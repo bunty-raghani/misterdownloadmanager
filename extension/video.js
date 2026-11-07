@@ -381,6 +381,163 @@ button:focus-visible { outline: 2px solid #2a78d6; outline-offset: -2px; }
   }
 
   // ---- acting ---------------------------------------------------------------------------------
+  // Telegram: the page itself fetches the media (its service worker only serves the page's own
+  // requests); this content script uploads the chunks to MDM's local server. The page gets no
+  // token: MDM writes the file and shows its own progress.
+  let telegramActive = null;
+
+  async function startTelegramDownload(src, title) {
+    if (telegramActive) return;
+    const server = await send({ type: "media-server" });
+    if (!server || !server.ok || !server.port || !server.token) {
+      return flash("err", t("video_failed"));
+    }
+    if (!src) {
+      const v = [...document.querySelectorAll("video")].find((v) => v.closest(TELEGRAM_VIEWER));
+      src = /^(https?|blob):/i.test(v?.currentSrc || "") ? v.currentSrc : "";
+    }
+    if (!src) return flash("err", t("video_failed"));
+    telegramActive = {
+      requestId: crypto.randomUUID(),
+      base: `http://127.0.0.1:${server.port}`,
+      token: server.token,
+      title: (title || document.title || "telegram-media").trim(),
+      total: null,
+      mime: "",
+      id: null,
+      lastSeq: 0,
+      chain: Promise.resolve(),
+    };
+    const started = await send({
+      type: "telegram-fetch",
+      requestId: telegramActive.requestId,
+      src,
+      page: location.href,
+    });
+    if (!started || !started.ok) {
+      telegramActive = null;
+      flash("err", t("video_failed"));
+      return;
+    }
+    flash("ok", t("video_sent"));
+  }
+
+  // The page's chunks (main world) arrive here; upload them in order to MDM.
+  window.addEventListener("message", (event) => {
+    const a = telegramActive;
+    if (!a || event.source !== window || !event.data || event.data.mdmTelegram !== a.requestId) {
+      return;
+    }
+    const m = event.data;
+    const headers = (extra = {}) => ({ "x-mdm-token": a.token, ...extra });
+    a.chain = a.chain
+      .then(async () => {
+        if (m.kind === "start") {
+          a.total = Number.isSafeInteger(m.total) ? m.total : null;
+          a.mime = typeof m.mime === "string" ? m.mime : "";
+          const name0 =
+            a.title.replace(/[\\/:*?"<>|]+/g, "_").trim().slice(0, 120) || "telegram-media";
+          const ext = a.mime.includes("webm")
+            ? "webm"
+            : a.mime.includes("quicktime")
+              ? "mov"
+              : a.mime.includes("matroska")
+                ? "mkv"
+                : a.mime.startsWith("audio/mpeg")
+                  ? "mp3"
+                  : a.mime.startsWith("audio/ogg")
+                    ? "ogg"
+                    : a.mime.startsWith("image/")
+                      ? "jpg"
+                      : "mp4";
+          const name = /\.[a-z0-9]{2,5}$/i.test(name0) ? name0 : `${name0}.${ext}`;
+          const r = await fetch(`${a.base}/telegram/start`, {
+            method: "POST",
+            headers: headers({ "content-type": "application/json" }),
+            body: JSON.stringify({ name, url: location.href, size: a.total, mime: a.mime }),
+          });
+          if (!r.ok) throw new Error(`MDM start ${r.status}`);
+          a.id = (await r.json()).id;
+          return;
+        }
+        if (m.kind === "chunk") {
+          if (!a.id) throw new Error("the upload did not start");
+          a.lastSeq = m.seq;
+          const r = await fetch(`${a.base}/telegram/chunk?id=${a.id}`, {
+            method: "POST",
+            headers: headers({
+              "content-type": "application/octet-stream",
+              ...(a.total !== null ? { "x-mdm-total": String(a.total) } : {}),
+            }),
+            body: m.data,
+          });
+          if (!r.ok) throw new Error(`MDM chunk ${r.status}`);
+          const reply = await r.json();
+          if (reply.continue === false) {
+            window.postMessage(
+              { mdmTelegramAck: a.requestId, seq: m.seq, abort: true },
+              "*",
+            );
+            await fetch(`${a.base}/telegram/cancel?id=${a.id}`, {
+              method: "POST",
+              headers: headers(),
+            }).catch(() => {});
+            telegramActive = null;
+            return;
+          }
+          window.postMessage({ mdmTelegramAck: a.requestId, seq: m.seq, abort: false }, "*");
+          return;
+        }
+        if (m.kind === "end") {
+          await fetch(`${a.base}/telegram/end?id=${a.id}`, {
+            method: "POST",
+            headers: headers(),
+          });
+          telegramActive = null;
+          return;
+        }
+        if (m.kind === "error") {
+          if (a.id) {
+            await fetch(`${a.base}/telegram/fail?id=${a.id}`, {
+              method: "POST",
+              headers: headers(),
+              body: String(m.why || "download failed"),
+            }).catch(() => {});
+          }
+          telegramActive = null;
+          flash("err", t("video_failed"));
+        }
+      })
+      .catch(async (error) => {
+        if (a.id) {
+          await fetch(`${a.base}/telegram/fail?id=${a.id}`, {
+            method: "POST",
+            headers: headers(),
+            body: String((error && error.message) || error),
+          }).catch(() => {});
+        }
+        if (a.requestId) {
+          window.postMessage(
+            { mdmTelegramAck: a.requestId, seq: a.lastSeq, abort: true },
+            "*",
+          );
+        }
+        telegramActive = null;
+        flash("err", t("video_failed"));
+      });
+  });
+
+  ext.runtime.onMessage.addListener((m, _sender, reply) => {
+    if (m && m.type === "telegram-upload") {
+      startTelegramDownload(
+        typeof m.src === "string" ? m.src : "",
+        typeof m.title === "string" ? m.title : "",
+      );
+      reply?.({ ok: true });
+      return true;
+    }
+  });
+
   async function download() {
     if (busy || !video) return;
     busy = true;
@@ -391,11 +548,9 @@ button:focus-visible { outline: 2px solid #2a78d6; outline-offset: -2px; }
       const src = /^(https?|blob):/i.test(video.currentSrc || "") ? video.currentSrc : "";
       const title = (document.querySelector('meta[property="og:title"]')?.content || document.title || "").trim();
       if (TELEGRAM) {
-        // Its page's own downloader has the session (protected channels included); the finished
-        // file is added to MDM when the browser download completes.
-        const r = await send({ type: "telegram-download", src, title, page: location.href });
-        if (r.gone) return;
-        flash(r.ok ? "ok" : "err", t(r.ok ? "video_sent" : "video_failed"));
+        // The page fetches its own protected media into MDM's local upload server; MDM writes
+        // it and shows the progress window. No browser download.
+        await telegramUpload(src, title);
         return;
       }
       const r = await send({ type: "video", src, title, page: location.href });

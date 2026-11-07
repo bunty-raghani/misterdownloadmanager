@@ -4431,6 +4431,8 @@ name = "mdm-app"
 version = "0.3.0"
 dependencies = [
  "arboard",
+ "aws-lc-rs",
+ "axum",
  "base64 0.23.1",
  "brotli",
  "brotli-decompressor",

@@ -27,6 +27,7 @@ mod icons;
 mod langpick;
 mod launch;
 mod list;
+mod media;
 mod model;
 mod native;
 mod netwatch;

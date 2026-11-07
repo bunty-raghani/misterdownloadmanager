@@ -1511,141 +1511,80 @@ if (FIREFOX && ext.webRequest && ext.webRequest.onHeadersReceived) {
 // the signed-in session (protected channels and groups included). Its browser download is added
 // to MDM when done (`telegramImported` above). Self-contained: `scripting.executeScript` sends
 // this function's source to the page.
-function telegramDownloadInPage(src, title) {
-  const host = location.hostname.toLowerCase();
-  const path = location.pathname;
-  const webK =
-    host === "webk.telegram.org" ||
-    host === "webz.telegram.org" ||
-    (host === "web.telegram.org" && path.startsWith("/k/"));
-  try {
-    if (webK) {
-      const viewer = window.appMediaViewer;
-      if (viewer && viewer.target) {
-        const target = viewer.target;
-        const media = target.message && target.message.media;
-        const doc =
-          media && media._ === "messageMediaDocument"
-            ? media.document
-            : media && media._ === "messageMediaPhoto"
-              ? media.photo
-              : null;
-        if (doc && window.appDownloadManager && typeof window.appDownloadManager.downloadToDisc === "function") {
-          window.appDownloadManager.downloadToDisc({ media: doc });
-          return { ok: true, how: "downloadToDisc" };
+// The Telegram page's own fetch (its service worker only serves the page's requests). It
+// streams chunks to the content script, which uploads them to MDM; no app token reaches the page.
+function telegramFetchInPage(requestId, src) {
+  (async () => {
+    const CHUNK = 4 * 1024 * 1024;
+    const post = (m, transfer) =>
+      window.postMessage({ mdmTelegram: requestId, ...m }, "*", transfer || []);
+    let offset = 0;
+    let total = null;
+    let mime = "";
+    let seq = 0;
+    const waitAck = (n) =>
+      new Promise((resolve, reject) => {
+        const on = (e) => {
+          if (
+            e.source !== window ||
+            !e.data ||
+            e.data.mdmTelegramAck !== requestId ||
+            e.data.seq !== n
+          ) {
+            return;
+          }
+          clearTimeout(timer);
+          window.removeEventListener("message", on);
+          if (e.data.abort) reject(new Error("cancelled"));
+          else resolve();
+        };
+        const timer = setTimeout(() => {
+          window.removeEventListener("message", on);
+          reject(new Error("MDM did not answer"));
+        }, 30000);
+        window.addEventListener("message", on);
+      });
+    try {
+      while (total === null || offset < total) {
+        const res = await fetch(src, {
+          headers: { Range: `bytes=${offset}-${offset + CHUNK - 1}` },
+          credentials: "include",
+        });
+        if (res.status !== 200 && res.status !== 206) {
+          throw new Error(`Telegram answered ${res.status}`);
         }
-        if (typeof viewer.onDownloadClick === "function") {
-          viewer.onDownloadClick({
-            type: "click",
-            target: null,
-            preventDefault() {},
-            stopPropagation() {},
-          });
-          return { ok: true, how: "onDownloadClick" };
-        }
-      }
-    }
-    // WebA: its store and actions are on the page window; the action ignores the "protected"
-    // flag that only hides the native button.
-    if (typeof window.getGlobal === "function" && typeof window.getActions === "function") {
-      const global = window.getGlobal();
-      const tabs = global && global.byTabId;
-      let viewer = null;
-      if (tabs) {
-        for (const tab of Object.values(tabs)) {
-          const v = tab && tab.mediaViewer;
-          if (v && (v.messageId || v.standaloneMedia || v.pageMedia)) {
-            if (!v.isHidden) {
-              viewer = v;
-              break;
-            }
-            viewer = viewer || v;
+        const type = (res.headers.get("content-type") || "")
+          .split(";")[0]
+          .trim()
+          .toLowerCase();
+        if (type) mime = type;
+        if (total === null) {
+          const cr = res.headers.get("content-range") || "";
+          const m = /^bytes \d+-\d+\/(\d+)$/.exec(cr);
+          if (m) total = Number(m[1]);
+          else if (res.status === 200) {
+            const cl = Number(res.headers.get("content-length"));
+            if (cl > 0 && !res.headers.get("content-encoding")) total = cl;
           }
         }
+        const data = await res.arrayBuffer();
+        if (!data.byteLength) throw new Error("Telegram returned no media");
+        if (seq === 0) post({ kind: "start", total, mime });
+        const ack = waitAck(seq);
+        post({ kind: "chunk", seq, data }, [data]);
+        await ack;
+        offset += data.byteLength;
+        seq += 1;
+        if (res.status === 200) break;
+        if (total !== null && offset >= total) break;
+        if (total === null && data.byteLength < CHUNK) break;
       }
-      if (viewer) {
-        let message;
-        let media;
-        if (viewer.standaloneMedia) {
-          media = viewer.standaloneMedia[viewer.mediaIndex || 0];
-        } else if (viewer.chatId && viewer.messageId) {
-          const chats = global.messages && global.messages.byChatId;
-          const chat = chats && chats[viewer.chatId];
-          message =
-            chat &&
-            (chat.byId?.[viewer.messageId] || chat.ephemeralById?.[viewer.messageId]);
-          const content = message && message.content;
-          media =
-            content &&
-            (content.photo || content.video || content.document || (content.action && content.action.photo));
-        }
-        if (media) {
-          window.getActions().downloadMedia({ media, originMessage: message });
-          return { ok: true, how: "downloadMedia" };
-        }
-      }
+      post({ kind: "end" });
+    } catch (error) {
+      post({ kind: "error", why: String((error && error.message) || error) });
     }
-    // No viewer state (an inline player or a viewer variant): fetch the media the page itself
-    // sees and hand it to the browser, whose finished download MDM imports.
-    if (src) {
-      const base =
-        String(title || "telegram-media")
-          .replace(/[\\/:*?"<>|]+/g, "_")
-          .trim()
-          .slice(0, 120) || "telegram-media";
-      (async () => {
-        try {
-          const res = await fetch(src, { credentials: "include" });
-          if (!res.ok) return;
-          const blob = await res.blob();
-          const mime = (blob.type || "").toLowerCase();
-          const ext = mime.includes("webm")
-            ? "webm"
-            : mime.includes("quicktime")
-              ? "mov"
-              : mime.includes("matroska")
-                ? "mkv"
-                : mime.startsWith("audio/ogg")
-                  ? "ogg"
-                  : mime.startsWith("audio/mpeg")
-                    ? "mp3"
-                    : mime.startsWith("image/")
-                      ? (mime.split("/")[1] || "jpg")
-                      : "mp4";
-          const name = /\.[a-z0-9]{2,5}$/i.test(base) ? base : `${base}.${ext}`;
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = name;
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          setTimeout(() => URL.revokeObjectURL(url), 60000);
-        } catch {
-          // Nothing started; Telegram's own button still works.
-        }
-      })();
-      return { ok: true, how: "blob" };
-    }
-    return { ok: false, why: "Open the media in Telegram, then try again." };
-  } catch (error) {
-    return { ok: false, why: String((error && error.message) || error) };
-  }
-}
-
-async function telegramDownload(tab, src = "", title = "") {
-  if (!tab || tab.id === undefined || tab.id === null || !ext.scripting) return false;
-  try {
-    const [r] = await ext.scripting.executeScript({
-      target: { tabId: tab.id },
-      world: "MAIN",
-      func: telegramDownloadInPage,
-      args: [typeof src === "string" ? src : "", typeof title === "string" ? title : ""],
-    });
-    return Boolean(r && r.result && r.result.ok);
-  } catch {
-    return false;
-  }
+  })();
+  return { ok: true };
 }
 
 // ---- right-click menus -------------------------------------------------------------------
@@ -1699,11 +1638,16 @@ ext.contextMenus.onClicked.addListener(async (info, tab) => {
   const incognito = Boolean(tab && tab.incognito);
   const storeId = tab && tab.cookieStoreId;
   if (info.menuItemId === "mdm-link") {
-    // Telegram: its page's own downloader has the session (protected channels included); its
-    // finished file is added to MDM by `telegramImported`. Never hand the page-only URL to the
-    // app: it answers 302.
-    if (info.mediaType && tab && isTelegramUrl(tab.url)) {
-      await telegramDownload(tab, info.srcUrl || "", tab.title || "");
+    // Telegram: the page's own fetch (its session/service worker) streams the media into MDM's
+    // local upload server; never hand the page-only URL to the app (302).
+    if (tab && isTelegramUrl(tab.url) && (info.mediaType || info.srcUrl)) {
+      ext.tabs
+        .sendMessage(tab.id, {
+          type: "telegram-upload",
+          src: info.srcUrl || "",
+          title: tab.title || "",
+        })
+        .catch(() => {});
       return;
     }
     const url = info.linkUrl || info.srcUrl;
@@ -1916,14 +1860,27 @@ async function pageMessage(m, sender) {
       : await currentPage(sender);
   const tab = sender.tab || {};
   if (m.type === "panel") return { on: page ? await panelOn(page) : false };
+  if (m.type === "media-server") {
+    const r = await native({ media: true });
+    return { ok: Boolean(r && r.ok), port: r && r.mediaPort, token: r && r.mediaToken };
+  }
+  if (m.type === "telegram-fetch" && page && isTelegramUrl(page) && sender.tab) {
+    const [r] = await ext.scripting.executeScript({
+      target: { tabId: sender.tab.id },
+      world: "MAIN",
+      func: telegramFetchInPage,
+      args: [String(m.requestId || ""), String(m.src || "")],
+    });
+    return { ok: Boolean(r && r.result && r.result.ok) };
+  }
   if (m.type === "bypass" && typeof m.url === "string") {
     bypass.set(m.url, { at: Date.now() });
     return { ok: true };
   }
   if (m.type === "telegram-download" && page && isTelegramUrl(page)) {
-    const src = typeof m.src === "string" ? m.src : "";
-    const title = typeof m.title === "string" ? m.title.slice(0, 200) : "";
-    return { ok: await telegramDownload(sender.tab, src, title) };
+    // The content script does the upload (the page's media fetch + MDM's local server); this
+    // path is only for an old copy of video.js. Never hand the page-only URL to the app.
+    return { ok: false, why: "options" };
   }
   if (m.type === "video" && page) {
     // Telegram's page-only media cannot be fetched by the app (its endpoint answers 302); its

@@ -385,6 +385,12 @@ pub struct App {
     update_checked_this_run: Option<i64>,
     progress: Vec<Progress>,
     complete: Vec<Complete>,
+    /// The local upload server for pages only they can fetch (Telegram's protected media): the
+    /// page streams into it and MDM writes the download, with its own progress.
+    media: Option<std::sync::Arc<crate::media::Server>>,
+    /// Upload id -> the list item it fills, and the item -> upload (Cancel/Remove).
+    media_items: HashMap<u64, u64>,
+    media_item_upload: HashMap<u64, u64>,
     settings: Settings,
     speed_settings: Option<dialogs::SpeedSettings>,
     scheduler: Option<crate::scheduler::Scheduler>,
@@ -713,6 +719,56 @@ fn dest_without_scan(folder: &std::path::Path, name: &str, items: &[Item]) -> Pa
     folder.join(format!("{chosen}{ext}"))
 }
 
+/// The engine's view of a Telegram upload for the list/progress window: one segment, no
+/// connections (the page, not the engine, is fetching it).
+fn media_snapshot(
+    upload: &crate::media::Upload,
+    state: crate::media::UploadState,
+    file: Option<PathBuf>,
+) -> mdm_engine::Snapshot {
+    use std::sync::atomic::Ordering;
+    let downloaded = upload.downloaded.load(Ordering::Relaxed);
+    let size = upload
+        .size_known
+        .load(Ordering::Relaxed)
+        .then(|| upload.size.load(Ordering::Relaxed));
+    let engine = match &state {
+        crate::media::UploadState::Downloading => mdm_engine::download::State::Downloading,
+        crate::media::UploadState::Done => mdm_engine::download::State::Done,
+        crate::media::UploadState::Failed(_) => mdm_engine::download::State::Failed,
+        crate::media::UploadState::Cancelled => mdm_engine::download::State::Cancelled,
+    };
+    let url = url::Url::parse(&upload.url)
+        .or_else(|_| url::Url::parse("https://web.telegram.org/"))
+        .expect("the placeholder is a URL");
+    let error = match &state {
+        crate::media::UploadState::Failed(e) => Some(e.clone()),
+        _ => None,
+    };
+    mdm_engine::Snapshot {
+        state: engine,
+        url,
+        file,
+        size,
+        downloaded,
+        resumable: Some(false),
+        segments: size
+            .map(|t| {
+                vec![mdm_engine::download::SegmentView {
+                    start: 0,
+                    cursor: downloaded.min(t),
+                    end: t,
+                }]
+            })
+            .unwrap_or_default(),
+        connections: Vec::new(),
+        error,
+        failure: None,
+        events: Vec::new(),
+        server: None,
+    }
+}
+
 /// The page to look up for a browser's video request: the page itself, unless the browser sent
 /// a stream's own manifest (`src`) and the page it came from is one yt-dlp reads. A manifest
 /// often carries one track — YouTube's HLS variant is video only — so a quality picked from it
@@ -990,6 +1046,8 @@ impl App {
         }
         // The remote control (#141): off unless Options → Remote turned it on.
         let remote = crate::remote::start(&rt, sink, &settings);
+        // The local upload channel for pages only they can fetch (Telegram's protected media).
+        let media = crate::media::Server::start(&rt);
         // Started with the session where a window can't be hidden (Wayland, #226): minimized.
         if start == crate::Start::Minimized {
             tracing::info!("started with the session: minimized (a window can't be hidden here)");
@@ -1032,6 +1090,9 @@ impl App {
             kept_answers: Default::default(),
             progress: Vec::new(),
             complete: Vec::new(),
+            media,
+            media_items: Default::default(),
+            media_item_upload: Default::default(),
             settings,
             speed_settings: None,
             scheduler: None,
@@ -2194,6 +2255,166 @@ impl App {
         self.dirty = true;
     }
 
+    /// Telegram media streamed by its page into [`crate::media`]: add the row and progress
+    /// window when an upload starts, follow its bytes, and move the finished file to the
+    /// category's folder. A page-only download, so the engine never sees the URL.
+    fn media_tick(&mut self, ctx: &egui::Context) {
+        let Some(server) = self.media.clone() else {
+            return;
+        };
+        let uploads = server.snapshot();
+        for upload in uploads {
+            let state = upload.state.lock().unwrap().clone();
+            let downloaded = upload.downloaded.load(std::sync::atomic::Ordering::Relaxed);
+            let total = upload
+                .size_known
+                .load(std::sync::atomic::Ordering::Relaxed)
+                .then(|| upload.size.load(std::sync::atomic::Ordering::Relaxed));
+            if let Some(&item_id) = self.media_items.get(&upload.id) {
+                let Some(pos) = self.items.iter().position(|i| i.id == item_id) else {
+                    continue;
+                };
+                let item = &mut self.items[pos];
+                if item.status == Status::Complete {
+                    continue;
+                }
+                item.downloaded = downloaded;
+                if let Some(t) = total {
+                    item.size = Some(t);
+                }
+                match state {
+                    crate::media::UploadState::Downloading => {
+                        item.snap = Some(media_snapshot(&upload, state, None));
+                    }
+                    crate::media::UploadState::Done => {
+                        let dest = item.dest.clone();
+                        if let Some(parent) = dest.parent() {
+                            let _ = std::fs::create_dir_all(parent);
+                        }
+                        match std::fs::rename(&upload.temp, &dest) {
+                            Ok(()) => {
+                                let size = total
+                                    .or_else(|| std::fs::metadata(&dest).ok().map(|m| m.len()));
+                                item.size = size;
+                                item.downloaded = size.unwrap_or(downloaded);
+                                item.status = Status::Complete;
+                                item.error = None;
+                                item.resumable = Some(false);
+                                item.snap = Some(media_snapshot(
+                                    &upload,
+                                    crate::media::UploadState::Done,
+                                    Some(dest),
+                                ));
+                                item.note("Telegram media downloaded".to_string());
+                                self.dirty = true;
+                            }
+                            Err(e) => {
+                                item.status = Status::Error;
+                                item.error = Some(e.to_string());
+                                item.snap = Some(media_snapshot(
+                                    &upload,
+                                    crate::media::UploadState::Failed(e.to_string()),
+                                    None,
+                                ));
+                                let _ = std::fs::remove_file(&upload.temp);
+                            }
+                        }
+                    }
+                    crate::media::UploadState::Failed(why) => {
+                        item.status = Status::Error;
+                        item.error = Some(why.clone());
+                        item.snap = Some(media_snapshot(
+                            &upload,
+                            crate::media::UploadState::Failed(why),
+                            None,
+                        ));
+                        let _ = std::fs::remove_file(&upload.temp);
+                    }
+                    crate::media::UploadState::Cancelled => {
+                        item.status = Status::Stopped;
+                        item.snap = Some(media_snapshot(
+                            &upload,
+                            crate::media::UploadState::Cancelled,
+                            None,
+                        ));
+                        let _ = std::fs::remove_file(&upload.temp);
+                    }
+                }
+                continue;
+            }
+            if matches!(
+                state,
+                crate::media::UploadState::Failed(_) | crate::media::UploadState::Cancelled
+            ) {
+                let _ = std::fs::remove_file(&upload.temp);
+                continue;
+            }
+            let mut name = upload.name.trim().to_owned();
+            if name.is_empty() {
+                name = format!("telegram-{}.mp4", upload.id);
+            }
+            let mime = upload.mime.lock().unwrap().to_ascii_lowercase();
+            if !name.contains('.') {
+                let ext = if mime.contains("webm") {
+                    "webm"
+                } else if mime.contains("quicktime") {
+                    "mov"
+                } else if mime.contains("matroska") {
+                    "mkv"
+                } else if mime.starts_with("audio/mpeg") {
+                    "mp3"
+                } else if mime.starts_with("audio/ogg") {
+                    "ogg"
+                } else if mime.starts_with("image/") {
+                    "jpg"
+                } else {
+                    "mp4"
+                };
+                name.push('.');
+                name.push_str(ext);
+            }
+            let name = mdm_engine::naming::sanitize(&name);
+            let category = Category::of(&name);
+            let folder = self.settings.category_dir(category, &self.downloads);
+            let items = &self.items;
+            let dest = mdm_engine::naming::stem_destination(&folder, &name, |stem| {
+                items.iter().any(|i| {
+                    i.dest.parent() == Some(folder.as_path())
+                        && i.dest
+                            .file_stem()
+                            .is_some_and(|s| s.to_string_lossy().eq_ignore_ascii_case(stem))
+                })
+            });
+            let url = url::Url::parse(&upload.url)
+                .or_else(|_| url::Url::parse("https://web.telegram.org/"))
+                .expect("the placeholder is a URL");
+            let id = self.next_id;
+            self.next_id += 1;
+            let mut item = Item::new(id, url, dest, category);
+            item.size = total;
+            item.downloaded = downloaded;
+            item.status = Status::Downloading;
+            item.resumable = Some(false);
+            item.description = "Telegram".into();
+            item.snap = Some(media_snapshot(
+                &upload,
+                crate::media::UploadState::Downloading,
+                None,
+            ));
+            item.note("Added from Telegram (streamed into MDM)".to_string());
+            self.items.push(item);
+            self.media_items.insert(upload.id, id);
+            self.media_item_upload.insert(id, upload.id);
+            let show_complete = self.settings.show_complete;
+            if !self.progress.iter().any(|p| p.id == id) {
+                self.progress.push(Progress::new(id, show_complete));
+            }
+            self.show_window(ctx);
+            self.selection.set(id);
+            self.dirty = true;
+        }
+    }
+
     /// A command from the command line, a second launch, or the browser (ipc.rs).
     fn handle_command(&mut self, cmd: ipc::Command, ctx: &egui::Context) {
         if cmd.exit {
@@ -2438,6 +2659,11 @@ impl App {
     /// Start or resume a download; `show` opens its progress dialog (IDM's default).
     fn start(&mut self, id: u64, show: bool) {
         let rt = self.rt.clone();
+        // Telegram media streamed by its page into MDM: not an engine download (the page-only
+        // URL answers 302 outside the page); its progress window's Resume must not start one.
+        if self.media_item_upload.contains_key(&id) {
+            return;
+        }
         let Some(item) = self.item(id) else { return };
         // A finished gallery may start again: it fetches the files not there yet (#58).
         if item.live.is_some() || (item.status == Status::Complete && item.gallery.is_none()) {
@@ -2573,6 +2799,15 @@ impl App {
     }
 
     fn stop(&mut self, id: u64) {
+        if let Some(upload) = self.media_item_upload.get(&id).copied() {
+            if let Some(server) = &self.media {
+                server.cancel(upload);
+            }
+            if let Some(item) = self.item(id) {
+                item.status = Status::Stopped;
+            }
+            return;
+        }
         if let Some(l) = self.item(id).and_then(|i| i.live.as_ref()) {
             l.dl.cancel();
         }
@@ -2607,6 +2842,12 @@ impl App {
     /// Take a download off the list (not while it runs); with `files`, its file goes from disk
     /// too: a finished file, or the data so far (a torrent's files when its session runs).
     fn remove_download(&mut self, id: u64, files: bool) {
+        if let Some(upload) = self.media_item_upload.remove(&id) {
+            self.media_items.remove(&upload);
+            if let Some(server) = &self.media {
+                server.forget(upload);
+            }
+        }
         if self.item(id).is_some_and(|i| i.live.is_none()) {
             // yt-dlp names its unfinished data `<stem>.<format>.<ext>.part`; the item is going,
             // so no one can resume it. Left behind, the next download of the same name would
@@ -8197,6 +8438,7 @@ impl App {
             self.open_file_info(new, context, ctx);
         }
         self.finish_stopped();
+        self.media_tick(ctx);
         let mut actions = Vec::new();
         // A progress window can be hidden in the tray only when there is one to bring it back.
         // Off-screen test copies have no tray icon: their windows are drawn as if they had one

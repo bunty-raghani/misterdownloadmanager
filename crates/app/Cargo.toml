@@ -21,6 +21,10 @@ test-update = ["mdm-tools/test-update"]
 
 [dependencies]
 arboard.workspace = true
+# The page-to-MDM upload channel for Telegram media (media.rs): a local, token-checked HTTP
+# server; aws-lc-rs makes its token.
+axum.workspace = true
+aws-lc-rs.workspace = true
 base64.workspace = true
 chrono.workspace = true
 craft-atomic.workspace = true

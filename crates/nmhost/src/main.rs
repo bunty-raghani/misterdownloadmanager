@@ -63,6 +63,9 @@ struct Message {
     /// installed, or the browser started) asks the same and tells the app it is there.
     rules: bool,
     hello: bool,
+    /// The extension asks where the app's local media upload server is (Telegram's page-only
+    /// media streams into MDM there). Answered with `mediaPort`/`mediaToken`.
+    media: bool,
     /// The extension's version.
     v: Option<String>,
     url: String,
@@ -175,6 +178,11 @@ struct Reply {
     /// extension to say (its popup).
     #[serde(skip_serializing_if = "Option::is_none")]
     declined: Option<&'static str>,
+    /// For `media`: the app's local upload server's port and token.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    media_port: Option<u16>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    media_token: Option<String>,
 }
 
 impl Reply {
@@ -235,6 +243,28 @@ fn answer(m: Message, rules: &mdm_ipc::capture::CaptureRules) -> Reply {
             min_kb: Some(rules.capture_min_kb),
             capture_off: rules.capture_off(browser).map(|d| d.code()),
             ..Default::default()
+        };
+    }
+    if m.media {
+        let info = mdm_ipc::data_dir()
+            .and_then(|d| std::fs::read_to_string(d.join("media.json")).ok())
+            .and_then(|s| serde_json::from_str::<serde_json::Value>(&s).ok());
+        let port = info
+            .as_ref()
+            .and_then(|v| v["port"].as_u64())
+            .and_then(|p| u16::try_from(p).ok());
+        let token = info
+            .as_ref()
+            .and_then(|v| v["token"].as_str())
+            .map(str::to_owned);
+        return match (port, token) {
+            (Some(port), Some(token)) => Reply {
+                ok: true,
+                media_port: Some(port),
+                media_token: Some(token),
+                ..Default::default()
+            },
+            _ => Reply::failed("not-running", "the local media server is not ready"),
         };
     }
     if let Some(n) = &m.declined {
