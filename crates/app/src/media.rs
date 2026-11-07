@@ -9,7 +9,7 @@
 //! uploads up (`App::media_tick`), creates the row and progress window, and moves the finished
 //! file to its category folder.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, VecDeque};
 use std::io::Write;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
@@ -47,10 +47,15 @@ pub struct Upload {
     pub downloaded: AtomicU64,
     pub cancel: AtomicBool,
     pub state: Mutex<UploadState>,
-    /// The last rate sample: (bytes, when), and the bytes/s between samples. The page sends
-    /// chunks, not engine connections, so the app computes the transfer rate itself.
-    last_sample: Mutex<(u64, std::time::Instant)>,
-    rate_bits: AtomicU64,
+    /// The rate window: the page sends 4 MB chunks in bursts, not a steady engine stream, so a
+    /// single sample would flash 0 between chunks. Keep the last 3 s of (time, bytes) samples
+    /// and report their average.
+    rate_window: Mutex<RateWindow>,
+}
+
+struct RateWindow {
+    samples: VecDeque<(std::time::Instant, u64)>,
+    rate: f64,
 }
 
 #[derive(Clone, Debug)]
@@ -62,20 +67,36 @@ pub enum UploadState {
 }
 
 impl Upload {
-    /// Bytes/s since the last sample (at most four a second), 0 when no bytes arrived.
+    /// Bytes/s over the last 3 s, sampled at most every 250 ms; 0 when nothing arrived in that
+    /// window. The average hides the gaps between the page's chunk uploads.
     pub fn rate(&self) -> f64 {
+        const SAMPLE: std::time::Duration = std::time::Duration::from_millis(250);
+        const WINDOW: std::time::Duration = std::time::Duration::from_secs(3);
         let now = std::time::Instant::now();
         let downloaded = self.downloaded.load(Ordering::Relaxed);
-        let mut last = self.last_sample.lock().unwrap();
-        let (bytes, at) = *last;
-        let elapsed = now.duration_since(at).as_secs_f64();
-        if elapsed < 0.25 {
-            return f64::from_bits(self.rate_bits.load(Ordering::Relaxed));
+        let mut w = self.rate_window.lock().unwrap();
+        if w.samples
+            .back()
+            .is_none_or(|(at, _)| now.duration_since(*at) >= SAMPLE)
+        {
+            w.samples.push_back((now, downloaded));
         }
-        let rate = downloaded.saturating_sub(bytes) as f64 / elapsed;
-        self.rate_bits.store(rate.to_bits(), Ordering::Relaxed);
-        *last = (downloaded, now);
-        rate
+        while w
+            .samples
+            .front()
+            .is_some_and(|(at, _)| now.duration_since(*at) > WINDOW)
+        {
+            w.samples.pop_front();
+        }
+        if let (Some(&(first_at, first)), Some(&(last_at, last))) =
+            (w.samples.front(), w.samples.back())
+        {
+            let elapsed = last_at.duration_since(first_at).as_secs_f64();
+            if elapsed >= SAMPLE.as_secs_f64() {
+                w.rate = last.saturating_sub(first) as f64 / elapsed;
+            }
+        }
+        w.rate
     }
 }
 
@@ -217,8 +238,10 @@ async fn start(
         downloaded: AtomicU64::new(0),
         cancel: AtomicBool::new(false),
         state: Mutex::new(UploadState::Downloading),
-        last_sample: Mutex::new((0, std::time::Instant::now())),
-        rate_bits: AtomicU64::new(0.0f64.to_bits()),
+        rate_window: Mutex::new(RateWindow {
+            samples: VecDeque::from([(std::time::Instant::now(), 0)]),
+            rate: 0.0,
+        }),
     });
     server.uploads.lock().unwrap().insert(id, upload);
     Json(Started { id }).into_response()
