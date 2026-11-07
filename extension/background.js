@@ -1682,11 +1682,15 @@ ext.contextMenus.onClicked.addListener(async (info, tab) => {
     // local upload server; never hand the page-only URL to the app (302).
     if (tab && isTelegramUrl(tab.url) && (info.mediaType || info.srcUrl)) {
       ext.tabs
-        .sendMessage(tab.id, {
-          type: "telegram-upload",
-          src: info.srcUrl || "",
-          title: tab.title || "",
-        })
+        .sendMessage(
+          tab.id,
+          {
+            type: "telegram-upload",
+            src: info.srcUrl || "",
+            title: tab.title || "",
+          },
+          { frameId: 0 },
+        )
         .catch(() => {});
       return;
     }
@@ -1906,7 +1910,7 @@ async function pageMessage(m, sender) {
   }
   if (m.type === "telegram-fetch" && page && isTelegramUrl(page) && sender.tab) {
     const [r] = await ext.scripting.executeScript({
-      target: { tabId: sender.tab.id },
+      target: { tabId: sender.tab.id, frameIds: [sender.frameId || 0] },
       world: "MAIN",
       func: telegramFetchInPage,
       args: [String(m.requestId || ""), String(m.src || "")],
