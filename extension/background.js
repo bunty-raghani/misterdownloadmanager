@@ -1514,6 +1514,46 @@ if (FIREFOX && ext.webRequest && ext.webRequest.onHeadersReceived) {
 // The Telegram page's own fetch (its service worker only serves the page's requests). It
 // streams chunks to the content script, which uploads them to MDM; no app token reaches the page.
 function telegramFetchInPage(requestId, src) {
+  // The viewer's <video> may be a blob:/MediaSource; the browser's own download for the same
+  // message uses `/<k|a>/d/<media id>`, which the page's service worker serves with the session.
+  // Use that address when we can read the message's media, and the element's URL otherwise.
+  const mediaUrl = () => {
+    if (/^https?:/i.test(src)) return src;
+    const prefix = location.pathname.startsWith("/a/") ? "/a" : "/k";
+    let id = "";
+    try {
+      const viewer = window.appMediaViewer;
+      if (viewer && viewer.target) {
+        const media = viewer.target.message && viewer.target.message.media;
+        const doc = media && (media.document || media.photo);
+        if (doc && doc.id) id = String(doc.id);
+        if (!id && viewer.target.photo && viewer.target.photo.id) id = String(viewer.target.photo.id);
+      }
+      if (!id && typeof window.getGlobal === "function") {
+        const global = window.getGlobal();
+        const tabs = global && global.byTabId;
+        if (tabs) {
+          for (const tab of Object.values(tabs)) {
+            const v = tab && tab.mediaViewer;
+            if (!v) continue;
+            let media = v.standaloneMedia && v.standaloneMedia[v.mediaIndex || 0];
+            if (!media && v.chatId && v.messageId) {
+              const chat = global.messages && global.messages.byChatId && global.messages.byChatId[v.chatId];
+              const msg = chat && (chat.byId?.[v.messageId] || chat.ephemeralById?.[v.messageId]);
+              const content = msg && msg.content;
+              media = content && (content.photo || content.video || content.document || (content.action && content.action.photo));
+            }
+            const doc = media && (media.document || media.photo || media);
+            if (doc && doc.id) { id = String(doc.id); break; }
+          }
+        }
+      }
+    } catch (error) {
+      // Fall back to the element's own address.
+    }
+    return id ? `https://${location.host}${prefix}/d/${id}` : src;
+  };
+  src = mediaUrl();
   (async () => {
     const CHUNK = 4 * 1024 * 1024;
     const post = (m, transfer) =>
