@@ -103,6 +103,9 @@ pub struct Command {
     /// From the browser's download button over a video: open the Download video window for this
     /// page (its address; an embedded player's own).
     pub video_page: Option<String>,
+    /// From the same button, a second message: the qualities the page's own player response
+    /// already lists, shown while yt-dlp looks the page up. Not kept.
+    pub video_heights: Vec<u32>,
     /// From that button's menu: never show it on this site (a host name) again.
     pub panel_hide_site: Option<String>,
     /// From the browser's right-click menu: the links of a page or a selection, offered in the

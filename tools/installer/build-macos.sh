@@ -6,6 +6,7 @@
 # Apple Developer ID, macOS asks before the first start (right-click the app -> Open).
 # Needs: macOS with Xcode's command line tools, rustup, pwsh (the extension).
 #   tools/installer/build-macos.sh [--no-build]
+# MDM_MACOS_ARCH=arm64 (or x86_64) builds one processor's app only, for a local test.
 set -euo pipefail
 root="$(cd "$(dirname "$0")/../.." && pwd)"
 dist="$root/target/dist"
@@ -13,7 +14,14 @@ version="$(sed -n 's/^version *= *"\([^"]*\)".*/\1/p' "$root/Cargo.toml" | head 
 [ -n "$version" ] || { echo "no version in Cargo.toml" >&2; exit 1; }
 programs=(misterdownloadmanager misterdownloadmanager-nmhost misterdownloadmanager-cli misterdownloadmanager-mcp)
 # Rust's target and the processor's name in the release files (as macOS calls it), with ':'.
-targets=(aarch64-apple-darwin:arm64 x86_64-apple-darwin:x86_64)
+all_targets=(aarch64-apple-darwin:arm64 x86_64-apple-darwin:x86_64)
+targets=()
+for pair in "${all_targets[@]}"; do
+  if [ -z "${MDM_MACOS_ARCH:-}" ] || [ "$MDM_MACOS_ARCH" = "${pair##*:}" ]; then
+    targets+=("$pair")
+  fi
+done
+[ ${#targets[@]} -gt 0 ] || { echo "MDM_MACOS_ARCH must be arm64 or x86_64" >&2; exit 1; }
 
 if [ "${1:-}" != "--no-build" ]; then
   for pair in "${targets[@]}"; do

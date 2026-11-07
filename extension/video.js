@@ -383,7 +383,7 @@ button:focus-visible { outline: 2px solid #2a78d6; outline-offset: -2px; }
       if (video.mediaKeys) return flash("err", t("video_drm"));
       const src = /^https?:/i.test(video.currentSrc || "") ? video.currentSrc : "";
       const title = (document.querySelector('meta[property="og:title"]')?.content || document.title || "").trim();
-      const r = await send({ type: "video", src, title });
+      const r = await send({ type: "video", src, title, page: location.href });
       if (r.gone) return;
       flash(r.ok ? "ok" : "err", t(r.ok ? "video_sent" : r.why === "options" ? "video_off" : "video_failed"));
     } finally {

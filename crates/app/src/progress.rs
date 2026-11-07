@@ -152,6 +152,9 @@ pub struct Progress {
     /// Hidden in the notification area (#63): not shown, its tab and choices kept for when it
     /// comes back (the tray's "Downloads in progress", or the download double-clicked).
     pub hidden: bool,
+    /// The window has been brought to the front once, when it opened; a later show (from the
+    /// tray) leaves the focus where the person put it.
+    raised: bool,
     /// A tray shows MDM's icon, so the window can be hidden there (set by the app each frame).
     pub tray: bool,
     /// Options → General → "Minimize to the notification area": Minimize hides it there too.
@@ -209,6 +212,7 @@ impl Progress {
             keep_sharing: false,
             host: None,
             hidden: false,
+            raised: false,
             tray: false,
             minimize_to_tray: false,
             hang_up: false,
@@ -353,6 +357,13 @@ impl Progress {
             crate::theme::dark_surface(),
             !closing,
         );
+        // A download started from the browser leaves the browser in front; the progress window
+        // must come over it (IDM's does), or the person sees no sign that it started. Only when
+        // it opens: a hidden one brought back from the tray leaves the focus where it is.
+        if !self.raised && !closing {
+            crate::dialogs::raise(ctx, ViewportId::from_hash_of(("progress", self.id)));
+            self.raised = true;
+        }
         let action = match (action, self.pending_limit.take()) {
             (Action::None, Some((limit, remember))) => Action::Limit(limit, remember),
             (a, _) => a,

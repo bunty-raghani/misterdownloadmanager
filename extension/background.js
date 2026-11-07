@@ -1633,8 +1633,89 @@ function senderPage(sender) {
   return /^https?:/i.test(u) ? u : null;
 }
 
+// The page's address as it is now. A content script loaded before an extension update has no
+// `page` in its message, and `sender.url` is the document's first address (YouTube changes the
+// video in the same document, so it still names the previous video). Asking the frame itself
+// is right for both new and old content scripts.
+async function currentPage(sender) {
+  const tabId = sender.tab && sender.tab.id;
+  if (tabId !== undefined && tabId !== null && sender.frameId !== undefined && ext.scripting) {
+    try {
+      const [found] = await ext.scripting.executeScript({
+        target: { tabId, frameIds: [sender.frameId] },
+        func: () => location.href,
+      });
+      if (found && typeof found.result === "string" && /^https?:/i.test(found.result)) {
+        return found.result;
+      }
+    } catch {
+      // A frame the extension may not script (a browser page, a store): the tab's own address.
+    }
+  }
+  return senderPage(sender);
+}
+
+// The object starting at `from` (`{`), to its matching `}`: strings and escapes are skipped,
+// so a `};` inside a description doesn't end it early.
+function objectAt(text, from) {
+  let depth = 0;
+  let quoted = false;
+  let escaped = false;
+  for (let i = from; i < text.length; i++) {
+    const c = text[i];
+    if (quoted) {
+      if (escaped) escaped = false;
+      else if (c === "\\") escaped = true;
+      else if (c === '"') quoted = false;
+      continue;
+    }
+    if (c === '"') {
+      quoted = true;
+    } else if (c === "{") {
+      depth++;
+    } else if (c === "}") {
+      depth--;
+      if (depth === 0) return text.slice(from, i + 1);
+    }
+  }
+  return null;
+}
+
+// The qualities in a YouTube page's own player response: the page has already fetched them,
+// so the window can show its list before yt-dlp's slower look-up ends. Nothing is kept: the
+// page is read again for each click, and the exact list replaces this one.
+async function pageHeights(page) {
+  try {
+    const r = await withTimeout(fetch(page, { credentials: "include" }), 5000);
+    if (!r.ok) return [];
+    const text = await withTimeout(r.text(), 5000);
+    const at = text.indexOf("ytInitialPlayerResponse");
+    if (at < 0) return [];
+    const begin = text.indexOf("{", text.indexOf("=", at));
+    if (begin < 0) return [];
+    const raw = objectAt(text, begin);
+    if (!raw) return [];
+    const data = JSON.parse(raw);
+    const streams = data.streamingData || {};
+    const heights = new Set();
+    for (const f of [...(streams.formats || []), ...(streams.adaptiveFormats || [])]) {
+      const h = Number(f.height);
+      if (h > 0) heights.add(h);
+    }
+    return [...heights].sort((a, b) => b - a);
+  } catch {
+    return [];
+  }
+}
+
 async function pageMessage(m, sender) {
-  const page = senderPage(sender);
+  // YouTube changes the video in the same page (a history entry, not a new document): the
+  // content script's message carries the video's current address; `sender.url` can still be
+  // the first video's, which made the button send video 1 after switching to video 2.
+  const page =
+    m.type === "video" && typeof m.page === "string" && /^https?:/i.test(m.page)
+      ? m.page
+      : await currentPage(sender);
   const tab = sender.tab || {};
   if (m.type === "panel") return { on: page ? await panelOn(page) : false };
   if (m.type === "bypass" && typeof m.url === "string") {
@@ -1644,6 +1725,13 @@ async function pageMessage(m, sender) {
   if (m.type === "video" && page) {
     await mediaBack;
     const src = typeof m.src === "string" && /^https?:/i.test(m.src) ? m.src : await streamFor(sender);
+    // Each cookie with the domain and flags the browser keeps, so the app files a `.youtube.com`
+    // sign-in for every host of it (YouTube Music's page included); the header goes too, for an
+    // older app.
+    const cookieContext = await videoCookies(src || page, {
+      incognito: tab.incognito,
+      storeId: tab.cookieStoreId,
+    });
     const reply = await native({
       video: true,
       url: page,
@@ -1652,8 +1740,22 @@ async function pageMessage(m, sender) {
       referrer: tab.url && tab.url !== page ? tab.url : "",
       // The cookies of what yt-dlp is given (the app files them under its host): the stream's
       // own server may not be the page's, and the page's cookies are not for it.
-      ...(await videoCookies(src || page, { incognito: tab.incognito, storeId: tab.cookieStoreId })),
+      ...cookieContext,
       ...(tab.incognito ? { private: true } : {}),
+    });
+    // Sent apart so the window opens at once; its qualities follow in a second, when the
+    // page's player response has been read.
+    pageHeights(page).then((heights) => {
+      if (heights.length) {
+        native({
+          video: true,
+          url: page,
+          ...(src ? { src } : {}),
+          referrer: tab.url && tab.url !== page ? tab.url : "",
+          ...cookieContext,
+          heights,
+        }).catch(() => {});
+      }
     });
     return { ok: Boolean(reply.ok), why: reply.why };
   }

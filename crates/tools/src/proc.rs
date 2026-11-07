@@ -455,6 +455,42 @@ fn cookie_file(text: &str) -> std::io::Result<CookieFile> {
 /// Python's.
 const UTF8: [&str; 2] = ["--encoding", "utf-8"];
 
+/// yt-dlp's JavaScript runtime for the sites whose player it must run (YouTube's newer formats
+/// are missing without one: "Requested format is not available", or only some qualities). yt-dlp
+/// enables Deno by default; Node.js is far more common on this system, so name it when found.
+fn js_runtime_args() -> Vec<String> {
+    use std::sync::OnceLock;
+    static NODE: OnceLock<Option<PathBuf>> = OnceLock::new();
+    match NODE.get_or_init(find_node) {
+        Some(node) => vec!["--js-runtimes".into(), format!("node:{}", node.display())],
+        None => Vec::new(),
+    }
+}
+
+/// Node.js in the places a program started from a desktop finds it (the PATH may be the bare
+/// system one), or in its usual Windows folder.
+fn find_node() -> Option<PathBuf> {
+    #[cfg(windows)]
+    {
+        let path = std::env::var_os("PATH").unwrap_or_default();
+        std::env::split_paths(&path)
+            .map(|d| d.join("node.exe"))
+            .chain([
+                PathBuf::from(r"C:\Program Files\nodejs\node.exe"),
+                PathBuf::from(r"C:\Program Files (x86)\nodejs\node.exe"),
+            ])
+            .find(|p| p.is_file())
+    }
+    #[cfg(not(windows))]
+    {
+        let path = std::env::var_os("PATH").unwrap_or_default();
+        std::env::split_paths(&path)
+            .chain(["/opt/homebrew/bin", "/usr/local/bin", "/usr/bin"].map(PathBuf::from))
+            .map(|d| d.join("node"))
+            .find(|p| p.is_file())
+    }
+}
+
 fn ytdlp_command(exe: &Path) -> Command {
     let mut cmd = Command::new(exe);
     cmd.env("PYTHONIOENCODING", "utf-8");
@@ -503,6 +539,7 @@ pub fn ytdlp(
     layers(&mut cmd, user, ours)?;
     cmd.args(["--ignore-config", "--no-exec", "--no-update"]);
     cmd.args(UTF8);
+    cmd.args(js_runtime_args());
     cmd.args(route);
     cmd.arg("--");
     cmd.arg(safe(url)?);
@@ -522,6 +559,7 @@ pub fn ytdlp_info(
     layers(&mut cmd, user, ours)?;
     cmd.args(["--ignore-config", "--no-exec", "--no-update"]);
     cmd.args(UTF8);
+    cmd.args(js_runtime_args());
     cmd.args(route);
     cmd.arg("--load-info-json");
     cmd.arg(info);
@@ -1001,6 +1039,12 @@ mod tests {
             .get_args()
             .map(|a| a.to_string_lossy().into_owned())
             .collect();
+        // Node.js may be named for yt-dlp's player scripts; the fixed order is what matters.
+        let mut args = args;
+        if let Some(i) = args.iter().position(|a| a == "--js-runtimes") {
+            assert!(args.get(i + 1).is_some_and(|p| p.starts_with("node:")));
+            args.drain(i..=i + 1);
+        }
         assert_eq!(
             args,
             [

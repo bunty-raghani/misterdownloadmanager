@@ -75,8 +75,24 @@ pub fn tools_dir() -> Option<PathBuf> {
     mdm_ipc::data_dir().map(|d| d.join("tools"))
 }
 
-/// yt-dlp's file name for this platform in its releases.
+/// yt-dlp's release file for this platform. macOS gets the folder build (`yt-dlp_macos.zip`):
+/// the single-file build unpacks its whole Python runtime into a temporary folder on every
+/// run, which macOS's code-signing checks scan file by file (10 s or more before yt-dlp even
+/// answers) and which is the `Python.framework` failure PyInstaller's one-file mode is known
+/// for. The folder build runs from where it is installed; everywhere else a release is one
+/// program.
 pub fn ytdlp_asset() -> &'static str {
+    if cfg!(windows) {
+        "yt-dlp.exe"
+    } else if cfg!(target_os = "macos") {
+        "yt-dlp_macos.zip"
+    } else {
+        "yt-dlp_linux"
+    }
+}
+
+/// The yt-dlp program's file name inside its release (and in MDM's install folder).
+pub fn ytdlp_exe_name() -> &'static str {
     if cfg!(windows) {
         "yt-dlp.exe"
     } else if cfg!(target_os = "macos") {
@@ -84,6 +100,21 @@ pub fn ytdlp_asset() -> &'static str {
     } else {
         "yt-dlp_linux"
     }
+}
+
+/// Whether an install of yt-dlp is the kind this system should run: on macOS, the folder build,
+/// whose `_internal` folder sits beside the program. An older single-file install is accepted
+/// (it works, just slowly) but is replaced by [`install_latest`].
+pub fn ytdlp_complete(exe: &Path) -> bool {
+    exe.is_file()
+        && (!cfg!(target_os = "macos")
+            || exe.parent().is_some_and(|d| d.join("_internal").is_dir()))
+}
+
+/// Whether MDM's own yt-dlp in `dir` is an older single-file install that [`install_latest`]
+/// replaces with the folder build even when the version is the same (macOS only).
+pub fn ytdlp_needs_onedir(dir: &Path) -> bool {
+    cfg!(target_os = "macos") && own_ytdlp(dir).is_some_and(|i| !ytdlp_complete(&i.exe))
 }
 
 /// Whether `sums` carries a valid signature `sig` (binary OpenPGP) by yt-dlp's key or one of its
@@ -282,6 +313,7 @@ pub async fn install_latest(
         serde_json::from_slice(&body).map_err(|e| Error::BadRelease(e.to_string()))?;
     if let Some(current) = own_ytdlp(dir)
         && !newer(&release.tag_name, &current.version)
+        && ytdlp_complete(&current.exe)
     {
         return Ok(current); // never the same again, never older
     }
@@ -314,7 +346,122 @@ pub async fn install_latest(
     if Sha256::digest(&program).as_slice() != expected {
         return Err(Error::BadChecksum);
     }
-    put(dir, "yt-dlp", &release.tag_name, asset, &program, &exe_url)
+    if cfg!(target_os = "macos") {
+        // The folder build: its `_internal` runtime goes beside the program, as it expects.
+        let now = put_folder(
+            dir,
+            "yt-dlp",
+            &release.tag_name,
+            ytdlp_exe_name(),
+            &program,
+            &exe_url,
+        )?;
+        // First launch makes macOS's code-signing checks scan every file of the runtime (9 s
+        // the first time). Pay that here, while the install is still running, so the first
+        // look-up is as quick as every later one.
+        let exe = now.exe.clone();
+        let _ = tokio::task::spawn_blocking(move || {
+            let cmd = std::process::Command::new(exe);
+            let _ = crate::proc::output(cmd, "yt-dlp", std::time::Duration::from_secs(60));
+        })
+        .await;
+        Ok(now)
+    } else {
+        put(
+            dir,
+            "yt-dlp",
+            &release.tag_name,
+            ytdlp_exe_name(),
+            &program,
+            &exe_url,
+        )
+    }
+}
+
+/// Install verified archive `zip` of `tool` as `version` (`dir/<tool>/<version>/`, every file
+/// and folder in it) and make its program `exe_name` current (atomically), keeping the previous
+/// version for rollback and removing older ones. Used for macOS's folder build of yt-dlp: the
+/// program reads its `_internal` folder from beside itself, so both must be installed together.
+/// The archive's executable bits are kept; nothing in it can climb out of the folder.
+pub(crate) fn put_folder(
+    dir: &Path,
+    tool: &str,
+    version: &str,
+    exe_name: &str,
+    zip: &[u8],
+    from: &str,
+) -> Result<Installed, Error> {
+    check_version(version)?;
+    let root = dir.join(tool);
+    let folder = root.join(version);
+    let staging = root.join(format!(".{version}.installing-{}", std::process::id()));
+    std::fs::create_dir_all(&root)?;
+    let _ = std::fs::remove_dir_all(&staging);
+    std::fs::create_dir_all(&staging)?;
+    if let Err(e) = unzip_into(zip, &staging) {
+        let _ = std::fs::remove_dir_all(&staging);
+        return Err(e);
+    }
+    let exe = staging.join(exe_name);
+    if !exe.is_file() {
+        let _ = std::fs::remove_dir_all(&staging);
+        return Err(Error::Missing(format!("{exe_name} in yt-dlp's archive")));
+    }
+    // Replacing the same version is how a single-file install becomes the folder build.
+    let _ = std::fs::remove_dir_all(&folder);
+    std::fs::rename(&staging, &folder)?;
+    let exe = folder.join(exe_name);
+    mark_downloaded(&exe, from);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::set_permissions(&exe, std::fs::Permissions::from_mode(0o755))?;
+    }
+    make_current(
+        &root,
+        Installed {
+            version: version.to_owned(),
+            exe,
+        },
+    )
+}
+
+/// Unpack every file of archive `zip` into `dest`, keeping the folders it has. Files' modes
+/// come with them (the yt-dlp program and Python's binaries must stay executable); symbolic
+/// links, which a release doesn't need, are written as the text they point to and so skipped
+/// rather than followed.
+fn unzip_into(zip: &[u8], dest: &Path) -> Result<(), Error> {
+    let mut archive = zip::ZipArchive::new(std::io::Cursor::new(zip))
+        .map_err(|e| Error::BadRelease(e.to_string()))?;
+    for i in 0..archive.len() {
+        let mut entry = archive
+            .by_index(i)
+            .map_err(|e| Error::BadRelease(e.to_string()))?;
+        let Some(path) = entry.enclosed_name() else {
+            continue;
+        };
+        let out = dest.join(path);
+        #[cfg(unix)]
+        if entry.unix_mode().is_some_and(|m| m & 0o170000 == 0o120000) {
+            continue; // a symbolic link: the archive has real files where it matters
+        }
+        if entry.is_dir() {
+            std::fs::create_dir_all(&out)?;
+            continue;
+        }
+        if let Some(parent) = out.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        let mut file = std::fs::File::create(&out)?;
+        std::io::copy(&mut entry, &mut file)?;
+        #[cfg(unix)]
+        if let Some(mode) = entry.unix_mode() {
+            use std::os::unix::fs::PermissionsExt;
+            let mode = if mode & 0o111 != 0 { 0o755 } else { 0o644 };
+            std::fs::set_permissions(&out, std::fs::Permissions::from_mode(mode))?;
+        }
+    }
+    Ok(())
 }
 
 /// Install verified `program` as `version` of `tool` (`dir/<tool>/<version>/<asset>`) and make it
@@ -327,9 +474,7 @@ pub(crate) fn put(
     program: &[u8],
     from: &str,
 ) -> Result<Installed, Error> {
-    if version.is_empty() || version.contains(['/', '\\', ':']) || version.starts_with('.') {
-        return Err(Error::BadRelease(format!("version {version:?}")));
-    }
+    check_version(version)?;
     let root = dir.join(tool);
     let folder = root.join(version);
     std::fs::create_dir_all(&folder)?;
@@ -348,6 +493,14 @@ pub(crate) fn put(
             exe,
         },
     )
+}
+
+/// A release's version is a folder name, never a path.
+fn check_version(version: &str) -> Result<(), Error> {
+    if version.is_empty() || version.contains(['/', '\\', ':']) || version.starts_with('.') {
+        return Err(Error::BadRelease(format!("version {version:?}")));
+    }
+    Ok(())
 }
 
 /// Make `now` (installed in `root/<version>/`) the current version of a tool: `current.json`
@@ -444,7 +597,7 @@ mod tests {
     #[test]
     fn installs_switch_and_keep_one_previous_version() {
         let dir = tempfile::tempdir().unwrap();
-        let name = ytdlp_asset();
+        let name = ytdlp_exe_name();
         put(
             dir.path(),
             "yt-dlp",
@@ -481,5 +634,53 @@ mod tests {
         );
         assert!(!root.join("2026.01.01").exists(), "older ones go");
         assert!(put(dir.path(), "yt-dlp", "../evil", name, b"x", "https://x/").is_err());
+    }
+
+    #[test]
+    fn a_folder_install_keeps_its_files_and_executable_bits() {
+        use std::io::Write;
+        let dir = tempfile::tempdir().unwrap();
+        let mut zip = zip::ZipWriter::new(std::io::Cursor::new(Vec::new()));
+        let opts = zip::write::SimpleFileOptions::default().unix_permissions(0o755);
+        zip.start_file("yt-dlp_macos", opts).unwrap();
+        zip.write_all(b"program").unwrap();
+        let opts = zip::write::SimpleFileOptions::default().unix_permissions(0o644);
+        zip.start_file("_internal/runtime.txt", opts).unwrap();
+        zip.write_all(b"runtime").unwrap();
+        let bytes = zip.finish().unwrap().into_inner();
+        let now = put_folder(
+            dir.path(),
+            "yt-dlp",
+            "2026.10.26",
+            "yt-dlp_macos",
+            &bytes,
+            "https://x/",
+        )
+        .unwrap();
+        assert_eq!(std::fs::read(&now.exe).unwrap(), b"program");
+        assert!(
+            now.exe
+                .parent()
+                .unwrap()
+                .join("_internal/runtime.txt")
+                .is_file()
+        );
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let mode = std::fs::metadata(&now.exe).unwrap().permissions().mode();
+            assert_ne!(mode & 0o111, 0, "the program stays executable");
+        }
+        assert!(
+            put_folder(
+                dir.path(),
+                "yt-dlp",
+                "../evil",
+                "yt-dlp_macos",
+                &bytes,
+                "https://x/"
+            )
+            .is_err()
+        );
     }
 }

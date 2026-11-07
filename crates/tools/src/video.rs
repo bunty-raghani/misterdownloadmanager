@@ -322,6 +322,7 @@ fn supervise(
     child: &Child,
     expected: Option<u64>,
     retry: Option<&SubsRetry>,
+    mut first_info: Option<Arc<Vec<u8>>>,
 ) {
     let mut ours = ours.to_vec();
     let mut dead: std::collections::BTreeSet<String> = Default::default();
@@ -330,8 +331,19 @@ fn supervise(
     let mut reroute = true;
     let mut last = String::from("yt-dlp stopped");
     for _ in 0..5 {
+        let from_window = first_info.is_some();
         match attempt(
-            exe, url, &ours, browser, progress, child, expected, retry, &dead, reroute,
+            exe,
+            url,
+            &ours,
+            browser,
+            progress,
+            child,
+            expected,
+            retry,
+            &dead,
+            reroute,
+            first_info.take(),
         ) {
             Attempt::Stopped => return,
             Attempt::Done(f, problems, quality) => {
@@ -360,6 +372,16 @@ fn supervise(
             }
             Attempt::Failed { error, rerouted } => {
                 end(child);
+                // The window's document is old or its links expired: the next attempt asks the
+                // page itself (and does whatever rerouting its fresh links need).
+                if from_window {
+                    note(
+                        progress,
+                        "The page's links changed; looking it up again".into(),
+                    );
+                    last = error;
+                    continue;
+                }
                 let gone: Vec<String> = servers::unreachable_in(&error)
                     .into_iter()
                     .filter(|h| !dead.contains(h))
@@ -635,11 +657,23 @@ fn attempt(
     retry: Option<&SubsRetry>,
     dead: &std::collections::BTreeSet<String>,
     reroute: bool,
+    from_window: Option<Arc<Vec<u8>>>,
 ) -> Attempt {
     let failed = |error: String, rerouted: bool| Attempt::Failed { error, rerouted };
-    let mut info = match look_up(exe, url, browser) {
-        Ok(v) => v,
-        Err(e) => return failed(e, false),
+    let mut info = match from_window {
+        Some(bytes) => match serde_json::from_slice::<serde_json::Value>(&bytes) {
+            Ok(v) => v,
+            Err(e) => {
+                return failed(
+                    format!("The window's video information is unreadable: {e}"),
+                    false,
+                );
+            }
+        },
+        None => match look_up(exe, url, browser) {
+            Ok(v) => v,
+            Err(e) => return failed(e, false),
+        },
     };
     let changed = if reroute {
         let prober = servers::Prober::new();
@@ -821,6 +855,28 @@ impl VideoJob {
         browser: &proc::FromBrowser,
         subs: &Subs,
     ) -> Result<VideoJob, ProcError> {
+        Self::start_with_info(
+            exe, url, selector, dir, stem, rate, ffmpeg, expected, browser, subs, None,
+        )
+    }
+
+    /// [`Self::start`], with the page's look-up document the window already has (`info`): its
+    /// first attempt downloads from that instead of asking the site again. The document is used
+    /// once; if that attempt fails, the next one looks the page up afresh.
+    #[allow(clippy::too_many_arguments)]
+    pub fn start_with_info(
+        exe: &Path,
+        url: &str,
+        selector: &str,
+        dir: &Path,
+        stem: &str,
+        rate: Option<u64>,
+        ffmpeg: Option<&Path>,
+        expected: Option<u64>,
+        browser: &proc::FromBrowser,
+        subs: &Subs,
+        info: Option<Arc<Vec<u8>>>,
+    ) -> Result<VideoJob, ProcError> {
         proc::safe(url)?;
         let output = dir.join(format!("{}.%(ext)s", template_text(stem)));
         // An MP3, Opus or FLAC choice (#32, #70): the best sound, converted by ffmpeg.
@@ -933,6 +989,7 @@ impl VideoJob {
                         &child,
                         expected,
                         retry.as_ref(),
+                        info,
                     )
                 });
                 if std::panic::catch_unwind(run).is_err() {

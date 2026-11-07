@@ -102,6 +102,9 @@ struct Message {
     /// the tab's media asked for it (#38).
     video: bool,
     src: Option<String>,
+    /// The qualities the page's own player response already lists (YouTube), sent in a second
+    /// message so the window can show them before yt-dlp's look-up finishes.
+    heights: Vec<u32>,
     /// The button's menu: keep it off this site (a host name).
     hide_site: Option<String>,
     /// The button's menu: open its settings in Options (`page`: the toolbar button's popup asks
@@ -422,6 +425,7 @@ fn video_command(
     };
     Ok(mdm_ipc::Command {
         video_page: Some(src.unwrap_or_else(|| m.url.clone())),
+        video_heights: m.heights.clone(),
         referer,
         cookies: m.cookies.clone().filter(|c| !c.is_empty()),
         cookie_jar: m.cookie_jar.clone(),

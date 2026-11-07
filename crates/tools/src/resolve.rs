@@ -43,6 +43,8 @@ pub struct Format {
     pub size: Option<u64>,
     /// Kbit/s, when the site says (a stream's variants differ by it alone).
     pub tbr: Option<f64>,
+    /// YouTube's higher-bitrate "Premium" stream (1080p Premium), not DRM.
+    pub premium: bool,
 }
 
 /// One line of the choice list: what to show and what to ask yt-dlp for.
@@ -110,6 +112,7 @@ struct RawFormat {
     filesize: Option<u64>,
     filesize_approx: Option<u64>,
     tbr: Option<f64>,
+    format_note: Option<String>,
 }
 
 /// Parse `yt-dlp -J` output.
@@ -133,6 +136,10 @@ pub fn parse(json: &[u8]) -> Option<Video> {
                 fps: f.fps,
                 size: f.filesize.or(f.filesize_approx),
                 tbr: f.tbr,
+                premium: f
+                    .format_note
+                    .as_deref()
+                    .is_some_and(|n| n.to_ascii_lowercase().contains("premium")),
             })
             .collect(),
         subtitles: tracks(raw.subtitles),
@@ -233,6 +240,25 @@ pub fn parse_looked(json: &[u8]) -> Option<Looked> {
 /// video of a 6,000-long playlist at once; `--flat-playlist -I 1:1` doesn't change a video's
 /// look-up).
 pub fn look_up(exe: &Path, url: &str, browser: &proc::FromBrowser) -> Result<Looked, ProcError> {
+    Ok(look_up_with_info(exe, url, browser)?.looked)
+}
+
+/// A look-up's answer and yt-dlp's own `-J` document for it. A download started from the window
+/// that did this look-up uses the document once (`--load-info-json`): asking the site again is
+/// the slow part of pressing Start. It is not kept: a later start (or a failed first attempt)
+/// looks the page up afresh.
+#[derive(Clone, Debug)]
+pub struct Lookup {
+    pub looked: Looked,
+    pub info: Vec<u8>,
+}
+
+/// [`look_up`], keeping the document for a download that starts now.
+pub fn look_up_with_info(
+    exe: &Path,
+    url: &str,
+    browser: &proc::FromBrowser,
+) -> Result<Lookup, ProcError> {
     let mut args: Vec<String> = [
         "-J",
         "--no-playlist",
@@ -248,10 +274,11 @@ pub fn look_up(exe: &Path, url: &str, browser: &proc::FromBrowser) -> Result<Loo
     args.extend(theirs);
     let cmd = proc::ytdlp(exe, &[], &args, url)?;
     let out = proc::output(cmd, "yt-dlp", Duration::from_secs(90))?;
-    parse_looked(&out).ok_or_else(|| ProcError::Failed {
+    let looked = parse_looked(&out).ok_or_else(|| ProcError::Failed {
         tool: "yt-dlp".into(),
         message: "it gave no video information".into(),
-    })
+    })?;
+    Ok(Lookup { looked, info: out })
 }
 
 /// Look `url` up as one video (a list is an error here).
@@ -362,15 +389,30 @@ pub fn choices(v: &Video, can_merge: bool) -> Vec<Choice> {
         .iter()
         .filter(|f| f.audio && !f.video)
         .max_by_key(|f| f.size.unwrap_or(0));
-    let mut out: Vec<Choice> = heights
-        .into_iter()
-        .map(|h| {
-            // The largest format of that height stands for its size.
-            let best = v
-                .formats
-                .iter()
-                .filter(|f| f.video && f.height == Some(h) && (can_merge || f.audio))
-                .max_by_key(|f| f.size.unwrap_or(0));
+    let mut out: Vec<Choice> = Vec::new();
+    for h in heights {
+        let at: Vec<&Format> = v
+            .formats
+            .iter()
+            .filter(|f| f.video && f.height == Some(h) && (can_merge || f.audio))
+            .collect();
+        let premium: Vec<&Format> = at.iter().copied().filter(|f| f.premium).collect();
+        let normal: Vec<&Format> = at.iter().copied().filter(|f| !f.premium).collect();
+        let has_premium = !premium.is_empty();
+        let variants: Vec<(&str, Vec<&Format>)> = if has_premium && !normal.is_empty() {
+            // YouTube's 1080p Premium is a second stream at the same height, not the same
+            // choice: both are offered, the higher-bitrate one first.
+            vec![("Premium", premium), ("", normal)]
+        } else if has_premium {
+            vec![("Premium", premium)]
+        } else {
+            vec![("", normal)]
+        };
+        for (kind, formats) in variants {
+            if formats.is_empty() {
+                continue;
+            }
+            let best = formats.into_iter().max_by_key(|f| f.size.unwrap_or(0));
             let fps = best
                 .and_then(|f| f.fps)
                 .filter(|fps| *fps > 31.0)
@@ -378,27 +420,65 @@ pub fn choices(v: &Video, can_merge: bool) -> Vec<Choice> {
                 .unwrap_or_default();
             let (selector, ext, size) = if can_merge {
                 let audio = best.filter(|f| !f.audio).and(best_audio);
+                let (plain, premium, normal) = if best_audio.is_some() {
+                    (
+                        format!("bv*[height={h}]+ba/b[height={h}]"),
+                        format!("bv*[height={h}][format_note*=Premium]+ba/b[height={h}]"),
+                        format!(
+                            "bv*[height={h}][format_note!=Premium]+ba/b[height={h}][format_note!=Premium]"
+                        ),
+                    )
+                } else {
+                    (
+                        format!("b[height={h}]/bv*[height={h}]"),
+                        format!(
+                            "b[height={h}][format_note*=Premium]/bv*[height={h}][format_note*=Premium]"
+                        ),
+                        format!(
+                            "b[height={h}][format_note!=Premium]/bv*[height={h}][format_note!=Premium]"
+                        ),
+                    )
+                };
+                let selector = if kind == "Premium" {
+                    premium
+                } else if has_premium {
+                    normal
+                } else {
+                    plain
+                };
                 (
-                    format!("bv*[height={h}]+ba/b[height={h}]"),
+                    selector,
                     "mp4".to_owned(),
                     best.and_then(|f| f.size)
                         .map(|s| s + audio.and_then(|a| a.size).unwrap_or(0)),
                 )
             } else {
+                let selector = if kind == "Premium" {
+                    format!("b[height={h}][format_note*=Premium]")
+                } else if has_premium {
+                    format!("b[height={h}][format_note!=Premium]")
+                } else {
+                    format!("b[height={h}]")
+                };
                 (
-                    format!("b[height={h}]"),
+                    selector,
                     best.map(|f| f.ext.clone()).unwrap_or_else(|| "mp4".into()),
                     best.and_then(|f| f.size),
                 )
             };
-            Choice {
-                label: format!("{}p{fps} {}", h, ext.to_uppercase()),
+            let kind = if kind.is_empty() {
+                String::new()
+            } else {
+                format!(" {kind}")
+            };
+            out.push(Choice {
+                label: format!("{}p{fps}{kind} {}", h, ext.to_uppercase()),
                 selector,
                 ext,
                 size,
-            }
-        })
-        .collect();
+            });
+        }
+    }
     // Files whose resolution isn't known (generic sites, a stream's variants with a bitrate
     // only): offered by type, and by bitrate when there are several, best first. Audio
     // containers, and streams with no video codec named, aren't videos.
@@ -493,6 +573,7 @@ mod tests {
             audio: true,
             size: None,
             tbr: Some(tbr),
+            premium: false,
         };
         let v = Video {
             title: "t".into(),
@@ -630,6 +711,48 @@ mod tests {
         let v = parse(json.as_bytes()).unwrap();
         let labels: Vec<String> = choices(&v, false).into_iter().map(|c| c.label).collect();
         assert_eq!(labels, ["360p MP4", "Audio only original M4A"]);
+    }
+
+    /// YouTube's "1080p Premium" is another stream at the same height, not a duplicate of the
+    /// normal 1080p: both get a choice, with selectors that download the one asked for.
+    #[test]
+    fn a_premium_stream_is_a_second_choice() {
+        let json = r#"{"title": "T", "formats": [
+            {"format_id": "137", "ext": "mp4", "height": 1080, "vcodec": "avc1", "acodec": "none", "filesize": 1000},
+            {"format_id": "616", "ext": "mp4", "height": 1080, "vcodec": "vp9", "acodec": "none", "format_note": "Premium"},
+            {"format_id": "140", "ext": "m4a", "vcodec": "none", "acodec": "mp4a", "filesize": 100}]}"#;
+        let v = parse(json.as_bytes()).unwrap();
+        let c = choices(&v, true);
+        assert_eq!(c[0].label, "1080p Premium MP4");
+        assert_eq!(c[1].label, "1080p MP4");
+        assert!(
+            c[0].selector.contains("[format_note*=Premium]"),
+            "{}",
+            c[0].selector
+        );
+        assert!(
+            c[1].selector.contains("[format_note!=Premium]"),
+            "{}",
+            c[1].selector
+        );
+    }
+
+    /// A stream manifest a browser sends may hold video only (YouTube's HLS variant does):
+    /// asking for `+ba` there is a format that isn't available. Prefer a combined format, then
+    /// the video alone; never a missing audio stream.
+    #[test]
+    fn a_video_only_manifest_does_not_ask_for_missing_audio() {
+        let json = r#"{"title": "T", "formats": [
+            {"format_id": "137", "ext": "mp4", "height": 1080, "vcodec": "avc1", "acodec": "none", "filesize": 900},
+            {"format_id": "18", "ext": "mp4", "height": 360, "vcodec": "avc1", "acodec": "mp4a", "filesize": 300}]}"#;
+        let v = parse(json.as_bytes()).unwrap();
+        let c = choices(&v, true);
+        assert_eq!(c[0].selector, "b[height=1080]/bv*[height=1080]");
+        assert_eq!(c[1].selector, "b[height=360]/bv*[height=360]");
+        assert!(
+            c.iter().all(|c| !c.selector.contains("+ba")),
+            "no missing audio in any choice"
+        );
     }
 
     /// A page's subtitles (#68), as yt-dlp -J lists them: the uploader's by name, the chat

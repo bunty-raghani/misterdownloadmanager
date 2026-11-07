@@ -7,7 +7,7 @@ use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
 use egui::{Pos2, Ui, pos2};
-use mdm_tools::resolve::{Choice, Looked, SubChoice, Video};
+use mdm_tools::resolve::{Choice, Format, Looked, SubChoice, Video};
 use mdm_tools::video::{ALL_UPLOADERS, Subs};
 
 use crate::dialogs::{Outcome, window};
@@ -33,6 +33,9 @@ pub struct VideoAdd {
     pub context: mdm_ipc::Command,
     /// The subtitles to save with it (#68; none for a sound-only choice).
     pub subs: Subs,
+    /// The page's look-up document, for this immediate start only (none for Download Later:
+    /// that start may be hours away and looks the page up then).
+    pub info: Option<Arc<Vec<u8>>>,
     /// The Subtitles choice to remember for the next video (settings.video_subs); none when
     /// the page had no subtitles to choose from (the last real choice stays).
     pub remember: Option<Subs>,
@@ -52,7 +55,16 @@ pub struct VideoDialog {
     from_browser: String,
     folder: String,
     name: String,
-    lookup: Option<Slot<Looked>>,
+    lookup: Option<Slot<mdm_tools::resolve::Lookup>>,
+    /// yt-dlp's document from this window's look-up, handed to the download once when it starts
+    /// now (not stored with the download, not used by another one).
+    info: Option<Arc<Vec<u8>>>,
+    /// The list shown is the page's own quick list (qualities only), while yt-dlp looks the
+    /// page up for the exact formats and sizes.
+    provisional: bool,
+    /// A same-page browser click is refreshing the list: keep what is shown until the new
+    /// answer (so the window doesn't blink empty).
+    keep_list: bool,
     /// The yt-dlp and the browser's context the look-up ran with (a list is listed with them).
     looking: Option<(PathBuf, mdm_tools::proc::FromBrowser)>,
     /// The page is a playlist or a channel: its videos (#69).
@@ -137,6 +149,9 @@ impl VideoDialog {
             folder: folder.display().to_string(),
             name: String::new(),
             lookup: None,
+            info: None,
+            provisional: false,
+            keep_list: false,
             looking: None,
             list: None,
             confirmed: None,
@@ -176,6 +191,91 @@ impl VideoDialog {
             auto_look: true,
             ..Self::new(folder)
         }
+    }
+
+    /// The browser's button was clicked again (or Add URL was given another video's page): keep
+    /// this window, its quality list and every choice when the page is the one already looked
+    /// up; otherwise look the new page up at once, as [`Self::for_page`] does. Replacing the
+    /// dialog instead (as the app did) lost the open window and its list, and yt-dlp's next run
+    /// started from nothing.
+    pub fn open_page(&mut self, folder: PathBuf, page: &str, context: mdm_ipc::Command) {
+        self.folder = folder.display().to_string();
+        if self.page.trim() == page {
+            self.context = context;
+            // Clicked again on the same page: its formats may have changed (or the open list
+            // may predate this build). Ask again, keeping what is shown until the answer.
+            self.auto_look = true;
+            self.keep_list = self.video.is_some();
+            return;
+        }
+        self.page = page.to_owned();
+        self.from_browser = page.to_owned();
+        self.context = context;
+        self.auto_look = true;
+        self.lookup = None;
+        self.info = None;
+        self.provisional = false;
+        self.keep_list = false;
+        self.looking = None;
+        self.list = None;
+        self.confirmed = None;
+        self.video = None;
+        self.looked_up.clear();
+        self.error = None;
+        self.start_now = None;
+        self.rows = Default::default();
+        self.name.clear();
+    }
+
+    /// The browser's page already had these qualities (YouTube's player response): show them
+    /// now, while yt-dlp's exact look-up (formats, sizes, subtitles) finishes and replaces them.
+    /// They are read again for each click; nothing is kept.
+    pub fn show_heights(&mut self, heights: &[u32]) {
+        if self.video.is_some() && !self.provisional {
+            return; // the exact list is already here
+        }
+        let mut heights: Vec<u32> = heights.iter().copied().filter(|h| *h > 0).collect();
+        heights.sort_unstable_by(|a, b| b.cmp(a));
+        heights.dedup();
+        if heights.is_empty() {
+            return;
+        }
+        let mut formats: Vec<Format> = heights
+            .into_iter()
+            .map(|h| Format {
+                id: format!("p{h}"),
+                ext: "mp4".into(),
+                height: Some(h),
+                fps: None,
+                video: true,
+                // A height may be a separate video stream or a file that has both; either way
+                // the merged choice works and the exact list corrects the details.
+                audio: true,
+                size: None,
+                tbr: None,
+                premium: false,
+            })
+            .collect();
+        formats.push(Format {
+            id: "audio".into(),
+            ext: "m4a".into(),
+            height: None,
+            fps: None,
+            video: false,
+            audio: true,
+            size: None,
+            tbr: None,
+            premium: false,
+        });
+        self.provisional = true;
+        self.set_video(Video {
+            title: "video".into(),
+            duration: None,
+            formats,
+            subtitles: Vec::new(),
+            automatic: Vec::new(),
+            language: None,
+        });
     }
 
     /// The browser's context, while the address is still the one it came with.
@@ -292,17 +392,25 @@ impl VideoDialog {
         if let Some(res) = looked {
             self.lookup = None;
             match res {
-                Ok(Looked::Video(v)) => self.set_video(v),
-                Ok(Looked::List(l)) => {
-                    if let Some((exe, browser)) = self.looking.take() {
-                        self.list = Some(crate::playlistdlg::PlaylistView::start(
-                            &exe,
-                            &self.looked_up,
-                            browser,
-                            l,
-                        ));
+                Ok(lo) => match lo.looked {
+                    Looked::Video(v) => {
+                        self.info = Some(Arc::new(lo.info));
+                        self.provisional = false;
+                        self.set_video(v);
                     }
-                }
+                    Looked::List(l) => {
+                        self.info = None;
+                        self.provisional = false;
+                        if let Some((exe, browser)) = self.looking.take() {
+                            self.list = Some(crate::playlistdlg::PlaylistView::start(
+                                &exe,
+                                &self.looked_up,
+                                browser,
+                                l,
+                            ));
+                        }
+                    }
+                },
                 Err(e) => {
                     // Whose cookies the look-up had (#229): the extension's, or (none came) the
                     // browser's Options names, or none.
@@ -394,12 +502,17 @@ impl VideoDialog {
                 let c = &choices[self.chosen.min(choices.len() - 1)];
                 let name = mdm_engine::naming::sanitize(self.name.trim());
                 let chosen = self.chosen_subs();
+                let start_now = self.start_now.unwrap_or(true);
+                let info = (start_now && self.looked_up == self.page.trim())
+                    .then(|| self.info.clone())
+                    .flatten();
                 Outcome::Done(VideoOut::One(VideoAdd {
                     page,
                     selector: c.selector.clone(),
                     dest: PathBuf::from(self.folder.trim()).join(name),
                     size: c.size,
-                    start_now: self.start_now.unwrap_or(true),
+                    start_now,
+                    info,
                     context: self.context(),
                     // Into the video only where its file type holds them (and with ffmpeg,
                     // which VideoJob checks).
@@ -500,7 +613,7 @@ impl VideoDialog {
             && can_look
             && let Some(tool) = &ytdlp
         {
-            let slot: Slot<Looked> = Arc::new(Mutex::new(None));
+            let slot: Slot<mdm_tools::resolve::Lookup> = Arc::new(Mutex::new(None));
             let (out, exe, page, ctx) = (
                 slot.clone(),
                 tool.exe.clone(),
@@ -510,14 +623,20 @@ impl VideoDialog {
             let browser = from_browser(&self.context());
             self.looking = Some((exe.clone(), browser.clone()));
             std::thread::spawn(move || {
-                let res =
-                    mdm_tools::resolve::look_up(&exe, &page, &browser).map_err(|e| e.to_string());
+                let res = mdm_tools::resolve::look_up_with_info(&exe, &page, &browser)
+                    .map_err(|e| e.to_string());
                 *out.lock().unwrap() = Some(res);
                 ctx.request_repaint();
             });
             self.lookup = Some(slot);
             self.looked_up = self.page.trim().to_owned();
-            self.video = None;
+            self.info = None;
+            // The page's quick list stays until the exact one replaces it; a same-page refresh
+            // keeps the old list too, so the window never blinks empty.
+            let keep = std::mem::take(&mut self.keep_list);
+            if !keep && !self.provisional {
+                self.video = None;
+            }
             // A list being listed stops (dropped).
             self.list = None;
             self.error = None;
@@ -1271,5 +1390,87 @@ mod tests {
         let auto = at(4);
         assert_eq!(auto.langs, ["en-orig"]);
         assert!(auto.automatic && auto.embed);
+    }
+
+    /// The browser's button clicked again on the page already shown: the open window keeps its
+    /// quality list. Another page is looked up afresh in the same window.
+    #[test]
+    fn a_second_click_keeps_the_open_list() {
+        let mut d = VideoDialog::for_page(
+            PathBuf::from("."),
+            "https://video.example/talk",
+            Default::default(),
+        );
+        d.show_sample();
+        let choices = d.video.as_ref().map_or(0, |(_, c)| c.len());
+        assert!(choices > 0);
+        d.open_page(
+            PathBuf::from("."),
+            "https://video.example/talk",
+            Default::default(),
+        );
+        assert_eq!(d.video.as_ref().map_or(0, |(_, c)| c.len()), choices);
+        assert!(d.auto_look, "a click on the same page asks again");
+        assert!(d.keep_list, "the old list stays until the answer");
+        d.auto_look = false;
+        d.open_page(
+            PathBuf::from("."),
+            "https://video.example/other",
+            Default::default(),
+        );
+        assert!(d.video.is_none());
+        assert!(d.auto_look);
+    }
+
+    /// The page's own player response lists qualities before yt-dlp has answered: the window
+    /// shows them, and the exact look-up replaces them.
+    #[test]
+    fn a_pages_own_qualities_show_before_the_exact_list() {
+        let mut d = VideoDialog::for_page(
+            PathBuf::from("."),
+            "https://www.youtube.com/watch?v=x",
+            Default::default(),
+        );
+        d.show_heights(&[720, 1080, 1080, 360]);
+        assert!(d.provisional);
+        let labels: Vec<&str> = d
+            .video
+            .as_ref()
+            .unwrap()
+            .1
+            .iter()
+            .map(|c| c.label.as_str())
+            .collect();
+        assert_eq!(
+            &labels[..4],
+            [
+                "1080p MP4",
+                "720p MP4",
+                "360p MP4",
+                "Audio only original M4A"
+            ]
+        );
+    }
+
+    /// No ceiling: 1440p and 2160p (and anything else the page reports) are offered too.
+    #[test]
+    fn every_height_is_offered() {
+        let mut d = VideoDialog::for_page(
+            PathBuf::from("."),
+            "https://www.youtube.com/watch?v=x",
+            Default::default(),
+        );
+        d.show_heights(&[2160, 1440, 1080, 720]);
+        let labels: Vec<&str> = d
+            .video
+            .as_ref()
+            .unwrap()
+            .1
+            .iter()
+            .map(|c| c.label.as_str())
+            .collect();
+        assert!(labels[0].starts_with("2160p"), "{labels:?}");
+        assert!(labels[1].starts_with("1440p"), "{labels:?}");
+        assert!(labels[2].starts_with("1080p"), "{labels:?}");
     }
 }

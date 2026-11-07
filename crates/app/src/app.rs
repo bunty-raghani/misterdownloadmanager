@@ -671,6 +671,95 @@ fn drive_file_behind_player(cmd: &ipc::Command) -> Option<String> {
         .map(str::to_owned)
 }
 
+/// macOS: whether reading the Downloads folder has been allowed. A first read asks the person
+/// (Privacy & Security → Files & Folders) and blocks until they answer; doing that on the
+/// window's thread made Start look frozen for minutes while the system's prompt waited behind
+/// the other windows. The app asks once, at start, on a thread of its own; until it is allowed
+/// the name is picked without reading the folder.
+#[cfg(target_os = "macos")]
+static DOWNLOADS_ACCESS: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+fn downloads_access_ok() -> bool {
+    #[cfg(target_os = "macos")]
+    {
+        DOWNLOADS_ACCESS.load(std::sync::atomic::Ordering::Relaxed)
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        true
+    }
+}
+
+/// The destination for a video whose folder hasn't been read (macOS permission not answered
+/// yet): the name as given, numbered past the app's own downloads in that folder. Reading the
+/// folder here would wait for the system's prompt on the window's thread.
+fn dest_without_scan(folder: &std::path::Path, name: &str, items: &[Item]) -> PathBuf {
+    let (stem, ext) = match name.rfind('.') {
+        Some(i) if i > 0 => (&name[..i], &name[i..]),
+        _ => (name, ""),
+    };
+    let taken = |s: &str| {
+        items.iter().any(|i| {
+            i.dest.parent() == Some(folder)
+                && i.dest
+                    .file_stem()
+                    .is_some_and(|x| x.to_string_lossy().eq_ignore_ascii_case(s))
+        })
+    };
+    let chosen = std::iter::once(stem.to_owned())
+        .chain((1u32..).map(|n| format!("{stem} ({n})")))
+        .find(|s| !taken(s))
+        .unwrap_or_else(|| stem.to_owned());
+    folder.join(format!("{chosen}{ext}"))
+}
+
+/// The page to look up for a browser's video request: the page itself, unless the browser sent
+/// a stream's own manifest (`src`) and the page it came from is one yt-dlp reads. A manifest
+/// often carries one track — YouTube's HLS variant is video only — so a quality picked from it
+/// cannot be merged and yt-dlp answers "Requested format is not available"; the page has both
+/// tracks (and the site's own extractor). A manifest from an unknown player is still used: it
+/// may be the only address yt-dlp can read there.
+fn video_page(page: &str, context: &ipc::Command) -> String {
+    let lower = page.to_ascii_lowercase();
+    let path = lower.split(['?', '#']).next().unwrap_or(&lower);
+    let manifest = path.ends_with(".m3u8")
+        || path.ends_with(".mpd")
+        || lower.contains("manifest.googlevideo.com/");
+    if !manifest {
+        return page.to_owned();
+    }
+    let Some(referer) = context.referer.as_deref() else {
+        return page.to_owned();
+    };
+    let Ok(url) = url::Url::parse(referer) else {
+        return page.to_owned();
+    };
+    if mdm_tools::pages::is_video_page(&url) {
+        referer.to_owned()
+    } else {
+        page.to_owned()
+    }
+}
+
+/// Remove the unfinished pieces yt-dlp keeps beside a video (`<stem>.<format>.<ext>.part`) when
+/// its download leaves the list: they are not a finished file, and a later download must not
+/// continue a format whose server links have expired.
+fn remove_ytdlp_parts(dest: &std::path::Path) {
+    let (Some(dir), Some(stem)) = (dest.parent(), dest.file_stem().and_then(|s| s.to_str())) else {
+        return;
+    };
+    let prefix = format!("{stem}.");
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return;
+    };
+    for e in entries.flatten() {
+        let name = e.file_name().to_string_lossy().into_owned();
+        if name.starts_with(&prefix) && name.ends_with(".part") {
+            let _ = std::fs::remove_file(e.path());
+        }
+    }
+}
+
 pub fn auth_headers(login: Option<&(String, String)>) -> HeaderMap {
     let mut h = HeaderMap::new();
     if let Some((user, pass)) = login {
@@ -868,6 +957,19 @@ impl App {
         let downloads = dirs::download_dir()
             .or_else(|| dirs::home_dir().map(|h| h.join("Downloads")))
             .unwrap_or_else(|| PathBuf::from("."));
+        // macOS: ask for the Downloads folder now, while the main window is opening, rather
+        // than when Start is pressed (the prompt blocks the reading thread until answered).
+        #[cfg(target_os = "macos")]
+        {
+            let video_dir = settings.category_dir(Category::Video, &downloads);
+            if video_dir.starts_with(&downloads) {
+                std::thread::spawn(move || {
+                    if std::fs::read_dir(&video_dir).is_ok() {
+                        DOWNLOADS_ACCESS.store(true, std::sync::atomic::Ordering::Relaxed);
+                    }
+                });
+            }
+        }
         // The Categories pane as it was left, and the node shown (if it still exists).
         let [all_open, unfinished_open, finished_open, queues_open] = settings.branches;
         let known = |c: Option<Category>| c.is_none_or(|c| Category::all().contains(&c));
@@ -878,6 +980,14 @@ impl App {
             _ => View::All,
         };
         let show_categories = settings.show_categories;
+        // macOS: 0.2.x installed yt-dlp's single-file build. Replace it at startup with the
+        // folder build, before the first video page is opened: the single-file build unpacks
+        // its Python runtime on every run (10 s and more, and the Python.framework failures).
+        if let Some(dir) = mdm_tools::tools_dir()
+            && mdm_tools::ytdlp_needs_onedir(&dir)
+        {
+            crate::videodlg::refresh_ytdlp(&rt);
+        }
         // The remote control (#141): off unless Options → Remote turned it on.
         let remote = crate::remote::start(&rt, sink, &settings);
         // Started with the session where a window can't be hidden (Wayland, #226): minimized.
@@ -2008,6 +2118,32 @@ impl App {
         }
     }
 
+    /// The video window for `page`: the open one, its quality list kept when the page is the
+    /// one it already looked up; a new one (looked up at once) when there is none. The browser's
+    /// button can be clicked again while the window is open (bug: the dialog was replaced, so
+    /// its list went away and the next download started from nothing).
+    fn open_video(&mut self, page: &str, mut context: ipc::Command, ctx: &egui::Context) {
+        self.show_window(ctx);
+        let dir = self.settings.category_dir(Category::Video, &self.downloads);
+        crate::videodlg::refresh_ytdlp(&self.rt);
+        let page = video_page(page, &context);
+        // A referer that is the page itself (the browser's video button sends one for a
+        // stream's manifest) makes YouTube answer a bot check and yt-dlp returns no formats;
+        // it is no referer at all.
+        if context.referer.as_deref() == Some(page.as_str()) {
+            context.referer = None;
+        }
+        if let Some(v) = &mut self.video_dlg {
+            v.open_page(dir, &page, context);
+            crate::dialogs::raise(ctx, crate::dialogs::dialog_viewport("video-page"));
+        } else {
+            self.video_dlg = Some(
+                crate::videodlg::VideoDialog::for_page(dir, &page, context)
+                    .with_subs(self.settings.video_subs.clone()),
+            );
+        }
+    }
+
     /// A command from the command line, a second launch, or the browser (ipc.rs).
     fn handle_command(&mut self, cmd: ipc::Command, ctx: &egui::Context) {
         if cmd.exit {
@@ -2046,14 +2182,15 @@ impl App {
         // The browser's download button over a video: the Download video window, looking the
         // page up at once.
         if let Some(page) = cmd.video_page.as_deref() {
-            self.show_window(ctx);
-            let dir = self.settings.category_dir(Category::Video, &self.downloads);
-            crate::videodlg::refresh_ytdlp(&self.rt);
             let page = page.to_owned();
-            self.video_dlg = Some(
-                crate::videodlg::VideoDialog::for_page(dir, &page, cmd)
-                    .with_subs(self.settings.video_subs.clone()),
-            );
+            let heights = std::mem::take(&mut cmd.video_heights);
+            if heights.is_empty() {
+                self.open_video(&page, cmd, ctx);
+            } else if let Some(v) = &mut self.video_dlg {
+                // The page's own list, after the window has opened: never re-open a window the
+                // person has closed in the meantime.
+                v.show_heights(&heights);
+            }
             return;
         }
         // Its menu: never on this site.
@@ -2415,6 +2552,14 @@ impl App {
     /// too: a finished file, or the data so far (a torrent's files when its session runs).
     fn remove_download(&mut self, id: u64, files: bool) {
         if self.item(id).is_some_and(|i| i.live.is_none()) {
+            // yt-dlp names its unfinished data `<stem>.<format>.<ext>.part`; the item is going,
+            // so no one can resume it. Left behind, the next download of the same name would
+            // try to continue a format whose links are long gone (403 from YouTube).
+            if let Some(i) = self.items.iter().find(|i| i.id == id)
+                && i.video.is_some()
+            {
+                remove_ytdlp_parts(&i.dest);
+            }
             if let Some(spec) = self.item(id).and_then(|i| i.torrent.clone()) {
                 self.torrent_host.forget(&self.rt, &spec.hash, files);
             } else if files
@@ -3035,6 +3180,8 @@ impl App {
 
     /// Download video from a page → Download Now / Later.
     fn add_video(&mut self, add: crate::videodlg::VideoAdd) {
+        let info = add.info;
+        let start_now = add.start_now;
         let folder = add
             .dest
             .parent()
@@ -3048,14 +3195,18 @@ impl App {
         // yt-dlp takes any `<stem>.*` there as its own: a stem no file and no other download
         // in the folder has, whatever the extension (#32).
         let items = &self.items;
-        let dest = mdm_engine::naming::stem_destination(&folder, &name, |stem| {
-            items.iter().any(|i| {
-                i.dest.parent() == Some(folder.as_path())
-                    && i.dest
-                        .file_stem()
-                        .is_some_and(|s| s.to_string_lossy().to_lowercase() == stem.to_lowercase())
+        let dest = if downloads_access_ok() {
+            mdm_engine::naming::stem_destination(&folder, &name, |stem| {
+                items.iter().any(|i| {
+                    i.dest.parent() == Some(folder.as_path())
+                        && i.dest.file_stem().is_some_and(|s| {
+                            s.to_string_lossy().to_lowercase() == stem.to_lowercase()
+                        })
+                })
             })
-        });
+        } else {
+            dest_without_scan(&folder, &name, items)
+        };
         let id = self.push_item(
             add.page,
             dest,
@@ -3077,8 +3228,9 @@ impl App {
             self.settings.video_subs = subs;
         }
         self.selection.set(id);
-        if add.start_now {
-            self.start(id, true);
+        if start_now {
+            // The window's look-up, handed over once: no second extraction before the download.
+            self.start_video_with_info(id, true, info);
         } else {
             self.queue_later(vec![id], self.settings.queue_panel_later);
         }
@@ -3142,6 +3294,18 @@ impl App {
 
     /// Start a video item: yt-dlp (installed and verified) downloads it.
     fn start_video(&mut self, id: u64, show: bool) {
+        self.start_video_with_info(id, show, None);
+    }
+
+    /// [`Self::start_video`], with the video window's look-up document for this one start (it
+    /// saves the extraction that would otherwise happen again before the first byte). One use
+    /// only: a resume or a later start passes none.
+    fn start_video_with_info(
+        &mut self,
+        id: u64,
+        show: bool,
+        info: Option<std::sync::Arc<Vec<u8>>>,
+    ) {
         let tools = mdm_tools::tools_dir();
         let tool = tools.as_deref().and_then(mdm_tools::installed);
         let ffmpeg = tools.as_deref().and_then(mdm_tools::ffmpeg::installed);
@@ -3168,7 +3332,7 @@ impl App {
             .map(|s| s.to_string_lossy().into_owned())
             .unwrap_or_else(|| "video".into());
         let _ = std::fs::create_dir_all(&folder);
-        let started = mdm_tools::video::VideoJob::start(
+        let started = mdm_tools::video::VideoJob::start_with_info(
             &tool.exe,
             item.url.as_str(),
             &spec.selector,
@@ -3179,6 +3343,7 @@ impl App {
             item.size,
             &crate::videodlg::from_browser(&item.context),
             &spec.subs,
+            info,
         );
         match started {
             Ok(job) => {
@@ -4861,6 +5026,8 @@ impl App {
                         crate::videodlg::VideoDialog::new(dir)
                             .with_subs(self.settings.video_subs.clone()),
                     );
+                } else {
+                    dialogs::raise(ctx, dialogs::dialog_viewport("video-page"));
                 }
             }
             Cmd::AddMagnet => self.open_torrent_dialog(None, ctx),
@@ -7589,16 +7756,7 @@ impl App {
                 // A video's page, not a file (YouTube, Vimeo…): the video window looks it up.
                 Outcome::Done(new) if mdm_tools::pages::is_video_page(&new.url) => {
                     self.add_url = None;
-                    let dir = self.settings.category_dir(Category::Video, &self.downloads);
-                    crate::videodlg::refresh_ytdlp(&self.rt);
-                    self.video_dlg = Some(
-                        crate::videodlg::VideoDialog::for_page(
-                            dir,
-                            new.url.as_str(),
-                            Default::default(),
-                        )
-                        .with_subs(self.settings.video_subs.clone()),
-                    );
+                    self.open_video(new.url.as_str(), Default::default(), ctx);
                 }
                 // An image gallery's page (Wikimedia Commons, Flickr…): gallery-dl (#58).
                 Outcome::Done(new) if mdm_tools::pages::is_gallery_page(&new.url) => {
@@ -8483,5 +8641,70 @@ mod trim_tests {
             })
             .collect();
         assert_eq!(times, [2, 120, 720, 1320]);
+    }
+}
+
+#[cfg(test)]
+mod video_page_tests {
+    use super::{ipc, video_page};
+
+    /// The browser's player sent its HLS variant (video only) from a YouTube page: the page is
+    /// what yt-dlp must read, so the quality list has both tracks and a choice can be merged.
+    #[test]
+    fn a_manifest_from_a_known_video_page_is_looked_up_as_the_page() {
+        let page = "https://www.youtube.com/watch?v=-6HtUmfDiaA";
+        let cmd = ipc::Command {
+            referer: Some(page.into()),
+            ..Default::default()
+        };
+        assert_eq!(
+            video_page(
+                "https://manifest.googlevideo.com/api/manifest/hls_variant/id/x/file/index.m3u8",
+                &cmd
+            ),
+            page
+        );
+        assert_eq!(
+            video_page("https://cdn.test/stream/index.m3u8?token=x", &cmd),
+            page
+        );
+    }
+
+    /// A manifest from a player yt-dlp has no page extractor for is kept: it may be the only
+    /// address that can be read there.
+    #[test]
+    fn an_unknown_pages_manifest_is_kept() {
+        let manifest = "https://cdn.test/stream/index.mpd";
+        let cmd = ipc::Command {
+            referer: Some("https://example.test/watch/1".into()),
+            ..Default::default()
+        };
+        assert_eq!(video_page(manifest, &cmd), manifest, "kept for yt-dlp");
+        assert_eq!(
+            video_page("https://cdn.test/clip.mp4", &cmd),
+            "https://cdn.test/clip.mp4",
+            "a plain file is itself"
+        );
+    }
+}
+
+#[cfg(test)]
+mod ytdlp_parts_tests {
+    use super::remove_ytdlp_parts;
+
+    #[test]
+    fn unfinished_parts_go_with_their_download() {
+        let dir = tempfile::tempdir().unwrap();
+        let dest = dir.path().join("A talk.mp4");
+        let part = dir.path().join("A talk.f399.mp4.part");
+        let other = dir.path().join("Another talk.f399.mp4.part");
+        let finished = dir.path().join("A talk.mp4");
+        std::fs::write(&part, b"part").unwrap();
+        std::fs::write(&other, b"other").unwrap();
+        std::fs::write(&finished, b"film").unwrap();
+        remove_ytdlp_parts(&dest);
+        assert!(!part.exists(), "the item's own unfinished data goes");
+        assert!(other.exists(), "another download's stays");
+        assert!(finished.exists(), "the finished file stays");
     }
 }

@@ -554,6 +554,16 @@
             "null"
           ]
         },
+        "video_heights": {
+          "default": [],
+          "description": "From the same button, a second message: the qualities the page's own player response\nalready lists, shown while yt-dlp looks the page up. Not kept.",
+          "items": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": "array"
+        },
         "video_page": {
           "default": null,
           "description": "From the browser's download button over a video: open the Download video window for this\npage (its address; an embedded player's own).",
