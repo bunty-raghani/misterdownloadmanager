@@ -52,7 +52,7 @@ $manifest.PSObject.Properties.Remove("key")
 $video = $manifest.content_scripts | Where-Object { $_.js -contains "video.js" } | Select-Object -First 1
 if (-not $video) { throw "no content script entry runs video.js" }
 $video | Add-Member -NotePropertyName exclude_matches -NotePropertyValue @(
-  "*://*.youtube.com/*", "*://*.youtube-nocookie.com/*", "*://youtu.be/*")
+  "*://*.youtube.com/*", "*://*.youtube-nocookie.com/*", "*://youtu.be/*") -Force
 $json = $manifest | ConvertTo-Json -Depth 10
 [IO.File]::WriteAllText((Join-Path $store "manifest.json"), $json, (New-Object Text.UTF8Encoding $false))
 Add-Type -AssemblyName System.IO.Compression, System.IO.Compression.FileSystem

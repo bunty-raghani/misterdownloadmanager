@@ -1199,8 +1199,29 @@ async function handOff(d) {
 // The file name to offer the app the download under (`{name}`), or why Options leave it to
 // the browser (`{left, name}`), or null: the browser keeps it and there is nothing to say (not a
 // web address, paused, Alt held, a form that can't be posted again, MDM not reached).
+// Telegram's own page downloader streams protected media through its service worker: the
+// page-only endpoint (`/k/d/…`) answers 302 to anything outside the page. Leave its downloads
+// to the page; `telegramFinished` below adds the finished file to MDM.
+function isTelegramUrl(u) {
+  try {
+    let s = String(u || "");
+    if (s.startsWith("blob:")) s = s.slice(5);
+    const host = new URL(s).hostname.toLowerCase();
+    return (
+      host === "web.telegram.org" ||
+      host === "webk.telegram.org" ||
+      host === "webz.telegram.org"
+    );
+  } catch {
+    return false;
+  }
+}
+
 async function candidate(item, url) {
   if (!/^https?:/i.test(url)) return null; // blob:, data:, file: stay the browser's
+  // Telegram: its page's own downloader has the session and the media (protected channels
+  // included). Handing the page-only URL to the app made it answer 302.
+  if (isTelegramUrl(url) || isTelegramUrl(item.referrer)) return null;
   const { paused } = await ext.storage.local.get({ paused: false });
   if (paused) return null;
   forget(bypass, 10000);
@@ -1336,6 +1357,35 @@ if (!FIREFOX) {
   });
 }
 
+// Telegram's page finishes protected media itself (its service worker carries the session).
+// Take the finished file into MDM's list and drop the browser's own entry, so it isn't kept
+// twice. The file stays where the browser saved it.
+const telegramImported = new Set();
+ext.downloads.onChanged.addListener(async (delta) => {
+  if (!delta.state || delta.state.current !== "complete") return;
+  const id = delta.id;
+  if (telegramImported.has(id)) return;
+  try {
+    const [item] = await ext.downloads.search({ id });
+    if (!item || item.exists === false || !item.filename || item.incognito) return;
+    if (![item.url, item.finalUrl, item.referrer].some(isTelegramUrl)) return;
+    telegramImported.add(id);
+    const name = (item.filename || "").split(/[\\/]/).pop() || "";
+    const size = item.fileSize > 0 ? item.fileSize : item.totalBytes;
+    const reply = await native({
+      telegramDone: true,
+      url: item.finalUrl || item.url,
+      filePath: item.filename,
+      filename: name,
+      ...(size > 0 ? { size } : {}),
+      ...(item.mime ? { mime: item.mime } : {}),
+    });
+    if (reply && reply.ok) ext.downloads.erase({ id }).catch(() => {});
+  } catch {
+    // The browser's own download stays; nothing is lost.
+  }
+});
+
 // ---- files the browser would open itself (a PDF, an MP3): made downloads -----------------
 
 // Options → General in the app: also take the listed types the browser shows or plays when a
@@ -1457,6 +1507,147 @@ if (FIREFOX && ext.webRequest && ext.webRequest.onHeadersReceived) {
   );
 }
 
+// The Telegram page's own downloader, called in its main world: it has the current media and
+// the signed-in session (protected channels and groups included). Its browser download is added
+// to MDM when done (`telegramImported` above). Self-contained: `scripting.executeScript` sends
+// this function's source to the page.
+function telegramDownloadInPage(src, title) {
+  const host = location.hostname.toLowerCase();
+  const path = location.pathname;
+  const webK =
+    host === "webk.telegram.org" ||
+    host === "webz.telegram.org" ||
+    (host === "web.telegram.org" && path.startsWith("/k/"));
+  try {
+    if (webK) {
+      const viewer = window.appMediaViewer;
+      if (viewer && viewer.target) {
+        const target = viewer.target;
+        const media = target.message && target.message.media;
+        const doc =
+          media && media._ === "messageMediaDocument"
+            ? media.document
+            : media && media._ === "messageMediaPhoto"
+              ? media.photo
+              : null;
+        if (doc && window.appDownloadManager && typeof window.appDownloadManager.downloadToDisc === "function") {
+          window.appDownloadManager.downloadToDisc({ media: doc });
+          return { ok: true, how: "downloadToDisc" };
+        }
+        if (typeof viewer.onDownloadClick === "function") {
+          viewer.onDownloadClick({
+            type: "click",
+            target: null,
+            preventDefault() {},
+            stopPropagation() {},
+          });
+          return { ok: true, how: "onDownloadClick" };
+        }
+      }
+    }
+    // WebA: its store and actions are on the page window; the action ignores the "protected"
+    // flag that only hides the native button.
+    if (typeof window.getGlobal === "function" && typeof window.getActions === "function") {
+      const global = window.getGlobal();
+      const tabs = global && global.byTabId;
+      let viewer = null;
+      if (tabs) {
+        for (const tab of Object.values(tabs)) {
+          const v = tab && tab.mediaViewer;
+          if (v && (v.messageId || v.standaloneMedia || v.pageMedia)) {
+            if (!v.isHidden) {
+              viewer = v;
+              break;
+            }
+            viewer = viewer || v;
+          }
+        }
+      }
+      if (viewer) {
+        let message;
+        let media;
+        if (viewer.standaloneMedia) {
+          media = viewer.standaloneMedia[viewer.mediaIndex || 0];
+        } else if (viewer.chatId && viewer.messageId) {
+          const chats = global.messages && global.messages.byChatId;
+          const chat = chats && chats[viewer.chatId];
+          message =
+            chat &&
+            (chat.byId?.[viewer.messageId] || chat.ephemeralById?.[viewer.messageId]);
+          const content = message && message.content;
+          media =
+            content &&
+            (content.photo || content.video || content.document || (content.action && content.action.photo));
+        }
+        if (media) {
+          window.getActions().downloadMedia({ media, originMessage: message });
+          return { ok: true, how: "downloadMedia" };
+        }
+      }
+    }
+    // No viewer state (an inline player or a viewer variant): fetch the media the page itself
+    // sees and hand it to the browser, whose finished download MDM imports.
+    if (src) {
+      const base =
+        String(title || "telegram-media")
+          .replace(/[\\/:*?"<>|]+/g, "_")
+          .trim()
+          .slice(0, 120) || "telegram-media";
+      (async () => {
+        try {
+          const res = await fetch(src, { credentials: "include" });
+          if (!res.ok) return;
+          const blob = await res.blob();
+          const mime = (blob.type || "").toLowerCase();
+          const ext = mime.includes("webm")
+            ? "webm"
+            : mime.includes("quicktime")
+              ? "mov"
+              : mime.includes("matroska")
+                ? "mkv"
+                : mime.startsWith("audio/ogg")
+                  ? "ogg"
+                  : mime.startsWith("audio/mpeg")
+                    ? "mp3"
+                    : mime.startsWith("image/")
+                      ? (mime.split("/")[1] || "jpg")
+                      : "mp4";
+          const name = /\.[a-z0-9]{2,5}$/i.test(base) ? base : `${base}.${ext}`;
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = name;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 60000);
+        } catch {
+          // Nothing started; Telegram's own button still works.
+        }
+      })();
+      return { ok: true, how: "blob" };
+    }
+    return { ok: false, why: "Open the media in Telegram, then try again." };
+  } catch (error) {
+    return { ok: false, why: String((error && error.message) || error) };
+  }
+}
+
+async function telegramDownload(tab, src = "", title = "") {
+  if (!tab || tab.id === undefined || tab.id === null || !ext.scripting) return false;
+  try {
+    const [r] = await ext.scripting.executeScript({
+      target: { tabId: tab.id },
+      world: "MAIN",
+      func: telegramDownloadInPage,
+      args: [typeof src === "string" ? src : "", typeof title === "string" ? title : ""],
+    });
+    return Boolean(r && r.result && r.result.ok);
+  } catch {
+    return false;
+  }
+}
+
 // ---- right-click menus -------------------------------------------------------------------
 
 // Created at install and update (removed first: they persist, and a second create fails), in
@@ -1508,6 +1699,13 @@ ext.contextMenus.onClicked.addListener(async (info, tab) => {
   const incognito = Boolean(tab && tab.incognito);
   const storeId = tab && tab.cookieStoreId;
   if (info.menuItemId === "mdm-link") {
+    // Telegram: its page's own downloader has the session (protected channels included); its
+    // finished file is added to MDM by `telegramImported`. Never hand the page-only URL to the
+    // app: it answers 302.
+    if (info.mediaType && tab && isTelegramUrl(tab.url)) {
+      await telegramDownload(tab, info.srcUrl || "", tab.title || "");
+      return;
+    }
     const url = info.linkUrl || info.srcUrl;
     // A player's own stream (blob:, a MediaSource) or a stream's manifest: the Download video
     // window, which reads streams (a manifest downloaded as a file is only a short list).
@@ -1722,7 +1920,15 @@ async function pageMessage(m, sender) {
     bypass.set(m.url, { at: Date.now() });
     return { ok: true };
   }
+  if (m.type === "telegram-download" && page && isTelegramUrl(page)) {
+    const src = typeof m.src === "string" ? m.src : "";
+    const title = typeof m.title === "string" ? m.title.slice(0, 200) : "";
+    return { ok: await telegramDownload(sender.tab, src, title) };
+  }
   if (m.type === "video" && page) {
+    // Telegram's page-only media cannot be fetched by the app (its endpoint answers 302); its
+    // own downloader and the finished-file import are the path.
+    if (isTelegramUrl(page)) return { ok: false, why: "options" };
     await mediaBack;
     const src = typeof m.src === "string" && /^https?:/i.test(m.src) ? m.src : await streamFor(sender);
     // Each cookie with the domain and flags the browser keeps, so the app files a `.youtube.com`

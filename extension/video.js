@@ -52,6 +52,11 @@
     }
   };
   const host = location.hostname;
+  // Telegram's web apps: its media viewer is the only place the pill appears (an inline preview
+  // is a thumbnail, not the media the page's own downloader can save). Its click goes through
+  // the page's downloader, not yt-dlp: protected channels only its session can fetch.
+  const TELEGRAM = /^(web|webk|webz)\.telegram\.org$/i.test(host);
+  const TELEGRAM_VIEWER = ".media-viewer-whole, #MediaViewer, #StoryViewer";
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   // "Hide on this video": the video's address (players reuse one element for the next video),
@@ -213,6 +218,8 @@ button:focus-visible { outline: 2px solid #2a78d6; outline-offset: -2px; }
 
   function eligible(v) {
     if (!v.isConnected || isDismissed(v)) return false;
+    // Telegram: only the media viewer's own video, never a thumbnail or an inline preview.
+    if (TELEGRAM && !v.closest(TELEGRAM_VIEWER)) return false;
     const r = v.getBoundingClientRect();
     const audio = v instanceof HTMLAudioElement;
     if (audio ? !v.controls || r.width < MIN_W || r.height < MIN_AUDIO_H : r.width < MIN_W || r.height < MIN_H) {
@@ -381,8 +388,16 @@ button:focus-visible { outline: 2px solid #2a78d6; outline-offset: -2px; }
       closeMenu();
       // Encrypted (DRM): no tool can save it; say so rather than send it.
       if (video.mediaKeys) return flash("err", t("video_drm"));
-      const src = /^https?:/i.test(video.currentSrc || "") ? video.currentSrc : "";
+      const src = /^(https?|blob):/i.test(video.currentSrc || "") ? video.currentSrc : "";
       const title = (document.querySelector('meta[property="og:title"]')?.content || document.title || "").trim();
+      if (TELEGRAM) {
+        // Its page's own downloader has the session (protected channels included); the finished
+        // file is added to MDM when the browser download completes.
+        const r = await send({ type: "telegram-download", src, title, page: location.href });
+        if (r.gone) return;
+        flash(r.ok ? "ok" : "err", t(r.ok ? "video_sent" : "video_failed"));
+        return;
+      }
       const r = await send({ type: "video", src, title, page: location.href });
       if (r.gone) return;
       flash(r.ok ? "ok" : "err", t(r.ok ? "video_sent" : r.why === "options" ? "video_off" : "video_failed"));

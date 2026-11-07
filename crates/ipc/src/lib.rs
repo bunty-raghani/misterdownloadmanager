@@ -106,6 +106,11 @@ pub struct Command {
     /// From the same button, a second message: the qualities the page's own player response
     /// already lists, shown while yt-dlp looks the page up. Not kept.
     pub video_heights: Vec<u32>,
+    /// The browser finished a Telegram media download at `path`: add it to the list as a
+    /// completed download. Telegram's protected media can only be fetched by its own page (its
+    /// service worker carries the session); a direct request answers 302.
+    #[schemars(skip)]
+    pub completed_file: Option<CompletedFile>,
     /// From that button's menu: never show it on this site (a host name) again.
     pub panel_hide_site: Option<String>,
     /// From the browser's right-click menu: the links of a page or a selection, offered in the
@@ -134,6 +139,22 @@ pub struct BrowserCookie {
     /// When it expires, in seconds since 1970; none: when the browser closes.
     #[serde(alias = "expirationDate")]
     pub expires: Option<f64>,
+}
+
+/// A file the browser finished downloading from a page whose media only that page can fetch
+/// (Telegram's protected channels and groups): the app adds it as a completed download.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
+#[serde(default)]
+pub struct CompletedFile {
+    /// The page or media address, for the item's Properties and its history.
+    pub url: String,
+    /// The file's absolute path, as the browser saved it.
+    pub path: String,
+    /// The file's name (the path's last part when empty).
+    pub name: String,
+    /// Bytes, when the browser knew already.
+    pub size: Option<u64>,
+    pub mime: Option<String>,
 }
 
 impl Command {

@@ -2144,10 +2144,66 @@ impl App {
         }
     }
 
+    /// A Telegram media file the browser finished (its page's own downloader fetched it: the
+    /// page-only endpoint answers 302 to anything else): add it to the list as a completed
+    /// download, so MDM keeps its row, opens it and removes it with its file like any other.
+    fn add_completed_file(&mut self, done: ipc::CompletedFile, ctx: &egui::Context) {
+        let path = PathBuf::from(done.path.trim());
+        let Ok(meta) = std::fs::metadata(&path) else {
+            return;
+        };
+        if !meta.is_file() {
+            return;
+        }
+        let size = done.size.filter(|s| *s > 0).or(Some(meta.len()));
+        // The browser may have saved over a download MDM already had: mark it complete, never
+        // disturb one still running.
+        if let Some(existing) = self.items.iter_mut().find(|i| i.dest == path) {
+            if existing.live.is_some() {
+                return;
+            }
+            existing.status = Status::Complete;
+            existing.error = None;
+            existing.size = size.or(existing.size);
+            existing.downloaded = size.unwrap_or(existing.downloaded);
+            existing.resumable = Some(false);
+            let id = existing.id;
+            self.show_window(ctx);
+            self.selection.set(id);
+            self.dirty = true;
+            return;
+        }
+        let Some(name) = path.file_name().map(|n| n.to_string_lossy().into_owned()) else {
+            return;
+        };
+        let url = url::Url::parse(done.url.trim())
+            .or_else(|_| url::Url::parse("https://web.telegram.org/"))
+            .expect("the placeholder is a URL");
+        let id = self.next_id;
+        self.next_id += 1;
+        let mut item = Item::new(id, url, path, Category::of(&name));
+        item.size = size;
+        item.downloaded = size.unwrap_or(0);
+        item.status = Status::Complete;
+        item.resumable = Some(false);
+        item.description = "Telegram".into();
+        item.note("Added from Telegram (the page's own download)".to_string());
+        self.items.push(item);
+        self.show_window(ctx);
+        self.selection.set(id);
+        self.dirty = true;
+    }
+
     /// A command from the command line, a second launch, or the browser (ipc.rs).
     fn handle_command(&mut self, cmd: ipc::Command, ctx: &egui::Context) {
         if cmd.exit {
             self.run(Cmd::Exit, None, ctx);
+            return;
+        }
+        // A Telegram media file the browser finished (its page's own downloader fetched it):
+        // add it to the list as a completed download.
+        if let Some(done) = cmd.completed_file.clone() {
+            self.add_completed_file(done, ctx);
             return;
         }
         // Without a window (#157): an address, magnet or .torrent is added as a paired device's

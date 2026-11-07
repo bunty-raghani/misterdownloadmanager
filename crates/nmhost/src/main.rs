@@ -78,6 +78,10 @@ struct Message {
     filename: Option<String>,
     /// Where the browser's redirects from `url` ended.
     final_url: Option<String>,
+    /// The browser finished a Telegram media download: `file_path` is the saved file's absolute
+    /// path, `url` its page/media address, `filename` its name. Add it to MDM's list as complete.
+    telegram_done: bool,
+    file_path: Option<String>,
     /// The browser's own download: its size (bytes, when known) and type.
     size: Option<u64>,
     mime: Option<String>,
@@ -237,6 +241,14 @@ fn answer(m: Message, rules: &mdm_ipc::capture::CaptureRules) -> Reply {
         log_left(browser, &n.site, &n.name, notice_reason(&n.why), m.private);
         return Reply::done();
     }
+    // A Telegram media file the browser finished (its page's own downloader fetched it: the
+    // page-only endpoint answers 302 to anything else): add it to the list as a completed file.
+    if m.telegram_done {
+        return match telegram_file_command(&m) {
+            Some(cmd) => delivered(&cmd),
+            None => Reply::failed("refused", "the Telegram download has no file path"),
+        };
+    }
     // The video button: asked about, clicked, its menu. What it sends goes to the app (started
     // if need be), which opens its window or keeps the setting.
     if m.panel {
@@ -395,6 +407,25 @@ fn log_line(message: &str) {
     {
         let _ = f.write_all(line.as_bytes());
     }
+}
+
+/// The command adding a finished Telegram media file to MDM's list; none when it came without
+/// a path.
+fn telegram_file_command(m: &Message) -> Option<mdm_ipc::Command> {
+    let path = m.file_path.as_deref()?.trim();
+    if path.is_empty() {
+        return None;
+    }
+    Some(mdm_ipc::Command {
+        completed_file: Some(mdm_ipc::CompletedFile {
+            url: m.url.clone(),
+            path: path.to_owned(),
+            name: m.filename.clone().unwrap_or_default(),
+            size: m.size,
+            mime: m.mime.clone(),
+        }),
+        ..Default::default()
+    })
 }
 
 /// The Download video window's command for a video message: the page, or the video's own file
@@ -1067,6 +1098,25 @@ mod tests {
         assert!(downloadable("https://x.org/a.zip") && downloadable("FTP://x.org/a.iso"));
         assert!(downloadable("ftps://x/a") && downloadable("ftpes://x/a"));
         assert!(!downloadable("file:///C:/a") && !downloadable("javascript:alert(1)"));
+    }
+
+    /// A Telegram media file the browser finished is added as a completed file: its path, name,
+    /// size and page go with it; no path, no command.
+    #[test]
+    fn a_finished_telegram_file_maps_to_a_completed_file() {
+        let m: Message = serde_json::from_str(
+            r#"{"telegramDone":true,"url":"https://web.telegram.org/k/d/1","filePath":"/tmp/x.mp4","filename":"x.mp4","size":123,"mime":"video/mp4"}"#,
+        )
+        .unwrap();
+        let c = telegram_file_command(&m).unwrap().completed_file.unwrap();
+        assert_eq!(c.path, "/tmp/x.mp4");
+        assert_eq!(c.name, "x.mp4");
+        assert_eq!(c.size, Some(123));
+        assert_eq!(c.url, "https://web.telegram.org/k/d/1");
+        assert_eq!(c.mime.as_deref(), Some("video/mp4"));
+        let mut without = m;
+        without.file_path = None;
+        assert!(telegram_file_command(&without).is_none());
     }
 
     #[test]
