@@ -415,6 +415,10 @@ pub struct Item {
     pub remote: Option<RemoteSpec>,
     #[serde(skip)]
     pub live: Option<Live>,
+    /// Bytes/s for a download the app itself receives (Telegram media streamed by its page
+    /// into `media.rs`): there is no engine job to ask. Memory only.
+    #[serde(skip)]
+    pub stream_rate: f64,
     /// The engine's last view of this download (segments, connections).
     #[serde(skip)]
     pub snap: Option<mdm_engine::Snapshot>,
@@ -699,6 +703,7 @@ impl Item {
             direct: false,
             remote: None,
             live: None,
+            stream_rate: 0.0,
             snap: None,
             login: None,
             context: Default::default(),
@@ -845,7 +850,7 @@ impl Item {
     }
 
     pub fn rate(&self) -> f64 {
-        self.live.as_ref().map_or(0.0, |l| l.rate)
+        self.live.as_ref().map_or(self.stream_rate, |l| l.rate)
     }
 
     /// The Status column: `13.38%`, `Complete`, `Error`, or blank.

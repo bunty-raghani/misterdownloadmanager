@@ -496,17 +496,29 @@ impl Progress {
                 Action::Resume
             };
         }
+        // A finished download's window closes; it must never offer to cancel (and throw the
+        // finished file back to Stopped).
+        let finished = item.status == Status::Complete;
+        let cancel_label = if finished {
+            crate::i18n::mark("Close")
+        } else {
+            "Cancel"
+        };
         if winui::button(
             ui,
             r(o, cancel_at.0, 206.0, cancel_at.1, 22.0),
-            "Cancel",
+            cancel_label,
             ButtonKind::Normal,
             false,
             None,
         )
         .clicked()
         {
-            action = Action::Cancel;
+            action = if finished {
+                Action::Close
+            } else {
+                Action::Cancel
+            };
         }
 
         if self.details && item.torrent.is_some() {

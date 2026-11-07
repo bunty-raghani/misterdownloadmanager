@@ -385,7 +385,6 @@ button:focus-visible { outline: 2px solid #2a78d6; outline-offset: -2px; }
   // requests); this content script uploads the chunks to MDM's local server. The page gets no
   // token: MDM writes the file and shows its own progress.
   let telegramActive = null;
-
   async function startTelegramDownload(src, title) {
     if (telegramActive) return;
     const server = await send({ type: "media-server" });
@@ -396,7 +395,6 @@ button:focus-visible { outline: 2px solid #2a78d6; outline-offset: -2px; }
       const v = [...document.querySelectorAll("video")].find((v) => v.closest(TELEGRAM_VIEWER));
       src = /^(https?|blob):/i.test(v?.currentSrc || "") ? v.currentSrc : "";
     }
-    if (!src) return flash("err", t("video_failed"));
     telegramActive = {
       requestId: crypto.randomUUID(),
       base: `http://127.0.0.1:${server.port}`,
@@ -429,14 +427,22 @@ button:focus-visible { outline: 2px solid #2a78d6; outline-offset: -2px; }
       return;
     }
     const m = event.data;
+    if (m.kind === "probe") {
+    }
     const headers = (extra = {}) => ({ "x-mdm-token": a.token, ...extra });
     a.chain = a.chain
       .then(async () => {
         if (m.kind === "start") {
           a.total = Number.isSafeInteger(m.total) ? m.total : null;
           a.mime = typeof m.mime === "string" ? m.mime : "";
-          const name0 =
-            a.title.replace(/[\\/:*?"<>|]+/g, "_").trim().slice(0, 120) || "telegram-media";
+          const name0 = (
+            (typeof m.name === "string" && m.name.trim()) ||
+            a.title ||
+            "telegram-media"
+          )
+            .replace(/[\\/:*?"<>|]+/g, "_")
+            .trim()
+            .slice(0, 120) || "telegram-media";
           const ext = a.mime.includes("webm")
             ? "webm"
             : a.mime.includes("quicktime")
@@ -486,6 +492,15 @@ button:focus-visible { outline: 2px solid #2a78d6; outline-offset: -2px; }
             return;
           }
           window.postMessage({ mdmTelegramAck: a.requestId, seq: m.seq, abort: false }, "*");
+          // The page knows the media's size; once every byte is written, finish here too, so a
+          // lost final `end` message cannot leave the download at 100% forever.
+          if (a.total !== null && reply.downloaded >= a.total) {
+            await fetch(`${a.base}/telegram/end?id=${a.id}`, {
+              method: "POST",
+              headers: headers(),
+            });
+            telegramActive = null;
+          }
           return;
         }
         if (m.kind === "end") {
@@ -550,7 +565,7 @@ button:focus-visible { outline: 2px solid #2a78d6; outline-offset: -2px; }
       if (TELEGRAM) {
         // The page fetches its own protected media into MDM's local upload server; MDM writes
         // it and shows the progress window. No browser download.
-        await telegramUpload(src, title);
+        await startTelegramDownload(src, title);
         return;
       }
       const r = await send({ type: "video", src, title, page: location.href });

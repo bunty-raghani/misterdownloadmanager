@@ -1514,22 +1514,24 @@ if (FIREFOX && ext.webRequest && ext.webRequest.onHeadersReceived) {
 // The Telegram page's own fetch (its service worker only serves the page's requests). It
 // streams chunks to the content script, which uploads them to MDM; no app token reaches the page.
 function telegramFetchInPage(requestId, src) {
-  // The viewer's <video> may be a blob:/MediaSource; the browser's own download for the same
-  // message uses `/<k|a>/d/<media id>`, which the page's service worker serves with the session.
-  // Use that address when we can read the message's media, and the element's URL otherwise.
-  const mediaUrl = () => {
-    if (/^https?:/i.test(src)) return src;
-    const prefix = location.pathname.startsWith("/a/") ? "/a" : "/k";
+  // The viewer's <video> may be a blob:/MediaSource, whose URL the page cannot fetch; the
+  // browser's own download for the same message uses `/<k|a>/d/<media id>`, which the page's
+  // service worker serves with the session. Try the element's own address first (a real Blob
+  // works), then the page's download endpoint. Read the media object for its name and id.
+  const info = (() => {
     let id = "";
+    let name = "";
+    let mime = "";
+    let size = 0;
     try {
       const viewer = window.appMediaViewer;
+      let doc = null;
       if (viewer && viewer.target) {
         const media = viewer.target.message && viewer.target.message.media;
-        const doc = media && (media.document || media.photo);
-        if (doc && doc.id) id = String(doc.id);
-        if (!id && viewer.target.photo && viewer.target.photo.id) id = String(viewer.target.photo.id);
+        doc = media && (media.document || media.photo);
+        if (!doc && viewer.target.photo) doc = viewer.target.photo;
       }
-      if (!id && typeof window.getGlobal === "function") {
+      if (!doc && typeof window.getGlobal === "function") {
         const global = window.getGlobal();
         const tabs = global && global.byTabId;
         if (tabs) {
@@ -1543,24 +1545,45 @@ function telegramFetchInPage(requestId, src) {
               const content = msg && msg.content;
               media = content && (content.photo || content.video || content.document || (content.action && content.action.photo));
             }
-            const doc = media && (media.document || media.photo || media);
-            if (doc && doc.id) { id = String(doc.id); break; }
+            const candidate = media && (media.document || media.photo || media);
+            if (candidate && candidate.id) {
+              doc = candidate;
+              break;
+            }
           }
         }
+      }
+      if (doc) {
+        id = String(doc.id || "");
+        name = String(doc.file_name || doc.fileName || "");
+        if (!name && Array.isArray(doc.attributes)) {
+          const file = doc.attributes.find((a) => a && (a.fileName || a.file_name));
+          name = String((file && (file.fileName || file.file_name)) || "");
+        }
+        mime = String(doc.mime_type || doc.mimeType || "");
+        size = Number(doc.size) || 0;
       }
     } catch (error) {
       // Fall back to the element's own address.
     }
-    return id ? `https://${location.host}${prefix}/d/${id}` : src;
-  };
-  src = mediaUrl();
+    const prefix = location.pathname.startsWith("/a/") ? "/a" : "/k";
+    return {
+      id,
+      name,
+      mime,
+      size,
+      direct: /^(https?|blob):/i.test(src) ? src : "",
+      endpoint: id ? `https://${location.host}${prefix}/d/${id}` : "",
+    };
+  })();
+  const candidates = [...new Set([info.direct, info.endpoint].filter(Boolean))];
   (async () => {
     const CHUNK = 4 * 1024 * 1024;
     const post = (m, transfer) =>
       window.postMessage({ mdmTelegram: requestId, ...m }, "*", transfer || []);
     let offset = 0;
-    let total = null;
-    let mime = "";
+    let total = info.size > 0 ? info.size : null;
+    let mime = info.mime;
     let seq = 0;
     const waitAck = (n) =>
       new Promise((resolve, reject) => {
@@ -1584,15 +1607,43 @@ function telegramFetchInPage(requestId, src) {
         }, 30000);
         window.addEventListener("message", on);
       });
-    try {
-      while (total === null || offset < total) {
-        const res = await fetch(src, {
-          headers: { Range: `bytes=${offset}-${offset + CHUNK - 1}` },
+    const usableType = (type) =>
+      !type ||
+      type.startsWith("video/") ||
+      type.startsWith("audio/") ||
+      type.startsWith("image/") ||
+      type === "application/octet-stream" ||
+      type === "binary/octet-stream";
+    // The first response decides which address works: a blob created from media fetches whole;
+    // a MediaSource blob (or a dead URL) fails, and the page's own download endpoint follows.
+    let source = "";
+    let first = null;
+    for (const candidate of candidates) {
+      try {
+        const res = await fetch(candidate, {
+          headers: { Range: `bytes=0-${CHUNK - 1}` },
           credentials: "include",
         });
-        if (res.status !== 200 && res.status !== 206) {
-          throw new Error(`Telegram answered ${res.status}`);
-        }
+        if (res.status !== 200 && res.status !== 206) continue;
+        const type = (res.headers.get("content-type") || "")
+          .split(";")[0]
+          .trim()
+          .toLowerCase();
+        if (!usableType(type)) continue;
+        source = candidate;
+        first = res;
+        break;
+      } catch (error) {
+        // Try the next address.
+      }
+    }
+    if (!first) {
+      post({ kind: "error", why: "Telegram did not serve the media" });
+      return;
+    }
+    try {
+      let res = first;
+      while (true) {
         const type = (res.headers.get("content-type") || "")
           .split(";")[0]
           .trim()
@@ -1607,17 +1658,29 @@ function telegramFetchInPage(requestId, src) {
             if (cl > 0 && !res.headers.get("content-encoding")) total = cl;
           }
         }
-        const data = await res.arrayBuffer();
+        let data = await res.arrayBuffer();
         if (!data.byteLength) throw new Error("Telegram returned no media");
-        if (seq === 0) post({ kind: "start", total, mime });
+        if (total !== null && offset + data.byteLength > total) {
+          data = data.slice(0, total - offset);
+        }
+        // Transferring the buffer detaches it here, so keep its size before posting.
+        const received = data.byteLength;
+        if (seq === 0) post({ kind: "start", total, mime, name: info.name });
         const ack = waitAck(seq);
         post({ kind: "chunk", seq, data }, [data]);
         await ack;
-        offset += data.byteLength;
+        offset += received;
         seq += 1;
         if (res.status === 200) break;
         if (total !== null && offset >= total) break;
-        if (total === null && data.byteLength < CHUNK) break;
+        if (total === null && received < CHUNK) break;
+        res = await fetch(source, {
+          headers: { Range: `bytes=${offset}-${offset + CHUNK - 1}` },
+          credentials: "include",
+        });
+        if (res.status !== 200 && res.status !== 206) {
+          throw new Error(`Telegram answered ${res.status}`);
+        }
       }
       post({ kind: "end" });
     } catch (error) {
@@ -1680,13 +1743,13 @@ ext.contextMenus.onClicked.addListener(async (info, tab) => {
   if (info.menuItemId === "mdm-link") {
     // Telegram: the page's own fetch (its session/service worker) streams the media into MDM's
     // local upload server; never hand the page-only URL to the app (302).
-    if (tab && isTelegramUrl(tab.url) && (info.mediaType || info.srcUrl)) {
+    if (tab && isTelegramUrl(tab.url)) {
       ext.tabs
         .sendMessage(
           tab.id,
           {
             type: "telegram-upload",
-            src: info.srcUrl || "",
+            src: "",
             title: tab.title || "",
           },
           { frameId: 0 },
@@ -1731,6 +1794,19 @@ ext.contextMenus.onClicked.addListener(async (info, tab) => {
     return;
   }
   if ((info.menuItemId === "mdm-selected" || info.menuItemId === "mdm-all") && tab) {
+    // Telegram's page menu ("Download all links...") would collect the viewer's thumbnails and
+    // media fragments (the old "8 files"): on Telegram, every Mister menu entry downloads the
+    // media the viewer is showing, through MDM.
+    if (isTelegramUrl(tab.url)) {
+      ext.tabs
+        .sendMessage(
+          tab.id,
+          { type: "telegram-upload", src: "", title: tab.title || "" },
+          { frameId: 0 },
+        )
+        .catch(() => {});
+      return;
+    }
     let links = [];
     try {
       const [res] = await ext.scripting.executeScript({

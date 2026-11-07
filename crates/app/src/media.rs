@@ -47,6 +47,10 @@ pub struct Upload {
     pub downloaded: AtomicU64,
     pub cancel: AtomicBool,
     pub state: Mutex<UploadState>,
+    /// The last rate sample: (bytes, when), and the bytes/s between samples. The page sends
+    /// chunks, not engine connections, so the app computes the transfer rate itself.
+    last_sample: Mutex<(u64, std::time::Instant)>,
+    rate_bits: AtomicU64,
 }
 
 #[derive(Clone, Debug)]
@@ -55,6 +59,24 @@ pub enum UploadState {
     Done,
     Failed(String),
     Cancelled,
+}
+
+impl Upload {
+    /// Bytes/s since the last sample (at most four a second), 0 when no bytes arrived.
+    pub fn rate(&self) -> f64 {
+        let now = std::time::Instant::now();
+        let downloaded = self.downloaded.load(Ordering::Relaxed);
+        let mut last = self.last_sample.lock().unwrap();
+        let (bytes, at) = *last;
+        let elapsed = now.duration_since(at).as_secs_f64();
+        if elapsed < 0.25 {
+            return f64::from_bits(self.rate_bits.load(Ordering::Relaxed));
+        }
+        let rate = downloaded.saturating_sub(bytes) as f64 / elapsed;
+        self.rate_bits.store(rate.to_bits(), Ordering::Relaxed);
+        *last = (downloaded, now);
+        rate
+    }
 }
 
 impl Server {
@@ -103,6 +125,11 @@ impl Server {
             );
         }
         Some(server)
+    }
+
+    /// One upload, for the app's Cancel decision.
+    pub fn upload(&self, id: u64) -> Option<Arc<Upload>> {
+        self.uploads.lock().unwrap().get(&id).cloned()
     }
 
     pub fn cancel(&self, id: u64) {
@@ -190,6 +217,8 @@ async fn start(
         downloaded: AtomicU64::new(0),
         cancel: AtomicBool::new(false),
         state: Mutex::new(UploadState::Downloading),
+        last_sample: Mutex::new((0, std::time::Instant::now())),
+        rate_bits: AtomicU64::new(0.0f64.to_bits()),
     });
     server.uploads.lock().unwrap().insert(id, upload);
     Json(Started { id }).into_response()

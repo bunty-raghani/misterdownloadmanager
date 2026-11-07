@@ -1327,7 +1327,13 @@ impl App {
 
     /// "2 downloading, 1.25 MB/sec" while downloads run (the status strip, the tray's tip).
     fn activity(&self) -> Option<String> {
-        let running: Vec<&Item> = self.items.iter().filter(|i| i.live.is_some()).collect();
+        // Engine downloads have a job; Telegram media streamed by its page has only the row's
+        // own rate (item.live is None), so a downloading row counts here too.
+        let running: Vec<&Item> = self
+            .items
+            .iter()
+            .filter(|i| i.live.is_some() || i.status == Status::Downloading)
+            .collect();
         if running.is_empty() {
             return None;
         }
@@ -2263,13 +2269,28 @@ impl App {
             return;
         };
         let uploads = server.snapshot();
+        let mut running = false;
+        // Media items have no engine job, so `poll` never sees them finish: close their progress
+        // window here and open the same "Download complete" box as an engine download would.
+        let mut finished = Vec::new();
         for upload in uploads {
             let state = upload.state.lock().unwrap().clone();
+            let known = self.media_items.contains_key(&upload.id);
+            if matches!(state, crate::media::UploadState::Downloading)
+                || (!known
+                    && matches!(
+                        state,
+                        crate::media::UploadState::Downloading | crate::media::UploadState::Done
+                    ))
+            {
+                running = true;
+            }
             let downloaded = upload.downloaded.load(std::sync::atomic::Ordering::Relaxed);
             let total = upload
                 .size_known
                 .load(std::sync::atomic::Ordering::Relaxed)
                 .then(|| upload.size.load(std::sync::atomic::Ordering::Relaxed));
+            let rate = upload.rate();
             if let Some(&item_id) = self.media_items.get(&upload.id) {
                 let Some(pos) = self.items.iter().position(|i| i.id == item_id) else {
                     continue;
@@ -2278,7 +2299,8 @@ impl App {
                 if item.status == Status::Complete {
                     continue;
                 }
-                item.downloaded = downloaded;
+                item.downloaded = total.map_or(downloaded, |t| downloaded.min(t));
+                item.stream_rate = rate;
                 if let Some(t) = total {
                     item.size = Some(t);
                 }
@@ -2300,12 +2322,14 @@ impl App {
                                 item.status = Status::Complete;
                                 item.error = None;
                                 item.resumable = Some(false);
+                                item.stream_rate = 0.0;
                                 item.snap = Some(media_snapshot(
                                     &upload,
                                     crate::media::UploadState::Done,
                                     Some(dest),
                                 ));
                                 item.note("Telegram media downloaded".to_string());
+                                finished.push(item_id);
                                 self.dirty = true;
                             }
                             Err(e) => {
@@ -2322,6 +2346,7 @@ impl App {
                     }
                     crate::media::UploadState::Failed(why) => {
                         item.status = Status::Error;
+                        item.stream_rate = 0.0;
                         item.error = Some(why.clone());
                         item.snap = Some(media_snapshot(
                             &upload,
@@ -2332,6 +2357,7 @@ impl App {
                     }
                     crate::media::UploadState::Cancelled => {
                         item.status = Status::Stopped;
+                        item.stream_rate = 0.0;
                         item.snap = Some(media_snapshot(
                             &upload,
                             crate::media::UploadState::Cancelled,
@@ -2392,7 +2418,8 @@ impl App {
             self.next_id += 1;
             let mut item = Item::new(id, url, dest, category);
             item.size = total;
-            item.downloaded = downloaded;
+            item.downloaded = total.map_or(downloaded, |t| downloaded.min(t));
+            item.stream_rate = rate;
             item.status = Status::Downloading;
             item.resumable = Some(false);
             item.description = "Telegram".into();
@@ -2412,6 +2439,34 @@ impl App {
             self.show_window(ctx);
             self.selection.set(id);
             self.dirty = true;
+        }
+        for id in finished {
+            let window = self.progress.iter().find(|p| p.id == id);
+            let this_file = window.is_none_or(|p| p.shows_complete());
+            if let Some(w) = window.and_then(Progress::when_done) {
+                self.when_done(w);
+            }
+            self.progress.retain(|p| p.id != id);
+            if self.settings.show_complete
+                && this_file
+                && let Some(i) = self.items.iter().find(|i| i.id == id)
+            {
+                self.complete.push(Complete {
+                    id,
+                    url: i.url.to_string(),
+                    path: i.dest.clone(),
+                    size: i.size.unwrap_or(i.downloaded),
+                    dont_show: false,
+                    notices: i.notices.clone(),
+                    seen: false,
+                });
+            }
+            self.sound(0);
+        }
+        // The page streams into the app, outside the engine: keep the progress window and the
+        // rate sampling alive until the last chunk is written, and one more frame to finalize.
+        if running {
+            ctx.request_repaint_after(std::time::Duration::from_millis(200));
         }
     }
 
@@ -2799,9 +2854,22 @@ impl App {
     }
 
     fn stop(&mut self, id: u64) {
-        if let Some(upload) = self.media_item_upload.get(&id).copied() {
-            if let Some(server) = &self.media {
-                server.cancel(upload);
+        if let Some(upload_id) = self.media_item_upload.get(&id).copied() {
+            // A completed item, or one whose bytes are all written and only the final save is
+            // left, is not cancellable: let media_tick finish it (Cancel would otherwise move a
+            // finished Telegram download back to Stopped).
+            let done = self.item(id).is_some_and(|i| i.status == Status::Complete);
+            if let Some(server) = &self.media
+                && let Some(upload) = server.upload(upload_id)
+            {
+                let state = upload.state.lock().unwrap().clone();
+                let all_bytes = upload.size_known.load(std::sync::atomic::Ordering::Relaxed)
+                    && upload.downloaded.load(std::sync::atomic::Ordering::Relaxed)
+                        >= upload.size.load(std::sync::atomic::Ordering::Relaxed);
+                if done || all_bytes || matches!(state, crate::media::UploadState::Done) {
+                    return;
+                }
+                server.cancel(upload_id);
             }
             if let Some(item) = self.item(id) {
                 item.status = Status::Stopped;
@@ -4508,7 +4576,7 @@ impl App {
                         status: format!("{:?}", i.status),
                         size: i.size,
                         downloaded: i.downloaded,
-                        speed: if i.live.is_some() { i.rate() as u64 } else { 0 },
+                        speed: i.rate() as u64,
                         added: i.added.clone(),
                         category: i.category.key().into_owned(),
                         error: i.error.clone().filter(|_| i.status == Status::Error),
@@ -4517,7 +4585,7 @@ impl App {
                 let speed: f64 = self
                     .items
                     .iter()
-                    .filter(|i| i.live.is_some())
+                    .filter(|i| i.live.is_some() || i.status == Status::Downloading)
                     .map(|i| i.rate())
                     .sum();
                 let queues = self
