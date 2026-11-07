@@ -47,9 +47,10 @@ pub struct Upload {
     pub downloaded: AtomicU64,
     pub cancel: AtomicBool,
     pub state: Mutex<UploadState>,
-    /// The rate window: the page sends 4 MB chunks in bursts, not a steady engine stream, so a
-    /// single sample would flash 0 between chunks. Keep the last 3 s of (time, bytes) samples
-    /// and report their average.
+    /// The rate window: the page sends 4 MB chunks in bursts, not a steady engine stream, and
+    /// two concurrent Telegram downloads can take turns. Keep the last 6 s of (time, bytes)
+    /// samples and report their average, so the speed and time left do not blink to 0 between
+    /// chunks; it still reaches 0 after 6 s with no data.
     rate_window: Mutex<RateWindow>,
 }
 
@@ -67,11 +68,11 @@ pub enum UploadState {
 }
 
 impl Upload {
-    /// Bytes/s over the last 3 s, sampled at most every 250 ms; 0 when nothing arrived in that
+    /// Bytes/s over the last 6 s, sampled at most every 250 ms; 0 when nothing arrived in that
     /// window. The average hides the gaps between the page's chunk uploads.
     pub fn rate(&self) -> f64 {
         const SAMPLE: std::time::Duration = std::time::Duration::from_millis(250);
-        const WINDOW: std::time::Duration = std::time::Duration::from_secs(3);
+        const WINDOW: std::time::Duration = std::time::Duration::from_secs(6);
         let now = std::time::Instant::now();
         let downloaded = self.downloaded.load(Ordering::Relaxed);
         let mut w = self.rate_window.lock().unwrap();
