@@ -315,14 +315,31 @@ fn upper_list(exts: &[String]) -> String {
 /// The category's folder: the one chosen in Options → Save to (or remembered from Download
 /// File Info), else the default.
 pub fn category_folder(cat: Category, downloads: &Path, dirs: &[(String, String)]) -> PathBuf {
-    if cat.is_custom() {
-        return cat.folder(downloads);
+    let folder = if cat.is_custom() {
+        cat.folder(downloads)
+    } else {
+        let key = cat.key();
+        dirs.iter()
+            .find(|(c, _)| *c == *key)
+            .map(|(_, d)| PathBuf::from(d))
+            .unwrap_or_else(|| cat.folder(downloads))
+    };
+    // A folder shown under the user's profile (`Downloads/Video`) is under it: that is how
+    // Download File Info and Options show it. Resolved from the process's working directory
+    // instead, a desktop launch made it `/Downloads/Video`, on the read-only system volume.
+    if folder.is_absolute() || windows_path(&folder) {
+        folder
+    } else {
+        dirs::home_dir().map_or(folder.clone(), |h| h.join(folder))
     }
-    let key = cat.key();
-    dirs.iter()
-        .find(|(c, _)| *c == *key)
-        .map(|(_, d)| PathBuf::from(d))
-        .unwrap_or_else(|| cat.folder(downloads))
+}
+
+/// A path written for Windows (`E:\Songs`, `\\server\share`): not a path under this user's
+/// profile, even when this system reads it as a relative Unix path (the tests' Windows folders).
+fn windows_path(p: &Path) -> bool {
+    let s = p.to_string_lossy();
+    s.contains('\\')
+        || (s.len() >= 2 && s.as_bytes()[1] == b':' && s.as_bytes()[0].is_ascii_alphabetic())
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -1071,6 +1088,26 @@ mod tests {
         assert_eq!(time(82.0), "1 min 22 sec");
         assert_eq!(time(7500.0), "2 hour(s) 5 min");
         assert_eq!(rate(12_187_628.0), "11.623 MB/sec");
+    }
+
+    /// The folder shown under the profile (`Downloads/Video`) is under the user's home, not
+    /// under the process's working directory (a desktop launch made it `/Downloads/Video`, on
+    /// the read-only system volume).
+    #[test]
+    fn a_category_folder_shown_under_the_profile_is_under_the_home() {
+        let home = dirs::home_dir().unwrap();
+        let downloads = home.join("Downloads");
+        let dirs = vec![("Video".to_string(), "Downloads/Video".to_string())];
+        let found = category_folder(Category::Video, &downloads, &dirs);
+        assert_eq!(found, home.join("Downloads/Video"));
+        assert!(found.is_absolute());
+        // An absolute folder is kept as it is.
+        let absolute = home.join("Media/Video");
+        let dirs = vec![("Video".to_string(), absolute.display().to_string())];
+        assert_eq!(
+            category_folder(Category::Video, &downloads, &dirs),
+            absolute
+        );
     }
 }
 
