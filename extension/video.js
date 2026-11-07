@@ -384,9 +384,9 @@ button:focus-visible { outline: 2px solid #2a78d6; outline-offset: -2px; }
   // Telegram: the page itself fetches the media (its service worker only serves the page's own
   // requests); this content script uploads the chunks to MDM's local server. The page gets no
   // token: MDM writes the file and shows its own progress.
-  let telegramActive = null;
+  // Each Telegram download has its own request: two videos can stream into MDM at once.
+  const telegramActive = new Map();
   async function startTelegramDownload(src, title) {
-    if (telegramActive) return;
     const server = await send({ type: "media-server" });
     if (!server || !server.ok || !server.port || !server.token) {
       return flash("err", t("video_failed"));
@@ -395,7 +395,7 @@ button:focus-visible { outline: 2px solid #2a78d6; outline-offset: -2px; }
       const v = [...document.querySelectorAll("video")].find((v) => v.closest(TELEGRAM_VIEWER));
       src = /^(https?|blob):/i.test(v?.currentSrc || "") ? v.currentSrc : "";
     }
-    telegramActive = {
+    const active = {
       requestId: crypto.randomUUID(),
       base: `http://127.0.0.1:${server.port}`,
       token: server.token,
@@ -406,14 +406,15 @@ button:focus-visible { outline: 2px solid #2a78d6; outline-offset: -2px; }
       lastSeq: 0,
       chain: Promise.resolve(),
     };
+    telegramActive.set(active.requestId, active);
     const started = await send({
       type: "telegram-fetch",
-      requestId: telegramActive.requestId,
+      requestId: active.requestId,
       src,
       page: location.href,
     });
     if (!started || !started.ok) {
-      telegramActive = null;
+      telegramActive.delete(active.requestId);
       flash("err", t("video_failed"));
       return;
     }
@@ -422,13 +423,11 @@ button:focus-visible { outline: 2px solid #2a78d6; outline-offset: -2px; }
 
   // The page's chunks (main world) arrive here; upload them in order to MDM.
   window.addEventListener("message", (event) => {
-    const a = telegramActive;
-    if (!a || event.source !== window || !event.data || event.data.mdmTelegram !== a.requestId) {
-      return;
-    }
+    const requestId = event.data && event.data.mdmTelegram;
+    if (event.source !== window || !requestId) return;
+    const a = telegramActive.get(requestId);
+    if (!a) return;
     const m = event.data;
-    if (m.kind === "probe") {
-    }
     const headers = (extra = {}) => ({ "x-mdm-token": a.token, ...extra });
     a.chain = a.chain
       .then(async () => {
@@ -488,7 +487,7 @@ button:focus-visible { outline: 2px solid #2a78d6; outline-offset: -2px; }
               method: "POST",
               headers: headers(),
             }).catch(() => {});
-            telegramActive = null;
+            telegramActive.delete(a.requestId);
             return;
           }
           window.postMessage({ mdmTelegramAck: a.requestId, seq: m.seq, abort: false }, "*");
@@ -499,7 +498,7 @@ button:focus-visible { outline: 2px solid #2a78d6; outline-offset: -2px; }
               method: "POST",
               headers: headers(),
             });
-            telegramActive = null;
+            telegramActive.delete(a.requestId);
           }
           return;
         }
@@ -508,7 +507,7 @@ button:focus-visible { outline: 2px solid #2a78d6; outline-offset: -2px; }
             method: "POST",
             headers: headers(),
           });
-          telegramActive = null;
+          telegramActive.delete(a.requestId);
           return;
         }
         if (m.kind === "error") {
@@ -519,7 +518,7 @@ button:focus-visible { outline: 2px solid #2a78d6; outline-offset: -2px; }
               body: String(m.why || "download failed"),
             }).catch(() => {});
           }
-          telegramActive = null;
+          telegramActive.delete(a.requestId);
           flash("err", t("video_failed"));
         }
       })
@@ -537,7 +536,7 @@ button:focus-visible { outline: 2px solid #2a78d6; outline-offset: -2px; }
             "*",
           );
         }
-        telegramActive = null;
+        telegramActive.delete(a.requestId);
         flash("err", t("video_failed"));
       });
   });
