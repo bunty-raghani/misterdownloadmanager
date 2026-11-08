@@ -15,10 +15,10 @@
     "message": "વધુ વિકલ્પો"
   },
   "video_hide_here": {
-    "message": "આ વીડિયો પર છુપાવો"
+    "message": "આ વિડિયો માટે છુપાવો"
   },
   "video_never_site": {
-    "message": "$site$ પર ક્યારેય નહીં",
+    "message": "$site$ પર ક્યારેય બતાવશો નહીં",
     "placeholders": {
       "site": {
         "content": "$1",
@@ -60,7 +60,7 @@
     "message": "થોભાવેલ: ડાઉનલોડ્સ બ્રાઉઝર સાથે રહે છે"
   },
   "status_not_installed": {
-    "message": "Mister Download Manager ઇન્સ્ટોલ કરેલ નથી, અથવા તેનું બ્રાઉઝર ઇન્ટિગ્રેશન સેટ કરેલ નથી"
+    "message": "Mister Download Manager ઇન્સ્ટોલ કરેલ નથી, અથવા તેનું બ્રાઉઝર ઇન્ટિગ્રેશન સેટ અપ કરેલું નથી"
   },
   "status_forbidden": {
     "message": "Mister Download Manager એક્સટેન્શનની આ કૉપિ સ્વીકારતું નથી"
@@ -72,10 +72,10 @@
     "message": "Mister Download Manager સાથેનું કનેક્શન નિષ્ફળ થયું"
   },
   "status_too_large": {
-    "message": "આ ડાઉનલોડની વિગતો આપવા માટે ખૂબ મોટી હતી"
+    "message": "આ ડાઉનલોડની વિગતો સોંપવા માટે ખૂબ મોટી હતી"
   },
   "status_update_app": {
-    "message": "આ એક્સ્ટેંશન જે બધું પ્રદાન કરે છે તેનો ઉપયોગ કરવા માટે Mister Download Manager અપડેટ કરો"
+    "message": "આ એક્સ્ટેંશન જે કંઈ આપે છે તેનો ઉપયોગ કરવા માટે Mister Download Manager અપડેટ કરો"
   },
   "popup_take": {
     "message": "આ બ્રાઉઝરમાંથી ડાઉનલોડ્સ લો"
@@ -84,13 +84,13 @@
     "message": "આ બ્રાઉઝરના પ્રોક્સી અથવા VPN એક્સ્ટેંશન દ્વારા ડાઉનલોડ્સ મોકલો"
   },
   "popup_proxy_title": {
-    "message": "Mister Download Manager પછી આ બ્રાઉઝર જેવા જ પ્રોક્સી દ્વારા ડાઉનલોડ કરે છે. બ્રાઉઝર તમને એકવાર તેને મંજૂરી આપવા માટે પૂછે છે; આને બંધ કરવાથી તે પાછું ખેંચાઈ જાય છે."
+    "message": "Mister Download Manager પછી આ બ્રાઉઝર જેવા જ પ્રોક્સી દ્વારા ડાઉનલોડ કરે છે. બ્રાઉઝર તમને એક વાર તેને મંજૂરી આપવા માટે પૂછે છે; આ બંધ કરવાથી તે મંજૂરી પાછી ખેંચાઈ જાય છે."
   },
   "popup_proxy_title_chromium": {
     "message": "Mister Download Manager પછી આ બ્રાઉઝર જેવા જ પ્રોક્સી દ્વારા ડાઉનલોડ કરે છે. જ્યારે આ બંધ હોય, ત્યારે એક્સ્ટેંશન બ્રાઉઝરના પ્રોક્સીને વાંચતું નથી."
   },
   "popup_exclude_site": {
-    "message": "$site$ માંથી ક્યારેય ડાઉનલોડ્સ ન લો",
+    "message": "હવેથી $site$ માંથી ડાઉનલોડ્સ ક્યારેય ન લો",
     "placeholders": {
       "site": {
         "content": "$1",
@@ -162,7 +162,7 @@
     "message": "આ પૃષ્ઠ પર મીડિયા"
   },
   "popup_media_none": {
-    "message": "આ પૃષ્ઠ પર હજુ સુધી કોઈ વિડિઓ અથવા ધ્વનિ મળ્યા નથી. તેને ચલાવો, પછી આ ફરીથી ખોલો."
+    "message": "આ પૃષ્ઠ પર હજી સુધી કોઈ વિડિયો કે ધ્વનિ મળ્યાં નથી. તેને ચલાવો, પછી આ ફરીથી ખોલો."
   },
   "popup_media_download": {
     "message": "ડાઉનલોડ કરો"

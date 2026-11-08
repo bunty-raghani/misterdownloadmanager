@@ -33,7 +33,7 @@
     "message": "به Mister Download Manager ارسال شد"
   },
   "video_failed": {
-    "message": "Mister Download Manager نصب نشده است یا شروع نشد"
+    "message": "Mister Download Manager نصب نشده است یا اجرا نشد"
   },
   "video_drag": {
     "message": "برای جابجایی در لبه ویدیو بکشید"
@@ -57,10 +57,10 @@
     }
   },
   "status_paused": {
-    "message": "متوقف شد: دانلودها در مرورگر می‌مانند"
+    "message": "متوقف شد: بارگیری‌ها در مرورگر می‌مانند"
   },
   "status_not_installed": {
-    "message": "Mister Download Manager نصب نشده است، یا یکپارچه‌سازی مرورگر آن تنظیم نشده است"
+    "message": "Mister Download Manager نصب نشده است یا یکپارچه‌سازی آن با مرورگر تنظیم نشده است"
   },
   "status_forbidden": {
     "message": "Mister Download Manager این نسخه از افزونه را نمی‌پذیرد"
@@ -69,28 +69,28 @@
     "message": "Mister Download Manager به موقع شروع نشد"
   },
   "status_host_failed": {
-    "message": "اتصال به Mister Download Manager قطع شد"
+    "message": "اتصال به Mister Download Manager برقرار نشد"
   },
   "status_too_large": {
-    "message": "جزئیات این دانلود برای انتقال بیش از حد بزرگ بود"
+    "message": "جزئیات این بارگیری برای واگذاری بیش از حد بزرگ بود"
   },
   "status_update_app": {
-    "message": "Mister Download Manager را به‌روزرسانی کنید تا از تمام قابلیت‌های این افزونه استفاده کنید"
+    "message": "Mister Download Manager را به‌روزرسانی کنید تا از همه قابلیت‌های این افزونه استفاده کنید"
   },
   "popup_take": {
-    "message": "دانلودها را از این مرورگر دریافت کن"
+    "message": "دریافت بارگیری‌ها از این مرورگر"
   },
   "popup_proxy": {
-    "message": "ارسال دانلودها از طریق پروکسی یا افزونه VPN این مرورگر"
+    "message": "بارگیری‌ها از طریق پروکسی یا افزونه VPN این مرورگر ارسال شوند"
   },
   "popup_proxy_title": {
-    "message": "Mister Download Manager سپس از طریق همان پروکسی این مرورگر دانلود می‌کند. مرورگر یک بار از شما می‌خواهد که اجازه دهید؛ خاموش کردن این گزینه، آن را لغو می‌کند."
+    "message": "Mister Download Manager سپس از طریق همان پروکسی این مرورگر بارگیری می‌کند. مرورگر یک‌بار از شما اجازه می‌گیرد؛ با خاموش کردن این گزینه، اجازه لغو می‌شود."
   },
   "popup_proxy_title_chromium": {
     "message": "Mister Download Manager از طریق همان پراکسی این مرورگر بارگیری می‌کند. وقتی این گزینه خاموش باشد، افزونه پراکسی مرورگر را نمی‌خواند."
   },
   "popup_exclude_site": {
-    "message": "هرگز دانلودها را از $site$ نگیر",
+    "message": "هرگز بارگیری‌های $site$ را دریافت نکنید",
     "placeholders": {
       "site": {
         "content": "$1",
@@ -156,13 +156,13 @@
     "message": "افزونه اجازه خواندن این سایت را ندارد (دسترسی سایت مرورگر)."
   },
   "popup_alt": {
-    "message": "هنگام کلیک روی پیوند، Alt را نگه دارید تا مرورگر آن را بارگیری کند."
+    "message": "هنگام کلیک روی پیوند، کلید Alt را نگه دارید تا مرورگر آن را بارگیری کند."
   },
   "popup_media": {
-    "message": "رسانه در این صفحه"
+    "message": "رسانه‌های این صفحه"
   },
   "popup_media_none": {
-    "message": "هنوز هیچ ویدیو یا صدایی در این صفحه یافت نشد. آن را پخش کنید، سپس دوباره این را باز کنید."
+    "message": "هنوز ویدیو یا صدایی در این صفحه پیدا نشده است. آن را پخش کنید و سپس این پنجره را دوباره باز کنید."
   },
   "popup_media_download": {
     "message": "دانلود"
@@ -174,10 +174,10 @@
     "message": "زنده"
   },
   "video_off": {
-    "message": "دکمه دانلود در این سایت خاموش است"
+    "message": "دکمه بارگیری در این سایت خاموش است"
   },
   "video_drm": {
-    "message": "ویدیوی محافظت‌شده: نمی‌توان آن را ذخیره کرد"
+    "message": "ویدیوی محافظت‌شده: امکان ذخیره آن نیست"
   },
   "popup_send_to": {
     "message": "ارسال دانلودها به"

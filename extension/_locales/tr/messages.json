@@ -15,10 +15,10 @@
     "message": "Diğer seçenekler"
   },
   "video_hide_here": {
-    "message": "Bu videoda gizle"
+    "message": "Yalnızca bu videoda gizle"
   },
   "video_never_site": {
-    "message": "$site$ üzerinde asla gösterme",
+    "message": "$site$ sitesinde bir daha gösterme",
     "placeholders": {
       "site": {
         "content": "$1",
@@ -33,7 +33,7 @@
     "message": "Mister Download Manager uygulamasına gönderildi"
   },
   "video_failed": {
-    "message": "Mister Download Manager yüklü değil veya başlamadı"
+    "message": "Mister Download Manager yüklü değil veya başlatılamadı"
   },
   "video_drag": {
     "message": "Videonun kenarı boyunca taşımak için sürükleyin"
@@ -66,31 +66,31 @@
     "message": "Mister Download Manager uzantının bu kopyasını kabul etmiyor"
   },
   "status_not_running": {
-    "message": "Mister Download Manager zamanında başlamadı"
+    "message": "Mister Download Manager zamanında başlatılamadı"
   },
   "status_host_failed": {
-    "message": "Mister Download Manager bağlantısı başarısız oldu"
+    "message": "Mister Download Manager ile bağlantı kurulamadı"
   },
   "status_too_large": {
-    "message": "Bu indirmenin ayrıntıları devredilemeyecek kadar büyüktü"
+    "message": "Bu indirmenin ayrıntıları aktarılamayacak kadar büyüktü"
   },
   "status_update_app": {
-    "message": "Bu uzantının sunduğu her şeyi kullanmak için Mister Download Manager uygulamasını güncelleyin"
+    "message": "Bu uzantının sunduğu tüm özellikleri kullanmak için Mister Download Manager uygulamasını güncelle"
   },
   "popup_take": {
-    "message": "Bu tarayıcıdan indirmeleri al"
+    "message": "İndirmeleri bu tarayıcıdan al"
   },
   "popup_proxy": {
     "message": "İndirmeleri bu tarayıcının proxy veya VPN uzantısı üzerinden gönder"
   },
   "popup_proxy_title": {
-    "message": "Mister Download Manager daha sonra bu tarayıcıyla aynı proxy üzerinden indirir. Tarayıcı sizden bir kez izin vermenizi ister; bunu kapatmak bu izni geri alır."
+    "message": "Mister Download Manager daha sonra bu tarayıcıyla aynı proxy üzerinden indirme yapar. Tarayıcı bir kez izin vermenizi ister; bu seçeneği kapatmak verilen izni geri alır."
   },
   "popup_proxy_title_chromium": {
     "message": "Bu özellik açıkken Mister Download Manager, bu tarayıcıyla aynı proxy üzerinden indirme yapar. Kapalıyken uzantı, tarayıcının proxy ayarlarını okumaz."
   },
   "popup_exclude_site": {
-    "message": "$site$ adresinden indirmeleri asla alma",
+    "message": "$site$ sitesindeki indirmeleri artık alma",
     "placeholders": {
       "site": {
         "content": "$1",
@@ -99,7 +99,7 @@
     }
   },
   "popup_excluded": {
-    "message": "$site$ adresinden indirmeler tarayıcıda kalır",
+    "message": "$site$ adresinden yapılan indirmeler tarayıcıda kalır",
     "placeholders": {
       "site": {
         "content": "$1",
@@ -156,13 +156,13 @@
     "message": "Uzantının bu siteyi okumasına izin verilmiyor (tarayıcının site erişimi)."
   },
   "popup_alt": {
-    "message": "Bir bağlantıya tıklarken Alt tuşunu basılı tutarak tarayıcının indirmesini sağlayın."
+    "message": "Tarayıcının bir bağlantıyı indirmesini sağlamak için tıklarken Alt tuşunu basılı tutun."
   },
   "popup_media": {
     "message": "Bu sayfadaki medya"
   },
   "popup_media_none": {
-    "message": "Bu sayfada henüz video veya ses bulunamadı. Oynatın, ardından bunu tekrar açın."
+    "message": "Bu sayfada henüz video veya ses bulunamadı. Oynatıp tekrar açın."
   },
   "popup_media_download": {
     "message": "İndir"

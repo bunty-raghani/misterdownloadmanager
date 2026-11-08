@@ -5,7 +5,8 @@
 # - A pushed tag vX.Y.Z (matching Cargo.toml's version) publishes a GitHub release with them and
 #   SHA256SUMS.txt, its notes from CHANGELOG.md (Help -> Check for updates sees it at once). The
 #   release waits for Windows and the extensions: a failed Linux or macOS build leaves those out.
-# - Run by hand (Actions -> Release -> Run workflow) it only builds and keeps them as artifacts.
+# - Run by hand (Actions -> Release -> Run workflow) it only builds and keeps them as artifacts:
+#   nothing is published, and nothing is sent to addons.mozilla.org or the Chrome Web Store.
 name: Release
 
 on:
@@ -116,7 +117,8 @@ jobs:
     # Every browser's extension as its own download: Chrome, Edge, Brave, Opera and Vivaldi
     # (unzip, then load the folder unpacked) and Firefox (.xpi).
     runs-on: ubuntu-latest
-    # The signing step below runs only when the key is there (a step's `if` sees the job's env).
+    # The store steps below run only for a pushed tag, and only when their key is there (a step's
+    # `if` sees the job's env): a run by hand never sends anything to a store.
     env:
       AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
       CWS_REFRESH_TOKEN: ${{ secrets.CWS_REFRESH_TOKEN }}
@@ -148,7 +150,7 @@ jobs:
       # for review (not waited for); Firefox installs and updates it from its listing. The .xpi
       # in the release stays the unsigned one (for about:debugging).
       - name: Send the Firefox add-on to addons.mozilla.org
-        if: ${{ env.AMO_JWT_ISSUER != '' }}
+        if: ${{ startsWith(github.ref, 'refs/tags/') && env.AMO_JWT_ISSUER != '' }}
         env:
           AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
         shell: pwsh
@@ -170,7 +172,7 @@ jobs:
       # Chrome, Edge, Brave, Opera and Vivaldi update from the listing. A store refusal (a version
       # it has already) never fails the release.
       - name: Send the extension to the Chrome Web Store
-        if: ${{ env.CWS_REFRESH_TOKEN != '' }}
+        if: ${{ startsWith(github.ref, 'refs/tags/') && env.CWS_REFRESH_TOKEN != '' }}
         continue-on-error: true
         env:
           CLIENT_ID: ${{ secrets.CWS_CLIENT_ID }}
@@ -263,6 +265,8 @@ jobs:
     permissions:
       contents: write # the release
       actions: write # rebuilding the website
+      issues: read # the release notes' Thanks to (tools/contributors.py)
+      pull-requests: read
     if: >-
       always() && startsWith(github.ref, 'refs/tags/') && needs.windows.result == 'success' &&
       needs.extension.result == 'success'
@@ -317,15 +321,26 @@ jobs:
               "the first? Give them a go and tell us how it went in an " +
               "[issue](https://github.com/${{ github.repository }}/issues).`n`n"
           }
+          # Last, "Thanks to": everyone who opened a pull request or an issue, or commented, on
+          # GitHub since the previous release (by version) was published, with their avatars and
+          # @-mentions (tools/contributors.py thanks; the maintainer, Claude and bots aren't
+          # counted). Nobody, or GitHub not answering, leaves it out; it never stops the release.
+          $thanks = ""
+          try {
+            $thanks = (python3 tools/contributors.py thanks "${{ github.ref_name }}" | Out-String).Trim()
+          } catch {
+            Write-Warning "The contributors couldn't be listed: $_"
+          }
+          if ($thanks) { $thanks = "`n`n" + $thanks }
           $all = (Get-ChildItem dist -File).FullName
           if ($m.Success -and $m.Groups[1].Value.Trim()) {
             # Links into the repository (docs/x.md) would resolve against the release's page:
             # point them at the tagged files.
             $notes = $m.Groups[1].Value.Trim() -replace '\]\((?![a-z]+:|#)([^)\s]+)\)', '](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/$1)'
-            Set-Content -Encoding utf8 notes.md ($invite + $notes)
+            Set-Content -Encoding utf8 notes.md ($invite + $notes + $thanks)
             gh release create "${{ github.ref_name }}" --latest --title $title --notes-file notes.md $all
           } else {
-            Set-Content -Encoding utf8 notes.md $invite
+            Set-Content -Encoding utf8 notes.md ($invite + $thanks.Trim())
             gh release create "${{ github.ref_name }}" --latest --title $title --notes-file notes.md --generate-notes $all
           }
           # The website links to the latest published release: rebuild it now that the files are

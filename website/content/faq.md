@@ -33,7 +33,7 @@ MDM is made by Ahmed Nefzaoui, an independent developer, and is open to contribu
 
 ### Which systems does it run on? {#systems}
 
-Windows 10 and 11, 64-bit, is the main platform. Builds for Linux (AppImage, .deb, .rpm and .tar.gz) and macOS (.dmg) come with every release too; today's are marked experimental. From the next release, Linux isn't experimental any more: it is checked on GNOME, KDE Plasma, Xfce and Cinnamon, in Wayland sessions too, and its packages in clean Ubuntu, Debian and Fedora systems. Still to come there: the Flatpak Firefox isn't checked yet, and screen readers (Orca) don't read MDM's windows yet. macOS stays experimental. See [Windows, Mac and Linux](/features/systems.html) and [Download](/download.html).
+Windows 10 and 11, 64-bit, is the main platform. Builds for Linux (AppImage, .deb, .rpm and .tar.gz) and macOS (.dmg) come with every release too; today's are marked experimental. From version 0.5.0, Linux isn't experimental any more: it is checked on GNOME, KDE Plasma, Xfce and Cinnamon, in Wayland sessions too, and its packages in clean Ubuntu, Debian and Fedora systems. Still to come there: the Flatpak Firefox isn't checked yet, and screen readers (Orca) don't read MDM's windows yet. macOS stays experimental. See [Windows, Mac and Linux](/features/systems.html) and [Download](/download.html).
 
 ### Does it run on Windows 7 or 8? {#windows-7}
 

@@ -154,8 +154,8 @@ pub fn set_run_at_startup(on: bool) {
     let _ = std::fs::write(&file, text);
 }
 
-/// The startup entry written again with its argument when it was written without (by 0.3.0 or
-/// earlier) for this very program (#226).
+/// The startup entry written again with its argument when it was written without (by versions
+/// before 0.5.0) for this very program (#226).
 pub fn update_run_at_startup() {
     let (Some(file), Some(exe)) = (startup_file(), program()) else {
         return;
@@ -1280,6 +1280,37 @@ pub fn on_wayland() -> bool {
     window_system().wayland
 }
 
+/// Linux, X11 and XWayland (MDM's default): a menu's window as X11 menus are (GTK's, Qt's).
+/// Override-redirect: no window manager manages it, so it opens exactly where it's placed (a
+/// tiling compositor, sway, centred a managed one, #267), and compositors treat it as a menu:
+/// Hyprland gives it no border and doesn't slide or pop it in as it does a new window (it only
+/// fades it, as any X11 menu), where a managed one came down from the top of the screen (#277).
+/// Its type says which menu it is (`menu_window_type`), for the compositors that style each.
+/// Never activated either way: the main window keeps the keyboard, and the menu's keys reach it
+/// (chrome::popup). Native Wayland (`MDM_WAYLAND=1`) ignores both: winit 0.30 has no popup
+/// windows (xdg_popup) there, so a menu is a window the compositor places and animates as any.
+#[cfg(target_os = "linux")]
+pub fn menu_window(
+    builder: egui::ViewportBuilder,
+    kind: crate::chrome::MenuKind,
+) -> egui::ViewportBuilder {
+    builder
+        .with_override_redirect(true)
+        .with_window_type(menu_window_type(kind))
+}
+
+/// The X11 window type (`_NET_WM_WINDOW_TYPE`) of a menu's window: the menu bar's are drop-down
+/// menus, context menus popup menus, a drop-down list's choices a combo's.
+#[cfg(target_os = "linux")]
+fn menu_window_type(kind: crate::chrome::MenuKind) -> egui::X11WindowType {
+    use crate::chrome::MenuKind;
+    match kind {
+        MenuKind::Bar => egui::X11WindowType::DropdownMenu,
+        MenuKind::Context => egui::X11WindowType::PopupMenu,
+        MenuKind::List => egui::X11WindowType::Combo,
+    }
+}
+
 /// The family of distributions /etc/os-release (`os_release`) names: the index of its packages
 /// in `WindowLib::packages`, and how it installs one.
 #[cfg(target_os = "linux")]
@@ -1717,6 +1748,23 @@ pub fn process_alive(pid: u32) -> bool {
     unsafe { libc::kill(pid as libc::pid_t, 0) == 0 }
 }
 
+/// The OpenGL driver in its own words, for the log and the crash reports (#280): its renderer
+/// (the graphics card) and version (Mesa's carries its own: "4.6 (Core Profile) Mesa 24.0.5").
+/// Windows: win32.rs.
+#[allow(unsafe_code)]
+pub fn gl_driver(gl: &eframe::glow::Context) -> String {
+    use eframe::glow::{self, HasContext as _};
+    // SAFETY: called while eframe makes the app, with its context current on this thread;
+    // glGetString only reads the driver's strings.
+    let (renderer, version) = unsafe {
+        (
+            gl.get_parameter_string(glow::RENDERER),
+            gl.get_parameter_string(glow::VERSION),
+        )
+    };
+    format!("{renderer} ({version})")
+}
+
 /// End process `pid` (a frozen MDM the user chose to close from the crash report).
 #[allow(unsafe_code)]
 pub fn end_process(pid: u32) -> bool {
@@ -1853,7 +1901,23 @@ fn set_xattr(path: &Path, name: &str, value: &str) {
 mod tests {
     use zbus::zvariant::Value;
 
-    use super::{WindowLib, X11_LIBS, choose_window_system, install_command};
+    use super::{WindowLib, X11_LIBS, choose_window_system, install_command, menu_window_type};
+
+    /// #277: each menu's window says which menu it is, as GTK's and Qt's do.
+    #[test]
+    fn menu_windows_have_their_x11_type() {
+        use crate::chrome::MenuKind;
+        use egui::X11WindowType;
+        assert_eq!(menu_window_type(MenuKind::Bar), X11WindowType::DropdownMenu);
+        assert_eq!(
+            menu_window_type(MenuKind::Context),
+            X11WindowType::PopupMenu
+        );
+        assert_eq!(menu_window_type(MenuKind::List), X11WindowType::Combo);
+        let b = super::menu_window(egui::ViewportBuilder::default(), MenuKind::Bar);
+        assert_eq!(b.override_redirect, Some(true));
+        assert_eq!(b.window_type, Some(X11WindowType::DropdownMenu));
+    }
 
     const X11_KEYBOARD: &str = "libxkbcommon-x11.so.0";
 
@@ -2297,7 +2361,7 @@ mod startup_tests {
     use super::{entry_program, startup_entry, startup_outdated};
     use std::path::Path;
 
-    /// The entries 0.3.0 and earlier wrote: the program alone.
+    /// The entries versions before 0.5.0 wrote: the program alone.
     fn old_entry(exe: &str, macos: bool) -> String {
         if macos {
             format!(
@@ -2334,7 +2398,7 @@ mod startup_tests {
         ));
     }
 
-    /// An entry of 0.3.0 and earlier for this program is written again; another copy's is not.
+    /// An entry of a version before 0.5.0 for this program is written again; another copy's is not.
     #[test]
     fn old_startup_entries_are_rewritten() {
         let exe = "/home/ana/Apps/Mister Download Manager.AppImage";

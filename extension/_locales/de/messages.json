@@ -162,7 +162,7 @@
     "message": "Medien auf dieser Seite"
   },
   "popup_media_none": {
-    "message": "Auf dieser Seite wurden noch keine Videos oder Sounds gefunden. Spielen Sie sie ab, und öffnen Sie dies dann erneut."
+    "message": "Auf dieser Seite wurden noch keine Videos oder Sounds gefunden. Spielen Sie ein Video oder einen Sound ab und öffnen Sie dieses Fenster dann erneut."
   },
   "popup_media_download": {
     "message": "Herunterladen"

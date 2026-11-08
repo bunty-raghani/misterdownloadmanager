@@ -90,7 +90,7 @@
     "message": "Mister Download Manager télécharge alors via le même proxy que ce navigateur. Lorsque cette option est désactivée, l’extension ne lit pas le proxy du navigateur."
   },
   "popup_exclude_site": {
-    "message": "Ne jamais prendre les téléchargements de $site$",
+    "message": "Ne plus prendre les téléchargements de $site$",
     "placeholders": {
       "site": {
         "content": "$1",
@@ -156,13 +156,13 @@
     "message": "L’extension n’est pas autorisée à lire ce site (accès au site du navigateur)."
   },
   "popup_alt": {
-    "message": "Maintenez Alt enfoncé en cliquant sur un lien pour laisser le navigateur le télécharger."
+    "message": "Maintenez la touche Alt enfoncée en cliquant sur un lien pour laisser le navigateur le télécharger."
   },
   "popup_media": {
     "message": "Contenu multimédia sur cette page"
   },
   "popup_media_none": {
-    "message": "Aucune vidéo ou son n’a encore été trouvé sur cette page. Lisez-le, puis rouvrez ceci."
+    "message": "Aucune vidéo ni aucun son n’a encore été détecté sur cette page. Lancez la lecture, puis rouvrez cette fenêtre."
   },
   "popup_media_download": {
     "message": "Télécharger"

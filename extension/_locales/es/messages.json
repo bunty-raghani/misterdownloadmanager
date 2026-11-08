@@ -78,19 +78,19 @@
     "message": "Actualiza Mister Download Manager para usar todo lo que ofrece esta extensión"
   },
   "popup_take": {
-    "message": "Tomar descargas de este navegador"
+    "message": "Aceptar descargas de este navegador"
   },
   "popup_proxy": {
     "message": "Enviar descargas a través del proxy o la extensión VPN de este navegador"
   },
   "popup_proxy_title": {
-    "message": "Mister Download Manager descarga entonces a través del mismo proxy que este navegador. El navegador le pedirá una vez que lo permita; desactivar esto lo anula."
+    "message": "Mister Download Manager descarga entonces a través del mismo proxy que este navegador. El navegador te pedirá permiso una vez; al desactivar esta opción, se revoca."
   },
   "popup_proxy_title_chromium": {
     "message": "Mister Download Manager descarga entonces a través del mismo proxy que este navegador. Mientras está desactivado, la extensión no lee el proxy del navegador."
   },
   "popup_exclude_site": {
-    "message": "Nunca tomar descargas de $site$",
+    "message": "No aceptar descargas de $site$",
     "placeholders": {
       "site": {
         "content": "$1",
@@ -156,13 +156,13 @@
     "message": "La extensión no tiene permiso para leer este sitio (acceso al sitio del navegador)."
   },
   "popup_alt": {
-    "message": "Mantenga pulsado Alt mientras hace clic en un enlace para que el navegador lo descargue."
+    "message": "Mantén pulsado Alt mientras haces clic en un enlace para que lo descargue el navegador."
   },
   "popup_media": {
     "message": "Contenido multimedia en esta página"
   },
   "popup_media_none": {
-    "message": "Aún no se ha encontrado ningún vídeo o sonido en esta página. Reprodúzcalo y vuelva a abrir esto."
+    "message": "Aún no se ha encontrado ningún vídeo ni sonido en esta página. Reprodúcelo y vuelve a abrir esto."
   },
   "popup_media_download": {
     "message": "Descargar"

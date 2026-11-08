@@ -272,6 +272,18 @@ pub fn banner(
     extra
 }
 
+/// A separator dot between two parts of a line ("Germany · about 35 ms"), at English `x`: a
+/// round 3 px dot on the middle of the lowercase letters. The font's "·" is a thin tick sitting
+/// high at small sizes, which reads as an apostrophe. Its rect on screen.
+pub fn separator_dot(p: &Painter, x: f32, baseline: f32, color: Color32) -> Rect {
+    let rc = rect(Rect::from_center_size(
+        pos2(x + 1.5, baseline - 2.5),
+        vec2(3.0, 3.0),
+    ));
+    p.circle_filled(rc.center(), 1.5, color);
+    rc
+}
+
 /// Draw `s` with its pen (its start) at English `x` and its baseline (last cap row) at
 /// `baseline`. Returns the text's advance rect on screen.
 pub fn text(p: &Painter, x: f32, baseline: f32, s: &str, color: Color32) -> Rect {
@@ -2272,9 +2284,14 @@ pub fn copy_menu(resp: &Response, text: &str) {
         return;
     };
     let entries = [MenuEntry::Item("&Copy", (), !text.is_empty(), false)];
-    match crate::chrome::popup(&ctx, &format!("copy-{:?}", resp.id), at, &entries, &|_| {
-        None
-    }) {
+    match crate::chrome::popup(
+        &ctx,
+        crate::chrome::MenuKind::Context,
+        &format!("copy-{:?}", resp.id),
+        at,
+        &entries,
+        &|_| None,
+    ) {
         PopupResult::Open | PopupResult::Neighbor(_) => {}
         PopupResult::Chosen(()) => {
             crate::copy_text(&ctx, text.to_owned());
@@ -2399,7 +2416,14 @@ pub fn edit_menu(resp: &Response, value: &mut String, password: bool, multiline:
         MenuEntry::Sep,
         MenuEntry::Item("Select &all", EditCmd::SelectAll, n > 0, false),
     ];
-    let cmd = match crate::chrome::popup(&ctx, &format!("edit-{id:?}"), at, &entries, &|_| None) {
+    let cmd = match crate::chrome::popup(
+        &ctx,
+        crate::chrome::MenuKind::Context,
+        &format!("edit-{id:?}"),
+        at,
+        &entries,
+        &|_| None,
+    ) {
         PopupResult::Open | PopupResult::Neighbor(_) => return,
         PopupResult::Dismissed => None,
         PopupResult::Chosen(c) => Some(c),
@@ -2742,7 +2766,14 @@ pub fn drop_list(
     } else {
         anchor.left_bottom()
     };
-    let menu = crate::chrome::popup(ui.ctx(), &format!("drop-{id}"), at, &entries, &|_| None);
+    let menu = crate::chrome::popup(
+        ui.ctx(),
+        crate::chrome::MenuKind::List,
+        &format!("drop-{id}"),
+        at,
+        &entries,
+        &|_| None,
+    );
     match menu {
         PopupResult::Chosen(i) => {
             *open = false;
@@ -5338,7 +5369,14 @@ pub fn combo_light(
         } else {
             rc.left_bottom()
         };
-        match crate::chrome::popup(ui.ctx(), &popup_id, at, &entries, &|_| None) {
+        match crate::chrome::popup(
+            ui.ctx(),
+            crate::chrome::MenuKind::List,
+            &popup_id,
+            at,
+            &entries,
+            &|_| None,
+        ) {
             PopupResult::Chosen(i) => {
                 open = false;
                 chosen = Some(i).filter(|i| *i != selected);
@@ -6008,6 +6046,10 @@ pub mod caption {
         pub pressed: Option<CaptionButton>,
         pub buttons: Vec<Rect>,
         pub icon: Rect,
+        /// The colour along the bar's top edge (the sizing frame above the main window's bar
+        /// takes it: win32::caption_colour). Only Windows draws title bars (elsewhere unread).
+        #[cfg_attr(not(windows), allow(dead_code))]
+        pub top: Color32,
     }
 
     /// A title bar we draw ourselves (where the window's frame is ours: win32::thin_frame): the
@@ -6030,17 +6072,17 @@ pub mod caption {
         let p = ui.painter().clone();
         let st = style();
         let bar = bar_colour(active);
-        match st.era {
-            Some(era) => fill_shaded(
-                &p,
-                rect,
-                0.0,
-                &bar_stops(era, bar, crate::theme::colors().gloss),
-            ),
+        let top = match st.era {
+            Some(era) => {
+                let stops = bar_stops(era, bar, crate::theme::colors().gloss);
+                fill_shaded(&p, rect, 0.0, &stops);
+                stops.first().map_or(bar, |s| s.1)
+            }
             None => {
                 p.rect_filled(rect, 0.0, bar);
+                bar
             }
-        }
+        };
         let mut pressed = None;
         let mut rects = Vec::with_capacity(buttons.len());
         // From the window's end inwards, each as wide as its kind is.
@@ -6163,6 +6205,7 @@ pub mod caption {
             pressed,
             buttons: rects,
             icon,
+            top,
         }
     }
 }

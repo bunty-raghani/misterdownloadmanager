@@ -15,7 +15,7 @@
     "message": "കൂടുതൽ ഓപ്ഷനുകൾ"
   },
   "video_hide_here": {
-    "message": "ഈ വീഡിയോയിൽ മറയ്ക്കുക"
+    "message": "ഈ വീഡിയോയിൽ മാത്രം മറയ്ക്കുക"
   },
   "video_never_site": {
     "message": "$site$ എന്നതിൽ ഒരിക്കലും വേണ്ട",
@@ -30,7 +30,7 @@
     "message": "ബട്ടൺ ക്രമീകരണങ്ങൾ..."
   },
   "video_sent": {
-    "message": "Mister Download Manager എന്നതിലേക്ക് അയച്ചു"
+    "message": "Mister Download Manager ലേക്ക് അയച്ചു"
   },
   "video_failed": {
     "message": "Mister Download Manager ഇൻസ്റ്റാൾ ചെയ്തിട്ടില്ല അല്ലെങ്കിൽ ആരംഭിച്ചില്ല"
@@ -66,7 +66,7 @@
     "message": "Mister Download Manager ഈ എക്സ്റ്റൻഷൻ കോപ്പി സ്വീകരിക്കുന്നില്ല"
   },
   "status_not_running": {
-    "message": "Mister Download Manager സമയത്തിന് ആരംഭിച്ചില്ല"
+    "message": "Mister Download Manager കൃത്യസമയത്ത് ആരംഭിച്ചില്ല"
   },
   "status_host_failed": {
     "message": "Mister Download Manager ലേക്കുള്ള കണക്ഷൻ പരാജയപ്പെട്ടു"
@@ -75,7 +75,7 @@
     "message": "ഈ ഡൗൺലോഡിന്റെ വിശദാംശങ്ങൾ കൈമാറാൻ കഴിയാത്തത്ര വലുതായിരുന്നു"
   },
   "status_update_app": {
-    "message": "ഈ എക്സ്റ്റൻഷൻ നൽകുന്ന എല്ലാം ഉപയോഗിക്കാൻ Mister Download Manager അപ്ഡേറ്റ് ചെയ്യുക"
+    "message": "ഈ എക്സ്റ്റൻഷന്റെ എല്ലാ സവിശേഷതകളും ഉപയോഗിക്കാൻ Mister Download Manager അപ്‌ഡേറ്റ് ചെയ്യുക"
   },
   "popup_take": {
     "message": "ഈ ബ്രൗസറിൽ നിന്ന് ഡൗൺലോഡുകൾ എടുക്കുക"
@@ -84,13 +84,13 @@
     "message": "ഈ ബ്രൗസറിൻ്റെ പ്രോക്സി അല്ലെങ്കിൽ VPN എക്സ്റ്റൻഷൻ വഴി ഡൗൺലോഡുകൾ അയയ്ക്കുക"
   },
   "popup_proxy_title": {
-    "message": "Mister Download Manager ഈ ബ്രൗസറിൻ്റെ അതേ പ്രോക്സി വഴി ഡൗൺലോഡ് ചെയ്യുന്നു. ഇത് അനുവദിക്കാൻ ബ്രൗസർ നിങ്ങളോട് ഒരു തവണ ചോദിക്കും; ഇത് ഓഫാക്കുന്നത് ആ അനുമതി റദ്ദാക്കും."
+    "message": "Mister Download Manager ഈ ബ്രൗസറിന്റെ അതേ പ്രോക്സി വഴി ഡൗൺലോഡ് ചെയ്യുന്നു. ഇത് അനുവദിക്കാൻ ബ്രൗസർ ഒരിക്കൽ ചോദിക്കും; ഇത് ഓഫാക്കുന്നത് ആ അനുമതി പിൻവലിക്കും."
   },
   "popup_proxy_title_chromium": {
     "message": "Mister Download Manager ഈ ബ്രൗസറിന്റെ അതേ പ്രോക്സി വഴി ഡൗൺലോഡ് ചെയ്യുന്നു. ഇത് ഓഫായിരിക്കുമ്പോൾ, എക്സ്റ്റൻഷൻ ബ്രൗസറിന്റെ പ്രോക്സി വായിക്കില്ല."
   },
   "popup_exclude_site": {
-    "message": "$site$ എന്നതിൽ നിന്ന് ഡൗൺലോഡുകൾ ഒരിക്കലും എടുക്കരുത്",
+    "message": "$site$ ൽ നിന്നുള്ള ഡൗൺലോഡുകൾ ഇനി എടുക്കരുത്",
     "placeholders": {
       "site": {
         "content": "$1",
@@ -120,7 +120,7 @@
     "message": "MDM-നെ പിന്തുണയ്ക്കുക"
   },
   "popup_fix": {
-    "message": "ഇത് എങ്ങനെ ശരിയാക്കാം"
+    "message": "ഇത് എങ്ങനെ പരിഹരിക്കാം"
   },
   "popup_declined": {
     "message": "ബ്രൗസറിനായി വിട്ടു: $name$",
@@ -162,13 +162,13 @@
     "message": "ഈ പേജിലെ മീഡിയ"
   },
   "popup_media_none": {
-    "message": "ഈ പേജിൽ ഇതുവരെ വീഡിയോയോ ശബ്ദമോ കണ്ടെത്തിയിട്ടില്ല. ഇത് പ്ലേ ചെയ്യുക, തുടർന്ന് ഇത് വീണ്ടും തുറക്കുക."
+    "message": "ഈ പേജിൽ ഇതുവരെ വീഡിയോയോ ശബ്ദമോ കണ്ടെത്തിയിട്ടില്ല. ഇത് പ്ലേ ചെയ്ത ശേഷം വീണ്ടും തുറക്കുക."
   },
   "popup_media_download": {
     "message": "ഡൗൺലോഡ് ചെയ്യുക"
   },
   "popup_media_protected": {
-    "message": "പരിരക്ഷിച്ചിരിക്കുന്നു"
+    "message": "പരിരക്ഷിതം"
   },
   "popup_media_live": {
     "message": "തത്സമയം"
@@ -177,7 +177,7 @@
     "message": "ഈ സൈറ്റിൽ ഡൗൺലോഡ് ബട്ടൺ ഓഫാണ്"
   },
   "video_drm": {
-    "message": "സംരക്ഷിത വീഡിയോ: ഇത് സംരക്ഷിക്കാൻ കഴിയില്ല"
+    "message": "പരിരക്ഷിത വീഡിയോ: സംരക്ഷിക്കാനാവില്ല"
   },
   "popup_send_to": {
     "message": "ഡൗൺലോഡുകൾ ഇതിലേക്ക് അയയ്ക്കുക"

@@ -23,6 +23,10 @@
 //!
 //! Unknown keys and values that can't be read are skipped and reported as warnings, so a file
 //! written for a newer MDM still loads; a file that isn't TOML or JSON is an error.
+//!
+//! A Base16 scheme (`.yaml`, `.yml`) and pywal's `colors.json` are themes too: `crate::schemes`
+//! reads them into the same value tree, on the classic look. pywal's own file, where `wal`
+//! writes it, is the theme `pywal`, read again when `wal` changes it ([`pywal_changed`]).
 
 use std::path::{Path, PathBuf};
 
@@ -52,8 +56,9 @@ pub struct Entry {
     pub path: Option<PathBuf>,
 }
 
-/// The built-in themes, then the theme files in [`dir`] (by name), each once: a file named as a
-/// built-in is skipped (the built-in keeps its id).
+/// The built-in themes, then pywal's colours when `wal` has written them, then the theme files
+/// in [`dir`] (by name), each once: a file named as a built-in is skipped (the built-in keeps
+/// its id).
 pub fn list() -> Vec<Entry> {
     let mut out: Vec<Entry> = palette::builtins()
         .iter()
@@ -80,6 +85,16 @@ pub fn list() -> Vec<Entry> {
         })
         .collect();
     files.sort();
+    // pywal's colours where `wal` keeps them, unless a file of the folder takes the name.
+    if let Some(wal) = pywal_file().filter(|p| p.is_file())
+        && !files.iter().any(|(id, _)| id == PYWAL)
+    {
+        out.push(Entry {
+            id: PYWAL.into(),
+            name: PYWAL.into(),
+            path: Some(wal),
+        });
+    }
     for (id, path) in files {
         // Built-ins keep their ids (Native too, which is made, not read).
         if out.iter().any(|e| e.id == id) || id == "native" {
@@ -89,7 +104,7 @@ pub fn list() -> Vec<Entry> {
         let name = std::fs::read_to_string(&path)
             .ok()
             .and_then(|t| read_value(&path, &t).ok())
-            .and_then(|v| v.get("name").and_then(Value::as_str).map(str::to_owned))
+            .and_then(|(v, _)| v.get("name").and_then(Value::as_str).map(str::to_owned))
             .unwrap_or_else(|| id.clone());
         out.push(Entry {
             id,
@@ -113,13 +128,78 @@ fn folder_file(dir: &Path) -> Option<PathBuf> {
         .find(|p| p.is_file())
 }
 
-/// A theme file's id: its name without `.toml` or `.json`; None for any other file.
+/// The file kinds a theme can be: MDM's own (TOML, JSON, pywal's JSON too) and Base16's YAML.
+const EXTENSIONS: [&str; 4] = ["toml", "json", "yaml", "yml"];
+
+/// A theme file's id: its name without its extension ([`EXTENSIONS`]); None for any other file.
 fn theme_id(path: &Path) -> Option<String> {
     let ext = path.extension()?.to_str()?.to_ascii_lowercase();
-    if ext != "toml" && ext != "json" {
+    if !EXTENSIONS.contains(&ext.as_str()) {
         return None;
     }
     Some(path.file_stem()?.to_str()?.to_owned())
+}
+
+/// The theme of pywal's own colours (`wal`'s `colors.json`).
+pub const PYWAL: &str = "pywal";
+
+/// Where pywal writes its colours, as pywal itself finds its cache: `$PYWAL_CACHE_DIR`, else
+/// `$XDG_CACHE_HOME/wal`, else `.cache/wal` in the home folder (`$HOME`, else the user's
+/// profile folder: `%USERPROFILE%\.cache\wal` on Windows, where winwal writes it too).
+pub fn pywal_file() -> Option<PathBuf> {
+    let var = |k: &str| {
+        std::env::var_os(k)
+            .filter(|v| !v.is_empty())
+            .map(PathBuf::from)
+    };
+    let dir = var("PYWAL_CACHE_DIR")
+        .or_else(|| var("XDG_CACHE_HOME").map(|c| c.join("wal")))
+        .or_else(|| {
+            var("HOME")
+                .or_else(dirs::home_dir)
+                .map(|h| h.join(".cache").join("wal"))
+        })?;
+    Some(dir.join("colors.json"))
+}
+
+/// The file's time and size: what says it was written again.
+type Stamp = (Option<std::time::SystemTime>, u64);
+
+/// pywal's file as last read for the active theme, with its stamp then: None when the active
+/// theme isn't made from it.
+static PYWAL_READ: std::sync::Mutex<Option<(PathBuf, Stamp)>> = std::sync::Mutex::new(None);
+
+fn stamp(path: &Path) -> Stamp {
+    let meta = std::fs::metadata(path).ok();
+    (
+        meta.as_ref().and_then(|m| m.modified().ok()),
+        meta.map_or(0, |m| m.len()),
+    )
+}
+
+/// The active theme stops following pywal's file (a theme is being chosen).
+pub fn forget_pywal() {
+    *PYWAL_READ.lock().unwrap_or_else(|e| e.into_inner()) = None;
+}
+
+/// pywal's file as it is now taken as seen: a file that didn't read is read again only once it
+/// is written again.
+pub fn pywal_seen() {
+    if let Some((path, seen)) = PYWAL_READ
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .as_mut()
+    {
+        *seen = stamp(path);
+    }
+}
+
+/// True when the active theme is made from pywal's file and `wal` has written it since (its
+/// time or size changed): one look at the file's details, on the main loop's 2-second check.
+pub fn pywal_changed() -> bool {
+    let read = PYWAL_READ.lock().unwrap_or_else(|e| e.into_inner());
+    read.as_ref()
+        .is_some_and(|(path, seen)| stamp(path) != *seen)
 }
 
 /// The theme with this id: a built-in, or the file of that name in [`dir`].
@@ -147,15 +227,31 @@ fn load_in(folder: &Path, id: &str, depth: usize) -> Result<Loaded, String> {
         return Err(format!("{id}: too many themes inherit one another"));
     }
     let own = folder.join(id);
-    let path = ["toml", "json"]
+    let found = EXTENSIONS
         .iter()
         .map(|ext| folder.join(format!("{id}.{ext}")))
         .find(|p| p.is_file())
-        .or_else(|| folder_file(&own))
+        .or_else(|| folder_file(&own));
+    // pywal's colours where `wal` writes them, when no file in the folder has the name.
+    let wal = if found.is_none() && id == PYWAL {
+        pywal_file().filter(|p| p.is_file())
+    } else {
+        None
+    };
+    let path = found
+        .or_else(|| wal.clone())
         .ok_or_else(|| format!("{id}: no such theme"))?;
+    // Its stamp from before it is read: a write while it was read is seen at the next check.
+    let before = wal.as_deref().map(stamp);
     let text = std::fs::read_to_string(&path).map_err(|e| format!("{}: {e}", path.display()))?;
-    let value = read_value(&path, &text)?;
+    let (value, mut warnings) = read_value(&path, &text)?;
     let mut loaded = parse(id, &value, |base| load_in(folder, base, depth + 1))?;
+    warnings.append(&mut loaded.warnings);
+    loaded.warnings = warnings;
+    // Followed from now on: read again when `wal` writes it.
+    if let (Some(wal), Some(seen)) = (wal, before) {
+        *PYWAL_READ.lock().unwrap_or_else(|e| e.into_inner()) = Some((wal, seen));
+    }
     // A theme folder's own icons (`<id>/icons/16`, `24`), unless the file names a set.
     let icons = own.join("icons");
     if value.get("icon-set").is_none() && icons.is_dir() {
@@ -174,17 +270,122 @@ fn load_in(folder: &Path, id: &str, depth: usize) -> Result<Loaded, String> {
     Ok(loaded)
 }
 
-/// A file's contents as one value tree: TOML, or JSON for a `.json` file.
-fn read_value(path: &Path, text: &str) -> Result<Value, String> {
-    let json = path
+/// A file's contents as one value tree: TOML, JSON for a `.json` file (pywal's colours made a
+/// theme's), a Base16 scheme made a theme's for a `.yaml` or `.yml` one; with what reading a
+/// scheme changed (its contrast).
+fn read_value(path: &Path, text: &str) -> Result<(Value, Vec<String>), String> {
+    let at = |e: String| format!("{}: {e}", path.display());
+    let ext = path
         .extension()
         .and_then(|e| e.to_str())
-        .is_some_and(|e| e.eq_ignore_ascii_case("json"));
-    if json {
-        serde_json::from_str(text).map_err(|e| format!("{}: {e}", path.display()))
-    } else {
-        toml::from_str(text).map_err(|e| format!("{}: {e}", path.display()))
+        .unwrap_or("")
+        .to_ascii_lowercase();
+    match ext.as_str() {
+        "json" => {
+            let v: Value = serde_json::from_str(text).map_err(|e| at(e.to_string()))?;
+            if crate::schemes::is_pywal(&v) {
+                crate::schemes::pywal_theme(&v).map_err(at)
+            } else {
+                Ok((v, Vec::new()))
+            }
+        }
+        "yaml" | "yml" => {
+            let stem = path.file_stem().and_then(|s| s.to_str()).unwrap_or("");
+            crate::schemes::base16_theme(text, stem).map_err(at)
+        }
+        _ => toml::from_str(text)
+            .map(|v| (v, Vec::new()))
+            .map_err(|e| at(e.to_string())),
     }
+}
+
+/// View → Theme → Add a theme file (#45): a theme file or a colour scheme copied into [`dir`]
+/// (made the first time), under its own file name, or with a number added when another theme
+/// has that name; the same file already there is used as it is. The copy must load (with the
+/// themes it inherits, beside it), or it is taken out again. Returns the theme's id.
+pub fn add(source: &Path) -> Result<String, String> {
+    let folder = dir().ok_or("MDM has no data folder")?;
+    add_in(&folder, source)
+}
+
+fn add_in(folder: &Path, source: &Path) -> Result<String, String> {
+    let ext = source
+        .extension()
+        .and_then(|e| e.to_str())
+        .map(str::to_ascii_lowercase)
+        .filter(|e| EXTENSIONS.contains(&e.as_str()))
+        .ok_or_else(|| {
+            format!(
+                "{}: not a theme file (.toml, .json, .yaml, .yml)",
+                source.display()
+            )
+        })?;
+    let bytes = std::fs::read(source).map_err(|e| format!("{}: {e}", source.display()))?;
+    let text = String::from_utf8_lossy(&bytes);
+    // Read before it is copied: a file that isn't a theme stays out of the folder.
+    let (value, _) = read_value(source, &text)?;
+    let raw: Option<Value> = (ext == "json")
+        .then(|| serde_json::from_str(&text).ok())
+        .flatten();
+    // pywal's file is always `colors.json`: its copy is named after the wallpaper.
+    let stem = match raw.filter(crate::schemes::is_pywal) {
+        Some(_) => file_name_of(value.get("name").and_then(Value::as_str).unwrap_or("")),
+        None => source
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .map(file_name_of)
+            .unwrap_or_default(),
+    };
+    let stem = if stem.is_empty() {
+        "theme".to_owned()
+    } else {
+        stem
+    };
+    std::fs::create_dir_all(folder).map_err(|e| format!("{}: {e}", folder.display()))?;
+    // The built-ins' ids, Native's and pywal's are never a file's (the file would be passed over).
+    let reserved =
+        |id: &str| palette::builtins().iter().any(|t| t.id == id) || id == "native" || id == PYWAL;
+    let taken = |id: &str| {
+        folder.join(id).exists()
+            || EXTENSIONS
+                .iter()
+                .any(|e| folder.join(format!("{id}.{e}")).exists())
+    };
+    let mut id = stem.clone();
+    let mut n = 1;
+    loop {
+        if !reserved(&id) {
+            if std::fs::read(folder.join(format!("{id}.{ext}"))).is_ok_and(|b| b == bytes) {
+                return Ok(id);
+            }
+            if !taken(&id) {
+                break;
+            }
+        }
+        n += 1;
+        id = format!("{stem}-{n}");
+    }
+    let target = folder.join(format!("{id}.{ext}"));
+    std::fs::write(&target, &bytes).map_err(|e| format!("{}: {e}", target.display()))?;
+    if let Err(e) = load_in(folder, &id, 0) {
+        let _ = std::fs::remove_file(&target);
+        return Err(e);
+    }
+    Ok(id)
+}
+
+/// A name as a file name: letters and digits kept, lower case, the rest one dash
+/// (`pywal: lake.jpg` → `pywal-lake-jpg`).
+fn file_name_of(name: &str) -> String {
+    let mut out = String::new();
+    for c in name.chars() {
+        if c.is_alphanumeric() || c == '_' {
+            out.extend(c.to_lowercase());
+        } else if !out.is_empty() && !out.ends_with('-') {
+            out.push('-');
+        }
+    }
+    out.trim_end_matches('-').to_owned()
 }
 
 /// A built-in theme shipped as a theme file (inheriting the classic look at most): a file that
@@ -548,5 +749,129 @@ mod tests {
         assert!(load_in(&dir, "a", 0).is_err());
         assert_eq!(load_in(&dir, "classic", 0).unwrap().theme, CLASSIC);
         let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    fn temp_dir(name: &str) -> PathBuf {
+        let dir = std::env::temp_dir().join(format!("mdm-{name}-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        dir
+    }
+
+    const SCHEME: &str = "scheme: \"Test Scheme\"\nbase00: \"1d2021\"\nbase01: \"32302f\"\n\
+        base02: \"504945\"\nbase03: \"665c54\"\nbase04: \"bdae93\"\nbase05: \"d5c4a1\"\n\
+        base06: \"ebdbb2\"\nbase07: \"fbf1c7\"\nbase08: \"fb4934\"\nbase09: \"fe8019\"\n\
+        base0A: \"fabd2f\"\nbase0B: \"b8bb26\"\nbase0C: \"8ec07c\"\nbase0D: \"83a598\"\n\
+        base0E: \"d3869b\"\nbase0F: \"d65d0e\"\n";
+
+    const WAL: &str = r##"{ "wallpaper": "C:\\Users\\someone\\Pictures\\dunes.png",
+        "special": { "background": "#f2efe9", "foreground": "#3a3530" },
+        "colors": { "color0": "#f2efe9", "color1": "#a8483c", "color2": "#4f7a3a",
+            "color3": "#8a6a1e", "color4": "#3d6a9a", "color8": "#8c867c" } }"##;
+
+    #[test]
+    fn schemes_in_the_folder_are_themes() {
+        let dir = temp_dir("schemes");
+        std::fs::write(dir.join("gruvish.yaml"), SCHEME).unwrap();
+        std::fs::write(dir.join("colors.json"), WAL).unwrap();
+        std::fs::write(dir.join("broken.yml"), "base00: \"1d2021\"\n").unwrap();
+        // A theme file built on a scheme: its colours, the file's own changes on top.
+        std::fs::write(
+            dir.join("mine.toml"),
+            "inherits = \"gruvish\"\nicons = \"accent\"\n[sizes]\nradius = 6\n",
+        )
+        .unwrap();
+        let t = load_in(&dir, "gruvish", 0).unwrap().theme;
+        assert_eq!(t.name, "Test Scheme");
+        assert_eq!(t.dark.field, Color32::from_rgb(0x1d, 0x20, 0x21));
+        assert_eq!(t.light, t.dark);
+        let mine = load_in(&dir, "mine", 0).unwrap().theme;
+        assert_eq!(
+            (mine.dark.field, mine.light.accent),
+            (t.dark.field, t.light.accent)
+        );
+        assert_eq!(mine.icons, IconStyle::Accent);
+        assert_eq!(mine.metrics.control_radius, 6.0);
+        // pywal's file, here a light one: a light theme named after its wallpaper.
+        let wal = load_in(&dir, "colors", 0).unwrap();
+        assert_eq!(wal.theme.name, "pywal: dunes.png");
+        assert!(!wal.theme.light.dark);
+        assert_eq!(wal.theme.light.accent, Color32::from_rgb(0x3d, 0x6a, 0x9a));
+        assert!(load_in(&dir, "broken", 0).unwrap_err().contains("base05"));
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn adding_copies_into_the_folder_once() {
+        let from = temp_dir("add-from");
+        let to = from.join("themes");
+        std::fs::write(from.join("gruvish.yaml"), SCHEME).unwrap();
+        std::fs::write(from.join("colors.json"), WAL).unwrap();
+        std::fs::write(from.join("metro.toml"), "[colors]\naccent = \"#123456\"\n").unwrap();
+        std::fs::write(from.join("bad.yaml"), "just: words\n").unwrap();
+        std::fs::write(from.join("lonely.toml"), "inherits = \"not-here\"\n").unwrap();
+        std::fs::write(from.join("notes.txt"), "hi").unwrap();
+        assert_eq!(add_in(&to, &from.join("gruvish.yaml")).unwrap(), "gruvish");
+        // The same file again: the copy there; another of the same name: a number added.
+        assert_eq!(add_in(&to, &from.join("gruvish.yaml")).unwrap(), "gruvish");
+        let other = from.join("other").join("gruvish.yml");
+        std::fs::create_dir_all(other.parent().unwrap()).unwrap();
+        std::fs::write(&other, SCHEME.replace("83a598", "458588")).unwrap();
+        assert_eq!(add_in(&to, &other).unwrap(), "gruvish-2");
+        // pywal's colors.json: named after its wallpaper. A built-in's name: a number added.
+        assert_eq!(
+            add_in(&to, &from.join("colors.json")).unwrap(),
+            "pywal-dunes-png"
+        );
+        assert_eq!(add_in(&to, &from.join("metro.toml")).unwrap(), "metro-2");
+        assert_eq!(
+            load_in(&to, "metro-2", 0).unwrap().theme.light.accent,
+            Color32::from_rgb(0x12, 0x34, 0x56)
+        );
+        // Not themes, or not loading once copied: nothing left in the folder.
+        for f in ["bad.yaml", "lonely.toml", "notes.txt", "missing.toml"] {
+            assert!(add_in(&to, &from.join(f)).is_err(), "{f}");
+        }
+        let mut names: Vec<String> = std::fs::read_dir(&to)
+            .unwrap()
+            .map(|e| e.unwrap().file_name().to_string_lossy().into_owned())
+            .collect();
+        names.sort();
+        assert_eq!(
+            names,
+            [
+                "gruvish-2.yml",
+                "gruvish.yaml",
+                "metro-2.toml",
+                "pywal-dunes-png.json"
+            ]
+        );
+        let _ = std::fs::remove_dir_all(&from);
+    }
+
+    #[test]
+    fn a_rewritten_pywal_file_is_seen() {
+        let dir = temp_dir("wal-follow");
+        let file = dir.join("colors.json");
+        std::fs::write(&file, WAL).unwrap();
+        *PYWAL_READ.lock().unwrap() = Some((file.clone(), stamp(&file)));
+        assert!(!pywal_changed());
+        // `wal` run again: other colours, another size.
+        std::fs::write(
+            &file,
+            WAL.replace("#3d6a9a", "#7b4d9e\", \"color5\": \"#000"),
+        )
+        .unwrap();
+        assert!(pywal_changed());
+        forget_pywal();
+        assert!(!pywal_changed());
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn file_names_from_names() {
+        assert_eq!(file_name_of("pywal: lake.jpg"), "pywal-lake-jpg");
+        assert_eq!(file_name_of("Gruvbox dark, medium"), "gruvbox-dark-medium");
+        assert_eq!(file_name_of("  ..  "), "");
     }
 }

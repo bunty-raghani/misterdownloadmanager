@@ -30,7 +30,7 @@
     "message": "Postavke gumba..."
   },
   "video_sent": {
-    "message": "Poslano u Mister Download Manager"
+    "message": "Poslano aplikaciji Mister Download Manager"
   },
   "video_failed": {
     "message": "Mister Download Manager nije instaliran ili se nije pokrenuo"
@@ -84,7 +84,7 @@
     "message": "Šalji preuzimanja putem proxyja ili VPN proširenja ovog preglednika"
   },
   "popup_proxy_title": {
-    "message": "Mister Download Manager zatim preuzima putem istog proxyja kao i ovaj preglednik. Preglednik će vas jednom pitati da to dopustite; isključivanjem ove opcije to se poništava."
+    "message": "Mister Download Manager zatim preuzima putem istog proxyja kao i ovaj preglednik. Preglednik će vas jednom pitati želite li to dopustiti; isključivanjem ove opcije to se poništava."
   },
   "popup_proxy_title_chromium": {
     "message": "Mister Download Manager zatim preuzima putem istog proxyja kao i ovaj preglednik. Dok je ovo isključeno, proširenje ne čita proxy preglednika."
@@ -156,7 +156,7 @@
     "message": "Proširenje ne smije čitati ovu stranicu (pristup stranici preglednika)."
   },
   "popup_alt": {
-    "message": "Držite Alt dok klikate vezu kako bi je preglednik preuzeo."
+    "message": "Držite Alt dok kliknete vezu kako bi je preglednik preuzeo."
   },
   "popup_media": {
     "message": "Mediji na ovoj stranici"

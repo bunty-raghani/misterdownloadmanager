@@ -250,6 +250,11 @@
 #. what a keyboard shortcut does in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #, machine
 	Add a download (Add URL)	ማውረድ አክል (URL አክል)
+#. message or event log entry in the main window
+#. title of the file dialog of View → Theme → Add a theme file
+#. title of the message when View → Theme → Add a theme file fails
+#, machine
+	Add a theme file	ገጽታ ፋይል ያክሉ
 #. window title in the Options window
 #. window title: adding a debrid service account (Real-Debrid…)
 #, machine
@@ -4324,6 +4329,9 @@
 #. {error} = an error message (keep the braces as they are)
 #, machine
 	The list could not be saved: {error}	ዝርዝሩ ሊቀመጥ አልቻለም: {error}
+#. text in whereis.rs
+#, machine
+	the local network	አካባቢያዊ አውታረ መረብ
 #. text in errors.rs; text in torrent downloads
 #. an error: the network adapter chosen in Options (a VPN's, usually) is off or gone; {adapter} its name
 #, machine
@@ -4432,6 +4440,10 @@
 #. text in a download's Properties window
 #, machine
 	The web page from which this file was obtained:	ይህ ፋይል የተገኘበት የድር ገጽ:
+#. message or event log entry in the main window
+#. the kind of file View → Theme → Add a theme file lists: MDM's themes (TOML, JSON), Base16 schemes (YAML) and pywal's colors.json
+#, machine
+	Themes and colour schemes	ገጽታዎች እና የቀለም መርሃግብሮች
 #. text in the Options window
 #. Options → Archives check box
 #, machine
@@ -4464,6 +4476,9 @@
 #. Options → Remote → Pair a device: the code ran out (10 minutes, or 5 wrong tries)
 #, machine
 	This code can't be used any more.	ይህ ኮድ ከእንግዲህ ጥቅም ላይ ሊውል አይችልም።
+#. text in whereis.rs
+#, machine
+	this computer	ይህ ኮምፒውተር
 #. text in win32.rs
 #. the Scheduler, under "Wake the computer to run this queue": Windows set the timer but can't wake this computer with it
 #, machine
@@ -4480,10 +4495,6 @@
 #. Options → Remote → Listen on: only programs on this computer can connect (127.0.0.1)
 #, machine
 	This computer only (127.0.0.1)	ይህ ኮምፒውተር ብቻ (127.0.0.1)
-#. text in whereis.rs
-#. where a download's server is: on this computer or the local network (no country)
-#, machine
-	this computer or the local network	ይህ ኮምፒውተር ወይም የአካባቢ አውታረ መረብ
 #. text in the Scheduler window
 #. tooltip on the Scheduler's date when it is in the past
 #, machine
@@ -4492,6 +4503,11 @@
 #. remote control page (on a phone): label of the box naming this phone (shown in MDM's list of paired devices)
 #, machine
 	This device's name	የዚህ መሳሪያ ስም
+#. message or event log entry in the main window
+#. {error} is why, in English (a file that isn't a theme or a colour scheme, a colour missing)
+#. {error} = an error message (keep the braces as they are)
+#, machine
+	This file can't be used as a theme: {error}	ይህ ፋይል እንደ ገጽታ መጠቀም አይቻልም፦ {error}
 #. text in remote.rs
 #. remote control page (on a phone): the file chosen is too large for a .torrent file
 #, machine
@@ -5984,6 +6000,10 @@ menu	Add &batch download	የ&ቡድን ማውረድ አክል
 #. the trailing ... means it opens a window: keep it
 #, machine
 menu	Add &magnet link...	የ&ማግኔት አገናኝ አክል...
+#. menu command in the main window
+#. View → Theme: picks a theme file or a Base16 or pywal colour scheme, copies it into the themes folder and uses it
+#, machine
+menu	Add a theme file…	የገጽታ ፋይል ያክሉ…
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine

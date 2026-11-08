@@ -306,10 +306,6 @@ function excludedBy(r, url) {
   return "";
 }
 
-function excluded(r, url) {
-  return excludedBy(r, url) !== "";
-}
-
 // ---- downloads left to the browser: why, for the popup and MDM's log (#208) ----------------
 
 // A host's refusal by Options names the rule (`declined`); one before #208 says it only in its
@@ -355,6 +351,8 @@ async function noteLeft(why, name, url, incognito, told) {
 // app, with the same body (it can't be sent as a GET). Kept two minutes.
 const posts = new Map();
 const BODY_LIMIT = 512 * 1024;
+// The Referer each page load was sent with, by request (Firefox, two minutes).
+const referrers = new Map();
 
 function forget(map, ms) {
   const now = Date.now();
@@ -402,12 +400,19 @@ if (ext.webRequest) {
     navigations,
     ["requestBody"],
   );
-  // The Content-Type the form went with (a multipart boundary must stay the same).
+  // The Content-Type the form went with (a multipart boundary must stay the same), and (Firefox)
+  // the page a load came from, for a download caught from its answer (`headersReceived`).
   ext.webRequest.onBeforeSendHeaders.addListener(
     (d) => {
+      const header = (n) => (d.requestHeaders || []).find((h) => h.name.toLowerCase() === n);
+      if (FIREFOX) {
+        forget(referrers, 120000);
+        const ref = header("referer");
+        if (ref && ref.value) referrers.set(d.requestId, { url: ref.value, at: Date.now() });
+      }
       if (d.method !== "POST") return;
       const p = posts.get(d.url);
-      const ct = (d.requestHeaders || []).find((h) => h.name.toLowerCase() === "content-type");
+      const ct = header("content-type");
       if (p && p.id === d.requestId && ct && ct.value) p.type = ct.value;
     },
     navigations,
@@ -1020,15 +1025,16 @@ if (PROXY_DECLARED && ext.webRequest && ext.webRequest.onAuthRequired) {
     // Not offered here: no login is noticed.
   }
 }
+// Firefox: the proxy a request went through, kept for its hand-over. Noted as its response
+// starts, and from its answer's headers when the extension takes the download there (#208): that
+// request is cancelled, so it never starts.
+function noteProxy(d) {
+  if (!proxyAllowed || !d.proxyInfo || d.proxyInfo.type === "direct") return;
+  forget(proxyUsed, 120000);
+  proxyUsed.set(d.url, { info: d.proxyInfo, at: Date.now() });
+}
 if (PROXY_DECLARED && FIREFOX && ext.webRequest && ext.webRequest.onResponseStarted) {
-  ext.webRequest.onResponseStarted.addListener(
-    (d) => {
-      if (!proxyAllowed || !d.proxyInfo || d.proxyInfo.type === "direct") return;
-      forget(proxyUsed, 120000);
-      proxyUsed.set(d.url, { info: d.proxyInfo, at: Date.now() });
-    },
-    { urls: ["<all_urls>"] },
-  );
+  ext.webRequest.onResponseStarted.addListener(noteProxy, { urls: ["<all_urls>"] });
 }
 
 const hostPort = (host, port) => `${String(host).includes(":") ? `[${host}]` : host}:${port}`;
@@ -1104,6 +1110,13 @@ async function pacText(url) {
   }
 }
 
+// Firefox never sends loopback addresses through its proxy settings' proxy
+// (network.proxy.allow_hijacking_localhost, off by default): localhost and its names, 127.0.0.0/8, ::1.
+function firefoxLoopback(u) {
+  const host = u.hostname.toLowerCase().replace(/^\[|\]$/g, "");
+  return host === "localhost" || host.endsWith(".localhost") || host === "::1" || /^127(\.\d{1,3}){3}$/.test(host);
+}
+
 // What the app needs to download `url` through the browser's proxy: {} when it uses none (or
 // the system's, which the app reads itself), and {} unless the user switched it on (above).
 async function browserProxy(url, incognito) {
@@ -1153,6 +1166,7 @@ async function browserProxy(url, incognito) {
   }
   // Firefox: {proxyType, http, ssl, socks, socksVersion, proxyDNS, autoConfigUrl, passthrough}.
   if (v.proxyType === "manual") {
+    if (firefoxLoopback(u)) return {};
     if (String(v.passthrough || "").split(/[,\s]+/).some((b) => bypassed(b, u))) return {};
     const pick = (hp) => {
       const m = /^\[?([^\]]+?)\]?:(\d+)$/.exec(String(hp || "").trim());
@@ -1336,11 +1350,16 @@ if (!FIREFOX) {
     return true; // suggest() comes later
   });
 } else {
-  // Firefox names the file before the download is created and has no such pause: the download
-  // is paused at once when it may be the app's (the stored rules say so without asking), then
-  // cancelled or resumed; one that finished meanwhile (a small file) has its file removed.
+  // Firefox names the file before the download is created and has no such pause. Most are
+  // caught earlier, from the answer to the page load (`headersReceived`, below); the others (a
+  // download started by a page's script, a type the answer didn't say) here: the download is
+  // paused at once when it may be the app's, then cancelled or resumed; one that finished
+  // meanwhile (a small file) has its file removed.
+  // A page load decided from its answer already (`headersReceived`, #208) isn't asked again.
   ext.downloads.onCreated.addListener(async (item) => {
     const url = item.finalUrl || item.url;
+    forget(decided, 120000);
+    if (decided.has(url) || decided.has(firstUrl(item))) return;
     const c = await candidate(item, url).catch(() => null);
     if (!c || c.left) return leftAlone(c, item, url);
     const name = c.name;
@@ -1390,8 +1409,8 @@ ext.downloads.onChanged.addListener(async (delta) => {
 
 // Options → General in the app: also take the listed types the browser shows or plays when a
 // link leads to one. Chromium: a session rule marks such answers as attachments, so they come
-// down the download path above (where the rules and Alt apply). Firefox: the same by changing
-// the answer's headers.
+// down the download path above (where the rules and Alt apply). Firefox: taken from the answer
+// as a download is (`headersReceived`), else it opens.
 const OPENED = {
   PDF: ["application/pdf"],
   MP3: ["audio/mpeg", "audio/mp3"],
@@ -1481,28 +1500,123 @@ async function syncOpenedRule() {
   }
 }
 
+// ---- Firefox: a download caught from its answer, before the browser's dialog (#208) ----------
+
+// Firefox creates a download (downloads.onCreated, above) only once it has a file to save to:
+// when it asks first ("What should Firefox do with this file?", which Waterfox always asks for
+// a new type), only after the user answered, while it downloads the whole file behind the
+// dialog. So a page load whose answer would be a download is caught as the answer arrives: the
+// load waits while the app is asked, as Chromium's download does, and is cancelled when the app
+// took it (no dialog, no browser download). Else it goes on as before, and the download it
+// becomes is left to the browser (`decided`). A file the browser would show or play (a PDF, an
+// MP3) is taken the same way when Options say so (`openedTypes`); else it opens.
+
+// What Firefox shows or plays itself: a download only when its answer says "attachment".
+const SHOWN = /^(text\/|image\/|video\/|audio\/|multipart\/|application\/(pdf|xhtml\+xml|xml|json|javascript|x-javascript|ecmascript|ogg|x-xpinstall|[\w.+-]+\+(xml|json))$)/;
+
+// The file name a Content-Disposition gives (filename*=UTF-8''…, else filename="…"), or "".
+function dispositionName(cd) {
+  const star = /filename\*\s*=\s*([\w-]+)'[^']*'([^;]+)/i.exec(cd);
+  if (star) {
+    try {
+      return decodeURIComponent(star[2].trim().replace(/^"|"$/g, ""));
+    } catch {
+      // Not percent-encoded as it says: the plain name below.
+    }
+  }
+  const plain = /(?:^|;)\s*filename\s*=\s*("((?:[^"\\]|\\.)*)"|[^;]+)/i.exec(cd);
+  if (!plain) return "";
+  return (plain[2] !== undefined ? plain[2].replace(/\\(.)/g, "$1") : plain[1]).trim();
+}
+
+// {name, size, mime, opened} when this answer to a page load becomes a download (or is one of
+// the files Options take though the browser would open them), else null: a page, a picture, a
+// redirect, an error, a piece of a file.
+function answerFile(d) {
+  const code = d.statusCode || 0;
+  if (code < 200 || code > 299 || code === 204 || code === 205 || code === 206) return null;
+  const headers = d.responseHeaders || [];
+  const get = (n) => ((headers.find((h) => h.name.toLowerCase() === n) || {}).value || "").trim();
+  const mime = get("content-type").split(";")[0].trim().toLowerCase();
+  const cd = get("content-disposition");
+  const attachment = /^attachment/i.test(cd);
+  const opened = !attachment && openedTypes.some((m) => mime.startsWith(m));
+  // No type: the browser guesses from the bytes (a page, mostly); a download it becomes is
+  // still seen by onCreated.
+  if (!attachment && !opened && (!mime || SHOWN.test(mime))) return null;
+  let name = dispositionName(cd);
+  if (!name) {
+    try {
+      name = decodeURIComponent(pathOf(d.url).split("/").pop() || "");
+    } catch {
+      name = pathOf(d.url).split("/").pop() || "";
+    }
+  }
+  name = name.split(/[\\/]/).pop() || "";
+  // The size the file will have: the length of an answer that isn't compressed on the way.
+  const size = get("content-encoding") ? 0 : Number(get("content-length")) || 0;
+  return { name, size, mime, opened };
+}
+
+// The page loads decided here (by their first and last addresses, two minutes): the download
+// one of them becomes after the browser's dialog is left to the browser (asked once).
+const decided = new Map();
+
+// A tab opened for the download only (a link opened in a new tab or window), closed with it.
+async function closeDownloadTab(tabId, urls) {
+  forget(newTabs, 10000);
+  if (!(tabId >= 0) || !newTabs.has(tabId)) return;
+  try {
+    const tab = await ext.tabs.get(tabId);
+    const at = tab.url || "";
+    if (at === "about:blank" || urls.includes(at)) {
+      newTabs.delete(tabId);
+      await ext.tabs.remove(tabId);
+    }
+  } catch {
+    // Closed already.
+  }
+}
+
+async function headersReceived(d) {
+  if (d.method !== "GET" && d.method !== "POST") return {};
+  const file = answerFile(d);
+  if (!file) return {};
+  const ref = referrers.get(d.requestId);
+  const item = {
+    url: d.url,
+    filename: file.name,
+    totalBytes: file.size,
+    fileSize: file.size,
+    mime: file.mime,
+    referrer: (ref && ref.url) || "",
+    incognito: Boolean(d.incognito),
+    cookieStoreId: d.cookieStoreId,
+  };
+  if (PROXY_DECLARED) {
+    await proxyChecked;
+    noteProxy(d);
+  }
+  const first = firstUrl(item);
+  forget(decided, 120000);
+  decided.set(d.url, { at: Date.now() });
+  decided.set(first, { at: Date.now() });
+  const c = await candidate(item, d.url).catch(() => null);
+  if (!c || c.left) {
+    // A file the browser opens stays a page: there is no download to say anything about.
+    if (!file.opened) leftAlone(c, item, d.url);
+    return {};
+  }
+  const taken = await offer(item, d.url, c.name).catch(() => false);
+  if (!taken) return {};
+  closeDownloadTab(d.tabId, [first, d.url]).catch(() => {});
+  return { cancel: true };
+}
+
 if (FIREFOX && ext.webRequest && ext.webRequest.onHeadersReceived) {
   ext.webRequest.onHeadersReceived.addListener(
-    (d) => {
-      const first = (redirected.get(d.url) || {}).from || d.url;
-      if (!openedTypes.length || bypass.has(d.url) || bypass.has(first)) return {};
-      if (rules && (excluded(rules, d.url) || excluded(rules, first))) return {};
-      const headers = d.responseHeaders || [];
-      const get = (n) => headers.find((h) => h.name.toLowerCase() === n);
-      const type = ((get("content-type") || {}).value || "").toLowerCase();
-      const cd = get("content-disposition");
-      if (!openedTypes.some((m) => type.startsWith(m)) || (cd && /^\s*attachment/i.test(cd.value))) return {};
-      // Under Options' minimum it would only go back to the browser as a download: it opens.
-      const size = Number((get("content-length") || {}).value) || 0;
-      if (rules && rules.minKb > 0 && size > 0 && size < rules.minKb * 1024) return {};
-      return {
-        responseHeaders: [
-          ...headers.filter((h) => h.name.toLowerCase() !== "content-disposition"),
-          { name: "Content-Disposition", value: "attachment" },
-        ],
-      };
-    },
-    { urls: ["<all_urls>"], types: ["main_frame"] },
+    (d) => headersReceived(d).catch(() => ({})),
+    { urls: ["<all_urls>"], types: ["main_frame", "sub_frame"] },
     ["blocking", "responseHeaders"],
   );
 }

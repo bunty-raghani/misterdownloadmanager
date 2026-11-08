@@ -3,18 +3,146 @@
 Each release's notes on GitHub come from its section here (`## [X.Y.Z]`, see
 `.github/workflows/release.yml`).
 
-## [Unreleased]
-
-MDM's biggest release so far. Nine looks for its windows, and an interface that grows to 200 %.
-The browser extension in the Chrome Web Store and on addons.mozilla.org. MDM on a server, and
-from your phone. Torrents that download in order, follow RSS feeds or go through a debrid account.
-Video playlists, subtitles and sign-ins, image galleries, and a link grabber that extracts
-archives. Every connection held to one network adapter, with a kill switch and the DNS you
-choose. And Linux, checked on a real desktop with every change.
+## [0.5.0] - 2026-11-08
 
 ### Added
 
-#### Themes and the look
+#### Themes Support
+
+Now you can change Mister Download Manager's look and feel, and even its icons, with themes, and you can write your own.
+
+- 9 built-in looks in **View → Theme**: Classic, Native, High contrast, Metro, Adwaita, Breeze, Luna, Aero, Aqua.
+- Write your own theme as a TOML or JSON file, or import a Base16 scheme or your pywal colours.
+
+#### Remote Control and Headless Mode Support
+
+MDM no longer has to be in front of you: manage your downloads from your phone, or keep it running on a machine with no screen.
+
+- Add links and manage your downloads and queues from your phone, on your own network: **Options → Remote**.
+- Run MDM with no window on a server, NAS, Docker or Unraid with `--headless`, and send it downloads from your browser.
+
+#### Browser extension
+
+The extension now installs from your browser's store, updates itself, and catches more of what you download.
+
+- Install it from the Chrome Web Store or Firefox Add-ons.
+- See the streams, videos and sounds a page has loaded, with their qualities, and download any of them.
+- **VPN and proxy support:** send downloads through the browser's proxy or VPN extension (off until you turn it on).
+- See why a download stayed in the browser, and which setting to change.
+- **More browsers supported:** it now works in Zen, Helium, LibreWolf, Floorp and Waterfox too.
+
+#### Video and Images
+
+MDM now goes well beyond single videos: whole playlists, subtitles, sound on its own, and picture galleries.
+
+- **Playlist and channel support:** download a whole playlist or channel from a video site: tick the videos you want and pick one quality for all.
+- **Subtitle support:** download a video's subtitles, saved beside it or put into it.
+- **Audio-only support:** download just a video's sound, as MP3, Opus or FLAC.
+- **Signed-in video support:** download videos that need you signed in, using your browser's cookies.
+- **Image gallery support:** download whole galleries (Flickr, Imgur, DeviantArt and more) with gallery-dl.
+
+#### Torrents
+
+Torrents grew into a full client: watch while they download, follow feeds, or let your debrid service do the work.
+
+- **Sequential download support:** download a torrent in order, so you can watch it while it downloads.
+- **RSS support:** follow feeds and add new torrents automatically, by your own rules.
+- **Debrid support:** use your Real-Debrid, AllDebrid or Premiumize account for torrents and file-host links.
+- Limit seeding and upload, recheck files, reannounce, add trackers, and block IPs with a blocklist.
+
+#### Downloads
+
+Hand MDM a pile of links or a Google Drive link and let it get on with it.
+
+- Link grabber: paste many links, MDM groups them, checks which are online, and extracts archives when they arrive.
+- **Google Drive support:** links now download the actual file instead of Drive's web page.
+- Up to 128 connections per download, if you turn it on.
+- The Scheduler can wake the computer to run a queue.
+
+#### Network
+
+Decide exactly how MDM reaches the internet, and see where your files come from.
+
+- Send every download through one network adapter, such as your VPN's. If it drops, nothing goes out through your normal connection.
+- **Custom DNS support:** choose who looks up addresses: Cloudflare, Google, Quad9, AdGuard, NextDNS or your own, over HTTPS, TLS or plain.
+- See each download's server: its country, flag and round trip.
+
+#### Interface
+
+Bigger when you need it, faster to open, and closer to your system.
+
+- Make every window larger, up to 200 %: **View → Interface size**, or Ctrl + and Ctrl −.
+- **Direct3D 12, Vulkan and Metal support:** MDM draws with Direct3D 12 on Windows; Vulkan on Linux and Metal on macOS are options.
+- Every file name now has its file-type icon, the one your system uses.
+- The built-in categories can now be renamed, given other file types, or deleted.
+- Hide a download's progress window to the notification area while it keeps going.
+- When MDM starts with the computer, it now waits in the notification area instead of opening its window.
+
+#### Other
+
+Smaller additions worth knowing about.
+
+- **System keychain support:** passwords and account sign-ins are now kept in your system's keychain, not in MDM's settings.
+- Use your own copies of yt-dlp and ffmpeg instead of MDM's.
+- **AppImage tools support:** the AppImage can update through them, downloading only what changed.
+- Website: a page for every feature, a Themes gallery, and a hall of fame.
+
+### Changed
+
+MDM got much lighter, and Linux is now supported like Windows.
+
+- Linux is no longer experimental: checked on GNOME, KDE Plasma, Xfce and Cinnamon, and on clean Ubuntu, Debian and Fedora.
+- Downloads are about half the size: setup.exe 23 → 12 MB, AppImage 36 → 16 MB, .deb 27 → 13 MB.
+- Under 10 MB of memory in the notification area on Windows, from about 50 MB.
+- Machine translations in all 85 languages were checked again against the English and corrected.
+- Downloads from the browser keep the name, size and type the browser saw, so downloads behind a sign-in show correctly right away.
+- MDM follows every kind of redirect a browser does, including "your download starts in a moment" pages.
+- Freeze reports now say whether MDM was stuck in a loop, waiting on something, or the computer was too busy to run it.
+
+### Removed
+
+No features were removed, only an old label and some bulky files.
+
+- The `-experimental` label on the Linux files (macOS keeps it).
+- The 80 MB universal Mac download: there's now one for Apple Silicon and one for Intel. Coming from 0.2.4, update once by hand: **Download** in Check for updates opens the release.
+- The separate 28 MB command-line program: now a 0.2 MB launcher, every command works as before.
+
+### Fixed
+
+More than 80 fixes. The main ones:
+
+- Firefox and Waterfox: MDM now takes the download before the browser's file dialog, so the browser doesn't download it too.
+- The extension now reaches MDM from Ubuntu's Snap Firefox and from Brave Origin.
+- Download File Info and the progress window open in front of the browser.
+- No more black band across menus and windows on Windows 11 Insider builds.
+- Text is sharper on Windows.
+- A slow start no longer makes MDM give up on Direct3D and stay on OpenGL.
+- Linux: menus open in the right place and appear at once on Hyprland and similar compositors.
+- Linux: dark mode follows the desktop, and a slow keyring or sleep service no longer freezes the window.
+- No more crash when a magnet link or browser download arrives while MDM is minimized or in the tray.
+- A minimized MDM keeps running its queues and Scheduler.
+- Downloads no longer fail with "part file still in use" on a busy computer.
+- Links that work only once no longer fail with "403 Forbidden".
+- YouTube's "Requested format is not available" no longer stops a download: MDM takes the nearest quality below.
+- Stop now also stops yt-dlp, which used to keep downloading in the background.
+- Buttons fit their text in every language.
+- Screen readers read lists, menus and windows properly.
+
+### Security
+
+This release tightens what MDM accepts from torrents.
+
+- Unsafe file names in torrents are refused.
+- When a torrent's files are already in the folder, MDM asks before writing into them.
+- Files from torrents are marked as downloaded from the internet, so SmartScreen and Gatekeeper check programs before they first run.
+- MDM no longer contacts torrent trackers on this computer or the local network.
+- The torrent library, librqbit, is updated to 9.1.0.
+
+### Every change in detail
+
+#### Added
+
+##### Themes and the look
 
 - **Themes: View → Theme** ([#45](https://github.com/anefzaoui/misterdownloadmanager/issues/45)).
   **Classic** is MDM's look, unchanged and still the default. **Native** takes your system's
@@ -61,8 +189,18 @@ choose. And Linux, checked on a real desktop with every change.
     set, and a theme can be a folder that brings its own icons. An icon set can mix PNG pictures
     with SVG drawings, and one-colour icons (`-symbolic.svg`, `-symbolic.png`, drawn in the
     theme's text colour) with coloured ones, and hold pictures at 32 and 48 pixels, used on a
-    screen scaled to 150 % and more: the style themes' pictures stay sharp there. Base16 and pywal
-    schemes come next.
+    screen scaled to 150 % and more: the style themes' pictures stay sharp there.
+  - **Base16 and pywal colour schemes as themes**: a Base16 or Base24 scheme (`.yaml`, the
+    classic layout and tinted-theming's `palette:` one) or pywal's `colors.json` (wallust's
+    pywal-shaped one too), added with **View → Theme → Add a theme file…** or put in the themes
+    folder, is a theme on the classic look: only the colours change. base00 and base01 are the
+    backgrounds, base05 and base04 the text, base0D the focus, the selection and the progress bar
+    (pywal: its background and foreground, color4); text is kept at 4.5:1 or more against every
+    background and the accent at 3:1, moved a little where a scheme falls short. Once `wal` has
+    run, **View → Theme** lists **pywal**, read from where pywal writes it
+    (`~/.cache/wal/colors.json`, `%USERPROFILE%\.cache\wal\colors.json` on Windows), and MDM
+    follows each new wallpaper's colours within two seconds. A theme file can `inherits` a scheme
+    to change more than its colours.
 - **View → Interface size** ([#262](https://github.com/anefzaoui/misterdownloadmanager/issues/262)):
   every window larger, 100 % to 200 %, on top of the system's display scale; **Ctrl +**,
   **Ctrl −** and **Ctrl 0** in any MDM window, as in a browser. Every open window follows at once
@@ -124,7 +262,7 @@ choose. And Linux, checked on a real desktop with every change.
 - **Drop-down lists for screen readers**: a screen reader or UI Automation can now set a
   drop-down list's choice by its text, and open or close the list.
 
-#### Downloads
+##### Downloads
 
 - **Downloads through one network adapter, with a kill switch**
   ([#35](https://github.com/anefzaoui/misterdownloadmanager/issues/35)): **Options → Proxy /
@@ -210,7 +348,7 @@ choose. And Linux, checked on a real desktop with every change.
   off the list; their files stay either way. **Options → Save to → Restore the built-in
   categories** brings them back as they came. General and Torrents still change only their folder.
 
-#### Videos
+##### Videos
 
 - **Playlists and channels** ([#69](https://github.com/anefzaoui/misterdownloadmanager/issues/69)):
   Download video from a page lists a playlist's or a channel's videos, with their lengths, all
@@ -255,7 +393,7 @@ choose. And Linux, checked on a real desktop with every change.
   the window and the command line alike; MDM leaves its updates to you). **Use MDM's own copy**
   goes back.
 
-#### Torrents
+##### Torrents
 
 - **Download in order** ([#39](https://github.com/anefzaoui/misterdownloadmanager/issues/39)): to
   watch a video while it downloads, tick **Download in order** in **Add torrent**, or choose
@@ -302,7 +440,7 @@ choose. And Linux, checked on a real desktop with every change.
   and removes the torrent from the account's list. Your computer never connects to the torrent's
   peers. Experimental, as the accounts are.
 
-#### Debrid accounts, experimental
+##### Debrid accounts, experimental
 
 - **Real-Debrid, AllDebrid and Premiumize** ([#44](https://github.com/anefzaoui/misterdownloadmanager/issues/44)):
   **Options → Accounts** keeps your debrid service accounts. Real-Debrid signs in by code in the
@@ -324,7 +462,7 @@ choose. And Linux, checked on a real desktop with every change.
   the browser had already started stays direct after a restart, and when one service doesn't
   answer, the other accounts still work.
 
-#### The browser extension
+##### The browser extension
 
 - **In the stores**: the Firefox add-on is on addons.mozilla.org,
   [Mister Download Manager](https://addons.mozilla.org/firefox/addon/mister-download-manager/),
@@ -371,7 +509,8 @@ choose. And Linux, checked on a real desktop with every change.
   Vivaldi can't make that permission optional, so their extension has it from the install; Chrome
   counts it under the access to every site the extension already has, so the update asks for
   nothing new. There the extension reads the browser's proxy settings: the server for the
-  download's scheme (honouring their bypass list), or their auto-config script.
+  download's scheme (honouring their bypass list), or their auto-config script. Addresses on
+  this computer (localhost, 127.0.0.1) go straight to it, as the browser sends them.
 - **Zen, Helium and other browsers built on Firefox or Chromium** ([#41](https://github.com/anefzaoui/misterdownloadmanager/issues/41)):
   the extension reaches MDM in them, also when one is the only browser on Linux or macOS (Zen
   reads Firefox's folder, which MDM now creates; Helium its own). **Add Mister Download Manager
@@ -402,7 +541,7 @@ choose. And Linux, checked on a real desktop with every change.
   with the form's data, instead of being lost. A form that sends a file (multipart) stays with
   the browser.
 
-#### Remote control, servers and scripts
+##### Remote control, servers and scripts
 
 - **Control MDM from your phone** ([#141](https://github.com/anefzaoui/misterdownloadmanager/issues/141)):
   **Options → Remote**, off by default. A phone or another computer on the local network, paired
@@ -420,7 +559,7 @@ choose. And Linux, checked on a real desktop with every change.
 - The automation API's list also gives the queues, the categories and the free space; it starts
   and stops a queue by name, and an added address can choose its category and queue.
 
-#### Accounts, the Scheduler and support
+##### Accounts, the Scheduler and support
 
 - **Sign-ins in the system's keychain**
   ([#44](https://github.com/anefzaoui/misterdownloadmanager/issues/44)): debrid accounts, Sites
@@ -445,7 +584,7 @@ choose. And Linux, checked on a real desktop with every change.
   README and the browser extension's popup link to it too. Only when asked: MDM stays free, with
   no reminders, and nothing changes or unlocks.
 
-#### Linux
+##### Linux
 
 - **The AppImage updates through AppImage tools too** ([#24](https://github.com/anefzaoui/misterdownloadmanager/issues/24)):
   it carries the address of its updates, and each release has its `.AppImage.zsync`, so
@@ -456,7 +595,7 @@ choose. And Linux, checked on a real desktop with every change.
   descriptions no longer call them an experimental build. Update now, the AppImage tools and the
   website find them by either name. The macOS .dmg files keep `-experimental`.
 
-#### The website
+##### The website
 
 - **A page for every feature, and a Themes page**
   ([#260](https://github.com/anefzaoui/misterdownloadmanager/issues/260)): each feature has a page
@@ -464,10 +603,15 @@ choose. And Linux, checked on a real desktop with every change.
   can't do yet; the home page lists them all, by group. The Themes page shows every built-in theme
   in its light and dark side, and how to make your own theme file, try it without building MDM,
   and share it, with a prompt to give an AI assistant. What isn't in a release yet says so.
+- **Made possible by these amazing humans**: the home page's first view thanks everyone who sent
+  a pull request, opened an issue or joined a conversation on GitHub, with their round photos; the new
+  [Contributors](https://misterdownloadmanager.com/contributors.html) page shows what each one did;
+  each release, on the News page and in its notes on GitHub, ends with the people who helped since
+  the one before; and the README thanks everyone too.
 
-### Changed
+#### Changed
 
-#### Downloads and the browser
+##### Downloads and the browser
 
 - A download from the browser keeps the browser's name, size and type: Download File Info no
   longer asks the server again, so a link's own name (`download="…"`), a Unicode name and a
@@ -494,7 +638,7 @@ choose. And Linux, checked on a real desktop with every change.
   script does (the download goes on with the default proxy settings), instead of holding it.
 - The extension is called **Mister Download Manager**.
 
-#### Smaller and lighter
+##### Smaller and lighter
 
 - **MDM's programs are a third of their size, its download about half** ([#25](https://github.com/anefzaoui/misterdownloadmanager/issues/25)):
   on Windows, the programs went from 93 MB to 33 MB (`misterdownloadmanager.exe` from 61 MB to
@@ -531,7 +675,7 @@ choose. And Linux, checked on a real desktop with every change.
   system the same way. [MDM uses a lot of memory](docs/troubleshooting.md#mdm-uses-a-lot-of-memory)
   explains Task Manager's figures.
 
-#### Reports, translations and help
+##### Reports, translations and help
 
 - **Freeze reports say what kind of freeze it was** ([#57](https://github.com/anefzaoui/misterdownloadmanager/issues/57)):
   MDM measures how much processor time the window got while it didn't answer. The report then
@@ -557,7 +701,7 @@ choose. And Linux, checked on a real desktop with every change.
   with a click; their descriptions and captions are translated with the page. The pictures are
   made by a script from one list (`tools/shots/`), so they can all be taken again in one go.
 
-#### For developers
+##### For developers
 
 - **A Linux test machine, scripted** (part of [#164](https://github.com/anefzaoui/misterdownloadmanager/issues/164)):
   `tools/lab/linux-vm/` sets up an Ubuntu 24.04 desktop in VirtualBox from a Windows host
@@ -614,8 +758,21 @@ choose. And Linux, checked on a real desktop with every change.
 - **`/show menu:<n>` opens the menu bar's menu even with downloads in the list**; it opened the
   first download's right-click menu instead.
 
-### Fixed
+#### Fixed
 
+- **The progress window's Download status tab is balanced**: its rows sat 10 px below the
+  tab's top edge but touched its bottom edge; there are now 7 px above and below.
+- **Where a download's server is says "this computer" or "the local network"**, each with its own
+  icon in the flag's place, instead of "this computer or the local network" with nothing; the dot
+  between the place and the time is round, where the font's thin "·" read as an apostrophe.
+- **Windows: a slow start no longer turns Direct3D off** (part of
+  [#280](https://github.com/anefzaoui/misterdownloadmanager/issues/280)): MDM gives Direct3D 10
+  seconds to show its first frame, and goes back to OpenGL when it doesn't. Those 10 seconds
+  counted MDM's own loading too (the list, the fonts, the icons), which can take that long by
+  itself on a busy computer just after it starts, so Direct3D was taken for failing and OpenGL drew
+  from then on. Only Direct3D's own time counts now. Crash and freeze reports say what drew, on
+  which graphics card and driver (OpenGL's too), and why, near their top, where a report cut to fit
+  still has it.
 - **Linux: torrents work on a system without CA certificates too** (part of
   [#264](https://github.com/anefzaoui/misterdownloadmanager/issues/264)): the torrent engine built
   its own connection for the trackers, which can't be made without them, so no torrent or magnet
@@ -630,7 +787,7 @@ choose. And Linux, checked on a real desktop with every change.
   folder for those browsers, and takes away the ones an earlier version wrote. The AppImage and
   the tar.gz, and Opera, Helium, Thorium and Firefox's forks (which read them only in the home
   folder), still get them there.
-#### Windows, menus and dialogs
+##### Windows, menus and dialogs
 
 - **Sharper text on Windows** ([#262](https://github.com/anefzaoui/misterdownloadmanager/issues/262)):
   Segoe UI and Tahoma are grid-fitted across as well as up and down, and each letter starts on a
@@ -653,6 +810,25 @@ choose. And Linux, checked on a real desktop with every change.
   picture where the title bar would have ended. Menus and the drop target are now plain pop-up
   windows, as Windows' own menus are, with nothing above their contents to take for a title bar;
   every window of MDM without a title bar is made one the same way.
+- **The progress window, and the windows with a style theme's title bar, without a black band
+  across their top** ([#208](https://github.com/anefzaoui/misterdownloadmanager/issues/208)): on
+  the same Windows 11 Insider build, the progress window showed a black band a title bar tall
+  above its own title bar and a thin one down its left side, its contents moved down and cut off
+  at the bottom; so could every dialog and the main window with Metro, Luna, Aero or Aqua. MDM
+  draws these title bars itself, in windows that kept the system's title bar style, hidden.
+  On Windows 11 they now have no title bar style at all: the progress window and the dialogs are
+  plain windows, all theirs; the main window keeps the system's resizing edges, so it still
+  resizes, snaps and maximizes as before, with a thin strip of its title bar's colour above it.
+  Moving them by their title bar, their taskbar button, Alt+Tab and the window menu (Alt+Space,
+  or a right-click on the title bar) work as before. Windows 10 keeps the frames it had.
+- **Windows: Download File Info and the progress window open in front of the browser**
+  ([#208](https://github.com/anefzaoui/misterdownloadmanager/issues/208)): a download handed over
+  by the browser could open its window behind the browser, and stay there. Windows lets a
+  program in the background take the foreground only with the browser's say-so, which the user's
+  next click or key ends, and a window refused it opens under the program in front. Every dialog
+  and progress window of MDM that opens without the foreground now goes above the other
+  programs' windows, without taking the keyboard from the one being typed in: a click on it does,
+  as with Download complete.
 - **A window closed with its title bar's × no longer turns black first**
   ([#207](https://github.com/anefzaoui/misterdownloadmanager/issues/207)): every dialog and the
   progress window turned black for a moment when closed with the × or Alt+F4, rather than with
@@ -682,7 +858,7 @@ choose. And Linux, checked on a real desktop with every change.
   has it (else English), and **Home Page** opens the website too. The command line's and the MCP
   server's help name the website's guide. Problem reports, releases and the source stay on GitHub.
 
-#### Every language
+##### Every language
 
 - **Buttons fit their text in every language, in every window**
   ([#192](https://github.com/anefzaoui/misterdownloadmanager/issues/192)): many windows gave
@@ -756,7 +932,7 @@ choose. And Linux, checked on a real desktop with every change.
 - Bangla shows Bangladesh's flag instead of India's, in the language picker, on the website and
   in the README ([#27](https://github.com/anefzaoui/misterdownloadmanager/issues/27)).
 
-#### Linux
+##### Linux
 
 - **Ubuntu's Firefox reaches MDM** (part of [#164](https://github.com/anefzaoui/misterdownloadmanager/issues/164)):
   the Snap Firefox never makes the folder MDM looked for, so browser integration wasn't set up
@@ -795,6 +971,14 @@ choose. And Linux, checked on a real desktop with every change.
   lists still opened in the middle of the screen, as the compositor placed them like windows. They
   are now menu windows no window manager places, as X11 menus are, so they open where MDM puts
   them, on every window manager.
+- **Linux: menus appear at once, as menus, on compositors that animate windows** (Hyprland,
+  picom with fading, [#277](https://github.com/anefzaoui/misterdownloadmanager/issues/277)).
+  Before the fix above, Hyprland gave MDM's menus a window's border and slid each one down from
+  the top of the screen. And moving from title to title along the menu bar closed one menu
+  window and opened another, so such a compositor faded each menu out and the next one in at
+  every switch. The menu bar's menus now share one window that moves from title to title, as a
+  submenu's window already did from item to item, and each menu window says which menu it is (a
+  drop-down menu, a right-click menu, a drop-down list), as GTK's and Qt's do.
 - **Leaving a submenu no longer closes the whole menu**
   ([#250](https://github.com/anefzaoui/misterdownloadmanager/issues/250)): with a submenu open
   (Tasks → Import, Downloads → Speed Limiter), moving the pointer back onto its menu, to another
@@ -876,7 +1060,7 @@ choose. And Linux, checked on a real desktop with every change.
   .rpm, .tar.gz and .dmg were named `…-experimental`; MDM now looks for the name without it
   first and still takes the older one, so Update now keeps working whichever a release uses.
 
-#### Downloads
+##### Downloads
 
 - **A minimized MDM keeps working**: with the main window minimized (not to the notification
   area), queues didn't start their next file, the Scheduler's starts and stops didn't fire,
@@ -952,8 +1136,14 @@ choose. And Linux, checked on a real desktop with every change.
   window state, a freeze there opened no crash report window and wrote no freeze report, minimized
   or not. The watchdog now times that part of each frame too.
 
-#### The browser
+##### The browser
 
+- **Waterfox (and Firefox set to ask what to do with each file): the download stayed in the
+  browser** ([#208](https://github.com/anefzaoui/misterdownloadmanager/issues/208)). Firefox's
+  family hands an extension the download only after its *What should … do with this file?*
+  dialog, by which time it has already downloaded the file behind the dialog. MDM now takes the
+  download as the server's answer arrives, before the dialog: for a file MDM takes, the dialog
+  never shows and the browser downloads nothing. Other files open the dialog as before.
 - A second browser download arriving while Download File Info was open replaced the first, which
   was lost (the browser had already given it up). They now wait their turn, and those still
   waiting when MDM quits are kept in the main queue (Download Later).
@@ -969,7 +1159,7 @@ choose. And Linux, checked on a real desktop with every change.
 - **The browser extension's Download video menu: an item's highlight ran past the menu's
   edge** ([#81](https://github.com/anefzaoui/misterdownloadmanager/issues/81)).
 
-#### Videos
+##### Videos
 
 - **HLS and DASH videos from the browser, as their stream**
   ([#155](https://github.com/anefzaoui/misterdownloadmanager/issues/155)): a video played as a
@@ -1020,7 +1210,7 @@ choose. And Linux, checked on a real desktop with every change.
   reads BtbN's newest releases, either naming, and takes the newest complete build. Errors while
   installing yt-dlp or ffmpeg are also worded in the interface language now.
 
-#### Torrents
+##### Torrents
 
 - **A magnet link could wait minutes for its file list** ([#92](https://github.com/anefzaoui/misterdownloadmanager/issues/92)):
   in 0.2.4 on Windows, the DHT (how MDM finds peers without trackers) could stop for the rest
@@ -1043,7 +1233,7 @@ choose. And Linux, checked on a real desktop with every change.
   Trackers, Pieces and General (with the share ratio) said "Shown while the torrent is
   downloading." They now stay for as long as the torrent is shared.
 
-#### Screen readers
+##### Screen readers
 
 - **Every row of a list, not only those in view**
   ([#111](https://github.com/anefzaoui/misterdownloadmanager/issues/111)): a list's rows out of
@@ -1075,7 +1265,7 @@ choose. And Linux, checked on a real desktop with every change.
   only after the focus moved on, and its "Remember Speed Limiter settings for this file" check box
   had no name. A speed set that way applies at once, and the box is named.
 
-### Security
+#### Security
 
 - **Torrents: file names are checked more strictly** ([#40](https://github.com/anefzaoui/misterdownloadmanager/issues/40)):
   a torrent with names the system can't write safely is refused, saying which name, and so are

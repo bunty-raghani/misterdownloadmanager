@@ -88,6 +88,14 @@ fn flags(ctx: &egui::Context) -> Option<egui::TextureHandle> {
         .clone()
 }
 
+/// This computer's own addresses (loopback): its icon is a computer, not the local network's.
+fn is_this_computer(ip: IpAddr) -> bool {
+    match ip {
+        IpAddr::V4(a) => a.is_loopback(),
+        IpAddr::V6(a) => a.is_loopback() || a.to_ipv4_mapped().is_some_and(|v4| v4.is_loopback()),
+    }
+}
+
 fn is_local(ip: IpAddr) -> bool {
     match ip {
         IpAddr::V4(a) => a.is_private() || a.is_loopback() || a.is_link_local(),
@@ -98,8 +106,15 @@ fn is_local(ip: IpAddr) -> bool {
     }
 }
 
-/// The place's words and its country (for the flag), or None while the table loads.
-fn place(seen: &Seen) -> Option<(String, Option<mdm_geo::Country>)> {
+/// Where a place's picture comes from: its country's flag, or a Tango icon for this computer
+/// and the local network, which have no country.
+enum Mark {
+    Flag(mdm_geo::Country),
+    Icon(&'static str),
+}
+
+/// The place's words and its mark (a flag or an icon), or None while the table loads.
+fn place(seen: &Seen) -> Option<(String, Option<Mark>)> {
     let Some(ip) = seen.ip else {
         // i18n: where a download's server is: not known (no address seen)
         return Some((crate::i18n::t("unknown").to_owned(), None));
@@ -109,14 +124,24 @@ fn place(seen: &Seen) -> Option<(String, Option<mdm_geo::Country>)> {
         return None;
     }
     let country = mdm_geo::country(ip);
-    let name = match &country {
-        Some(c) => crate::countries::name(c.code())
-            .unwrap_or(c.code())
-            .to_owned(),
-        // i18n: where a download's server is: on this computer or the local network (no country)
-        None if is_local(ip) => crate::i18n::t("this computer or the local network").to_owned(),
+    let (name, icon) = match &country {
+        Some(c) => (
+            crate::countries::name(c.code())
+                .unwrap_or(c.code())
+                .to_owned(),
+            None,
+        ),
+        // i18n: where a download's server is: on this very computer (no country)
+        None if is_this_computer(ip) => {
+            (crate::i18n::t("this computer").to_owned(), Some("computer"))
+        }
+        // i18n: where a download's server is: another computer on the local network (no country)
+        None if is_local(ip) => (
+            crate::i18n::t("the local network").to_owned(),
+            Some("network-workgroup"),
+        ),
         // i18n: where a download's server is: an address the location table doesn't place
-        None => crate::i18n::t("unknown").to_owned(),
+        None => (crate::i18n::t("unknown").to_owned(), None),
     };
     let words = if seen.proxied {
         match &country {
@@ -131,7 +156,8 @@ fn place(seen: &Seen) -> Option<(String, Option<mdm_geo::Country>)> {
     } else {
         name
     };
-    Some((words, country))
+    let mark = country.map(Mark::Flag).or(icon.map(Mark::Icon));
+    Some((words, mark))
 }
 
 /// What the line's tooltip says.
@@ -188,7 +214,7 @@ pub fn line(ui: &Ui, x: f32, baseline: f32, right: f32, seen: Option<&Seen>, id:
         winui::text(&p, x, baseline, "...", winui::MUTED());
         return;
     };
-    let Some((words, country)) = place(seen) else {
+    let Some((words, mark)) = place(seen) else {
         winui::text(&p, x, baseline, "...", winui::MUTED());
         ui.ctx()
             .request_repaint_after(std::time::Duration::from_millis(100));
@@ -196,7 +222,22 @@ pub fn line(ui: &Ui, x: f32, baseline: f32, right: f32, seen: Option<&Seen>, id:
     };
     let mut at = x;
     let mut shown: Option<Rect> = None;
+    // This computer's or the local network's icon, 16 x 16, in the flag's place: its drawing's
+    // middle level with the middle of the text's letters (measured on the pictures).
+    if let Some(Mark::Icon(name)) = &mark {
+        let rc = winui::rect(Rect::from_min_size(
+            pos2(at, baseline - 11.0),
+            vec2(16.0, 16.0),
+        ));
+        crate::fileicons::paint_tango(ui, &p, name, rc);
+        shown = Some(rc);
+        at += 21.0;
+    }
     // The flag, 16 x 12, its middle on the text's.
+    let country = match &mark {
+        Some(Mark::Flag(c)) => Some(c),
+        _ => None,
+    };
     if let Some((cx, cy)) = country.and_then(|c| c.flag_cell())
         && let Some(tex) = flags(ui.ctx())
     {
@@ -249,7 +290,7 @@ pub fn line(ui: &Ui, x: f32, baseline: f32, right: f32, seen: Option<&Seen>, id:
     let mut all = shown.map_or(rc, |s| s.union(rc));
     if let Some((t, colour)) = time {
         let after = at + rc.width() + 6.0;
-        let dot = winui::text(&p, after, baseline, "·", winui::MUTED());
+        let dot = winui::separator_dot(&p, after, baseline, winui::MUTED());
         let rc = winui::text(&p, after + dot.width() + 5.0, baseline, &t, colour);
         all = all.union(dot).union(rc);
     }

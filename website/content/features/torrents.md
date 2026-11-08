@@ -45,7 +45,7 @@ Plainly: everyone sharing the same torrent sees your IP address. That is how Bit
 and no setting changes it. To hide it, use a VPN for the whole computer.
 [Torrents and your security](torrent-security.md) says what others can see.
 
-## More control in the next version
+## More control in version 0.5.0
 
 <!--@coming 0.5-->
 

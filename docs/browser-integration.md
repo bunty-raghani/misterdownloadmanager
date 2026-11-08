@@ -64,7 +64,7 @@ Both the address you clicked and the one its redirects led to are checked, so a 
 
 When MDM takes a download, it gets the browser's file name, size and type with it, so **Download File Info** shows them at once without asking the server again. A download from a form (a button that posts and gets a file back) is posted again by MDM with the form's data; a form that sends a file stays with the browser.
 
-When MDM takes a download, the browser's own copy is cancelled and removed from the browser's download list. **Download File Info** opens in MDM (unless you turned it off in **Options → Downloads**). Cancelling there doesn't hand the download back to the browser.
+When MDM takes a download, the browser's own copy is cancelled and removed from the browser's download list. In Firefox and the browsers built on it (Waterfox, Zen, LibreWolf), MDM takes it as soon as the server answers, before the browser asks *What should … do with this file?*: for a file MDM takes, that question never shows (Waterfox asks it for every new type of file). Files MDM doesn't take get the question as before. **Download File Info** opens in MDM (unless you turned it off in **Options → Downloads**). Cancelling there doesn't hand the download back to the browser.
 
 <!-- steps -->
 

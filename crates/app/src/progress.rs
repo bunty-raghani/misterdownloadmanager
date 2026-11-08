@@ -902,6 +902,8 @@ fn hide_tab(ui: &mut Ui, o: Pos2) -> bool {
 /// Right end for text on the tab page (its frame is x 18..529).
 const PAGE_TEXT_RIGHT: f32 = 520.0;
 
+// The rows sit 7 px inside the page's frame at the top and at the bottom (the Server row's
+// descent included), with a slightly wider break after Status, as before.
 fn status_page(ui: &Ui, o: Pos2, item: &Item, snap: Option<&Snapshot>, frac: f64) {
     let p = &ui.painter().clone();
     // Long values are cut with "..." at the page edge and shown whole on hover.
@@ -946,23 +948,23 @@ fn status_page(ui: &Ui, o: Pos2, item: &Item, snap: Option<&Snapshot>, frac: f64
     fit(
         "url",
         33.0,
-        47.0,
+        44.0,
         &crate::i18n::ltr(item.url.as_str()),
         winui::TEXT(),
     );
     let rows: [(&str, f32, f32, String); 6] = [
         // i18n: noun: label before the download's state
-        (crate::i18n::mark("Status"), 64.0, 102.0, status),
+        (crate::i18n::mark("Status"), 61.0, 102.0, status),
         (
             crate::i18n::mark("File size"),
-            86.0,
+            80.0,
             135.0,
             item.size.map_or(String::new(), size3),
         ),
         (
             // i18n: label before the amount received so far
             crate::i18n::mark("Downloaded"),
-            102.0,
+            96.0,
             135.0,
             if crate::i18n::code() == "en" {
                 format!("{} ( {:.2} % )", size3(item.downloaded), frac * 100.0) // not translated: English path (IDM's spacing)
@@ -976,7 +978,7 @@ fn status_page(ui: &Ui, o: Pos2, item: &Item, snap: Option<&Snapshot>, frac: f64
         ),
         (
             crate::i18n::mark("Transfer rate"),
-            118.0,
+            112.0,
             135.0,
             if item.status == Status::Downloading {
                 model::rate(item.rate())
@@ -986,14 +988,14 @@ fn status_page(ui: &Ui, o: Pos2, item: &Item, snap: Option<&Snapshot>, frac: f64
         ),
         (
             crate::i18n::mark("Time left"),
-            134.0,
+            128.0,
             135.0,
             item.time_left(),
         ),
         (
             // i18n: label: whether the server lets a stopped download continue (Yes / No)
             crate::i18n::mark("Resume capability"),
-            151.0,
+            145.0,
             135.0,
             match item.resumable {
                 Some(true) => crate::i18n::t("Yes"),
@@ -1037,7 +1039,7 @@ fn status_page(ui: &Ui, o: Pos2, item: &Item, snap: Option<&Snapshot>, frac: f64
     if item.torrent.is_none() && item.video.is_none() && item.gallery.is_none() {
         // i18n: label before where a download's server is (its country and round trip)
         let label = crate::i18n::t("Server");
-        text(p, o.x + 33.0, o.y + 167.0, label, winui::TEXT());
+        text(p, o.x + 33.0, o.y + 161.0, label, winui::TEXT());
         let seen = snap
             .and_then(|s| s.server.as_ref())
             .map(crate::whereis::Seen::from)
@@ -1045,7 +1047,7 @@ fn status_page(ui: &Ui, o: Pos2, item: &Item, snap: Option<&Snapshot>, frac: f64
         crate::whereis::line(
             ui,
             o.x + column.max(33.0 + winui::text_width(p, label).ceil() + 6.0),
-            o.y + 167.0,
+            o.y + 161.0,
             o.x + PAGE_TEXT_RIGHT,
             seen.as_ref(),
             &format!("progress-{}", item.id),

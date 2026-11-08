@@ -12,8 +12,8 @@ use mdm_engine::{Destination, Download, Options, Request};
 use reqwest::header::{AUTHORIZATION, HeaderMap, HeaderValue};
 
 use crate::chrome::{
-    self, IconKey, MenuBarEvent, MenuEntry, PopupResult, ShellIcons, ToolbarEvent, TreeEvent,
-    TreeRow,
+    self, IconKey, MenuBarEvent, MenuEntry, MenuKind, PopupResult, ShellIcons, ToolbarEvent,
+    TreeEvent, TreeRow,
 };
 use crate::dialogs::{self, AddUrl, Complete, FileInfo, Outcome, Start};
 use crate::icons::Icon;
@@ -108,6 +108,9 @@ enum Cmd {
     Theme(&'static str),
     /// View → Theme → Open themes folder.
     OpenThemesFolder,
+    /// View → Theme → Add a theme file: a theme or a Base16 or pywal colour scheme, copied
+    /// into the themes folder and picked.
+    AddThemeFile,
     /// View → Draw with → OpenGL / Direct3D, Vulkan or Metal (#89, #206), from the next start.
     #[cfg(gpu)]
     DrawWith(crate::renderer::Api),
@@ -549,6 +552,8 @@ pub struct App {
     /// View → Theme's choices (#45), and when the themes folder last changed (read again then).
     theme_list: Vec<crate::themefile::Entry>,
     themes_changed: Option<std::time::SystemTime>,
+    /// pywal's colours were there at the last check (View → Theme → pywal listed then).
+    pywal_there: bool,
     /// When `logic`'s every-2-seconds work last ran (crash state, torrents, #174).
     ticked: Option<Instant>,
     /// The main window's caption matches the mode.
@@ -958,7 +963,7 @@ impl App {
         }
         // "Launch on startup" is whatever the Run key says (the installer may have set it); on
         // Linux and macOS, the autostart entry / LaunchAgent.
-        // An entry written before #226 (by 0.3.0 and earlier, or by their installer) starts MDM
+        // An entry written before #226 (by versions before 0.5.0, or by their installer) starts MDM
         // with its window in front: written again, with the argument that starts it in the
         // notification area. Only an entry for this very program (not one a copy elsewhere
         // wrote), and never by a portable copy, which writes nothing outside its folder.
@@ -1182,6 +1187,7 @@ impl App {
             fitted: false,
             theme_list: crate::themefile::list(),
             themes_changed: crate::themefile::changed(),
+            pywal_there: crate::themefile::pywal_file().is_some_and(|p| p.is_file()),
             ticked: None,
             caption_set: false,
             // The system's title bar is the frame's own: nothing to apply for it.
@@ -2097,6 +2103,11 @@ impl App {
                 {
                     p.show_tab(tab);
                 }
+            }
+            // View → Theme → Add a theme file, as its dialog answers (#45):
+            // `theme-add:<path>` (tests of a scheme's import without the system's dialog).
+            "theme-add" => {
+                self.add_theme_file(std::path::Path::new(tab), ctx);
             }
             // View → Theme → a theme, as the menu picks it (#45): `theme:native` (tests of the
             // live switch without a click).
@@ -5295,6 +5306,28 @@ impl App {
                     crate::launch::open(dir);
                 }
             }
+            Cmd::AddThemeFile => {
+                // i18n: title of the file dialog of View → Theme → Add a theme file
+                let title = crate::i18n::t("Add a theme file").to_owned();
+                // i18n: the kind of file View → Theme → Add a theme file lists: MDM's themes (TOML, JSON), Base16 schemes (YAML) and pywal's colors.json
+                let kinds = crate::i18n::t("Themes and colour schemes").to_owned();
+                let all = crate::i18n::t("All files").to_owned();
+                // Where pywal writes its colours, when it has: the first place to look.
+                let start = crate::themefile::pywal_file()
+                    .filter(|p| p.is_file())
+                    .and_then(|p| p.parent().map(std::path::Path::to_path_buf));
+                winui::start_pick(&self.ui_ctx, "app-theme-file", move || {
+                    let dialog = rfd::FileDialog::new().set_title(title);
+                    let dialog = match start {
+                        Some(dir) => dialog.set_directory(dir),
+                        None => dialog,
+                    };
+                    dialog
+                        .add_filter(kinds, &["toml", "json", "yaml", "yml"])
+                        .add_filter(all, &["*"])
+                        .pick_file()
+                });
+            }
             // Every window at once (the frames after this one); saved by `follow_zoom`.
             Cmd::InterfaceSize(percent) => crate::scale::set(ctx, percent),
             #[cfg(gpu)]
@@ -5986,16 +6019,25 @@ impl App {
         items.push(Radio("Aero", Cmd::Theme("aero"), true, on("aero")));
         // i18n: View → Theme: a style theme's name (Mac OS X's look), a name: keep "Aqua" as written
         items.push(Radio("Aqua", Cmd::Theme("aqua"), true, on("aqua")));
+        let wal = crate::themefile::PYWAL;
         for e in self.theme_list.iter().filter(|e| e.path.is_some()) {
             if !files {
                 items.push(Sep);
                 files = true;
+            }
+            // pywal's colours, where `wal` writes them, followed as it writes them again.
+            if e.id == wal && e.name == wal {
+                // i18n: View → Theme: the colours of pywal (a program making colour schemes from the wallpaper), followed as they change; a name: keep "pywal" as written
+                items.push(Radio("pywal", Cmd::Theme(wal), true, chosen == wal));
+                continue;
             }
             // A file's theme by its own name, untranslated.
             let (id, name) = (crate::chrome::label(&e.id), crate::chrome::label(&e.name));
             items.push(Radio(name, Cmd::Theme(id), true, e.id == chosen));
         }
         items.push(Sep);
+        // i18n: View → Theme: picks a theme file or a Base16 or pywal colour scheme, copies it into the themes folder and uses it
+        items.push(I("Add a theme file…", Cmd::AddThemeFile, true, false));
         // i18n: View → Theme: opens the folder where theme files go (TOML or JSON)
         items.push(I("Open themes folder", Cmd::OpenThemesFolder, true, false));
         // i18n: View menu: submenu choosing MDM's look (colours, sizes, icons): Classic, Native…
@@ -6565,6 +6607,8 @@ impl App {
             ];
             let bar = caption::title_bar(ui, rect, crate::MAIN_TITLE, &buttons);
             if let Some(h) = self.main_hwnd {
+                // The sizing frame above the bar (Windows 11, #208) in the bar's colour.
+                crate::win32::caption_colour(h, [bar.top.r(), bar.top.g(), bar.top.b()]);
                 let ppp = ui.ctx().pixels_per_point();
                 let px = |r: egui::Rect| {
                     let (a, b) = ((r.min - full.min) * ppp, (r.max - full.min) * ppp);
@@ -6708,14 +6752,23 @@ impl App {
         if let Some(event) = chrome::menu_bar(ui, o, w, self.open_menu) {
             self.open_menu = chrome::menubar_next(self.open_menu, event);
         }
-        if let Some(i) = self.open_menu {
+        // A menu opened by Left or Right is drawn in the same pass as the one it replaces (a
+        // second turn): on X11 the bar's menus share one window (chrome::popup), and a pass
+        // without a menu closed it, a new window opening for the next (#277).
+        for _ in 0..2 {
+            let Some(i) = self.open_menu else { break };
             let x = chrome::menus(ui.painter())[i].1;
             let entries = self.menu_entries(i);
             // Under the item's leading edge (the menu's top-right in RTL).
             let at = pos2(winui::mx(o.x + x), o.y + chrome::MENU_H - 1.0);
-            let event = match chrome::popup(&ctx, &format!("menu-{i}"), at, &entries, &|c: &Cmd| {
-                c.hint()
-            }) {
+            let event = match chrome::popup(
+                &ctx,
+                MenuKind::Bar,
+                &format!("menu-{i}"),
+                at,
+                &entries,
+                &|c: &Cmd| c.hint(),
+            ) {
                 PopupResult::Open => None,
                 PopupResult::Neighbor(d) => {
                     let n = chrome::menus(ui.painter()).len() as i32;
@@ -6737,8 +6790,12 @@ impl App {
                     Some(MenuBarEvent::Dismissed { press_on_title })
                 }
             };
+            let neighbor = matches!(event, Some(MenuBarEvent::Open(_)));
             if let Some(event) = event {
                 self.open_menu = chrome::menubar_next(self.open_menu, event);
+            }
+            if !neighbor {
+                break;
             }
         }
 
@@ -7061,6 +7118,7 @@ impl App {
             };
             match chrome::popup(
                 &ctx,
+                MenuKind::Context,
                 &format!("popup-{serial}"),
                 pos,
                 &entries,
@@ -7568,10 +7626,37 @@ impl App {
         if let Some(path) = winui::picked(ctx, "app-import") {
             self.import_file(&path);
         }
+        if let Some(path) = winui::picked(ctx, "app-theme-file") {
+            self.add_theme_file(&path, ctx);
+        }
         if let Some(target) = winui::picked(ctx, "app-move-rename")
             && let Some(id) = self.move_rename_for.take()
         {
             self.start_move(id, target);
+        }
+    }
+
+    /// View → Theme → Add a theme file, answered: the file copied into the themes folder and
+    /// picked, as clicking it in View → Theme does; a file that isn't a theme says why.
+    fn add_theme_file(&mut self, path: &std::path::Path, ctx: &egui::Context) {
+        match crate::themefile::add(path) {
+            Ok(id) => {
+                self.themes_changed = crate::themefile::changed();
+                self.theme_list = crate::themefile::list();
+                self.run(Cmd::Theme(crate::chrome::label(&id)), None, ctx);
+            }
+            Err(e) => {
+                tracing::warn!("add a theme file: {e}");
+                self.notice = Some((
+                    // i18n: title of the message when View → Theme → Add a theme file fails
+                    crate::i18n::mark("Add a theme file"),
+                    crate::i18n::fmt(
+                        // i18n: {error} is why, in English (a file that isn't a theme or a colour scheme, a colour missing)
+                        crate::i18n::t("This file can't be used as a theme: {error}"),
+                        &[("error", &e)],
+                    ),
+                ));
+            }
         }
     }
 
@@ -8594,7 +8679,10 @@ impl eframe::App for App {
     /// (#162). A command that opens a window gets the UI pass that creates it, minimized or not
     /// (no window is raised or focused for it beyond what the command itself does).
     fn logic(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        // MDM's own work: not counted as the graphics API's time to its first frame (#280).
+        crate::renderer::own_work_begin();
         self.tick(ctx);
+        crate::renderer::own_work_end();
     }
 
     fn ui(&mut self, ui: &mut Ui, frame: &mut eframe::Frame) {
@@ -8708,10 +8796,13 @@ impl App {
                 .is_none_or(|t| t.elapsed() > Duration::from_secs(2))
         {
             self.theme_checked = Some(Instant::now());
-            // A theme file added, removed or renamed: View → Theme lists it.
+            // A theme file added, removed or renamed, pywal's colours written or taken away:
+            // View → Theme lists it.
             let changed = crate::themefile::changed();
-            if changed != self.themes_changed {
+            let wal = crate::themefile::pywal_file().is_some_and(|p| p.is_file());
+            if changed != self.themes_changed || wal != self.pywal_there {
                 self.themes_changed = changed;
+                self.pywal_there = wal;
                 self.theme_list = crate::themefile::list();
             }
             let changed = crate::theme::update(
@@ -8719,8 +8810,9 @@ impl App {
                 self.settings.always_dark,
                 &ctx,
             );
-            // Native follows the system's accent and contrast as they change.
-            let changed = if crate::theme::follow_system(&ctx) {
+            // Native follows the system's accent and contrast as they change, a theme made from
+            // pywal's colours the colours `wal` writes for each new wallpaper.
+            let changed = if crate::theme::follow_system(&ctx) || crate::theme::follow_pywal() {
                 crate::theme::apply_theme(&ctx);
                 true
             } else {

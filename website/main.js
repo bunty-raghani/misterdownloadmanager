@@ -16,6 +16,23 @@
     for (var i = 0; i < els.length; i++) fn(els[i]);
   }
 
+  // ---- The crew's names ------------------------------------------------------------------------
+  // A contributor's login shows over their photo on hover and focus (styles.css .face-name); at
+  // the start or end of a row it slides back inside the list rather than run out of the sheet.
+  function nudge(e) {
+    var face = e.target && e.target.closest ? e.target.closest(".face") : null;
+    var name = face && face.querySelector(".face-name");
+    var list = face && face.closest(".faces");
+    if (!name || !list) return;
+    name.style.setProperty("--nudge", "0px");
+    var r = name.getBoundingClientRect();
+    var box = list.getBoundingClientRect();
+    var shift = r.left < box.left ? box.left - r.left : r.right > box.right ? box.right - r.right : 0;
+    name.style.setProperty("--nudge", shift + "px");
+  }
+  document.addEventListener("pointerover", nudge);
+  document.addEventListener("focusin", nudge);
+
   // ---- Your language ---------------------------------------------------------------------------
   // An English page offers its copy in the visitor's language once (the first language the
   // browser asks for, unless that is English), in that language's words (the language menu's

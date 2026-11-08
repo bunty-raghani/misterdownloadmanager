@@ -15,7 +15,7 @@
     "message": "Lisää vaihtoehtoja"
   },
   "video_hide_here": {
-    "message": "Piilota tältä videolta"
+    "message": "Piilota tässä videossa"
   },
   "video_never_site": {
     "message": "Ei koskaan sivustolla $site$",
@@ -30,10 +30,10 @@
     "message": "Painikkeen asetukset..."
   },
   "video_sent": {
-    "message": "Lähetetty kohteeseen Mister Download Manager"
+    "message": "Lähetetty Mister Download Manager:lle"
   },
   "video_failed": {
-    "message": "Mister Download Manager ei ole asennettu tai ei käynnistynyt"
+    "message": "Mister Download Manager ei ole asennettu tai sitä ei käynnistetty"
   },
   "video_drag": {
     "message": "Vedä siirtääksesi sitä videon reunaa pitkin"
@@ -57,7 +57,7 @@
     }
   },
   "status_paused": {
-    "message": "Keskeytetty: lataukset pysyvät selaimessa"
+    "message": "Ei käytössä: lataukset jäävät selaimeen"
   },
   "status_not_installed": {
     "message": "Mister Download Manager ei ole asennettu, tai sen selainintegrointia ei ole määritetty"
@@ -69,22 +69,22 @@
     "message": "Mister Download Manager ei käynnistynyt ajoissa"
   },
   "status_host_failed": {
-    "message": "Yhteys sovellukseen Mister Download Manager epäonnistui"
+    "message": "Yhteyden muodostaminen sovellukseen Mister Download Manager epäonnistui"
   },
   "status_too_large": {
-    "message": "Tämän latauksen tiedot olivat liian suuria siirrettäväksi"
+    "message": "Tämän latauksen tiedot olivat liian suuria siirrettäviksi"
   },
   "status_update_app": {
-    "message": "Päivitä Mister Download Manager käyttääksesi kaikkia tämän laajennuksen tarjoamia ominaisuuksia"
+    "message": "Päivitä Mister Download Manager, jotta voit käyttää kaikkia tämän laajennuksen tarjoamia ominaisuuksia"
   },
   "popup_take": {
-    "message": "Ota lataukset tästä selaimesta"
+    "message": "Latausten siirtäminen tästä selaimesta"
   },
   "popup_proxy": {
     "message": "Lähetä lataukset tämän selaimen välityspalvelimen tai VPN-laajennuksen kautta"
   },
   "popup_proxy_title": {
-    "message": "Mister Download Manager lataa sitten saman välityspalvelimen kautta kuin tämä selain. Selain kysyy sinulta kerran lupaa; tämän poistaminen käytöstä peruuttaa sen."
+    "message": "Tällöin Mister Download Manager lataa saman välityspalvelimen kautta kuin tämä selain. Selain pyytää kerran lupaa; tämän poistaminen käytöstä peruuttaa luvan."
   },
   "popup_proxy_title_chromium": {
     "message": "Mister Download Manager lataa tiedostot sitten tämän selaimen käyttämän välityspalvelimen kautta. Kun tämä asetus on pois päältä, laajennus ei lue selaimen välityspalvelimen asetuksia."
@@ -162,7 +162,7 @@
     "message": "Sivun media"
   },
   "popup_media_none": {
-    "message": "Sivulta ei löytynyt videoita tai ääniä. Toista media ja avaa tämä uudelleen."
+    "message": "Sivulta ei ole vielä löytynyt videoita eikä ääntä. Toista videota tai ääntä ja avaa tämä uudelleen."
   },
   "popup_media_download": {
     "message": "Lataa"
@@ -174,10 +174,10 @@
     "message": "Live"
   },
   "video_off": {
-    "message": "Latauspainike on pois käytöstä tällä sivustolla"
+    "message": "Latauspainike ei ole käytössä tällä sivustolla"
   },
   "video_drm": {
-    "message": "Suojattu video: sitä ei voi tallentaa"
+    "message": "Suojattua videota ei voi tallentaa"
   },
   "popup_send_to": {
     "message": "Lähetä lataukset kohteeseen"

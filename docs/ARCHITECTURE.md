@@ -191,6 +191,15 @@ instance off the screen, crops and annotates it from the window's accessibility 
 lossless WebP; `make.py check` (CI) keeps the list, the pages and the files in step. The
 published ones are taken on GitHub's Windows runner (`docs-shots.yml`).
 
+## Contributors
+
+`tools/contributors.py` reads who opened pull requests and issues, and who commented, from
+GitHub's public API (the maintainer, Claude and bots left out) for every place that thanks them:
+the website's home page, `/contributors.html` and each release on the News page (`build.py`, on
+every build), each release's notes (`release.yml`, the people active since the release before)
+and the README (`python tools/contributors.py readme` at each release's preparation: its round
+photos are committed in `art/contributors/`, since GitHub can't round a picture in a README).
+
 ## Tests and benchmarks
 
 `cargo test` runs unit tests and end-to-end downloads against `mdm-labserver` with injected

@@ -1333,6 +1333,180 @@ const popupState = (listeners) =>
   ok("#208: refusal codes, the app's and the popup's, agree");
 }
 
+// #208: Firefox (and Waterfox, which always asks first) creates a download only after its "What
+// should … do with this file?" dialog, having downloaded the whole file behind it. The answer to
+// the page load is caught before that instead: offered with its name (Content-Disposition), size,
+// type and the page that linked it, then cancelled (no dialog, no browser download); the
+// download it would still become is left alone, never asked twice.
+const answer = (url, headers, more = {}) => ({
+  requestId: "r1",
+  url,
+  method: "GET",
+  type: "main_frame",
+  tabId: 3,
+  statusCode: 200,
+  responseHeaders: Object.entries(headers).map(([name, value]) => ({ name, value })),
+  ...more,
+});
+// The listener's answer, as a plain object (it is made in the sandbox).
+const held = async (listeners, d) => JSON.parse(JSON.stringify(await listeners.headersReceived(d)));
+const ask = (listeners) => (m, sender) => new Promise((r) => listeners.message(m, sender, r));
+{
+  const { api, calls, listeners } = fakeApi({ firefox: true });
+  load(api, true);
+  await settle();
+  listeners.beforeSendHeaders({ requestId: "r1", method: "GET", url: "https://dl.test/get?id=1", requestHeaders: [{ name: "Referer", value: "https://site.test/page" }] });
+  const res = await held(listeners, 
+    answer(
+      "https://dl.test/get?id=1",
+      {
+        "Content-Type": "application/octet-stream",
+        "Content-Disposition": "attachment; filename=\"fallback.zip\"; filename*=UTF-8''r%C3%A9sum%C3%A9%20v2.zip",
+        "Content-Length": "4096",
+      },
+      { cookieStoreId: "firefox-container-3" },
+    ),
+  );
+  assert.deepEqual(res, { cancel: true });
+  const m = natives(calls)[0];
+  assert.deepEqual(
+    [m.url, m.filename, m.size, m.mime, m.referrer, m.cookies],
+    ["https://dl.test/get?id=1", "résumé v2.zip", 4096, "application/octet-stream", "https://site.test/page", "sid=1"],
+  );
+  assert.deepEqual(calls.find((c) => c[0] === "cookies")[1], { url: "https://dl.test/get?id=1", storeId: "firefox-container-3" });
+  // Were the browser to create the download all the same: left alone, not asked twice.
+  listeners.created({ id: 30, url: "https://dl.test/get?id=1", filename: "C:\\dl\\résumé v2.zip" });
+  await settle();
+  assert.equal(natives(calls).length, 1);
+  assert.deepEqual(steps(calls), []);
+  ok("#208 Firefox: a download caught from its answer, before the browser's dialog");
+}
+// A download taken from its answer (#208) is cancelled, so its response never starts: the proxy a
+// VPN add-on chose for it (proxy.onRequest, in the answer's proxyInfo) still goes with it.
+{
+  const { api, calls, listeners } = fakeApi({ firefox: true, proxyGranted: true });
+  load(api, true);
+  await settle();
+  const res = await held(
+    listeners,
+    answer("https://dl.test/vpn.zip", { "Content-Type": "application/zip", "Content-Disposition": "attachment" }, { proxyInfo: { type: "socks", host: "10.8.0.1", port: 1080, proxyDNS: true } }),
+  );
+  assert.deepEqual(res, { cancel: true });
+  assert.deepEqual([natives(calls)[0].proxy, natives(calls)[0].proxyLogin], ["socks5h://10.8.0.1:1080", undefined]);
+  ok("#208 Firefox: a download taken from its answer keeps its request's proxy (a VPN add-on's)");
+}
+// Firefox's own proxy settings never cover loopback addresses (allow_hijacking_localhost is off):
+// nothing is sent for them, the proxy for anything else.
+{
+  const settings = { proxyType: "manual", http: "10.0.0.9:3128", httpProxyAll: true, passthrough: "" };
+  const { api, calls, listeners } = fakeApi({ firefox: true, proxyGranted: true, proxy: settings });
+  api.proxy.settings.get = async () => ({ value: settings });
+  load(api, true);
+  await settle();
+  const urls = ["http://127.0.0.1:8231/a.zip", "http://localhost/b.zip", "http://[::1]/c.zip", "http://127.9.9.9/d.zip", "https://x.test/e.zip"];
+  urls.forEach((url, i) => listeners.created({ id: 60 + i, url, filename: `C:\dl\f${i}.zip` }));
+  await settle();
+  assert.deepEqual(natives(calls).map((m) => m.proxy), [undefined, undefined, undefined, undefined, "http://10.0.0.9:3128"]);
+  ok("Firefox: loopback addresses skip its proxy settings' proxy, as Firefox itself does");
+}
+// A type the app doesn't take: the browser goes on (its dialog shows), MDM's log hears why once,
+// and the download after the dialog isn't paused or asked again.
+{
+  const { api, calls, listeners } = fakeApi({ firefox: true });
+  load(api, true);
+  await settle();
+  const res = await held(listeners, answer("https://dl.test/data.xyz", { "Content-Type": "application/octet-stream", "Content-Disposition": "attachment" }));
+  assert.deepEqual(res, {});
+  listeners.created({ id: 31, url: "https://dl.test/data.xyz", filename: "C:\\dl\\data.xyz" });
+  await settle();
+  assert.deepEqual(natives(calls), []);
+  assert.deepEqual(notices(calls), [{ why: "file-type", name: "data.xyz", site: "dl.test" }]);
+  assert.deepEqual(steps(calls), []);
+  ok("#208 Firefox: a type not taken goes on to the browser, said once");
+}
+// Pages, pictures, feeds, add-ons, redirects, pieces and errors are never held; an inline PDF
+// opens when Options don't take the files the browser would open; a type the browser can't show
+// is a download even without "attachment".
+{
+  const { api, calls, listeners } = fakeApi({ firefox: true, rules: { opened: false } });
+  load(api, true);
+  await settle();
+  for (const [url, headers, more] of [
+    ["https://x.test/", { "Content-Type": "text/html; charset=utf-8" }],
+    ["https://x.test/p.png", { "Content-Type": "image/png" }],
+    ["https://x.test/doc.pdf", { "Content-Type": "application/pdf" }],
+    ["https://x.test/a.json", { "Content-Type": "application/json" }],
+    ["https://x.test/feed", { "Content-Type": "application/rss+xml" }],
+    ["https://x.test/addon.xpi", { "Content-Type": "application/x-xpinstall" }],
+    ["https://x.test/old.zip", { "Content-Type": "application/zip", Location: "https://x.test/new.zip" }, { statusCode: 302 }],
+    ["https://x.test/part.zip", { "Content-Type": "application/zip" }, { statusCode: 206 }],
+    ["https://x.test/gone.zip", { "Content-Type": "application/zip" }, { statusCode: 404 }],
+    ["https://x.test/untyped", {}],
+  ]) {
+    assert.deepEqual(await held(listeners, answer(url, headers, more)), {}, url);
+  }
+  assert.deepEqual(natives(calls), []);
+  assert.deepEqual(notices(calls), []);
+  assert.deepEqual(await held(listeners, answer("https://x.test/dl/setup.exe", { "Content-Type": "application/x-msdownload", "Content-Length": "10" })), { cancel: true });
+  assert.equal(natives(calls)[0].filename, "setup.exe");
+  ok("#208 Firefox: pages, pictures, redirects, inline PDFs untouched; an unshowable type taken");
+}
+// A PDF the browser would show is taken when Options say so; the app saying no lets the browser
+// go on.
+{
+  const taken = fakeApi({ firefox: true });
+  load(taken.api, true);
+  await settle();
+  assert.deepEqual(await held(taken.listeners, answer("https://x.test/doc.pdf", { "Content-Type": "application/pdf" })), { cancel: true });
+  const refused = fakeApi({ firefox: true, reply: { ok: false } });
+  load(refused.api, true);
+  await settle();
+  assert.deepEqual(await held(refused.listeners, answer("https://x.test/a.zip", { "Content-Type": "application/zip" })), {});
+  assert.equal(natives(refused.calls).length, 1);
+  ok("#208 Firefox: a PDF taken when Options say so; the app's no lets the browser go on");
+}
+// Alt held, Options' excluded sites, a file under the minimum size, a form that can't be posted
+// again, paused: the browser keeps it, nothing asked.
+{
+  const { api, calls, listeners } = fakeApi({ firefox: true, rules: { excludedSites: "*.skip.test", minKb: 100 } });
+  load(api, true);
+  await settle();
+  const send = ask(listeners);
+  const zip = { "Content-Type": "application/zip" };
+  await send({ type: "bypass", url: "https://x.test/alt.zip" }, { id: "ours", url: "https://x.test/", tab: { url: "https://x.test/" } });
+  assert.deepEqual(await held(listeners, answer("https://x.test/alt.zip", zip)), {});
+  assert.deepEqual(await held(listeners, answer("https://dl.skip.test/a.zip", zip)), {});
+  assert.deepEqual(await held(listeners, answer("https://x.test/small.zip", { ...zip, "Content-Length": "2048" })), {});
+  listeners.beforeRequest({ method: "POST", url: "https://x.test/upload", requestId: "p1", requestBody: { raw: [{ file: "C:\\f" }] } });
+  const upload = answer("https://x.test/upload", { ...zip, "Content-Disposition": "attachment; filename=r.zip" }, { method: "POST", requestId: "p1" });
+  assert.deepEqual(await held(listeners, upload), {});
+  assert.deepEqual(natives(calls), []);
+  await send({ type: "pause", paused: true }, { id: "ours", url: "chrome-extension://ours/popup.html" });
+  assert.deepEqual(await held(listeners, answer("https://x.test/paused.zip", zip)), {});
+  assert.deepEqual(natives(calls), []);
+  ok("#208 Firefox: Alt, excluded sites, small files, file uploads and pause stay the browser's");
+}
+// A private window's download goes as one; a tab opened only for it closes with it.
+{
+  const { api, calls, listeners } = fakeApi({ firefox: true });
+  load(api, true);
+  await settle();
+  listeners.tabCreated({ id: 12 });
+  const res = await held(listeners, answer("https://x.test/p.zip", { "Content-Type": "application/zip" }, { incognito: true, tabId: 12 }));
+  assert.deepEqual(res, { cancel: true });
+  await settle();
+  assert.equal(natives(calls)[0].private, true);
+  assert.ok(calls.some((c) => c[0] === "closeTab" && c[1] === 12));
+  ok("#208 Firefox: private stays private; a tab opened for the download closes");
+}
+// Chromium has its own pause (onDeterminingFilename): no answer is held there.
+{
+  const { api, listeners } = fakeApi({ firefox: false });
+  load(api, false);
+  await settle();
+  assert.equal(listeners.headersReceived, undefined);
+  ok("#208 Chromium: answers aren't held");
+}
 // The manifests (#42): "proxy" optional in Firefox's, required in Chrome's (it can't be optional
 // there); the popup's switch: the permission in Firefox, the extension's own setting in Chrome.
 {

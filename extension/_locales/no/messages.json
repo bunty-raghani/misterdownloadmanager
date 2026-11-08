@@ -15,7 +15,7 @@
     "message": "Flere alternativer"
   },
   "video_hide_here": {
-    "message": "Skjul på denne videoen"
+    "message": "Skjul for denne videoen"
   },
   "video_never_site": {
     "message": "Aldri på $site$",
@@ -57,7 +57,7 @@
     }
   },
   "status_paused": {
-    "message": "Pauset: nedlastinger blir i nettleseren"
+    "message": "Pauset: nedlastingene blir i nettleseren"
   },
   "status_not_installed": {
     "message": "Mister Download Manager er ikke installert, eller nettleserintegrasjonen er ikke konfigurert"
@@ -72,7 +72,7 @@
     "message": "Tilkoblingen til Mister Download Manager mislyktes"
   },
   "status_too_large": {
-    "message": "Detaljene for denne nedlastingen var for store til å overføres"
+    "message": "Detaljene for denne nedlastingen var for store til å overføre"
   },
   "status_update_app": {
     "message": "Oppdater Mister Download Manager for å bruke alt denne utvidelsen tilbyr"
@@ -156,13 +156,13 @@
     "message": "Utvidelsen har ikke tillatelse til å lese dette nettstedet (nettleserens nettstedstilgang)."
   },
   "popup_alt": {
-    "message": "Hold Alt mens du klikker en kobling for å la nettleseren laste den ned."
+    "message": "Hold Alt mens du klikker på en kobling for å la nettleseren laste den ned."
   },
   "popup_media": {
     "message": "Medier på denne siden"
   },
   "popup_media_none": {
-    "message": "Ingen video eller lyd funnet på denne siden ennå. Spill av, og åpne deretter dette igjen."
+    "message": "Ingen video eller lyd funnet på denne siden ennå. Spill den av, og åpne dette igjen."
   },
   "popup_media_download": {
     "message": "Last ned"

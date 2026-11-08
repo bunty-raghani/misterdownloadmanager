@@ -37,10 +37,70 @@ it gives itself. After you edit a file, pick it again in **View → Theme** to s
 A theme can be one file (`harbour.toml`) or a folder of its own (`harbour/theme.toml`) when it
 brings icons.
 
+**View → Theme → Add a theme file…** does it for you: pick a file anywhere, and MDM copies it into
+the themes folder and uses it at once. A file that isn't a theme stays out, and MDM says why.
+
+## Base16 and pywal colour schemes
+
+Colour schemes made for other programs are themes too, with nothing to convert:
+
+- **A Base16 scheme**, the `.yaml` file the
+  [Base16 and Base24 schemes](https://github.com/tinted-theming/schemes) come in: both the
+  classic layout (`scheme:` and `base00` to `base0F` at the top) and the newer one (`name:` and a
+  `palette:` block). A Base24 scheme reads as its first 16 colours.
+- **pywal's `colors.json`**, or any program's file in pywal's shape (wallust's pywal template).
+
+Add it with **View → Theme → Add a theme file…**, or put it in the themes folder yourself. It
+shows in **View → Theme** under the scheme's name (`name:` or `scheme:`; pywal's is named after
+the wallpaper).
+
+**pywal itself:** once `wal` has run, **View → Theme** lists **pywal**, read straight from where
+pywal writes its colours: `~/.cache/wal/colors.json` (on Windows
+`%USERPROFILE%\.cache\wal\colors.json`, where winwal and pywal write it; `$PYWAL_CACHE_DIR` or
+`$XDG_CACHE_HOME/wal` when you set them). Pick it and MDM follows your wallpaper: each time `wal`
+writes new colours, MDM takes them within two seconds. It looks only at the file's date and size,
+every two seconds, and only while pywal is the theme. A copy added with **Add a theme file…**
+keeps the colours it had.
+
+A scheme changes colours only, on the classic look: every window, button and menu stays where it
+was. A dark scheme makes MDM dark and a light one light, whatever **View → Always dark** says. The
+scheme's colours go where they mean the same:
+
+| MDM | Base16 | pywal |
+|---|---|---|
+| The download list, text boxes and menus | `base00` (the background) | `special.background` |
+| Windows, dialogs, the toolbar, the menu bar and column headers | `base01` (the lighter background) | the background a step toward the foreground |
+| Text | `base05` (the foreground) | `special.foreground` |
+| Secondary text (sizes, notes) | `base04` | `color8` |
+| Focus, default buttons, check boxes, links, the selection and the progress bar | `base0D` (blue) | `color4` |
+| Errors | `base08` (red) | `color1` |
+| Warnings | `base0A` (yellow) | `color3` |
+| Success, the meters and a torrent's pieces | `base0B` (green) | `color2` |
+
+Borders and the hover and pressed shades are mixed from these, as for a theme file's `[seeds]`.
+Text stays readable: text and secondary text at 4.5:1 or more against every background they sit
+on (WCAG AA), the accent at 3:1. A scheme short of that has those colours moved a little darker
+(lighter on a dark scheme) until they pass; MDM's log says which.
+
+To change more than colours, make a theme file that inherits the scheme by its file name and adds
+what you like:
+
+```toml
+name = "Gruvbox, my way"
+inherits = "gruvbox-dark-medium"   # gruvbox-dark-medium.yaml, beside it
+icons = "accent"
+
+[sizes]
+radius = 6
+```
+
+`inherits = "pywal"` works the same way, and follows `wal` too.
+
 ## The file
 
-A theme is one small text file in [TOML](https://toml.io/) (or JSON, `.json`). It names only what
-it changes; everything else comes from the theme it `inherits`:
+A theme is one small text file in [TOML](https://toml.io/) (or JSON, `.json`; or a
+[colour scheme](#base16-and-pywal-colour-schemes), `.yaml`). It names only what it changes;
+everything else comes from the theme it `inherits`:
 
 ```toml
 name = "Harbour"

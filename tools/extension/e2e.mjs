@@ -7,9 +7,14 @@
 // browser kept nothing.
 //
 //   cargo build --release -p mdm-app -p mdm-nmhost -p mdm-labserver; tools\extension\pack.ps1
-//   node tools/extension/e2e.mjs [chrome] [brave] [edge] [firefox] [--only=case,case]
+//   node tools/extension/e2e.mjs [chrome] [brave] [edge] [firefox] [waterfox] [--only=case,case]
 //
-// The cases (per browser): link (a .zip link, throttled and not), cookie (cookies and referrer
+// Waterfox runs with Firefox's driver (E2E_WATERFOX: its program, when not installed in the usual
+// place). E2E_FIREFOX_ASK=1: Firefox's family asks what to do with each new type in every case
+// (Waterfox's default), not only in the ask case.
+//
+// The cases (per browser): link (a .zip link, throttled and not), ask (Firefox set to ask what to
+// do with each new type, as Waterfox is: caught before its dialog, #208), cookie (cookies and referrer
 // forwarded), names (Content-Disposition), redirect, form (POST, 303), alt (Alt+click leaves it
 // to the browser), opened (a PDF or MP3 the browser would show or play), csp (the video button
 // under a strict CSP), hls (the stream a player loaded), streams (HLS and DASH players handed over
@@ -26,7 +31,7 @@
 // host entries and Chrome's external extension, per user and for everyone) is exported first
 // and checked byte for byte at the end; one that differs is put back from its copy. An installed
 // copy's registration for everyone (HKLM) is only read. With E2E_HOST_NAME, the host is registered
-// under that test name instead, for the run's Chromium browsers only (testHost). Your own browser
+// under that test name instead, for the run's browsers only (testHost). Your own browser
 // profiles are never used, nor the clipboard. Every process started here is stopped at the end.
 //
 // Linux (the lab's VM, tools/lab/linux-vm): the host's manifests (files) are written instead, and
@@ -58,8 +63,9 @@ const PAC = `function FindProxyForURL(url, host) { return host === "${PROXY_HOST
 // The extension's own address in Firefox (moz-extension://UUID/), fixed in the test profile so
 // its pages (the popup) can be opened in a tab.
 const FIREFOX_ID = "integration@misterdownloadmanager.com";
-// The Chromium extension the browsers load: pack.ps1's, or its copy for E2E_HOST_NAME (testHost).
+// The extensions the browsers load: pack.ps1's, or their copies for E2E_HOST_NAME (testHost).
 let chromiumExtension = path.join(root, "target", "extension", "chromium");
+let firefoxExtension = { type: "archivePath", path: path.join(root, "target", "extension", "mdm-firefox.xpi") };
 const FIREFOX_UUID = "5d0c3b8e-7a51-4c1e-9f0a-38e2c4a1d7b6";
 
 const pf = process.env.ProgramFiles || "C:\\Program Files";
@@ -72,6 +78,8 @@ const BROWSERS = WIN
       brave: ["chromium", [`${pf}\\BraveSoftware\\Brave-Browser\\Application\\brave.exe`, `${local}\\BraveSoftware\\Brave-Browser\\Application\\brave.exe`]],
       edge: ["chromium", [`${pf86}\\Microsoft\\Edge\\Application\\msedge.exe`, `${pf}\\Microsoft\\Edge\\Application\\msedge.exe`]],
       firefox: ["firefox", [`${pf}\\Mozilla Firefox\\firefox.exe`, `${pf86}\\Mozilla Firefox\\firefox.exe`]],
+      // Firefox's family: the same driver (E2E_WATERFOX: a copy unpacked elsewhere).
+      waterfox: ["firefox", [process.env.E2E_WATERFOX || "", `${pf}\\Waterfox\\waterfox.exe`].filter(Boolean)],
     }
   : // Linux (the lab's VM: tools/lab/linux-vm).
     {
@@ -80,6 +88,7 @@ const BROWSERS = WIN
       edge: ["chromium", ["/usr/bin/microsoft-edge"]],
       // A .deb or tarball Firefox; else Ubuntu's Snap.
       firefox: ["firefox", ["/usr/lib/firefox/firefox", "/opt/firefox/firefox", "/snap/bin/firefox"]],
+      waterfox: ["firefox", [process.env.E2E_WATERFOX || "", "/usr/lib/waterfox/waterfox", "/opt/waterfox/waterfox"].filter(Boolean)],
     };
 
 export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -393,7 +402,9 @@ async function firefox(bin, profile, dl, page, ready) {
       pref("browser.download.dir", dl),
       pref("browser.download.folderList", 2),
       pref("browser.download.useDownloadDir", true),
-      pref("browser.download.always_ask_before_handling_new_types", false),
+      // E2E_FIREFOX_ASK=1: every case with the browser asking what to do with each new type
+      // (Waterfox's default, #208); else it doesn't (Firefox's).
+      pref("browser.download.always_ask_before_handling_new_types", process.env.E2E_FIREFOX_ASK === "1"),
       pref("browser.shell.checkDefaultBrowser", false),
       pref("datareporting.policy.dataSubmissionEnabled", false),
       pref("browser.aboutwelcome.enabled", false),
@@ -425,8 +436,8 @@ async function firefox(bin, profile, dl, page, ready) {
     // The remote case's server certificate, as in Chromium (above).
     const { capabilities } = await bidi.send("session.new", { capabilities: { alwaysMatch: { acceptInsecureCerts: true } } });
     const major = Number(String(capabilities.browserVersion || "").split(".")[0]) || 0;
-    const xpi = path.join(root, "target", "extension", "mdm-firefox.xpi");
-    const { extension } = await bidi.send("webExtension.install", { extensionData: { type: "archivePath", path: xpi } });
+    // A temporary add-on (unsigned is fine), gone with the profile.
+    const { extension } = await bidi.send("webExtension.install", { extensionData: firefoxExtension });
     await ready();
     const { contexts } = await bidi.send("browsingContext.getTree", {});
     const context = contexts[0].context;
@@ -559,6 +570,9 @@ async function firefox(bin, profile, dl, page, ready) {
     };
     return {
       extension,
+      // Another add-on (the folder `dir`), temporary beside ours: its ID; and removed again.
+      install: async (dir) => (await bidi.send("webExtension.install", { extensionData: { type: "path", path: dir } })).extension,
+      uninstall: (id) => bidi.send("webExtension.uninstall", { extension: id }),
       inBrowser,
       base: `moz-extension://${FIREFOX_UUID}/`,
       major,
@@ -1074,6 +1088,18 @@ async function throughProxy(t, label, wantMdm) {
   return proxyLog.filter((e) => e.target.includes(file)).length;
 }
 
+// With the switch on and a proxy set: an ordinary .zip link on the lab's own address (127.0.0.1,
+// which the browser itself never sends to a proxy) still reaches MDM. How many of its requests
+// went through the proxy.
+async function plainWhileProxied(t) {
+  proxyLog.length = 0;
+  const file = `e2e-proxyon-${t.name}.zip`;
+  await clickLink(t, `/gen/1M/${file}`);
+  await arrived(file, 1 << 20);
+  await keptNothing(t.dl);
+  return proxyLog.filter((e) => e.target.includes(file)).length;
+}
+
 // A stand-in VPN extension: it has the "proxy" permission and sets the browser's proxy
 // (chrome.proxy.settings.set, from its page), as real VPN and proxy extensions do.
 function vpnExtension() {
@@ -1085,6 +1111,29 @@ function vpnExtension() {
   );
   // Its page, driven over DevTools by e2e.mjs.
   fs.writeFileSync(path.join(dir, "page.html"), "<!doctype html><title>stand-in VPN</title>");
+  return dir;
+}
+
+// Firefox's stand-in VPN add-on: it sends the lab's host (lab.mdm.test) through the test proxy
+// per request (proxy.onRequest), leaving the browser's proxy settings alone.
+function firefoxVpnExtension() {
+  const dir = path.join(work, "vpn-addon");
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(
+    path.join(dir, "manifest.json"),
+    JSON.stringify({
+      manifest_version: 2,
+      name: "MDM e2e stand-in VPN",
+      version: "1.0",
+      permissions: ["proxy", "<all_urls>"],
+      background: { scripts: ["background.js"] },
+      browser_specific_settings: { gecko: { id: "vpn-e2e@misterdownloadmanager.com" } },
+    }),
+  );
+  fs.writeFileSync(
+    path.join(dir, "background.js"),
+    `browser.proxy.onRequest.addListener((d) => (new URL(d.url).hostname === ${JSON.stringify(PROXY_HOST)} ? { type: "http", host: "127.0.0.1", port: ${PROXY_PORT} } : { type: "direct" }), { urls: ["<all_urls>"] });`,
+  );
   return dir;
 }
 
@@ -1145,6 +1194,9 @@ async function proxyInChromium(t) {
     const on = await throughProxy(t, "on", true);
     if (on < 2) throw new Error(`on: only ${on} request(s) through the proxy`);
     done.push(`on, a fixed server: ${on} requests through it (the browser's, then MDM's)`);
+    const local = await plainWhileProxied(t);
+    if (local) throw new Error(`on: ${local} request(s) for 127.0.0.1 through the proxy (Chromium sends none there)`);
+    done.push("on: an ordinary link on 127.0.0.1 taken, straight (the proxy bypassed, as the browser does)");
 
     await setProxy({ mode: "pac_script", pacScript: { data: PAC } });
     const pacData = await throughProxy(t, "pac-data", true);
@@ -1208,6 +1260,7 @@ const CASES = {
       return proxyLog.filter((e) => e.target.includes(file)).length;
     };
     const done = [];
+    let perRequest = "";
     try {
       const popup = await s.tab(popupUrl);
       try {
@@ -1249,6 +1302,28 @@ const CASES = {
         const on = await fetchFile("on", true);
         if (on < 2) throw new Error(`granted: only ${on} request(s) through the proxy`);
         done.push(`granted: ${on} requests through the browser's proxy (the browser's, then MDM's)`);
+        // An ordinary link on 127.0.0.1 is still taken (Firefox itself never proxies it; MDM
+        // may, the test proxy passes it on: said, not failed).
+        const local = await plainWhileProxied(t);
+        done.push(`granted: an ordinary link on 127.0.0.1 taken (${local} of its requests through the proxy)`);
+
+        // Granted, the proxy set per request by a VPN extension (proxy.onRequest, as Firefox's
+        // proxy and VPN add-ons do) rather than in the browser's settings: MDM gets that one too.
+        await pref("network.proxy.type", 0);
+        // A failure here is said at the end, after the other steps.
+        const vpn = await s.install(firefoxVpnExtension());
+        try {
+          await sleep(1000);
+          const per = await fetchFile("onrequest", true);
+          if (per < 2) throw new Error(`only ${per} request(s) through it`);
+          done.push(`granted, a VPN add-on's per-request proxy (proxy.onRequest): ${per} requests through it`);
+        } catch (e) {
+          perRequest = `a VPN add-on's per-request proxy (proxy.onRequest): ${e.message}`;
+          for (const f of fs.readdirSync(t.dl)) fs.rmSync(path.join(t.dl, f), { force: true, recursive: true });
+        } finally {
+          await s.uninstall(vpn).catch(() => {});
+          await pref("network.proxy.type", 1);
+        }
 
         // Revoked: the switch off again.
         await popup.click("#proxy");
@@ -1265,6 +1340,7 @@ const CASES = {
         .map((m) => m.errorMessage)`);
       if (errors.length) throw new Error(`the extension's console: ${errors.join(" | ")}`);
       done.push("no error in the console");
+      if (perRequest) throw new Error(`${perRequest} (the rest ok: ${done.join("; ")})`);
       return done.join("; ");
     } finally {
       await pref("network.proxy.type", 0).catch(() => {});
@@ -1285,6 +1361,36 @@ const CASES = {
       done.push(query ? "throttled" : "full speed");
     }
     return done.join(", ");
+  },
+
+  // #208: Firefox set to ask what to do with each new type (Waterfox's default): the download is
+  // caught from the answer before the browser's "What should … do with this file?" dialog, which
+  // never opens, and the browser doesn't download the file behind it. Firefox's family only.
+  async ask(t) {
+    if (!t.session.inBrowser) throw new Skip("Firefox's family only");
+    const s = t.session;
+    const always = JSON.stringify("browser.download.always_ask_before_handling_new_types");
+    // As the run set it (E2E_FIREFOX_ASK), put back after.
+    const was = await s.inBrowser(`Services.prefs.getBoolPref(${always}, false)`);
+    await s.inBrowser(`(Services.prefs.setBoolPref(${always}, true), "set")`);
+    try {
+      const file = `e2e-ask-${t.name}.zip`;
+      const url = `/gen/2M/${file}?rate=512K`;
+      const size = await sizeOf(LAB + url);
+      await clickLink(t, url);
+      await arrived(file, size);
+      const dialog = await s.inBrowser(
+        `[...Services.wm.getEnumerator(null)].some((w) => Boolean(w.document.getElementById("unknownContentTypeWindow")))`,
+      );
+      if (dialog) throw new Error("the browser's dialog opened");
+      await keptNothing(t.dl);
+      // The browser's own request (the first) was stopped before it had the file.
+      const [own] = (await requests(`/gen/2M/${file}`)).filter((e) => e.method === "GET");
+      if (!own || own.bytes_sent >= size) throw new Error(`the browser downloaded the file itself: ${own ? brief(own) : "no request"}`);
+      return `no dialog, MDM has it, the browser's request stopped after ${own.bytes_sent} bytes`;
+    } finally {
+      await s.inBrowser(`(Services.prefs.setBoolPref(${always}, ${was === true}), "set")`).catch(() => {});
+    }
   },
 
   // Cookies and referrer: a file behind a session cookie and hotlink protection.
@@ -1822,41 +1928,70 @@ export function regRestore(before, dir, written = []) {
   return { changed, differ: differ.map((b) => b.key) };
 }
 
-// E2E_HOST_NAME=com.mdm.sometest (Windows, Chromium browsers): the host is registered under that
-// test name only, for this run's browsers only (per user), instead of `nmhost --register`'s
-// every browser under the real name: a browser you have open never reaches the test's host. The
-// extension loaded is pack.ps1's with that name in background.js. Its keys are removed at the end.
+// E2E_HOST_NAME=com.mdm.sometest (Windows): the host is registered under that test name only, for
+// this run's browsers only (per user), instead of `nmhost --register`'s every browser under the
+// real name: a browser you have open never reaches the test's host. The extensions loaded are
+// pack.ps1's with that name in background.js (Firefox's family: its folder, as a temporary
+// add-on, with the same add-on ID). Its keys are removed at the end.
 const TEST_HOST_KEYS = {
   chrome: "Software\\Google\\Chrome\\NativeMessagingHosts",
   brave: "Software\\BraveSoftware\\Brave-Browser\\NativeMessagingHosts",
   edge: "Software\\Microsoft\\Edge\\NativeMessagingHosts",
+  // Firefox's forks read Mozilla's key too.
+  firefox: "Software\\Mozilla\\NativeMessagingHosts",
+  waterfox: "Software\\Mozilla\\NativeMessagingHosts",
 };
 function testHost(name, browsers, nmhost) {
   if (!WIN) throw new Error("E2E_HOST_NAME: Windows only");
   if (!/^[a-z0-9_]+(\.[a-z0-9_]+)+$/.test(name) || name === HOST) throw new Error(`E2E_HOST_NAME: ${name} isn't a test host name`);
   const other = browsers.filter((b) => !TEST_HOST_KEYS[b]);
-  if (other.length) throw new Error(`E2E_HOST_NAME: Chromium browsers only (${other.join(", ")}: their add-on is the signed package)`);
-  const dir = path.join(work, "extension-chromium");
-  fs.cpSync(path.join(root, "target", "extension", "chromium"), dir, { recursive: true });
-  const bg = path.join(dir, "background.js");
-  const code = fs.readFileSync(bg, "utf8");
-  const renamed = code.replace(`const HOST = "${HOST}";`, `const HOST = ${JSON.stringify(name)};`);
-  if (renamed === code) throw new Error("background.js: its host's name wasn't found");
-  fs.writeFileSync(bg, renamed);
-  // The unpacked extension's ID, from its manifest's key (as Chromium makes it).
-  const key = JSON.parse(fs.readFileSync(path.join(dir, "manifest.json"), "utf8")).key;
-  const hex = crypto.createHash("sha256").update(Buffer.from(key, "base64")).digest("hex").slice(0, 32);
-  const id = [...hex].map((c) => String.fromCharCode(97 + parseInt(c, 16))).join("");
-  const file = path.join(work, "host", `${name}.json`);
-  fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.writeFileSync(file, JSON.stringify({ name, description: "Mister Download Manager (test)", path: nmhost, type: "stdio", allowed_origins: [`chrome-extension://${id}/`] }, null, 2));
-  const keys = browsers.map((b) => `HKCU\\${TEST_HOST_KEYS[b]}\\${name}`);
+  if (other.length) throw new Error(`E2E_HOST_NAME: not for ${other.join(", ")}`);
+  // pack.ps1's folder for `kind`, copied with the test host's name in its background.js.
+  const renamedCopy = (kind) => {
+    const dir = path.join(work, `extension-${kind}`);
+    fs.cpSync(path.join(root, "target", "extension", kind), dir, { recursive: true });
+    const bg = path.join(dir, "background.js");
+    const code = fs.readFileSync(bg, "utf8");
+    const renamed = code.replace(`const HOST = "${HOST}";`, `const HOST = ${JSON.stringify(name)};`);
+    if (renamed === code) throw new Error("background.js: its host's name wasn't found");
+    fs.writeFileSync(bg, renamed);
+    return dir;
+  };
+  const kinds = new Set(browsers.map((b) => BROWSERS[b][0]));
+  const manifests = {};
+  const write = (kind, more) => {
+    const file = path.join(work, "host", `${name}.${kind}.json`);
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.writeFileSync(file, JSON.stringify({ name, description: "Mister Download Manager (test)", path: nmhost, type: "stdio", ...more }, null, 2));
+    manifests[kind] = file;
+  };
+  if (kinds.has("chromium")) {
+    const dir = renamedCopy("chromium");
+    // The unpacked extension's ID, from its manifest's key (as Chromium makes it).
+    const key = JSON.parse(fs.readFileSync(path.join(dir, "manifest.json"), "utf8")).key;
+    const hex = crypto.createHash("sha256").update(Buffer.from(key, "base64")).digest("hex").slice(0, 32);
+    const id = [...hex].map((c) => String.fromCharCode(97 + parseInt(c, 16))).join("");
+    write("chromium", { allowed_origins: [`chrome-extension://${id}/`] });
+    chromiumExtension = dir;
+  }
+  if (kinds.has("firefox")) {
+    const dir = renamedCopy("firefox");
+    const id = JSON.parse(fs.readFileSync(path.join(dir, "manifest.json"), "utf8")).browser_specific_settings.gecko.id;
+    if (id !== FIREFOX_ID) throw new Error(`the Firefox add-on's ID is ${id}, not ${FIREFOX_ID}`);
+    write("firefox", { allowed_extensions: [id] });
+    firefoxExtension = { type: "path", path: dir };
+  }
+  // One key per browser family's registry place (Firefox and its forks share one).
+  const entries = [...new Map(browsers.map((b) => [`HKCU\\${TEST_HOST_KEYS[b]}\\${name}`, manifests[BROWSERS[b][0]]])).entries()];
+  const keys = entries.map(([k]) => k);
   const there = (k) => spawnSync("reg", ["query", k], { stdio: "ignore" }).status === 0;
   for (const k of keys) if (there(k)) throw new Error(`${k} is there already: not touching it`);
-  for (const k of keys) {
-    if (spawnSync("reg", ["add", k, "/ve", "/t", "REG_SZ", "/d", file, "/f"], { stdio: "ignore" }).status !== 0) throw new Error(`reg add ${k}`);
+  for (const [k, file] of entries) {
+    if (spawnSync("reg", ["add", k, "/ve", "/t", "REG_SZ", "/d", file, "/f"], { stdio: "ignore" }).status !== 0) {
+      for (const [added] of entries) spawnSync("reg", ["delete", added, "/f"], { stdio: "ignore" });
+      throw new Error(`reg add ${k}`);
+    }
   }
-  chromiumExtension = dir;
   return {
     keys,
     // Removed; the ones still there after (none).
@@ -2009,7 +2144,11 @@ async function run() {
           }).then(() => sleep(300)); // its answer stored
         session = await (kind === "firefox" ? firefox : chromium)(bin, profile, dl, `${LAB}/page?link=none`, ready);
         const t = { name, kind, session, dl, snap, last: name === names[names.length - 1], ua: await session.evaluate("navigator.userAgent") };
-        results.push([name, "browser", "ok", `${kind} ${session.major} (to MDM: ${seenAs}), extension ${session.extension}`, Date.now() - started]);
+        // Firefox's family: whether it asks what to do with each new type (E2E_FIREFOX_ASK).
+        const asks = session.inBrowser
+          ? `, asks for new types: ${await session.inBrowser(`Services.prefs.getBoolPref("browser.download.always_ask_before_handling_new_types", false)`)}`
+          : "";
+        results.push([name, "browser", "ok", `${kind} ${session.major} (to MDM: ${seenAs}), extension ${session.extension}${asks}`, Date.now() - started]);
         for (const [label, fn] of Object.entries(CASES)) {
           if (only.length && !only.includes(label)) continue;
           const at = Date.now();

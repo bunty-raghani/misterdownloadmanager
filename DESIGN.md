@@ -334,6 +334,12 @@ A feature page's first view repeats the home's memorable moment at a smaller sca
 ### Theme Tiles
 Paper tiles two to a row, each its screenshot (light or dark: the switch above the grid chooses, the site's theme by default) over a 1.5px ink rule, then the name and its feel. Rows share their heights (subgrid). The last tile is empty: no paper, a 2px dashed outline on the board, a dashed plus, "Make your own theme". The three make-your-own steps are numbered at poster scale (900, width 68%), because their order is the instruction.
 
+### The Crew (contributors)
+The people who make MDM possible, from GitHub's public record (`tools/contributors.py`): round photos that link to each GitHub profile, with the login in an ink tag over the photo on hover and focus (kept inside the row by `main.js`). Real photos only, and no counts or claims beyond what GitHub shows.
+- **In the hero (the owner's choice: a "liked by" line):** on the board under the window's caption, beside the label (after the label and the caption under 980px). The title "Made possible by these amazing humans" in board text, 800 weight at width 78%; then one row of 44px photos that overlap by 8px, each ringed 2.5px in on-board so it reads on the blue board and the navy depot; then "+N", an on-board disc in board-coloured figures, which opens `/contributors.html`. The row shows 7, 11 or 15 photos by width (`PILE_TIERS`). Hover lifts a photo 3px; reduced motion keeps it still.
+- **On `/contributors.html`:** one labelled sheet per group (pull requests, issues, comments), its people in a ruled roster of 1px hairlines: a 48px photo ringed 1.5px in ink, the login at 750 weight, the counts in ink-2 with their numbers in tabular ink.
+- **At the end of each release on the News page:** "Thanks to", then 40px photos ringed in ink, row under row, and a fine line naming the release before.
+
 ## Do's and Don'ts
 
 ### Do:

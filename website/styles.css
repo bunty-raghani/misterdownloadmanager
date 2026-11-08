@@ -291,8 +291,11 @@ main > .sec:last-child { padding-bottom: var(--gap-section); }
 .parcel { padding: clamp(24px, 4vw, 48px) 0 0; }
 /* The window and its label share one cell, so the section is as tall as whichever reaches lower
    and nothing after it can run into the label. */
-.parcel-inner { display: grid; grid-template-columns: minmax(0, 1fr); }
-.parcel-window, .parcel .waybill { grid-area: 1 / 1; }
+.parcel-inner { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; }
+/* The label spans the window's row and the crew's under it (.parcel-crew), the room it needs
+   beyond them going to the crew's row. */
+.parcel-window { grid-area: 1 / 1; }
+.parcel .waybill { grid-area: 1 / 1 / 3 / 2; }
 .parcel-window { width: min(84%, 1080px); margin: 0; margin-inline-start: auto; }
 .parcel-window img { width: 100%; border-radius: 8px; box-shadow: var(--shadow-lift); }
 .parcel-window figcaption { margin-top: 14px; font-size: 13.5px; color: var(--on-board-2); text-align: end; }
@@ -517,6 +520,81 @@ tbody th { font-weight: 650; }
 .sender-list a:hover b { text-decoration: underline; }
 .sender-links { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; margin-top: 12px; padding-top: 18px; border-top: 1.5px solid var(--ink); }
 
+/* ---- The crew: the people who made it possible (build.py crew_pile, faces, /contributors.html) - */
+
+/* Round photos on label stock, each ringed in ink like a stamp's rule; the login shows in an ink
+   tag over the photo on hover and focus (main.js keeps it inside the list's width). */
+.faces { display: flex; flex-wrap: wrap; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.faces li { margin: 0; }
+.face { position: relative; display: block; width: var(--face); height: var(--face); border-radius: 50%; color: var(--ink); text-decoration: none; }
+.face img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; background: var(--paper-2); box-shadow: 0 0 0 1.5px var(--ink); transition: box-shadow .15s ease; }
+.face:hover img { box-shadow: 0 0 0 3px var(--ink); }
+.face:focus-visible { border-radius: 50%; }
+.face-name {
+  position: absolute; bottom: calc(100% + 8px); left: 50%; z-index: 3; transform: translateX(calc(-50% + var(--nudge, 0px)));
+  padding: 4px 9px 5px; border-radius: 4px; background: var(--ink); color: var(--paper);
+  font-size: 13.5px; font-weight: 700; line-height: 1.2; white-space: nowrap; pointer-events: none;
+  opacity: 0; transition: opacity .12s ease;
+}
+.face:is(:hover, :focus-visible) .face-name { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .face img, .face-name { transition: none; } }
+/* The home page: "Made possible by these amazing humans" on the board beside the hero's label, in
+   the board's empty space under the window (the owner's choice: a "liked by" line). Board text;
+   the photos overlap in one row, each ringed in the board's text colour so it reads on the blue
+   board and the navy depot; "+N" for the rest opens /contributors.html. How many the row shows
+   follows the width (build.py PILE_TIERS: 7, 11 from 561px, 15 from 1200px). */
+.parcel-crew { grid-area: 2 / 1; align-self: start; min-width: 0; margin-top: 28px; margin-inline-start: calc(max(340px, 35.6% + 2px) + clamp(40px, 5vw, 72px)); color: var(--on-board); }
+[dir="rtl"] .parcel-crew { margin-inline-start: calc(max(340px, 31.2% + 2px) + clamp(40px, 5vw, 72px)); }
+.crew-title { font-size: clamp(22px, 2.2vw, 28px); font-weight: 800; font-stretch: 78%; line-height: 1.1; letter-spacing: -.01em; text-wrap: balance; }
+.pile { flex-wrap: nowrap; gap: 0; margin-top: 16px; }
+.pile > li + li { margin-inline-start: -8px; }
+.pile .face { transition: transform .15s cubic-bezier(.16, 1, .3, 1); }
+.pile .face img { background: var(--board-deep); box-shadow: 0 0 0 2.5px var(--on-board); }
+.pile .face:is(:hover, :focus-visible) { z-index: 2; transform: translateY(-3px); }
+.pile .face:hover img { box-shadow: 0 0 0 2.5px var(--on-board); }
+.pile-more a {
+  position: relative; display: grid; place-items: center; width: var(--face); height: var(--face); border-radius: 50%;
+  background: var(--on-board); color: var(--board); box-shadow: 0 0 0 2.5px var(--on-board);
+  font-size: 15px; font-weight: 800; font-stretch: 86%; font-variant-numeric: tabular-nums; text-decoration: none;
+}
+.pile-more a:hover { background: var(--on-board-2); box-shadow: 0 0 0 2.5px var(--on-board-2); }
+.pile-more a:focus-visible { border-radius: 50%; }
+.pile-more, .pile-n { display: none; }
+@media (max-width: 560px) {
+  .pile > li:not(.pile-more):nth-child(n+8) { display: none; }
+  .pile-full-7 .pile-more { display: block; }
+  .pile-n-7 { display: inline; }
+}
+@media (min-width: 561px) and (max-width: 1199px) {
+  .pile > li:not(.pile-more):nth-child(n+12) { display: none; }
+  .pile-full-11 .pile-more { display: block; }
+  .pile-n-11 { display: inline; }
+}
+@media (min-width: 1200px) {
+  .pile-full-15 .pile-more { display: block; }
+  .pile-n-15 { display: inline; }
+}
+.crew-fine { max-width: 54ch; margin-top: 14px; font-size: 14.5px; line-height: 1.5; color: var(--on-board-2); }
+.crew-fine a { color: var(--on-board); font-weight: 650; }
+@media (prefers-reduced-motion: reduce) { .pile .face { transition: none; } .pile .face:is(:hover, :focus-visible) { transform: none; } }
+
+/* /contributors.html: one labelled sheet per group, its people in a ruled roster. */
+.crew-page { display: grid; gap: clamp(20px, 3vw, 32px); margin-bottom: var(--gap-section); }
+.roster-sheet h2.sheet-band { line-height: 1.15; letter-spacing: 0; text-wrap: initial; }
+.roster-sheet h2.sheet-band span { font-weight: 400; font-stretch: 100%; }
+.roster { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); margin: 0 -1px -1px 0; padding: 0; list-style: none; }
+.roster > li { display: grid; grid-template-columns: 48px minmax(0, 1fr); column-gap: 14px; align-items: center; padding: 16px clamp(16px, 2.4vw, 22px); border-bottom: 1px solid var(--line); border-inline-end: 1px solid var(--line); }
+.roster-pic { grid-row: span 2; display: block; width: 48px; height: 48px; border-radius: 50%; }
+.roster-pic img { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; background: var(--paper-2); box-shadow: 0 0 0 1.5px var(--ink); transition: box-shadow .15s ease; }
+.roster > li:has(a:hover) .roster-pic img { box-shadow: 0 0 0 3px var(--ink); }
+.roster-who { min-width: 0; margin: -4px; padding: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 16.5px; font-weight: 750; line-height: 1.3; }
+.roster-who a { color: var(--ink); text-decoration: none; }
+.roster-who a:hover { text-decoration: underline; text-underline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { .roster-pic img { transition: none; } }
+.roster-counts { display: flex; flex-wrap: wrap; gap: 0 10px; margin: 2px 0 0; padding: 0; list-style: none; font-size: 14px; line-height: 1.45; color: var(--ink-2); }
+.roster-counts b { font-weight: 750; color: var(--ink); font-variant-numeric: tabular-nums; }
+.crew-join { margin: 0; }
+
 .questions h2 { font-size: clamp(32px, 4vw, 48px); margin-bottom: 28px; }
 .qa { background: var(--paper); border-radius: var(--radius); box-shadow: var(--shadow-sheet); overflow: hidden; }
 .qa details + details { border-top: 1px solid var(--line); }
@@ -663,6 +741,15 @@ tbody th { font-weight: 650; }
 .release + .release { margin-top: 2.6em; padding-top: 2em; border-top: 1.5px dashed var(--line); }
 .release h2 { margin-top: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; }
 .release time { font-size: 15px; font-weight: 600; font-stretch: 100%; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+/* Each release ends with its people: the ones active on GitHub since the release before. */
+.release-thanks { margin-top: 1.6em; padding-top: 1.1em; border-top: 1.5px solid var(--ink); }
+.prose .release-thanks h3 { margin: 0 0 14px; font-size: 17px; font-stretch: 86%; }
+.prose .release-thanks .faces { gap: 10px; padding: 0; }
+.prose .release-thanks .faces li { max-width: none; margin: 0; }
+.prose .release-thanks .face { text-decoration: none; }
+.prose .release-thanks .face img { border-radius: 50%; box-shadow: 0 0 0 1.5px var(--ink); }
+.prose .release-thanks .face:hover img { box-shadow: 0 0 0 3px var(--ink); }
+.prose .release-thanks .fine { margin-top: 12px; }
 .lang-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0 20px; padding: 0 !important; list-style: none; }
 .lang-grid li { display: flex; align-items: center; gap: 12px; margin: 0 !important; padding: 10px 0; border-top: 1px solid var(--line); }
 .lang-grid img { width: 28px; height: 21px; border-radius: 2px; box-shadow: 0 0 0 1px rgba(0, 0, 0, .18); }
@@ -808,6 +895,8 @@ html.lb-on { overflow: hidden; }
   /* The desktop's right-to-left width (max 340px) would hold it wider than a phone (#169). */
   [dir="rtl"] .parcel .waybill { transform: rotate(1.2deg); width: min(100%, 520px); }
   .parcel-window figcaption { text-align: start; }
+  /* The crew after the label and the window's caption. */
+  .parcel-crew, [dir="rtl"] .parcel-crew { order: 4; margin: 36px 0 0; }
   .tour { grid-template-columns: 1fr; }
   .customs-inner, .facts-inner, .sender-inner, .closing-inner { grid-template-columns: 1fr; }
   .parcel-window figcaption { max-width: none; }

@@ -15,10 +15,10 @@
     "message": "আরও বিকল্প"
   },
   "video_hide_here": {
-    "message": "এই ভিডিওতে লুকান"
+    "message": "শুধু এই ভিডিওতে লুকান"
   },
   "video_never_site": {
-    "message": "$site$ এ আর কখনও না",
+    "message": "$site$-এ আর কখনও নয়",
     "placeholders": {
       "site": {
         "content": "$1",
@@ -30,10 +30,10 @@
     "message": "বোতামের সেটিংস..."
   },
   "video_sent": {
-    "message": "Mister Download Manager এ পাঠানো হয়েছে"
+    "message": "Mister Download Manager-এ পাঠানো হয়েছে"
   },
   "video_failed": {
-    "message": "Mister Download Manager ইনস্টল করা নেই বা শুরু হয়নি"
+    "message": "Mister Download Manager ইনস্টল করা নেই বা চালু হয়নি"
   },
   "video_drag": {
     "message": "ভিডিওর প্রান্ত বরাবর সরাতে টেনে আনুন"
@@ -66,16 +66,16 @@
     "message": "Mister Download Manager এক্সটেনশনের এই কপি গ্রহণ করে না"
   },
   "status_not_running": {
-    "message": "Mister Download Manager সময়মতো শুরু হয়নি"
+    "message": "Mister Download Manager সময়মতো চালু হয়নি"
   },
   "status_host_failed": {
-    "message": "Mister Download Manager-এর সাথে সংযোগ ব্যর্থ হয়েছে"
+    "message": "Mister Download Manager-এর সঙ্গে সংযোগ ব্যর্থ হয়েছে"
   },
   "status_too_large": {
     "message": "এই ডাউনলোডের বিবরণ হস্তান্তর করার জন্য খুব বড় ছিল"
   },
   "status_update_app": {
-    "message": "এই এক্সটেনশন যা কিছু অফার করে তা ব্যবহার করতে Mister Download Manager আপডেট করুন"
+    "message": "এই এক্সটেনশনের সব সুবিধা ব্যবহার করতে Mister Download Manager আপডেট করুন"
   },
   "popup_take": {
     "message": "এই ব্রাউজার থেকে ডাউনলোড নিন"
@@ -90,7 +90,7 @@
     "message": "Mister Download Manager এই ব্রাউজারের মতো একই প্রক্সির মাধ্যমে ডাউনলোড করে। এটি বন্ধ থাকলে, এক্সটেনশনটি ব্রাউজারের প্রক্সি পড়ে না।"
   },
   "popup_exclude_site": {
-    "message": "$site$ থেকে ডাউনলোডগুলি আর নেবেন না",
+    "message": "$site$ থেকে আর ডাউনলোড নেবেন না",
     "placeholders": {
       "site": {
         "content": "$1",
@@ -99,7 +99,7 @@
     }
   },
   "popup_excluded": {
-    "message": "$site$ থেকে ডাউনলোডগুলি ব্রাউজারের সাথে থাকে",
+    "message": "$site$ থেকে ডাউনলোড ব্রাউজারেই হয়",
     "placeholders": {
       "site": {
         "content": "$1",
@@ -111,13 +111,13 @@
     "message": "Mister Download Manager খুলুন"
   },
   "popup_options": {
-    "message": "বিকল্প..."
+    "message": "বিকল্পসমূহ..."
   },
   "popup_help": {
     "message": "সহায়তা"
   },
   "popup_support": {
-    "message": "MDM সমর্থন করুন"
+    "message": "MDM-কে সহায়তা করুন"
   },
   "popup_fix": {
     "message": "কীভাবে ঠিক করবেন"
@@ -162,7 +162,7 @@
     "message": "এই পৃষ্ঠার মিডিয়া"
   },
   "popup_media_none": {
-    "message": "এই পৃষ্ঠায় এখনো কোনো ভিডিও বা সাউন্ড পাওয়া যায়নি। এটি প্লে করুন, তারপর এটি আবার খুলুন।"
+    "message": "এই পৃষ্ঠায় এখনো কোনো ভিডিও বা অডিও পাওয়া যায়নি। এটি চালান, তারপর এটি আবার খুলুন।"
   },
   "popup_media_download": {
     "message": "ডাউনলোড করুন"
@@ -171,10 +171,10 @@
     "message": "সুরক্ষিত"
   },
   "popup_media_live": {
-    "message": "সরাসরি"
+    "message": "লাইভ"
   },
   "video_off": {
-    "message": "এই সাইটে ডাউনলোড বোতাম বন্ধ আছে"
+    "message": "এই সাইটে ডাউনলোড বোতামটি বন্ধ আছে"
   },
   "video_drm": {
     "message": "সুরক্ষিত ভিডিও: এটি সংরক্ষণ করা যাবে না"

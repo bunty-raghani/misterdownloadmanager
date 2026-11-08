@@ -25,7 +25,7 @@ Mister Download Manager ("MDM") is free, open-source software made by Ahmed Nefz
 
 ### What stays on your computer
 
-Your download list, settings, logins you save in **Sites Logins**, the history of each download and the files you download are stored only on your computer: in `%APPDATA%\misterdownloadmanager` on Windows (or the `data` folder of the portable copy), and in the usual application-data folder on macOS and Linux. Nothing is uploaded anywhere. Uninstalling offers to delete them. From the next release, the passwords of Sites Logins, the proxy and debrid accounts go into the system's keychain instead (Windows Credential Manager, the keyring on Linux, the macOS keychain), still on your computer, when one is there and unlocked.
+Your download list, settings, logins you save in **Sites Logins**, the history of each download and the files you download are stored only on your computer: in `%APPDATA%\misterdownloadmanager` on Windows (or the `data` folder of the portable copy), and in the usual application-data folder on macOS and Linux. Nothing is uploaded anywhere. Uninstalling offers to delete them. From version 0.5.0, the passwords of Sites Logins, the proxy and debrid accounts go into the system's keychain instead (Windows Credential Manager, the keyring on Linux, the macOS keychain), still on your computer, when one is there and unlocked.
 
 ### Who the app talks to, and why
 
@@ -36,7 +36,7 @@ Your download list, settings, logins you save in **Sites Logins**, the history o
 - **Torrent peers and trackers.** When you download a torrent, MDM connects to the trackers listed in the torrent, to the BitTorrent DHT network and to other peers, who see your IP address and which pieces you have. To accept connections it may ask your router to open a port (UPnP). This is how BitTorrent works; it ends when the torrent stops.
 - **Your AI assistant, only if you connect one.** MDM's MCP server (`misterdownloadmanager-mcp`) talks only to the MDM on your computer. But if you add it to an AI assistant (Claude, Cursor, VS Code…) and turn on the automation API, the assistant can read your download list, and what it reads (file names, addresses, folders) goes to that assistant's AI service, under its privacy terms. Nothing of this happens unless you set it up; see [AI assistants](/help/ai-assistants.html).
 
-From the next release, only if you choose them:
+From version 0.5.0, only if you choose them:
 
 - **The DNS you choose.** With a DNS other than the system's in **Options → Connection → DNS** (Cloudflare, Google, Quad9, AdGuard, NextDNS or your own), MDM asks it, over HTTPS, TLS or TCP, for the addresses of the servers it downloads from. That service sees those names and your IP address, under its own privacy terms.
 - **Your debrid accounts.** A link or torrent you send through a Real-Debrid, AllDebrid or Premiumize account in **Options → Accounts** goes to that service, which then serves the file. Its sign-in stays on your computer, with the passwords above.

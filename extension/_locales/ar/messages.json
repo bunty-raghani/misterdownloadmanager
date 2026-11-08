@@ -18,7 +18,7 @@
     "message": "إخفاء على هذا الفيديو"
   },
   "video_never_site": {
-    "message": "عدم الإظهار مطلقا على $site$",
+    "message": "عدم الإظهار مطلقا في $site$",
     "placeholders": {
       "site": {
         "content": "$1",
@@ -60,7 +60,7 @@
     "message": "متوقف مؤقتا: تبقى التنزيلات مع المستعرض"
   },
   "status_not_installed": {
-    "message": "لم يتم تثبيت Mister Download Manager، أو لم يتم إعداد تكامل المتصفح الخاص به"
+    "message": "لم يتم تثبيت Mister Download Manager، أو لم يتم إعداد الربط بالمستعرض الخاص به"
   },
   "status_forbidden": {
     "message": "لا يقبل Mister Download Manager هذه النسخة من الملحق"
@@ -75,22 +75,22 @@
     "message": "كانت تفاصيل هذا التنزيل كبيرة جدا بحيث لا يمكن تسليمها"
   },
   "status_update_app": {
-    "message": "حدث Mister Download Manager لاستخدام كل ما يوفره هذا الملحق"
+    "message": "قم بتحديث Mister Download Manager لاستخدام كل ما يوفره هذا الملحق"
   },
   "popup_take": {
     "message": "تلقي التنزيلات من هذا المستعرض"
   },
   "popup_proxy": {
-    "message": "إرسال التنزيلات من خلال وكيل هذا المتصفح أو ملحق VPN"
+    "message": "إرسال التنزيلات عبر وكيل هذا المستعرض أو ملحق VPN"
   },
   "popup_proxy_title": {
-    "message": "يقوم Mister Download Manager بعد ذلك بالتنزيل من خلال نفس الوكيل الذي يستخدمه هذا المتصفح. يطلب منك المتصفح مرة واحدة السماح بذلك؛ يؤدي إيقاف تشغيل هذا إلى التراجع عن ذلك."
+    "message": "يجري Mister Download Manager التنزيل بعد ذلك عبر الوكيل نفسه الذي يستخدمه هذا المستعرض. يطلب منك المستعرض مرة واحدة السماح بذلك؛ وإيقاف هذا يلغي ذلك."
   },
   "popup_proxy_title_chromium": {
     "message": "يجري Mister Download Manager التنزيل بعد ذلك عبر الوكيل نفسه الذي يستخدمه هذا المستعرض. عندما يكون هذا الخيار متوقفا، لا يقرأ الملحق وكيل المستعرض."
   },
   "popup_exclude_site": {
-    "message": "عدم أخذ التنزيلات من $site$ أبدا",
+    "message": "عدم التقاط التنزيلات من $site$ أبدا",
     "placeholders": {
       "site": {
         "content": "$1",
@@ -99,7 +99,7 @@
     }
   },
   "popup_excluded": {
-    "message": "تبقى التنزيلات من $site$ مع المتصفح",
+    "message": "تبقى التنزيلات من $site$ مع المستعرض",
     "placeholders": {
       "site": {
         "content": "$1",
@@ -156,13 +156,13 @@
     "message": "لا يسمح للملحق بقراءة هذا الموقع (وصول الملحق إلى الموقع)."
   },
   "popup_alt": {
-    "message": "اضغط على Alt أثناء النقر فوق ارتباط للسماح للمتصفح بتنزيله."
+    "message": "اضغط على Alt أثناء النقر فوق ارتباط للسماح للمستعرض بتنزيله."
   },
   "popup_media": {
     "message": "الوسائط في هذه الصفحة"
   },
   "popup_media_none": {
-    "message": "لم يتم العثور على أي فيديو أو صوت في هذه الصفحة بعد. قم بتشغيله، ثم افتح هذا مرة أخرى."
+    "message": "لم يتم العثور على أي فيديو أو صوت في هذه الصفحة بعد. ابدأ تشغيله، ثم افتح هذا مرة أخرى."
   },
   "popup_media_download": {
     "message": "تنزيل"

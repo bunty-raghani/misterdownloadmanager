@@ -15,7 +15,7 @@
     "message": "Rohkem valikuid"
   },
   "video_hide_here": {
-    "message": "Peida sellel videol"
+    "message": "Peida ainult selle video puhul"
   },
   "video_never_site": {
     "message": "Mitte kunagi saidil $site$",
@@ -36,7 +36,7 @@
     "message": "Mister Download Manager pole installitud või ei käivitunud"
   },
   "video_drag": {
-    "message": "Liigutamiseks lohistage video serva mööda"
+    "message": "Lohista video serva mööda, et seda liigutada"
   },
   "menu_selected": {
     "message": "Laadi valitud lingid alla rakendusega Mister Download Manager"
@@ -69,28 +69,28 @@
     "message": "Mister Download Manager ei käivitunud õigel ajal"
   },
   "status_host_failed": {
-    "message": "Ühendus rakendusega Mister Download Manager nurjus"
+    "message": "Ühenduse loomine rakendusega Mister Download Manager nurjus"
   },
   "status_too_large": {
     "message": "Selle allalaadimise üksikasjad olid edastamiseks liiga suured"
   },
   "status_update_app": {
-    "message": "Värskendage rakendust Mister Download Manager, et kasutada kõike, mida see laiendus pakub"
+    "message": "Värskendage rakendust Mister Download Manager, et kasutada kõiki laienduse võimalusi"
   },
   "popup_take": {
-    "message": "Võta allalaadimised sellest brauserist"
+    "message": "Suuna allalaadimised sellest brauserist rakendusse"
   },
   "popup_proxy": {
-    "message": "Saada allalaadimised selle brauseri puhverserveri või VPN-i laienduse kaudu"
+    "message": "Suuna allalaadimised selle brauseri puhverserveri või VPN-laienduse kaudu"
   },
   "popup_proxy_title": {
-    "message": "Mister Download Manager laadib seejärel alla sama puhverserveri kaudu, mida see brauser kasutab. Brauser küsib teilt selleks üks kord luba; selle väljalülitamine tühistab selle."
+    "message": "Mister Download Manager laadib seejärel alla sama puhverserveri kaudu, mida see brauser kasutab. Brauser küsib teilt selleks ühe korra luba; selle väljalülitamisel luba tühistatakse."
   },
   "popup_proxy_title_chromium": {
     "message": "Mister Download Manager laadib seejärel alla sama puhverserveri kaudu, mida see brauser kasutab. Kui see on välja lülitatud, ei loe laiendus brauseri puhverserverit."
   },
   "popup_exclude_site": {
-    "message": "Ära kunagi võta allalaadimisi saidilt $site$",
+    "message": "Ära võta enam allalaadimisi saidilt $site$",
     "placeholders": {
       "site": {
         "content": "$1",
@@ -156,13 +156,13 @@
     "message": "Laiendil pole lubatud seda saiti lugeda (brauseri saidi juurdepääs)."
   },
   "popup_alt": {
-    "message": "Hoidke Alt-klahvi all, klõpsates lingil, et brauser selle alla laadiks."
+    "message": "Hoia all Alt-klahvi ja klõpsa lingil, et brauser selle alla laadiks."
   },
   "popup_media": {
     "message": "Meedia sellel lehel"
   },
   "popup_media_none": {
-    "message": "Sellelt lehelt pole veel videot ega heli leitud. Esitage see ja avage seejärel uuesti."
+    "message": "Sellelt lehelt pole veel videot ega heli leitud. Esitage seda ja avage seejärel see uuesti."
   },
   "popup_media_download": {
     "message": "Laadi alla"
@@ -171,13 +171,13 @@
     "message": "Kaitstud"
   },
   "popup_media_live": {
-    "message": "Otse"
+    "message": "Otseülekanne"
   },
   "video_off": {
     "message": "Sellel saidil on allalaadimisnupp välja lülitatud"
   },
   "video_drm": {
-    "message": "Kaitstud video: seda ei saa salvestada"
+    "message": "Kaitstud videot ei saa salvestada"
   },
   "popup_send_to": {
     "message": "Saada allalaadimised asukohta"

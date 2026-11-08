@@ -33,7 +33,7 @@
     "message": "Sendt til Mister Download Manager"
   },
   "video_failed": {
-    "message": "Mister Download Manager er ikke installeret eller startede ikke"
+    "message": "Mister Download Manager er ikke installeret eller blev ikke startet"
   },
   "video_drag": {
     "message": "Træk for at flytte den langs videoens kant"
@@ -72,13 +72,13 @@
     "message": "Forbindelsen til Mister Download Manager mislykkedes"
   },
   "status_too_large": {
-    "message": "Detaljerne for denne download var for store til at overføre"
+    "message": "Oplysningerne om denne download var for store til at overføre"
   },
   "status_update_app": {
     "message": "Opdater Mister Download Manager for at bruge alt, hvad denne udvidelse tilbyder"
   },
   "popup_take": {
-    "message": "Tag downloads fra denne browser"
+    "message": "Overfør downloads fra denne browser"
   },
   "popup_proxy": {
     "message": "Send downloads gennem denne browsers proxy- eller VPN-udvidelse"
@@ -90,7 +90,7 @@
     "message": "Mister Download Manager downloader derefter via den samme proxy som denne browser. Når dette er slået fra, læser udvidelsen ikke browserens proxy."
   },
   "popup_exclude_site": {
-    "message": "Tag aldrig downloads fra $site$",
+    "message": "Overfør aldrig downloads fra $site$",
     "placeholders": {
       "site": {
         "content": "$1",
@@ -156,7 +156,7 @@
     "message": "Udvidelsen har ikke tilladelse til at læse dette websted (browserens webstedsadgang)."
   },
   "popup_alt": {
-    "message": "Hold Alt nede, mens du klikker på et link for at lade browseren downloade det."
+    "message": "Hold Alt nede, mens du klikker på et link, for at lade browseren hente det."
   },
   "popup_media": {
     "message": "Medier på denne side"

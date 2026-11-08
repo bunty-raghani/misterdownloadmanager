@@ -708,6 +708,14 @@
       "description": "The board's slim sticky header: brand, links, language, the green Download.",
       "html": "<header class=\"ds-top\"><b class=\"ds-brand\">Mister Download Manager</b><nav class=\"ds-nav\"><a href=\"#\" aria-current=\"page\">Features</a><a href=\"#\">Download</a><a href=\"#\">Help</a><a href=\"#\">Benchmark</a></nav><a class=\"ds-langs\" href=\"#\">English</a><a class=\"ds-top-dl\" href=\"#\">Download</a></header>",
       "css": ".ds-top { display: flex; align-items: center; gap: 24px; height: 68px; padding: 0 24px; background: var(--board, #1f63d6); color: var(--on-board, #ffffff); border-bottom: 1px solid var(--board-edge, #3b78e0); font-family: Archivo, 'Segoe UI', system-ui, sans-serif; } .ds-brand { font-size: 18px; font-weight: 800; font-stretch: 80%; } .ds-nav { display: flex; gap: 4px; } .ds-nav a, .ds-langs { padding: 8px 10px; border-radius: 6px; color: inherit; font-size: 15px; font-weight: 600; text-decoration: none; } .ds-nav a:hover, .ds-langs:hover { background: color-mix(in srgb, currentColor 12%, transparent); } .ds-nav a[aria-current] { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 8px; } .ds-langs { margin-inline-start: auto; border-radius: 8px; box-shadow: inset 0 0 0 1.5px color-mix(in srgb, currentColor 55%, transparent); } .ds-top-dl { display: inline-flex; align-items: center; height: 40px; padding: 0 16px; border-radius: 8px; background: var(--go, #57cc5a); color: var(--go-ink, #08200b); font-weight: 700; font-size: 15px; text-decoration: none; box-shadow: inset 0 -3px 0 rgba(0,0,0,.18), 0 0 0 1.5px rgba(4,32,10,.55); } .ds-top-dl:hover { background: var(--go-hover, #47b94a); } .ds-top a:focus-visible { outline: 3px solid var(--link, #0d58c9); outline-offset: 2px; }"
+    },
+    {
+      "name": "The Crew",
+      "kind": "avatar-row",
+      "refersTo": "pile",
+      "description": "Contributors' round photos linked to GitHub: an overlapping row on the hero's board with +N to /contributors.html; a ruled roster on that page; a row under each release on the News page.",
+      "html": "<ul class=\"ds-pile\"><li><span class=\"ds-face\"></span></li><li><span class=\"ds-face\"></span></li><li><span class=\"ds-face\"></span></li><li><span class=\"ds-face ds-more\">+11</span></li></ul>",
+      "css": ".ds-pile { display: flex; margin: 0; padding: 16px; list-style: none; background: var(--board, #1f63d6); } .ds-pile li + li { margin-inline-start: -8px; } .ds-face { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--paper-2, #f0f3f7); box-shadow: 0 0 0 2.5px var(--on-board, #ffffff); } .ds-more { background: var(--on-board, #ffffff); color: var(--board, #1f63d6); font: 800 15px/1 Archivo, 'Segoe UI', system-ui, sans-serif; }"
     }
   ],
   "narrative": {

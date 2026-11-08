@@ -15,10 +15,10 @@
     "message": "Més opcions"
   },
   "video_hide_here": {
-    "message": "Amaga en aquest vídeo"
+    "message": "Amaga només en aquest vídeo"
   },
   "video_never_site": {
-    "message": "Mai a $site$",
+    "message": "No ho tornis a mostrar a $site$",
     "placeholders": {
       "site": {
         "content": "$1",
@@ -75,22 +75,22 @@
     "message": "Els detalls d'aquesta baixada eren massa grans per transferir-los"
   },
   "status_update_app": {
-    "message": "Actualitzeu Mister Download Manager per utilitzar tot el que ofereix aquesta extensió"
+    "message": "Actualitza Mister Download Manager per aprofitar tot el que ofereix aquesta extensió"
   },
   "popup_take": {
-    "message": "Rebre baixades d'aquest navegador"
+    "message": "Intercepta les baixades d’aquest navegador"
   },
   "popup_proxy": {
     "message": "Envia les descàrregues a través del servidor intermediari o l'extensió de VPN d'aquest navegador"
   },
   "popup_proxy_title": {
-    "message": "Mister Download Manager descarrega llavors a través del mateix servidor intermediari que aquest navegador. El navegador us demanarà una vegada que ho permeteu; si ho desactiveu, es revoca el permís."
+    "message": "Aleshores, Mister Download Manager baixa els fitxers a través del mateix servidor intermediari que aquest navegador. El navegador et demanarà una vegada que ho permetis; si desactives aquesta opció, revocaràs el permís."
   },
   "popup_proxy_title_chromium": {
     "message": "Mister Download Manager baixa els fitxers a través del mateix servidor intermediari que aquest navegador. Mentre aquesta opció estigui desactivada, l’extensió no llegirà el servidor intermediari del navegador."
   },
   "popup_exclude_site": {
-    "message": "No baixis mai de $site$",
+    "message": "No interceptis mai les baixades de $site$",
     "placeholders": {
       "site": {
         "content": "$1",
@@ -117,7 +117,7 @@
     "message": "Ajuda"
   },
   "popup_support": {
-    "message": "Donar suport a MDM"
+    "message": "Dona suport a MDM"
   },
   "popup_fix": {
     "message": "Com solucionar-ho"
@@ -156,13 +156,13 @@
     "message": "L'extensió no té permís per llegir aquest lloc (accés al lloc del navegador)."
   },
   "popup_alt": {
-    "message": "Mantén Alt premut mentre fas clic a un enllaç per deixar que el navegador el baixi."
+    "message": "Mantén premuda la tecla Alt mentre fas clic en un enllaç perquè el navegador el baixi."
   },
   "popup_media": {
     "message": "Contingut multimèdia en aquesta pàgina"
   },
   "popup_media_none": {
-    "message": "Encara no s'ha trobat cap vídeo ni so en aquesta pàgina. Reprodueix-lo i torna a obrir-ho."
+    "message": "Encara no s’ha trobat cap vídeo ni cap so en aquesta pàgina. Reprodueix-ne un i torna a obrir-ho."
   },
   "popup_media_download": {
     "message": "Baixa"

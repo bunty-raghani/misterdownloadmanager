@@ -39,7 +39,7 @@
     "message": "גרור כדי להזיז אותו לאורך קצה הסרטון"
   },
   "menu_selected": {
-    "message": "הורד קישורים נבחרים באמצעות Mister Download Manager"
+    "message": "הורד את הקישורים שנבחרו באמצעות Mister Download Manager"
   },
   "menu_all": {
     "message": "הורד את כל הקישורים באמצעות Mister Download Manager"
@@ -72,7 +72,7 @@
     "message": "החיבור ל- Mister Download Manager נכשל"
   },
   "status_too_large": {
-    "message": "פרטי הורדה זו היו גדולים מדי מכדי למסור אותם"
+    "message": "פרטי ההורדה הזו היו גדולים מדי למסירה"
   },
   "status_update_app": {
     "message": "עדכן את Mister Download Manager כדי להשתמש בכל מה שתוסף זה מציע"
@@ -120,7 +120,7 @@
     "message": "תמוך ב-MDM"
   },
   "popup_fix": {
-    "message": "כיצד לתקן זאת"
+    "message": "איך לתקן זאת"
   },
   "popup_declined": {
     "message": "הושאר לדפדפן: $name$",

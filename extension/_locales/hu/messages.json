@@ -3,10 +3,10 @@
     "message": "Mister Download Manager"
   },
   "description": {
-    "message": "Átadja a letöltéseket a böngészőből a Mister Download Manager számára."
+    "message": "Átadja a letöltéseket a böngészőből a(z) Mister Download Manager alkalmazásnak."
   },
   "menu": {
-    "message": "Letöltés a Mister Download Manager használatával"
+    "message": "Letöltés a(z) Mister Download Manager alkalmazással"
   },
   "video_download": {
     "message": "Videó letöltése"
@@ -15,7 +15,7 @@
     "message": "További lehetőségek"
   },
   "video_hide_here": {
-    "message": "Elrejtés ezen a videón"
+    "message": "Elrejtés ennél a videónál"
   },
   "video_never_site": {
     "message": "Soha ne jelenjen meg ezen a webhelyen: $site$",
@@ -69,7 +69,7 @@
     "message": "Az Mister Download Manager nem indult el időben"
   },
   "status_host_failed": {
-    "message": "A(z) Mister Download Manager kapcsolódása sikertelen"
+    "message": "Nem sikerült csatlakozni az Mister Download Manager alkalmazáshoz"
   },
   "status_too_large": {
     "message": "A letöltés részletei túl nagyok voltak az átadáshoz"
@@ -84,7 +84,7 @@
     "message": "Letöltések küldése a böngésző proxy- vagy VPN-bővítményén keresztül"
   },
   "popup_proxy_title": {
-    "message": "Mister Download Manager ezután ugyanazon a proxyn keresztül tölt le, mint ez a böngésző. A böngésző egyszer kéri, hogy engedélyezze; ennek kikapcsolása visszavonja ezt."
+    "message": "Az Mister Download Manager ezután ugyanazon a proxyn keresztül tölt le, mint ez a böngésző. A böngésző egyszer engedélyt kér erre; ennek kikapcsolásával visszavonhatja az engedélyt."
   },
   "popup_proxy_title_chromium": {
     "message": "Ekkor a(z) Mister Download Manager ugyanazon a proxyn keresztül tölt le, mint ez a böngésző. Ha ez ki van kapcsolva, a bővítmény nem olvassa be a böngésző proxyját."
@@ -162,7 +162,7 @@
     "message": "Média ezen az oldalon"
   },
   "popup_media_none": {
-    "message": "Még nem található videó vagy hang ezen az oldalon. Játssza le, majd nyissa meg újra."
+    "message": "Még nem található videó vagy hang ezen az oldalon. Indítsa el a lejátszást, majd nyissa meg újra."
   },
   "popup_media_download": {
     "message": "Letöltés"
@@ -174,7 +174,7 @@
     "message": "Élő"
   },
   "video_off": {
-    "message": "A letöltés gomb ki van kapcsolva ezen a webhelyen"
+    "message": "A letöltés gomb ezen a webhelyen ki van kapcsolva"
   },
   "video_drm": {
     "message": "Védett videó: nem menthető"

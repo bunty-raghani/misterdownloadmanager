@@ -72,13 +72,13 @@
     "message": "Ryšys su Mister Download Manager nepavyko"
   },
   "status_too_large": {
-    "message": "Šio atsisiuntimo duomenys buvo per dideli, kad būtų galima perduoti"
+    "message": "Šio atsisiuntimo duomenys buvo per dideli, kad juos būtų galima perduoti"
   },
   "status_update_app": {
-    "message": "Atnaujinkite Mister Download Manager, kad galėtumėte naudoti viską, ką siūlo šis plėtinys"
+    "message": "Atnaujinkite Mister Download Manager, kad galėtumėte naudotis visomis šio plėtinio funkcijomis"
   },
   "popup_take": {
-    "message": "Paimti atsisiuntimus iš šios naršyklės"
+    "message": "Perimti atsisiuntimus iš šios naršyklės"
   },
   "popup_proxy": {
     "message": "Siųsti atsisiuntimus per šios naršyklės tarpinio serverio arba VPN plėtinį"
@@ -156,13 +156,13 @@
     "message": "Plėtiniui neleidžiama skaityti šios svetainės (naršyklės prieiga prie svetainės)."
   },
   "popup_alt": {
-    "message": "Laikykite Alt ir spustelėkite nuorodą, kad naršyklė ją atsisiųstų."
+    "message": "Laikykite nuspaudę Alt ir spustelėkite nuorodą, kad ją atsisiųstų naršyklė."
   },
   "popup_media": {
     "message": "Medija šiame puslapyje"
   },
   "popup_media_none": {
-    "message": "Šiame puslapyje dar nerasta vaizdo ar garso. Paleiskite, tada atidarykite tai iš naujo."
+    "message": "Šiame puslapyje dar nerasta vaizdo ar garso. Paleiskite jį, tada atidarykite šį langą iš naujo."
   },
   "popup_media_download": {
     "message": "Atsisiųsti"

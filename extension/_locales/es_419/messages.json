@@ -36,10 +36,10 @@
     "message": "Mister Download Manager no está instalado o no se inició"
   },
   "video_drag": {
-    "message": "Arrastre para moverlo por el borde del video"
+    "message": "Arrastra para moverlo por el borde del video"
   },
   "menu_selected": {
-    "message": "Descargar enlaces seleccionados con Mister Download Manager"
+    "message": "Descargar los enlaces seleccionados con Mister Download Manager"
   },
   "menu_all": {
     "message": "Descargar todos los enlaces con Mister Download Manager"
@@ -72,7 +72,7 @@
     "message": "La conexión a Mister Download Manager falló"
   },
   "status_too_large": {
-    "message": "Los detalles de esta descarga eran demasiado grandes para transferir"
+    "message": "Los detalles de esta descarga eran demasiado grandes para transferirlos"
   },
   "status_update_app": {
     "message": "Actualiza Mister Download Manager para usar todo lo que ofrece esta extensión"
@@ -84,7 +84,7 @@
     "message": "Enviar descargas a través del proxy o la extensión VPN de este navegador"
   },
   "popup_proxy_title": {
-    "message": "Mister Download Manager descarga entonces a través del mismo proxy que este navegador. El navegador le pedirá una vez que lo permita; al desactivar esto, se revoca el permiso."
+    "message": "Mister Download Manager descarga entonces a través del mismo proxy que este navegador. El navegador te pedirá una vez que lo permitas; al desactivar esto, se revoca el permiso."
   },
   "popup_proxy_title_chromium": {
     "message": "Mister Download Manager descarga a través del mismo proxy que este navegador. Cuando está desactivada, la extensión no lee el proxy del navegador."
@@ -156,13 +156,13 @@
     "message": "La extensión no tiene permiso para leer este sitio (acceso al sitio del navegador)."
   },
   "popup_alt": {
-    "message": "Mantenga presionada la tecla Alt mientras hace clic en un enlace para que el navegador lo descargue."
+    "message": "Mantén presionada la tecla Alt mientras haces clic en un enlace para que el navegador lo descargue."
   },
   "popup_media": {
     "message": "Contenido multimedia en esta página"
   },
   "popup_media_none": {
-    "message": "Aún no se ha encontrado ningún video o sonido en esta página. Reprodúzcalo y vuelva a abrir esto."
+    "message": "Aún no se encontró ningún video ni sonido en esta página. Reprodúcelo y vuelve a abrir esto."
   },
   "popup_media_download": {
     "message": "Descargar"

@@ -15,10 +15,10 @@
     "message": "ተጨማሪ አማራጮች"
   },
   "video_hide_here": {
-    "message": "በዚህ ቪዲዮ ላይ ደብቅ"
+    "message": "በዚህ ቪዲዮ ላይ ደብቁ"
   },
   "video_never_site": {
-    "message": "በ$site$ ላይ በጭራሽ",
+    "message": "በ$site$ ላይ ዳግም አታሳዩ",
     "placeholders": {
       "site": {
         "content": "$1",
@@ -57,7 +57,7 @@
     }
   },
   "status_paused": {
-    "message": "ቆሟል: ውርዶች በአሳሹ ይቀራሉ"
+    "message": "ባለበት ቆሟል፦ ውርዶች በአሳሹ ይቀራሉ"
   },
   "status_not_installed": {
     "message": "Mister Download Manager አልተጫነም፣ ወይም የአሳሽ ውህደቱ አልተዘጋጀም"
@@ -81,16 +81,16 @@
     "message": "ውርዶችን ከዚህ አሳሽ ይውሰዱ"
   },
   "popup_proxy": {
-    "message": "ማውረዶችን በዚህ አሳሽ ፕሮክሲ ወይም ቪፒኤን ቅጥያ በኩል ይላኩ"
+    "message": "ውርዶችን በዚህ አሳሽ ፕሮክሲ ወይም ቪፒኤን ቅጥያ በኩል ይላኩ"
   },
   "popup_proxy_title": {
-    "message": "Mister Download Manager ከዚያ በዚህ አሳሽ ውስጥ እንዳለው ፕሮክሲ ያወርዳል። አሳሹ አንድ ጊዜ እንዲፈቅዱ ይጠይቅዎታል፤ ይህን ማጥፋት ያንን ይሽራል።"
+    "message": "Mister Download Manager ከዚያ በዚህ አሳሽ ከሚጠቀምበት ፕሮክሲ በኩል ያወርዳል። አሳሹ አንድ ጊዜ እንዲፈቅዱ ይጠይቅዎታል፤ ይህን ማጥፋት ፈቃዱን ይሽራል።"
   },
   "popup_proxy_title_chromium": {
     "message": "Mister Download Manager ከዚያም በዚህ አሳሽ በኩል በተመሳሳይ ፕሮክሲ ያወርዳል። ይህ ሲጠፋ፣ ቅጥያው የአሳሹን ፕሮክሲ አያነብም።"
   },
   "popup_exclude_site": {
-    "message": "ከ$site$ የሚወርዱ ፋይሎችን በጭራሽ አይውሰዱ",
+    "message": "ከ$site$ የሚመጡ ውርዶችን ዳግም አትውሰዱ",
     "placeholders": {
       "site": {
         "content": "$1",
@@ -108,7 +108,7 @@
     }
   },
   "popup_open": {
-    "message": "Mister Download Managerን ክፈት"
+    "message": "Mister Download Managerን ይክፈቱ"
   },
   "popup_options": {
     "message": "አማራጮች..."
@@ -174,10 +174,10 @@
     "message": "ቀጥታ"
   },
   "video_off": {
-    "message": "የማውረጃው ቁልፍ በዚህ ጣቢያ ላይ ጠፍቷል"
+    "message": "የማውረጃ ቁልፉ በዚህ ጣቢያ ላይ ጠፍቷል"
   },
   "video_drm": {
-    "message": "የተጠበቀ ቪዲዮ: ማስቀመጥ አይቻልም"
+    "message": "የተጠበቀ ቪዲዮ፦ ማስቀመጥ አይቻልም"
   },
   "popup_send_to": {
     "message": "ውርዶችን ወደ"

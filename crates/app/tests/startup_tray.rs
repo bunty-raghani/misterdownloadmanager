@@ -2,8 +2,8 @@
 //! screens (MDM_OFFSCREEN), with a data folder of its own, started as its startup entry starts
 //! it (`/startup`), with its tray icon (MDM_TEST_TRAY: off-screen copies have none otherwise):
 //! the icon is shown and no window is, the list's clock runs, and a second launch by the user
-//! shows the window as always. On the way, the startup entry 0.3.0 wrote (the program alone) is
-//! written again with `/startup`: on Windows a Run value of the test's own name
+//! shows the window as always. On the way, the startup entry versions before 0.5.0 wrote (the
+//! program alone) is written again with `/startup`: on Windows a Run value of the test's own name
 //! (MDM_TEST_RUN_VALUE, deleted after; the user's own is never read nor written by an off-screen
 //! copy), on Linux an autostart entry in a configuration folder of the test's own.
 //!
@@ -74,7 +74,7 @@ struct Startup {
 const RUN: &str = r"HKCU\Software\Microsoft\Windows\CurrentVersion\Run";
 
 impl Startup {
-    /// The entry 0.3.0 wrote for this program: the program alone, no argument.
+    /// The entry versions before 0.5.0 wrote for this program: the program alone, no argument.
     fn old(_dir: &Path) -> Startup {
         #[cfg(windows)]
         {

@@ -46,8 +46,10 @@ a contact shadow and a long soft one (no 3D turn, no pointer movement: the owner
 the window's grid cell so the section clears it. It carries the sender block (logo,
 name), the headline set large, the subline, the green Download action, macOS and Linux with their
 icons, the fields (postage free; delivery time; for Windows 10 and 11; version and size) and the
-barcode. A slim header above. Mobile: the window full width, the card below overlapping its lower
-edge with a gentler tilt, the caption under it.
+barcode. Under the window's caption, beside the label, on the board: "Made possible by these
+amazing humans" and a row of the contributors' round photos with "+N" (the owner's choice,
+2026-11-08: a "liked by" line). A slim header above. Mobile: the window full width, the card below overlapping its lower
+edge with a gentler tilt, the caption under it, then the contributors' row.
 
 FORM: grounded candidate 5 of 7 (courier waybill and parcel label); seed:d1b9f806aa0c2dc4.
 Signature interaction: the tracking race, two shipments scanned event by event to the real

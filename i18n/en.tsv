@@ -193,6 +193,10 @@
 	Add	Add
 #. what a keyboard shortcut does in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 	Add a download (Add URL)	Add a download (Add URL)
+#. message or event log entry in the main window
+#. title of the file dialog of View → Theme → Add a theme file
+#. title of the message when View → Theme → Add a theme file fails
+	Add a theme file	Add a theme file
 #. window title in the Options window
 #. window title: adding a debrid service account (Real-Debrid…)
 	Add an account	Add an account
@@ -3191,6 +3195,8 @@
 #. message or event log entry in the main window
 #. {error} = an error message (keep the braces as they are)
 	The list could not be saved: {error}	The list could not be saved: {error}
+#. text in whereis.rs
+	the local network	the local network
 #. text in errors.rs; text in torrent downloads
 #. an error: the network adapter chosen in Options (a VPN's, usually) is off or gone; {adapter} its name
 	the network adapter {adapter} is not connected	the network adapter {adapter} is not connected
@@ -3269,6 +3275,9 @@
 	The update is open in your system's package installer.	The update is open in your system's package installer.
 #. text in a download's Properties window
 	The web page from which this file was obtained:	The web page from which this file was obtained:
+#. message or event log entry in the main window
+#. the kind of file View → Theme → Add a theme file lists: MDM's themes (TOML, JSON), Base16 schemes (YAML) and pywal's colors.json
+	Themes and colour schemes	Themes and colour schemes
 #. text in the Options window
 #. Options → Archives check box
 	Then move the archives to the Recycle Bin	Then move the archives to the Recycle Bin
@@ -3292,6 +3301,8 @@
 #. text in the Options window
 #. Options → Remote → Pair a device: the code ran out (10 minutes, or 5 wrong tries)
 	This code can't be used any more.	This code can't be used any more.
+#. text in whereis.rs
+	this computer	this computer
 #. text in win32.rs
 #. the Scheduler, under "Wake the computer to run this queue": Windows set the timer but can't wake this computer with it
 	This computer can't be woken by a timer	This computer can't be woken by a timer
@@ -3304,15 +3315,16 @@
 #. text in the Options window
 #. Options → Remote → Listen on: only programs on this computer can connect (127.0.0.1)
 	This computer only (127.0.0.1)	This computer only (127.0.0.1)
-#. text in whereis.rs
-#. where a download's server is: on this computer or the local network (no country)
-	this computer or the local network	this computer or the local network
 #. text in the Scheduler window
 #. tooltip on the Scheduler's date when it is in the past
 	This date has passed: the queue will not start	This date has passed: the queue will not start
 #. text in remote.rs
 #. remote control page (on a phone): label of the box naming this phone (shown in MDM's list of paired devices)
 	This device's name	This device's name
+#. message or event log entry in the main window
+#. {error} is why, in English (a file that isn't a theme or a colour scheme, a colour missing)
+#. {error} = an error message (keep the braces as they are)
+	This file can't be used as a theme: {error}	This file can't be used as a theme: {error}
 #. text in remote.rs
 #. remote control page (on a phone): the file chosen is too large for a .torrent file
 	This file is too large to be a torrent.	This file is too large to be a torrent.
@@ -4432,6 +4444,9 @@ menu	Add &batch download	Add &batch download
 #. the trailing ... means it opens a window: keep it
 menu	Add &magnet link...	Add &magnet link...
 #. menu command in the main window
+#. View → Theme: picks a theme file or a Base16 or pywal colour scheme, copies it into the themes folder and uses it
+menu	Add a theme file…	Add a theme file…
+#. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 menu	Add batch download from &clipboard	Add batch download from &clipboard
 #. menu command in the main window
@@ -4633,6 +4648,9 @@ menu	OpenGL	OpenGL
 #. noun: opens the download's Properties window
 #. noun: opens the category's properties
 menu	Properties	Properties
+#. menu command in the main window
+#. View → Theme: the colours of pywal (a program making colour schemes from the wallpaper), followed as they change; a name: keep "pywal" as written
+menu	pywal	pywal
 #. menu command in the main window
 #. verb: download the file again from the start
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation

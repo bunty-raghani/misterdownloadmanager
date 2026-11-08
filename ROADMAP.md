@@ -1,18 +1,32 @@
 # Roadmap
 
-What's done for the next release, what's being built, and what's planned. Each item links to its
+What's done for version 0.5.0, what's being built, and what's planned. Each item links to its
 issue, where the details and the discussion are. Released changes are in
 [CHANGELOG.md](CHANGELOG.md). Ideas and bug reports are welcome in
 [Issues](https://github.com/anefzaoui/misterdownloadmanager/issues).
 
-✅ done, not released yet · 🔄 being built · 📋 planned · 🔍 looking into it
+✅ done, coming in 0.5.0 · 🔄 being built · 📋 planned · 🔍 looking into it
 
-## The next release
+## Version 0.5.0
 
-Everything below ships together, in the next release.
+Everything below ships together, in version 0.5.0.
 
 ### Done
 
+- ✅ Menus on compositors that animate windows (Hyprland): no border and no slide-in, and going from
+  title to title moves one window, so nothing fades; the reporter confirmed it
+  ([#277](https://github.com/anefzaoui/misterdownloadmanager/issues/277))
+- ✅ A very slow first window on Windows: MDM draws with Direct3D 12 by default and keeps it through
+  a slow start ([#57](https://github.com/anefzaoui/misterdownloadmanager/issues/57))
+- ✅ A crash on Linux as Download File Info opens
+  ([#48](https://github.com/anefzaoui/misterdownloadmanager/issues/48))
+- ✅ Linux on GNOME Wayland: right-click menus open where you click, and windows fit their buttons
+  ([#29](https://github.com/anefzaoui/misterdownloadmanager/issues/29))
+- ✅ Windows 11 Insider builds: no black band across the top of menus, the drop target, the
+  progress window and the windows whose title bar MDM draws (the style themes); the reporter
+  confirmed it ([#208](https://github.com/anefzaoui/misterdownloadmanager/issues/208))
+- ✅ The progress window's Download status tab: as much room above its first row as below its
+  last; where the server is says "this computer" or "the local network", each with its icon
 - ✅ **View → Interface size**: every window larger, 100 % to 200 %, with Ctrl + / Ctrl − / Ctrl 0
   as in a browser; a window larger than the screen scrolls. Sharper text on Windows (part of
   [#262](https://github.com/anefzaoui/misterdownloadmanager/issues/262))
@@ -96,8 +110,14 @@ Everything below ships together, in the next release.
   that decided, and the extension's button shows the last one. The extension from the Chrome Web
   Store needs this release (0.2.x serves only the copy in MDM's folder)
   ([#208](https://github.com/anefzaoui/misterdownloadmanager/issues/208))
+- ✅ Waterfox, and Firefox set to ask what to do with each file: MDM takes the download before
+  the browser's *What should … do with this file?* dialog, which no longer shows for the files
+  MDM takes ([#208](https://github.com/anefzaoui/misterdownloadmanager/issues/208))
 - ✅ More file types taken from the browser by default: DMG, PKG, DEB, RPM, APPIMAGE, MSIX, APPX,
   CAB, JAR, XZ, ZST, WEBM, FLAC, OPUS and others; a list never edited gains them
+  ([#208](https://github.com/anefzaoui/misterdownloadmanager/issues/208))
+- ✅ Windows: Download File Info and the progress window open in front of the browser, even when
+  Windows doesn't let MDM take the foreground; the keyboard stays where it was until a click
   ([#208](https://github.com/anefzaoui/misterdownloadmanager/issues/208))
 - ✅ The window no longer freezes on Linux when the system's sleep service (logind) or keyring
   (Secret Service) is slow or doesn't answer: keeping the computer awake for a woken queue is
@@ -164,7 +184,9 @@ Everything below ships together, in the next release.
   without making it; store packages and theme windows are checked there too (part of
   [#164](https://github.com/anefzaoui/misterdownloadmanager/issues/164))
 - ✅ Firefox: reading the browser's proxy (#42) is an opt-in, a switch in the extension's popup, so
-  the extension's update asks for no new permission
+  the extension's update asks for no new permission; a VPN add-on's proxy goes with the downloads
+  taken before Firefox's file dialog too, and addresses on this computer skip the proxy, as in
+  Firefox
 - ✅ Chrome and the other Chromium browsers: downloads go through the browser's proxy or VPN
   extension too (#42), with the same switch, off as installed: a fixed server for each scheme and
   its bypass list, or an auto-config script
@@ -194,6 +216,9 @@ Everything below ships together, in the next release.
   glossy buttons, their check boxes and progress bars, their title bars on Windows, icons drawn
   for MDM); Metro, Adwaita and Breeze get MDM's own icons where theirs had none
   ([#45](https://github.com/anefzaoui/misterdownloadmanager/issues/45))
+- ✅ Themes: Base16 and pywal colour schemes imported as themes (View → Theme → Add a theme
+  file…, or the themes folder); **pywal** follows `wal` as it writes new colours, text kept
+  readable (4.5:1) ([#45](https://github.com/anefzaoui/misterdownloadmanager/issues/45))
 - ✅ Dark mode: grey notes and error texts readable (4.5:1), Options' failed checks no longer dark
   red on the dark dialog ([#45](https://github.com/anefzaoui/misterdownloadmanager/issues/45))
 - ✅ A minimized MDM keeps working: queues, the Scheduler, download limits, the kill switch and
@@ -234,6 +259,11 @@ Everything below ships together, in the next release.
 - ✅ Windows: MDM draws with Direct3D 12 by default; **View → Draw with** goes back to OpenGL, and
   either one falls back to the other when it can't start
   ([#89](https://github.com/anefzaoui/misterdownloadmanager/issues/89))
+- ✅ A slow start no longer turns Direct3D off for good: its 10 seconds for the first frame count
+  only Direct3D's own time, not MDM's loading (on one computer that sent MDM to OpenGL, where
+  Intel's driver froze it); crash and freeze reports say near the top what drew, on which card
+  and driver, and why
+  ([#280](https://github.com/anefzaoui/misterdownloadmanager/issues/280))
 - ✅ Linux and macOS: **View → Draw with → Vulkan** (Linux) and **Metal** (macOS), with the same
   fallback to OpenGL as Direct3D on Windows; OpenGL stays their default for now, and the menu
   says why when one can't start here
@@ -374,13 +404,17 @@ Everything below ships together, in the next release.
   [Themes](https://misterdownloadmanager.com/themes.html) page with every built-in theme, light and
   dark, and how to make, try and share your own
   ([#260](https://github.com/anefzaoui/misterdownloadmanager/issues/260))
+- ✅ Thanks to the people who make MDM possible: everyone who sent a pull request, opened an issue
+  or commented on GitHub, as round photos in the home page's first view and the README, on a
+  [Contributors](https://misterdownloadmanager.com/contributors.html) page with what each one did,
+  at the end of each release on the News page, and in each release's notes on GitHub
 - ✅ Themes ([#45](https://github.com/anefzaoui/misterdownloadmanager/issues/45)): today's look stays the default. Every colour, size and spacing now
   comes from the chosen theme (the classic look pixel for pixel the same); **View → Theme** with
   Classic, Native (follows the system's accent and contrast on Windows, Linux and macOS) and High
   contrast; style themes with their own control shapes, a drawn title bar on Windows and their own
   icons: Metro, Adwaita, Breeze, Luna, Aero and Aqua; and theme files anyone can make, try and
-  share, in TOML or JSON, built on any theme (`inherits`), with their own icons
-  ([the guide](docs/themes.md))
+  share, in TOML or JSON, built on any theme (`inherits`), with their own icons; Base16 and
+  pywal colour schemes read as themes ([the guide](docs/themes.md))
 - ✅ Linux, no longer experimental: every change is checked on Ubuntu (GNOME) as well as Windows,
   and on KDE Plasma, Cinnamon and Xfce; Wayland sessions (through XWayland, menus under their
   titles on sway too); the .deb and .rpm installed in clean Ubuntu, Debian and Fedora systems, the
@@ -392,10 +426,12 @@ Everything below ships together, in the next release.
   docs, the README and the website brought up to date
   ([#186](https://github.com/anefzaoui/misterdownloadmanager/issues/186))
 
+## Being worked on
+
+These ship in a later version, when they're ready.
+
 ### Being built
 
-- 🔄 Themes: Base16 and pywal colour schemes imported as themes
-  ([#45](https://github.com/anefzaoui/misterdownloadmanager/issues/45))
 - 🔄 Linux, what's left ([#164](https://github.com/anefzaoui/misterdownloadmanager/issues/164)):
   screen readers (Orca) reading MDM's windows; browsers installed as a Flatpak (Firefox from
   Flathub may reach MDM through the desktop, as the Snap does: to check); native Wayland windows
@@ -404,33 +440,11 @@ Everything below ships together, in the next release.
 
 ### Bugs being looked into
 
-- 🔍 Menus and the drop target with a black band across their top on a Windows 11 Insider build
-  ([#208](https://github.com/anefzaoui/misterdownloadmanager/issues/208)): menus are plain pop-up
-  windows now, as Windows' own are, and the reporter confirmed them fixed; the drop target is one
-  too, its test build is with the reporter
-- 🔍 Menus opening as the pointer crosses the menu bar on a tiling window manager
-  ([#277](https://github.com/anefzaoui/misterdownloadmanager/issues/277)): after a command the
-  bar waits for a click, as before the first one (now tested on Windows and Linux); once a menu is
-  open, the pointer moves it from title to title, as Windows' menu bars do. Whether a tiling
-  desktop should behave otherwise is being discussed with the reporter
-- 🔍 A freeze of the window on start ([#57](https://github.com/anefzaoui/misterdownloadmanager/issues/57)):
-  most likely a computer busy just after start; freeze reports now measure it, so the next one says
-- 🔍 A crash on Linux as Download File Info opens
-  ([#48](https://github.com/anefzaoui/misterdownloadmanager/issues/48)), likely fixed with #22
-- 🔍 Linux display issues ([#29](https://github.com/anefzaoui/misterdownloadmanager/issues/29))
+- 🔍 A 10-second freeze of the window after a night left open
+  ([#304](https://github.com/anefzaoui/misterdownloadmanager/issues/304)): most likely the
+  computer waking from sleep; waiting on the reporter's full report
 
 ## Planned
-
-### Downloads and windows
-
-
-### Network
-
-
-### Browser extension
-
-- ✅ On Firefox Add-ons: [Mister Download Manager](https://addons.mozilla.org/firefox/addon/mister-download-manager/)
-- ✅ On the Chrome Web Store: [Mister Download Manager](https://chromewebstore.google.com/detail/mister-download-manager/ejoleppdfgjdndddcjoehopknmlglojp)
 
 ### Look and performance
 

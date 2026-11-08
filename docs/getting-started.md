@@ -227,8 +227,10 @@ MDM follows your system: when Windows (or your desktop's light/dark preference o
 
 Each has a light and a dark side: **Dark Mode support** and **Always dark** choose between
 them as before. Theme files you put in the themes folder (**View → Theme → Open themes folder**)
-are listed there too: [Themes](themes.md) says where that folder is, what a theme file holds
-(`inherits`, colours, sizes, control shapes, icons) and how to make and share one.
+are listed there too, and so are Base16 and pywal colour schemes (**View → Theme → Add a theme
+file…**; **pywal** follows `wal` as it runs): [Themes](themes.md) says where that folder is, what
+a theme file holds (`inherits`, colours, sizes, control shapes, icons), how a scheme's colours are
+used, and how to make and share one.
 
 ## The tray icon
 

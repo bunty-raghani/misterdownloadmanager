@@ -1,7 +1,8 @@
 # Builds misterdownloadmanager.com (tools/website/build.py: website/, docs/, CHANGELOG.md and the
 # language list, then every page again in each language of i18n/site/, tools/website/sitei18n.py)
 # and publishes it with GitHub Pages, on every push to main that touches them, and
-# once a day so the repository's star, fork and issue counts on the site stay current.
+# once a day so the repository's star, fork and issue counts and its contributors (the home page,
+# /contributors.html, the News page; tools/contributors.py) on the site stay current.
 name: Website
 
 on:
@@ -15,6 +16,7 @@ on:
       - "i18n/languages.tsv"
       - "i18n/site/**"
       - "tools/website/**"
+      - "tools/contributors.py"
       - ".github/workflows/pages.yml"
   schedule:
     - cron: "17 4 * * *"

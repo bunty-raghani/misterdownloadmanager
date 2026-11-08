@@ -15,7 +15,7 @@
     "message": "Več možnosti"
   },
   "video_hide_here": {
-    "message": "Skrij na tem videoposnetku"
+    "message": "Skrij samo pri tem videoposnetku"
   },
   "video_never_site": {
     "message": "Nikoli na $site$",
@@ -57,7 +57,7 @@
     }
   },
   "status_paused": {
-    "message": "Zaustavljeno: prenosi ostanejo v brskalniku"
+    "message": "Začasno ustavljeno: prenosi ostanejo v brskalniku"
   },
   "status_not_installed": {
     "message": "Mister Download Manager ni nameščen ali njegova integracija brskalnika ni nastavljena"
@@ -90,7 +90,7 @@
     "message": "Mister Download Manager nato prenaša prek istega posrednika kot ta brskalnik. Ko je to izklopljeno, razširitev ne bere brskalnikovega posrednika."
   },
   "popup_exclude_site": {
-    "message": "Nikoli ne prevzemaj prenosov iz $site$",
+    "message": "Nikoli ne prevzemi prenosov s spletnega mesta $site$",
     "placeholders": {
       "site": {
         "content": "$1",
@@ -120,7 +120,7 @@
     "message": "Podprite MDM"
   },
   "popup_fix": {
-    "message": "Kako to popraviti"
+    "message": "Kako odpraviti težavo"
   },
   "popup_declined": {
     "message": "Prepuščeno brskalniku: $name$",
@@ -162,7 +162,7 @@
     "message": "Predstavnost na tej strani"
   },
   "popup_media_none": {
-    "message": "Na tej strani še ni najdenega videoposnetka ali zvoka. Predvajajte ga, nato znova odprite to."
+    "message": "Na tej strani še ni videoposnetkov ali zvoka. Predvajajte jih, nato pa to znova odprite."
   },
   "popup_media_download": {
     "message": "Prenesi"
@@ -174,7 +174,7 @@
     "message": "V živo"
   },
   "video_off": {
-    "message": "Gumb za prenos je na tem mestu izklopljen"
+    "message": "Gumb za prenos je na tem spletnem mestu izklopljen"
   },
   "video_drm": {
     "message": "Zaščiten videoposnetek: ni ga mogoče shraniti"

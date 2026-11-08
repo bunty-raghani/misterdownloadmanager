@@ -99,7 +99,7 @@
     }
   },
   "popup_excluded": {
-    "message": "Downloads de $site$ permanecem com o navegador",
+    "message": "Os downloads de $site$ continuam no navegador",
     "placeholders": {
       "site": {
         "content": "$1",

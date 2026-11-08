@@ -638,6 +638,18 @@ fn keyboard<C: Clone>(
     out
 }
 
+/// What a popup menu is: how its window says so to the window system (X11's window types) and,
+/// on X11, whether it shares its window with others ([`menu_viewport`]).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum MenuKind {
+    /// A menu of the menu bar, and its submenus.
+    Bar,
+    /// A context menu: a right click, the Menu key, a toolbar button's drop-down.
+    Context,
+    /// A drop-down list's choices: a combo box's, a text box's history.
+    List,
+}
+
 /// Show a popup menu with its top-left at `pos` (main-window client coordinates, on screen) —
 /// its top-right in a right-to-left interface, where menus open to the left.
 ///
@@ -647,6 +659,7 @@ fn keyboard<C: Clone>(
 /// widgets underneath. Call every frame while open, from the main window's `ui`.
 pub fn popup<C: Clone>(
     ctx: &egui::Context,
+    kind: MenuKind,
     id: &str,
     pos: Pos2,
     entries: &[MenuEntry<C>],
@@ -691,6 +704,7 @@ pub fn popup<C: Clone>(
     ctx.data_mut(|d| d.insert_temp(window_focus, false));
     popup_level(
         ctx,
+        kind,
         id,
         origin + pos.to_vec2(),
         None,
@@ -1012,9 +1026,41 @@ fn place_menu(ctx: &egui::Context, at: Pos2, size: egui::Vec2, parent: Option<Re
     at
 }
 
+/// Whether the menu bar's menus share one window per level ([`menu_viewport`]): on X11 and
+/// XWayland, where MDM places its menus itself.
+fn bar_shares_window() -> bool {
+    #[cfg(target_os = "linux")]
+    {
+        !crate::unix::on_wayland()
+    }
+    // Windows and macOS: one window per menu, as before. Native Wayland (MDM_WAYLAND=1) too: a
+    // program can't move its windows there (winit 0.30 has no popup windows on Wayland), so a
+    // shared window would stay where the first menu opened.
+    #[cfg(not(target_os = "linux"))]
+    {
+        false
+    }
+}
+
+/// The window menu `id`'s level `depth` is drawn in. With `bar_shared` (X11: [`bar_shares_window`])
+/// every menu of the bar is drawn in one window per level, moved and resized as the pointer or
+/// the arrow keys go from title to title, as a submenu's window already is from item to item.
+/// A window of its own for each menu was mapped and unmapped at every switch, and a compositor
+/// that animates new windows (Hyprland, picom with fading) faded each one in, and the last one
+/// out, every time (#277). Other menus: a window of their own, as before.
+fn menu_viewport(kind: MenuKind, id: &str, depth: usize, bar_shared: bool) -> egui::ViewportId {
+    let key = if bar_shared && kind == MenuKind::Bar {
+        "menu-bar"
+    } else {
+        id
+    };
+    egui::ViewportId::from_hash_of(("menu", key, depth))
+}
+
 #[allow(clippy::too_many_arguments)]
 fn popup_level<C: Clone>(
     ctx: &egui::Context,
+    kind: MenuKind,
     id: &str,
     at: Pos2,
     parent: Option<Rect>,
@@ -1035,15 +1081,9 @@ fn popup_level<C: Clone>(
         .with_active(false)
         .with_position(screen.min)
         .with_inner_size(size);
-    // Linux, X11 and XWayland (MDM's default): a menu window the window manager doesn't manage
-    // (override-redirect), as X11 menus are, so it opens exactly where it's placed. A tiling
-    // compositor (sway) placed a managed one as it likes, centred on the screen (#267). Never
-    // activated either way (the main window keeps the keyboard); its type says it's a menu.
-    // Ignored on Wayland, which has no such window.
+    // Linux: a menu window as X11 menus are (unix::menu_window).
     #[cfg(target_os = "linux")]
-    let builder = builder
-        .with_override_redirect(true)
-        .with_window_type(egui::X11WindowType::PopupMenu);
+    let builder = crate::unix::menu_window(builder, kind);
     let open_sub = if depth == 0 {
         ctx.data(|d| d.get_temp::<usize>(sub_key))
     } else {
@@ -1051,7 +1091,7 @@ fn popup_level<C: Clone>(
     };
     // (index, slot top) of the submenu to show beside this menu.
     let mut sub_at: Option<(usize, f32)> = None;
-    let vid = egui::ViewportId::from_hash_of(("menu", id, depth));
+    let vid = menu_viewport(kind, id, depth, bar_shares_window());
     let parent_vid = ctx.viewport_id();
     // Set when this pass made the new (hidden) window a menu window: shown below. (Elsewhere a
     // menu's window is created visible.)
@@ -1343,6 +1383,7 @@ fn popup_level<C: Clone>(
         let at = pos2(x, screen.min.y + slot_y - 3.0);
         popup_level(
             ctx,
+            kind,
             id,
             at,
             Some(screen),
@@ -2154,7 +2195,43 @@ fn chevron(p: &egui::Painter, ox: f32, top: f32, open: bool, bright: bool) {
 
 #[cfg(test)]
 mod tests {
-    use super::{FOCUS_GRACE, FocusVerdict, MenuBarEvent, MenuFocus, menubar_next};
+    use super::{
+        FOCUS_GRACE, FocusVerdict, MenuBarEvent, MenuFocus, MenuKind, menu_viewport, menubar_next,
+    };
+
+    /// #277: on X11 the menu bar's menus share one window per level, so going from title to
+    /// title moves it (a compositor has no new window to fade in); elsewhere, and for every
+    /// other menu, a window of their own as before.
+    #[test]
+    fn the_bar_menus_share_one_window_on_x11() {
+        let bar = |i: usize, depth, shared| {
+            menu_viewport(MenuKind::Bar, &format!("menu-{i}"), depth, shared)
+        };
+        // Tasks, File, Downloads, View, Help: one window (and one for their submenus).
+        for i in 1..5 {
+            assert_eq!(bar(0, 0, true), bar(i, 0, true));
+            assert_eq!(bar(0, 1, true), bar(i, 1, true));
+        }
+        assert_ne!(bar(0, 0, true), bar(0, 1, true));
+        // Without sharing (Windows, macOS, native Wayland): one per menu, as before.
+        assert_ne!(bar(0, 0, false), bar(1, 0, false));
+        assert_eq!(
+            bar(2, 0, false),
+            egui::ViewportId::from_hash_of(("menu", "menu-2", 0usize))
+        );
+        // A context menu and a drop-down list keep their own window, shared or not.
+        for shared in [true, false] {
+            let ctx = menu_viewport(MenuKind::Context, "popup-1", 0, shared);
+            let list = menu_viewport(MenuKind::List, "drop-x", 0, shared);
+            assert_ne!(ctx, bar(0, 0, shared));
+            assert_ne!(list, bar(0, 0, shared));
+            assert_ne!(ctx, list);
+            assert_eq!(
+                ctx,
+                egui::ViewportId::from_hash_of(("menu", "popup-1", 0usize))
+            );
+        }
+    }
 
     /// Runs `events` from no menu open; the open menu after each.
     fn run(events: &[MenuBarEvent]) -> Vec<Option<usize>> {

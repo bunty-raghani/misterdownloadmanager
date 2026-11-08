@@ -168,6 +168,42 @@ fn parse(name: &str) -> Option<Attempt> {
 pub struct Plan {
     pub attempts: Vec<Attempt>,
     pub watched: bool,
+    /// Why the first way is the one tried first, for the log and the crash reports.
+    pub because: Because,
+}
+
+/// Why a plan's first way is tried first (#280: a report drawn with OpenGL where Direct3D is the
+/// default must say why).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Because {
+    /// Chosen in View → Draw with.
+    Chosen,
+    /// Nothing chosen (or another system's API): this system's default.
+    Default,
+    /// `/renderer` or `MDM_RENDERER`.
+    Override,
+    /// The system's API is the choice, but it failed here before: OpenGL until it is chosen
+    /// again.
+    FailedBefore,
+}
+
+impl Because {
+    /// Its words after "Drawing with: …" (`api`: the system's API's name).
+    fn words(self, api: &str) -> String {
+        match self {
+            Because::Chosen => "chosen in View → Draw with".into(),
+            Because::Default => "the default here".into(),
+            Because::Override => "the testing override (/renderer, MDM_RENDERER)".into(),
+            Because::FailedBefore => format!(
+                "{api} failed here before: {}",
+                FAILED_DETAILS
+                    .lock()
+                    .ok()
+                    .and_then(|d| d.clone())
+                    .unwrap_or_default()
+            ),
+        }
+    }
 }
 
 /// What to try: the override if any, else the setting (or [`DEFAULT`]) unless the system's API
@@ -186,10 +222,23 @@ pub fn plan(setting: Option<Api>, overridden: Option<&str>, failed_before: bool)
         }
         a
     });
-    let first = match forced {
-        Some(a) => a,
-        None if Some(chosen(setting)) == GPU && !failed_before => Attempt::Gpu(Adapters::Hardware),
-        None => Attempt::OpenGl,
+    let wants_gpu = Some(chosen(setting)) == GPU;
+    let (first, because) = match forced {
+        Some(a) => (a, Because::Override),
+        None if wants_gpu && failed_before => (Attempt::OpenGl, Because::FailedBefore),
+        None => (
+            if wants_gpu {
+                Attempt::Gpu(Adapters::Hardware)
+            } else {
+                Attempt::OpenGl
+            },
+            // Only this system's own choices count as chosen (chosen()).
+            if setting.is_some_and(|s| s == chosen(setting)) {
+                Because::Chosen
+            } else {
+                Because::Default
+            },
+        ),
     };
     let then: &[Attempt] = match first {
         Attempt::OpenGl => &[Attempt::Gpu(Adapters::Any)],
@@ -205,6 +254,7 @@ pub fn plan(setting: Option<Api>, overridden: Option<&str>, failed_before: bool)
     Plan {
         watched: forced.is_none() && attempts.first() == Some(&Attempt::Gpu(Adapters::Hardware)),
         attempts,
+        because,
     }
 }
 
@@ -265,7 +315,7 @@ impl Why {
     }
 
     /// A failure file's text: its reason's key, then the details on the next line. An older
-    /// one (one line of details, from MDM 0.3 on Windows) is `Other`.
+    /// one (one line of details, from test builds before 0.5.0 on Windows) is `Other`.
     fn read(text: &str) -> (Why, &str) {
         let (first, rest) = text.trim().split_once('\n').unwrap_or((text.trim(), ""));
         match Why::ALL.into_iter().find(|w| w.key() == first.trim()) {
@@ -278,6 +328,9 @@ impl Why {
 /// The system's API failed here (before this start, or in it) and wasn't chosen again since:
 /// why.
 static GPU_FAILED: Mutex<Option<Why>> = Mutex::new(None);
+
+/// The details of that failure, as its file has them (for the crash reports).
+static FAILED_DETAILS: Mutex<Option<String>> = Mutex::new(None);
 
 fn set_failed(why: Option<Why>) {
     if let Ok(mut f) = GPU_FAILED.lock() {
@@ -313,6 +366,9 @@ pub fn failed_before() -> Option<String> {
     let (why, details) = Why::read(&text);
     tracing::info!("{api} failed here before ({why:?}: {details})");
     set_failed(Some(why));
+    if let Ok(mut d) = FAILED_DETAILS.lock() {
+        *d = Some(details.to_owned());
+    }
     Some(details.to_owned())
 }
 
@@ -348,8 +404,23 @@ fn testing(name: &str) -> bool {
     crate::offscreen() && std::env::var_os(name).is_some_and(|v| v == "1")
 }
 
+/// MDM_TEST_SLOW_START=<ms> (off-screen test copies): making the app takes that much longer, as
+/// on a slow computer just after it starts (#280, the first frame's clock).
+pub fn test_slow_start() {
+    let ms = std::env::var("MDM_TEST_SLOW_START")
+        .ok()
+        .and_then(|v| v.trim().parse::<u64>().ok())
+        .filter(|_| crate::offscreen());
+    if let Some(ms) = ms {
+        tracing::info!("testing: making the app {ms} ms slower");
+        std::thread::sleep(std::time::Duration::from_millis(ms));
+    }
+}
+
 /// The start of every main-window pass: the system's API's device checked (see `gpu::poll`).
+/// The pass itself is MDM's own work, not the API's (see [`FirstFrameClock`]).
 pub fn frame_begin() {
+    own_work_begin();
     #[cfg(gpu)]
     gpu::poll();
 }
@@ -361,6 +432,7 @@ static DRAWN: AtomicBool = AtomicBool::new(false);
 /// frame count, not its passes: a first frame can run two), the first was drawn: a watched
 /// start made it.
 pub fn frame_done(ctx: &egui::Context) {
+    own_work_end();
     if DRAWN.load(Ordering::Relaxed) || ctx.cumulative_frame_nr() == 0 {
         return;
     }
@@ -370,10 +442,86 @@ pub fn frame_done(ctx: &egui::Context) {
         return;
     }
     DRAWN.store(true, Ordering::Relaxed);
-    tracing::info!("first frame drawn, {} ms after start", since_start());
+    let api = clock_counted().map_or(String::new(), |d| {
+        format!(" ({} ms of it counted for the API)", d.as_millis())
+    });
+    tracing::info!("first frame drawn, {} ms after start{api}", since_start());
     if let Some(f) = file(STARTING) {
         let _ = std::fs::remove_file(f);
     }
+}
+
+// ---- The first frame's clock ----------------------------------------------------------------
+
+/// How long a watched start has been the graphics API's to bring its first frame: the time from
+/// the start of [`run`] to the first frame, less MDM's own work meanwhile (making the app:
+/// loading the list, the fonts, the icons; and its passes' logic and layout), which isn't the
+/// API's. A slow computer just after it starts can spend more than [`FIRST_FRAME_WITHIN`] there
+/// alone, and that was counted as Direct3D drawing no first frame: MDM started again with OpenGL
+/// and kept it (#280).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+struct FirstFrameClock {
+    /// Counted before the stretch now running.
+    counted: std::time::Duration,
+    /// Since when it runs; None while MDM's own work pauses it.
+    since: Option<std::time::Instant>,
+}
+
+impl FirstFrameClock {
+    fn started(now: std::time::Instant) -> Self {
+        FirstFrameClock {
+            counted: std::time::Duration::ZERO,
+            since: Some(now),
+        }
+    }
+
+    /// MDM's own work begins: not counted.
+    fn pause(&mut self, now: std::time::Instant) {
+        if let Some(since) = self.since.take() {
+            self.counted += now.saturating_duration_since(since);
+        }
+    }
+
+    /// MDM's own work is done: the API's turn again.
+    fn resume(&mut self, now: std::time::Instant) {
+        self.since.get_or_insert(now);
+    }
+
+    fn counted(&self, now: std::time::Instant) -> std::time::Duration {
+        self.counted
+            + self.since.map_or(std::time::Duration::ZERO, |s| {
+                now.saturating_duration_since(s)
+            })
+    }
+}
+
+/// The watched start's clock (None when no start is watched).
+static CLOCK: Mutex<Option<FirstFrameClock>> = Mutex::new(None);
+
+fn with_clock<R>(f: impl FnOnce(&mut FirstFrameClock, std::time::Instant) -> R) -> Option<R> {
+    let mut c = CLOCK.lock().ok()?;
+    let now = std::time::Instant::now();
+    c.as_mut().map(|c| f(c, now))
+}
+
+/// MDM's own work begins (the app being made, a pass's logic and layout): the first-frame clock
+/// stops until [`own_work_end`].
+pub fn own_work_begin() {
+    if !DRAWN.load(Ordering::Relaxed) {
+        with_clock(|c, now| c.pause(now));
+    }
+}
+
+/// MDM's own work is done: the first-frame clock runs again.
+pub fn own_work_end() {
+    if !DRAWN.load(Ordering::Relaxed) {
+        with_clock(|c, now| c.resume(now));
+    }
+}
+
+/// The time counted for the API so far (a watched start only).
+fn clock_counted() -> Option<std::time::Duration> {
+    with_clock(|c, now| c.counted(now))
 }
 
 // ---- What draws now ---------------------------------------------------------------------------
@@ -439,6 +587,9 @@ pub fn run<A: eframe::App + 'static>(
         // A watched start must show its first frame in time, or MDM starts again.
         #[cfg(gpu)]
         if n == 0 && plan.watched {
+            if let Ok(mut c) = CLOCK.lock() {
+                *c = Some(FirstFrameClock::started(std::time::Instant::now()));
+            }
             gpu::watch_first_frame();
         }
         #[cfg(gpu)]
@@ -447,14 +598,22 @@ pub fn run<A: eframe::App + 'static>(
         configure(&mut opts, attempt);
         tracing::info!("drawing with {}", attempt.name());
         let make = creator.clone();
-        let why_not = instead.clone();
+        // Why this way: the plan's reason for its first, the last one's failure for another.
+        let why_not = match &instead {
+            Some(w) => w.clone(),
+            None => plan.because.words(GPU.map_or("", |g| g.name())),
+        };
         result = eframe::run_native(
             name,
             opts,
             Box::new(move |cc| {
                 let make = make.borrow_mut().take().ok_or("the app was already made")?;
                 started(cc, attempt, why_not);
-                Ok(Box::new(make(cc)))
+                // Making the app is MDM's own work, not the API's: off the first frame's clock.
+                own_work_begin();
+                let app = make(cc);
+                own_work_end();
+                Ok(Box::new(app))
             }),
         );
         // A failure after the app was made is the app's own (or a later one): no retry.
@@ -504,27 +663,35 @@ fn configure(opts: &mut eframe::NativeOptions, attempt: Attempt) {
 }
 
 /// The app is being made: what draws is known.
-fn started(cc: &eframe::CreationContext<'_>, attempt: Attempt, instead: Option<String>) {
+/// `why`: why this way (the plan's reason, or why the way before it didn't start).
+fn started(cc: &eframe::CreationContext<'_>, attempt: Attempt, why: String) {
     #[cfg(gpu)]
-    let detail = match &cc.wgpu_render_state {
-        Some(rs) => gpu::describe(&rs.adapter.get_info()),
-        None => attempt.name().to_owned(),
-    };
+    let gpu = cc
+        .wgpu_render_state
+        .as_ref()
+        .map(|rs| gpu::describe(&rs.adapter.get_info()));
     #[cfg(not(gpu))]
-    let detail = {
-        let _ = cc;
-        attempt.name().to_owned()
-    };
+    let gpu: Option<String> = None;
+    // OpenGL names its card and driver too (#280: a freeze inside Intel's OpenGL driver came
+    // with "OpenGL" alone).
+    #[cfg(unix)]
+    use crate::unix::gl_driver;
+    #[cfg(windows)]
+    use crate::win32::gl_driver;
+    let detail = gpu
+        .or_else(|| {
+            cc.gl
+                .as_ref()
+                .map(|gl| format!("{} on {}", attempt.name(), gl_driver(gl)))
+        })
+        .unwrap_or_else(|| attempt.name().to_owned());
     tracing::info!(
-        "drawing with {detail}, {} ms after start{}",
-        since_start(),
-        instead
-            .as_deref()
-            .map(|w| format!(" ({w})"))
-            .unwrap_or_default()
+        "drawing with {detail}, {} ms after start ({why})",
+        since_start()
     );
-    // The crash reports say it ("Direct3D 12 on Intel(R) UHD Graphics 620 (driver …)").
-    crate::crash::renderer(&detail);
+    // The crash reports say it, and why ("OpenGL on Intel(R) UHD Graphics 620 (4.6.0 - Build …)
+    // — Direct3D 12 failed here before: …").
+    crate::crash::renderer(&format!("{detail} — {why}"));
     // Errors are logged, not panics, and a lost graphics card starts MDM again.
     #[cfg(gpu)]
     if let Some(rs) = &cc.wgpu_render_state {
@@ -543,12 +710,15 @@ pub fn test_device_lost() {
 /// eframe's wgpu set up for the system's API only: Direct3D 12, Vulkan or Metal.
 #[cfg(gpu)]
 mod gpu {
-    use super::{Adapters, DRAWN, FIRST_FRAME_WITHIN, GPU, Why, file, remember_failure, testing};
+    use super::{
+        Adapters, DRAWN, FIRST_FRAME_WITHIN, GPU, Why, clock_counted, file, remember_failure,
+        testing,
+    };
     use eframe::egui_wgpu::{WgpuConfiguration, WgpuSetup, WgpuSetupCreateNew};
     use eframe::wgpu;
     use std::sync::Arc;
     use std::sync::atomic::{AtomicBool, Ordering};
-    use std::time::{Duration, Instant, SystemTime};
+    use std::time::{Duration, SystemTime};
 
     /// The API's name in the log and the crash reports.
     fn api() -> &'static str {
@@ -566,8 +736,9 @@ mod gpu {
         let _ = std::thread::Builder::new()
             .name("first frame watch".into())
             .spawn(|| {
-                let until = Instant::now() + FIRST_FRAME_WITHIN;
-                while Instant::now() < until {
+                // The API's time only: MDM's own work meanwhile isn't counted (#280).
+                let over = || clock_counted().is_some_and(|d| d >= FIRST_FRAME_WITHIN);
+                while !over() {
                     if DRAWN.load(Ordering::Relaxed) || !TRYING.load(Ordering::Relaxed) {
                         return;
                     }
@@ -577,9 +748,10 @@ mod gpu {
                     return;
                 }
                 let why = format!(
-                    "{} drew no first frame within {} s",
+                    "{} drew no first frame within {} s ({} s after start)",
                     api(),
-                    FIRST_FRAME_WITHIN.as_secs()
+                    FIRST_FRAME_WITHIN.as_secs(),
+                    super::since_start() / 1000
                 );
                 remember_failure(Why::NoFirstFrame, &why);
                 // Remembered as this reason, not as a start that ended before its first frame.
@@ -953,7 +1125,7 @@ mod tests {
             let text = format!("{}\nsome details", why.key());
             assert_eq!(Why::read(&text), (why, "some details"));
         }
-        // MDM 0.3's files on Windows: one line of details.
+        // The files of test builds before 0.5.0 on Windows: one line of details.
         let old = "Direct3D drew no first frame within 10 s";
         assert_eq!(Why::read(old), (Why::Other, old));
         assert_eq!(Why::read("  \n"), (Why::Other, ""));
@@ -980,5 +1152,76 @@ mod tests {
         assert_eq!(choose(&mac, Adapters::Hardware, false), Some(0));
         assert_eq!(choose(&l, Adapters::Hardware, true), Some(1));
         assert_eq!(choose(&[(VirtualGpu, true)], Adapters::Any, true), Some(0));
+    }
+
+    /// The first frame's clock counts the API's time only: MDM's own work (making the app, its
+    /// passes) is left out, so a slow start of MDM's isn't taken for Direct3D failing (#280: 10.7
+    /// s from OpenGL's context to the first frame on the reporter's computer, at the 10 s limit).
+    #[test]
+    fn the_first_frame_clock_leaves_out_mdms_own_work() {
+        use std::time::{Duration, Instant};
+        let s = |n: u64| Duration::from_secs(n);
+        let t0 = Instant::now();
+        let mut c = FirstFrameClock::started(t0);
+        // The window and the device: 2 s, the API's.
+        assert_eq!(c.counted(t0 + s(2)), s(2));
+        // The app made in 12 s: not counted, however long.
+        c.pause(t0 + s(2));
+        assert_eq!(c.counted(t0 + s(14)), s(2));
+        c.resume(t0 + s(14));
+        // Its first pass, 3 s of MDM's, then 1 s of painting and presenting.
+        c.pause(t0 + s(14));
+        c.resume(t0 + s(17));
+        assert_eq!(c.counted(t0 + s(18)), s(3));
+        assert!(c.counted(t0 + s(18)) < FIRST_FRAME_WITHIN);
+        // A driver stuck in its first present is still caught: only its time runs.
+        assert!(c.counted(t0 + s(25)) >= FIRST_FRAME_WITHIN);
+        // Pausing twice, or resuming a running clock, changes nothing.
+        let mut d = FirstFrameClock::started(t0);
+        d.pause(t0 + s(1));
+        d.pause(t0 + s(5));
+        d.resume(t0 + s(6));
+        d.resume(t0 + s(8));
+        assert_eq!(d.counted(t0 + s(9)), s(4));
+    }
+
+    /// Why the first way is tried, for the log and the crash reports (#280).
+    #[test]
+    fn a_plan_says_why() {
+        let Some(api) = GPU else {
+            assert_eq!(
+                plan(Some(Api::OpenGl), None, false).because,
+                Because::Chosen
+            );
+            return;
+        };
+        assert_eq!(plan(None, None, false).because, Because::Default);
+        assert_eq!(plan(Some(api), None, false).because, Because::Chosen);
+        assert_eq!(
+            plan(Some(Api::OpenGl), None, false).because,
+            Because::Chosen
+        );
+        assert_eq!(plan(Some(Api::OpenGl), None, true).because, Because::Chosen);
+        assert_eq!(plan(Some(api), None, true).because, Because::FailedBefore);
+        assert_eq!(
+            plan(Some(api), Some("opengl"), true).because,
+            Because::Override
+        );
+        // The default fails like a choice where the default is the system's API (Windows).
+        let failed_default = plan(None, None, true).because;
+        if DEFAULT == api {
+            assert_eq!(failed_default, Because::FailedBefore);
+        } else {
+            assert_eq!(failed_default, Because::Default);
+        }
+        assert_eq!(
+            Because::Chosen.words("Direct3D 12"),
+            "chosen in View → Draw with"
+        );
+        assert!(
+            Because::FailedBefore
+                .words("Direct3D 12")
+                .starts_with("Direct3D 12 failed here before: ")
+        );
     }
 }

@@ -87,7 +87,7 @@
     "message": "Mister Download Manager scaricherà così tramite lo stesso proxy di questo browser. Il browser ti chiederà l'autorizzazione una sola volta; disattivando l'opzione la revochi."
   },
   "popup_proxy_title_chromium": {
-    "message": "Mister Download Manager scaricherà quindi tramite lo stesso proxy di questo browser. Quando è disattivata, l'estensione non legge il proxy del browser."
+    "message": "Mister Download Manager scaricherà così tramite lo stesso proxy di questo browser. Quando l'opzione è disattivata, l'estensione non legge il proxy del browser."
   },
   "popup_exclude_site": {
     "message": "Non acquisire mai download da $site$",
@@ -138,10 +138,10 @@
     "message": "Il suo tipo non è in Opzioni → Tipi di file."
   },
   "declined_site": {
-    "message": "Il suo sito è in Opzioni → Tipi di file, siti lasciati al browser."
+    "message": "Il suo sito è in Opzioni → Tipi di file, tra i siti lasciati al browser."
   },
   "declined_address": {
-    "message": "Il suo indirizzo è in Opzioni → Tipi di file, indirizzi lasciati al browser."
+    "message": "Il suo indirizzo è in Opzioni → Tipi di file, tra gli indirizzi lasciati al browser."
   },
   "declined_small": {
     "message": "È più piccolo della dimensione minima in Opzioni → Tipi di file."
@@ -150,10 +150,10 @@
     "message": "Questo browser non è selezionato in Opzioni → Generale."
   },
   "declined_integration_off": {
-    "message": "L'opzione \"Usa integrazione browser avanzata\" è disattivata in Opzioni → Generale."
+    "message": "L'opzione \"Usa l'integrazione avanzata con i browser\" è disattivata in Opzioni → Generale."
   },
   "declined_site_access": {
-    "message": "L'estensione non è autorizzata a leggere questo sito (accesso al sito del browser)."
+    "message": "L'estensione non ha il permesso di leggere questo sito (accesso ai siti del browser)."
   },
   "popup_alt": {
     "message": "Tieni premuto Alt mentre fai clic su un collegamento per farlo scaricare al browser."
@@ -180,7 +180,7 @@
     "message": "Video protetto: non può essere salvato"
   },
   "popup_send_to": {
-    "message": "Invia download a"
+    "message": "Invia i download a"
   },
   "popup_send_here": {
     "message": "Questo computer"
@@ -192,13 +192,13 @@
     "message": "Codice di associazione"
   },
   "popup_remote_open": {
-    "message": "Apri"
+    "message": "Aprilo"
   },
   "popup_remote_pair": {
     "message": "Associa"
   },
   "popup_remote_help": {
-    "message": "Aprire il suo indirizzo una volta e accettare il suo certificato, quindi immettere un codice dalle sue Opzioni, Remoto, Associa un dispositivo (o misterdownloadmanager-cli pair)."
+    "message": "Apri una volta il suo indirizzo e accetta il suo certificato, poi inserisci un codice da Opzioni → Remoto → Associa un dispositivo (o misterdownloadmanager-cli pair)."
   },
   "status_remote": {
     "message": "I download vanno a $address$",
@@ -210,22 +210,22 @@
     }
   },
   "remote_address": {
-    "message": "Immettere l'indirizzo https://."
+    "message": "Inserisci il suo indirizzo https://."
   },
   "remote_unreachable": {
-    "message": "Non raggiungibile. Aprire il suo indirizzo una volta in questo browser e accettare il suo certificato, quindi riprovare."
+    "message": "Non raggiungibile. Apri una volta il suo indirizzo in questo browser e accetta il suo certificato, poi riprova."
   },
   "remote_wrong_code": {
     "message": "Codice errato."
   },
   "remote_no_code": {
-    "message": "Non mostra alcun codice ora: fare clic prima su Associa un dispositivo."
+    "message": "Al momento non mostra nessun codice: fai prima clic su Associa un dispositivo."
   },
   "remote_too_soon": {
-    "message": "Attendere un momento, quindi riprovare."
+    "message": "Attendi un momento, poi riprova."
   },
   "remote_failed": {
-    "message": "Non ha funzionato. Riprovare."
+    "message": "Non ha funzionato. Riprova."
   },
   "remote_device_name": {
     "message": "Estensione del browser"

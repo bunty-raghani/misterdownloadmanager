@@ -18,7 +18,7 @@
     "message": "Ẩn trên video này"
   },
   "video_never_site": {
-    "message": "Không bao giờ trên $site$",
+    "message": "Không hiển thị trên $site$ nữa",
     "placeholders": {
       "site": {
         "content": "$1",
@@ -27,7 +27,7 @@
     }
   },
   "video_settings": {
-    "message": "Thiết đặt nút..."
+    "message": "Cài đặt nút..."
   },
   "video_sent": {
     "message": "Đã gửi đến Mister Download Manager"
@@ -60,25 +60,25 @@
     "message": "Đã tạm dừng: các bản tải xuống vẫn ở trong trình duyệt"
   },
   "status_not_installed": {
-    "message": "Mister Download Manager chưa được cài đặt hoặc tích hợp trình duyệt của nó chưa được thiết lập"
+    "message": "Mister Download Manager chưa được cài đặt hoặc tích hợp trình duyệt chưa được thiết lập"
   },
   "status_forbidden": {
     "message": "Mister Download Manager không chấp nhận bản sao tiện ích mở rộng này"
   },
   "status_not_running": {
-    "message": "Mister Download Manager không khởi động kịp thời"
+    "message": "Mister Download Manager chưa khởi động kịp"
   },
   "status_host_failed": {
     "message": "Kết nối với Mister Download Manager không thành công"
   },
   "status_too_large": {
-    "message": "Chi tiết của bản tải xuống này quá lớn để chuyển giao"
+    "message": "Thông tin của lượt tải xuống này quá lớn để chuyển giao"
   },
   "status_update_app": {
-    "message": "Cập nhật Mister Download Manager để sử dụng mọi thứ tiện ích mở rộng này cung cấp"
+    "message": "Cập nhật Mister Download Manager để sử dụng mọi tính năng mà tiện ích mở rộng này cung cấp"
   },
   "popup_take": {
-    "message": "Tải xuống từ trình duyệt này"
+    "message": "Nhận tải xuống từ trình duyệt này"
   },
   "popup_proxy": {
     "message": "Gửi các bản tải xuống qua proxy hoặc tiện ích VPN của trình duyệt này"
@@ -90,7 +90,7 @@
     "message": "Mister Download Manager sau đó tải xuống qua cùng một proxy với trình duyệt này. Khi tắt tùy chọn này, tiện ích sẽ không đọc proxy của trình duyệt."
   },
   "popup_exclude_site": {
-    "message": "Không bao giờ tải xuống từ $site$",
+    "message": "Không nhận tải xuống từ $site$ nữa",
     "placeholders": {
       "site": {
         "content": "$1",
@@ -174,7 +174,7 @@
     "message": "Trực tiếp"
   },
   "video_off": {
-    "message": "Nút tải xuống đã tắt trên trang web này"
+    "message": "Nút tải xuống bị tắt trên trang web này"
   },
   "video_drm": {
     "message": "Video được bảo vệ: không thể lưu"

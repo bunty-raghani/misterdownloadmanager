@@ -15,7 +15,7 @@
     "message": "Περισσότερες επιλογές"
   },
   "video_hide_here": {
-    "message": "Απόκρυψη σε αυτό το βίντεο"
+    "message": "Απόκρυψη μόνο σε αυτό το βίντεο"
   },
   "video_never_site": {
     "message": "Ποτέ στο $site$",
@@ -39,10 +39,10 @@
     "message": "Σύρετε για να το μετακινήσετε κατά μήκος της άκρης του βίντεο"
   },
   "menu_selected": {
-    "message": "Λήψη επιλεγμένων συνδέσεων με το Mister Download Manager"
+    "message": "Λήψη επιλεγμένων συνδέσμων με το Mister Download Manager"
   },
   "menu_all": {
-    "message": "Λήψη όλων των συνδέσεων με το Mister Download Manager"
+    "message": "Λήψη όλων των συνδέσμων με το Mister Download Manager"
   },
   "status_connected": {
     "message": "Συνδεδεμένο στο Mister Download Manager"
@@ -159,7 +159,7 @@
     "message": "Κρατήστε πατημένο το Alt ενώ κάνετε κλικ σε μια σύνδεση για να την κατεβάσει το πρόγραμμα περιήγησης."
   },
   "popup_media": {
-    "message": "Μέσα σε αυτήν τη σελίδα"
+    "message": "Πολυμέσα σε αυτήν τη σελίδα"
   },
   "popup_media_none": {
     "message": "Δεν βρέθηκε ακόμα βίντεο ή ήχος σε αυτήν τη σελίδα. Αναπαραγάγετε το και, στη συνέχεια, ανοίξτε ξανά αυτό."

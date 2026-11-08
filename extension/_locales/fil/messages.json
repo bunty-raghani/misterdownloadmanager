@@ -60,7 +60,7 @@
     "message": "Naka-pause: mananatili ang mga download sa browser"
   },
   "status_not_installed": {
-    "message": "Hindi naka-install ang Mister Download Manager, o hindi naka-set up ang integrasyon ng browser nito"
+    "message": "Hindi naka-install ang Mister Download Manager, o hindi naka-set up ang integrasyon nito sa browser"
   },
   "status_forbidden": {
     "message": "Hindi tinatanggap ng Mister Download Manager ang kopyang ito ng extension"
@@ -120,7 +120,7 @@
     "message": "Suportahan ang MDM"
   },
   "popup_fix": {
-    "message": "Paano ayusin"
+    "message": "Paano ito ayusin"
   },
   "popup_declined": {
     "message": "Iniwan sa browser: $name$",
@@ -156,7 +156,7 @@
     "message": "Hindi pinapayagan ang extension na basahin ang site na ito (pag-access ng site ng browser)."
   },
   "popup_alt": {
-    "message": "Pindutin ang Alt habang nagki-click ng link para hayaang i-download ito ng browser."
+    "message": "Pindutin nang matagal ang Alt habang nagki-click ng link para i-download ito gamit ang browser."
   },
   "popup_media": {
     "message": "Media sa pahinang ito"
@@ -177,7 +177,7 @@
     "message": "Naka-off ang button ng download sa site na ito"
   },
   "video_drm": {
-    "message": "Protektadong video: hindi ito maise-save"
+    "message": "Protektadong video: hindi ito mase-save"
   },
   "popup_send_to": {
     "message": "Ipadala ang mga download sa"

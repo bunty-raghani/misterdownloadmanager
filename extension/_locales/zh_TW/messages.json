@@ -15,7 +15,7 @@
     "message": "更多選項"
   },
   "video_hide_here": {
-    "message": "在此影片上隱藏"
+    "message": "僅在此影片上隱藏"
   },
   "video_never_site": {
     "message": "永遠不要在 $site$ 上顯示",
@@ -156,7 +156,7 @@
     "message": "不允許擴充功能讀取此網站 (瀏覽器的網站存取)。"
   },
   "popup_alt": {
-    "message": "按住 Alt 鍵並點擊連結，讓瀏覽器下載。"
+    "message": "按住 Alt 鍵並按一下連結，讓瀏覽器下載。"
   },
   "popup_media": {
     "message": "此頁面上的媒體"
@@ -177,7 +177,7 @@
     "message": "此網站的下載按鈕已關閉"
   },
   "video_drm": {
-    "message": "受保護影片：無法儲存"
+    "message": "受保護的影片：無法儲存"
   },
   "popup_send_to": {
     "message": "傳送下載項目至"

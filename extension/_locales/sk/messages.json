@@ -15,7 +15,7 @@
     "message": "Ďalšie možnosti"
   },
   "video_hide_here": {
-    "message": "Skryť na tomto videu"
+    "message": "Skryť pri tomto videu"
   },
   "video_never_site": {
     "message": "Nikdy na $site$",
@@ -90,7 +90,7 @@
     "message": "Mister Download Manager potom sťahuje cez rovnaký server proxy ako tento prehliadač. Keď je táto možnosť vypnutá, rozšírenie nečíta server proxy prehliadača."
   },
   "popup_exclude_site": {
-    "message": "Nikdy nepreberať súbory z $site$",
+    "message": "Nikdy nepreberať sťahovania z webu $site$",
     "placeholders": {
       "site": {
         "content": "$1",

@@ -36,7 +36,7 @@
     "message": "Mister Download Manager이(가) 설치되지 않았거나 시작되지 않았습니다."
   },
   "video_drag": {
-    "message": "비디오 가장자리를 따라 이동하려면 끄세요."
+    "message": "비디오 가장자리를 따라 이동하려면 드래그하세요."
   },
   "menu_selected": {
     "message": "Mister Download Manager으로 선택한 링크 다운로드"
@@ -162,7 +162,7 @@
     "message": "이 페이지의 미디어"
   },
   "popup_media_none": {
-    "message": "이 페이지에서 비디오 또는 사운드를 찾을 수 없습니다. 재생한 다음 다시 여세요."
+    "message": "이 페이지에서 아직 비디오나 오디오를 찾을 수 없습니다. 재생한 다음 다시 여세요."
   },
   "popup_media_download": {
     "message": "다운로드"

@@ -1,6 +1,6 @@
 # Mister Download Manager
 
-> Mister Download Manager (MDM) is a free, open-source (GPL-3.0) download manager for Windows 10 and 11, with builds for Linux and macOS (today's marked experimental; Linux is no longer experimental from the next release, macOS still is). It is laid out like Internet Download Manager (IDM) — toolbar, categories, download list, progress window with every connection, queues and scheduler — and is not affiliated with Tonec Inc. In its published benchmark against IDM 6.42 on the same computer and server it was faster in all seven scenarios (5.4× on a 1 GiB file, 106× on a 256 KiB file).
+> Mister Download Manager (MDM) is a free, open-source (GPL-3.0) download manager for Windows 10 and 11, with builds for Linux and macOS (today's marked experimental; Linux is no longer experimental from version 0.5.0, macOS still is). It is laid out like Internet Download Manager (IDM) — toolbar, categories, download list, progress window with every connection, queues and scheduler — and is not affiliated with Tonec Inc. In its published benchmark against IDM 6.42 on the same computer and server it was faster in all seven scenarios (5.4× on a 1 GiB file, 106× on a 256 KiB file).
 
 Key facts:
 - Price: free, no ads, no trial, no paid edition. Licence: GNU GPL 3.0. Source: https://github.com/anefzaoui/misterdownloadmanager
@@ -11,7 +11,7 @@ Key facts:
 - Imports IDM's export files (.ef2). Accepts IDM's command-line switches (/d /p /f /a /n /s). Has a CLI (misterdownloadmanager-cli, with --json output for scripts and agents) and a local token-protected automation API, described by a JSON Schema.
 - AI assistants: an MCP server (misterdownloadmanager-mcp) lets Claude, Cursor, VS Code and other MCP clients list, add, pause, resume and remove downloads in the running app.
 - Privacy: the app has no accounts, no analytics, no telemetry; an update check against GitHub at each start (and once a day while it runs) that can be turned off.
-- In the source now, coming with the next release: themes (Classic, Native, High contrast, Metro, Adwaita, Breeze, Luna, Aero, Aqua), View → Interface size, a link grabber with archive extraction, image galleries via gallery-dl, RSS feeds for torrents, debrid accounts (Real-Debrid, AllDebrid, Premiumize), downloads held to one network adapter with a kill switch, a chosen DNS, the server's country and round trip, a phone remote control on the local network, a headless server mode (Docker, Unraid), and sign-ins in the system's keychain. Each has a page under https://misterdownloadmanager.com/features/.
+- In the source now, coming with version 0.5.0: themes (Classic, Native, High contrast, Metro, Adwaita, Breeze, Luna, Aero, Aqua), View → Interface size, a link grabber with archive extraction, image galleries via gallery-dl, RSS feeds for torrents, debrid accounts (Real-Debrid, AllDebrid, Premiumize), downloads held to one network adapter with a kill switch, a chosen DNS, the server's country and round trip, a phone remote control on the local network, a headless server mode (Docker, Unraid), and sign-ins in the system's keychain. Each has a page under https://misterdownloadmanager.com/features/.
 - Written in Rust with egui. Made by Ahmed Nefzaoui and contributors.
 
 ## Pages

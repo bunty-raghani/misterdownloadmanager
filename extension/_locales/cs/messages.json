@@ -15,10 +15,10 @@
     "message": "Další možnosti"
   },
   "video_hide_here": {
-    "message": "Skrýt na tomto videu"
+    "message": "Skrýt u tohoto videa"
   },
   "video_never_site": {
-    "message": "Nikdy na $site$",
+    "message": "Nikdy na webu $site$",
     "placeholders": {
       "site": {
         "content": "$1",
@@ -33,7 +33,7 @@
     "message": "Odesláno do Mister Download Manager"
   },
   "video_failed": {
-    "message": "Mister Download Manager není nainstalován nebo se nespustil"
+    "message": "Aplikace Mister Download Manager není nainstalovaná nebo se nespustila"
   },
   "video_drag": {
     "message": "Přetažením přesunete podél okraje videa"
@@ -60,10 +60,10 @@
     "message": "Pozastaveno: stahování zůstává v prohlížeči"
   },
   "status_not_installed": {
-    "message": "Mister Download Manager není nainstalován nebo jeho integrace prohlížeče není nastavena"
+    "message": "Aplikace Mister Download Manager není nainstalovaná nebo není nastavená její integrace s prohlížečem"
   },
   "status_forbidden": {
-    "message": "Mister Download Manager nepřijímá tuto kopii rozšíření"
+    "message": "Aplikace Mister Download Manager tuto kopii rozšíření nepřijímá"
   },
   "status_not_running": {
     "message": "Mister Download Manager se nespustil včas"
@@ -78,19 +78,19 @@
     "message": "Aktualizujte Mister Download Manager, abyste mohli používat vše, co toto rozšíření nabízí"
   },
   "popup_take": {
-    "message": "Převzít stahování z tohoto prohlížeče"
+    "message": "Přebírat stahování z tohoto prohlížeče"
   },
   "popup_proxy": {
-    "message": "Odesílat stahování přes proxy nebo VPN rozšíření tohoto prohlížeče"
+    "message": "Předávat stahování přes proxy server nebo rozšíření VPN tohoto prohlížeče"
   },
   "popup_proxy_title": {
-    "message": "Aplikace Mister Download Manager pak stahuje přes stejný proxy server jako tento prohlížeč. Prohlížeč vás jednou požádá o povolení; vypnutím této možnosti to zrušíte."
+    "message": "Aplikace Mister Download Manager pak stahuje přes stejný proxy server jako tento prohlížeč. Prohlížeč vás jednou požádá o povolení; vypnutím této možnosti toto povolení zrušíte."
   },
   "popup_proxy_title_chromium": {
     "message": "Aplikace Mister Download Manager pak stahuje přes stejný proxy server jako tento prohlížeč. Pokud je tato možnost vypnutá, rozšíření proxy server prohlížeče nenačítá."
   },
   "popup_exclude_site": {
-    "message": "Nikdy nepřevzít stahování z $site$",
+    "message": "Nikdy nepřebírat stahování z webu $site$",
     "placeholders": {
       "site": {
         "content": "$1",
@@ -156,13 +156,13 @@
     "message": "Rozšíření nemá povoleno číst tento web (přístup prohlížeče k webu)."
   },
   "popup_alt": {
-    "message": "Podržte Alt a klikněte na odkaz, aby jej stáhl prohlížeč."
+    "message": "Při kliknutí na odkaz podržte Alt, aby ho stáhl prohlížeč."
   },
   "popup_media": {
     "message": "Média na této stránce"
   },
   "popup_media_none": {
-    "message": "Na této stránce zatím nebylo nalezeno žádné video ani zvuk. Přehrávejte jej a poté toto znovu otevřete."
+    "message": "Na této stránce zatím nebylo nalezeno žádné video ani zvuk. Spusťte přehrávání a poté toto znovu otevřete."
   },
   "popup_media_download": {
     "message": "Stáhnout"

@@ -51,7 +51,7 @@ Some limits, plainly: the portable copy can't connect to a browser, since it wri
 outside its folder. The Chrome Web Store copy shows no button over YouTube videos, which the
 store's policy forbids; **Tasks → Download video from a page** still takes any page.
 
-## More of the browser, in the next version
+## More of the browser, in version 0.5.0
 
 <!--@coming 0.5-->
 

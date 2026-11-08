@@ -124,10 +124,12 @@ pub fn keep_theme(
 ) {
     let theme_key = key.with("theme");
     let shown_key = key.with("shown");
+    let front_key = key.with("front");
     if !open {
         ctx.data_mut(|d| {
             d.remove::<bool>(theme_key);
             d.remove::<bool>(shown_key);
+            d.remove::<u32>(front_key);
         });
         return;
     }
@@ -142,10 +144,40 @@ pub fn keep_theme(
         ctx.request_repaint();
     }
     // The theme went out in an earlier frame: show the window now.
-    if sent.is_some() && !ctx.data(|d| d.get_temp::<bool>(shown_key).unwrap_or(false)) {
+    let shown = ctx.data(|d| d.get_temp::<bool>(shown_key).unwrap_or(false));
+    if sent.is_some() && !shown {
         ctx.send_viewport_cmd_to(vid, egui::ViewportCommand::Visible(true));
         ctx.data_mut(|d| d.insert_temp(shown_key, true));
+        // The next frame sees where it went (below).
+        ctx.request_repaint();
     }
+    // Shown (in an earlier frame), once: in front of the other programs' windows, where Windows
+    // didn't give it the foreground (#208: Download File Info behind the browser that asked for
+    // it). Not in off-screen test runs, whose windows stay out of the way. Elsewhere the window
+    // manager places a new window and decides on its focus; an app has no say there.
+    // Looked for in a few frames at most (its title may change meanwhile: a progress window's).
+    #[cfg(windows)]
+    {
+        const TRIES: u32 = 30;
+        let tries = ctx.data(|d| d.get_temp::<u32>(front_key).unwrap_or(0));
+        if shown && !crate::offscreen() && tries < TRIES {
+            let tries = match crate::win32::come_forward(title) {
+                Some(lifted) => {
+                    if lifted {
+                        tracing::info!("window {title:?} shown behind another program's: lifted");
+                    }
+                    TRIES
+                }
+                None => {
+                    ctx.request_repaint();
+                    tries + 1
+                }
+            };
+            ctx.data_mut(|d| d.insert_temp(front_key, tries));
+        }
+    }
+    #[cfg(not(windows))]
+    let _ = front_key;
     // Belt and braces: a no-op when the caption is already right.
     #[cfg(windows)]
     crate::win32::caption_dark(title, dark);

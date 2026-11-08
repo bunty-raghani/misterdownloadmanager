@@ -80,6 +80,9 @@ pub fn set(theme: Theme) {
 /// that can't be read leaves the classic look, logged. Returns what was skipped or went wrong.
 pub fn select(id: &str, ctx: &egui::Context) -> Vec<String> {
     let id = id.to_owned();
+    // pywal's file is followed again only if this theme is made from it (`themefile::load_in`).
+    crate::themefile::forget_pywal();
+    *SELECTED.lock().unwrap_or_else(|e| e.into_inner()) = id.clone();
     if id.is_empty() || id == CLASSIC.id {
         set(CLASSIC.clone());
         return Vec::new();
@@ -90,13 +93,7 @@ pub fn select(id: &str, ctx: &egui::Context) -> Vec<String> {
         set(crate::native::theme(&system));
         return Vec::new();
     }
-    let path = std::path::Path::new(&id);
-    let loaded = if path.is_file() {
-        crate::themefile::load_file(path)
-    } else {
-        crate::themefile::load(&id)
-    };
-    match loaded {
+    match load(&id) {
         Ok(loaded) => {
             for w in &loaded.warnings {
                 tracing::warn!("theme {id}: {w}");
@@ -108,6 +105,42 @@ pub fn select(id: &str, ctx: &egui::Context) -> Vec<String> {
             tracing::warn!("theme {id}: {e}; the classic look instead");
             set(CLASSIC.clone());
             vec![e]
+        }
+    }
+}
+
+/// A theme file's theme, by its id or its path.
+fn load(id: &str) -> Result<crate::themefile::Loaded, String> {
+    let path = std::path::Path::new(id);
+    if path.is_file() {
+        crate::themefile::load_file(path)
+    } else {
+        crate::themefile::load(id)
+    }
+}
+
+/// The id (or path) [`select`] was last given.
+static SELECTED: std::sync::Mutex<String> = std::sync::Mutex::new(String::new());
+
+/// While the theme is made from pywal's colours (#45): read again when `wal` wrote them anew,
+/// as it does for each new wallpaper. A file that doesn't read (half written as it was read)
+/// keeps the theme as it is, and is read again when it is next written. True when the theme
+/// changed (the caller applies it: `apply_theme`, `apply_mode`).
+pub fn follow_pywal() -> bool {
+    if !crate::themefile::pywal_changed() {
+        return false;
+    }
+    let id = SELECTED.lock().unwrap_or_else(|e| e.into_inner()).clone();
+    match load(&id) {
+        Ok(loaded) => {
+            tracing::info!("theme {id}: pywal's colours changed, read again");
+            set(loaded.theme);
+            true
+        }
+        Err(e) => {
+            tracing::warn!("theme {id}: {e}; the theme kept until pywal's file is written again");
+            crate::themefile::pywal_seen();
+            false
         }
     }
 }

@@ -50,6 +50,13 @@ pub fn text(input: &Input, home: Option<&Path>) -> String {
     if let Some(d) = &input.dump {
         let _ = writeln!(s, "Dump: {d}");
     }
+    // What draws, and why, at the top: a freeze or a crash inside a graphics driver is read from
+    // it, and the end of a long report is what a size limit cuts (#280).
+    if let Some(r) = input.notes.session.as_ref().map(|ss| &ss.renderer)
+        && !r.is_empty()
+    {
+        let _ = writeln!(s, "Drawing with: {r}");
+    }
     let _ = writeln!(s);
 
     // What went wrong.
@@ -170,9 +177,6 @@ pub fn text(input: &Input, home: Option<&Path>) -> String {
         let _ = writeln!(s, "System: {} ({})", ss.os_version, ss.arch);
         let _ = writeln!(s, "Language: {}", ss.language);
         let _ = writeln!(s, "Theme: {}", if ss.dark { "dark" } else { "light" });
-        if !ss.renderer.is_empty() {
-            let _ = writeln!(s, "Drawing with: {}", ss.renderer);
-        }
         let _ = writeln!(s, "Program: {}", ss.exe);
         if let Ok(now) = chrono::DateTime::parse_from_rfc3339(&input.time) {
             let up = now.timestamp() - ss.started;
@@ -703,6 +707,38 @@ mod tests {
         assert!(!t.contains("Someone"));
         // The watchdog's thread is listed among the others.
         assert!(t.contains("-- Thread watchdog (2) --"));
+    }
+
+    /// What drew, and why, is in the report's head, before the stack and the log: a report cut
+    /// to fit an issue still says it (#280, a freeze inside Intel's OpenGL driver).
+    #[test]
+    fn the_renderer_is_named_at_the_top() {
+        let a = frozen();
+        let drawing = "OpenGL on Intel(R) UHD Graphics 620 (4.6.0 - Build 31.0.101.2125)                        — Direct3D 12 failed here before: Direct3D 12 drew no first frame within 10 s";
+        let input = Input {
+            kind: Some(Kind::Freeze),
+            time: "2026-11-07T15:13:03Z".into(),
+            notes: Notes {
+                session: Some(Session {
+                    renderer: drawing.into(),
+                    ..Default::default()
+                }),
+                ..Default::default()
+            },
+            analysis: Some(&a),
+            log_tail: vec!["a log line".into()],
+            dump: Some("x-freeze.dmp".into()),
+        };
+        let t = text(&input, None);
+        let line = format!("Drawing with: {drawing}");
+        let at = t.find(&line).expect("named");
+        assert_eq!(t.matches(&line).count(), 1, "once");
+        assert!(at < t.find("a log line").unwrap());
+        assert!(at < t.find("-- System details --").unwrap());
+        // Nothing to say when the window never started.
+        let mut none = input.clone();
+        none.notes.session = Some(Session::default());
+        assert!(!text(&none, None).contains("Drawing with"));
     }
 
     fn freeze_with(a: &Analysis, cpu_ms: u64) -> Input<'_> {

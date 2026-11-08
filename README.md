@@ -432,6 +432,45 @@ Bug reports and ideas are welcome in
 [Issues](https://github.com/anefzaoui/misterdownloadmanager/issues/new/choose): **Help → Report a problem**
 in the app fills in your version and system. Pull requests are accepted under the same licence: start with [CONTRIBUTING.md](CONTRIBUTING.md).
 
+## Made possible by these amazing humans
+
+Everyone who sent a pull request, opened an issue or joined a conversation here: thank you. People
+with pull requests first, then issues, then comments; [the website](https://misterdownloadmanager.com/contributors.html)
+shows what each one did.
+
+<!-- contributors:start (python tools/contributors.py readme) -->
+<p>
+<a href="https://github.com/AzureKnigh7" title="AzureKnigh7"><img src="art/contributors/azureknigh7.png" width="48" height="48" alt="AzureKnigh7"></a>
+<a href="https://github.com/specailm5" title="specailm5"><img src="art/contributors/specailm5.png" width="48" height="48" alt="specailm5"></a>
+<a href="https://github.com/osunday" title="osunday"><img src="art/contributors/osunday.png" width="48" height="48" alt="osunday"></a>
+<a href="https://github.com/SwiftyPop" title="SwiftyPop"><img src="art/contributors/swiftypop.png" width="48" height="48" alt="SwiftyPop"></a>
+<a href="https://github.com/mfat" title="mfat"><img src="art/contributors/mfat.png" width="48" height="48" alt="mfat"></a>
+<a href="https://github.com/praveenkumar2K06" title="praveenkumar2K06"><img src="art/contributors/praveenkumar2k06.png" width="48" height="48" alt="praveenkumar2K06"></a>
+<a href="https://github.com/shreeramncity" title="shreeramncity"><img src="art/contributors/shreeramncity.png" width="48" height="48" alt="shreeramncity"></a>
+<a href="https://github.com/AwesomeIronman" title="AwesomeIronman"><img src="art/contributors/awesomeironman.png" width="48" height="48" alt="AwesomeIronman"></a>
+<a href="https://github.com/Maldo-0750" title="Maldo-0750"><img src="art/contributors/maldo-0750.png" width="48" height="48" alt="Maldo-0750"></a>
+<a href="https://github.com/Twig6943" title="Twig6943"><img src="art/contributors/twig6943.png" width="48" height="48" alt="Twig6943"></a>
+<a href="https://github.com/ADIxxDEV" title="ADIxxDEV"><img src="art/contributors/adixxdev.png" width="48" height="48" alt="ADIxxDEV"></a>
+<a href="https://github.com/crse" title="crse"><img src="art/contributors/crse.png" width="48" height="48" alt="crse"></a>
+<a href="https://github.com/dhrubo11" title="dhrubo11"><img src="art/contributors/dhrubo11.png" width="48" height="48" alt="dhrubo11"></a>
+<a href="https://github.com/Drigva" title="Drigva"><img src="art/contributors/drigva.png" width="48" height="48" alt="Drigva"></a>
+<a href="https://github.com/EnderDobra" title="EnderDobra"><img src="art/contributors/enderdobra.png" width="48" height="48" alt="EnderDobra"></a>
+<a href="https://github.com/farjanatech" title="farjanatech"><img src="art/contributors/farjanatech.png" width="48" height="48" alt="farjanatech"></a>
+<a href="https://github.com/gowzee" title="gowzee"><img src="art/contributors/gowzee.png" width="48" height="48" alt="gowzee"></a>
+<a href="https://github.com/husnainahmedrana" title="husnainahmedrana"><img src="art/contributors/husnainahmedrana.png" width="48" height="48" alt="husnainahmedrana"></a>
+<a href="https://github.com/justnxhom" title="justnxhom"><img src="art/contributors/justnxhom.png" width="48" height="48" alt="justnxhom"></a>
+<a href="https://github.com/mayankmohan1992" title="mayankmohan1992"><img src="art/contributors/mayankmohan1992.png" width="48" height="48" alt="mayankmohan1992"></a>
+<a href="https://github.com/Mpsp4321" title="Mpsp4321"><img src="art/contributors/mpsp4321.png" width="48" height="48" alt="Mpsp4321"></a>
+<a href="https://github.com/sadatdaniel" title="sadatdaniel"><img src="art/contributors/sadatdaniel.png" width="48" height="48" alt="sadatdaniel"></a>
+<a href="https://github.com/SHURmanizer" title="SHURmanizer"><img src="art/contributors/shurmanizer.png" width="48" height="48" alt="SHURmanizer"></a>
+<a href="https://github.com/Uyaii" title="Uyaii"><img src="art/contributors/uyaii.png" width="48" height="48" alt="Uyaii"></a>
+<a href="https://github.com/Volcanify" title="Volcanify"><img src="art/contributors/volcanify.png" width="48" height="48" alt="Volcanify"></a>
+<a href="https://github.com/Zekidt" title="Zekidt"><img src="art/contributors/zekidt.png" width="48" height="48" alt="Zekidt"></a>
+<a href="https://github.com/Stark-0505" title="Stark-0505"><img src="art/contributors/stark-0505.png" width="48" height="48" alt="Stark-0505"></a>
+<a href="https://github.com/dr-strange15" title="dr-strange15"><img src="art/contributors/dr-strange15.png" width="48" height="48" alt="dr-strange15"></a>
+</p>
+<!-- contributors:end -->
+
 ## ⭐ Star history
 
 If MDM saves you time, a star is the quickest way to say so, and it helps the next person find

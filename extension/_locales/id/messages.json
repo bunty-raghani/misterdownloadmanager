@@ -156,13 +156,13 @@
     "message": "Ekstensi tidak diizinkan untuk membaca situs ini (akses situs browser)."
   },
   "popup_alt": {
-    "message": "Tahan Alt saat mengeklik tautan untuk membiarkan browser mengunduhnya."
+    "message": "Tahan Alt saat mengeklik tautan agar browser mengunduhnya."
   },
   "popup_media": {
     "message": "Media di halaman ini"
   },
   "popup_media_none": {
-    "message": "Belum ada video atau suara yang ditemukan di halaman ini. Putar, lalu buka ini lagi."
+    "message": "Belum ada video atau suara yang ditemukan di halaman ini. Putar media, lalu buka ini lagi."
   },
   "popup_media_download": {
     "message": "Unduh"

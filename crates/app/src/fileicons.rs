@@ -248,6 +248,15 @@ fn paint_source(ui: &Ui, painter: &Painter, src: ImageSource<'static>, rc: Rect)
     }
 }
 
+/// The Tango icon `name` (not a file's: a place, such as the Server row's computer and local
+/// network, #140) in `rc` on screen, at the screen's pixel size, so it stays sharp at every scale.
+pub fn paint_tango(ui: &Ui, painter: &Painter, name: &str, rc: Rect) {
+    let ppp = ui.ctx().pixels_per_point();
+    let rc = rc.round_to_pixels(ppp);
+    let px = (rc.width() * ppp).round().clamp(1.0, 512.0) as u32;
+    paint_source(ui, painter, tango_source(name, px), rc);
+}
+
 /// [`paint`] at English point `min` (a list's layout), `side` points square: placed where that
 /// is on screen, so in a right-to-left window the icon is at the row's start there too.
 pub fn paint_at(ui: &Ui, painter: &Painter, kind: Kind, min: egui::Pos2, side: f32) {
@@ -283,11 +292,13 @@ static TANGO: &[Tango] = tango!(
     "application-certificate",
     "application-x-executable",
     "audio-x-generic",
+    "computer",
     "folder",
     "folder-open",
     "font-x-generic",
     "image-x-generic",
     "media-optical",
+    "network-workgroup",
     "package-x-generic",
     "text-html",
     "text-x-generic",
@@ -352,8 +363,13 @@ fn tango_name(what: &What) -> &'static str {
 
 /// Tango's image for `what` at `px` pixels: the hand-drawn PNG at 16 and 32, the SVG otherwise.
 fn fallback(what: &What, px: u32) -> ImageSource<'static> {
-    let name = tango_name(what);
+    tango_source(tango_name(what), px)
+}
+
+/// The Tango icon `name` at `px` pixels (the first one when there is none of that name).
+fn tango_source(name: &str, px: u32) -> ImageSource<'static> {
     let icon = TANGO.iter().find(|t| t.name == name).unwrap_or(&TANGO[0]);
+    let name = icon.name;
     let (bytes, file) = match px {
         16 => (icon.png16, format!("16/{name}.png")),
         32 => (icon.png32, format!("32/{name}.png")),

@@ -6,16 +6,16 @@
     "message": "Прехвърля изтеглянията от браузъра към Mister Download Manager."
   },
   "menu": {
-    "message": "Изтегляне с Mister Download Manager"
+    "message": "Изтеглете с Mister Download Manager"
   },
   "video_download": {
-    "message": "Изтегляне на видео"
+    "message": "Изтеглете видео"
   },
   "video_more": {
     "message": "Още опции"
   },
   "video_hide_here": {
-    "message": "Скриване на този видеоклип"
+    "message": "Не показвайте на този видеоклип"
   },
   "video_never_site": {
     "message": "Никога на $site$",
@@ -69,19 +69,19 @@
     "message": "Mister Download Manager не стартира навреме"
   },
   "status_host_failed": {
-    "message": "Връзката с Mister Download Manager не бе осъществена"
+    "message": "Връзката с Mister Download Manager прекъсна"
   },
   "status_too_large": {
-    "message": "Подробностите за това изтегляне бяха твърде големи, за да бъдат предадени"
+    "message": "Данните за това изтегляне бяха твърде големи, за да бъдат предадени"
   },
   "status_update_app": {
     "message": "Актуализирайте Mister Download Manager, за да използвате всичко, което предлага това разширение"
   },
   "popup_take": {
-    "message": "Приемане на изтегляния от този браузър"
+    "message": "Приемайте изтегляния от този браузър"
   },
   "popup_proxy": {
-    "message": "Изпращане на изтегляния през прокси или VPN разширението на този браузър"
+    "message": "Изпращайте изтеглянията през прокси или VPN разширението на този браузър"
   },
   "popup_proxy_title": {
     "message": "Mister Download Manager след това изтегля през същия прокси сървър като този браузър. Браузърът ще ви попита веднъж дали да го разрешите; изключването на тази опция отменя това."
@@ -165,7 +165,7 @@
     "message": "Все още не е намерено видео или звук на тази страница. Пуснете го, след което отворете това отново."
   },
   "popup_media_download": {
-    "message": "Изтегляне"
+    "message": "Изтеглете"
   },
   "popup_media_protected": {
     "message": "Защитено"

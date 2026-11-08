@@ -36,7 +36,7 @@
     "message": "Mister Download Manager is niet geïnstalleerd of is niet gestart"
   },
   "video_drag": {
-    "message": "Slepen om te verplaatsen langs de rand van de video"
+    "message": "Sleep om de knop langs de rand van de video te verplaatsen"
   },
   "menu_selected": {
     "message": "Geselecteerde koppelingen downloaden met Mister Download Manager"
@@ -84,7 +84,7 @@
     "message": "Downloads verzenden via de proxy- of VPN-extensie van deze browser"
   },
   "popup_proxy_title": {
-    "message": "Mister Download Manager downloadt dan via dezelfde proxy als deze browser. De browser vraagt u eenmalig om dit toe te staan; als u dit uitschakelt, wordt dat ongedaan gemaakt."
+    "message": "Mister Download Manager downloadt dan via dezelfde proxy als deze browser. De browser vraagt u eenmalig om dit toe te staan; als u dit uitschakelt, wordt die toestemming ingetrokken."
   },
   "popup_proxy_title_chromium": {
     "message": "Mister Download Manager downloadt dan via dezelfde proxy als deze browser. Als dit is uitgeschakeld, leest de extensie de proxy van de browser niet."

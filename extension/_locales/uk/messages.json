@@ -12,13 +12,13 @@
     "message": "Завантажити відео"
   },
   "video_more": {
-    "message": "Більше опцій"
+    "message": "Інші параметри"
   },
   "video_hide_here": {
-    "message": "Приховати на цьому відео"
+    "message": "Приховати для цього відео"
   },
   "video_never_site": {
-    "message": "Ніколи на $site$",
+    "message": "Ніколи не показувати на сайті $site$",
     "placeholders": {
       "site": {
         "content": "$1",
@@ -69,7 +69,7 @@
     "message": "Mister Download Manager не запустився вчасно"
   },
   "status_host_failed": {
-    "message": "З’єднання з Mister Download Manager не вдалося"
+    "message": "Не вдалося встановити з’єднання з Mister Download Manager"
   },
   "status_too_large": {
     "message": "Деталі цього завантаження були завеликі для передачі"
@@ -78,7 +78,7 @@
     "message": "Оновіть Mister Download Manager, щоб використовувати всі можливості цього розширення"
   },
   "popup_take": {
-    "message": "Завантажувати файли з цього браузера"
+    "message": "Перехоплювати завантаження з цього браузера"
   },
   "popup_proxy": {
     "message": "Надсилати завантаження через проксі-сервер або розширення VPN цього браузера"

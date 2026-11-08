@@ -17,8 +17,8 @@ trip, a window still opening): look at each one, and take that one again with -O
 stay).
 
 GNOME (-Desktop gnome, the default) publishes docs/images/<shot>-linux.webp (the dark main window
-as main-dark-linux.webp) and the site's pairs website/assets/screens/<main|progress|options>-linux-
-<light|dark>.webp; another desktop publishes its main window as docs/images/<desktop>-main-linux.webp.
+as main-linux-dark.webp) and the site's pair website/assets/screens/main-linux-<light|dark>.webp;
+another desktop publishes its main window as docs/images/<desktop>-main-linux.webp.
 
 The tray's shot clicks MDM's icon in the top bar: -TrayAt "x y" is its place on the VM's screen
 (a first run without it saves the top bar as topbar.png to find it). The VM's account comes from
@@ -92,10 +92,11 @@ jobs = []
 if desktop == "gnome":
     for name in ["main", "add-url", "progress", "options", "scheduler", "add-torrent", "browser-offer", "tray"]:
         jobs.append((local / "light" / f"{name}.png", docs / f"{name}-linux.webp"))
-    jobs.append((local / "dark" / "main.png", docs / "main-dark-linux.webp"))
-    for name in ["main", "progress", "options"]:
-        for mode in ["light", "dark"]:
-            jobs.append((local / mode / f"{name}.png", site / f"{name}-linux-{mode}.webp"))
+    jobs.append((local / "dark" / "main.png", docs / "main-linux-dark.webp"))
+    # The site shows the main window only (download.html); make.py check fails on a picture
+    # nothing shows.
+    for mode in ["light", "dark"]:
+        jobs.append((local / mode / "main.png", site / f"main-linux-{mode}.webp"))
 else:
     jobs.append((local / "light" / "main.png", docs / f"{desktop}-main-linux.webp"))
 for src, dst in jobs:
