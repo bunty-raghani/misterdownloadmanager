@@ -1052,7 +1052,7 @@ impl App {
         // The remote control (#141): off unless Options → Remote turned it on.
         let remote = crate::remote::start(&rt, sink, &settings);
         // The local upload channel for pages only they can fetch (Telegram's protected media).
-        let media = crate::media::Server::start(&rt);
+        let media = crate::media::Server::start(&rt, ctx);
         // Started with the session where a window can't be hidden (Wayland, #226): minimized.
         if start == crate::Start::Minimized {
             tracing::info!("started with the session: minimized (a window can't be hidden here)");

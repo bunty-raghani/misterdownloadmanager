@@ -31,6 +31,8 @@ pub struct Server {
     pub token: String,
     /// The uploads, by id. Finished ones stay (the UI ignores an item already complete).
     pub uploads: Arc<Mutex<BTreeMap<u64, Arc<Upload>>>>,
+    /// Wakes the app's frame loop when a chunk arrives, even while its window is idle.
+    ctx: egui::Context,
     next: AtomicU64,
 }
 
@@ -104,7 +106,7 @@ impl Upload {
 impl Server {
     /// Start the local server (a port of the system's choosing) and write `media.json` for the
     /// native host. None when no port can be opened (the feature then just doesn't offer).
-    pub fn start(rt: &tokio::runtime::Handle) -> Option<Arc<Server>> {
+    pub fn start(rt: &tokio::runtime::Handle, ctx: &egui::Context) -> Option<Arc<Server>> {
         // Unit tests build App objects; none may take a port or overwrite a running app's
         // media.json.
         if cfg!(test) {
@@ -121,6 +123,7 @@ impl Server {
             port,
             token: token.clone(),
             uploads: Default::default(),
+            ctx: ctx.clone(),
             next: AtomicU64::new(1),
         });
         let state = server.clone();
@@ -245,6 +248,7 @@ async fn start(
         }),
     });
     server.uploads.lock().unwrap().insert(id, upload);
+    server.ctx.request_repaint();
     Json(Started { id }).into_response()
 }
 
@@ -294,6 +298,7 @@ async fn chunk(
         .downloaded
         .fetch_add(body.len() as u64, Ordering::Relaxed)
         + body.len() as u64;
+    server.ctx.request_repaint();
     Json(ChunkReply {
         more: !upload.cancel.load(Ordering::Relaxed),
         downloaded,
@@ -313,6 +318,7 @@ async fn end(
         return StatusCode::NOT_FOUND.into_response();
     };
     *upload.state.lock().unwrap() = UploadState::Done;
+    server.ctx.request_repaint();
     StatusCode::NO_CONTENT.into_response()
 }
 
@@ -328,6 +334,7 @@ async fn cancel(
         upload.cancel.store(true, Ordering::Relaxed);
         *upload.state.lock().unwrap() = UploadState::Cancelled;
     }
+    server.ctx.request_repaint();
     StatusCode::NO_CONTENT.into_response()
 }
 
@@ -348,6 +355,7 @@ async fn fail(
             why
         });
     }
+    server.ctx.request_repaint();
     StatusCode::NO_CONTENT.into_response()
 }
 
