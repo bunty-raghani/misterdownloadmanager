@@ -333,6 +333,7 @@ impl LabServer {
         // Routes answered from memory, logged by `log_simple`.
         let simple = Router::new()
             .route("/page", get(pages::page))
+            .route("/leadon", get(pages::leadon))
             .route("/formpage", get(pages::formpage))
             .route("/cookie", get(pages::cookie))
             .route("/assets/{file}", get(pages::asset))

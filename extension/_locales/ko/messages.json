@@ -164,6 +164,12 @@
   "popup_media_none": {
     "message": "이 페이지에서 아직 비디오나 오디오를 찾을 수 없습니다. 재생한 다음 다시 여세요."
   },
+  "popup_media_streamed": {
+    "message": "이 페이지의 플레이어는 비디오를 조각으로 스트리밍하므로 목록에 표시할 파일이 없습니다. 비디오를 가리킨 다음 '비디오 다운로드' 버튼을 사용하세요."
+  },
+  "popup_media_store": {
+    "message": "Chrome 웹 스토어 규칙에 따라 이 부가 기능 사본은 이 사이트의 비디오에서 작동하지 않습니다. 할 수 있는 방법은 도움말을 참조하세요."
+  },
   "popup_media_download": {
     "message": "다운로드"
   },
@@ -178,6 +184,9 @@
   },
   "video_drm": {
     "message": "보호된 비디오: 저장할 수 없습니다."
+  },
+  "video_unnamed": {
+    "message": "어떤 비디오인지 알 수 없습니다. 비디오 자체 페이지를 열어 다시 시도하세요"
   },
   "popup_send_to": {
     "message": "다운로드 보낼 위치"

@@ -164,6 +164,12 @@
   "popup_media_none": {
     "message": "Chưa tìm thấy video hoặc âm thanh nào trên trang này. Hãy phát rồi mở lại."
   },
+  "popup_media_streamed": {
+    "message": "Trình phát của trang này truyền video theo từng phần nên không có tệp nào để liệt kê. Trỏ vào video và dùng nút Tải xuống video của nó."
+  },
+  "popup_media_store": {
+    "message": "Quy tắc của Cửa hàng Chrome trực tuyến giữ bản sao tiện ích này tránh xa video của trang web này. Mục Trợ giúp cho biết bạn có thể làm gì."
+  },
   "popup_media_download": {
     "message": "Tải xuống"
   },
@@ -178,6 +184,9 @@
   },
   "video_drm": {
     "message": "Video được bảo vệ: không thể lưu"
+  },
+  "video_unnamed": {
+    "message": "Không xác định được đây là video nào: hãy mở trang riêng của video và thử ở đó"
   },
   "popup_send_to": {
     "message": "Gửi tải xuống đến"

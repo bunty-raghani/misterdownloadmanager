@@ -10,14 +10,18 @@ use serde::Deserialize;
 /// Options → File types defaults: IDM 6.42's; TORRENT (a .torrent the browser hands over opens
 /// Add torrent, #39); and today's installers, packages and archives (macOS DMG and PKG, Linux
 /// DEB, RPM and AppImage, Windows MSIX, APPX and CAB, Java's JAR, XZ, Zstandard and their tarballs)
-/// and open audio and video formats (WEBM, FLAC, OPUS; #208).
-pub const DEFAULT_AUTO_TYPES: &str = "3GP 7Z AAC ACE AIF APK APPIMAGE APPX APPXBUNDLE ARJ ASF AVI BIN BZ2 CAB DEB DMG EXE FLAC GZ GZIP IMG ISO JAR LZH M4A M4V MKV MOV MP3 MP4 MPA MPE MPEG MPG MSI MSIX MSU OGG OGV OPUS PDF PKG PLJ PPS PPT QT R0* R1* RA RAR RM RMVB RPM SEA SIT SITX TAR TGZ TIF TIFF TORRENT TXZ WAV WEBM WMA WMV XZ Z ZIP ZST";
+/// and open audio and video formats (WEBM, FLAC, OPUS; #208); and what people fetch by the
+/// gigabyte today (#382): AI models and datasets, 3D and CAD, camera RAW and design files, books
+/// and Office files, disk images and split archives. Never what a browser saves as part of
+/// everyday browsing (pages, scripts, plain text, web images) or installs itself (XPI, CRX).
+pub const DEFAULT_AUTO_TYPES: &str = "00* 3DM 3DS 3GP 3MF 7Z AAB AAC ABC ACE AFDESIGN AFPHOTO AI AIF AIFF APE APK APKM APKS APPIMAGE APPX APPXBUNDLE ARJ ARROW ARW ASF AU AVI AVRO AZW AZW3 BAK BAM BIN BLEND BZ BZ2 C4D CAB CAF CBR CBZ CCD CHD CKPT CPIO CR2 CR3 CRAM CSO DAE DAT DCM DDS DEB DFF DIVX DJVU DMG DNG DOC DOCX DSF DWG DXF EPS EPUB EXE EXR F3D F4V FASTA FASTQ FB2 FBX FEATHER FIG FITS FLAC FLATPAK FQ GCODE GCZ GEM GGML GGUF GLB GLTF GPKG GRIB GRIB2 GZ GZIP H5 HDF5 HDR IGES IGS IMG INDD IPA ISO ISZ JAR JOBLIB JSONL KERAS KRA LAS LAZ LLAMAFILE LWO LZ LZ4 LZH LZMA M2T M2TS M2V M4A M4B M4V MA MAT MAX MB MBTILES MDF MDS MID MIDI MKA MKV MLMODEL MOBI MOV MP3 MP4 MPA MPE MPEG MPG MSI MSIX MSIXBUNDLE MSP MSU MTS MXF NC NDJSON NEF NEMO NII NPY NPZ NRG NSP NSZ NUPKG OBJ ODP ODS ODT OGG OGM OGV ONNX OPUS ORC ORF OTF OVA OVF PAK PARQUET PB PBF PDF PICKLE PK3 PK4 PKG PKL PLJ PLY POTX PPS PPSX PPT PPTX PSB PSD PT PTH QCOW QCOW2 QT R0* R1* R2* R3* R4* R5* R6* R7* R8* R9* RA RAF RAR RDS RM RMVB RPM RTF RUN RVZ RW2 SAFETENSORS SEA SF2 SFZ SHP SIT SITX SKETCH SKP SLDASM SLDPRT SNAP SQLITE SQLITE3 STEP STL STP TAR TBZ TBZ2 TFLITE TGA TGZ TIF TIFF TLZ TORRENT TTA TTC TTF TXZ TZST UNITYPACKAGE USD USDA USDC USDZ VDB VDI VHD VHDX VMDK VOB VPK VSIX WAV WBFS WEBM WHL WIM WMA WMV WRL WTV WUA WV X3D XAPK XCF XCI XLS XLSB XLSM XLSX XZ Z Z0* ZIP ZIPX ZPR ZST ZTL";
 
-/// The lists earlier versions started with: IDM 6.42's (MDM 0.2.x), then with TORRENT (#39).
-/// A saved list equal to one of them was never edited, and becomes today's (`upgraded_types`).
-const EARLIER_AUTO_TYPES: [&str; 2] = [
+/// The lists earlier versions started with: IDM 6.42's (MDM 0.2.x), with TORRENT (#39), then
+/// with today's packages and open formats (#208). A saved list equal to one of them was never edited, and becomes today's (`upgraded_types`).
+const EARLIER_AUTO_TYPES: [&str; 3] = [
     "3GP 7Z AAC ACE AIF APK ARJ ASF AVI BIN BZ2 EXE GZ GZIP IMG ISO LZH M4A M4V MKV MOV MP3 MP4 MPA MPE MPEG MPG MSI MSU OGG OGV PDF PLJ PPS PPT QT R0* R1* RA RAR RM RMVB SEA SIT SITX TAR TIF TIFF WAV WMA WMV Z ZIP",
     "3GP 7Z AAC ACE AIF APK ARJ ASF AVI BIN BZ2 EXE GZ GZIP IMG ISO LZH M4A M4V MKV MOV MP3 MP4 MPA MPE MPEG MPG MSI MSU OGG OGV PDF PLJ PPS PPT QT R0* R1* RA RAR RM RMVB SEA SIT SITX TAR TIF TIFF TORRENT WAV WMA WMV Z ZIP",
+    "3GP 7Z AAC ACE AIF APK APPIMAGE APPX APPXBUNDLE ARJ ASF AVI BIN BZ2 CAB DEB DMG EXE FLAC GZ GZIP IMG ISO JAR LZH M4A M4V MKV MOV MP3 MP4 MPA MPE MPEG MPG MSI MSIX MSU OGG OGV OPUS PDF PKG PLJ PPS PPT QT R0* R1* RA RAR RM RMVB RPM SEA SIT SITX TAR TGZ TIF TIFF TORRENT TXZ WAV WEBM WMA WMV XZ Z ZIP ZST",
 ];
 
 /// Today's default list when `saved` (Options → File types as saved) is an earlier version's
@@ -352,6 +356,18 @@ pub fn address_matches(pattern: &str, url: &str) -> bool {
     wildcard(&pattern, text)
 }
 
+/// Is a copied link named `name` a file to offer? A copied address is often not meant to be
+/// downloaded at all (a picture, a font or a model to paste into code), and it says nothing about
+/// what is behind it, unlike a browser that is really downloading. So the clipboard keeps to the
+/// list as it stood before #382, plus what the user typed in themselves; the types #382 added are
+/// the browser's alone, and a lone `*` (every type) doesn't count.
+pub fn clipboard_type(types: &str, name: &str) -> bool {
+    let own: Vec<&str> = types.split_whitespace().filter(|t| *t != "*").collect();
+    let browser_only =
+        type_listed(DEFAULT_AUTO_TYPES, name) && !type_listed(EARLIER_AUTO_TYPES[2], name);
+    !browser_only && type_listed(&own.join(" "), name)
+}
+
 /// `*` matches any run of characters (IDM's address patterns).
 fn wildcard(pattern: &str, text: &str) -> bool {
     let parts: Vec<&str> = pattern.split('*').collect();
@@ -612,6 +628,98 @@ mod tests {
                 assert!(DEFAULT_AUTO_TYPES.split(' ').any(|n| n == t), "{t}");
             }
         }
+    }
+
+    #[test]
+    fn todays_big_files_are_taken_and_everyday_browsing_is_not() {
+        // #382: an untouched list from before gets them too.
+        let earlier = CaptureRules {
+            auto_types: EARLIER_AUTO_TYPES[2].into(),
+            ..CaptureRules::default()
+        };
+        assert!(!earlier.auto_type("model.Q4_K_M.gguf"));
+        let r = earlier.upgraded();
+        for name in [
+            "model.Q4_K_M.gguf",
+            "model-00001-of-00004.safetensors",
+            "sd15.ckpt",
+            "weights.pth",
+            "model.onnx",
+            "train-00000.parquet",
+            "scene.glb",
+            "part.stl",
+            "character.fbx",
+            "house.blend",
+            "bracket.step",
+            "IMG_0001.CR3",
+            "cover.psd",
+            "book.epub",
+            "report.docx",
+            "budget.xlsx",
+            "disk.vhdx",
+            "backup.7z.001",
+            "backup.z01",
+            "movie.r27",
+            "5GB-testfile.dat",
+        ] {
+            assert!(r.auto_type(name), "{name}");
+        }
+        for name in [
+            "index.html",
+            "app.js",
+            "style.css",
+            "config.json",
+            "notes.txt",
+            "photo.jpg",
+            "logo.png",
+            "icon.svg",
+            "addon.xpi",
+            "addon.crx",
+        ] {
+            assert!(!r.auto_type(name), "{name}");
+        }
+    }
+
+    #[test]
+    fn a_lone_star_takes_every_file_with_a_type() {
+        let r = CaptureRules {
+            auto_types: "*".into(),
+            ..CaptureRules::default()
+        };
+        for name in ["model.gguf", "photo.jpg", "anything.xyz123"] {
+            assert_eq!(r.accepts("https://x.test/f", name, "Google Chrome"), Ok(()));
+        }
+        assert!(!r.auto_type("no_extension"));
+    }
+
+    #[test]
+    fn a_copied_address_is_offered_only_as_it_always_was() {
+        // What people copy to paste somewhere else, never a download by default.
+        for name in [
+            "photo.jpg",
+            "logo.png",
+            "page.html",
+            "font.ttf",
+            "scene.glb",
+            "model.gguf",
+            "a.safetensors",
+            "jane.ma",
+            "site.ai",
+            "cover.psd",
+            "winmail.dat",
+        ] {
+            assert!(!clipboard_type(DEFAULT_AUTO_TYPES, name), "{name}");
+            assert!(!clipboard_type("*", name), "{name}, a lone star");
+            assert!(!clipboard_type("* ZIP", name), "{name}, a star and more");
+        }
+        // Every type offered before #382 still is.
+        for t in EARLIER_AUTO_TYPES[2].split(' ') {
+            let name = format!("a.{}", t.replace('*', "1"));
+            assert!(clipboard_type(DEFAULT_AUTO_TYPES, &name), "{name}");
+        }
+        // A type the user listed themselves; and one they took off.
+        assert!(clipboard_type("ZIP XYZ", "a.xyz"));
+        assert!(!clipboard_type("ZIP", "a.exe"));
     }
 
     #[test]

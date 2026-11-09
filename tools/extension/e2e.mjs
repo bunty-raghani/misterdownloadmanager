@@ -15,7 +15,7 @@
 //
 // The cases (per browser): link (a .zip link, throttled and not), ask (Firefox set to ask what to
 // do with each new type, as Waterfox is: caught before its dialog, #208), cookie (cookies and referrer
-// forwarded), names (Content-Disposition), redirect, form (POST, 303), alt (Alt+click leaves it
+// forwarded), names (Content-Disposition), redirect, leadon (a page going to the file by script, #374), form (POST, 303), alt (Alt+click leaves it
 // to the browser), opened (a PDF or MP3 the browser would show or play), csp (the video button
 // under a strict CSP), hls (the stream a player loaded), streams (HLS and DASH players handed over
 // by the button, the right-click menu and the media list, and read by yt-dlp; #155; also with no
@@ -50,7 +50,8 @@ import { fileURLToPath } from "node:url";
 export const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 export const release = path.join(process.env.CARGO_TARGET_DIR ? path.resolve(process.env.CARGO_TARGET_DIR) : path.join(root, "target"), "release");
 export const exe = (name) => path.join(release, process.platform === "win32" ? `${name}.exe` : name);
-const work = path.join(root, "target", "e2e");
+// E2E_WORK: the run's own folder instead (its profiles, the instance's data and downloads).
+const work = process.env.E2E_WORK ? path.resolve(process.env.E2E_WORK) : path.join(root, "target", "e2e");
 const PORT = 8101;
 const LAB = `http://127.0.0.1:${PORT}`;
 // The proxy case (#42): a proxy on 127.0.0.1 that alone knows the name lab.mdm.test (the lab
@@ -1439,6 +1440,19 @@ const CASES = {
     return "the address clicked kept, the file from its target";
   },
 
+  // A page that goes to the file by script (#374): MDM gets the file's address, not the page's.
+  async leadon(t) {
+    const file = `e2e-leadon-${t.name}.zip`;
+    const page = `/leadon?to=${encodeURIComponent(`/gen/2M/${file}`)}`;
+    await t.session.navigate(`${LAB}${page}`);
+    const item = await arrived(file, 2 << 20);
+    if (item.url !== `${LAB}/gen/2M/${file}`) throw new Error(`MDM's address is ${item.url}, not the file's`);
+    const asked = await requests(page.split("?")[0]);
+    if (asked.length !== 1) throw new Error(`the page was asked ${asked.length} times (only the browser's expected)`);
+    await keptNothing(t.dl);
+    return "the file's address, the page asked by the browser only";
+  },
+
   // A form's download: MDM posts it again with the form's body; one answered 303 too.
   async form(t) {
     const name = `e2e-form-${t.name}.zip`;
@@ -1751,6 +1765,21 @@ const CASES = {
     } finally {
       await popup.close();
     }
+  },
+
+  // A page that moves in place (history.pushState, as YouTube does between videos): the button
+  // hands the app the address it is at now, not the one the document loaded at.
+  async inplace(t) {
+    await t.session.navigate(`${LAB}/page?video=${encodeURIComponent("/gen/1M/clip.mp4")}`);
+    // A blob: source, as a site's own player has (there's no file of its own to send).
+    await t.session.evaluate(`(() => { const v = document.querySelector("#video"); v.src = URL.createObjectURL(new MediaSource()); history.pushState({}, "", "/page?video=moved"); return true; })()`);
+    const v = await rect(t.session, "#video");
+    const b = await hover(t.session, v);
+    if (!b) throw new Error("no button over the player");
+    const address = await clickButton(t.session, b);
+    const want = `${LAB}/page?video=moved`;
+    if (address !== want) throw new Error(`the video window got ${address}, not ${want}`);
+    return `sent ${address.replace(LAB, "")}`;
   },
 
   async video(t) {

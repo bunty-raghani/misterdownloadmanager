@@ -295,6 +295,10 @@
 #. button in the browser extension's window: open the extension's page in that browser
 #, machine
 	Add the extension	Pridėti plėtinį
+#. window title in extension.rs
+#. title of the window that shows how to turn on the Safari extension
+#, machine
+	Add the extension to Safari	Plėtinio įtraukimas į „Safari“
 #. text in extension.rs
 #, machine
 	Add the free extension: files you download in your browser come here, and videos get a Download button.	Pridėkite nemokamą plėtinį: naršyklėje atsisiųsti failai atkeliaus čia, o vaizdo įrašai gaus mygtuką „Atsisiųsti“.
@@ -1932,6 +1936,10 @@
 #. a country's name (where a download's server is)
 #, machine
 	Hong Kong	Honkongas
+#. text in extension.rs
+#. button in the browser extension's window, on Safari's row: open the steps that turn the extension on
+#, machine
+	How to Add	Kaip įtraukti
 #. text in the Scheduler window
 #. link after why the computer can't be woken (Linux, macOS): opens the guide's page that shows how an administrator can allow it
 #, machine
@@ -3066,6 +3074,14 @@
 #. text in the tray icon's menu
 #, machine
 	Open Mister Download Manager	Atidaryti „Mister Download Manager“
+#. text in extension.rs
+#. step 2 of turning on the Safari extension; Cmd is the Command key
+#, machine
+	Open Safari's settings (Cmd+,).	Atidarykite „Safari“ nustatymus (Cmd+,).
+#. text in extension.rs
+#. step 1 of turning on the Safari extension
+#, machine
+	Open Safari.	Atidarykite „Safari“.
 #. text in the Scheduler window
 #, machine
 	Open the following file when done	Atidaryti šį failą, kai baigta
@@ -3500,6 +3516,9 @@
 #. Saturday, as short as a calendar's column head (two letters in English)
 #, machine
 	Sa	Še
+#. text in extension.rs
+#, machine
+	Safari turns "Allow unsigned extensions" off each time it quits: do steps 1 to 6 again after restarting it.	„Safari“ kaskart išjungdama išjungia parinktį „Allow unsigned extensions“: iš naujo paleidę ją, atlikite 1–6 veiksmus dar kartą.
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -4088,6 +4107,18 @@
 #. a country's name (where a download's server is)
 #, machine
 	Sweden	Švedija
+#. text in extension.rs
+#. step 3 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+#, machine
+	Switch to the "Advanced" tab (the cogwheels).	Pereikite į skirtuką „Advanced“ (krumpliaračiai).
+#. text in extension.rs
+#. step 5 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+#, machine
+	Switch to the "Developer" tab (the screwdriver and spanner).	Pereikite į skirtuką „Developer“ (atsuktuvas ir veržliaraktis).
+#. text in extension.rs
+#. step 7 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+#, machine
+	Switch to the "Extensions" tab (the puzzle piece).	Pereikite į skirtuką „Plėtiniai“ (dėlionės detalė).
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -4266,6 +4297,9 @@
 #. text in errors.rs
 #, machine
 	the drive or network share is no longer available	diskas arba tinklo bendrinimas nebeprieinamas
+#. text in extension.rs
+#, machine
+	The extension is already in this app. Apple hasn't notarized this build, so Safari needs these steps to allow it.	Plėtinys jau yra šioje programoje. „Apple“ šios versijos nepatvirtino (notarizavo), todėl „Safari“ reikia šių veiksmų, kad ją leistų.
 #. text in errors.rs
 #, machine
 	the file changed on the server	failas serveryje pasikeitė
@@ -4724,6 +4758,22 @@
 #. verb: turn the Speed Limiter on
 #, machine
 	Turn on	Įjungti
+#. text in extension.rs
+#. step 6 of turning on the Safari extension; the quoted switch name is what Safari's settings show in this language: use Apple's own words for it, or keep the English name when unsure
+#, machine
+	Turn on "Allow unsigned extensions".	Įjunkite „Allow unsigned extensions“.
+#. text in extension.rs
+#. step 8 of turning on the Safari extension
+#, machine
+	Turn on "Mister Download Manager" and allow it on all websites.	Įjunkite „Mister Download Manager“ ir leiskite jį visose svetainėse.
+#. text in extension.rs
+#. step 4 of turning on the Safari extension; the quoted switch name is what Safari's settings show in this language: use Apple's own words for it, or keep the English name when unsure
+#, machine
+	Turn on "Show features for web developers".	Įjunkite „Show features for web developers“.
+#. text in extension.rs
+#. the headline of the window that shows how to turn on the Safari extension
+#, machine
+	Turn on the extension in Safari	Plėtinio įjungimas „Safari“
 #. tooltip (why a control is greyed) in the Options window
 #. why Options → Remote → Pair a device... is greyed
 #, machine
@@ -5520,6 +5570,10 @@ extension	Browser extension	Naršyklės plėtinys
 #, machine
 extension	Button settings...	Mygtuko parametrai...
 #. text in the browser extension
+#. shown briefly on the download button when nothing on the page says which video the player is playing, so nothing was sent
+#, machine
+extension	Can't tell which video this is: open its own page and try there	Neaišku, kuris tai vaizdo įrašas: atidarykite jo paties puslapį ir bandykite ten
+#. text in the browser extension
 #. the toolbar button's status when the browser reaches the app; keep the name Mister Download Manager as it is
 #, machine
 extension	Connected to Mister Download Manager	Prijungta prie Mister Download Manager
@@ -5730,6 +5784,10 @@ extension	Support MDM	Palaikykite MDM
 #, machine
 extension	Take downloads from this browser	Perimti atsisiuntimus iš šios naršyklės
 #. text in the browser extension
+#. in the toolbar button's popup, on a site where the Chrome Web Store's copy of the extension shows no download button; Help is the link at the bottom of the popup
+#, machine
+extension	The Chrome Web Store's rules keep this copy of the add-on away from this site's videos. Help says what you can do.	„Chrome“ internetinės parduotuvės taisyklės laiko šią priedo kopiją atokiau nuo šios svetainės vaizdo įrašų. Žinyne parašyta, ką galite padaryti.
+#. text in the browser extension
 #. status when the connection to the app broke off (often security software blocking it); keep the name Mister Download Manager as it is
 #, machine
 extension	The connection to Mister Download Manager failed	Ryšys su Mister Download Manager nepavyko
@@ -5757,6 +5815,10 @@ extension	This computer	Šis kompiuteris
 #. status when a download carried too much data (very large cookies) to give to the app
 #, machine
 extension	This download's details were too large to hand over	Šio atsisiuntimo duomenys buvo per dideli, kad juos būtų galima perduoti
+#. text in the browser extension
+#. in the toolbar button's popup, when the page's player plays from a stream built in the page (a blob:): the list of the page's media has nothing to show; Download video is the name of the button over videos
+#, machine
+extension	This page's player streams its video in pieces, so there's no file to list. Point at the video and use its Download video button.	Šio puslapio grotuvas srautu perduoda vaizdo įrašą dalimis, todėl nėra failo, kurį būtų galima parodyti. Užveskite ant vaizdo įrašo ir naudokite jo mygtuką „Atsisiųsti vaizdo įrašą“.
 #. text in the browser extension
 #. status when the app is older than the extension; keep the name Mister Download Manager as it is
 #, machine

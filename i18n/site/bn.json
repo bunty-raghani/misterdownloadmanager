@@ -1150,10 +1150,6 @@
    "source": "Make it",
    "text": "তৈরি করুন"
   },
-  "12c5a9fe21646b92": {
-   "source": "<g1>MDM's programs are a third of their size, its download about half</g1> (<g2>#25</g2>): on Windows, the programs went from 93 MB to 33 MB (<x3/> from 61 MB to 29 MB, the command line from 28 MB to a 0.2 MB launcher), and setup.exe from 23 MB to 12 MB. On Linux the AppImage went from 36 MB to 16 MB, the .deb from 27 MB to 13 MB.",
-   "text": "<g1>MDM-এর প্রোগ্রামগুলি তাদের আকারের এক-তৃতীয়াংশ, এর ডাউনলোড প্রায় অর্ধেক</g1> (<g2>#25</g2>): Windows-এ, প্রোগ্রামগুলি 93 MB থেকে 33 MB-তে নেমে এসেছে (<x3/> 61 MB থেকে 29 MB-তে, কমান্ড লাইন 28 MB থেকে 0.2 MB লঞ্চারে), এবং setup.exe 23 MB থেকে 12 MB-তে। Linux-এ AppImage 36 MB থেকে 16 MB-তে, .deb 27 MB থেকে 13 MB-তে নেমে এসেছে।"
-  },
   "12ed54fb5407aa89": {
    "source": "The website has <x1/> and <x2/>, and every help page as Markdown, for AI tools.",
    "text": "AI টুলের জন্য ওয়েবসাইটে <x1/> এবং <x2/> আছে, আর প্রতিটি সহায়তা পৃষ্ঠা Markdown হিসেবেও পাওয়া যায়।"
@@ -5434,6 +5430,10 @@
    "source": "<g1>The built-in categories are yours to change</g1> (<g2>#93</g2>): Compressed, Documents, Music, Programs and Video can be renamed, given other file types and deleted, like your own categories (right-click → Properties or Delete). A renamed category keeps its folder. Deleting one asks what happens to its downloads: move them to General, or take them off the list; their files stay either way. <g3>Options → Save to → Restore the built-in categories</g3> brings them back as they came. General and Torrents still change only their folder.",
    "text": "<g1>বিল্ট-ইন বিভাগগুলি আপনার পরিবর্তনের জন্য</g1> (<g2>#93</g2>): সংকুচিত, ডকুমেন্টস, সঙ্গীত, প্রোগ্রাম এবং ভিডিও আপনার নিজস্ব বিভাগগুলির মতো নাম পরিবর্তন করা, অন্যান্য ফাইল প্রকার দেওয়া এবং মুছে ফেলা যেতে পারে (রাইট-ক্লিক → বৈশিষ্ট্য বা মুছুন)। একটি নাম পরিবর্তন করা বিভাগ তার ফোল্ডার রাখে। একটি মুছে ফেলার সময় জিজ্ঞাসা করা হয় তার ডাউনলোডগুলির কী হবে: সেগুলিকে সাধারণ-এ সরান, অথবা তালিকা থেকে সরিয়ে দিন; তাদের ফাইলগুলি উভয় ক্ষেত্রেই থাকে। <g3>সেটিংস → এতে সংরক্ষণ করুন → বিল্ট-ইন বিভাগগুলি পুনরুদ্ধার করুন</g3> সেগুলিকে যেমন এসেছিল তেমনই ফিরিয়ে আনে। সাধারণ এবং টরেন্টগুলি এখনও শুধুমাত্র তাদের ফোল্ডার পরিবর্তন করে।"
   },
+  "55106b089fb71eba": {
+   "source": "<g1>Ubuntu's Firefox reaches MDM</g1> (part of <g2>#164</g2>): the Snap Firefox never makes the folder MDM looked for, so browser integration wasn't set up for it and its extension couldn't find MDM. It is now, and the Snap goes through the desktop, which asks once (<g3>Allow</g3>); the help says how to be asked again after <g4>Don't allow</g4>. Chromium as a Snap ran MDM's helper inside its sandbox, away from MDM (it started a second, sandboxed MDM): MDM no longer offers it, and the help says why.",
+   "text": "<g1>উবুন্টুর Firefox MDM-এ পৌঁছেছে</g1> (<g2>#164</g2>-এর অংশ): Snap Firefox MDM যে ফোল্ডারটি খুঁজছিল তা তৈরি করে না, তাই এর জন্য ব্রাউজার ইন্টিগ্রেশন সেট আপ করা হয়নি এবং এর এক্সটেনশন MDM খুঁজে পায়নি। এখন এটি সেট আপ করা হয়েছে, এবং Snap ডেস্কটপের মাধ্যমে চলে, যা একবার জিজ্ঞাসা করে (<g3>অনুমতি দিন</g3>); সাহায্য বিভাগে বলা আছে কিভাবে <g4>অনুমতি দেবেন না</g4> নির্বাচন করার পর আবার জিজ্ঞাসা করতে হয়। একটি Snap হিসাবে Chromium MDM-এর হেল্পারকে তার স্যান্ডবক্সের ভিতরে চালিয়েছিল, MDM থেকে দূরে (এটি একটি দ্বিতীয়, স্যান্ডবক্সড MDM শুরু করেছিল): MDM আর এটি অফার করে না, এবং সাহায্য বিভাগে এর কারণ বলা আছে।"
+  },
   "55215ba8e5158748": {
    "source": "Mister Download Manager's queues and Scheduler: start downloads at night, stop them in the morning, stay under a data cap, turn the computer off.",
    "text": "Mister Download Manager-এর সারি এবং শিডিউলার: রাতে ডাউনলোড শুরু করুন, সকালে বন্ধ করুন, ডেটা ক্যাপের নিচে থাকুন, কম্পিউটার বন্ধ করুন।"
@@ -7378,6 +7378,10 @@
    "source": "Options, General with Test browser integration...",
    "text": "বিকল্প, সাধারণ ব্রাউজার ইন্টিগ্রেশন পরীক্ষা করুন... সহ"
   },
+  "73c46eea77b3659f": {
+   "source": "<g1>MDM's programs and downloads are much smaller</g1> (<g2>#25</g2>): on Windows, the programs went from 93 MB to 41 MB (<x3/> from 61 MB to 38 MB, the command line from 28 MB to a 0.2 MB launcher), and setup.exe from 23 MB to 16 MB. On Linux the AppImage went from 36 MB to 20 MB, the .deb from 27 MB to 17 MB.",
+   "text": "<g1>MDM-এর প্রোগ্রাম এবং ডাউনলোডগুলি অনেক ছোট হয়েছে</g1> (<g2>#25</g2>): Windows-এ, প্রোগ্রামগুলি 93 এমবি থেকে 41 এমবিতে নেমে এসেছে (<x3/> 61 এমবি থেকে 38 এমবিতে, কমান্ড লাইন 28 এমবি থেকে 0.2 এমবি লঞ্চারে), এবং setup.exe 23 এমবি থেকে 16 এমবিতে। Linux-এ AppImage 36 এমবি থেকে 20 এমবিতে, .deb 27 এমবি থেকে 17 এমবিতে নেমে এসেছে।"
+  },
   "73ee1eb7251e220f": {
    "source": "Video and Images",
    "text": "ভিডিও এবং ছবি"
@@ -7829,10 +7833,6 @@
   "7b96ddc4c567caf5": {
    "source": "Browsers installed as a Flatpak or a Snap run in a sandbox, which decides whether they can reach MDM.",
    "text": "Flatpak বা Snap হিসেবে ইনস্টল করা ব্রাউজারগুলি স্যান্ডবক্সে চলে। এই স্যান্ডবক্সই ঠিক করে তারা MDM-এ পৌঁছাতে পারবে কি না।"
-  },
-  "7bab57d3591ffa30": {
-   "source": "<g1>Two smaller macOS downloads</g1> (<g2>#25</g2>): a .dmg for Apple Silicon (<x3/>, about 10 MB) and one for Intel (<x4/>, about 13 MB) instead of one universal .dmg of 80 MB. From 0.2.4 or older, update once by hand: <g5>Download</g5> in Check for updates opens the release; pick your Mac's .dmg. <g6>Update now</g6> works again after that.",
-   "text": "<g1>দুটি ছোট macOS ডাউনলোড</g1> (<g2>#25</g2>): অ্যাপল সিলিকনের জন্য একটি .dmg (<x3/>, প্রায় 10 MB) এবং ইন্টেলের জন্য একটি (<x4/>, প্রায় 13 MB) 80 MB-এর একটি সার্বজনীন .dmg-এর পরিবর্তে। 0.2.4 বা তার পুরানো সংস্করণ থেকে, একবার হাতে আপডেট করুন: আপডেটের জন্য পরীক্ষা করুন-এ <g5>ডাউনলোড করুন</g5> রিলিজটি খোলে; আপনার ম্যাকের .dmg বেছে নিন। এর পরে <g6>এখনই আপডেট করুন</g6> আবার কাজ করে।"
   },
   "7bbfd6a588b5c2c4": {
    "source": "Where a tooltip's text wraps",
@@ -9122,10 +9122,6 @@
    "source": "Download Mister Download Manager 0.5.0 — free for Windows, macOS and Linux",
    "text": "Mister Download Manager 0.5.0 ডাউনলোড করুন — Windows, macOS এবং Linux-এর জন্য বিনামূল্যে"
   },
-  "8f937668a1130538": {
-   "source": "<g1>0.5.0</g1> <g2>24.1 MB</g2>",
-   "text": "<g1>0.5.0</g1> <g2>24.1 MB</g2>"
-  },
   "8fabf2cac610e9a8": {
    "source": "Cinnamon.",
    "text": "Cinnamon।"
@@ -9785,6 +9781,10 @@
   "99605902518653e2": {
    "source": "The same programs without an installer. It keeps its data in <x1/>, like an installed copy.",
    "text": "ইনস্টলার ছাড়া একই প্রোগ্রাম। ইনস্টল করা কপির মতোই এটি নিজের ডেটা <x1/>-তে রাখে।"
+  },
+  "99711c45fa3147e5": {
+   "source": "<g1>0.5.0</g1> <g2>16.9 MB</g2>",
+   "text": "<g1>0.5.0</g1> <g2>16.9 এমবি</g2>"
   },
   "997cc2f8f3474ae1": {
    "source": "Windows<g1><g2>3</g2></g1>",
@@ -10749,6 +10749,10 @@
   "a84e33bb5d1bc55c": {
    "source": "The <g1>command line guide</g1> lists everything <x2/> takes.",
    "text": "<g1>কমান্ড লাইন গাইড</g1> <x2/> যা যা নেয় তার সব তালিকাভুক্ত করে।"
+  },
+  "a8562e95bb3fa120": {
+   "source": "<g1>Two smaller macOS downloads</g1> (<g2>#25</g2>): a .dmg for Apple Silicon (<x3/>, about 14 MB) and one for Intel (<x4/>, about 16 MB) instead of one universal .dmg of 80 MB. From 0.2.4 or older, update once by hand: <g5>Download</g5> in Check for updates opens the release; pick your Mac's .dmg. <g6>Update now</g6> works again after that.",
+   "text": "<g1>দুটি ছোট macOS ডাউনলোড</g1> (<g2>#25</g2>): 80 এমবি-এর একটি ইউনিভার্সাল .dmg-এর পরিবর্তে Apple Silicon-এর জন্য একটি .dmg (<x3/>, প্রায় 14 এমবি) এবং Intel-এর জন্য একটি (<x4/>, প্রায় 16 এমবি)। 0.2.4 বা তার পুরোনো সংস্করণ থেকে, একবার নিজে হাতে আপডেট করুন: আপডেটের জন্য পরীক্ষা করুন-এ <g5>ডাউনলোড</g5> রিলিজটি খোলে; আপনার Mac-এর .dmg বেছে নিন। এরপর <g6>এখনই আপডেট করুন</g6> আবার কাজ করবে।"
   },
   "a856aa8d56dfc9ae": {
    "source": "<g1>Dark mode: grey notes and error texts are easier to read</g1> (<g2>#45</g2>): they now have the contrast WCAG asks for (4.5:1) on every dark surface, Options' failed checks no longer use light mode's dark red on the dark dialog, and an editable drop-down's arrow is tinted dark under the pointer.",
@@ -12562,6 +12566,10 @@
    "source": "<g1>The system:</g1> MDM's version and how you installed it, your operating system and its version, the processor, the language and theme, and how many downloads and queues you have. These are counts only.",
    "text": "<g1>সিস্টেম:</g1> MDM-এর সংস্করণ এবং আপনি এটি কীভাবে ইনস্টল করেছেন, আপনার অপারেটিং সিস্টেম এবং এর সংস্করণ, প্রসেসর, ভাষা এবং থিম, এবং আপনার কতগুলি ডাউনলোড ও কিউ আছে। এগুলি শুধুমাত্র সংখ্যা।"
   },
+  "c5ddef5d4d228288": {
+   "source": "Downloads are smaller: setup.exe 23 → 16 MB, AppImage 36 → 20 MB, .deb 27 → 17 MB.",
+   "text": "ডাউনলোডগুলি ছোট হয়েছে: setup.exe 23 → 16 এমবি, AppImage 36 → 20 এমবি, .deb 27 → 17 এমবি।"
+  },
   "c5ea65c70393f2d1": {
    "source": "<g1>Hang up modem when done</g1> — ends a dial-up connection, if you use one.",
    "text": "<g1>কাজ শেষ হলে মডেমের সংযোগ বিচ্ছিন্ন করুন</g1> — ডায়াল-আপ সংযোগ ব্যবহার করলে সেটি বিচ্ছিন্ন করে।"
@@ -12925,10 +12933,6 @@
   "cb797c11de6612fd": {
    "source": "3. Choose how many run at once",
    "text": "3. একসঙ্গে কতগুলো ডাউনলোড চলবে তা বেছে নিন"
-  },
-  "cb7d403b3b59f081": {
-   "source": "Downloads are about half the size: setup.exe 23 → 12 MB, AppImage 36 → 16 MB, .deb 27 → 13 MB.",
-   "text": "ডাউনলোডগুলি প্রায় অর্ধেক আকারের: setup.exe 23 → 12 MB, AppImage 36 → 16 MB, .deb 27 → 13 MB।"
   },
   "cb8376955028cc1c": {
    "source": "<g1>Linux: uninstalling the .deb or .rpm leaves no browser files behind</g1> (<g2>#266</g2>): MDM wrote the files that tell each browser where its helper is in every user's home folder, and <x3/> or <x4/> left them there, naming a program that was gone. The packages now install them for everyone, in each browser's own folder (Chrome and Brave, Chromium and Vivaldi, Edge, Firefox, the Snap Firefox included), and remove them with the package; MDM writes none in the home folder for those browsers, and takes away the ones an earlier version wrote. The AppImage and the tar.gz, and Opera, Helium, Thorium and Firefox's forks (which read them only in the home folder), still get them there.",

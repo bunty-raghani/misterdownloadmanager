@@ -90,6 +90,17 @@ fn fake_ytdlp() -> ExitCode {
     {
         return fake_list(list, has("-J"), after("--playlist-items"));
     }
+    // #352: yt-dlp's answer when the cookies leave it nothing to offer.
+    if args
+        .last()
+        .is_some_and(|u| u == "https://cookies.example/none")
+        && has("--cookies")
+    {
+        eprintln!(
+            "ERROR: [youtube] abc: Requested format is not available. Use --list-formats for a list of available formats"
+        );
+        return ExitCode::FAILURE;
+    }
     if has("-J") {
         const PAGE: &str = r#"{"title": "Talk", "language": "ru", "formats": [
             {"format_id": "18", "ext": "mp4", "height": 360, "vcodec": "avc1", "acodec": "mp4a"}],
@@ -397,6 +408,27 @@ fn list_checks(me: &Path) {
         look_up(&exe, "https://video.example/talk", &none).unwrap(),
         Looked::Video(_)
     ));
+
+    // #352: cookies that leave yt-dlp nothing to offer: the same page without them.
+    let page = "https://cookies.example/none";
+    let cookies = mdm_tools::proc::FromBrowser {
+        cookies: Some("LOGIN_INFO=l; SAPISID=s".into()),
+        ..Default::default()
+    };
+    assert!(matches!(
+        look_up(&exe, page, &cookies).unwrap(),
+        Looked::Video(_)
+    ));
+    let (args, _file) = cookies.args(page).unwrap();
+    let out =
+        mdm_tools::proc::look_up(&exe, &["-J".to_owned()], page, Duration::from_secs(30)).unwrap();
+    assert!(!out.without_cookies, "no cookies, so nothing to retry");
+    let first = ["-J".to_owned()]
+        .into_iter()
+        .chain(args)
+        .collect::<Vec<_>>();
+    let out = mdm_tools::proc::look_up(&exe, &first, page, Duration::from_secs(30)).unwrap();
+    assert!(out.without_cookies, "the second look-up, without them");
 
     // Six thousand, whole: all of them, in order, the private ones marked.
     let t = Instant::now();

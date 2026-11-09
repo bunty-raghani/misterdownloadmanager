@@ -86,6 +86,32 @@ fn run(
     (replies, ok)
 }
 
+/// #382: nothing edited in Options. A model is taken, a picture stays with the browser.
+#[test]
+fn the_default_list_takes_a_model_and_leaves_a_picture() {
+    let dir = data_dir("default-types", serde_json::json!({}));
+    let app = fake_app(&dir, "ok");
+    let offer = |name: &str| {
+        serde_json::json!({
+            "url": format!("https://huggingface.co/org/repo/resolve/main/{name}"),
+            "userAgent": UA, "filename": format!("C:/dl/{name}"),
+        })
+    };
+    let (replies, ok) = run(
+        &dir,
+        CALLER,
+        &[offer("model.Q4_K_M.gguf"), offer("photo.jpg")],
+    );
+    assert!(ok);
+    assert_eq!(replies[0]["ok"], true, "{:?}", replies[0]);
+    assert_eq!(
+        app.recv_timeout(Duration::from_secs(5)).unwrap()["name"],
+        "model.Q4_K_M.gguf"
+    );
+    assert_ne!(replies[1]["ok"], true, "{:?}", replies[1]);
+    assert!(app.recv_timeout(Duration::from_millis(300)).is_err());
+}
+
 #[test]
 fn rules_hand_off_and_the_status_per_browser() {
     let dir = data_dir(

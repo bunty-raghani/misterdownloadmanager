@@ -111,6 +111,9 @@ pub struct Command {
     /// service worker carries the session); a direct request answers 302.
     #[schemars(skip)]
     pub completed_file: Option<CompletedFile>,
+    /// The title of the page the button was clicked on: a video yt-dlp knows only by its address
+    /// is named by it.
+    pub video_title: Option<String>,
     /// From that button's menu: never show it on this site (a host name) again.
     pub panel_hide_site: Option<String>,
     /// From the browser's right-click menu: the links of a page or a selection, offered in the

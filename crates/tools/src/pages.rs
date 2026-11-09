@@ -25,12 +25,15 @@ pub fn is_video_page(url: &Url) -> bool {
     match host {
         "youtube.com" | "music.youtube.com" | "youtube-nocookie.com" => {
             (path == "/watch" && query("v"))
+                // A playlist's own page: the video window lists its videos (#69, #338).
+                || (path == "/playlist" && query("list"))
                 || matches!(segs.as_slice(), ["shorts" | "live" | "embed" | "v", _, ..])
         }
         "youtu.be" => segs.len() == 1,
         "vimeo.com" => segs.iter().any(|s| s.chars().all(|c| c.is_ascii_digit())),
         "player.vimeo.com" => matches!(segs.as_slice(), ["video", _, ..]),
         "dailymotion.com" => matches!(segs.as_slice(), ["video", _, ..]),
+        "geo.dailymotion.com" => segs.first() == Some(&"player") && query("video"),
         "dai.ly" => segs.len() == 1,
         "twitch.tv" => matches!(segs.as_slice(), ["videos", _] | [_, "clip", _]),
         "clips.twitch.tv" => segs.len() == 1,
@@ -50,6 +53,32 @@ pub fn is_video_page(url: &Url) -> bool {
             .first()
             .is_some_and(|s| s.starts_with('v') && s.contains('-')),
         _ => false,
+    }
+}
+
+/// The address to give yt-dlp for a video page: Dailymotion's embedded player
+/// (`geo.dailymotion.com/player/<player>.html?video=<id>`, what a site embedding it shows) becomes
+/// the video's own page, which is the one that always lists its formats (#359). Any other address
+/// as it is.
+pub fn video_address(page: &str) -> String {
+    let id = Url::parse(page).ok().and_then(|url| {
+        let player = url
+            .host_str()
+            .is_some_and(|h| h.eq_ignore_ascii_case("geo.dailymotion.com"))
+            && url.path().starts_with("/player");
+        player
+            .then(|| {
+                url.query_pairs()
+                    .find(|(k, _)| k == "video")
+                    .map(|(_, v)| v.into_owned())
+            })
+            .flatten()
+    });
+    match id {
+        Some(id) if !id.is_empty() && id.chars().all(|c| c.is_ascii_alphanumeric()) => {
+            format!("https://www.dailymotion.com/video/{id}")
+        }
+        _ => page.to_owned(),
     }
 }
 
@@ -156,6 +185,10 @@ mod tests {
         assert!(page("https://youtu.be/Tg6byXUo8RU?si=x"));
         assert!(page("https://vimeo.com/76979871"));
         assert!(page("https://www.dailymotion.com/video/x8abcd"));
+        assert!(page(
+            "https://geo.dailymotion.com/player/x19jsm.html?video=k4lGbCpdJJFSQgMvE8W"
+        ));
+        assert!(page("https://www.youtube.com/playlist?list=PLS37ZBSRa46"));
         assert!(page("https://www.twitch.tv/videos/123456"));
         assert!(page(
             "https://www.tiktok.com/@someone/video/7300000000000000000"
@@ -169,12 +202,32 @@ mod tests {
     }
 
     #[test]
+    fn dailymotions_player_becomes_the_videos_own_page() {
+        assert_eq!(
+            video_address(
+                "https://geo.dailymotion.com/player/x19jsm.html?video=k4lGbCpdJJFSQgMvE8W"
+            ),
+            "https://www.dailymotion.com/video/k4lGbCpdJJFSQgMvE8W"
+        );
+        for same in [
+            "https://geo.dailymotion.com/player/x19jsm.html",
+            "https://geo.dailymotion.com/player/x19jsm.html?video=a/b",
+            "https://www.dailymotion.com/video/x8abcd",
+            "https://www.youtube.com/watch?v=x",
+            "not an address",
+        ] {
+            assert_eq!(video_address(same), same);
+        }
+    }
+
+    #[test]
     fn other_pages_and_files_are_not() {
         assert!(!page("https://www.youtube.com/"));
         assert!(!page("https://www.youtube.com/watch"));
         assert!(!page("https://www.youtube.com/@channel/videos"));
         assert!(!page("https://www.youtube.com/results?search_query=x"));
-        assert!(!page("https://www.youtube.com/playlist?list=PLx"));
+        assert!(!page("https://www.youtube.com/playlist"));
+        assert!(!page("https://geo.dailymotion.com/player/x19jsm.html"));
         assert!(!page("https://vimeo.com/channels/staffpicks"));
         assert!(!page("https://example.com/video.mp4"));
         assert!(!page("https://x.com/someone"));

@@ -136,12 +136,79 @@ pub fn browser_cookies() -> Option<BrowserCookies> {
 /// store is read only when nothing came: a pasted address, a link typed into Add URL, a
 /// playlist listed later. yt-dlp would merge the two if given both; it never is.
 fn browser_cookie_args(args: &[String], chosen: Option<&BrowserCookies>) -> Vec<String> {
-    let has_cookies = args
+    let settled = args
         .iter()
-        .any(|a| a == "--cookies" || a == "--cookies-from-browser");
+        .any(|a| a == "--cookies" || a == "--cookies-from-browser" || a == NO_COOKIES);
     match chosen {
-        Some(c) if !has_cookies => vec!["--cookies-from-browser".into(), c.spec()],
+        Some(c) if !settled => vec!["--cookies-from-browser".into(), c.spec()],
         _ => Vec::new(),
+    }
+}
+
+/// yt-dlp's "no cookies from any browser": a run told this gets none of the chosen browser's.
+const NO_COOKIES: &str = "--no-cookies-from-browser";
+
+/// `ours` for a look-up without cookies (#352): the cookie file taken out, the browser's store
+/// refused.
+fn without_cookies(ours: &[String]) -> Vec<String> {
+    let mut out = Vec::with_capacity(ours.len() + 1);
+    let mut args = ours.iter();
+    while let Some(a) = args.next() {
+        if a == "--cookies" || a == "--cookies-from-browser" {
+            args.next();
+        } else {
+            out.push(a.clone());
+        }
+    }
+    out.push(NO_COOKIES.to_owned());
+    out
+}
+
+/// Does a run with arguments `ours` have cookies (its own, or the chosen browser's)?
+fn with_cookies(ours: &[String], chosen: Option<&BrowserCookies>) -> bool {
+    chosen.is_some()
+        || ours
+            .iter()
+            .any(|a| a == "--cookies" || a == "--cookies-from-browser")
+}
+
+/// A page's `-J` output, and whether it took looking the page up without cookies.
+pub struct LookedUp {
+    pub json: Vec<u8>,
+    pub without_cookies: bool,
+}
+
+/// Look a page up (`yt-dlp -J`, `ours` holding its arguments). yt-dlp's `-J` chooses a format too,
+/// and fails when none is left. Signed-in cookies make that likely on YouTube (#352): yt-dlp then
+/// asks only the players that need a JavaScript runtime to decode their links, and without one
+/// (it looks for Deno alone) every video is dropped: "Requested format is not available". The
+/// same page without the cookies lists its qualities, so a look-up that fails this way and had
+/// cookies is made once more without them; if that fails too, the first error is the one told.
+pub fn look_up(
+    exe: &Path,
+    ours: &[String],
+    url: &str,
+    timeout: Duration,
+) -> Result<LookedUp, ProcError> {
+    let run = |args: &[String]| output(ytdlp(exe, &[], args, url)?, "yt-dlp", timeout);
+    match run(ours) {
+        Ok(json) => Ok(LookedUp {
+            json,
+            without_cookies: false,
+        }),
+        Err(first)
+            if with_cookies(ours, browser_cookies().as_ref())
+                && crate::servers::format_unavailable(&first.to_string()) =>
+        {
+            match run(&without_cookies(ours)) {
+                Ok(json) => Ok(LookedUp {
+                    json,
+                    without_cookies: true,
+                }),
+                Err(_) => Err(first),
+            }
+        }
+        Err(e) => Err(e),
     }
 }
 
@@ -455,42 +522,6 @@ fn cookie_file(text: &str) -> std::io::Result<CookieFile> {
 /// Python's.
 const UTF8: [&str; 2] = ["--encoding", "utf-8"];
 
-/// yt-dlp's JavaScript runtime for the sites whose player it must run (YouTube's newer formats
-/// are missing without one: "Requested format is not available", or only some qualities). yt-dlp
-/// enables Deno by default; Node.js is far more common on this system, so name it when found.
-fn js_runtime_args() -> Vec<String> {
-    use std::sync::OnceLock;
-    static NODE: OnceLock<Option<PathBuf>> = OnceLock::new();
-    match NODE.get_or_init(find_node) {
-        Some(node) => vec!["--js-runtimes".into(), format!("node:{}", node.display())],
-        None => Vec::new(),
-    }
-}
-
-/// Node.js in the places a program started from a desktop finds it (the PATH may be the bare
-/// system one), or in its usual Windows folder.
-fn find_node() -> Option<PathBuf> {
-    #[cfg(windows)]
-    {
-        let path = std::env::var_os("PATH").unwrap_or_default();
-        std::env::split_paths(&path)
-            .map(|d| d.join("node.exe"))
-            .chain([
-                PathBuf::from(r"C:\Program Files\nodejs\node.exe"),
-                PathBuf::from(r"C:\Program Files (x86)\nodejs\node.exe"),
-            ])
-            .find(|p| p.is_file())
-    }
-    #[cfg(not(windows))]
-    {
-        let path = std::env::var_os("PATH").unwrap_or_default();
-        std::env::split_paths(&path)
-            .chain(["/opt/homebrew/bin", "/usr/local/bin", "/usr/bin"].map(PathBuf::from))
-            .map(|d| d.join("node"))
-            .find(|p| p.is_file())
-    }
-}
-
 fn ytdlp_command(exe: &Path) -> Command {
     let mut cmd = Command::new(exe);
     cmd.env("PYTHONIOENCODING", "utf-8");
@@ -524,6 +555,57 @@ fn layers_with(
     Ok(())
 }
 
+/// The file named `name` (`name.exe` on Windows) in one of `dirs`.
+fn program_in(dirs: &[PathBuf], name: &str) -> Option<PathBuf> {
+    let file = format!("{name}{}", std::env::consts::EXE_SUFFIX);
+    dirs.iter().map(|d| d.join(&file)).find(|p| p.is_file())
+}
+
+/// Node.js from nvm (`~/.nvm/versions/node/<version>/bin/node`), the newest name first: a program
+/// started from the desktop doesn't have nvm's folders on its PATH (#360).
+fn nvm_node(home: &Path) -> Option<PathBuf> {
+    let mut versions: Vec<PathBuf> = std::fs::read_dir(home.join(".nvm/versions/node"))
+        .ok()?
+        .flatten()
+        .map(|e| e.path().join("bin"))
+        .collect();
+    versions.sort();
+    versions.reverse();
+    program_in(&versions, "node")
+}
+
+/// What yt-dlp should be told about JavaScript (#360, #352, #351): YouTube's formats need a
+/// runtime, and yt-dlp looks for Deno alone unless told of another. Deno found: nothing to say.
+/// Else Node.js or Bun, if there is one.
+fn js_runtime(dirs: &[PathBuf], home: Option<&Path>) -> Option<(&'static str, PathBuf)> {
+    if program_in(dirs, "deno").is_some() {
+        return None;
+    }
+    program_in(dirs, "node")
+        .or_else(|| home.and_then(nvm_node))
+        .map(|p| ("node", p))
+        .or_else(|| program_in(dirs, "bun").map(|p| ("bun", p)))
+}
+
+/// `--js-runtimes` for this computer's Node.js or Bun, looked for once.
+fn js_runtime_args() -> &'static [String] {
+    static ARGS: std::sync::OnceLock<Vec<String>> = std::sync::OnceLock::new();
+    ARGS.get_or_init(|| {
+        let dirs: Vec<PathBuf> = std::env::var_os("PATH")
+            .map(|p| std::env::split_paths(&p).collect())
+            .unwrap_or_default();
+        let home = std::env::var_os("HOME").map(PathBuf::from);
+        js_runtime(&dirs, home.as_deref())
+            .map(|(name, path)| {
+                vec![
+                    "--js-runtimes".to_owned(),
+                    format!("{name}:{}", path.display()),
+                ]
+            })
+            .unwrap_or_default()
+    })
+}
+
 /// `yt-dlp` with arguments in layers: `user` extras, then `ours` (then the chosen browser's
 /// cookies when neither brought any, [`layers`]), then the fixed ones last (so nothing can
 /// switch them off), then `--` and the URL (so a URL starting with `-` is never read as an
@@ -538,8 +620,8 @@ pub fn ytdlp(
     let route = through_adapter(&mut cmd, Helper::YtDlp)?;
     layers(&mut cmd, user, ours)?;
     cmd.args(["--ignore-config", "--no-exec", "--no-update"]);
-    cmd.args(UTF8);
     cmd.args(js_runtime_args());
+    cmd.args(UTF8);
     cmd.args(route);
     cmd.arg("--");
     cmd.arg(safe(url)?);
@@ -558,8 +640,8 @@ pub fn ytdlp_info(
     let route = through_adapter(&mut cmd, Helper::YtDlp)?;
     layers(&mut cmd, user, ours)?;
     cmd.args(["--ignore-config", "--no-exec", "--no-update"]);
-    cmd.args(UTF8);
     cmd.args(js_runtime_args());
+    cmd.args(UTF8);
     cmd.args(route);
     cmd.arg("--load-info-json");
     cmd.arg(info);
@@ -979,6 +1061,63 @@ mod tests {
         );
     }
 
+    /// #360: yt-dlp is told of Node.js or Bun, from the PATH or nvm, and left alone with Deno.
+    #[test]
+    fn the_javascript_runtime_yt_dlp_is_told_of() {
+        let touch = |dir: &Path, name: &str| {
+            std::fs::create_dir_all(dir).unwrap();
+            std::fs::write(
+                dir.join(format!("{name}{}", std::env::consts::EXE_SUFFIX)),
+                b"",
+            )
+            .unwrap();
+        };
+        let root = tempfile::tempdir().unwrap();
+        let (path, home) = (root.path().join("bin"), root.path().join("home"));
+        let dirs = vec![path.clone()];
+        std::fs::create_dir_all(&path).unwrap();
+        assert_eq!(js_runtime(&dirs, Some(&home)), None);
+        for v in ["v20.1.0", "v22.3.0"] {
+            touch(&home.join(".nvm/versions/node").join(v).join("bin"), "node");
+        }
+        let (name, found) = js_runtime(&dirs, Some(&home)).unwrap();
+        assert_eq!(name, "node");
+        assert!(found.to_string_lossy().contains("v22.3.0"));
+        touch(&path, "bun");
+        assert_eq!(js_runtime(&dirs, None).unwrap().0, "bun");
+        touch(&path, "node");
+        assert_eq!(
+            js_runtime(&dirs, None).unwrap().1,
+            path.join(format!("node{}", std::env::consts::EXE_SUFFIX))
+        );
+        touch(&path, "deno");
+        assert_eq!(js_runtime(&dirs, Some(&home)), None);
+    }
+
+    /// #352: the second look-up has no cookies of any kind, and everything else the first had.
+    #[test]
+    fn a_look_up_without_cookies_keeps_the_rest() {
+        let ours: Vec<String> = [
+            "-J",
+            "--cookies",
+            "/tmp/c.txt",
+            "--referer",
+            "https://p.test/",
+        ]
+        .map(String::from)
+        .to_vec();
+        assert_eq!(
+            without_cookies(&ours),
+            ["-J", "--referer", "https://p.test/", NO_COOKIES]
+        );
+        let firefox = BrowserCookies::new("firefox", "").unwrap();
+        assert!(with_cookies(&ours, None));
+        assert!(with_cookies(&["-J".to_owned()], Some(&firefox)));
+        assert!(!with_cookies(&["-J".to_owned()], None));
+        // Told so, the chosen browser's cookies aren't read either.
+        assert_eq!(yt(Some(&firefox), &["-J", NO_COOKIES]), ["-J", NO_COOKIES]);
+    }
+
     /// #229: why the browser's cookies didn't help stays on the failure's message.
     #[test]
     fn the_cookie_trouble_is_kept_on_the_failure() {
@@ -1035,14 +1174,12 @@ mod tests {
             "-https://x/",
         )
         .unwrap();
-        let args: Vec<String> = cmd
+        let mut args: Vec<String> = cmd
             .get_args()
             .map(|a| a.to_string_lossy().into_owned())
             .collect();
-        // Node.js may be named for yt-dlp's player scripts; the fixed order is what matters.
-        let mut args = args;
+        // This computer's Node.js or Bun, if it has one (#360); tested on its own below.
         if let Some(i) = args.iter().position(|a| a == "--js-runtimes") {
-            assert!(args.get(i + 1).is_some_and(|p| p.starts_with("node:")));
             args.drain(i..=i + 1);
         }
         assert_eq!(

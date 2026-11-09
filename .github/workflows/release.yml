@@ -101,6 +101,8 @@ jobs:
       # download includes the .pdb files themselves).
       - name: Symbols
         shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }} # downloads the build's helpers signed in (fetch_release.py)
         run: |
           $v = [regex]::Match((Get-Content Cargo.toml -Raw), '(?m)^version\s*=\s*"([^"]+)"').Groups[1].Value
           $exes = "misterdownloadmanager", "misterdownloadmanager-nmhost", "misterdownloadmanager-cli", "misterdownloadmanager-mcp" |
@@ -223,6 +225,8 @@ jobs:
             libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev rpm python3-pil zsync
 
       - name: AppImage, tar.gz, .deb, .rpm
+        env:
+          GH_TOKEN: ${{ github.token }} # downloads the build's helpers signed in (fetch_release.py)
         run: bash tools/installer/build-linux.sh
 
       - uses: actions/upload-artifact@v4
@@ -254,6 +258,8 @@ jobs:
           restore-keys: release-${{ runner.os }}-cargo-
 
       - name: Apple Silicon and Intel .dmg
+        env:
+          GH_TOKEN: ${{ github.token }} # downloads the build's helpers signed in (fetch_release.py)
         run: bash tools/installer/build-macos.sh
 
       - uses: actions/upload-artifact@v4

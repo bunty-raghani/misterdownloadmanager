@@ -164,6 +164,12 @@
   "popup_media_none": {
     "message": "Nessun video o audio trovato ancora in questa pagina. Avvialo, poi riapri questo menu."
   },
+  "popup_media_streamed": {
+    "message": "Il lettore di questa pagina trasmette il video a pezzi, quindi non c'è alcun file da elencare. Punta il video e usa il suo pulsante «Scarica video»."
+  },
+  "popup_media_store": {
+    "message": "Le regole del Chrome Web Store tengono questa copia del componente lontana dai video di questo sito. La Guida spiega cosa puoi fare."
+  },
   "popup_media_download": {
     "message": "Scarica"
   },
@@ -178,6 +184,9 @@
   },
   "video_drm": {
     "message": "Video protetto: non può essere salvato"
+  },
+  "video_unnamed": {
+    "message": "Impossibile capire di quale video si tratta: apri la sua pagina e riprova da lì"
   },
   "popup_send_to": {
     "message": "Invia i download a"

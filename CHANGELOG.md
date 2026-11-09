@@ -3,6 +3,57 @@
 Each release's notes on GitHub come from its section here (`## [X.Y.Z]`, see
 `.github/workflows/release.yml`).
 
+## [Unreleased]
+
+### Fixed
+
+- Browser link import: tighter handling of site data.
+- Crash reports: a freeze that was over before its snapshot was taken says so, instead of calling it a deadlock in code that was only waiting for events ([#355](https://github.com/anefzaoui/misterdownloadmanager/issues/355)).
+- **Move/Rename** was greyed out with several downloads selected, for example a set just added to a queue. It now asks for a folder and moves them all there ([#333](https://github.com/anefzaoui/misterdownloadmanager/issues/333)).
+- The extension no longer asks you to update MDM when only a bug-fix version separates them, which it did even when there was no update to get.
+- **Download video** shows a plain file's size, from its server, instead of "size unknown" ([#320](https://github.com/anefzaoui/misterdownloadmanager/issues/320)).
+- **Download video** finds the video on pages whose player loads a `.mpd` or `.m3u8` address that answers something else first, as SVT Play does ([#377](https://github.com/anefzaoui/misterdownloadmanager/issues/377)).
+- RSS feeds: the boxes on the **Download rules** tab (**Episodes**, **Must contain** and the others) keep the keyboard while you type, instead of losing it after each key ([#353](https://github.com/anefzaoui/misterdownloadmanager/issues/353)).
+- A download refused by a site's bot check (Cloudflare's challenge) says so and how to get the file, instead of "the server answered 403 Forbidden" ([#376](https://github.com/anefzaoui/misterdownloadmanager/issues/376)).
+- **Open folder** works on a torrent that is still downloading ([#354](https://github.com/anefzaoui/misterdownloadmanager/issues/354)).
+- **Alt** and **F10** open the menu bar while a button or the list has the keyboard focus, not only when nothing does ([#328](https://github.com/anefzaoui/misterdownloadmanager/issues/328)).
+- Windows: no more crash on a computer where Direct3D can't start, when a window opened during the switch to OpenGL ([#337](https://github.com/anefzaoui/misterdownloadmanager/issues/337)).
+- Windows: no more crash when a screen is unplugged, turned off or rearranged while MDM runs ([#335](https://github.com/anefzaoui/misterdownloadmanager/issues/335)).
+### Added
+
+- **Far more file types taken from the browser by default** ([#382](https://github.com/anefzaoui/misterdownloadmanager/issues/382)): AI models and datasets (GGUF, SAFETENSORS, CKPT, PT, ONNX, PARQUET...), 3D and CAD (GLB, FBX, OBJ, STL, BLEND, STEP...), design and camera RAW files, ebooks, Office files, DAT, disk images and split archives. A list you never edited gains them; one you edited stays yours.
+- **A Safari extension, inside the Mac app:** a click on a link to a file type MDM takes goes to MDM, and so do the right-click items, the button over videos and **Media on this page**, as in the other browsers. Safari gives extensions no access to its downloads, so a download a page starts by itself stays with Safari, and the browser's proxy is not shared. See [Browser integration](docs/browser-integration.md#safari-macos).
+- **Far more file types taken from the browser by default** ([#382](https://github.com/anefzaoui/misterdownloadmanager/issues/382)): AI models and datasets (GGUF, SAFETENSORS, CKPT, PT, ONNX, PARQUET...), 3D and CAD (GLB, FBX, OBJ, STL, BLEND, STEP...), design and camera RAW files, ebooks, Office files, disk images and split archives. A list you never edited gains them; one you edited stays yours.
+- Help: what to do when an antivirus or VirusTotal flags MDM, and how to check your copy is the real one.
+
+### Fixed
+
+- Video downloads: the progress no longer says 100 % while a video is still coming, when the site gives no total size, or between a video and its separate sound ([#344](https://github.com/anefzaoui/misterdownloadmanager/issues/344)). A video yt-dlp only knows by its address is named after the page, not a long hash ([#345](https://github.com/anefzaoui/misterdownloadmanager/issues/345)).
+- **A YouTube playlist in Add URL** ([#338](https://github.com/anefzaoui/misterdownloadmanager/issues/338)) opens the video window with its videos, instead of saving the page as a file named "playlist".
+- **Dailymotion's embedded player** ([#359](https://github.com/anefzaoui/misterdownloadmanager/issues/359)): its address is looked up as the video's own page, so the download button works on sites that embed one.
+- A download that a page starts by script (a thank-you page going to the installer, as obsproject.com's does) gets the file's address, not the page's, so MDM no longer saves that page under the installer's name ([#374](https://github.com/anefzaoui/misterdownloadmanager/issues/374)). A finished download also shows what really came down when the server gives no size.
+- **Stop** on a download in a running queue stays stopped, instead of the queue starting it again a moment later; **Stop All** too ([#341](https://github.com/anefzaoui/misterdownloadmanager/issues/341)).
+- Removing the last feed in the RSS feeds window no longer crashes the app ([#321](https://github.com/anefzaoui/misterdownloadmanager/issues/321)).
+- **YouTube formats with Node.js or Bun installed** ([#360](https://github.com/anefzaoui/misterdownloadmanager/issues/360)): yt-dlp needs a JavaScript runtime for them and looks for Deno alone, so MDM now tells it about Node.js (nvm's too) or Bun when there is no Deno.
+- **YouTube's look-up failing with "Requested format is not available"** ([#352](https://github.com/anefzaoui/misterdownloadmanager/issues/352)): signed-in cookies make yt-dlp use only YouTube's players that need a JavaScript runtime, and without one no video is left. The page is now looked up again without the cookies, and lists its qualities.
+- **Download video offering only the sound, with no reason given** ([#351](https://github.com/anefzaoui/misterdownloadmanager/issues/351)): when a page's better videos need ffmpeg and it isn't installed, the window now says so.
+- Adding a link again after its finished file was moved or deleted starts a new download, instead of asking about a duplicate that isn't there ([#342](https://github.com/anefzaoui/misterdownloadmanager/issues/342)).
+- **Sharp, evenly spaced text on Windows:** letters no longer run together or drift apart. English and other Latin, Greek and Cyrillic text is drawn the way Windows draws its own classic controls, with each letter's shape and width fitted together; every other script uses hinting suited to anti-aliased rendering ([#323](https://github.com/anefzaoui/misterdownloadmanager/issues/323), [#334](https://github.com/anefzaoui/misterdownloadmanager/issues/334)).
+
+## [0.5.1] - 2026-11-08
+
+YouTube fixes for the Download video button, and the button in Chrome, Edge and Brave.
+
+### Added
+
+- **The Download video button on YouTube in Chrome, Edge, Brave, Opera and Vivaldi:** the copy of the extension from the Chrome Web Store shows it now, as Firefox's does.
+
+### Fixed
+
+- **The Download video button took the wrong video on YouTube** ([#311](https://github.com/anefzaoui/misterdownloadmanager/issues/311), thanks to [@mayankmohan1992](https://github.com/mayankmohan1992)): YouTube moves from one video to the next without loading a new page, and the browser kept naming the page it first loaded, so MDM got the video watched before. On the home page, a search or a channel it got that whole page instead, and offered about 50 videos. The button now sends the video playing in the player it's on, and a Short as the Short it is.
+- **Media on this page says why it's empty**: on a player that streams in pieces there's no file to list, and it says to use the button over the video instead of asking you to play it again.
+- A page's own short sounds (a click, a voice-search chime) are no longer listed in **Media on this page**.
+
 ## [0.5.0] - 2026-11-08
 
 ### Added
@@ -92,7 +143,7 @@ Smaller additions worth knowing about.
 MDM got much lighter, and Linux is now supported like Windows.
 
 - Linux is no longer experimental: checked on GNOME, KDE Plasma, Xfce and Cinnamon, and on clean Ubuntu, Debian and Fedora.
-- Downloads are about half the size: setup.exe 23 → 12 MB, AppImage 36 → 16 MB, .deb 27 → 13 MB.
+- Downloads are smaller: setup.exe 23 → 16 MB, AppImage 36 → 20 MB, .deb 27 → 17 MB.
 - Under 10 MB of memory in the notification area on Windows, from about 50 MB.
 - Machine translations in all 85 languages were checked again against the English and corrected.
 - Downloads from the browser keep the name, size and type the browser saw, so downloads behind a sign-in show correctly right away.
@@ -640,10 +691,10 @@ This release tightens what MDM accepts from torrents.
 
 ##### Smaller and lighter
 
-- **MDM's programs are a third of their size, its download about half** ([#25](https://github.com/anefzaoui/misterdownloadmanager/issues/25)):
-  on Windows, the programs went from 93 MB to 33 MB (`misterdownloadmanager.exe` from 61 MB to
-  29 MB, the command line from 28 MB to a 0.2 MB launcher), and setup.exe from 23 MB to 12 MB.
-  On Linux the AppImage went from 36 MB to 16 MB, the .deb from 27 MB to 13 MB.
+- **MDM's programs and downloads are much smaller** ([#25](https://github.com/anefzaoui/misterdownloadmanager/issues/25)):
+  on Windows, the programs went from 93 MB to 41 MB (`misterdownloadmanager.exe` from 61 MB to
+  38 MB, the command line from 28 MB to a 0.2 MB launcher), and setup.exe from 23 MB to 16 MB.
+  On Linux the AppImage went from 36 MB to 20 MB, the .deb from 27 MB to 17 MB.
   - The command line runs in the app's own program, so the download engine ships once. Every
     command, `--json`, Ctrl+C and exit code work as before.
   - The translations (85 languages besides English) are packed, 12 MB of text in under 1 MB
@@ -661,8 +712,8 @@ This release tightens what MDM accepts from torrents.
     installer from 16.1 to 13.6 MB and the zips from 19.3 to 15.6 MB, with the same features and
     the same download speed.
 - **Two smaller macOS downloads** ([#25](https://github.com/anefzaoui/misterdownloadmanager/issues/25)):
-  a .dmg for Apple Silicon (`-macos-arm64`, about 10 MB) and one for Intel (`-macos-x86_64`,
-  about 13 MB) instead of one universal .dmg of 80 MB. From 0.2.4 or older, update once by hand:
+  a .dmg for Apple Silicon (`-macos-arm64`, about 14 MB) and one for Intel (`-macos-x86_64`,
+  about 16 MB) instead of one universal .dmg of 80 MB. From 0.2.4 or older, update once by hand:
   **Download** in Check for updates opens the release; pick your Mac's .dmg. **Update now**
   works again after that.
 - **Less memory in the notification area** ([#72](https://github.com/anefzaoui/misterdownloadmanager/issues/72)):

@@ -295,6 +295,10 @@
 #. button in the browser extension's window: open the extension's page in that browser
 #, machine
 	Add the extension	Ավելացնել ընդլայնումը
+#. window title in extension.rs
+#. title of the window that shows how to turn on the Safari extension
+#, machine
+	Add the extension to Safari	Ավելացնել ընդլայնումը Safari-ում
 #. text in extension.rs
 #, machine
 	Add the free extension: files you download in your browser come here, and videos get a Download button.	Ավելացրեք անվճար ընդլայնումը. ձեր դիտարկիչում ներբեռնված ֆայլերը կհայտնվեն այստեղ, իսկ տեսանյութերը կունենան Ներբեռնել կոճակ:
@@ -1932,6 +1936,10 @@
 #. a country's name (where a download's server is)
 #, machine
 	Hong Kong	Հոնկոնգ
+#. text in extension.rs
+#. button in the browser extension's window, on Safari's row: open the steps that turn the extension on
+#, machine
+	How to Add	Ինչպես ավելացնել
 #. text in the Scheduler window
 #. link after why the computer can't be woken (Linux, macOS): opens the guide's page that shows how an administrator can allow it
 #, machine
@@ -3003,6 +3011,10 @@
 #. Options → Sites Logins → Cookies for video sites, a Chrome-like browser chosen on Windows
 #, machine
 	On Windows, Chrome, Edge and Brave may lock their cookies. Firefox works.	Windows-ում Chrome-ը, Edge-ը և Brave-ը կարող են արգելափակել իրենց թխուկները։ Firefox-ն աշխատում է։
+#. text in the Options window
+#. Options → Remote → Status: on; the address follows in a box below
+#, machine
+	On. On the phone, open this address:	Միացված է։ Հեռախոսում բացեք այս հասցեն:
 #. text in the Scheduler window; option (radio button) in the Scheduler window
 #, machine
 	Once at	Մեկ անգամ՝ ժամը
@@ -3062,6 +3074,14 @@
 #. text in the tray icon's menu
 #, machine
 	Open Mister Download Manager	Բացել Mister Download Manager-ը
+#. text in extension.rs
+#. step 2 of turning on the Safari extension; Cmd is the Command key
+#, machine
+	Open Safari's settings (Cmd+,).	Բացեք Safari-ի կարգավորումները (Cmd+,)։
+#. text in extension.rs
+#. step 1 of turning on the Safari extension
+#, machine
+	Open Safari.	Բացեք Safari-ը։
 #. text in the Scheduler window
 #, machine
 	Open the following file when done	Ավարտելուց հետո բացել հետևյալ ֆայլը
@@ -3496,6 +3516,9 @@
 #. Saturday, as short as a calendar's column head (two letters in English)
 #, machine
 	Sa	Շբ
+#. text in extension.rs
+#, machine
+	Safari turns "Allow unsigned extensions" off each time it quits: do steps 1 to 6 again after restarting it.	Safari-ն ամեն դուրս գալիս անջատում է «Allow unsigned extensions» ընտրանքը. վերագործարկելուց հետո կրկին կատարեք 1–6-րդ քայլերը։
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -4084,6 +4107,18 @@
 #. a country's name (where a download's server is)
 #, machine
 	Sweden	Շվեդիա
+#. text in extension.rs
+#. step 3 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+#, machine
+	Switch to the "Advanced" tab (the cogwheels).	Անցեք «Advanced» ներդիրին (հանդերձանքի պատկերակ)։
+#. text in extension.rs
+#. step 5 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+#, machine
+	Switch to the "Developer" tab (the screwdriver and spanner).	Անցեք «Developer» ներդիրին (պտուտակահանի և բանալու պատկերակ)։
+#. text in extension.rs
+#. step 7 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+#, machine
+	Switch to the "Extensions" tab (the puzzle piece).	Անցեք «Extensions» ներդիրին (հանելուկի կտորի պատկերակ)։
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -4262,6 +4297,9 @@
 #. text in errors.rs
 #, machine
 	the drive or network share is no longer available	սկավառակը կամ ցանցային ընդհանուր թղթապանակն այլևս հասանելի չէ
+#. text in extension.rs
+#, machine
+	The extension is already in this app. Apple hasn't notarized this build, so Safari needs these steps to allow it.	Ընդլայնումն արդեն այս հավելվածում է։ Apple-ը այս տարբերակը նոտարական վավերացում չի անցկացրել, ուստի Safari-ին թույլատրելու համար անհրաժեշտ են այս քայլերը։
 #. text in errors.rs
 #, machine
 	the file changed on the server	ֆայլը փոխվել է սերվերի վրա
@@ -4720,6 +4758,22 @@
 #. verb: turn the Speed Limiter on
 #, machine
 	Turn on	Միացնել
+#. text in extension.rs
+#. step 6 of turning on the Safari extension; the quoted switch name is what Safari's settings show in this language: use Apple's own words for it, or keep the English name when unsure
+#, machine
+	Turn on "Allow unsigned extensions".	Միացրեք «Allow unsigned extensions» ընտրանքը։
+#. text in extension.rs
+#. step 8 of turning on the Safari extension
+#, machine
+	Turn on "Mister Download Manager" and allow it on all websites.	Միացրեք «Mister Download Manager» ընդլայնումը և թույլ տվեք այն բոլոր կայքերում։
+#. text in extension.rs
+#. step 4 of turning on the Safari extension; the quoted switch name is what Safari's settings show in this language: use Apple's own words for it, or keep the English name when unsure
+#, machine
+	Turn on "Show features for web developers".	Միացրեք «Show features for web developers» ընտրանքը։
+#. text in extension.rs
+#. the headline of the window that shows how to turn on the Safari extension
+#, machine
+	Turn on the extension in Safari	Միացրեք ընդլայնումը Safari-ում
 #. tooltip (why a control is greyed) in the Options window
 #. why Options → Remote → Pair a device... is greyed
 #, machine
@@ -5516,6 +5570,10 @@ extension	Browser extension	Բրաուզերի ընդլայնում
 #, machine
 extension	Button settings...	Կոճակի կարգավորումներ...
 #. text in the browser extension
+#. shown briefly on the download button when nothing on the page says which video the player is playing, so nothing was sent
+#, machine
+extension	Can't tell which video this is: open its own page and try there	Հնարավոր չէ որոշել, թե որ տեսանյութն է. բացեք դրա սեփական էջը և փորձեք այնտեղ
+#. text in the browser extension
 #. the toolbar button's status when the browser reaches the app; keep the name Mister Download Manager as it is
 #, machine
 extension	Connected to Mister Download Manager	Միացված է Mister Download Manager-ին
@@ -5726,6 +5784,10 @@ extension	Support MDM	Աջակցել MDM-ին
 #, machine
 extension	Take downloads from this browser	Վերցնել ներբեռնումներն այս դիտարկիչից
 #. text in the browser extension
+#. in the toolbar button's popup, on a site where the Chrome Web Store's copy of the extension shows no download button; Help is the link at the bottom of the popup
+#, machine
+extension	The Chrome Web Store's rules keep this copy of the add-on away from this site's videos. Help says what you can do.	Chrome Web Store-ի կանոնները թույլ չեն տալիս ընդլայնման այս տարբերակին աշխատել այս կայքի տեսանյութերի հետ։ «Օգնություն» բաժնում նշված է, թե ինչ կարելի է անել։
+#. text in the browser extension
 #. status when the connection to the app broke off (often security software blocking it); keep the name Mister Download Manager as it is
 #, machine
 extension	The connection to Mister Download Manager failed	Mister Download Manager-ի հետ կապը խզվեց
@@ -5753,6 +5815,10 @@ extension	This computer	Այս համակարգիչը
 #. status when a download carried too much data (very large cookies) to give to the app
 #, machine
 extension	This download's details were too large to hand over	Այս ներբեռնման մանրամասները չափազանց մեծ էին փոխանցելու համար
+#. text in the browser extension
+#. in the toolbar button's popup, when the page's player plays from a stream built in the page (a blob:): the list of the page's media has nothing to show; Download video is the name of the button over videos
+#, machine
+extension	This page's player streams its video in pieces, so there's no file to list. Point at the video and use its Download video button.	Այս էջի նվագարկիչը տեսանյութը փոխանցում է մասերով, ուստի ցուցակագրելու ֆայլ չկա։ Մոտեցրեք ցուցիչը տեսանյութին և օգտագործեք դրա «Ներբեռնել տեսանյութը» կոճակը։
 #. text in the browser extension
 #. status when the app is older than the extension; keep the name Mister Download Manager as it is
 #, machine
@@ -6270,6 +6336,10 @@ menu	OpenGL	OpenGL
 #. noun: opens the category's properties
 #, machine
 menu	Properties	Հատկություններ
+#. menu command in the main window
+#. View → Theme: the colours of pywal (a program making colour schemes from the wallpaper), followed as they change; a name: keep "pywal" as written
+#, machine
+menu	pywal	Պայվոլ
 #. menu command in the main window
 #. verb: download the file again from the start
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation

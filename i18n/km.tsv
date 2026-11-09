@@ -295,6 +295,10 @@
 #. button in the browser extension's window: open the extension's page in that browser
 #, machine
 	Add the extension	បន្ថែមផ្នែកបន្ថែម
+#. window title in extension.rs
+#. title of the window that shows how to turn on the Safari extension
+#, machine
+	Add the extension to Safari	បន្ថែមផ្នែកបន្ថែមទៅ Safari
 #. text in extension.rs
 #, machine
 	Add the free extension: files you download in your browser come here, and videos get a Download button.	បន្ថែមផ្នែកបន្ថែមឥតគិតថ្លៃ៖ ឯកសារដែលអ្នកទាញយកនៅក្នុងកម្មវិធីរុករករបស់អ្នកនឹងមកទីនេះ ហើយវីដេអូនឹងទទួលបានប៊ូតុងទាញយក។
@@ -1932,6 +1936,10 @@
 #. a country's name (where a download's server is)
 #, machine
 	Hong Kong	ហុងកុង
+#. text in extension.rs
+#. button in the browser extension's window, on Safari's row: open the steps that turn the extension on
+#, machine
+	How to Add	របៀបបន្ថែម
 #. text in the Scheduler window
 #. link after why the computer can't be woken (Linux, macOS): opens the guide's page that shows how an administrator can allow it
 #, machine
@@ -3066,6 +3074,14 @@
 #. text in the tray icon's menu
 #, machine
 	Open Mister Download Manager	បើក Mister Download Manager
+#. text in extension.rs
+#. step 2 of turning on the Safari extension; Cmd is the Command key
+#, machine
+	Open Safari's settings (Cmd+,).	បើកការកំណត់របស់ Safari (Cmd+,)។
+#. text in extension.rs
+#. step 1 of turning on the Safari extension
+#, machine
+	Open Safari.	បើក Safari។
 #. text in the Scheduler window
 #, machine
 	Open the following file when done	បើកឯកសារខាងក្រោមនៅពេលរួចរាល់
@@ -3500,6 +3516,9 @@
 #. Saturday, as short as a calendar's column head (two letters in English)
 #, machine
 	Sa	សៅរ៍
+#. text in extension.rs
+#, machine
+	Safari turns "Allow unsigned extensions" off each time it quits: do steps 1 to 6 again after restarting it.	Safari បិទ «Allow unsigned extensions» រាល់ពេលដែលវាចាកចេញ៖ ធ្វើជំហានទី 1 ដល់ទី 6 ម្តងទៀតបន្ទាប់ពីចាប់ផ្តើមវាឡើងវិញ។
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -4088,6 +4107,18 @@
 #. a country's name (where a download's server is)
 #, machine
 	Sweden	ស៊ុយអែត
+#. text in extension.rs
+#. step 3 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+#, machine
+	Switch to the "Advanced" tab (the cogwheels).	ប្តូរទៅផ្ទាំង «Advanced» (រូបស្ពឺរ)។
+#. text in extension.rs
+#. step 5 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+#, machine
+	Switch to the "Developer" tab (the screwdriver and spanner).	ប្តូរទៅផ្ទាំង «Developer» (រូបឧបករណ៍ដោះវីស និងកូនសោ)។
+#. text in extension.rs
+#. step 7 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+#, machine
+	Switch to the "Extensions" tab (the puzzle piece).	ប្តូរទៅផ្ទាំង «Extensions» (រូបបំណែកផ្គុំរូប)។
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -4266,6 +4297,9 @@
 #. text in errors.rs
 #, machine
 	the drive or network share is no longer available	ដ្រាយ ឬការចែករំលែកបណ្តាញលែងមានទៀតហើយ
+#. text in extension.rs
+#, machine
+	The extension is already in this app. Apple hasn't notarized this build, so Safari needs these steps to allow it.	ផ្នែកបន្ថែមស្ថិតនៅក្នុងកម្មវិធីនេះរួចហើយ។ Apple មិនបានផ្ទៀងផ្ទាត់កំណែបង្កើតនេះទេ ដូច្នេះ Safari ត្រូវការជំហានទាំងនេះដើម្បីអនុញ្ញាតវា។
 #. text in errors.rs
 #, machine
 	the file changed on the server	ឯកសារនៅលើម៉ាស៊ីនមេបានផ្លាស់ប្តូរ
@@ -4724,6 +4758,22 @@
 #. verb: turn the Speed Limiter on
 #, machine
 	Turn on	បើក
+#. text in extension.rs
+#. step 6 of turning on the Safari extension; the quoted switch name is what Safari's settings show in this language: use Apple's own words for it, or keep the English name when unsure
+#, machine
+	Turn on "Allow unsigned extensions".	បើក «Allow unsigned extensions»។
+#. text in extension.rs
+#. step 8 of turning on the Safari extension
+#, machine
+	Turn on "Mister Download Manager" and allow it on all websites.	បើក «Mister Download Manager» ហើយអនុញ្ញាតវានៅលើគេហទំព័រទាំងអស់។
+#. text in extension.rs
+#. step 4 of turning on the Safari extension; the quoted switch name is what Safari's settings show in this language: use Apple's own words for it, or keep the English name when unsure
+#, machine
+	Turn on "Show features for web developers".	បើក «Show features for web developers»។
+#. text in extension.rs
+#. the headline of the window that shows how to turn on the Safari extension
+#, machine
+	Turn on the extension in Safari	បើកផ្នែកបន្ថែមក្នុង Safari
 #. tooltip (why a control is greyed) in the Options window
 #. why Options → Remote → Pair a device... is greyed
 #, machine
@@ -5520,6 +5570,10 @@ extension	Browser extension	ផ្នែក​បន្ថែម​កម្ម�
 #, machine
 extension	Button settings...	ការកំណត់ប៊ូតុង...
 #. text in the browser extension
+#. shown briefly on the download button when nothing on the page says which video the player is playing, so nothing was sent
+#, machine
+extension	Can't tell which video this is: open its own page and try there	មិនអាចដឹងថាជាវីដេអូមួយណាបានទេ៖ បើកទំព័ររបស់វាផ្ទាល់ រួចសាកល្បងនៅទីនោះ
+#. text in the browser extension
 #. the toolbar button's status when the browser reaches the app; keep the name Mister Download Manager as it is
 #, machine
 extension	Connected to Mister Download Manager	បានភ្ជាប់ទៅ Mister Download Manager
@@ -5730,6 +5784,10 @@ extension	Support MDM	គាំទ្រ MDM
 #, machine
 extension	Take downloads from this browser	ទាញយកពីកម្មវិធីរុករកនេះ
 #. text in the browser extension
+#. in the toolbar button's popup, on a site where the Chrome Web Store's copy of the extension shows no download button; Help is the link at the bottom of the popup
+#, machine
+extension	The Chrome Web Store's rules keep this copy of the add-on away from this site's videos. Help says what you can do.	ច្បាប់របស់ Chrome Web Store មិនអនុញ្ញាតឱ្យកំណែនៃផ្នែកបន្ថែមនេះដំណើរការលើវីដេអូរបស់គេហទំព័រនេះទេ។ ជំនួយប្រាប់អ្វីដែលអ្នកអាចធ្វើបាន។
+#. text in the browser extension
 #. status when the connection to the app broke off (often security software blocking it); keep the name Mister Download Manager as it is
 #, machine
 extension	The connection to Mister Download Manager failed	ការតភ្ជាប់ទៅ Mister Download Manager បានបរាជ័យ
@@ -5757,6 +5815,10 @@ extension	This computer	កុំព្យូទ័រ​នេះ
 #. status when a download carried too much data (very large cookies) to give to the app
 #, machine
 extension	This download's details were too large to hand over	ព័ត៌មានលម្អិតនៃការទាញយកនេះធំពេកមិនអាចប្រគល់បានទេ
+#. text in the browser extension
+#. in the toolbar button's popup, when the page's player plays from a stream built in the page (a blob:): the list of the page's media has nothing to show; Download video is the name of the button over videos
+#, machine
+extension	This page's player streams its video in pieces, so there's no file to list. Point at the video and use its Download video button.	កម្មវិធីចាក់របស់ទំព័រនេះផ្សាយវីដេអូជាបំណែកៗ ដូច្នេះគ្មានឯកសារដើម្បីរាយបញ្ជីទេ។ ចង្អុលទៅវីដេអូ ហើយប្រើប៊ូតុងទាញយកវីដេអូរបស់វា។
 #. text in the browser extension
 #. status when the app is older than the extension; keep the name Mister Download Manager as it is
 #, machine
@@ -6000,6 +6062,10 @@ menu	Add &batch download	បន្ថែមការទាញយកជាបា�
 #. the trailing ... means it opens a window: keep it
 #, machine
 menu	Add &magnet link...	បន្ថែមតំណ magnet(&M)...
+#. menu command in the main window
+#. View → Theme: picks a theme file or a Base16 or pywal colour scheme, copies it into the themes folder and uses it
+#, machine
+menu	Add a theme file…	បន្ថែមឯកសារស្បែក…
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
@@ -6270,6 +6336,10 @@ menu	OpenGL	OpenGL
 #. noun: opens the category's properties
 #, machine
 menu	Properties	លក្ខណសម្បត្តិ
+#. menu command in the main window
+#. View → Theme: the colours of pywal (a program making colour schemes from the wallpaper), followed as they change; a name: keep "pywal" as written
+#, machine
+menu	pywal	ភីវ៉ល
 #. menu command in the main window
 #. verb: download the file again from the start
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation

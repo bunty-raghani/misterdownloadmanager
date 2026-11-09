@@ -1150,10 +1150,6 @@
    "source": "Make it",
    "text": "Stwórz go"
   },
-  "12c5a9fe21646b92": {
-   "source": "<g1>MDM's programs are a third of their size, its download about half</g1> (<g2>#25</g2>): on Windows, the programs went from 93 MB to 33 MB (<x3/> from 61 MB to 29 MB, the command line from 28 MB to a 0.2 MB launcher), and setup.exe from 23 MB to 12 MB. On Linux the AppImage went from 36 MB to 16 MB, the .deb from 27 MB to 13 MB.",
-   "text": "<g1>Programy MDM są o jedną trzecią mniejsze, a pobieranie o połowę</g1> (<g2>#25</g2>): w systemie Windows programy zmniejszyły się z 93 MB do 33 MB (<x3/> z 61 MB do 29 MB, wiersz poleceń z 28 MB do 0,2 MB launchera), a setup.exe z 23 MB do 12 MB. W systemie Linux AppImage zmniejszył się z 36 MB do 16 MB, .deb z 27 MB do 13 MB."
-  },
   "12ed54fb5407aa89": {
    "source": "The website has <x1/> and <x2/>, and every help page as Markdown, for AI tools.",
    "text": "Strona internetowa zawiera <x1/> i <x2/> oraz każdą stronę pomocy w formacie Markdown dla narzędzi AI."
@@ -2098,6 +2094,10 @@
    "source": "<g1>Look links up when they arrive (name, size, online)</g1> — Link grabber asks each server about its file (on by default).",
    "text": "<g1>Sprawdzaj linki po ich otrzymaniu (nazwa, rozmiar, dostępność)</g1> — Link grabber sprawdza plik na każdym serwerze (domyślnie włączone)."
   },
+  "214d94db10fe0954": {
+   "source": "<g1>Cookies for video sites</g1> (<g2>#229</g2>): <g3>Options → Sites Logins</g3> can let yt-dlp read a browser's cookies on this computer (Firefox, Chrome, Edge, Brave, Opera, Vivaldi, Chromium, Whale; Safari on macOS), with a profile by name or folder, so a pasted link to a video that needs you signed in (YouTube's \"Sign in to confirm you're not a bot\") works. Off by default. When the browser's extension passes the page's own cookies, those are used instead. When the browser's cookies can't be read (Chrome, Edge and Brave lock them on Windows; a locked keyring on Linux), the Download video window says so in plain words.",
+   "text": "<g1>Pliki cookie dla witryn wideo</g1> (<g2>#229</g2>): <g3>Opcje → Loginy do witryn</g3> może pozwolić yt-dlp na odczytywanie plików cookie przeglądarki na tym komputerze (Firefox, Chrome, Edge, Brave, Opera, Vivaldi, Chromium, Whale; Safari na macOS), z profilem według nazwy lub folderu, dzięki czemu wklejony link do filmu, który wymaga zalogowania (komunikat YouTube „Zaloguj się, aby potwierdzić, że nie jesteś robotem”), działa. Domyślnie wyłączone. Gdy rozszerzenie przeglądarki przekazuje własne pliki cookie strony, są one używane zamiast tego. Gdy plików cookie przeglądarki nie można odczytać (Chrome, Edge i Brave blokują je w systemie Windows; zablokowany pęk kluczy w systemie Linux), okno Pobierz wideo informuje o tym w prostych słowach."
+  },
   "216583d42da33e52": {
    "source": "On macOS only an administrator can schedule a wake, so the option is greyed. MDM doesn't ask for an administrator's password. An administrator can have the Mac wake every day a minute before the queue starts, for example at 10:59 PM for a queue that starts at 11:00 PM:",
    "text": "W systemie macOS tylko administrator może zaplanować wybudzenie, dlatego opcja jest nieaktywna. MDM nie prosi o hasło administratora. Administrator może ustawić codzienne wybudzanie Maca minutę przed rozpoczęciem kolejki, na przykład o 22:59 dla kolejki rozpoczynającej się o 23:00:"
@@ -2438,6 +2438,10 @@
    "source": "Feeds and rules are kept in <x1/> in MDM's data folder. MDM reads at most 5 MB of a feed.",
    "text": "Kanały i reguły są przechowywane w <x1/> w folderze danych MDM. MDM odczytuje maksymalnie 5 MB danych z kanału."
   },
+  "2656643a5769e161": {
+   "source": "<g1>Real-Debrid, AllDebrid and Premiumize</g1> (<g2>#44</g2>): <g3>Options → Accounts</g3> keeps your debrid service accounts. Real-Debrid signs in by code in the browser, or with your API token; AllDebrid by a PIN in the browser or with an API key, and MDM waits while it prepares a slow link; Premiumize with its API key. A link from a file host your service supports is unlocked through your account, then downloaded with all of MDM's connections, pause and resume, from Add URL, the browser's link menu and batch downloads. When the direct link expires, MDM asks the service for a new one. The direct link is never shown or copied, and the sign-in is kept like your other passwords (the system's keychain, below). Each service is asked well under its request limit. See <g4>Debrid service accounts</g4>. Experimental: built from the services' public API documentation, not yet confirmed with a real paid account.",
+   "text": "<g1>Real-Debrid, AllDebrid i Premiumize</g1> (<g2>#44</g2>): <g3>Opcje → Konta</g3> przechowuje twoje konta usług debrid. Real-Debrid loguje się za pomocą kodu w przeglądarce lub za pomocą tokena API; AllDebrid za pomocą kodu PIN w przeglądarce lub klucza API, a MDM czeka, aż przygotuje wolne łącze; Premiumize za pomocą klucza API. Link z hosta plików obsługiwanego przez twoją usługę jest odblokowywany za pośrednictwem twojego konta, a następnie pobierany ze wszystkimi połączeniami MDM, z możliwością pauzy i wznowienia, z Dodaj URL, menu linków przeglądarki i pobierania wsadowego. Gdy bezpośredni link wygaśnie, MDM prosi usługę o nowy. Bezpośredni link nigdy nie jest wyświetlany ani kopiowany, a logowanie jest przechowywane jak inne twoje hasła (systemowy pęk kluczy, poniżej). Każda usługa jest pytana znacznie poniżej limitu żądań. Zobacz <g4>Konta usług debrid</g4>. Eksperymentalne: zbudowane na podstawie publicznej dokumentacji API usług, jeszcze niepotwierdzone prawdziwym płatnym kontem."
+  },
   "2661d3801e38313e": {
    "source": "A part with no face of its own (an arrow, a column header) under the pointer",
    "text": "Element bez własnego wyglądu (strzałka, nagłówek kolumny) pod wskaźnikiem"
@@ -2605,6 +2609,10 @@
   "28839702ae2bcd54": {
    "source": "A text box's border",
    "text": "Ramka pola tekstowego"
+  },
+  "28a0353a83207f33": {
+   "source": "<g1>Open folder no longer freezes the window</g1> (<g2>#222</g2>): Download complete's <g3>Open folder</g3> asks the desktop's file manager (over D-Bus) to show the file, and MDM waited for its answer on the window's own thread. A file manager slow to start, or one that never answered (seen on Pop!_OS), froze the window until the freeze report caught it. MDM now asks in the background and, when the file manager hasn't answered within 5 seconds, opens the folder instead. Every other program MDM starts from a window goes the same way, on every system: Test browser integration's <g4>Set it up</g4>, moving an extracted archive to the Trash (on a Mac the Finder may ask first), putting an update in place (<g5>Installing the update...</g5>, with Cancel greyed while it runs), opening pages and folders, reading the icon theme on Linux and, on a Mac, the accent colour (every 2 seconds with the Native theme) and the system's version for a bug report.",
+   "text": "<g1>Otwórz folder nie zawiesza już okna</g1> (<g2>#222</g2>): <g3>Otwórz folder</g3> w Pobieranie zakończone prosi menedżera plików pulpitu (przez D-Bus) o wyświetlenie pliku, a MDM czekał na jego odpowiedź w wątku okna. Menedżer plików, który wolno się uruchamiał lub nigdy nie odpowiadał (zaobserwowano w Pop!_OS), zawieszał okno, dopóki raport o zawieszeniu go nie wychwycił. MDM teraz pyta w tle i, gdy menedżer plików nie odpowie w ciągu 5 sekund, zamiast tego otwiera folder. Każdy inny program, który MDM uruchamia z okna, działa w ten sam sposób, w każdym systemie: <g4>Skonfiguruj</g4> w Test integracji z przeglądarką, przenoszenie rozpakowanego archiwum do Kosza (na Macu Finder może najpierw zapytać), instalowanie aktualizacji (<g5>Instalowanie aktualizacji...</g5>, z wyszarzonym Anuluj podczas działania), otwieranie stron i folderów, odczytywanie motywu ikon w systemie Linux oraz, na Macu, koloru akcentu (co 2 sekundy z motywem Natywny) i wersji systemu dla raportu o błędzie."
   },
   "28a8a7183e41f557": {
    "source": "<g1>Zen, Helium and other browsers built on Firefox or Chromium</g1> (<g2>#41</g2>): the extension reaches MDM in them, also when one is the only browser on Linux or macOS (Zen reads Firefox's folder, which MDM now creates; Helium its own). <g3>Add Mister Download Manager to your browser</g3> lists them, Zen, LibreWolf, Floorp and Waterfox by their own names (Options too), and sends Firefox's family to the right page. On Windows MDM lists the browsers Windows itself lists, so Helium is no longer taken for Chrome. Flatpak browsers can't start MDM's helper, which the help page now says.",
@@ -7054,6 +7062,10 @@
    "source": "<g1>Mister Download Manager closed unexpectedly</g1>: MDM crashed, or hit an internal error and closed.",
    "text": "<g1>Mister Download Manager został nieoczekiwanie zamknięty</g1>: MDM uległ awarii lub napotkał wewnętrzny błąd i został zamknięty."
   },
+  "6f22280b42545622": {
+   "source": "<g1>Torrent commands</g1> (<g2>#39</g2>): a torrent's right-click menu has <g3>Torrent → Recheck files</g3>, <g4>Reannounce</g4>, <g5>Add trackers...</g5> and <g6>Copy magnet link</g6>. Its Files tab can tick and untick files while it runs. A <x7/> file's web address, in Add URL or from the browser, opens Add torrent with what the file holds. TORRENT is in Options → File types' defaults, so the browser hands <x8/> files over; a list saved before keeps what it had.",
+   "text": "<g1>Polecenia torrenta</g1> (<g2>#39</g2>): menu kontekstowe torrenta zawiera <g3>Torrent → Ponownie sprawdź pliki</g3>, <g4>Ponownie ogłoś</g4>, <g5>Dodaj trackery...</g5> i <g6>Kopiuj łącze magnet</g6>. Jego zakładka Pliki może zaznaczać i odznaczać pliki podczas działania. Adres internetowy pliku <x7/>, w Dodaj URL lub z przeglądarki, otwiera Dodaj torrent z zawartością pliku. TORRENT znajduje się w domyślnych ustawieniach Opcje → Typy plików, więc przeglądarka przekazuje pliki <x8/>; lista zapisana wcześniej zachowuje to, co miała."
+  },
   "6f2f9063e93137cf": {
    "source": "<g1>Alt</g1> + an underlined letter",
    "text": "<g1>Alt</g1> + podkreślona litera"
@@ -7365,6 +7377,10 @@
   "73bbfe3db01da3ea": {
    "source": "Options, General with Test browser integration...",
    "text": "Opcje, Ogólne z Test integracji z przeglądarką..."
+  },
+  "73c46eea77b3659f": {
+   "source": "<g1>MDM's programs and downloads are much smaller</g1> (<g2>#25</g2>): on Windows, the programs went from 93 MB to 41 MB (<x3/> from 61 MB to 38 MB, the command line from 28 MB to a 0.2 MB launcher), and setup.exe from 23 MB to 16 MB. On Linux the AppImage went from 36 MB to 20 MB, the .deb from 27 MB to 17 MB.",
+   "text": "<g1>Programy i pobierane pliki MDM są znacznie mniejsze</g1> (<g2>#25</g2>): w systemie Windows programy zmniejszyły się z 93 MB do 41 MB (<x3/> z 61 MB do 38 MB, wiersz poleceń z 28 MB do 0,2 MB launchera), a setup.exe z 23 MB do 16 MB. W systemie Linux AppImage zmniejszył się z 36 MB do 20 MB, a .deb z 27 MB do 17 MB."
   },
   "73ee1eb7251e220f": {
    "source": "Video and Images",
@@ -7817,10 +7833,6 @@
   "7b96ddc4c567caf5": {
    "source": "Browsers installed as a Flatpak or a Snap run in a sandbox, which decides whether they can reach MDM.",
    "text": "Przeglądarki zainstalowane jako Flatpak lub Snap działają w piaskownicy, która decyduje, czy mogą one połączyć się z MDM."
-  },
-  "7bab57d3591ffa30": {
-   "source": "<g1>Two smaller macOS downloads</g1> (<g2>#25</g2>): a .dmg for Apple Silicon (<x3/>, about 10 MB) and one for Intel (<x4/>, about 13 MB) instead of one universal .dmg of 80 MB. From 0.2.4 or older, update once by hand: <g5>Download</g5> in Check for updates opens the release; pick your Mac's .dmg. <g6>Update now</g6> works again after that.",
-   "text": "<g1>Dwa mniejsze pobrania macOS</g1> (<g2>#25</g2>): .dmg dla Apple Silicon (<x3/>, około 10 MB) i jeden dla Intel (<x4/>, około 13 MB) zamiast jednego uniwersalnego .dmg o rozmiarze 80 MB. Od wersji 0.2.4 lub starszej, zaktualizuj raz ręcznie: <g5>Pobierz</g5> w Sprawdź aktualizacje otwiera wydanie; wybierz .dmg dla swojego Maca. <g6>Aktualizuj teraz</g6> ponownie działa po tym."
   },
   "7bbfd6a588b5c2c4": {
    "source": "Where a tooltip's text wraps",
@@ -9110,10 +9122,6 @@
    "source": "Download Mister Download Manager 0.5.0 — free for Windows, macOS and Linux",
    "text": "Pobierz Mister Download Manager 0.5.0 — bezpłatnie dla Windows, macOS i Linux"
   },
-  "8f937668a1130538": {
-   "source": "<g1>0.5.0</g1> <g2>24.1 MB</g2>",
-   "text": "<g1>0.5.0</g1> <g2>24,1 MB</g2>"
-  },
   "8fabf2cac610e9a8": {
    "source": "Cinnamon.",
    "text": "Cinnamon."
@@ -9769,6 +9777,10 @@
   "99605902518653e2": {
    "source": "The same programs without an installer. It keeps its data in <x1/>, like an installed copy.",
    "text": "Te same programy bez instalatora. Przechowuje swoje dane w <x1/>, tak jak zainstalowana kopia."
+  },
+  "99711c45fa3147e5": {
+   "source": "<g1>0.5.0</g1> <g2>16.9 MB</g2>",
+   "text": "<g1>0.5.0</g1> <g2>16.9 MB</g2>"
   },
   "997cc2f8f3474ae1": {
    "source": "Windows<g1><g2>3</g2></g1>",
@@ -10733,6 +10745,10 @@
   "a84e33bb5d1bc55c": {
    "source": "The <g1>command line guide</g1> lists everything <x2/> takes.",
    "text": "<g1>Przewodnik po wierszu poleceń</g1> wymienia wszystko, co przyjmuje <x2/>."
+  },
+  "a8562e95bb3fa120": {
+   "source": "<g1>Two smaller macOS downloads</g1> (<g2>#25</g2>): a .dmg for Apple Silicon (<x3/>, about 14 MB) and one for Intel (<x4/>, about 16 MB) instead of one universal .dmg of 80 MB. From 0.2.4 or older, update once by hand: <g5>Download</g5> in Check for updates opens the release; pick your Mac's .dmg. <g6>Update now</g6> works again after that.",
+   "text": "<g1>Dwa mniejsze pliki do pobrania dla macOS</g1> (<g2>#25</g2>): .dmg dla Apple Silicon (<x3/>, około 14 MB) i jeden dla Intel (<x4/>, około 16 MB) zamiast jednego uniwersalnego .dmg o rozmiarze 80 MB. Z wersji 0.2.4 lub starszej, zaktualizuj raz ręcznie: <g5>Pobierz</g5> w Sprawdź aktualizacje otwiera wydanie; wybierz .dmg dla swojego Maca. <g6>Aktualizuj teraz</g6> ponownie działa po tym."
   },
   "a856aa8d56dfc9ae": {
    "source": "<g1>Dark mode: grey notes and error texts are easier to read</g1> (<g2>#45</g2>): they now have the contrast WCAG asks for (4.5:1) on every dark surface, Options' failed checks no longer use light mode's dark red on the dark dialog, and an editable drop-down's arrow is tinted dark under the pointer.",
@@ -12138,6 +12154,10 @@
    "source": "Benchmark",
    "text": "Benchmark"
   },
+  "befc877eb2e581be": {
+   "source": "<g1>Torrent settings: the network is yours to choose</g1> (<g2>#40</g2>): accept incoming connections or not, map the port with UPnP or not, a fixed port, the DHT, finding peers on the local network, a SOCKS5 proxy from Proxy / Socks (which turns off what would go around it), an IP blocklist (P2P or eMule format, fetched again every 7 days), and stopping the torrent engine when no torrent runs. A new help page, <g3>Torrents and your security</g3>, says what others can see and what each switch does.",
+   "text": "<g1>Ustawienia torrenta: sieć do wyboru</g1> (<g2>#40</g2>): akceptuj połączenia przychodzące lub nie, mapuj port za pomocą UPnP lub nie, stały port, DHT, znajdowanie peerów w sieci lokalnej, proxy SOCKS5 z Serwer proxy / Socks (co wyłącza to, co by go omijało), lista blokowanych adresów IP (format P2P lub eMule, pobierana ponownie co 7 dni) i zatrzymywanie silnika torrenta, gdy żaden torrent nie działa. Nowa strona pomocy, <g3>Torrenty i twoje bezpieczeństwo</g3>, wyjaśnia, co inni mogą zobaczyć i co robi każdy przełącznik."
+  },
   "befd7691ab10546c": {
    "source": "All files, extensions and checksums →",
    "text": "Wszystkie pliki, rozszerzenia i sumy kontrolne →"
@@ -12538,6 +12558,10 @@
    "source": "<g1>The system:</g1> MDM's version and how you installed it, your operating system and its version, the processor, the language and theme, and how many downloads and queues you have. These are counts only.",
    "text": "<g1>System:</g1> wersja MDM i sposób jego instalacji, system operacyjny i jego wersja, procesor, język i motyw oraz liczba pobrań i kolejek. Są to tylko liczby."
   },
+  "c5ddef5d4d228288": {
+   "source": "Downloads are smaller: setup.exe 23 → 16 MB, AppImage 36 → 20 MB, .deb 27 → 17 MB.",
+   "text": "Pobrane pliki są mniejsze: setup.exe 23 → 16 MB, AppImage 36 → 20 MB, .deb 27 → 17 MB."
+  },
   "c5ea65c70393f2d1": {
    "source": "<g1>Hang up modem when done</g1> — ends a dial-up connection, if you use one.",
    "text": "<g1>Rozłącz modem po zakończeniu</g1> — kończy połączenie telefoniczne, jeśli go używasz."
@@ -12786,6 +12810,10 @@
    "source": "<g1>The plain zip</g1> (<x2/>), the same programs without an installer.",
    "text": "<g1>Zwykły plik zip</g1> (<x2/>), te same programy bez instalatora."
   },
+  "c9adce03030690a2": {
+   "source": "<g1>Seeding and upload limits, and a share ratio that lasts</g1> (<g2>#39</g2>): under \"Keep sharing torrents after they finish\", Torrent settings can stop sharing a finished torrent at a share ratio, or after it has been shared for some minutes; both off by default. A torrent stopped so says it in its event log and isn't shared again at the next start. Torrent settings can limit what all torrents together send, and a torrent's progress window can limit its own, kept with it. Its General tab now counts what it sent and how long it shared over all its runs, so the share ratio no longer starts again at 0 after a pause or a restart.",
+   "text": "<g1>Seeding i limity wysyłania oraz trwały współczynnik udostępniania</g1> (<g2>#39</g2>): w sekcji „Kontynuuj udostępnianie torrentów po ich zakończeniu” Ustawienia torrenta mogą zatrzymać udostępnianie ukończonego torrenta po osiągnięciu współczynnika udostępniania lub po udostępnianiu przez określoną liczbę minut; obie opcje są domyślnie wyłączone. Torrent zatrzymany w ten sposób informuje o tym w swoim dzienniku zdarzeń i nie jest ponownie udostępniany przy następnym uruchomieniu. Ustawienia torrenta mogą ograniczyć łączną wysyłkę wszystkich torrentów, a okno postępu torrenta może ograniczyć jego własną, zachowywaną z nim. Jego zakładka Ogólne teraz zlicza, co wysłał i jak długo udostępniał we wszystkich swoich uruchomieniach, więc współczynnik udostępniania nie zaczyna się ponownie od 0 po pauzie lub ponownym uruchomieniu."
+  },
   "c9bc77086f15e169": {
    "source": "<g1>From browser</g1> lists the browsers yt-dlp reads: Firefox, Chrome, Edge, Brave, Opera, Vivaldi, Chromium and Whale, and Safari on macOS. <g2>Profile</g2> is optional: a profile's name (<x3/>) or its folder; empty, the profile used last.",
    "text": "<g1>Z przeglądarki</g1> wyświetla przeglądarki, które yt-dlp odczytuje: Firefox, Chrome, Edge, Brave, Opera, Vivaldi, Chromium i Whale, oraz Safari na macOS. <g2>Profil</g2> jest opcjonalny: nazwa profilu (<x3/>) lub jego folder; jeśli puste, używany jest ostatnio używany profil."
@@ -12897,10 +12925,6 @@
   "cb797c11de6612fd": {
    "source": "3. Choose how many run at once",
    "text": "3. Wybierz, ile plików ma być pobieranych jednocześnie"
-  },
-  "cb7d403b3b59f081": {
-   "source": "Downloads are about half the size: setup.exe 23 → 12 MB, AppImage 36 → 16 MB, .deb 27 → 13 MB.",
-   "text": "Pobrane pliki są o około połowę mniejsze: setup.exe 23 → 12 MB, AppImage 36 → 16 MB, .deb 27 → 13 MB."
   },
   "cb8376955028cc1c": {
    "source": "<g1>Linux: uninstalling the .deb or .rpm leaves no browser files behind</g1> (<g2>#266</g2>): MDM wrote the files that tell each browser where its helper is in every user's home folder, and <x3/> or <x4/> left them there, naming a program that was gone. The packages now install them for everyone, in each browser's own folder (Chrome and Brave, Chromium and Vivaldi, Edge, Firefox, the Snap Firefox included), and remove them with the package; MDM writes none in the home folder for those browsers, and takes away the ones an earlier version wrote. The AppImage and the tar.gz, and Opera, Helium, Thorium and Firefox's forks (which read them only in the home folder), still get them there.",
@@ -14766,6 +14790,10 @@
    "source": "A helper you can check",
    "text": "Pomocnik, którego możesz sprawdzić"
   },
+  "e9de3deb5fe58030": {
+   "source": "<g1>Video subtitles</g1> (<g2>#68</g2>): Download video from a page lists the video's subtitle languages, the uploader's first, then the site's automatic captions (in the language spoken, English and yours). They're saved beside the video as <x3/>, or put into the video with ffmpeg (MP4, MKV), and the choice is offered again for the next video. Subtitles a site refuses (YouTube limits how often they may be fetched) never cost the video: MDM asks once more after a pause, then says which are missing. On the command line: <x4/>, <x5/>, <x6/>; <x7/> lists them. A finished video and its subtitles are now marked as downloaded from the internet, as other downloads are.",
+   "text": "<g1>Napisy do filmów</g1> (<g2>#68</g2>): Pobierz wideo ze strony wyświetla języki napisów do filmu, najpierw te od przesyłającego, a potem automatyczne napisy z witryny (w języku mówionym, angielskim i twoim). Są one zapisywane obok filmu jako <x3/> lub wstawiane do filmu za pomocą ffmpeg (MP4, MKV), a wybór jest ponownie oferowany dla następnego filmu. Napisy, których witryna odmawia (YouTube ogranicza częstotliwość ich pobierania), nigdy nie wpływają na film: MDM pyta ponownie po pauzie, a następnie informuje, których brakuje. W wierszu poleceń: <x4/>, <x5/>, <x6/>; <x7/> je wyświetla. Ukończony film i jego napisy są teraz oznaczone jako pobrane z internetu, podobnie jak inne pobrane pliki."
+  },
   "e9dfa5dcec820f03": {
    "source": "Make one",
    "text": "Utwórz własny"
@@ -15297,6 +15325,10 @@
   "f135b1b9671dc439": {
    "source": "Make everything larger / smaller, in every window (<g1>View → Interface size</g1>, 100 % to 200 %)",
    "text": "Powiększ / pomniejsz wszystko we wszystkich oknach (<g1>Widok → Rozmiar interfejsu</g1>, od 100% do 200%)"
+  },
+  "f1452f6e417cd255": {
+   "source": "<g1>Playlists and channels</g1> (<g2>#69</g2>): Download video from a page lists a playlist's or a channel's videos, with their lengths, all ticked, with Select all and Select none. One quality applies to all of them (the best, up to a height, the original sound, MP3, Opus or FLAC). Each video gets its own download, in a folder named after the list, and Download Now starts the main queue, which runs as many at once as its settings say. A playlist is listed as its videos come in; the listing can be stopped and taken up again (List the rest), and one the site breaks off says after how many videos and why. A channel is listed 50 videos at a time, with Load more. Lists of thousands stay quick, and adding more than 500 downloads asks first. On the command line: <x3/> and <x4/>.",
+   "text": "<g1>Listy odtwarzania i kanały</g1> (<g2>#69</g2>): Pobierz wideo ze strony wyświetla filmy z listy odtwarzania lub kanału, z ich długościami, wszystkie zaznaczone, z opcjami Zaznacz wszystko i Odznacz wszystko. Jedna jakość dotyczy wszystkich (najlepsza, do określonej wysokości, oryginalny dźwięk, MP3, Opus lub FLAC). Każdy film jest pobierany osobno, do folderu nazwanego tak jak lista, a Pobierz teraz uruchamia główną kolejkę, która wykonuje tyle pobrań jednocześnie, ile określono w ustawieniach. Lista odtwarzania jest wyświetlana w miarę pojawiania się filmów; wyświetlanie można zatrzymać i wznowić (Wyświetl resztę), a lista przerwana przez witrynę informuje, po ilu filmach i dlaczego. Kanał jest wyświetlany po 50 filmów naraz, z opcją Wczytaj więcej. Listy tysięcy filmów pozostają szybkie, a dodanie ponad 500 pobrań wymaga potwierdzenia. W wierszu poleceń: <x3/> i <x4/>."
   },
   "f154ebe2d1cfad18": {
    "source": "Scheduler and queues",

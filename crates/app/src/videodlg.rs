@@ -184,9 +184,10 @@ impl VideoDialog {
     /// Opened for `page` (Add URL was given a video's page, or the browser's button was
     /// clicked with `context`): looks it up at once.
     pub fn for_page(folder: PathBuf, page: &str, context: mdm_ipc::Command) -> Self {
+        let page = mdm_tools::pages::video_address(page);
         VideoDialog {
-            page: page.to_owned(),
-            from_browser: page.to_owned(),
+            page: page.clone(),
+            from_browser: page,
             context,
             auto_look: true,
             ..Self::new(folder)
@@ -275,6 +276,7 @@ impl VideoDialog {
             subtitles: Vec::new(),
             automatic: Vec::new(),
             language: None,
+            direct: false,
         });
     }
 
@@ -288,7 +290,15 @@ impl VideoDialog {
     }
 
     /// The choices for a looked-up video: merged qualities when ffmpeg is there.
-    fn set_video(&mut self, v: Video) {
+    fn set_video(&mut self, mut v: Video) {
+        // No page reader for this site: the page's own title rather than a hash (#345).
+        if let Some(title) = self.context.video_title.as_deref().map(str::trim)
+            && !title.is_empty()
+            && self.page.trim() == self.from_browser
+            && mdm_tools::resolve::named_after_address(&v.title, &self.page)
+        {
+            v.title = title.to_owned();
+        }
         let merge = self.tools.get_or_insert_with(tools).2.is_some();
         let choices = mdm_tools::resolve::choices(&v, merge);
         self.chosen = 0;
@@ -341,6 +351,22 @@ impl VideoDialog {
             "subtitles": {"de": [{"name": "German"}], "pt-PT": [{"name": "Portuguese (Portugal)"}],
                 "ar": [{"name": "Arabic"}]},
             "automatic_captions": {"en-orig": [{"name": "English (Original)"}], "en": [{"name": "English"}]}}"#;
+        if let Some(v) = mdm_tools::resolve::parse(SAMPLE.as_bytes()) {
+            self.page = "https://video.example/talk".into();
+            self.looked_up = self.page.clone();
+            self.auto_look = false;
+            self.set_video(v);
+        }
+    }
+
+    /// A page like YouTube's when yt-dlp has no JavaScript runtime (#351): videos and sound
+    /// apart, nothing carrying both (`/show video-adaptive`).
+    pub fn show_sample_adaptive(&mut self) {
+        const SAMPLE: &str = r#"{"title": "A conference talk about download managers, recorded in Lisbon",
+            "duration": 1830, "language": "en", "formats": [
+            {"format_id": "140", "ext": "m4a", "vcodec": "none", "acodec": "mp4a", "filesize": 29000000},
+            {"format_id": "137", "ext": "mp4", "height": 1080, "vcodec": "avc1", "acodec": "none", "filesize": 412000000},
+            {"format_id": "136", "ext": "mp4", "height": 720, "vcodec": "avc1", "acodec": "none", "filesize": 201000000}]}"#;
         if let Some(v) = mdm_tools::resolve::parse(SAMPLE.as_bytes()) {
             self.page = "https://video.example/talk".into();
             self.looked_up = self.page.clone();
@@ -613,18 +639,29 @@ impl VideoDialog {
             && can_look
             && let Some(tool) = &ytdlp
         {
+            // A typed or pasted address too (#359); the box shows what is looked up.
+            self.page = mdm_tools::pages::video_address(self.page.trim());
             let slot: Slot<mdm_tools::resolve::Lookup> = Arc::new(Mutex::new(None));
-            let (out, exe, page, ctx) = (
+            let (out, exe, page, ctx, rt) = (
                 slot.clone(),
                 tool.exe.clone(),
                 self.page.trim().to_owned(),
                 ui.ctx().clone(),
+                rt.clone(),
             );
             let browser = from_browser(&self.context());
             self.looking = Some((exe.clone(), browser.clone()));
             std::thread::spawn(move || {
-                let res = mdm_tools::resolve::look_up_with_info(&exe, &page, &browser)
+                let mut res = mdm_tools::resolve::look_up_with_info(&exe, &page, &browser)
                     .map_err(|e| e.to_string());
+                // A plain file: yt-dlp doesn't say its size, its server does (#320).
+                if let Ok(lo) = &mut res
+                    && let Looked::Video(v) = &mut lo.looked
+                    && v.needs_size()
+                    && let Some(size) = direct_size(&rt, &page, &browser)
+                {
+                    v.set_size(size);
+                }
                 *out.lock().unwrap() = Some(res);
                 ctx.request_repaint();
             });
@@ -681,6 +718,15 @@ impl VideoDialog {
                 winui::buttons_to_right(&p, 489.0, 8.0, &[(label, 90.0)], 200.0)[0]
             });
         let status_right = install_at.map_or(489.0, |(x, _)| x - 9.0);
+        // #351: a page whose better videos need ffmpeg says so in place of its title (still in
+        // File name): YouTube without a JavaScript runtime leaves nothing but the sound to offer
+        // here, and the list alone gives no reason.
+        let merge_note = self
+            .video
+            .as_ref()
+            .filter(|(v, _)| ffmpeg.is_none() && mdm_tools::resolve::needs_merging(v))
+            .and(offer.as_ref())
+            .map(|(_, _, msg)| *msg);
         if let Some(t) = installing {
             crate::torrentdlg::spinner(ui, pos2(o.x + 18.0, line_y - 4.0), 6.0);
             let msg = if t == Tool::YtDlp {
@@ -700,6 +746,17 @@ impl VideoDialog {
             );
         } else if self.list.is_some() {
             // The list draws its own (PlaylistView::middle).
+        } else if let Some(msg) = merge_note {
+            winui::fit(
+                ui,
+                &p,
+                o.x + 11.0,
+                line_y,
+                msg,
+                winui::MUTED(),
+                o.x + status_right,
+                "video-offer",
+            );
         } else if let Some((v, _)) = &self.video {
             let (rect, cut) = winui::text_fit(
                 &p,
@@ -1142,6 +1199,31 @@ pub fn from_browser(c: &mdm_ipc::Command) -> mdm_tools::proc::FromBrowser {
         cookies: c.cookies.clone(),
         jar: c.cookie_jar.clone(),
     }
+}
+
+/// The size the server says for a plain file at `page`, asked as the browser would (its Referer,
+/// its cookies, its user agent). None when it won't say: the window then says "size unknown", as
+/// it always did. A cookie jar (a whole site's cookies, for yt-dlp) isn't used: the header is.
+fn direct_size(
+    rt: &tokio::runtime::Handle,
+    page: &str,
+    browser: &mdm_tools::proc::FromBrowser,
+) -> Option<u64> {
+    use reqwest::header::{COOKIE, HeaderMap, HeaderValue, REFERER};
+    let url = url::Url::parse(page).ok()?;
+    let mut headers = HeaderMap::new();
+    for (name, value) in [(REFERER, &browser.referer), (COOKIE, &browser.cookies)] {
+        if let Some(v) = value.as_deref().and_then(|v| HeaderValue::from_str(v).ok()) {
+            headers.insert(name, v);
+        }
+    }
+    let mut opts = crate::settings::own_net();
+    if let Some(agent) = &browser.user_agent {
+        opts.user_agent = agent.clone();
+    }
+    rt.block_on(mdm_engine::probe(url, headers, &opts))
+        .ok()?
+        .size
 }
 
 /// A browser's name as people know it, from yt-dlp's (`chrome`: Chrome).

@@ -164,6 +164,12 @@
   "popup_media_none": {
     "message": "Šajā lapā vēl nav atrasts neviens video vai skaņa. Atskaņojiet to, pēc tam atveriet to vēlreiz."
   },
+  "popup_media_streamed": {
+    "message": "Šīs lapas atskaņotājs straumē video pa daļām, tāpēc nav faila, ko parādīt sarakstā. Norādiet uz video un izmantojiet tā pogu “Lejupielādēt video”."
+  },
+  "popup_media_store": {
+    "message": "Chrome interneta veikala noteikumi tur šo papildinājuma kopiju tālāk no šīs vietnes video. Sadaļā “Palīdzība” ir teikts, ko varat darīt."
+  },
   "popup_media_download": {
     "message": "Lejupielādēt"
   },
@@ -178,6 +184,9 @@
   },
   "video_drm": {
     "message": "Aizsargāts video: to nevar saglabāt"
+  },
+  "video_unnamed": {
+    "message": "Nevar noteikt, kurš video tas ir: atveriet tā lapu un mēģiniet tur"
   },
   "popup_send_to": {
     "message": "Sūtīt lejupielādes uz"

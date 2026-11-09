@@ -164,6 +164,12 @@
   "popup_media_none": {
     "message": "Sivulta ei ole vielä löytynyt videoita eikä ääntä. Toista videota tai ääntä ja avaa tämä uudelleen."
   },
+  "popup_media_streamed": {
+    "message": "Tämän sivun soitin suoratoistaa videon paloina, joten luetteloitavaa tiedostoa ei ole. Osoita videota ja käytä sen Lataa video -painiketta."
+  },
+  "popup_media_store": {
+    "message": "Chrome Web Storen säännöt pitävät tämän lisäosan kopion erossa tämän sivuston videoista. Ohje kertoo, mitä voit tehdä."
+  },
   "popup_media_download": {
     "message": "Lataa"
   },
@@ -178,6 +184,9 @@
   },
   "video_drm": {
     "message": "Suojattua videota ei voi tallentaa"
+  },
+  "video_unnamed": {
+    "message": "Ei selviä, mikä video tämä on: avaa videon oma sivu ja yritä siellä"
   },
   "popup_send_to": {
     "message": "Lähetä lataukset kohteeseen"

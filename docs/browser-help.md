@@ -54,6 +54,8 @@ MDM's helper serves only its own extension. The browser says this copy isn't one
 
 Downloads still work, but some of the extension's features need a newer MDM. Update it with **Help → Check for updates...** in MDM.
 
+If MDM says it's up to date, there's nothing for you to do. The extension updates by itself through its store and can get ahead of the app for a while. Everything keeps working, and the message goes away with the next version of MDM.
+
 ## A download's details were too large {#too-large}
 
 A download carries its site's cookies (and a form's data) to MDM. A few sites set so many that together they exceed what MDM accepts from the browser (1 MB). The browser kept this one. Signing out and back in to the site usually trims them.
@@ -72,6 +74,12 @@ Also check the extension's toolbar button: with **Take downloads from this brows
 ## The browser opens PDFs and music instead of sending them {#opened}
 
 MDM also takes the file types the browser would show or play itself (a PDF, an MP3), when they're listed in **Options → File types** and **Also take files the browser would open** is ticked in **Options → General → Keys...**. This needs a Chromium browser (Chrome, Edge, Brave, Opera, Vivaldi) version 128 or later, or Firefox. Sites in MDM's excluded sites keep opening them in the browser. Hold **Alt** while clicking a link to leave it to the browser: Firefox then opens it, while Chromium browsers download it themselves (Alt+click is their own "download link").
+
+## No Download video button on YouTube in Chrome, Edge or Brave {#store-youtube}
+
+The copy of the extension from the Chrome Web Store showed no **Download video** button on YouTube before version 0.5.1. From 0.5.1 it shows it. Your browser updates extensions by itself; to get it sooner, open its extensions page and update them there.
+
+You can always save a video without the button: in MDM, open **Tasks → Download video from a page** and paste the video's address.
 
 ## The extension can't read this site {#site-access}
 

@@ -214,6 +214,43 @@ fn move_file(from: &std::path::Path, to: &std::path::Path) -> Result<(), String>
     })
 }
 
+/// Whether Move/Rename can take a download now: a finished file, or nothing of it come in yet.
+fn can_move(i: &Item) -> bool {
+    i.live.is_none() && (i.status == Status::Complete || i.downloaded == 0)
+}
+
+/// What is said when a download can't move, or stays while the others of a selection move.
+fn cant_move_notice() -> (&'static str, String) {
+    (
+        crate::i18n::mark("Move/Rename"),
+        crate::i18n::t(
+            "Only a finished download, or one not started yet, can be moved. Stop it and finish it first.",
+        )
+        .to_owned(),
+    )
+}
+
+/// Where one download of a selection goes in `dir`: a name free there (on disk, what
+/// `naming::destination` checks) and not one the selection has taken (two not started under one
+/// name have no file yet to be seen).
+fn place_in(
+    dir: &std::path::Path,
+    name: &str,
+    taken: &mut std::collections::HashSet<PathBuf>,
+) -> PathBuf {
+    let (stem, ext) = match name.rfind('.') {
+        Some(i) if i > 0 => (&name[..i], &name[i..]),
+        _ => (name, ""),
+    };
+    let mut at = mdm_engine::naming::destination(dir, name);
+    let mut n = 1u32;
+    while !taken.insert(at.clone()) {
+        at = mdm_engine::naming::destination(dir, &format!("{stem} ({n}){ext}"));
+        n += 1;
+    }
+    at
+}
+
 /// A download's new place (its name from it). A name the user gave is no longer the address's
 /// guess (`Item::name_from_url`); another folder alone keeps the server's say.
 fn take_place(item: &mut Item, target: PathBuf) {
@@ -341,6 +378,8 @@ pub struct App {
     list_view: View,
     /// The download Move/Rename's dialog is for (winui::start_pick answers later).
     move_rename_for: Option<u64>,
+    /// The downloads Move/Rename's folder dialog is for, several selected (#333).
+    move_many_for: Vec<u64>,
     /// The Categories tree has the keys (else the list; Tab moves between them).
     tree_keys: bool,
     /// The app's context, to reach its windows from anywhere (bring one to the front).
@@ -581,6 +620,9 @@ pub struct App {
     queues: Vec<Queue>,
     /// Failure time and count per download, for queue retries.
     failures: HashMap<u64, (Instant, u32)>,
+    /// Stopped by hand while they could have run: a running queue leaves them alone until
+    /// they are started again or the queue is started anew (#341).
+    stopped_by_hand: std::collections::HashSet<u64>,
     /// Seconds since local midnight at the last scheduler tick.
     clock: u32,
     /// Scheduler → "Wake the computer to run this queue": the wake set with the system (#142).
@@ -629,6 +671,20 @@ fn sent_referrer(url: &url::Url, referrer: &str) -> Option<String> {
         return Some(full.to_string());
     }
     Some(format!("{}/", from.origin().ascii_serialization()))
+}
+
+/// What a link found on a page takes along from that page.
+fn page_data_for(link: &str, page: Option<&str>, data: Option<&str>) -> Option<String> {
+    let (link, page) = (url::Url::parse(link).ok()?, url::Url::parse(page?).ok()?);
+    let same_host = link.host_str().is_some()
+        && link
+            .host_str()
+            .map(str::to_ascii_lowercase)
+            .eq(&page.host_str().map(str::to_ascii_lowercase));
+    let downgrade = page.scheme() == "https" && link.scheme() != "https";
+    (same_host && !downgrade)
+        .then(|| data.map(str::to_owned))
+        .flatten()
 }
 
 /// Marks each file the engine starts writing as downloaded from the web (Mark-of-the-Web, macOS'
@@ -1074,6 +1130,7 @@ impl App {
             ui_ctx: ctx.clone(),
             tree_keys: false,
             move_rename_for: None,
+            move_many_for: Vec::new(),
             list_view: view,
             add_url: None,
             about: None,
@@ -1203,6 +1260,7 @@ impl App {
             last_layout: None,
             queues,
             failures: HashMap::new(),
+            stopped_by_hand: Default::default(),
             clock: seconds_now(),
             wake: Default::default(),
             commands,
@@ -2050,6 +2108,13 @@ impl App {
                     }
                 }
             }
+            // A page whose videos need ffmpeg (#351): without it the list has only the sound.
+            "video-adaptive" => {
+                self.run(Cmd::VideoPage, None, ctx);
+                if let Some(v) = &mut self.video_dlg {
+                    v.show_sample_adaptive();
+                }
+            }
             // A sample playlist (#69), its quality by its place in the list: `video-playlist:7`.
             "video-playlist" => {
                 self.run(Cmd::VideoPage, None, ctx);
@@ -2071,7 +2136,14 @@ impl App {
                 ]));
             }
             "extension" => self.extension = Some(crate::extension::Extension::new()),
+            // The Safari row's "How to Add" steps, open (screenshots).
+            "safari-steps" => {
+                let mut offer = crate::extension::Extension::new();
+                offer.open_safari_steps();
+                self.extension = Some(offer);
+            }
             "language" => self.run(Cmd::ChooseLanguage, None, ctx),
+            "move-rename" => self.run(Cmd::MoveRename, None, ctx),
             "shortcuts" => self.run(Cmd::Shortcuts, None, ctx),
             // The Help menu's windows and Download a gallery, for screenshots (#192). updates
             // asks GitHub, as Help → Check for updates does.
@@ -2135,6 +2207,14 @@ impl App {
                     .position(|e| matches!(e, MenuEntry::Sub(name, ..) if *name == wanted));
                 if let Some(at) = at {
                     chrome::open_sub_at(ctx, &format!("menu-{index}"), at);
+                }
+            }
+            // Every download selected and the right-click menu open on them (Move/Rename, #333).
+            "context" if tab == "all" => {
+                self.run(Cmd::SelectAll, None, ctx);
+                self.open_menu = None;
+                if let Some(id) = self.shown_ids().first().copied() {
+                    self.open_popup(Popup::Item(Some(id)), egui::pos2(360.0, 220.0));
                 }
             }
             // A finished archive's right-click menu (Extract, #37), for screenshots.
@@ -2552,7 +2632,7 @@ impl App {
                 .map(|url| crate::transfer::Imported {
                     url: url.clone(),
                     referer: cmd.referer.clone(),
-                    cookies: cmd.cookies.clone(),
+                    cookies: page_data_for(url, cmd.referer.as_deref(), cmd.cookies.as_deref()),
                     user_agent: cmd.user_agent.clone(),
                     private: cmd.private,
                 })
@@ -2724,6 +2804,7 @@ impl App {
 
     /// Start or resume a download; `show` opens its progress dialog (IDM's default).
     fn start(&mut self, id: u64, show: bool) {
+        self.stopped_by_hand.remove(&id);
         let rt = self.rt.clone();
         // Telegram media streamed by its page into MDM: not an engine download (the page-only
         // URL answers 302 outside the page); its progress window's Resume must not start one.
@@ -2892,11 +2973,21 @@ impl App {
         }
     }
 
+    /// The user's Stop (or Pause): it stays stopped, even in a queue that is running (#341).
+    fn stop_by_hand(&mut self, id: u64) {
+        self.stop(id);
+        self.stopped_by_hand.insert(id);
+    }
+
     fn stop_all(&mut self) {
-        for i in &self.items {
-            if let Some(l) = &i.live {
-                l.dl.cancel();
-            }
+        let running: Vec<u64> = self
+            .items
+            .iter()
+            .filter(|i| i.live.is_some())
+            .map(|i| i.id)
+            .collect();
+        for id in running {
+            self.stop_by_hand(id);
         }
     }
 
@@ -3386,7 +3477,7 @@ impl App {
             return;
         };
         let name = mdm_engine::naming::file_name(None, &url);
-        if mdm_engine::supported(&url) && self.settings.auto_type(&name) {
+        if mdm_engine::supported(&url) && self.settings.clipboard_type(&name) {
             let cmd = ipc::Command {
                 url: Some(text),
                 ..Default::default()
@@ -4871,7 +4962,7 @@ impl App {
             let why = match action {
                 "pause" if !running => Some("not running"),
                 "pause" => {
-                    self.stop(id);
+                    self.stop_by_hand(id);
                     None
                 }
                 "start" if running => Some("already running"),
@@ -4989,6 +5080,9 @@ impl App {
             self.sound(2);
         }
         self.queues[q].running = true;
+        for id in &self.queues[q].items {
+            self.stopped_by_hand.remove(id);
+        }
         self.tick_queues();
     }
 
@@ -5011,6 +5105,7 @@ impl App {
     fn member_of(&self, i: &Item, now: Instant) -> Member {
         let id = i.id;
         match i.status {
+            Status::Stopped if self.stopped_by_hand.contains(&id) => Member::Held,
             Status::Queued | Status::Stopped => Member::Waiting,
             Status::Downloading => Member::Running,
             Status::Complete => Member::Complete,
@@ -5197,7 +5292,7 @@ impl App {
             Cmd::Stop => {
                 for id in many {
                     if self.item(id).is_some_and(|i| i.live.is_some()) {
-                        self.stop(id);
+                        self.stop_by_hand(id);
                     }
                 }
             }
@@ -5584,7 +5679,9 @@ impl App {
                 }
             }
             Cmd::MoveRename => {
-                if let Some(id) = target {
+                if many.len() > 1 {
+                    self.move_many(many);
+                } else if let Some(id) = target {
                     self.move_rename(id);
                 }
             }
@@ -6258,7 +6355,8 @@ impl App {
             .chain([I("Create new queue", Cmd::NewQueue, true, false)])
             .collect();
         let open = self.settings.double_click_open;
-        let movable = it.is_some_and(|i| !live && (done || i.downloaded == 0));
+        // Several selected: enabled when one of them can go; the others are said to stay (#333).
+        let movable = chosen.iter().any(|i| can_move(i));
         let redo = it.is_some_and(|i| self.can_redownload(i.id));
         let extractable = chosen.iter().any(|i| {
             i.status == Status::Complete
@@ -6271,7 +6369,13 @@ impl App {
             // i18n: verb: opens the downloaded file
             I("Open", Cmd::Open, done, false),
             I("Open with...", Cmd::OpenWith, done, false),
-            I("Open folder", Cmd::OpenFolder, done, false),
+            // A torrent's folder is there while it downloads (#354).
+            I(
+                "Open folder",
+                Cmd::OpenFolder,
+                done || it.is_some_and(|i| i.torrent.is_some()),
+                false,
+            ),
             Sep,
             I("Move/Rename (Ctrl-M)", Cmd::MoveRename, movable, false),
             Sep,
@@ -6675,8 +6779,12 @@ impl App {
         // The menu bar from the keyboard: F10 or Alt pressed alone opens its first menu, Alt and a
         // menu's underlined letter that menu (Windows and Linux); on macOS, whose apps have no
         // Alt keys, Ctrl+F2 (the system's key for the menu bar).
-        if self.open_menu.is_none() && self.popup.is_none() && ctx.memory(|m| m.focused().is_none())
-        {
+        // A focused button or list (Tab, a screen reader, #328) leaves these keys to the menu bar;
+        // only a text box keeps them.
+        let typing = ctx
+            .memory(|m| m.focused())
+            .is_some_and(|id| egui::TextEdit::load_state(&ctx, id).is_some());
+        if self.open_menu.is_none() && self.popup.is_none() && !typing {
             let labels: Vec<String> = chrome::menus(ui.painter())
                 .iter()
                 .map(|(l, ..)| chrome::menu_letter(l))
@@ -7218,14 +7326,21 @@ impl App {
         if std::mem::take(&mut self.duplicate_cleared) {
             return true;
         }
-        let Some((dup, name)) = self
-            .items
-            .iter()
-            .find(|i| i.url == *url)
-            .map(|i| (i.id, i.file_name.clone()))
-        else {
+        let Some((dup, name, gone)) = self.items.iter().find(|i| i.url == *url).map(|i| {
+            (
+                i.id,
+                i.file_name.clone(),
+                model::finished_file_gone(i.status, &i.dest),
+            )
+        }) else {
             return true;
         };
+        // #342: its file was moved or deleted, so there is nothing to duplicate: the old row
+        // goes and this is an ordinary new download.
+        if gone {
+            self.overwrite(dup);
+            return true;
+        }
         match self.settings.duplicate_action {
             1 => true,
             2 => {
@@ -7634,6 +7749,10 @@ impl App {
         {
             self.start_move(id, target);
         }
+        if let Some(dir) = winui::picked(ctx, "app-move-many") {
+            let ids = std::mem::take(&mut self.move_many_for);
+            self.move_many_to(ids, dir);
+        }
     }
 
     /// View → Theme → Add a theme file, answered: the file copied into the themes folder and
@@ -7839,16 +7958,9 @@ impl App {
         let Some(item) = self.items.iter().find(|i| i.id == id) else {
             return;
         };
-        let complete = item.status == Status::Complete;
-        if item.live.is_some() || !(complete || item.downloaded == 0) {
+        if !can_move(item) {
             // Said, not silently ignored (F2, Ctrl+M on a download that can't move).
-            self.notice = Some((
-                crate::i18n::mark("Move/Rename"),
-                crate::i18n::t(
-                    "Only a finished download, or one not started yet, can be moved. Stop it and finish it first.",
-                )
-                .to_owned(),
-            ));
+            self.notice = Some(cant_move_notice());
             return;
         }
         let title = crate::i18n::t("Move/Rename").to_owned();
@@ -7866,6 +7978,60 @@ impl App {
                 .set_file_name(name)
                 .save_file()
         });
+    }
+
+    /// Move/Rename with several downloads selected (#333): their folder is asked for, not a name
+    /// each.
+    fn move_many(&mut self, ids: Vec<u64>) {
+        let can = ids
+            .iter()
+            .filter_map(|id| self.items.iter().find(|i| i.id == *id))
+            .find(|i| can_move(i));
+        let Some(first) = can else {
+            self.notice = Some(cant_move_notice());
+            return;
+        };
+        let title = crate::i18n::t("Move/Rename").to_owned();
+        let from = first
+            .dest
+            .parent()
+            .unwrap_or(std::path::Path::new("."))
+            .to_path_buf();
+        self.move_many_for = ids;
+        winui::start_pick(&self.ui_ctx, "app-move-many", move || {
+            // Off-screen test runs have no folder dialog to answer.
+            if let Some(dir) = std::env::var_os("MDM_TEST_MOVE_TO") {
+                return Some(PathBuf::from(dir));
+            }
+            rfd::FileDialog::new()
+                .set_title(title)
+                .set_directory(from)
+                .pick_folder()
+        });
+    }
+
+    /// The several downloads' new folder: each that can go goes there, under its own name.
+    fn move_many_to(&mut self, ids: Vec<u64>, dir: PathBuf) {
+        let mut taken = std::collections::HashSet::new();
+        let mut stay = false;
+        for id in ids {
+            let Some(item) = self.items.iter().find(|i| i.id == id) else {
+                continue;
+            };
+            if !can_move(item) {
+                stay = true;
+                continue;
+            }
+            if item.dest.parent() == Some(dir.as_path()) {
+                continue;
+            }
+            let target = place_in(&dir, &item.file_name, &mut taken);
+            self.start_move(id, target);
+        }
+        self.dirty = true;
+        if stay {
+            self.notice = Some(cant_move_notice());
+        }
     }
 
     /// Delete a queue of the user's (not the two built-in ones); its downloads stay in the list.
@@ -8616,7 +8782,7 @@ impl App {
         for (id, a) in actions {
             match a {
                 progress::Action::None => {}
-                progress::Action::Pause => self.stop(id),
+                progress::Action::Pause => self.stop_by_hand(id),
                 progress::Action::Resume => self.start(id, true),
                 progress::Action::Cancel => {
                     self.stop(id);
@@ -8962,6 +9128,32 @@ fn share(cap: u64, other: f64) -> u64 {
 }
 
 #[cfg(test)]
+mod move_many_tests {
+    use super::place_in;
+
+    /// #333: a selection moved to one folder keeps each its own name, or the next free one when
+    /// several would land on the same name (not started: no file yet) or one is on the disk.
+    #[test]
+    fn a_selection_gets_a_free_name_each() {
+        let dir = tempfile::tempdir().unwrap();
+        let d = dir.path();
+        std::fs::write(d.join("a.zip"), b"x").unwrap();
+        let mut taken = std::collections::HashSet::new();
+        let names: Vec<String> = ["a.zip", "a.zip", "b.bin", "b.bin"]
+            .iter()
+            .map(|n| {
+                place_in(d, n, &mut taken)
+                    .file_name()
+                    .unwrap()
+                    .to_string_lossy()
+                    .into_owned()
+            })
+            .collect();
+        assert_eq!(names, ["a (1).zip", "a (2).zip", "b.bin", "b (1).bin"]);
+    }
+}
+
+#[cfg(test)]
 mod at_login_tests {
     use super::{AtLogin, TRAY_GRACE, at_login};
     use std::time::Duration;
@@ -9164,5 +9356,35 @@ mod ytdlp_parts_tests {
         assert!(!part.exists(), "the item's own unfinished data goes");
         assert!(other.exists(), "another download's stays");
         assert!(finished.exists(), "the finished file stays");
+    }
+}
+
+#[cfg(test)]
+mod page_data_tests {
+    use super::page_data_for;
+
+    const PAGE: Option<&str> = Some("https://forum.example/thread/1");
+    const DATA: Option<&str> = Some("a=1");
+
+    #[test]
+    fn links_take_what_belongs_to_them() {
+        let got = |link| page_data_for(link, PAGE, DATA);
+        assert_eq!(got("https://forum.example/files/a.zip").as_deref(), DATA);
+        assert_eq!(got("https://FORUM.example/b.zip").as_deref(), DATA);
+        assert_eq!(got("https://other.test/a.zip"), None);
+        assert_eq!(got("https://forum.example.other.test/a.zip"), None);
+        assert_eq!(got("https://cdn.forum.example/a.zip"), None);
+        assert_eq!(got("http://forum.example/a.zip"), None);
+        assert_eq!(got("not an address"), None);
+    }
+
+    #[test]
+    fn no_page_or_nothing_to_take() {
+        assert_eq!(page_data_for("https://a.test/x", None, DATA), None);
+        assert_eq!(
+            page_data_for("https://a.test/x", Some("https://a.test/"), None),
+            None
+        );
+        assert_eq!(page_data_for("https://a.test/x", Some("nope"), DATA), None);
     }
 }

@@ -295,6 +295,10 @@
 #. button in the browser extension's window: open the extension's page in that browser
 #, machine
 	Add the extension	ವಿಸ್ತರಣೆಯನ್ನು ಸೇರಿಸಿ
+#. window title in extension.rs
+#. title of the window that shows how to turn on the Safari extension
+#, machine
+	Add the extension to Safari	Safari ಗೆ ವಿಸ್ತರಣೆಯನ್ನು ಸೇರಿಸಿ
 #. text in extension.rs
 #, machine
 	Add the free extension: files you download in your browser come here, and videos get a Download button.	ಉಚಿತ ವಿಸ್ತರಣೆಯನ್ನು ಸೇರಿಸಿ: ನಿಮ್ಮ ಬ್ರೌಸರ್‌ನಲ್ಲಿ ನೀವು ಡೌನ್‌ಲೋಡ್ ಮಾಡುವ ಫೈಲ್‌ಗಳು ಇಲ್ಲಿಗೆ ಬರುತ್ತವೆ, ಮತ್ತು ವೀಡಿಯೊಗಳಿಗೆ ಡೌನ್‌ಲೋಡ್ ಬಟನ್ ಸಿಗುತ್ತದೆ.
@@ -1932,6 +1936,10 @@
 #. a country's name (where a download's server is)
 #, machine
 	Hong Kong	ಹಾಂಗ್ ಕಾಂಗ್
+#. text in extension.rs
+#. button in the browser extension's window, on Safari's row: open the steps that turn the extension on
+#, machine
+	How to Add	ಸೇರಿಸುವುದು ಹೇಗೆ
 #. text in the Scheduler window
 #. link after why the computer can't be woken (Linux, macOS): opens the guide's page that shows how an administrator can allow it
 #, machine
@@ -3066,6 +3074,14 @@
 #. text in the tray icon's menu
 #, machine
 	Open Mister Download Manager	Mister Download Manager ತೆರೆಯಿರಿ
+#. text in extension.rs
+#. step 2 of turning on the Safari extension; Cmd is the Command key
+#, machine
+	Open Safari's settings (Cmd+,).	Safari ಸೆಟ್ಟಿಂಗ್‌ಗಳನ್ನು ತೆರೆಯಿರಿ (Cmd+,).
+#. text in extension.rs
+#. step 1 of turning on the Safari extension
+#, machine
+	Open Safari.	Safari ತೆರೆಯಿರಿ.
 #. text in the Scheduler window
 #, machine
 	Open the following file when done	ಮುಗಿದ ನಂತರ ಈ ಕೆಳಗಿನ ಫೈಲ್ ಅನ್ನು ತೆರೆಯಿರಿ
@@ -3500,6 +3516,9 @@
 #. Saturday, as short as a calendar's column head (two letters in English)
 #, machine
 	Sa	ಶನಿ
+#. text in extension.rs
+#, machine
+	Safari turns "Allow unsigned extensions" off each time it quits: do steps 1 to 6 again after restarting it.	Safari ಮುಚ್ಚಿದಾಗಲೆಲ್ಲ “Allow unsigned extensions” ಅನ್ನು ಆಫ್ ಮಾಡುತ್ತದೆ: ಅದನ್ನು ಮರುಪ್ರಾರಂಭಿಸಿದ ನಂತರ 1 ರಿಂದ 6 ಹಂತಗಳನ್ನು ಮತ್ತೆ ಮಾಡಿ.
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -4088,6 +4107,18 @@
 #. a country's name (where a download's server is)
 #, machine
 	Sweden	ಸ್ವೀಡನ್
+#. text in extension.rs
+#. step 3 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+#, machine
+	Switch to the "Advanced" tab (the cogwheels).	“ಸುಧಾರಿತ” ಟ್ಯಾಬ್‌ಗೆ ಬದಲಿಸಿ (ಗೇರ್‌ಗಳ ಚಿಹ್ನೆ).
+#. text in extension.rs
+#. step 5 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+#, machine
+	Switch to the "Developer" tab (the screwdriver and spanner).	“ಡೆವಲಪರ್” ಟ್ಯಾಬ್‌ಗೆ ಬದಲಿಸಿ (ಸ್ಕ್ರೂಡ್ರೈವರ್ ಮತ್ತು ಸ್ಪ್ಯಾನರ್).
+#. text in extension.rs
+#. step 7 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+#, machine
+	Switch to the "Extensions" tab (the puzzle piece).	“ವಿಸ್ತರಣೆಗಳು” ಟ್ಯಾಬ್‌ಗೆ ಬದಲಿಸಿ (ಪಜಲ್ ತುಣುಕು).
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -4266,6 +4297,9 @@
 #. text in errors.rs
 #, machine
 	the drive or network share is no longer available	ಡ್ರೈವ್ ಅಥವಾ ನೆಟ್‌ವರ್ಕ್ ಹಂಚಿಕೆ ಇನ್ನು ಮುಂದೆ ಲಭ್ಯವಿಲ್ಲ
+#. text in extension.rs
+#, machine
+	The extension is already in this app. Apple hasn't notarized this build, so Safari needs these steps to allow it.	ವಿಸ್ತರಣೆ ಈಗಾಗಲೇ ಈ ಅಪ್ಲಿಕೇಶನ್‌ನಲ್ಲಿದೆ. Apple ಈ ಬಿಲ್ಡ್ ಅನ್ನು ನೋಟರೈಸ್ ಮಾಡಿಲ್ಲ, ಆದ್ದರಿಂದ ಅದನ್ನು ಅನುಮತಿಸಲು Safari ಗೆ ಈ ಹಂತಗಳು ಬೇಕು.
 #. text in errors.rs
 #, machine
 	the file changed on the server	ಸರ್ವರ್‌ನಲ್ಲಿ ಫೈಲ್ ಬದಲಾಗಿದೆ
@@ -4724,6 +4758,22 @@
 #. verb: turn the Speed Limiter on
 #, machine
 	Turn on	ಆನ್ ಮಾಡಿ
+#. text in extension.rs
+#. step 6 of turning on the Safari extension; the quoted switch name is what Safari's settings show in this language: use Apple's own words for it, or keep the English name when unsure
+#, machine
+	Turn on "Allow unsigned extensions".	“Allow unsigned extensions” ಆನ್ ಮಾಡಿ.
+#. text in extension.rs
+#. step 8 of turning on the Safari extension
+#, machine
+	Turn on "Mister Download Manager" and allow it on all websites.	“Mister Download Manager” ಆನ್ ಮಾಡಿ ಮತ್ತು ಎಲ್ಲ ವೆಬ್‌ಸೈಟ್‌ಗಳಲ್ಲಿ ಅದನ್ನು ಅನುಮತಿಸಿ.
+#. text in extension.rs
+#. step 4 of turning on the Safari extension; the quoted switch name is what Safari's settings show in this language: use Apple's own words for it, or keep the English name when unsure
+#, machine
+	Turn on "Show features for web developers".	“Show features for web developers” ಆನ್ ಮಾಡಿ.
+#. text in extension.rs
+#. the headline of the window that shows how to turn on the Safari extension
+#, machine
+	Turn on the extension in Safari	Safari ನಲ್ಲಿ ವಿಸ್ತರಣೆಯನ್ನು ಆನ್ ಮಾಡಿ
 #. tooltip (why a control is greyed) in the Options window
 #. why Options → Remote → Pair a device... is greyed
 #, machine
@@ -5520,6 +5570,10 @@ extension	Browser extension	ಬ್ರೌಸರ್ ವಿಸ್ತರಣೆ
 #, machine
 extension	Button settings...	ಬಟನ್ ಸೆಟ್ಟಿಂಗ್‌ಗಳು...
 #. text in the browser extension
+#. shown briefly on the download button when nothing on the page says which video the player is playing, so nothing was sent
+#, machine
+extension	Can't tell which video this is: open its own page and try there	ಇದು ಯಾವ ವೀಡಿಯೊ ಎಂದು ತಿಳಿಯುತ್ತಿಲ್ಲ: ಅದರ ಸ್ವಂತ ಪುಟವನ್ನು ತೆರೆದು ಅಲ್ಲಿ ಪ್ರಯತ್ನಿಸಿ
+#. text in the browser extension
 #. the toolbar button's status when the browser reaches the app; keep the name Mister Download Manager as it is
 #, machine
 extension	Connected to Mister Download Manager	Mister Download Manager ಗೆ ಸಂಪರ್ಕಿಸಲಾಗಿದೆ
@@ -5730,6 +5784,10 @@ extension	Support MDM	MDM ಅನ್ನು ಬೆಂಬಲಿಸಿ
 #, machine
 extension	Take downloads from this browser	ಈ ಬ್ರೌಸರ್‌ನಿಂದ ಡೌನ್‌ಲೋಡ್‌ಗಳನ್ನು ತೆಗೆದುಕೊಳ್ಳಿ
 #. text in the browser extension
+#. in the toolbar button's popup, on a site where the Chrome Web Store's copy of the extension shows no download button; Help is the link at the bottom of the popup
+#, machine
+extension	The Chrome Web Store's rules keep this copy of the add-on away from this site's videos. Help says what you can do.	Chrome Web Store ನಿಯಮಗಳು ಆಡ್-ಆನ್‌ನ ಈ ಪ್ರತಿಯನ್ನು ಈ ಸೈಟ್‌ನ ವೀಡಿಯೊಗಳಿಂದ ದೂರ ಇಡುತ್ತವೆ. ನೀವು ಏನು ಮಾಡಬಹುದು ಎಂಬುದನ್ನು «ಸಹಾಯ» ತಿಳಿಸುತ್ತದೆ.
+#. text in the browser extension
 #. status when the connection to the app broke off (often security software blocking it); keep the name Mister Download Manager as it is
 #, machine
 extension	The connection to Mister Download Manager failed	Mister Download Manager ಗೆ ಸಂಪರ್ಕ ವಿಫಲವಾಗಿದೆ
@@ -5757,6 +5815,10 @@ extension	This computer	ಈ ಕಂಪ್ಯೂಟರ್
 #. status when a download carried too much data (very large cookies) to give to the app
 #, machine
 extension	This download's details were too large to hand over	ಈ ಡೌನ್‌ಲೋಡ್‌ನ ವಿವರಗಳು ಹಸ್ತಾಂತರಿಸಲು ತುಂಬಾ ದೊಡ್ಡದಾಗಿದೆ
+#. text in the browser extension
+#. in the toolbar button's popup, when the page's player plays from a stream built in the page (a blob:): the list of the page's media has nothing to show; Download video is the name of the button over videos
+#, machine
+extension	This page's player streams its video in pieces, so there's no file to list. Point at the video and use its Download video button.	ಈ ಪುಟದ ಪ್ಲೇಯರ್ ವೀಡಿಯೊವನ್ನು ತುಂಡುಗಳಲ್ಲಿ ಸ್ಟ್ರೀಮ್ ಮಾಡುತ್ತದೆ, ಆದ್ದರಿಂದ ಪಟ್ಟಿ ಮಾಡಲು ಯಾವುದೇ ಫೈಲ್ ಇಲ್ಲ. ವೀಡಿಯೊದ ಮೇಲೆ ಪಾಯಿಂಟರ್ ಇರಿಸಿ ಅದರ «ವೀಡಿಯೊ ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ» ಬಟನ್ ಬಳಸಿ.
 #. text in the browser extension
 #. status when the app is older than the extension; keep the name Mister Download Manager as it is
 #, machine

@@ -95,6 +95,20 @@ On Windows, MDM draws its windows with Direct3D 12; on Linux and macOS, with Ope
 - **Linux, from the AppImage or the tar.gz:** if the system lacks a library MDM's window needs (such as `libxkbcommon-x11`), MDM names it on the terminal and in a message box, with the command that installs it (`sudo apt install libxkbcommon-x11-0`, or your distribution's). The .deb and .rpm bring these libraries themselves. In a Wayland session MDM opens its window on Wayland instead.
 - **Linux, the first start is slow:** MDM looks up the system's fonts for every script once, all together, while it starts (fontconfig); a first start on a busy computer can take a few seconds more. Install your distribution's Noto fonts if some scripts or symbols show as boxes.
 
+## My antivirus or VirusTotal flags MDM {#antivirus}
+
+A few antivirus programs flag new installers just because they have rarely seen them, and machine-learning engines do this the most. On VirusTotal, a handful of small engines flagging a new setup while the big ones stay clean is usually a false positive. We report these to the vendors when we see them.
+
+To check that your copy is the real one:
+
+1. Download MDM only from [the website](https://misterdownloadmanager.com) or [GitHub Releases](https://github.com/anefzaoui/misterdownloadmanager/releases).
+2. Get your file's SHA-256. On Windows, run `certutil -hashfile "MisterDownloadManager-0.5.0-setup.exe" SHA256`; on Linux, `sha256sum` and the file's name.
+3. Compare it with the same file's line in that release's `SHA256SUMS.txt`.
+
+If they match, it is the file we published. Every release is built on GitHub from the [public source code](https://github.com/anefzaoui/misterdownloadmanager), so anyone can read what went into it.
+
+If your antivirus quarantined MDM, restore it and add an exception for its folder. If it flags something other than the setup or MDM's own programs, or a copy from anywhere else, don't run it, and please [tell us](https://github.com/anefzaoui/misterdownloadmanager/issues).
+
 ## HTTPS downloads fail with "no certificates" (Linux)
 
 A minimal Linux system (often with the AppImage, the tar.gz or a build from source) may have no CA certificates, which MDM needs to check a secure server. Plain `http://` and `ftp://` downloads still work; each `https://` or `ftps://` one stops at once saying the computer has no certificates to check the server with. Install the `ca-certificates` package (`sudo apt install ca-certificates`, `sudo dnf install ca-certificates`), then resume the download. The .deb and .rpm bring it.

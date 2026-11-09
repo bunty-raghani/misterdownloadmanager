@@ -164,6 +164,12 @@
   "popup_media_none": {
     "message": "Encara no s’ha trobat cap vídeo ni cap so en aquesta pàgina. Reprodueix-ne un i torna a obrir-ho."
   },
+  "popup_media_streamed": {
+    "message": "El reproductor d'aquesta pàgina emet el vídeo a trossos, així que no hi ha cap fitxer per llistar. Apunteu al vídeo i feu servir el seu botó «Baixa el vídeo»."
+  },
+  "popup_media_store": {
+    "message": "Les normes de Chrome Web Store mantenen aquesta còpia del complement lluny dels vídeos d'aquest lloc. A «Ajuda» s'explica què podeu fer."
+  },
   "popup_media_download": {
     "message": "Baixa"
   },
@@ -178,6 +184,9 @@
   },
   "video_drm": {
     "message": "Vídeo protegit: no es pot desar"
+  },
+  "video_unnamed": {
+    "message": "No es pot saber quin vídeo és: obriu la seva pàgina i torneu-ho a provar allà"
   },
   "popup_send_to": {
     "message": "Enviar baixades a"

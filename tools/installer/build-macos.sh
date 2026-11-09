@@ -4,7 +4,12 @@
 #   MisterDownloadManager-<version>-macos-x86_64-experimental.dmg  Intel
 # One app per processor, each half the size of a universal one (#25), ad-hoc signed: without an
 # Apple Developer ID, macOS asks before the first start (right-click the app -> Open).
-# Needs: macOS with Xcode's command line tools, rustup, pwsh (the extension).
+# The app carries the Safari extension (tools/safari). Safari loads an ad-hoc signed one only with
+# Develop -> Allow Unsigned Extensions (each time Safari starts); signed with a Developer ID
+# (MDM_MACOS_IDENTITY="Developer ID Application: ..."), it is an ordinary extension.
+# MDM_NOTARY_PROFILE=<name> (a `xcrun notarytool store-credentials` profile) also has Apple notarize
+# the app and the .dmg: Safari ignores a Developer ID extension that isn't.
+# Needs: macOS with Xcode's command line tools (swiftc), rustup, pwsh (the extension).
 #   tools/installer/build-macos.sh [--no-build]
 # MDM_MACOS_ARCH=arm64 (or x86_64) builds one processor's app only, for a local test.
 set -euo pipefail
@@ -33,6 +38,10 @@ if [ "${1:-}" != "--no-build" ]; then
   done
 fi
 pwsh -NoProfile -File "$root/tools/extension/pack.ps1"
+sign="${MDM_MACOS_IDENTITY:--}"
+# A real identity also gets the hardened runtime (notarization needs it).
+sign_opts=()
+[ "$sign" = "-" ] || sign_opts=(--options runtime --timestamp)
 
 mkdir -p "$dist"
 stage="$dist/stage-macos"
@@ -93,7 +102,25 @@ for pair in "${targets[@]}"; do
 </dict>
 </plist>
 EOF
-  codesign --force --deep --sign - "$app"
+  # The Safari extension (it carries its own copy of the helper, signed for its sandbox).
+  "$root/tools/safari/build-appex.sh" "$app" "$arch-apple-macos14.0" "$root/target/extension/safari" \
+    "$app/Contents/MacOS/misterdownloadmanager-nmhost" "$version" "$sign"
+  # The helper programs, then the app, which signs its own program (not --deep: that would sign
+  # the extension again, without the entitlements it was given). Signing the app's own program
+  # alone asks for the others to be signed already, which Intel builds made on an Apple Silicon
+  # Mac are not (the linker signs only its own processor's).
+  for p in "${programs[@]}"; do
+    [ "$p" = misterdownloadmanager ] || codesign --force ${sign_opts[@]+"${sign_opts[@]}"} --sign "$sign" "$app/Contents/MacOS/$p"
+  done
+  codesign --force ${sign_opts[@]+"${sign_opts[@]}"} --sign "$sign" "$app"
+  codesign --verify --strict --deep "$app"
+  if [ -n "${MDM_NOTARY_PROFILE:-}" ]; then
+    # Apple scans a zip of the app; the ticket is stapled to the app, so it also opens offline.
+    ditto -c -k --keepParent "$app" "$stage/$arch/notarize.zip"
+    xcrun notarytool submit "$stage/$arch/notarize.zip" --keychain-profile "$MDM_NOTARY_PROFILE" --wait
+    xcrun stapler staple "$app"
+    rm -f "$stage/$arch/notarize.zip"
+  fi
 
   # The disk image: the app next to a link to Applications, to drag it there. LZMA (ULMO, macOS
   # 10.15 and later; the app needs 11) packs it tighter than zlib (UDZO).
@@ -101,6 +128,11 @@ EOF
   rm -f "$dist/$name.dmg"
   hdiutil create -volname "Mister Download Manager" -srcfolder "$stage/$arch/dmg" -ov -format ULMO \
     "$dist/$name.dmg"
+  if [ -n "${MDM_NOTARY_PROFILE:-}" ]; then
+    codesign --force --sign "$sign" --timestamp "$dist/$name.dmg"
+    xcrun notarytool submit "$dist/$name.dmg" --keychain-profile "$MDM_NOTARY_PROFILE" --wait
+    xcrun stapler staple "$dist/$name.dmg"
+  fi
   dmgs+=("$name.dmg")
 done
 

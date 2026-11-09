@@ -164,6 +164,12 @@
   "popup_media_none": {
     "message": "Ainda não foi encontrado nenhum vídeo ou som nesta página. Reproduza-o e, em seguida, abra isto novamente."
   },
+  "popup_media_streamed": {
+    "message": "O leitor desta página transmite o vídeo em partes, por isso não há nenhum ficheiro para listar. Aponte para o vídeo e utilize o botão «Transferir vídeo»."
+  },
+  "popup_media_store": {
+    "message": "As regras da Chrome Web Store mantêm esta cópia do suplemento afastada dos vídeos deste site. A Ajuda indica o que pode fazer."
+  },
   "popup_media_download": {
     "message": "Transferir"
   },
@@ -178,6 +184,9 @@
   },
   "video_drm": {
     "message": "Vídeo protegido: não pode ser guardado"
+  },
+  "video_unnamed": {
+    "message": "Não é possível saber que vídeo é este: abra a página do próprio vídeo e tente lá"
   },
   "popup_send_to": {
     "message": "Enviar downloads para"

@@ -2,7 +2,8 @@
 //   node tools/extension/check-pack.mjs
 // Each package carries the app's version and every file its manifest names; the unpacked copy's
 // key gives the ID the native host serves (crates/ipc/src/extension.rs); the Chrome Web Store's
-// copy has no key and no video button on YouTube; Firefox's has its add-on ID.
+// copy has no key; Firefox's has its add-on ID; Safari's (a folder, tools/safari builds it into the
+// app) asks for nothing Safari lacks.
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import assert from "node:assert/strict";
@@ -21,7 +22,7 @@ const idOf = (key) =>
     .map((c) => String.fromCharCode(97 + parseInt(c, 16)))
     .join("");
 
-for (const kind of ["chromium", "chrome-store", "firefox"]) {
+for (const kind of ["chromium", "chrome-store", "firefox", "safari"]) {
   const dir = new URL(`${kind}/`, out);
   const m = JSON.parse(readFileSync(new URL("manifest.json", dir), "utf8"));
   assert.equal(m.version, version, `${kind}: the app's version`);
@@ -38,9 +39,17 @@ for (const kind of ["chromium", "chrome-store", "firefox"]) {
   if (kind === "chrome-store") {
     assert.equal(m.key, undefined, "the store signs it with its own key");
     const video = m.content_scripts.find((c) => c.js.includes("video.js"));
-    assert.ok(video && (video.exclude_matches || []).some((p) => p.includes("youtube.com")), "no button on YouTube");
+    assert.ok(video && !(video.exclude_matches || []).length, "the video button runs everywhere, YouTube included");
   }
   if (kind === "firefox") assert.equal(m.browser_specific_settings.gecko.id, firefoxId);
+  if (kind === "safari") {
+    // page.js tells Safari by this; Safari has no downloads or proxy API to ask permission for.
+    assert.ok(m.browser_specific_settings.safari, "page.js knows Safari by its manifest");
+    for (const p of ["downloads", "proxy", "webRequestBlocking", "declarativeNetRequestWithHostAccess"]) {
+      assert.ok(!(m.permissions || []).includes(p), `Safari: no ${p}`);
+    }
+    assert.ok(m.permissions.includes("nativeMessaging"), "Safari: the app extension is reached by native messaging");
+  }
 }
 for (const zip of ["mdm-chromium.zip", "mdm-firefox.xpi", "mdm-chrome-store.zip"]) {
   assert.ok(existsSync(new URL(zip, out)), zip);

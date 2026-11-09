@@ -229,6 +229,10 @@
 #. text in extension.rs
 #. button in the browser extension's window: open the extension's page in that browser
 	Add the extension	إضافة الملحق
+#. window title in extension.rs
+#. title of the window that shows how to turn on the Safari extension
+#, machine
+	Add the extension to Safari	إضافة الملحق إلى Safari
 #. text in extension.rs
 	Add the free extension: files you download in your browser come here, and videos get a Download button.	أضف الملحق المجاني: الملفات التي تجلبها في مستعرضك تأتي إلى هنا، وتحصل مقاطع الفيديو على زر تنزيل.
 #. text in rssdlg.rs
@@ -1450,6 +1454,10 @@
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Hong Kong	هونغ كونغ
+#. text in extension.rs
+#. button in the browser extension's window, on Safari's row: open the steps that turn the extension on
+#, machine
+	How to Add	كيفية الإضافة
 #. text in the Scheduler window
 #. link after why the computer can't be woken (Linux, macOS): opens the guide's page that shows how an administrator can allow it
 	How to allow it	كيفية السماح بذلك
@@ -2308,6 +2316,14 @@
 	Open magnet links and .torrent files with Mister Download Manager	فتح روابط مغناطيسية وملفات .torrent باستخدام Mister Download Manager
 #. text in the tray icon's menu
 	Open Mister Download Manager	فتح Mister Download Manager
+#. text in extension.rs
+#. step 2 of turning on the Safari extension; Cmd is the Command key
+#, machine
+	Open Safari's settings (Cmd+,).	افتح إعدادات Safari (Cmd+,).
+#. text in extension.rs
+#. step 1 of turning on the Safari extension
+#, machine
+	Open Safari.	افتح Safari.
 #. text in the Scheduler window
 	Open the following file when done	فتح الملف التالي عند الانتهاء
 #. checkbox in the Scheduler window
@@ -2642,6 +2658,9 @@
 #. text in the Scheduler window
 #. Saturday, as short as a calendar's column head (two letters in English)
 	Sa	سبت
+#. text in extension.rs
+#, machine
+	Safari turns "Allow unsigned extensions" off each time it quits: do steps 1 to 6 again after restarting it.	يعيد Safari ضبط «السماح بالملحقات غير الموقعة» على إيقاف عند كل إنهاء له: كرر الخطوات من 1 إلى 6 بعد إعادة تشغيله.
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Saint Barthélemy	سان بارتيلمي
@@ -3076,6 +3095,18 @@
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Sweden	السويد
+#. text in extension.rs
+#. step 3 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+#, machine
+	Switch to the "Advanced" tab (the cogwheels).	انتقل إلى علامة التبويب «متقدم» (التروس).
+#. text in extension.rs
+#. step 5 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+#, machine
+	Switch to the "Developer" tab (the screwdriver and spanner).	انتقل إلى علامة التبويب «المطور» (المفك ومفتاح الربط).
+#. text in extension.rs
+#. step 7 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+#, machine
+	Switch to the "Extensions" tab (the puzzle piece).	انتقل إلى علامة التبويب «الملحقات» (قطعة الأحجية).
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Switzerland	سويسرا
@@ -3207,6 +3238,9 @@
 	The downloads you add, or drop on this window, show here.	التنزيلات التي تضيفها، أو تفلتها في هذه النافذة، تظهر هنا.
 #. text in errors.rs
 	the drive or network share is no longer available	القرص أو مشاركة الشبكة لم يعد متوفرا
+#. text in extension.rs
+#, machine
+	The extension is already in this app. Apple hasn't notarized this build, so Safari needs these steps to allow it.	الملحق موجود بالفعل في هذا التطبيق. لم توثق Apple هذا الإصدار، لذا يحتاج Safari إلى هذه الخطوات للسماح به.
 #. text in errors.rs
 	the file changed on the server	تغير الملف على الخادم
 #. message or event log entry in the main window
@@ -3554,6 +3588,22 @@
 #. text in the tray icon's menu
 #. verb: turn the Speed Limiter on
 	Turn on	تشغيل
+#. text in extension.rs
+#. step 6 of turning on the Safari extension; the quoted switch name is what Safari's settings show in this language: use Apple's own words for it, or keep the English name when unsure
+#, machine
+	Turn on "Allow unsigned extensions".	شغل «السماح بالملحقات غير الموقعة».
+#. text in extension.rs
+#. step 8 of turning on the Safari extension
+#, machine
+	Turn on "Mister Download Manager" and allow it on all websites.	شغل «Mister Download Manager» واسمح به على جميع المواقع الإلكترونية.
+#. text in extension.rs
+#. step 4 of turning on the Safari extension; the quoted switch name is what Safari's settings show in this language: use Apple's own words for it, or keep the English name when unsure
+#, machine
+	Turn on "Show features for web developers".	شغل «إظهار ميزات لمطوري الويب».
+#. text in extension.rs
+#. the headline of the window that shows how to turn on the Safari extension
+#, machine
+	Turn on the extension in Safari	تشغيل الملحق في Safari
 #. tooltip (why a control is greyed) in the Options window
 #. why Options → Remote → Pair a device... is greyed
 #, machine
@@ -4164,6 +4214,10 @@ extension	Browser extension	ملحق المتصفح
 #. the trailing ... means it is still going on: keep it
 extension	Button settings...	إعدادات الزر...
 #. text in the browser extension
+#. shown briefly on the download button when nothing on the page says which video the player is playing, so nothing was sent
+#, machine
+extension	Can't tell which video this is: open its own page and try there	تعذّر تحديد هذا الفيديو: افتح صفحته الخاصة وحاول من هناك
+#. text in the browser extension
 #. the toolbar button's status when the browser reaches the app; keep the name Mister Download Manager as it is
 extension	Connected to Mister Download Manager	متصل بـ Mister Download Manager
 #. text in the browser extension
@@ -4339,6 +4393,10 @@ extension	Support MDM	ادعم MDM
 #. check box in the toolbar button's popup: on, downloads go to the app; off, the browser keeps them
 extension	Take downloads from this browser	تلقي التنزيلات من هذا المستعرض
 #. text in the browser extension
+#. in the toolbar button's popup, on a site where the Chrome Web Store's copy of the extension shows no download button; Help is the link at the bottom of the popup
+#, machine
+extension	The Chrome Web Store's rules keep this copy of the add-on away from this site's videos. Help says what you can do.	تُبقي قواعد سوق Chrome الإلكتروني هذه النسخة من الإضافة بعيدة عن مقاطع هذا الموقع. يوضّح قسم «تعليمات» ما يمكنك فعله.
+#. text in the browser extension
 #. status when the connection to the app broke off (often security software blocking it); keep the name Mister Download Manager as it is
 extension	The connection to Mister Download Manager failed	فشل الاتصال بـ Mister Download Manager
 #. text in the browser extension
@@ -4363,6 +4421,10 @@ extension	This computer	هذا الكمبيوتر
 #. text in the browser extension
 #. status when a download carried too much data (very large cookies) to give to the app
 extension	This download's details were too large to hand over	كانت تفاصيل هذا التنزيل كبيرة جدا بحيث لا يمكن تسليمها
+#. text in the browser extension
+#. in the toolbar button's popup, when the page's player plays from a stream built in the page (a blob:): the list of the page's media has nothing to show; Download video is the name of the button over videos
+#, machine
+extension	This page's player streams its video in pieces, so there's no file to list. Point at the video and use its Download video button.	يبثّ مشغّل هذه الصفحة الفيديو على أجزاء، فلا يوجد ملف لعرضه هنا. أشِر إلى الفيديو واستخدم زر «تنزيل الفيديو» عليه.
 #. text in the browser extension
 #. status when the app is older than the extension; keep the name Mister Download Manager as it is
 extension	Update Mister Download Manager to use everything this extension offers	قم بتحديث Mister Download Manager لاستخدام كل ما يوفره هذا الملحق
@@ -4554,6 +4616,10 @@ menu	Add &batch download	إضافة تنزيل &جماعي
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #. the trailing ... means it opens a window: keep it
 menu	Add &magnet link...	إضافة &رابط مغناطيسي...
+#. menu command in the main window
+#. View → Theme: picks a theme file or a Base16 or pywal colour scheme, copies it into the themes folder and uses it
+#, machine
+menu	Add a theme file…	إضافة ملف سمة…
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 menu	Add batch download from &clipboard	إضافة تنزيل جماعي من الحا&فظة
@@ -4759,6 +4825,10 @@ menu	OpenGL	OpenGL
 #. noun: opens the download's Properties window
 #. noun: opens the category's properties
 menu	Properties	خصائص
+#. menu command in the main window
+#. View → Theme: the colours of pywal (a program making colour schemes from the wallpaper), followed as they change; a name: keep "pywal" as written
+#, machine
+menu	pywal	ألوان pywal
 #. menu command in the main window
 #. verb: download the file again from the start
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation

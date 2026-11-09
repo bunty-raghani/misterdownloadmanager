@@ -19,11 +19,12 @@ import subprocess
 import sys
 import tarfile
 import tempfile
-import urllib.request
 import zipfile
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from fetch_release import fetch  # noqa: E402  (beside this file: signs in, tries again)
+
 DUMP_SYMS = "v2.3.9"
-BASE = f"https://github.com/mozilla/dump_syms/releases/download/{DUMP_SYMS}/"
 
 
 def fetch_dump_syms(work):
@@ -34,8 +35,8 @@ def fetch_dump_syms(work):
                 else "dump_syms-x86_64-apple-darwin.tar.xz")
     else:
         name = "dump_syms-x86_64-unknown-linux-gnu.tar.xz"
-    data = urllib.request.urlopen(BASE + name).read()
-    want = urllib.request.urlopen(BASE + name + ".sha256").read().decode().split()[0]
+    data = fetch("mozilla/dump_syms", DUMP_SYMS, name)
+    want = fetch("mozilla/dump_syms", DUMP_SYMS, name + ".sha256").decode().split()[0]
     got = hashlib.sha256(data).hexdigest()
     if got != want:
         sys.exit(f"dump_syms checksum mismatch: {got} != {want}")

@@ -164,6 +164,12 @@
   "popup_media_none": {
     "message": "Nog geen video of geluid gevonden op deze pagina. Speel het af en open dit dan opnieuw."
   },
+  "popup_media_streamed": {
+    "message": "De speler van deze pagina streamt de video in stukjes, dus er is geen bestand om te tonen. Wijs de video aan en gebruik de knop Video downloaden."
+  },
+  "popup_media_store": {
+    "message": "De regels van de Chrome Web Store houden deze kopie van de add-on weg van de video's op deze site. Onder Help staat wat u kunt doen."
+  },
   "popup_media_download": {
     "message": "Downloaden"
   },
@@ -178,6 +184,9 @@
   },
   "video_drm": {
     "message": "Beveiligde video: kan niet worden opgeslagen"
+  },
+  "video_unnamed": {
+    "message": "Niet duidelijk welke video dit is: open de eigen pagina van de video en probeer het daar"
   },
   "popup_send_to": {
     "message": "Downloads verzenden naar"

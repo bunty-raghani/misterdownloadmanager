@@ -295,6 +295,10 @@
 #. button in the browser extension's window: open the extension's page in that browser
 #, machine
 	Add the extension	Bővítmény hozzáadása
+#. window title in extension.rs
+#. title of the window that shows how to turn on the Safari extension
+#, machine
+	Add the extension to Safari	A bővítmény hozzáadása a Safarihoz
 #. text in extension.rs
 #, machine
 	Add the free extension: files you download in your browser come here, and videos get a Download button.	Adja hozzá az ingyenes bővítményt: a böngészőben letöltött fájlok ide kerülnek, és a videókhoz Letöltés gomb jelenik meg.
@@ -1932,6 +1936,10 @@
 #. a country's name (where a download's server is)
 #, machine
 	Hong Kong	Hongkong
+#. text in extension.rs
+#. button in the browser extension's window, on Safari's row: open the steps that turn the extension on
+#, machine
+	How to Add	Hozzáadás módja
 #. text in the Scheduler window
 #. link after why the computer can't be woken (Linux, macOS): opens the guide's page that shows how an administrator can allow it
 #, machine
@@ -3066,6 +3074,14 @@
 #. text in the tray icon's menu
 #, machine
 	Open Mister Download Manager	Mister Download Manager megnyitása
+#. text in extension.rs
+#. step 2 of turning on the Safari extension; Cmd is the Command key
+#, machine
+	Open Safari's settings (Cmd+,).	Nyissa meg a Safari beállításait (Cmd+,).
+#. text in extension.rs
+#. step 1 of turning on the Safari extension
+#, machine
+	Open Safari.	Nyissa meg a Safarit.
 #. text in the Scheduler window
 #, machine
 	Open the following file when done	A következő fájl megnyitása, ha kész
@@ -3500,6 +3516,9 @@
 #. Saturday, as short as a calendar's column head (two letters in English)
 #, machine
 	Sa	Szo
+#. text in extension.rs
+#, machine
+	Safari turns "Allow unsigned extensions" off each time it quits: do steps 1 to 6 again after restarting it.	A Safari minden kilépéskor kikapcsolja az „Allow unsigned extensions” beállítást: az újraindítás után ismételje meg az 1–6. lépést.
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -4088,6 +4107,18 @@
 #. a country's name (where a download's server is)
 #, machine
 	Sweden	Svédország
+#. text in extension.rs
+#. step 3 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+#, machine
+	Switch to the "Advanced" tab (the cogwheels).	Váltson a „Speciális” lapra (a fogaskerekek).
+#. text in extension.rs
+#. step 5 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+#, machine
+	Switch to the "Developer" tab (the screwdriver and spanner).	Váltson a „Fejlesztő” lapra (a csavarhúzó és a csavarkulcs).
+#. text in extension.rs
+#. step 7 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+#, machine
+	Switch to the "Extensions" tab (the puzzle piece).	Váltson a „Bővítmények” lapra (a puzzle-darab).
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -4266,6 +4297,9 @@
 #. text in errors.rs
 #, machine
 	the drive or network share is no longer available	a meghajtó vagy hálózati megosztás már nem érhető el
+#. text in extension.rs
+#, machine
+	The extension is already in this app. Apple hasn't notarized this build, so Safari needs these steps to allow it.	A bővítmény már megtalálható ebben az alkalmazásban. Az Apple nem hitelesítette ezt a buildet, ezért a Safari engedélyezéséhez ezek a lépések szükségesek.
 #. text in errors.rs
 #, machine
 	the file changed on the server	a fájl megváltozott a szerveren
@@ -4724,6 +4758,22 @@
 #. verb: turn the Speed Limiter on
 #, machine
 	Turn on	Bekapcsolás
+#. text in extension.rs
+#. step 6 of turning on the Safari extension; the quoted switch name is what Safari's settings show in this language: use Apple's own words for it, or keep the English name when unsure
+#, machine
+	Turn on "Allow unsigned extensions".	Kapcsolja be az „Allow unsigned extensions” beállítást.
+#. text in extension.rs
+#. step 8 of turning on the Safari extension
+#, machine
+	Turn on "Mister Download Manager" and allow it on all websites.	Kapcsolja be a(z) „Mister Download Manager” bővítményt, és engedélyezze minden webhelyen.
+#. text in extension.rs
+#. step 4 of turning on the Safari extension; the quoted switch name is what Safari's settings show in this language: use Apple's own words for it, or keep the English name when unsure
+#, machine
+	Turn on "Show features for web developers".	Kapcsolja be a „Show features for web developers” beállítást.
+#. text in extension.rs
+#. the headline of the window that shows how to turn on the Safari extension
+#, machine
+	Turn on the extension in Safari	A bővítmény bekapcsolása a Safariban
 #. tooltip (why a control is greyed) in the Options window
 #. why Options → Remote → Pair a device... is greyed
 #, machine
@@ -5520,6 +5570,10 @@ extension	Browser extension	Böngészőbővítmény
 #, machine
 extension	Button settings...	Gombbeállítások...
 #. text in the browser extension
+#. shown briefly on the download button when nothing on the page says which video the player is playing, so nothing was sent
+#, machine
+extension	Can't tell which video this is: open its own page and try there	Nem állapítható meg, melyik videóról van szó: nyissa meg a saját oldalát, és próbálja ott
+#. text in the browser extension
 #. the toolbar button's status when the browser reaches the app; keep the name Mister Download Manager as it is
 #, machine
 extension	Connected to Mister Download Manager	Csatlakoztatva az Mister Download Manager alkalmazáshoz
@@ -5730,6 +5784,10 @@ extension	Support MDM	MDM támogatása
 #, machine
 extension	Take downloads from this browser	Letöltések átvétele ebből a böngészőből
 #. text in the browser extension
+#. in the toolbar button's popup, on a site where the Chrome Web Store's copy of the extension shows no download button; Help is the link at the bottom of the popup
+#, machine
+extension	The Chrome Web Store's rules keep this copy of the add-on away from this site's videos. Help says what you can do.	A Chrome Internetes áruház szabályai távol tartják a bővítmény e példányát az oldal videóitól. A Súgó elmondja, mit tehet.
+#. text in the browser extension
 #. status when the connection to the app broke off (often security software blocking it); keep the name Mister Download Manager as it is
 #, machine
 extension	The connection to Mister Download Manager failed	Nem sikerült csatlakozni az Mister Download Manager alkalmazáshoz
@@ -5757,6 +5815,10 @@ extension	This computer	Ez a számítógép
 #. status when a download carried too much data (very large cookies) to give to the app
 #, machine
 extension	This download's details were too large to hand over	A letöltés részletei túl nagyok voltak az átadáshoz
+#. text in the browser extension
+#. in the toolbar button's popup, when the page's player plays from a stream built in the page (a blob:): the list of the page's media has nothing to show; Download video is the name of the button over videos
+#, machine
+extension	This page's player streams its video in pieces, so there's no file to list. Point at the video and use its Download video button.	Ennek az oldalnak a lejátszója darabokban streameli a videót, így nincs felsorolható fájl. Mutasson a videóra, és használja a „Videó letöltése” gombját.
 #. text in the browser extension
 #. status when the app is older than the extension; keep the name Mister Download Manager as it is
 #, machine

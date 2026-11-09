@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <!-- Safari loads only sandboxed extensions. -->
+  <key>com.apple.security.app-sandbox</key><true/>
+  <!-- The connection to the app (127.0.0.1). -->
+  <key>com.apple.security.network.client</key><true/>
+  <!-- MDM's data folder: the channel to the app and Options' rules (the helper reads and writes
+       them; outside the Mac App Store this exception is allowed). -->
+  <key>com.apple.security.temporary-exception.files.home-relative-path.read-write</key>
+  <array><string>/Library/Application Support/misterdownloadmanager/</string></array>
+</dict>
+</plist>

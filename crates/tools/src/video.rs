@@ -237,15 +237,16 @@ fn info_file() -> PathBuf {
 /// asked for the page (`browser`: its Referer, User-Agent and cookies, `FromBrowser::args`).
 /// Without them (#229) a page that wants a sign-in, YouTube's "confirm you're not a bot", was
 /// refused here although the video window's look-up, which had them, had listed its qualities.
-fn look_up(exe: &Path, url: &str, browser: &[String]) -> Result<serde_json::Value, String> {
+fn look_up(exe: &Path, url: &str, browser: &[String]) -> Result<(serde_json::Value, bool), String> {
     let mut args: Vec<String> = ["-J", "--no-playlist", "--no-warnings"]
         .map(String::from)
         .to_vec();
     args.extend(browser.iter().cloned());
-    let cmd = proc::ytdlp(exe, &[], &args, url).map_err(|e| e.to_string())?;
-    let out = proc::output(cmd, "yt-dlp", std::time::Duration::from_secs(90))
+    let out = proc::look_up(exe, &args, url, std::time::Duration::from_secs(90))
         .map_err(|e| e.to_string())?;
-    serde_json::from_slice(&out).map_err(|_| "yt-dlp gave no video information".to_owned())
+    let info = serde_json::from_slice(&out.json)
+        .map_err(|_| "yt-dlp gave no video information".to_owned())?;
+    Ok((info, out.without_cookies))
 }
 
 type Child = Arc<Mutex<Option<proc::Spawned>>>;
@@ -436,11 +437,15 @@ fn supervise(
     }
 }
 
+/// The most the bar shows while yt-dlp still works.
+const MAX_WHILE_RUNNING: f64 = 0.999;
+
 /// yt-dlp's progress lines (`MDMP <downloaded> <total> <estimate> <speed>`) made into one
 /// steady figure. Each stream of a merged download (video, then audio) reports from 0 with its
 /// own total, and a fragmented stream's total (HLS, DASH) is an estimate that moves with every
 /// fragment: the streams are added up, the total never falls below the size the video window
-/// showed (`expected`, every stream), and the fraction done never goes back.
+/// showed (`expected`, every stream), and the fraction done goes back only when a stream's end
+/// had looked like the whole (no `expected`, the next stream starts).
 struct Meter {
     expected: Option<u64>,
     /// The streams already finished, and the current one's last total and bytes.
@@ -475,34 +480,42 @@ impl Meter {
         if got < self.last_got && self.last_got > 0 {
             self.finished += self.last_total.max(self.last_got);
             self.last_total = 0;
+            // Without the whole size from the start, the first stream's end looked like the
+            // whole download: the next stream's total pulls the bar back (#344).
+            if self.expected.is_none() {
+                self.frac = 0.0;
+            }
         }
         self.last_got = got;
         if let Some(t) = total {
             self.last_total = t;
         }
         let downloaded = self.finished + got;
+        p.downloaded = downloaded;
+        p.speed = f.get(3).copied().flatten().unwrap_or(0.0);
+        // Neither yt-dlp nor the video window knows how much is coming (a live stream, some
+        // HLS): no percentage rather than what came so far as the whole, 100 % (#344).
+        if self.last_total == 0 && self.expected.is_none() {
+            p.total = None;
+            return;
+        }
         let mut whole = self.finished + self.last_total.max(got);
         if let Some(e) = self.expected {
             whole = whole.max(e);
         }
-        p.downloaded = downloaded;
-        p.speed = f.get(3).copied().flatten().unwrap_or(0.0);
         if whole == 0 {
             p.total = None;
             return;
         }
-        let frac = downloaded as f64 / whole as f64;
-        if frac >= self.frac {
-            self.frac = frac;
-            p.total = Some(whole);
-        } else {
-            // The estimate grew: keep the bar where it was rather than move it back.
-            p.total = Some(
-                (downloaded as f64 / self.frac)
-                    .round()
-                    .max(downloaded as f64) as u64,
-            );
-        }
+        // 100 % is for the end (State::Done): another stream or the merge may still follow.
+        let frac = (downloaded as f64 / whole as f64).min(MAX_WHILE_RUNNING);
+        // When the estimate grew, the bar stays where it was rather than move back.
+        self.frac = self.frac.max(frac);
+        p.total = Some(
+            (downloaded as f64 / self.frac)
+                .round()
+                .max(whole.min(downloaded + 1) as f64) as u64,
+        );
     }
 }
 
@@ -671,7 +684,15 @@ fn attempt(
             }
         },
         None => match look_up(exe, url, browser) {
-            Ok(v) => v,
+            Ok((v, without_cookies)) => {
+                if without_cookies {
+                    note(
+                        progress,
+                        "The site offered no format with the browser's cookies; looked the page up without them".into(),
+                    );
+                }
+                v
+            }
             Err(e) => return failed(e, false),
         },
     };
@@ -1172,15 +1193,37 @@ mod tests {
             "150 200 NA 5",
             "200 200 NA 5",
         ];
-        for expected in [None, Some(1800)] {
-            let f = fractions(&run(expected, &lines));
-            for w in f.windows(2) {
-                assert!(w[1] >= w[0] - 1e-9, "went back: {f:?}");
-            }
-            let last = run(expected, &lines).pop().unwrap();
-            assert_eq!(last.0, 1800);
-            assert!((f[f.len() - 1] - 1.0).abs() < 1e-9, "{f:?}");
+        let f = fractions(&run(Some(1800), &lines));
+        for w in f.windows(2) {
+            assert!(w[1] >= w[0] - 1e-9, "went back: {f:?}");
         }
+        let last = run(Some(1800), &lines).pop().unwrap();
+        assert_eq!(last.0, 1800);
+        assert!(f[f.len() - 1] > 0.99 && f[f.len() - 1] < 1.0, "{f:?}");
+    }
+
+    /// #344: with no size known from the start, the second stream brings the bar back from
+    /// where the first one's end had taken it, and it never says 100 % before the end.
+    #[test]
+    fn a_stream_ending_is_not_the_whole_download() {
+        let lines = [
+            "100 1000 NA 5",
+            "1000 1000 NA 5",
+            "50 500 NA 5",
+            "400 500 NA 5",
+        ];
+        let f = fractions(&run(None, &lines));
+        assert!(f.iter().all(|x| *x < 1.0), "100 % before the end: {f:?}");
+        assert!(f[2] < 0.75, "the first stream's 100 % stayed: {f:?}");
+        assert!(f[3] > f[2], "{f:?}");
+    }
+
+    /// #344: no total and no estimate for a stream, nothing said by the video window: no
+    /// percentage at all, and certainly not 100 %.
+    #[test]
+    fn nothing_known_is_no_percentage() {
+        let v = run(None, &["100 NA NA 5", "9000 NA NA 5"]);
+        assert_eq!(v, vec![(100, None), (9000, None)]);
     }
 
     /// The size the window showed counts both streams from the start: the first stream alone

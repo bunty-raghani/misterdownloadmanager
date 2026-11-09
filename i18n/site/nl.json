@@ -1150,10 +1150,6 @@
    "source": "Make it",
    "text": "Maken"
   },
-  "12c5a9fe21646b92": {
-   "source": "<g1>MDM's programs are a third of their size, its download about half</g1> (<g2>#25</g2>): on Windows, the programs went from 93 MB to 33 MB (<x3/> from 61 MB to 29 MB, the command line from 28 MB to a 0.2 MB launcher), and setup.exe from 23 MB to 12 MB. On Linux the AppImage went from 36 MB to 16 MB, the .deb from 27 MB to 13 MB.",
-   "text": "<g1>De programma's van MDM zijn een derde van hun grootte, de download ongeveer de helft</g1> (<g2>#25</g2>): op Windows gingen de programma's van 93 MB naar 33 MB (<x3/> van 61 MB naar 29 MB, de commandoregel van 28 MB naar een 0,2 MB launcher), en setup.exe van 23 MB naar 12 MB. Op Linux ging de AppImage van 36 MB naar 16 MB, de .deb van 27 MB naar 13 MB."
-  },
   "12ed54fb5407aa89": {
    "source": "The website has <x1/> and <x2/>, and every help page as Markdown, for AI tools.",
    "text": "De website heeft <x1/> en <x2/>, en elke helppagina is beschikbaar als Markdown voor AI-tools."
@@ -2098,6 +2094,10 @@
    "source": "<g1>Look links up when they arrive (name, size, online)</g1> — Link grabber asks each server about its file (on by default).",
    "text": "<g1>Koppelingen opzoeken wanneer ze aankomen (naam, grootte, online)</g1> — Link grabber vraagt elke server naar informatie over het bestand (standaard ingeschakeld)."
   },
+  "214d94db10fe0954": {
+   "source": "<g1>Cookies for video sites</g1> (<g2>#229</g2>): <g3>Options → Sites Logins</g3> can let yt-dlp read a browser's cookies on this computer (Firefox, Chrome, Edge, Brave, Opera, Vivaldi, Chromium, Whale; Safari on macOS), with a profile by name or folder, so a pasted link to a video that needs you signed in (YouTube's \"Sign in to confirm you're not a bot\") works. Off by default. When the browser's extension passes the page's own cookies, those are used instead. When the browser's cookies can't be read (Chrome, Edge and Brave lock them on Windows; a locked keyring on Linux), the Download video window says so in plain words.",
+   "text": "<g1>Cookies voor videosites</g1> (<g2>#229</g2>): <g3>Opties → Siteaanmeldingen</g3> kan yt-dlp de cookies van een browser op deze computer laten lezen (Firefox, Chrome, Edge, Brave, Opera, Vivaldi, Chromium, Whale; Safari op macOS), met een profiel op naam of map, zodat een geplakte link naar een video waarvoor u moet zijn aangemeld (YouTube's \"Meld u aan om te bevestigen dat u geen bot bent\") werkt. Standaard uitgeschakeld. Wanneer de browserextensie de eigen cookies van de pagina doorgeeft, worden die in plaats daarvan gebruikt. Wanneer de cookies van de browser niet kunnen worden gelezen (Chrome, Edge en Brave vergrendelen ze op Windows; een vergrendelde sleutelhanger op Linux), vermeldt het venster Video downloaden dit in duidelijke taal."
+  },
   "216583d42da33e52": {
    "source": "On macOS only an administrator can schedule a wake, so the option is greyed. MDM doesn't ask for an administrator's password. An administrator can have the Mac wake every day a minute before the queue starts, for example at 10:59 PM for a queue that starts at 11:00 PM:",
    "text": "Op macOS kan alleen een beheerder een wekactie plannen. Daarom is de optie grijs. MDM vraagt niet om het wachtwoord van een beheerder. Een beheerder kan de Mac elke dag een minuut voor de start van de wachtrij laten wekken, bijvoorbeeld om 22:59 uur voor een wachtrij die om 23:00 uur start:"
@@ -2437,6 +2437,10 @@
   "26389260c1c38a82": {
    "source": "Feeds and rules are kept in <x1/> in MDM's data folder. MDM reads at most 5 MB of a feed.",
    "text": "Feeds en regels worden bewaard in <x1/> in de gegevensmap van MDM. MDM leest maximaal 5 MB van een feed."
+  },
+  "2656643a5769e161": {
+   "source": "<g1>Real-Debrid, AllDebrid and Premiumize</g1> (<g2>#44</g2>): <g3>Options → Accounts</g3> keeps your debrid service accounts. Real-Debrid signs in by code in the browser, or with your API token; AllDebrid by a PIN in the browser or with an API key, and MDM waits while it prepares a slow link; Premiumize with its API key. A link from a file host your service supports is unlocked through your account, then downloaded with all of MDM's connections, pause and resume, from Add URL, the browser's link menu and batch downloads. When the direct link expires, MDM asks the service for a new one. The direct link is never shown or copied, and the sign-in is kept like your other passwords (the system's keychain, below). Each service is asked well under its request limit. See <g4>Debrid service accounts</g4>. Experimental: built from the services' public API documentation, not yet confirmed with a real paid account.",
+   "text": "<g1>Real-Debrid, AllDebrid en Premiumize</g1> (<g2>#44</g2>): <g3>Opties → Accounts</g3> bewaart uw debrid-serviceaccounts. Real-Debrid meldt zich aan met een code in de browser, of met uw API-token; AllDebrid met een pincode in de browser of met een API-sleutel, en MDM wacht terwijl het een langzame link voorbereidt; Premiumize met zijn API-sleutel. Een link van een bestandshost die uw service ondersteunt, wordt ontgrendeld via uw account en vervolgens gedownload met alle verbindingen van MDM, pauze en hervatten, vanuit URL toevoegen, het linkmenu van de browser en batchdownloads. Wanneer de directe link verloopt, vraagt MDM de service om een nieuwe. De directe link wordt nooit getoond of gekopieerd, en de aanmelding wordt bewaard zoals uw andere wachtwoorden (de sleutelhanger van het systeem, zie hieronder). Elke service wordt ruim onder de aanvraaglimiet bevraagd. Zie <g4>Debrid-serviceaccounts</g4>. Experimenteel: gebouwd op basis van de openbare API-documentatie van de services, nog niet bevestigd met een echt betaald account."
   },
   "2661d3801e38313e": {
    "source": "A part with no face of its own (an arrow, a column header) under the pointer",
@@ -7058,6 +7062,10 @@
    "source": "<g1>Mister Download Manager closed unexpectedly</g1>: MDM crashed, or hit an internal error and closed.",
    "text": "<g1>Mister Download Manager is onverwachts afgesloten</g1>: MDM is gecrasht, of heeft een interne fout gehad en is afgesloten."
   },
+  "6f22280b42545622": {
+   "source": "<g1>Torrent commands</g1> (<g2>#39</g2>): a torrent's right-click menu has <g3>Torrent → Recheck files</g3>, <g4>Reannounce</g4>, <g5>Add trackers...</g5> and <g6>Copy magnet link</g6>. Its Files tab can tick and untick files while it runs. A <x7/> file's web address, in Add URL or from the browser, opens Add torrent with what the file holds. TORRENT is in Options → File types' defaults, so the browser hands <x8/> files over; a list saved before keeps what it had.",
+   "text": "<g1>Torrent-opdrachten</g1> (<g2>#39</g2>): het rechtermuisknopmenu van een torrent heeft <g3>Torrent → Bestanden opnieuw controleren</g3>, <g4>Trackers opnieuw aankondigen</g4>, <g5>Trackers toevoegen...</g5> en <g6>Magnetlink kopiëren</g6>. De tab Bestanden kan bestanden aan- en uitvinken terwijl de torrent actief is. Het webadres van een <x7/>-bestand, in URL toevoegen of vanuit de browser, opent Torrent toevoegen met de inhoud van het bestand. TORRENT staat in de standaardinstellingen van Opties → Bestandstypen, zodat de browser <x8/>-bestanden overdraagt; een eerder opgeslagen lijst behoudt de inhoud."
+  },
   "6f2f9063e93137cf": {
    "source": "<g1>Alt</g1> + an underlined letter",
    "text": "<g1>Alt</g1> + een onderstreepte letter"
@@ -7369,6 +7377,10 @@
   "73bbfe3db01da3ea": {
    "source": "Options, General with Test browser integration...",
    "text": "Opties, Algemeen met Browserintegratie testen..."
+  },
+  "73c46eea77b3659f": {
+   "source": "<g1>MDM's programs and downloads are much smaller</g1> (<g2>#25</g2>): on Windows, the programs went from 93 MB to 41 MB (<x3/> from 61 MB to 38 MB, the command line from 28 MB to a 0.2 MB launcher), and setup.exe from 23 MB to 16 MB. On Linux the AppImage went from 36 MB to 20 MB, the .deb from 27 MB to 17 MB.",
+   "text": "<g1>MDM's programma's en downloads zijn veel kleiner</g1> (<g2>#25</g2>): op Windows gingen de programma's van 93 MB naar 41 MB (<x3/> van 61 MB naar 38 MB, de opdrachtregel van 28 MB naar een 0,2 MB launcher), en setup.exe van 23 MB naar 16 MB. Op Linux ging de AppImage van 36 MB naar 20 MB, de .deb van 27 MB naar 17 MB."
   },
   "73ee1eb7251e220f": {
    "source": "Video and Images",
@@ -7821,10 +7833,6 @@
   "7b96ddc4c567caf5": {
    "source": "Browsers installed as a Flatpak or a Snap run in a sandbox, which decides whether they can reach MDM.",
    "text": "Browsers die als Flatpak of Snap zijn geïnstalleerd, draaien in een sandbox. Die bepaalt of ze toegang hebben tot MDM."
-  },
-  "7bab57d3591ffa30": {
-   "source": "<g1>Two smaller macOS downloads</g1> (<g2>#25</g2>): a .dmg for Apple Silicon (<x3/>, about 10 MB) and one for Intel (<x4/>, about 13 MB) instead of one universal .dmg of 80 MB. From 0.2.4 or older, update once by hand: <g5>Download</g5> in Check for updates opens the release; pick your Mac's .dmg. <g6>Update now</g6> works again after that.",
-   "text": "<g1>Twee kleinere macOS-downloads</g1> (<g2>#25</g2>): een .dmg voor Apple Silicon (<x3/>, ongeveer 10 MB) en één voor Intel (<x4/>, ongeveer 13 MB) in plaats van één universele .dmg van 80 MB. Vanaf 0.2.4 of ouder, één keer handmatig bijwerken: <g5>Downloaden</g5> in Controleren op updates opent de release; kies de .dmg van uw Mac. <g6>Nu bijwerken</g6> werkt daarna weer."
   },
   "7bbfd6a588b5c2c4": {
    "source": "Where a tooltip's text wraps",
@@ -9114,10 +9122,6 @@
    "source": "Download Mister Download Manager 0.5.0 — free for Windows, macOS and Linux",
    "text": "Mister Download Manager 0.5.0 downloaden — gratis voor Windows, macOS en Linux"
   },
-  "8f937668a1130538": {
-   "source": "<g1>0.5.0</g1> <g2>24.1 MB</g2>",
-   "text": "<g1>0.5.0</g1> <g2>24,1 MB</g2>"
-  },
   "8fabf2cac610e9a8": {
    "source": "Cinnamon.",
    "text": "Cinnamon."
@@ -9777,6 +9781,10 @@
   "99605902518653e2": {
    "source": "The same programs without an installer. It keeps its data in <x1/>, like an installed copy.",
    "text": "Dezelfde programma's zonder installatieprogramma. Het bewaart zijn gegevens in <x1/>, net als een geïnstalleerde kopie."
+  },
+  "99711c45fa3147e5": {
+   "source": "<g1>0.5.0</g1> <g2>16.9 MB</g2>",
+   "text": "<g1>0.5.0</g1> <g2>16.9 MB</g2>"
   },
   "997cc2f8f3474ae1": {
    "source": "Windows<g1><g2>3</g2></g1>",
@@ -10741,6 +10749,10 @@
   "a84e33bb5d1bc55c": {
    "source": "The <g1>command line guide</g1> lists everything <x2/> takes.",
    "text": "De <g1>opdrachtregelhandleiding</g1> vermeldt alles wat <x2/> accepteert."
+  },
+  "a8562e95bb3fa120": {
+   "source": "<g1>Two smaller macOS downloads</g1> (<g2>#25</g2>): a .dmg for Apple Silicon (<x3/>, about 14 MB) and one for Intel (<x4/>, about 16 MB) instead of one universal .dmg of 80 MB. From 0.2.4 or older, update once by hand: <g5>Download</g5> in Check for updates opens the release; pick your Mac's .dmg. <g6>Update now</g6> works again after that.",
+   "text": "<g1>Twee kleinere macOS-downloads</g1> (<g2>#25</g2>): een .dmg voor Apple Silicon (<x3/>, ongeveer 14 MB) en een voor Intel (<x4/>, ongeveer 16 MB) in plaats van één universele .dmg van 80 MB. Vanaf 0.2.4 of ouder, één keer handmatig bijwerken: <g5>Downloaden</g5> in Controleren op updates opent de release; kies de .dmg van uw Mac. <g6>Nu bijwerken</g6> werkt daarna weer."
   },
   "a856aa8d56dfc9ae": {
    "source": "<g1>Dark mode: grey notes and error texts are easier to read</g1> (<g2>#45</g2>): they now have the contrast WCAG asks for (4.5:1) on every dark surface, Options' failed checks no longer use light mode's dark red on the dark dialog, and an editable drop-down's arrow is tinted dark under the pointer.",
@@ -12146,6 +12158,10 @@
    "source": "Benchmark",
    "text": "Benchmark"
   },
+  "befc877eb2e581be": {
+   "source": "<g1>Torrent settings: the network is yours to choose</g1> (<g2>#40</g2>): accept incoming connections or not, map the port with UPnP or not, a fixed port, the DHT, finding peers on the local network, a SOCKS5 proxy from Proxy / Socks (which turns off what would go around it), an IP blocklist (P2P or eMule format, fetched again every 7 days), and stopping the torrent engine when no torrent runs. A new help page, <g3>Torrents and your security</g3>, says what others can see and what each switch does.",
+   "text": "<g1>Torrent-instellingen: u kiest het netwerk</g1> (<g2>#40</g2>): inkomende verbindingen accepteren of niet, de poort toewijzen met UPnP of niet, een vaste poort, de DHT, peers vinden op het lokale netwerk, een SOCKS5-proxy van Proxy/Socks (die omzeilingen uitschakelt), een IP-blokkeerlijst (P2P- of eMule-formaat, elke 7 dagen opnieuw opgehaald), en de torrent-engine stoppen wanneer er geen torrent actief is. Een nieuwe helppagina, <g3>Torrents en uw veiligheid</g3>, legt uit wat anderen kunnen zien en wat elke schakelaar doet."
+  },
   "befd7691ab10546c": {
    "source": "All files, extensions and checksums →",
    "text": "Alle bestanden, extensies en checksums →"
@@ -12550,6 +12566,10 @@
    "source": "<g1>The system:</g1> MDM's version and how you installed it, your operating system and its version, the processor, the language and theme, and how many downloads and queues you have. These are counts only.",
    "text": "<g1>Het systeem:</g1> de versie van MDM en hoe u het hebt geïnstalleerd, uw besturingssysteem en de versie ervan, de processor, de taal en het thema, en hoeveel downloads en wachtrijen u hebt. Dit zijn alleen tellingen."
   },
+  "c5ddef5d4d228288": {
+   "source": "Downloads are smaller: setup.exe 23 → 16 MB, AppImage 36 → 20 MB, .deb 27 → 17 MB.",
+   "text": "Downloads zijn kleiner: setup.exe 23 → 16 MB, AppImage 36 → 20 MB, .deb 27 → 17 MB."
+  },
   "c5ea65c70393f2d1": {
    "source": "<g1>Hang up modem when done</g1> — ends a dial-up connection, if you use one.",
    "text": "<g1>Modem ophangen wanneer voltooid</g1> — beëindigt een inbelverbinding, als u die gebruikt."
@@ -12798,6 +12818,10 @@
    "source": "<g1>The plain zip</g1> (<x2/>), the same programs without an installer.",
    "text": "<g1>Het gewone zipbestand</g1> (<x2/>), dezelfde programma's zonder installatieprogramma."
   },
+  "c9adce03030690a2": {
+   "source": "<g1>Seeding and upload limits, and a share ratio that lasts</g1> (<g2>#39</g2>): under \"Keep sharing torrents after they finish\", Torrent settings can stop sharing a finished torrent at a share ratio, or after it has been shared for some minutes; both off by default. A torrent stopped so says it in its event log and isn't shared again at the next start. Torrent settings can limit what all torrents together send, and a torrent's progress window can limit its own, kept with it. Its General tab now counts what it sent and how long it shared over all its runs, so the share ratio no longer starts again at 0 after a pause or a restart.",
+   "text": "<g1>Seeden en uploadlimieten, en een blijvende deelverhouding</g1> (<g2>#39</g2>): onder \"Torrents blijven delen nadat ze zijn voltooid\" kunnen de Torrent-instellingen het delen van een voltooide torrent stoppen bij een deelverhouding, of nadat deze een aantal minuten is gedeeld; beide zijn standaard uitgeschakeld. Een torrent die zo is gestopt, vermeldt dit in het gebeurtenislogboek en wordt bij de volgende start niet opnieuw gedeeld. De Torrent-instellingen kunnen de totale upload van alle torrents samen beperken, en het voortgangsvenster van een torrent kan zijn eigen upload beperken, die bij de torrent wordt bewaard. De tab Algemeen telt nu wat er is verzonden en hoe lang er is gedeeld over alle uitvoeringen, zodat de deelverhouding niet langer opnieuw begint bij 0 na een pauze of een herstart."
+  },
   "c9bc77086f15e169": {
    "source": "<g1>From browser</g1> lists the browsers yt-dlp reads: Firefox, Chrome, Edge, Brave, Opera, Vivaldi, Chromium and Whale, and Safari on macOS. <g2>Profile</g2> is optional: a profile's name (<x3/>) or its folder; empty, the profile used last.",
    "text": "<g1>Van browser</g1> toont de browsers die yt-dlp leest: Firefox, Chrome, Edge, Brave, Opera, Vivaldi, Chromium en Whale, en Safari op macOS. <g2>Profiel</g2> is optioneel: de naam van een profiel (<x3/>) of de map ervan; leeg, het laatst gebruikte profiel."
@@ -12909,10 +12933,6 @@
   "cb797c11de6612fd": {
    "source": "3. Choose how many run at once",
    "text": "3. Kiezen hoeveel downloads tegelijk lopen"
-  },
-  "cb7d403b3b59f081": {
-   "source": "Downloads are about half the size: setup.exe 23 → 12 MB, AppImage 36 → 16 MB, .deb 27 → 13 MB.",
-   "text": "Downloads zijn ongeveer de helft kleiner: setup.exe 23 → 12 MB, AppImage 36 → 16 MB, .deb 27 → 13 MB."
   },
   "cb8376955028cc1c": {
    "source": "<g1>Linux: uninstalling the .deb or .rpm leaves no browser files behind</g1> (<g2>#266</g2>): MDM wrote the files that tell each browser where its helper is in every user's home folder, and <x3/> or <x4/> left them there, naming a program that was gone. The packages now install them for everyone, in each browser's own folder (Chrome and Brave, Chromium and Vivaldi, Edge, Firefox, the Snap Firefox included), and remove them with the package; MDM writes none in the home folder for those browsers, and takes away the ones an earlier version wrote. The AppImage and the tar.gz, and Opera, Helium, Thorium and Firefox's forks (which read them only in the home folder), still get them there.",
@@ -14782,6 +14802,10 @@
    "source": "A helper you can check",
    "text": "Een hulpprogramma dat u kunt controleren"
   },
+  "e9de3deb5fe58030": {
+   "source": "<g1>Video subtitles</g1> (<g2>#68</g2>): Download video from a page lists the video's subtitle languages, the uploader's first, then the site's automatic captions (in the language spoken, English and yours). They're saved beside the video as <x3/>, or put into the video with ffmpeg (MP4, MKV), and the choice is offered again for the next video. Subtitles a site refuses (YouTube limits how often they may be fetched) never cost the video: MDM asks once more after a pause, then says which are missing. On the command line: <x4/>, <x5/>, <x6/>; <x7/> lists them. A finished video and its subtitles are now marked as downloaded from the internet, as other downloads are.",
+   "text": "<g1>Video-ondertitels</g1> (<g2>#68</g2>): Video downloaden van een pagina toont de ondertitelings-talen van de video, eerst die van de uploader, daarna de automatische ondertitels van de site (in de gesproken taal, Engels en uw taal). Ze worden naast de video opgeslagen als <x3/>, of in de video geplaatst met ffmpeg (MP4, MKV), en de keuze wordt opnieuw aangeboden voor de volgende video. Ondertitels die een site weigert (YouTube beperkt hoe vaak ze kunnen worden opgehaald) kosten nooit de video: MDM vraagt na een pauze nogmaals, en zegt dan welke ontbreken. Op de opdrachtregel: <x4/>, <x5/>, <x6/>; <x7/> toont ze. Een voltooide video en de ondertitels worden nu gemarkeerd als gedownload van internet, net als andere downloads."
+  },
   "e9dfa5dcec820f03": {
    "source": "Make one",
    "text": "Maak een thema"
@@ -15317,6 +15341,10 @@
   "f135b1b9671dc439": {
    "source": "Make everything larger / smaller, in every window (<g1>View → Interface size</g1>, 100 % to 200 %)",
    "text": "Alles groter / kleiner maken, in elk venster (<g1>Beeld → Interfasegrootte</g1>, 100 % tot 200 %)"
+  },
+  "f1452f6e417cd255": {
+   "source": "<g1>Playlists and channels</g1> (<g2>#69</g2>): Download video from a page lists a playlist's or a channel's videos, with their lengths, all ticked, with Select all and Select none. One quality applies to all of them (the best, up to a height, the original sound, MP3, Opus or FLAC). Each video gets its own download, in a folder named after the list, and Download Now starts the main queue, which runs as many at once as its settings say. A playlist is listed as its videos come in; the listing can be stopped and taken up again (List the rest), and one the site breaks off says after how many videos and why. A channel is listed 50 videos at a time, with Load more. Lists of thousands stay quick, and adding more than 500 downloads asks first. On the command line: <x3/> and <x4/>.",
+   "text": "<g1>Afspeellijsten en kanalen</g1> (<g2>#69</g2>): Video downloaden van een pagina toont de video's van een afspeellijst of kanaal, met hun lengtes, allemaal aangevinkt, met Alles selecteren en Niets selecteren. Eén kwaliteit is van toepassing op allemaal (de beste, tot een bepaalde hoogte, het originele geluid, MP3, Opus of FLAC). Elke video krijgt een eigen download, in een map genoemd naar de lijst, en Nu downloaden start de hoofdwachtrij, die er zoveel tegelijk uitvoert als de instellingen aangeven. Een afspeellijst wordt weergegeven zodra de video's binnenkomen; de weergave kan worden gestopt en hervat (De rest weergeven), en een lijst die de site afbreekt, vermeldt na hoeveel video's en waarom. Een kanaal wordt per 50 video's weergegeven, met Meer laden. Lijsten van duizenden blijven snel, en het toevoegen van meer dan 500 downloads vraagt eerst om bevestiging. Op de opdrachtregel: <x3/> en <x4/>."
   },
   "f154ebe2d1cfad18": {
    "source": "Scheduler and queues",

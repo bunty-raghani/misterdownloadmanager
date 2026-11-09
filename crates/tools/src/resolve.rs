@@ -20,6 +20,23 @@ pub struct Video {
     pub automatic: Vec<Track>,
     /// The language the video is spoken in, when the site says (`en`, `pt-BR`).
     pub language: Option<String>,
+    /// A plain file at this address, not a page or a stream (yt-dlp's `direct`). yt-dlp says
+    /// nothing of its size then: the server is asked (`needs_size`, #320).
+    pub direct: bool,
+}
+
+impl Video {
+    /// A plain file whose size nobody has said yet.
+    pub fn needs_size(&self) -> bool {
+        self.direct && self.formats.iter().all(|f| f.size.is_none())
+    }
+
+    /// The size the file's server said.
+    pub fn set_size(&mut self, size: u64) {
+        for f in &mut self.formats {
+            f.size = Some(size);
+        }
+    }
 }
 
 /// One language of subtitles a page has (#68).
@@ -69,6 +86,8 @@ struct RawVideo {
     #[serde(default)]
     automatic_captions: Option<std::collections::BTreeMap<String, Vec<RawSub>>>,
     language: Option<String>,
+    #[serde(default)]
+    direct: bool,
 }
 
 /// One file of a subtitle language (its formats: srt, vtt, json3…); only the name is read.
@@ -115,6 +134,20 @@ struct RawFormat {
     format_note: Option<String>,
 }
 
+/// Whether `title` is only the last part of `page`'s address, which is what yt-dlp calls a video
+/// on a site it has no page reader for (#345: on some servers that part is a long hash).
+pub fn named_after_address(title: &str, page: &str) -> bool {
+    let Some(last) = url::Url::parse(page).ok().and_then(|u| {
+        u.path_segments()
+            .and_then(|mut p| p.next_back().map(str::to_owned))
+    }) else {
+        return false;
+    };
+    let last = percent_encoding::percent_decode_str(&last).decode_utf8_lossy();
+    let stem = last.rsplit_once('.').map_or(last.as_ref(), |(s, _)| s);
+    !stem.is_empty() && title.trim() == stem
+}
+
 /// Parse `yt-dlp -J` output.
 pub fn parse(json: &[u8]) -> Option<Video> {
     let raw: RawVideo = serde_json::from_slice(json).ok()?;
@@ -145,6 +178,7 @@ pub fn parse(json: &[u8]) -> Option<Video> {
         subtitles: tracks(raw.subtitles),
         automatic: tracks(raw.automatic_captions),
         language: raw.language,
+        direct: raw.direct,
     })
 }
 
@@ -272,13 +306,15 @@ pub fn look_up_with_info(
     // Kept until yt-dlp has answered.
     let (theirs, _cookies) = browser.args(url)?;
     args.extend(theirs);
-    let cmd = proc::ytdlp(exe, &[], &args, url)?;
-    let out = proc::output(cmd, "yt-dlp", Duration::from_secs(90))?;
-    let looked = parse_looked(&out).ok_or_else(|| ProcError::Failed {
+    let out = proc::look_up(exe, &args, url, Duration::from_secs(90))?;
+    let looked = parse_looked(&out.json).ok_or_else(|| ProcError::Failed {
         tool: "yt-dlp".into(),
         message: "it gave no video information".into(),
     })?;
-    Ok(Lookup { looked, info: out })
+    Ok(Lookup {
+        looked,
+        info: out.json,
+    })
 }
 
 /// Look `url` up as one video (a list is an error here).
@@ -371,6 +407,20 @@ pub fn holds_subtitles(c: &Choice) -> bool {
         c.ext.to_ascii_lowercase().as_str(),
         "mp4" | "mkv" | "mov" | "m4v"
     )
+}
+
+/// Would merging (ffmpeg) bring a better video than the ones already carrying their sound (#351)?
+/// YouTube's only such format is 360p, and without a JavaScript runtime yt-dlp often has none:
+/// the list then holds the sound alone, so the window must say why.
+pub fn needs_merging(v: &Video) -> bool {
+    let best = |merging: bool| {
+        v.formats
+            .iter()
+            .filter(|f| f.video && (merging || f.audio))
+            .filter_map(|f| f.height)
+            .max()
+    };
+    best(true) > best(false)
 }
 
 /// The choices, best first: each resolution (merged with the best audio when ffmpeg is there,
@@ -560,6 +610,19 @@ pub fn choices(v: &Video, can_merge: bool) -> Vec<Choice> {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn a_title_that_is_only_the_address() {
+        let hash = "SFp1NUcrZFRkRUVrUWlqM3paMitkakJIUW9JSFhOeEZkd0ZMNEc5UHpnZm5hRkY4Vis5MjlJU00xdDVqTk1vaw";
+        let page = format!("https://cdn.example/v/{hash}.mp4?sig=1");
+        assert!(named_after_address(hash, &page));
+        assert!(!named_after_address("A real title", &page));
+        assert!(!named_after_address("watch", "not an address"));
+        assert!(named_after_address(
+            "my clip",
+            "https://x.example/my%20clip.mp4"
+        ));
+    }
+
     use super::*;
 
     #[test]
@@ -586,6 +649,7 @@ mod tests {
             subtitles: Vec::new(),
             automatic: Vec::new(),
             language: None,
+            direct: false,
         };
         let labels: Vec<String> = choices(&v, true)
             .into_iter()
@@ -648,6 +712,86 @@ mod tests {
         let labels: Vec<&str> = plain.iter().map(|c| c.label.as_str()).collect();
         assert_eq!(labels, ["360p MP4", "Audio only original M4A"]);
         assert_eq!(plain[0].selector, "b[height=360]");
+    }
+
+    /// Live (#352): `MDM_LIVE_YTDLP=<yt-dlp> MDM_LIVE_PAGE=<video page> cargo test -p mdm-tools
+    /// live_look_up -- --ignored --nocapture`. A look-up given cookies; with a yt-dlp that fails
+    /// the way a signed-in session does (a wrapper forcing `web_embedded,tv_samsung,web` when it
+    /// sees `--cookies`), the second look-up, without them, lists the page's videos.
+    #[test]
+    #[ignore]
+    fn live_look_up_with_cookies() {
+        let exe =
+            std::path::PathBuf::from(std::env::var("MDM_LIVE_YTDLP").expect("MDM_LIVE_YTDLP"));
+        let page = std::env::var("MDM_LIVE_PAGE").expect("MDM_LIVE_PAGE");
+        let browser = proc::FromBrowser {
+            cookies: Some("YSC=test".into()),
+            ..Default::default()
+        };
+        let (mut args, _file) = browser.args(&page).unwrap();
+        args.insert(0, "-J".to_owned());
+        args.push("--no-playlist".to_owned());
+        let out = proc::look_up(&exe, &args, &page, Duration::from_secs(120)).unwrap();
+        let v = parse(&out.json).unwrap();
+        let heights: std::collections::BTreeSet<u32> = v
+            .formats
+            .iter()
+            .filter(|f| f.video)
+            .filter_map(|f| f.height)
+            .collect();
+        println!(
+            "without_cookies: {}, {} formats, video heights {heights:?}",
+            out.without_cookies,
+            v.formats.len()
+        );
+        assert!(!heights.is_empty(), "no video in {:?}", v.title);
+    }
+
+    /// #320: yt-dlp's answer for a plain file (real output, 2026.10.26) says `direct` and no size.
+    #[test]
+    fn a_direct_file_takes_the_size_the_server_said() {
+        let json = r#"{"title": "clip", "direct": true, "ext": "mp4", "formats": [
+            {"format_id": "mp4", "ext": "mp4", "vcodec": null, "acodec": null}]}"#;
+        let mut v = parse(json.as_bytes()).unwrap();
+        assert!(v.needs_size());
+        assert_eq!(choices(&v, true)[0].size, None);
+        v.set_size(430_019_588);
+        assert!(!v.needs_size());
+        assert_eq!(choices(&v, true)[0].size, Some(430_019_588));
+        // A page's video: no such look (its sizes are the site's to say, or estimated).
+        let page = r#"{"title": "t", "formats": [{"format_id": "18", "ext": "mp4"}]}"#;
+        assert!(!parse(page.as_bytes()).unwrap().needs_size());
+        // A file whose size yt-dlp said keeps it.
+        let sized =
+            r#"{"title": "t", "direct": true, "formats": [{"format_id": "mp4", "filesize": 9}]}"#;
+        assert!(!parse(sized.as_bytes()).unwrap().needs_size());
+    }
+
+    /// #351: what yt-dlp lists on YouTube with no JavaScript runtime (real output, 2026.10.26):
+    /// video-only streams and sound, nothing carrying both. Without ffmpeg only the sound is
+    /// offered, and the window has to say that ffmpeg brings the qualities.
+    #[test]
+    fn only_the_sound_without_ffmpeg_and_a_muxed_format() {
+        let json = r#"{"title": "T", "formats": [
+            {"format_id": "sb0", "ext": "mhtml", "vcodec": "none", "acodec": "none"},
+            {"format_id": "140-0", "ext": "m4a", "vcodec": "none", "acodec": "mp4a.40.2", "filesize": 900},
+            {"format_id": "312", "ext": "mp4", "height": 1080, "vcodec": "avc1.64002A", "acodec": "none", "filesize": 9000},
+            {"format_id": "230", "ext": "mp4", "height": 360, "vcodec": "avc1.4D401E", "acodec": "none", "filesize": 1000}]}"#;
+        let v = parse(json.as_bytes()).unwrap();
+        let without: Vec<String> = choices(&v, false).into_iter().map(|c| c.label).collect();
+        assert_eq!(without, ["Audio only original M4A"]);
+        assert!(needs_merging(&v));
+        let with: Vec<String> = choices(&v, true).into_iter().map(|c| c.label).collect();
+        assert_eq!(&with[..2], ["1080p MP4", "360p MP4"]);
+        // A format carrying both, as good as any video: nothing more to get from merging.
+        let muxed = r#"{"title": "T", "formats": [
+            {"format_id": "18", "ext": "mp4", "height": 360, "vcodec": "avc1", "acodec": "mp4a"},
+            {"format_id": "230", "ext": "mp4", "height": 360, "vcodec": "avc1", "acodec": "none"}]}"#;
+        assert!(!needs_merging(&parse(muxed.as_bytes()).unwrap()));
+        // Sound alone: nothing to merge.
+        let sound = r#"{"title": "T", "formats": [
+            {"format_id": "140", "ext": "m4a", "vcodec": "none", "acodec": "mp4a"}]}"#;
+        assert!(!needs_merging(&parse(sound.as_bytes()).unwrap()));
     }
 
     /// #70: what each audio choice converts to; the original and videos convert nothing.

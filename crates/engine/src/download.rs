@@ -245,6 +245,10 @@ pub enum Error {
     Http(Arc<reqwest::Error>),
     #[error("server answered {0}")]
     Status(StatusCode),
+    /// The site's bot check refused the request: it lets browsers through, not programs (#376).
+    /// Cloudflare says so in its answer (`cf-mitigated: challenge`).
+    #[error("the site's bot check refused the download")]
+    BotCheck,
     /// 429 / 503: the server is busy; retry after its `Retry-After` when it gives one.
     #[error("server busy ({0})")]
     Throttled(StatusCode, Option<Duration>),
@@ -336,7 +340,7 @@ impl Error {
     /// The address no longer serves this file (or refuses us): retrying won't help.
     fn link_dead(&self) -> bool {
         matches!(self, Error::Status(s) if matches!(s.as_u16(), 401 | 403 | 404 | 410 | 416))
-            || matches!(self, Error::GotWebPage | Error::LinkExpired)
+            || matches!(self, Error::GotWebPage | Error::LinkExpired | Error::BotCheck)
             // A site's refusal; a service's, unless waiting helps (#44).
             || matches!(self, Error::Refused(r) if !matches!(r, Refusal::Service { fault, .. } if fault.retry_wait().is_some()))
             // Login refused; no such file (or no permission); a name the server won't take.
@@ -2297,6 +2301,7 @@ async fn get(
             s if s == StatusCode::TOO_MANY_REQUESTS || s == StatusCode::SERVICE_UNAVAILABLE => {
                 return Err(Error::Throttled(s, retry_after(resp.headers())));
             }
+            s if is_bot_check(s, resp.headers()) => return Err(Error::BotCheck),
             s => return Err(Error::Status(s)),
         }
         // Where the HTTP redirects ended: the headers' credentials follow as reqwest's did.
@@ -2907,6 +2912,13 @@ fn per_node_etag(ctx: &Ctx, sent: Option<&HeaderValue>, resp: &Response) -> bool
 
 fn header_str(h: &HeaderMap, name: header::HeaderName) -> Option<&str> {
     h.get(name).and_then(|v| v.to_str().ok())
+}
+
+/// A site's bot check turning the request away (#376), as Cloudflare marks it.
+fn is_bot_check(status: StatusCode, h: &HeaderMap) -> bool {
+    status == StatusCode::FORBIDDEN
+        && h.get("cf-mitigated")
+            .is_some_and(|v| v.as_bytes().eq_ignore_ascii_case(b"challenge"))
 }
 
 fn is_web_page(h: &HeaderMap) -> bool {

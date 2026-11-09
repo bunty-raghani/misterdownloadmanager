@@ -164,6 +164,12 @@
   "popup_media_none": {
     "message": "Aucune vidéo ni aucun son n’a encore été détecté sur cette page. Lancez la lecture, puis rouvrez cette fenêtre."
   },
+  "popup_media_streamed": {
+    "message": "Le lecteur de cette page diffuse la vidéo par morceaux : il n'y a donc aucun fichier à lister. Pointez la vidéo et utilisez son bouton « Télécharger la vidéo »."
+  },
+  "popup_media_store": {
+    "message": "Les règles du Chrome Web Store tiennent cette copie du module à l'écart des vidéos de ce site. L'aide indique ce que vous pouvez faire."
+  },
   "popup_media_download": {
     "message": "Télécharger"
   },
@@ -178,6 +184,9 @@
   },
   "video_drm": {
     "message": "Vidéo protégée : impossible de l’enregistrer"
+  },
+  "video_unnamed": {
+    "message": "Impossible de savoir de quelle vidéo il s'agit : ouvrez sa propre page et réessayez"
   },
   "popup_send_to": {
     "message": "Envoyer les téléchargements vers"

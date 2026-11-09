@@ -209,6 +209,14 @@
     "message": "No video or sound found on this page yet. Play it, then open this again.",
     "description": "shown in the toolbar button's popup when the current web page hasn't loaded any video, sound or stream yet"
   },
+  "popup_media_streamed": {
+    "message": "This page's player streams its video in pieces, so there's no file to list. Point at the video and use its Download video button.",
+    "description": "in the toolbar button's popup, when the page's player plays from a stream built in the page (a blob:): the list of the page's media has nothing to show; Download video is the name of the button over videos"
+  },
+  "popup_media_store": {
+    "message": "The Chrome Web Store's rules keep this copy of the add-on away from this site's videos. Help says what you can do.",
+    "description": "in the toolbar button's popup, on a site where the Chrome Web Store's copy of the extension shows no download button; Help is the link at the bottom of the popup"
+  },
   "popup_media_download": {
     "message": "Download",
     "description": "button beside a video, sound or stream in the toolbar button's popup: download it with the app; verb; short"
@@ -228,6 +236,10 @@
   "video_drm": {
     "message": "Protected video: it can't be saved",
     "description": "shown briefly on the download button when the video is copy-protected (DRM) and no tool can download it"
+  },
+  "video_unnamed": {
+    "message": "Can't tell which video this is: open its own page and try there",
+    "description": "shown briefly on the download button when nothing on the page says which video the player is playing, so nothing was sent"
   },
   "popup_send_to": {
     "message": "Send downloads to",

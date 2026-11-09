@@ -38,6 +38,7 @@
     video_failed: "Mister Download Manager isn't installed or didn't start",
     video_off: "The download button is off on this site",
     video_drm: "Protected video: it can't be saved",
+    video_unnamed: "Can't tell which video this is: open its own page and try there",
     video_drag: "Drag to move it along the video's edge",
   };
   // To the background. After the extension was updated or removed, this page's copy of the script
@@ -57,6 +58,77 @@
   // the page's downloader, not yt-dlp: protected channels only its session can fetch.
   const TELEGRAM = /^(web|webk|webz)\.telegram\.org$/i.test(host);
   const TELEGRAM_VIEWER = ".media-viewer-whole, #MediaViewer, #StoryViewer";
+
+  // The address the app looks the video up by — the video's, not the page's. Most pages that play
+  // a video are not the video's page: YouTube's home, a search, a channel or a playlist carries a
+  // list in its address ("recommended", the results, the channel's videos), and yt-dlp reads such
+  // an address as the list, so the app offered the whole feed instead of the video the button was
+  // on. A watch page opened from a mix or a playlist has the same problem one level down
+  // (…&list=…&index=…): its own page is watch?v=<id>, and nothing else.
+  //
+  // Null when the page plays a video but its DOM doesn't name it: YouTube's channel masthead player
+  // has no video-id attribute, no link to the video inside the player and a blob: source. The page
+  // itself never goes to the app then (a channel is a whole list to yt-dlp): the background asks
+  // the player what it plays, in the page's own world (background.js playingVideo), and this
+  // answer is only what it falls back on.
+  function videoPage(v) {
+    const watch = (id) =>
+      /^[\w-]+$/.test(id || "") ? `https://www.youtube.com/watch?v=${id}` : null;
+    try {
+      const url = new URL(location.href);
+      const name = url.hostname.replace(/^(www|m|music)\./, "");
+      if (name === "youtu.be") {
+        const id = url.pathname.split("/")[1];
+        if (watch(id)) return `https://youtu.be/${id}`;
+      }
+      if (name === "youtube.com" || name === "youtube-nocookie.com") {
+        // An embed's own page is the video's (…/embed/<id>).
+        if (url.pathname.startsWith("/embed/")) {
+          const id = watch(url.pathname.split("/")[2]);
+          if (id) return id;
+        }
+        // A Short's or a live stream's own page (/shorts/<id>, /live/<id>). yt-dlp reads these as
+        // the same one video as watch?v=<id>.
+        const [, kind, pathId] = url.pathname.split("/");
+        if (kind === "shorts" || kind === "live") {
+          const id = watch(pathId);
+          if (id) return id;
+        }
+        // The page is this video's own: a watch page, with or without a list on it.
+        const own = watch(url.searchParams.get("v"));
+        if (own && url.pathname.startsWith("/watch")) return own;
+        const shown = watch(document.querySelector("ytd-watch-flexy")?.getAttribute("video-id"));
+        if (shown && url.pathname.startsWith("/watch")) return shown;
+        const player = watch(document.querySelector("#movie_player")?.getAttribute("video-id"));
+        if (player) return player;
+        // A player inside the card it belongs to (a feed, a search, a playlist): the card links to
+        // the video. Only a container that names exactly one video counts — walking on into the
+        // page's column would find some other card's link and send the wrong video, which is worse
+        // than sending none.
+        for (let node = v, i = 0; node && i < 12; i += 1, node = node.parentElement) {
+          const ids = new Set();
+          for (const a of node.querySelectorAll?.('a[href*="/watch?"], a[href*="youtu.be/"]') || []) {
+            const link = new URL(a.href, location.href);
+            const id = link.hostname.endsWith("youtu.be")
+              ? link.pathname.split("/")[1]
+              : link.searchParams.get("v");
+            if (watch(id)) ids.add(id);
+          }
+          if (ids.size === 1) return watch([...ids][0]);
+          if (ids.size > 1) break;
+        }
+        // A page that plays a video and names none: not the video's page, so not the app's.
+        return null;
+      }
+    } catch {
+      // Not an address this page can reason about: its own follows.
+    }
+    return location.href;
+  }
+
+  // The address this page first loaded at (`download`: a page that moves in place keeps its first
+  // page's og:title).
+  const landedAt = location.href;
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   // "Hide on this video": the video's address (players reuse one element for the next video),
@@ -560,16 +632,28 @@ button:focus-visible { outline: 2px solid #2a78d6; outline-offset: -2px; }
       // Encrypted (DRM): no tool can save it; say so rather than send it.
       if (video.mediaKeys) return flash("err", t("video_drm"));
       const src = /^(https?|blob):/i.test(video.currentSrc || "") ? video.currentSrc : "";
-      const title = (document.querySelector('meta[property="og:title"]')?.content || document.title || "").trim();
+      // A page that moved in place keeps its first page's og:title; its document title follows.
+      const og = location.href === landedAt ? document.querySelector('meta[property="og:title"]')?.content : "";
+      const title = (og || document.title || "").trim();
       if (TELEGRAM) {
         // The page fetches its own protected media into MDM's local upload server; MDM writes
         // it and shows the progress window. No browser download.
         await startTelegramDownload(src, title);
         return;
       }
-      const r = await send({ type: "video", src, title, page: location.href });
+      // The middle of the video: where the background asks the page's own player what it plays.
+      const box = video.getBoundingClientRect();
+      const at = { x: box.left + box.width / 2, y: box.top + box.height / 2 };
+      // Asked now, not kept: one <video> plays many videos at the same address (a feed's previews).
+      const r = await send({
+        type: "video",
+        src: /^https?:/i.test(src) ? src : "",
+        title,
+        url: videoPage(video),
+        at,
+      });
       if (r.gone) return;
-      flash(r.ok ? "ok" : "err", t(r.ok ? "video_sent" : r.why === "options" ? "video_off" : "video_failed"));
+      flash(r.ok ? "ok" : "err", t(r.ok ? "video_sent" : r.why === "options" ? "video_off" : r.why === "unnamed" ? "video_unnamed" : "video_failed"));
     } finally {
       busy = false;
     }

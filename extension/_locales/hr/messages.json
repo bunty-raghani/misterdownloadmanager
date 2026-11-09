@@ -164,6 +164,12 @@
   "popup_media_none": {
     "message": "Još nema videozapisa ili zvuka na ovoj stranici. Reproducirajte ih, a zatim ponovno otvorite ovo."
   },
+  "popup_media_streamed": {
+    "message": "Reproduktor ove stranice emitira videozapis u dijelovima pa nema datoteke za prikaz. Pokažite na videozapis i upotrijebite njegov gumb „Preuzmi videozapis”."
+  },
+  "popup_media_store": {
+    "message": "Pravila Chrome web-trgovine drže ovu kopiju dodatka podalje od videozapisa ove stranice. U „Pomoći” piše što možete učiniti."
+  },
   "popup_media_download": {
     "message": "Preuzmi"
   },
@@ -178,6 +184,9 @@
   },
   "video_drm": {
     "message": "Zaštićeni videozapis: ne može se spremiti"
+  },
+  "video_unnamed": {
+    "message": "Nije moguće utvrditi koji je ovo videozapis: otvorite njegovu stranicu i pokušajte ondje"
   },
   "popup_send_to": {
     "message": "Šalji preuzimanja na"

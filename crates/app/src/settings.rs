@@ -755,10 +755,10 @@ impl Settings {
             .map(|(_, user, pass)| (user.clone(), pass.clone()))
     }
 
-    /// Options → File types: whether a file name has one of the listed types (`R0*` is a
-    /// prefix pattern).
-    pub fn auto_type(&self, name: &str) -> bool {
-        mdm_ipc::capture::type_listed(&self.auto_types, name)
+    /// Should a copied link named `name` be offered? Fewer types than a browser hands over
+    /// (`mdm_ipc::capture::clipboard_type`).
+    pub fn clipboard_type(&self, name: &str) -> bool {
+        mdm_ipc::capture::clipboard_type(&self.auto_types, name)
     }
 
     /// Set (or forget, with `None`) the category's own folder.
@@ -1102,8 +1102,9 @@ mod tests {
     #[test]
     fn listed_file_types() {
         let s = Settings::default();
-        assert!(s.auto_type("setup.EXE") && s.auto_type("a.r01") && s.auto_type("x.zip"));
-        assert!(!s.auto_type("page.html") && !s.auto_type("noext"));
+        let listed = |name| mdm_ipc::capture::type_listed(&s.auto_types, name);
+        assert!(listed("setup.EXE") && listed("a.r01") && listed("x.zip"));
+        assert!(!listed("page.html") && !listed("noext"));
     }
 
     #[test]

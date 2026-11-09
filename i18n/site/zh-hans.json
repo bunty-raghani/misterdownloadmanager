@@ -1150,10 +1150,6 @@
    "source": "Make it",
    "text": "制作它"
   },
-  "12c5a9fe21646b92": {
-   "source": "<g1>MDM's programs are a third of their size, its download about half</g1> (<g2>#25</g2>): on Windows, the programs went from 93 MB to 33 MB (<x3/> from 61 MB to 29 MB, the command line from 28 MB to a 0.2 MB launcher), and setup.exe from 23 MB to 12 MB. On Linux the AppImage went from 36 MB to 16 MB, the .deb from 27 MB to 13 MB.",
-   "text": "<g1>MDM 的程序大小减少了三分之二，下载量减少了一半</g1>（<g2>#25</g2>）：在 Windows 上，程序从 93 MB 变为 33 MB（<x3/> 从 61 MB 变为 29 MB，命令行从 28 MB 变为 0.2 MB 的启动器），setup.exe 从 23 MB 变为 12 MB。在 Linux 上，AppImage 从 36 MB 变为 16 MB，.deb 从 27 MB 变为 13 MB。"
-  },
   "12ed54fb5407aa89": {
    "source": "The website has <x1/> and <x2/>, and every help page as Markdown, for AI tools.",
    "text": "网站提供 <x1/> 和 <x2/>，以及所有帮助页面（Markdown 格式），供 AI 工具使用。"
@@ -1525,6 +1521,10 @@
   "18b50a626d4c7cff": {
    "source": "Postage",
    "text": "邮费"
+  },
+  "18b71bddc92d0eb7": {
+   "source": "<g1>A Linux test machine, scripted</g1> (part of <g2>#164</g2>): <x3/> sets up an Ubuntu 24.04 desktop in VirtualBox from a Windows host (<x4/>: hardware, headless start, linked clones; <x5/>: packages, Rust, Node, the browsers, UI automation, an unlocked keyring), builds any branch or pull request there with a quick test profile (<x6/>), and checks pull requests on it: windows shot and compared pixel by pixel (<x7/>, <x8/>, <x9/>), HLS and DASH hand-overs from the Snap Firefox and Google Chrome (<x10/>, <x11/>), the extension's proxy switch (<x12/>), hand-overs and the Scheduler while minimized, torrents without a network, and MDM's start-up time (<x13/>). Every change is now checked on Linux as on Windows. The machine also has copies on KDE Plasma, Cinnamon and XFCE (<x14/>), which get a build copied over instead of making one (<x15/>); a window harness shoots many windows from one running MDM in any language, mode and theme, with real clicks and keys inside the machine (<x16/>, <x17/>); and a store package is checked before it ships (<x18/>, <x19/>).",
+   "text": "<g1>脚本化的 Linux 测试机</g1>（<g2>#164</g2> 的一部分）：<x3/> 在 VirtualBox 中从 Windows 主机设置 Ubuntu 24.04 桌面（<x4/>：硬件、无头启动、链接克隆；<x5/>：软件包、Rust、Node、浏览器、UI 自动化、已解锁的密钥环），使用快速测试配置文件（<x6/>）构建任何分支或拉取请求，并检查其上的拉取请求：窗口截图并逐像素比较（<x7/>、<x8/>、<x9/>），Snap Firefox 和 Google Chrome 的 HLS 和 DASH 切换（<x10/>、<x11/>），扩展程序的代理切换（<x12/>），最小化时的切换和计划程序，无网络时的种子下载，以及 MDM 的启动时间（<x13/>）。现在，每次更改都会像在 Windows 上一样在 Linux 上进行检查。该机器还在 KDE Plasma、Cinnamon 和 XFCE 上有副本（<x14/>），这些副本会复制构建而不是重新生成（<x15/>）；一个窗口工具可以在机器内部通过真实的点击和按键，以任何语言、模式和主题从一个运行中的 MDM 拍摄多个窗口（<x16/>、<x17/>）；并且在发布之前会检查商店软件包（<x18/>、<x19/>）。"
   },
   "18bca0e419aafc22": {
    "source": "<g1>Browser integration</g1> for Chrome, Edge, Brave, Opera and Vivaldi (Firefox in testing): downloads hand over to MDM with their cookies and referrer, right-click <g2>Download with Mister Download Manager</g2>, and a <g3>Download video</g3> button over videos on any page, which can be dragged along the video's edge, hidden on a video or a site, or turned off in Options.",
@@ -2610,6 +2610,10 @@
    "source": "A text box's border",
    "text": "文本框边框"
   },
+  "28a0353a83207f33": {
+   "source": "<g1>Open folder no longer freezes the window</g1> (<g2>#222</g2>): Download complete's <g3>Open folder</g3> asks the desktop's file manager (over D-Bus) to show the file, and MDM waited for its answer on the window's own thread. A file manager slow to start, or one that never answered (seen on Pop!_OS), froze the window until the freeze report caught it. MDM now asks in the background and, when the file manager hasn't answered within 5 seconds, opens the folder instead. Every other program MDM starts from a window goes the same way, on every system: Test browser integration's <g4>Set it up</g4>, moving an extracted archive to the Trash (on a Mac the Finder may ask first), putting an update in place (<g5>Installing the update...</g5>, with Cancel greyed while it runs), opening pages and folders, reading the icon theme on Linux and, on a Mac, the accent colour (every 2 seconds with the Native theme) and the system's version for a bug report.",
+   "text": "<g1>“打开文件夹”不再冻结窗口</g1> (<g2>#222</g2>)：“下载完成”的<g3>打开文件夹</g3>会请求桌面文件管理器（通过 D-Bus）显示文件，而 MDM 会在窗口自己的线程上等待其响应。启动缓慢或从未响应的文件管理器（在 Pop!_OS 上出现过）会冻结窗口，直到冻结报告捕获到它。MDM 现在会在后台请求，如果文件管理器在 5 秒内没有响应，则会转而打开文件夹。MDM 从窗口启动的所有其他程序在所有系统上都以相同的方式运行：“测试浏览器集成”的<g4>设置</g4>，将提取的存档移动到垃圾箱（在 Mac 上 Finder 可能会先询问），安装更新（<g5>正在安装更新...</g5>，运行时“取消”按钮会变灰），打开页面和文件夹，在 Linux 上读取图标主题，以及在 Mac 上读取强调色（使用原生主题时每 2 秒一次）和系统版本以用于错误报告。"
+  },
   "28a8a7183e41f557": {
    "source": "<g1>Zen, Helium and other browsers built on Firefox or Chromium</g1> (<g2>#41</g2>): the extension reaches MDM in them, also when one is the only browser on Linux or macOS (Zen reads Firefox's folder, which MDM now creates; Helium its own). <g3>Add Mister Download Manager to your browser</g3> lists them, Zen, LibreWolf, Floorp and Waterfox by their own names (Options too), and sends Firefox's family to the right page. On Windows MDM lists the browsers Windows itself lists, so Helium is no longer taken for Chrome. Flatpak browsers can't start MDM's helper, which the help page now says.",
    "text": "<g1>Zen、Helium 和其他基于 Firefox 或 Chromium 构建的浏览器</g1>（<g2>#41</g2>）：扩展可以在这些浏览器中连接到 MDM，即使其中一个浏览器是 Linux 或 macOS 上唯一的浏览器（Zen 读取 Firefox 的文件夹，MDM 现在会创建；Helium 读取其自己的文件夹）。<g3>将 Mister Download Manager 添加到您的浏览器</g3>会列出它们，Zen、LibreWolf、Floorp 和 Waterfox 会显示其自己的名称（“选项”中也是），并将 Firefox 系列浏览器发送到正确的页面。在 Windows 上，MDM 会列出 Windows 自身列出的浏览器，因此 Helium 不再被视为 Chrome。Flatpak 浏览器无法启动 MDM 的助手，帮助页面现在会说明这一点。"
@@ -2725,6 +2729,10 @@
   "2add106c9e30c8d5": {
    "source": "<g1>One browser only:</g1> <g2>Options → General → Capture downloads from the following browsers</g2>. Untick the ones MDM should leave alone.",
    "text": "<g1>仅使用某个浏览器：</g1><g2>选项 → 常规 → 从以下浏览器捕获下载</g2>。取消勾选要由 MDM 忽略的浏览器。"
+  },
+  "2ae83cc65522b8e0": {
+   "source": "<g1>Lists read as blank items</g1> (<g2>#95</g2>): the rows of Download video's qualities, Add torrent's files, the language picker, Options (browsers, sounds, the file-type and site lists), the Scheduler and Import now have their names (a format and its size, a file's name and size), their check boxes theirs, ticked or not, and their selected row; Download video's list is called Quality, Add torrent's Files and the sounds' Sounds. Choosing a row from a screen reader (UI Automation's Select) now shows the new choice at once: it used to wait for the next mouse move.",
+   "text": "<g1>列表项不再显示为空白</g1> (<g2>#95</g2>)：“下载视频”的质量列表、“添加种子”的文件列表、语言选择器、“选项”（浏览器、声音、文件类型和站点列表）、“计划程序”和“导入”的行现在都有其名称（格式和大小、文件名和大小）、其复选框（选中或未选中）以及其选定的行；“下载视频”的列表名为“质量”，“添加种子”的列表名为“文件”，声音列表名为“声音”。现在，从屏幕阅读器中选择一行（UI Automation 的 Select）会立即显示新选择：以前它会等待下一次鼠标移动。"
   },
   "2aeea5baa745863b": {
    "source": "<g1><g2>Not listed</g2></g1><g3>closed, freeware</g3>",
@@ -3001,6 +3009,10 @@
   "2ee4c3f4098357e1": {
    "source": "<g1>Two copies installed?</g1> Open the browser's extensions page (<x2/>, <x3/>, <x4/>) and keep only one <g5>Mister Download Manager</g5>.",
    "text": "<g1>安装了两个副本？</g1>打开浏览器的扩展程序页面（<x2/>、<x3/>、<x4/>），只保留一个<g5>Mister Download Manager</g5>。"
+  },
+  "2efa3b9120e6cf0c": {
+   "source": "<g1>Download complete shows above other programs' windows</g1>, as IDM's does, so the end of a download isn't missed (<g2>#77</g2>): it doesn't take the keyboard from the program being typed in, and once clicked it is a window like any other. <g3>Options opened from the extension's Button settings... comes to the front</g3> (<g4>#77</g4>), instead of opening behind the browser on Windows.",
+   "text": "<g1>“下载完成”显示在其他程序窗口上方</g1>，就像 IDM 的那样，这样就不会错过下载结束（<g2>#77</g2>）：它不会从正在输入的程序中抢夺键盘焦点，一旦点击，它就和其他窗口一样。<g3>从扩展程序的“按钮设置...”打开的“选项”会显示在最前面</g3>（<g4>#77</g4>），而不是在 Windows 上在浏览器后面打开。"
   },
   "2efb64efec7539b4": {
    "source": "Torrents grew into a full client: watch while they download, follow feeds, or let your debrid service do the work.",
@@ -3641,6 +3653,10 @@
   "39202940bfd37e73": {
    "source": "<g1>Your own copy:</g1> <g2>Helpers...</g2> (in the gallery window or the video window) lists yt-dlp, ffmpeg and gallery-dl, and <g3>Use another program...</g3> takes your own copy of each instead of MDM's.",
    "text": "<g1>您自己的副本：</g1><g2>帮助程序...</g2>（在图库窗口或视频窗口中）会列出 yt-dlp、ffmpeg 和 gallery-dl；点击<g3>使用其他程序...</g3>即可使用您自己的相应程序，而不是 MDM 提供的程序。"
+  },
+  "3928b858acc4258f": {
+   "source": "<g1>Update now asks the package manager which package MDM is</g1>: a copy in /usr/bin was taken for the .deb on a Debian-like system and for the .rpm anywhere else, so a copy installed with another package manager (pacman on Arch) would have fetched and opened an .rpm. MDM now asks dpkg, rpm and pacman which one owns its program; the .deb and .rpm update as before, and a copy of another package manager is left to the system's updates: Check for updates shows the new version's notes and says to update it there.",
+   "text": "<g1>“立即更新”现在会询问包管理器 MDM 是哪个包</g1>：在类似 Debian 的系统上，/usr/bin 中的副本被视为 .deb 包，在其他任何地方则被视为 .rpm 包，因此使用其他包管理器（Arch 上的 pacman）安装的副本会获取并打开 .rpm 包。MDM 现在会询问 dpkg、rpm 和 pacman 哪个拥有其程序；.deb 和 .rpm 会像以前一样更新，而其他包管理器的副本则留给系统的更新：“检查更新”会显示新版本的说明，并提示在那里更新。"
   },
   "392a4c3d29401ba8": {
    "source": "To see it again, right-click the tray icon and choose it under <g1>Downloads in progress</g1>, which lists every running download. Double-clicking the download in the list brings its window back too.",
@@ -4573,6 +4589,10 @@
   "4738b057ba138a3a": {
    "source": "Link grabber collects many links at once, from the browser, a text file or the clipboard. It sorts them into packages, shows which ones are really there, and MDM can unpack the archives once they are downloaded.",
    "text": "链接抓取器可以从浏览器、文本文件或剪贴板一次性收集大量链接。它将链接分类打包，显示哪些链接真实存在，并且 MDM 可以在下载完成后解压压缩包。"
+  },
+  "4745a78bbb7e23f8": {
+   "source": "<g1>The progress window's Download status tab is balanced</g1>: its rows sat 10 px below the tab's top edge but touched its bottom edge; there are now 7 px above and below.",
+   "text": "<g1>进度窗口的“下载状态”选项卡已平衡</g1>：其行之前位于选项卡顶部边缘下方 10 像素处，但触及底部边缘；现在顶部和底部都有 7 像素的间距。"
   },
   "4755b8b48f69ec2a": {
    "source": "Start Mister Download Manager from the Start menu, then <g1>download your first file</g1>.",
@@ -5546,6 +5566,10 @@
    "source": "On the web page, start the download again, or copy the new download link (right-click → <g1>Copy link</g1>). If the browser hands the new download to MDM, cancel it there: you only need the address.",
    "text": "在网页上，再次开始下载，或复制新的下载链接（右键点击 → <g1>复制链接</g1>）。如果浏览器将新下载交给 MDM，请在那里取消它：您只需要地址。"
   },
+  "57669c2585ba41dc": {
+   "source": "<g1>Windows: Download File Info and the progress window open in front of the browser</g1> (<g2>#208</g2>): a download handed over by the browser could open its window behind the browser, and stay there. Windows lets a program in the background take the foreground only with the browser's say-so, which the user's next click or key ends, and a window refused it opens under the program in front. Every dialog and progress window of MDM that opens without the foreground now goes above the other programs' windows, without taking the keyboard from the one being typed in: a click on it does, as with Download complete.",
+   "text": "<g1>Windows：“下载文件信息”和进度窗口在浏览器前面打开</g1>（<g2>#208</g2>）：浏览器移交的下载任务可能会在浏览器后面打开其窗口，并停留在那里。Windows 允许后台程序在浏览器同意的情况下才能切换到前台，这会在用户下次点击或按键时结束，并且被拒绝的窗口会在前面的程序下方打开。现在，MDM 中所有在没有前台的情况下打开的对话框和进度窗口都会显示在其他程序的窗口上方，而不会从正在输入的程序中抢夺键盘焦点：点击它会抢夺焦点，就像“下载完成”一样。"
+  },
   "5771868f7e936b50": {
    "source": "runs MDM with its list, categories, queues, Scheduler, speed limits and torrents, but no window. Its folders and port come from flags or the environment. It stops cleanly, saving its list, when the system stops it. It runs on any Linux machine with MDM installed, and on Windows and macOS the same way.",
    "text": "运行 MDM 时，它会保留下载列表、分类、队列、计划程序、速度限制和种子功能，但不会显示窗口。其文件夹和端口由标志或环境变量决定。当系统停止它时，它会干净地停止并保存其列表。它可以在任何安装了 MDM 的 Linux 机器上运行，在 Windows 和 macOS 上也以同样的方式运行。"
@@ -5821,6 +5845,10 @@
   "5c048bb2fcbcc1ce": {
    "source": "Who makes Mister Download Manager? — Mister Download Manager",
    "text": "Mister Download Manager 的开发者是谁？ — Mister Download Manager"
+  },
+  "5c2835f4bf5e979e": {
+   "source": "<g1>List rows sit inside their list</g1> (<g2>#102</g2>): they used to be listed beside it. A screen reader now says which row of how many (\"4 of 12\"), choosing from the list itself works (UI Automation's Selection), and a tree's check box belongs to its file's row. The language picker's list and the Options browser list and the Scheduler's two lists have names now too.",
+   "text": "<g1>列表行现在位于其列表内部</g1> (<g2>#102</g2>)：以前它们是并排显示的。现在屏幕阅读器会说出总行数中的哪一行（“12 中的 4”），从列表本身选择有效（UI Automation 的 Selection），并且树的复选框属于其文件的行。语言选择器列表、“选项”浏览器列表和“计划程序”的两个列表现在也有了名称。"
   },
   "5c32b466414eb19d": {
    "source": "Limit seeding and upload, recheck files, reannounce, add trackers, and block IPs with a blocklist.",
@@ -7058,6 +7086,10 @@
    "source": "Download for Apple Silicon",
    "text": "下载 Apple Silicon 版本"
   },
+  "6f6b05ed4b05346c": {
+   "source": "<g1>A window closed with its title bar's × no longer turns black first</g1> (<g2>#207</g2>): every dialog and the progress window turned black for a moment when closed with the × or Alt+F4, rather than with Esc or one of its buttons: one to several seconds on Linux, a few hundredths of a second on Windows. The window now keeps its contents until it goes.",
+   "text": "<g1>用标题栏的“×”关闭的窗口不再先变黑</g1>（<g2>#207</g2>）：所有对话框和进度窗口在用“×”或 Alt+F4 关闭时会短暂变黑，而不是用 Esc 或其按钮关闭时：在 Linux 上持续一到几秒，在 Windows 上持续几百分之一秒。现在，窗口在关闭前会保持其内容。"
+  },
   "6f6f84e7ad3660d6": {
    "source": "Numbers and dates",
    "text": "数字和日期"
@@ -7077,6 +7109,10 @@
   "6fd9e0f8a2505b9f": {
    "source": "Contributing",
    "text": "贡献"
+  },
+  "6fe2dcd2583ba8b7": {
+   "source": "MDM closed with an internal error when a window opened while the main window was minimized or hidden in the notification area, for example Download File Info for a download from the browser, or Add torrent for a magnet link opened in the browser (<g1>#22</g1>, <g2>#145</g2>). The cause was in egui, the toolkit MDM is drawn with (<g3>emilk/egui#8470</g3>), and is fixed in MDM's copy of it.",
+   "text": "当主窗口最小化或隐藏在通知区域时，如果打开了一个窗口（例如浏览器下载的“下载文件信息”，或浏览器中打开磁力链接的“添加种子”），MDM 会因内部错误而关闭 (<g1>#22</g1>, <g2>#145</g2>)。原因是 MDM 绘制所用的 egui 工具包 (<g3>emilk/egui#8470</g3>)，此问题已在 MDM 的副本中修复。"
   },
   "6ffa7e77fe9e6b56": {
    "source": "The <g1>Q</g1> column shows which downloads are in a queue. Under <g2>Queues</g2> in the categories pane, select a queue to see only its downloads.",
@@ -7337,6 +7373,10 @@
   "73bbfe3db01da3ea": {
    "source": "Options, General with Test browser integration...",
    "text": "选项，常规，带有“测试浏览器集成...”"
+  },
+  "73c46eea77b3659f": {
+   "source": "<g1>MDM's programs and downloads are much smaller</g1> (<g2>#25</g2>): on Windows, the programs went from 93 MB to 41 MB (<x3/> from 61 MB to 38 MB, the command line from 28 MB to a 0.2 MB launcher), and setup.exe from 23 MB to 16 MB. On Linux the AppImage went from 36 MB to 20 MB, the .deb from 27 MB to 17 MB.",
+   "text": "<g1>MDM 的程序和下载文件大幅缩小</g1>（<g2>#25</g2>）：在 Windows 上，程序从 93 MB 变为 41 MB（<x3/> 从 61 MB 变为 38 MB，命令行从 28 MB 变为 0.2 MB 的启动器），setup.exe 从 23 MB 变为 16 MB。在 Linux 上，AppImage 从 36 MB 变为 20 MB，.deb 从 27 MB 变为 17 MB。"
   },
   "73ee1eb7251e220f": {
    "source": "Video and Images",
@@ -7690,6 +7730,10 @@
    "source": "Add a download (<g1>Add URL</g1>)",
    "text": "添加下载（<g1>添加 URL</g1>）"
   },
+  "7a31f6dd87f98452": {
+   "source": "<g1>The window no longer freezes when the system's sleep or keychain service is slow</g1> (follows <g2>#222</g2>): a queue set to <g3>Wake the computer to run this queue</g3> asks the system to keep the computer awake while it runs. On Linux that is logind, which can be slow to answer just after the computer wakes, exactly when such a queue starts, and MDM waited for it on the window's own thread (asking again every 5 seconds while it refused). It is now asked in the background, on every system; the queue's downloads, retries and log lines are the same. A keyring that doesn't answer at start (a stopped GNOME Keyring) is now waited for once, at most 5 seconds, instead of once per saved password, and saving the list no longer asks it at all. On Linux the check for a tray to hide windows in, and in Download File Info the check that <g4>Save As</g4> isn't a folder (slow on a network share that doesn't answer), no longer run on the window's thread on every frame.",
+   "text": "<g1>当系统睡眠或密钥链服务缓慢时，窗口不再冻结</g1>（继<g2>#222</g2>之后）：设置为<g3>唤醒电脑以运行此队列</g3>的队列会请求系统在运行时保持电脑唤醒。在 Linux 上，这是 logind，它在电脑唤醒后（正是此类队列启动时）响应可能会很慢，而 MDM 会在窗口自己的线程上等待它（如果它拒绝，则每 5 秒再次询问）。现在它会在后台请求，在所有系统上都是如此；队列的下载、重试和日志行保持不变。对于启动时没有响应的密钥环（已停止的 GNOME Keyring），现在只会等待一次，最多 5 秒，而不是每个保存的密码等待一次，并且保存列表时根本不再询问它。在 Linux 上，检查是否有托盘可以隐藏窗口，以及在“下载文件信息”中检查<g4>另存为</g4>是否不是文件夹（在没有响应的网络共享上会很慢），不再在窗口的线程上每帧运行。"
+  },
   "7a431c024b9ed18e": {
    "source": "Choose <g1>Subtitles</g1> if you want them (see below).",
    "text": "需要字幕时，选择<g1>字幕</g1>（见下文）。"
@@ -7785,10 +7829,6 @@
   "7b96ddc4c567caf5": {
    "source": "Browsers installed as a Flatpak or a Snap run in a sandbox, which decides whether they can reach MDM.",
    "text": "以 Flatpak 或 Snap 形式安装的浏览器在沙盒中运行，能否访问 MDM 取决于沙盒设置。"
-  },
-  "7bab57d3591ffa30": {
-   "source": "<g1>Two smaller macOS downloads</g1> (<g2>#25</g2>): a .dmg for Apple Silicon (<x3/>, about 10 MB) and one for Intel (<x4/>, about 13 MB) instead of one universal .dmg of 80 MB. From 0.2.4 or older, update once by hand: <g5>Download</g5> in Check for updates opens the release; pick your Mac's .dmg. <g6>Update now</g6> works again after that.",
-   "text": "<g1>两个更小的 macOS 下载</g1>（<g2>#25</g2>）：一个用于 Apple Silicon 的 .dmg（<x3/>，约 10 MB）和一个用于 Intel 的 .dmg（<x4/>，约 13 MB），而不是一个 80 MB 的通用 .dmg。从 0.2.4 或更早版本更新，请手动更新一次：检查更新中的<g5>下载</g5>会打开发布页面；选择您 Mac 的 .dmg。<g6>立即更新</g6>在此之后将再次可用。"
   },
   "7bbfd6a588b5c2c4": {
    "source": "Where a tooltip's text wraps",
@@ -8090,6 +8130,10 @@
    "source": "A report holds the error, where it happened, MDM's recent log, and your system: MDM's version, how it was installed, your operating system, the processor, the language and theme, and how many downloads and queues you have, as counts only.",
    "text": "报告包含错误、发生位置、MDM 的最新日志以及您的系统信息：MDM 版本、安装方式、操作系统、处理器、语言和主题，以及您拥有的下载和队列数量（仅计数）。"
   },
+  "7fa6f9417a745711": {
+   "source": "<g1>Buttons fit their text in every language, in every window</g1> (<g2>#192</g2>): many windows gave their buttons a width made for English, so a longer translation was cut with \"...\" (German <g3>Später herunterla...</g3> in Download File Info, <g4>Hilfsprogramme...</g4> in Download a gallery, Russian <g5>Открыть с помощью...</g5> in Download complete, French <g6>Nouvelle file d’attente</g6> in the Scheduler). Each button is now as wide as its translated text, and the buttons beside it move along with the same gaps, the row keeping its end; a box or caption beside a widened button ends before it. Where a window has no room left, the buttons wider than their text give some back first. English is unchanged, and in Arabic and the other right-to-left languages the buttons widen the mirrored way.",
+   "text": "<g1>在所有语言和所有窗口中，按钮都能适应其文本长度</g1> (<g2>#192</g2>)：许多窗口的按钮宽度是为英文设计的，因此较长的翻译会被“...”截断（例如“下载文件信息”中的德语 <g3>Später herunterla...</g3>，“下载图库”中的 <g4>Hilfsprogramme...</g4>，“下载完成”中的俄语 <g5>Открыть с помощью...</g5>，“计划程序”中的法语 <g6>Nouvelle file d’attente</g6>）。现在每个按钮的宽度都与其翻译文本的长度一致，旁边的按钮也会随之移动，保持相同的间距，行尾保持不变；加宽按钮旁边的框或标题会在按钮之前结束。如果窗口没有剩余空间，则宽度超出文本的按钮会先缩小。英文界面保持不变，在阿拉伯语和其他从右到左的语言中，按钮会以镜像方式加宽。"
+  },
   "7fc6f4be3515bc1a": {
    "source": "<g1>Help → Check for updates...</g1> — <g2>Check for updates at every start</g2> is in that window.",
    "text": "<g1>帮助 → 检查更新…</g1> — <g2>每次启动时检查更新</g2>在该窗口中。"
@@ -8101,6 +8145,10 @@
   "7fd10c66683068bf": {
    "source": "Ask in plain words",
    "text": "用自然语言提问"
+  },
+  "7fea6520d723f668": {
+   "source": "<g1>Add torrent: the labels fit in every language</g1>: in German, <g2>Speichern unter</g2> ran under its field.",
+   "text": "<g1>添加种子：标签在所有语言中都能适应</g1>：在德语中，<g2>另存为</g2>会超出其字段。"
   },
   "7ffd827fb0a1bcea": {
    "source": "<g1>Sequential download support:</g1> download a torrent in order, so you can watch it while it downloads.",
@@ -8826,6 +8874,10 @@
    "source": "To change more than colours, make a theme file that inherits the scheme by its file name and adds what you like:",
    "text": "要更改颜色以外的更多内容，请制作一个主题文件，通过其文件名继承该方案并添加您喜欢的内容："
   },
+  "8b6d6550dbca9ec8": {
+   "source": "<g1>Download video: the buttons fit their text in every language</g1> (<g2>#172</g2>): in German <g3>ffmpeg installieren</g3> showed as \"ffmpeg installie...\", and in Russian <g4>Helpers...</g4> and <g5>Install ffmpeg</g5> were cut too. Each button is now as wide as its translated text (English is unchanged), and the page's title stops before the Install button instead of running under it. In Arabic and the other right-to-left languages, a widened <g6>Hide tab</g6> in a download's window now grows into the room beside it instead of towards the window's edge.",
+   "text": "<g1>下载视频：按钮在所有语言中都能适应其文本长度</g1> (<g2>#172</g2>)：在德语中，<g3>ffmpeg installieren</g3> 显示为“ffmpeg installie...”，在俄语中，<g4>帮助程序...</g4> 和<g5>安装 ffmpeg</g5> 也被截断。现在每个按钮的宽度都与其翻译文本的长度一致（英文保持不变），页面的标题会在“安装”按钮之前停止，而不是在其下方运行。在阿拉伯语和其他从右到左的语言中，下载窗口中加宽的<g6>隐藏选项卡</g6>现在会向其旁边的空间扩展，而不是向窗口边缘扩展。"
+  },
   "8b8a49dba39702b6": {
    "source": "<g1>Themes</g1><g2>Nine looks, light and dark, from Classic to Aqua, or your own in a text file.</g2>",
    "text": "<g1>主题</g1><g2>九种外观，包括浅色和深色模式，从“经典”到“Aqua”，或在文本文件中自定义。</g2>"
@@ -9030,6 +9082,10 @@
    "source": "Add URL sends these to the gallery window: - Wikimedia Commons categories; - Flickr photographers and albums; - DeviantArt and ArtStation galleries; - Imgur albums; - Pixiv artists and works; - Pinterest boards and pins; - Danbooru and Gelbooru searches; - Tumblr blogs; - Bluesky profiles.",
    "text": "添加 URL 会将以下内容发送到图库窗口：- 维基共享资源分类；- Flickr 摄影师和相册；- DeviantArt 和 ArtStation 图库；- Imgur 相册；- Pixiv 艺术家和作品；- Pinterest 画板和图钉；- Danbooru 和 Gelbooru 搜索；- Tumblr 博客；- Bluesky 个人资料。"
   },
+  "8ed0452c66932511": {
+   "source": "<g1>The progress window, and the windows with a style theme's title bar, without a black band across their top</g1> (<g2>#208</g2>): on the same Windows 11 Insider build, the progress window showed a black band a title bar tall above its own title bar and a thin one down its left side, its contents moved down and cut off at the bottom; so could every dialog and the main window with Metro, Luna, Aero or Aqua. MDM draws these title bars itself, in windows that kept the system's title bar style, hidden. On Windows 11 they now have no title bar style at all: the progress window and the dialogs are plain windows, all theirs; the main window keeps the system's resizing edges, so it still resizes, snaps and maximizes as before, with a thin strip of its title bar's colour above it. Moving them by their title bar, their taskbar button, Alt+Tab and the window menu (Alt+Space, or a right-click on the title bar) work as before. Windows 10 keeps the frames it had.",
+   "text": "<g1>进度窗口以及带有样式主题标题栏的窗口顶部不再有黑条</g1>（<g2>#208</g2>）：在相同的 Windows 11 Insider 版本上，进度窗口在其自身标题栏上方显示一个标题栏高度的黑条，左侧有一条细线，其内容向下移动并在底部被截断；所有对话框以及带有 Metro、Luna、Aero 或 Aqua 主题的主窗口也可能出现这种情况。MDM 在保留系统标题栏样式的窗口中自行绘制这些标题栏，并将其隐藏。在 Windows 11 上，它们现在完全没有标题栏样式：进度窗口和对话框是普通的窗口，完全由 MDM 控制；主窗口保留了系统的调整大小边缘，因此它仍然可以像以前一样调整大小、吸附和最大化，其上方有一条细细的标题栏颜色带。通过标题栏、任务栏按钮、Alt+Tab 和窗口菜单（Alt+Space，或右键点击标题栏）移动它们的功能与以前相同。Windows 10 保持了原有的框架。"
+  },
   "8f085588eab5dbf1": {
    "source": "<g1>RSS feeds</g1><g2>Follow torrent feeds, and let rules add the new episodes you want, each one only once.</g2>",
    "text": "<g1>RSS 源</g1><g2>关注种子 RSS 源，设置规则自动添加您想要的新剧集，每集只添加一次。</g2>"
@@ -9061,10 +9117,6 @@
   "8f90808f450bcadf": {
    "source": "Download Mister Download Manager 0.5.0 — free for Windows, macOS and Linux",
    "text": "下载 Mister Download Manager 0.5.0 — 免费支持 Windows、macOS 和 Linux"
-  },
-  "8f937668a1130538": {
-   "source": "<g1>0.5.0</g1> <g2>24.1 MB</g2>",
-   "text": "<g1>0.5.0</g1> <g2>24.1 MB</g2>"
   },
   "8fabf2cac610e9a8": {
    "source": "Cinnamon.",
@@ -9726,6 +9778,10 @@
    "source": "The same programs without an installer. It keeps its data in <x1/>, like an installed copy.",
    "text": "不带安装程序的程序。它将数据保存在 <x1/> 中，就像已安装的版本一样。"
   },
+  "99711c45fa3147e5": {
+   "source": "<g1>0.5.0</g1> <g2>16.9 MB</g2>",
+   "text": "<g1>0.5.0</g1> <g2>16.9 MB</g2>"
+  },
   "997cc2f8f3474ae1": {
    "source": "Windows<g1><g2>3</g2></g1>",
    "text": "Windows<g1><g2>3</g2></g1>"
@@ -10033,6 +10089,10 @@
   "9e48d0887ea7d226": {
    "source": "<g1>Version 0.2.3</g1> <g2>and later</g2>",
    "text": "<g1>0.2.3 版</g1> <g2>及更高版本</g2>"
+  },
+  "9e583f3f6cc8d5af": {
+   "source": "<g1>Update now finds the Linux and macOS files by either name</g1>: a release's AppImage, .deb, .rpm, .tar.gz and .dmg were named <x2/>; MDM now looks for the name without it first and still takes the older one, so Update now keeps working whichever a release uses.",
+   "text": "<g1>“立即更新”现在可以通过任一名称找到 Linux 和 macOS 文件</g1>：发布的 AppImage、.deb、.rpm、.tar.gz 和 .dmg 文件都命名为 <x2/>；MDM 现在会首先查找没有它的名称，并且仍然接受旧名称，因此无论发布使用哪个名称，“立即更新”都能继续工作。"
   },
   "9e5f6ea1de61f755": {
    "source": "Blocking addresses",
@@ -10382,6 +10442,10 @@
    "source": "Torrents and your security — Mister Download Manager help",
    "text": "种子和您的安全 — Mister Download Manager 帮助"
   },
+  "a4106dfebeee68bc": {
+   "source": "<g1>The last languages</g1> (after #247): Options → Proxy's title takes two lines where one leaves Get System too little room (Bulgarian, Armenian, Tamil), and where it ran over the page's icon or past the window's left edge (Greek, Finnish, Catalan, Estonian, Latvian, Lithuanian, Malayalam, Serbian, Afrikaans). In Greek and Malayalam, the Scheduler's \"Turn off computer when done\" and its choices have shorter machine translations, so the drop-down fits beside the caption; in Belarusian, Welsh, French, Russian, Tamil and Ukrainian, the longer ones the translation review brought (such as Russian's Hibernate) are back to their earlier, shorter wording.",
+   "text": "<g1>最后的语言调整</g1>（继 #247 之后）：在某些语言（保加利亚语、亚美尼亚语、泰米尔语）中，“选项”→“代理”的标题需要两行，否则“从系统获取”的空间不足；在另一些语言（希腊语、芬兰语、加泰罗尼亚语、爱沙尼亚语、拉脱维亚语、立陶宛语、马拉雅拉姆语、塞尔维亚语、南非荷兰语）中，标题会超出页面图标或窗口左边缘。在希腊语和马拉雅拉姆语中，“计划程序”的“完成后关闭计算机”及其选项的机器翻译较短，因此下拉菜单可以与标题并排显示；在白俄罗斯语、威尔士语、法语、俄语、泰米尔语和乌克兰语中，翻译审阅后较长的措辞（如俄语的“休眠”）已恢复到之前较短的措辞。"
+  },
   "a410e1f12c6dc5bd": {
    "source": "Options, General: Use advanced browser integration and the list of browsers MDM takes downloads from",
    "text": "选项，常规：使用高级浏览器集成和 MDM 从中获取下载的浏览器列表"
@@ -10682,6 +10746,14 @@
    "source": "The <g1>command line guide</g1> lists everything <x2/> takes.",
    "text": "<g1>命令行指南</g1>列出了<x2/>接受的所有参数。"
   },
+  "a8562e95bb3fa120": {
+   "source": "<g1>Two smaller macOS downloads</g1> (<g2>#25</g2>): a .dmg for Apple Silicon (<x3/>, about 14 MB) and one for Intel (<x4/>, about 16 MB) instead of one universal .dmg of 80 MB. From 0.2.4 or older, update once by hand: <g5>Download</g5> in Check for updates opens the release; pick your Mac's .dmg. <g6>Update now</g6> works again after that.",
+   "text": "<g1>macOS 下载文件分为两个更小的版本</g1>（<g2>#25</g2>）：一个适用于 Apple Silicon 的 .dmg（<x3/>，约 14 MB）和一个适用于 Intel 的 .dmg（<x4/>，约 16 MB），取代了之前 80 MB 的通用 .dmg。从 0.2.4 或更早版本更新时，需要手动更新一次：<g5>下载</g5>在“检查更新”中打开发布页面；选择适用于您 Mac 的 .dmg。之后<g6>立即更新</g6>将再次可用。"
+  },
+  "a856aa8d56dfc9ae": {
+   "source": "<g1>Dark mode: grey notes and error texts are easier to read</g1> (<g2>#45</g2>): they now have the contrast WCAG asks for (4.5:1) on every dark surface, Options' failed checks no longer use light mode's dark red on the dark dialog, and an editable drop-down's arrow is tinted dark under the pointer.",
+   "text": "<g1>深色模式：灰色注释和错误文本更易阅读</g1>（<g2>#45</g2>）：它们现在在所有深色背景上都具有 WCAG 要求的对比度（4.5:1），“选项”中失败的检查不再在深色对话框上使用浅色模式的深红色，并且可编辑下拉菜单的箭头在指针悬停时会显示深色。"
+  },
   "a86574f1a42f9169": {
    "source": "Open Windows Settings → Apps, find Mister Download Manager and choose Uninstall. The uninstaller asks whether to delete your download list and settings as well. Files you downloaded are never touched. For the portable copy, delete its folder. On Linux, remove the package with your package manager, or delete the AppImage; Uninstall on Linux says what stays in your home folder and how to remove it.",
    "text": "打开 Windows 设置 → 应用，找到 Mister Download Manager 并选择“卸载”。卸载程序会询问是否同时删除您的下载列表和设置。您已下载的文件不会被触动。对于便携版，请删除其文件夹。在 Linux 上，使用您的包管理器删除软件包，或删除 AppImage；Linux 上的卸载说明了哪些内容会保留在您的主文件夹中以及如何删除它们。"
@@ -10802,6 +10874,10 @@
    "source": "Use your own copies of yt-dlp and ffmpeg instead of MDM's.",
    "text": "使用您自己的 yt-dlp 和 ffmpeg 副本，而不是 MDM 内置的。"
   },
+  "aa1ab6951c7de9ce": {
+   "source": "<g1>Windows: a slow start no longer turns Direct3D off</g1> (part of <g2>#280</g2>): MDM gives Direct3D 10 seconds to show its first frame, and goes back to OpenGL when it doesn't. Those 10 seconds counted MDM's own loading too (the list, the fonts, the icons), which can take that long by itself on a busy computer just after it starts, so Direct3D was taken for failing and OpenGL drew from then on. Only Direct3D's own time counts now. Crash and freeze reports say what drew, on which graphics card and driver (OpenGL's too), and why, near their top, where a report cut to fit still has it.",
+   "text": "<g1>Windows：慢速启动不再关闭 Direct3D</g1>（<g2>#280</g2> 的一部分）：MDM 会给 Direct3D 10 秒时间来显示其第一帧，如果未显示则返回 OpenGL。这 10 秒也计算了 MDM 自身的加载时间（列表、字体、图标），这在刚启动的繁忙计算机上可能需要很长时间，因此 Direct3D 被认为是失败的，此后便使用 OpenGL 绘制。现在只计算 Direct3D 自身的时间。崩溃和冻结报告会在顶部附近说明绘制方式、使用的显卡和驱动程序（也包括 OpenGL 的），以及原因，即使报告被截断以适应空间，这些信息也仍然存在。"
+  },
   "aa29963bc67d10b2": {
    "source": "Mister Download Manager extracts ZIP, TAR, GZ and XZ archives itself, and 7z and RAR with 7-Zip, as soon as they finish downloading.",
    "text": "Mister Download Manager 自身可提取 ZIP、TAR、GZ 和 XZ 压缩包，并借助 7-Zip 提取 7z 和 RAR 压缩包，下载完成后立即进行。"
@@ -10837,6 +10913,10 @@
   "aa841f364038c810": {
    "source": "Each column title has a faint funnel. Click it to keep only some rows:",
    "text": "每个列标题旁都有一个浅色漏斗图标。点击图标可只显示符合条件的行："
+  },
+  "aa96ab75fe37ecf8": {
+   "source": "<g1>A window's contents the first time they read it</g1> (<g2>#131</g2>): a window read for the first time (Link grabber, Options, About...) showed only its title bar until it was drawn again. It now answers with what it shows at once, as soon as a screen reader is running.",
+   "text": "<g1>窗口内容首次读取时即可显示</g1> (<g2>#131</g2>)：首次读取的窗口（链接抓取器、选项、关于...）只显示其标题栏，直到再次绘制。现在，只要屏幕阅读器运行，它就会立即响应并显示其内容。"
   },
   "aa9ee64ba69f2d26": {
    "source": "A download that stopped halfway doesn't have to start over. MDM keeps what it has and continues from there.",
@@ -11298,6 +11378,10 @@
    "source": "Browser integration needs one more step in each browser: adding the extension. In Firefox, click <g1>Add to Firefox</g1> on <g2>its page on addons.mozilla.org</g2>; in Chrome, Edge, Brave, Opera and Vivaldi, <g3>Add to Chrome</g3> on <g4>its page in the Chrome Web Store</g4>. <g5>Browser integration</g5> shows how.",
    "text": "浏览器集成在每个浏览器中都需要多一步：添加扩展。在 Firefox 中，点击 <g2>addons.mozilla.org 上的页面</g2>中的<g1>添加到 Firefox</g1>；在 Chrome、Edge、Brave、Opera 和 Vivaldi 中，点击 <g4>Chrome 网上应用店中的页面</g4>中的<g3>添加到 Chrome</g3>。<g5>浏览器集成</g5>会展示具体操作。"
   },
+  "b25b5595e4410599": {
+   "source": "<g1>Help opens the website's help pages, in your language</g1> (<g2>#227</g2>): <g3>Help contents</g3>, <g4>Tutorials</g4>, <g5>Scheduler and queues</g5>, <g6>Video downloads</g6>, the <g7>Help</g7> buttons of Options and the Scheduler, and the browser extension window's tutorial and help links opened the docs on GitHub (the Options and Scheduler buttons a page that wasn't there). They open misterdownloadmanager.com now, at the same section, in the interface language when the website has it (else English), and <g8>Home Page</g8> opens the website too. The command line's and the MCP server's help name the website's guide. Problem reports, releases and the source stay on GitHub.",
+   "text": "<g1>帮助功能现在会打开网站的帮助页面，并显示您的语言</g1> (<g2>#227</g2>)：<g3>帮助内容</g3>、<g4>教程</g4>、<g5>计划程序和队列</g5>、<g6>视频下载</g6>、“选项”和“计划程序”中的<g7>帮助</g7>按钮，以及浏览器扩展窗口的教程和帮助链接，之前都打开 GitHub 上的文档（“选项”和“计划程序”按钮打开的页面不存在）。现在它们会打开 misterdownloadmanager.com 网站上对应的部分，如果网站支持界面语言，则显示该语言（否则显示英文），<g8>主页</g8>也会打开网站。命令行和 MCP 服务器的帮助会指明网站上的指南。问题报告、发布和源代码仍保留在 GitHub 上。"
+  },
   "b260dbdaf5dd80a2": {
    "source": "Add Mister Download Manager to your browser: each browser found, with a button to its store page",
    "text": "将 Mister Download Manager 添加到您的浏览器：找到的每个浏览器，带有一个指向其商店页面的按钮"
@@ -11650,6 +11734,10 @@
    "source": "Bullets, ticks and submenu arrows",
    "text": "项目符号、勾选标记和子菜单箭头"
   },
+  "b79173d2d22ed62f": {
+   "source": "<g1>Three more controls</g1> (after #212): in Russian and a few other languages, Download File Info's <g2>Preview</g2>, Options → Proxy's <g3>Get System</g3> and the Scheduler's drop-down after <g4>Turn off computer when done</g4> still ended in \"...\". Download File Info grows by what Preview's label needs (Russian, Ukrainian, Telugu, Belarusian and a few more), the Proxy page's title moves left to give Get System its room, and the Scheduler's drop-down widens towards its caption.",
+   "text": "<g1>新增三个控件</g1>（继 #212 之后）：在俄语和其他几种语言中，“下载文件信息”的<g2>预览</g2>、“选项”→“代理”的<g3>从系统获取</g3>以及“计划程序”中<g4>完成后关闭计算机</g4>后的下拉菜单仍然以“...”结尾。“下载文件信息”会根据“预览”标签所需的空间（俄语、乌克兰语、泰卢固语、白俄罗斯语等）进行扩展，“代理”页面的标题会向左移动，为“从系统获取”腾出空间，“计划程序”的下拉菜单会向其标题方向加宽。"
+  },
   "b793f20aa217a8fa": {
    "source": "If MDM or this website ever needs to use a new service, this page will say so first, and the change will be listed in <g1>What's new</g1>. Past versions of this page are in the project's history on GitHub.",
    "text": "如果 MDM 或本网站需要使用新服务，我们会先在本页面说明，并在<g1>新增内容</g1>中列出变更。本页面的历史版本可在 GitHub 上的项目历史记录中查看。"
@@ -11882,6 +11970,10 @@
    "source": "MDM finds the browsers installed and offers each one its extension.",
    "text": "MDM 会找到已安装的浏览器，并为每个浏览器提供其扩展。"
   },
+  "bbeb2269d1830f72": {
+   "source": "<g1>A menu shut with Escape opens again at the first click on its title</g1>: a menu opened from the menu bar and shut with Escape, the pointer still on its title, was left marked open. On Linux the next click on that title only \"shut\" it, and a second click was needed; on Windows Escape seemed to do nothing (the menu came back at once). Escape, or MDM losing the focus, now shuts the menu whatever the pointer rests on; a press on a title still shuts its own menu or opens another.",
+   "text": "<g1>用 Esc 关闭的菜单在第一次点击其标题时会再次打开</g1>：从菜单栏打开并用 Esc 关闭的菜单，如果指针仍在其标题上，则会被标记为打开状态。在 Linux 上，下次点击该标题只会“关闭”它，需要第二次点击才能打开；在 Windows 上，Esc 似乎什么也没做（菜单立即返回）。现在，Esc 或 MDM 失去焦点都会关闭菜单，无论指针停留在何处；点击标题仍然会关闭其自身的菜单或打开另一个菜单。"
+  },
   "bbef617a2c908337": {
    "source": "Catch downloads from your browser — Mister Download Manager help",
    "text": "从浏览器捕获下载 — Mister Download Manager 帮助"
@@ -11909,6 +12001,10 @@
   "bc3bdd1f749057f7": {
    "source": "Server mode is new, so please <g1>tell us how it goes</g1>.",
    "text": "服务器模式是新功能，请<g1>告诉我们您的使用体验</g1>。"
+  },
+  "bc4dcd5d0ee98446": {
+   "source": "nine more tests checked a time, a speed or a byte count that a starved CPU or a busy CI runner can't keep. Each now checks the state itself, or times from the event it is about: a slow request's own duration, a stop measured from Stop against a wait of minutes, the first bytes before a pause, a speed limit against a download the server paces at the same time (and every byte paid for once), parts asked again instead of a deadline, links that expire after a number of requests instead of milliseconds, range attempts a server without ranges answers slowly enough not to fill the sockets, and the bytes a sparse file takes on the drive. The slow-connection test now fails without shedding (it passed without it before). The lab server can hand out such links (<x1/>) and pace answers to range requests on their own (<x2/>) (#201).",
+   "text": "另外九项测试检查了在 CPU 资源不足或 CI 运行器繁忙时无法保持的时间、速度或字节计数。现在，每项测试都检查状态本身，或从相关事件开始计时：慢速请求自身的持续时间，从“停止”开始测量停止时间而不是等待几分钟，暂停前的第一个字节，针对服务器同时限制下载速度的下载任务的速度限制（并且每个字节只支付一次），重新请求部分而不是截止日期，在请求次数而不是毫秒数后过期的链接，服务器在没有范围请求时响应缓慢以至于不会填满套接字的范围尝试，以及稀疏文件在驱动器上占用的字节数。慢速连接测试现在在不丢弃数据的情况下会失败（之前在不丢弃数据的情况下会通过）。实验室服务器可以提供此类链接（<x1/>）并单独调整范围请求的响应速度（<x2/>）（#201）。"
   },
   "bc606bb991071128": {
    "source": "The next tab of a focused tab strip; the next choice of a radio group",
@@ -12466,6 +12562,10 @@
    "source": "<g1>The system:</g1> MDM's version and how you installed it, your operating system and its version, the processor, the language and theme, and how many downloads and queues you have. These are counts only.",
    "text": "<g1>系统信息：</g1>MDM 的版本和安装方式、操作系统及其版本、处理器、语言和主题，以及下载和队列的数量。这些信息只包含数量。"
   },
+  "c5ddef5d4d228288": {
+   "source": "Downloads are smaller: setup.exe 23 → 16 MB, AppImage 36 → 20 MB, .deb 27 → 17 MB.",
+   "text": "下载文件更小：setup.exe 从 23 MB 变为 16 MB，AppImage 从 36 MB 变为 20 MB，.deb 从 27 MB 变为 17 MB。"
+  },
   "c5ea65c70393f2d1": {
    "source": "<g1>Hang up modem when done</g1> — ends a dial-up connection, if you use one.",
    "text": "<g1>完成后挂断调制解调器</g1> — 如果您使用拨号连接，此选项会结束连接。"
@@ -12577,6 +12677,10 @@
   "c79d3d545a5bebd2": {
    "source": "Your account, your rules",
    "text": "您的账户，您的规则"
+  },
+  "c7a5c4f60bb2aacf": {
+   "source": "<g1>Dragging the file out of Download complete works in every language</g1> (<g2>#78</g2>): the handle looked for the English window title, so outside English the drag did nothing. The handle now says what it does on hover. It is Windows only, and no longer shown on Linux and macOS, where it did nothing.",
+   "text": "<g1>在所有语言中，将文件从“下载完成”窗口拖出均可正常工作</g1> (<g2>#78</g2>)：之前拖动手柄会查找英文窗口标题，因此在非英文环境下拖动无效。现在，将鼠标悬停在手柄上会显示其功能。此功能仅限 Windows，在 Linux 和 macOS 上已不再显示，因为它们原本就无效。"
   },
   "c7be8156ec0c3028": {
    "source": "Linux, checked on four desktops",
@@ -12702,6 +12806,10 @@
    "source": "<g1>Reannounce</g1> — asks the torrent's trackers for peers again now, instead of waiting for their next round. It works while the torrent runs or is shared.",
    "text": "<g1>重新发布</g1> — 立即再次向种子的跟踪器请求对等点，而不是等待下一轮。它在种子运行或共享时有效。"
   },
+  "c996f36adbc992f8": {
+   "source": "<g1>A long file name ran out of the progress window</g1> (<g2>#62</g2>): on the <g3>Options on completion</g3> tab, a longer translation of \"Save To:\" (Turkish, German…) ran into the path, and the path ran past the window's edge. The label now takes the room its language needs, and the path is shortened in the middle, keeping the file's name in sight, and shown whole on hover; right-to-left languages included.",
+   "text": "<g1>过长的文件名会超出进度窗口</g1> (<g2>#62</g2>)：在<g3>完成后选项</g3>选项卡上，“保存到:”的较长翻译（土耳其语、德语等）会与路径重叠，并且路径会超出窗口边缘。现在标签会根据其语言所需的空间进行调整，路径会在中间缩短，以保持文件名可见，并在鼠标悬停时显示完整路径；包括从右到左的语言。"
+  },
   "c9a8324f618160c6": {
    "source": "<g1>The plain zip</g1> (<x2/>), the same programs without an installer.",
    "text": "<g1>普通 zip 包</g1> (<x2/>)，不带安装程序的相同程序。"
@@ -12821,10 +12929,6 @@
   "cb797c11de6612fd": {
    "source": "3. Choose how many run at once",
    "text": "3. 选择同时运行的数量"
-  },
-  "cb7d403b3b59f081": {
-   "source": "Downloads are about half the size: setup.exe 23 → 12 MB, AppImage 36 → 16 MB, .deb 27 → 13 MB.",
-   "text": "下载文件大小约为原来的一半：setup.exe 23 → 12 MB，AppImage 36 → 16 MB，.deb 27 → 13 MB。"
   },
   "cb8376955028cc1c": {
    "source": "<g1>Linux: uninstalling the .deb or .rpm leaves no browser files behind</g1> (<g2>#266</g2>): MDM wrote the files that tell each browser where its helper is in every user's home folder, and <x3/> or <x4/> left them there, naming a program that was gone. The packages now install them for everyone, in each browser's own folder (Chrome and Brave, Chromium and Vivaldi, Edge, Firefox, the Snap Firefox included), and remove them with the package; MDM writes none in the home folder for those browsers, and takes away the ones an earlier version wrote. The AppImage and the tar.gz, and Opera, Helium, Thorium and Firefox's forks (which read them only in the home folder), still get them there.",
@@ -13377,6 +13481,10 @@
   "d46916a1a497cf15": {
    "source": "Yes (yt-dlp)",
    "text": "是 (yt-dlp)"
+  },
+  "d4746b859b60aae1": {
+   "source": "<g1>Linux builds and window shots in minutes, on WSL2</g1> (part of <g2>#164</g2>): <x3/> sets up <x4/>, an Ubuntu 24.04 WSL2 distribution of its own, which builds any branch or pull request for Linux at the computer's full speed (<x5/>: about 5 minutes from scratch, under a minute after a change, against 15 to 60 in the VirtualBox machine), shoots MDM's windows in any language and mode on a virtual screen that never shows on Windows (<x6/>: about a second a window, against 40), compares OpenGL and Vulkan pixel by pixel (<x7/>), and hands a build to a VirtualBox machine for what needs a real desktop (<x8/>).",
+   "text": "<g1>在 WSL2 上，Linux 构建和窗口截图只需几分钟</g1>（<g2>#164</g2> 的一部分）：<x3/> 设置了 <x4/>，一个独立的 Ubuntu 24.04 WSL2 发行版，它以计算机的全部速度构建适用于 Linux 的任何分支或拉取请求（<x5/>：从头开始约 5 分钟，更改后不到一分钟，而 VirtualBox 机器需要 15 到 60 分钟），在 Windows 上从不显示的虚拟屏幕上以任何语言和模式拍摄 MDM 的窗口（<x6/>：每个窗口约一秒，而之前需要 40 秒），逐像素比较 OpenGL 和 Vulkan（<x7/>），并将构建文件交给 VirtualBox 机器以处理需要真实桌面的任务（<x8/>）。"
   },
   "d48db80cbefbd30b": {
    "source": "Honest about the translations",
@@ -14006,6 +14114,10 @@
    "source": "<g1>Sites to leave alone:</g1> <g2>Options → File types → Don't start downloading automatically from the following sites</g2>. Add the site's name, for example <x3/> or <x4/>.",
    "text": "<g1>要忽略的站点：</g1><g2>选项 → 文件类型 → 不自动从以下站点开始下载</g2>。添加站点名称，例如<x3/>或<x4/>。"
   },
+  "dee8c65c52bd5601": {
+   "source": "<g1>Menus and the drop target without a black band across their top</g1> (<g2>#208</g2>): on a Windows 11 Insider build (22635), every menu and submenu showed a black band a title bar tall across its top and a thin one down its left side, its items moved down by as much and its last ones cut off; so did the drop target (Tasks → Show drop target), its icon moved down. Each of these windows had a title bar's style, hidden by MDM, and something on that build placed the window's picture where the title bar would have ended. Menus and the drop target are now plain pop-up windows, as Windows' own menus are, with nothing above their contents to take for a title bar; every window of MDM without a title bar is made one the same way.",
+   "text": "<g1>菜单和拖放目标顶部不再有黑条</g1>（<g2>#208</g2>）：在 Windows 11 Insider 版本 (22635) 上，每个菜单和子菜单顶部都显示一个标题栏高度的黑条，左侧有一条细线，其项目向下移动了相同的高度，最后几个项目被截断；拖放目标（任务 → 显示拖放目标）也一样，其图标向下移动。这些窗口都具有标题栏样式，被 MDM 隐藏了，并且在该版本上，某些东西将窗口的图片放置在标题栏结束的位置。现在，菜单和拖放目标是普通的弹出窗口，就像 Windows 自己的菜单一样，其内容上方没有任何东西可以作为标题栏；MDM 中所有没有标题栏的窗口都以相同的方式创建。"
+  },
   "df260daf719b26b8": {
    "source": "1 GiB over a fast link",
    "text": "通过高速链接下载 1 GiB 文件"
@@ -14133,6 +14245,10 @@
   "e1846d6a94dee510": {
    "source": "misterdownloadmanager-cli",
    "text": "misterdownloadmanager-cli"
+  },
+  "e184a8bf2e5e8059": {
+   "source": "<g1>The progress window's Speed Limiter</g1> took a speed set with a screen reader or UI Automation only after the focus moved on, and its \"Remember Speed Limiter settings for this file\" check box had no name. A speed set that way applies at once, and the box is named.",
+   "text": "<g1>进度窗口的“速度限制器”</g1>在焦点移动后才应用通过屏幕阅读器或 UI 自动化设置的速度，并且其“记住此文件的限速器设置”复选框没有名称。现在，以这种方式设置的速度会立即应用，并且该复选框已命名。"
   },
   "e18503e05752d9a2": {
    "source": "Themes and the look",
@@ -15085,6 +15201,10 @@
   "ef64a9a4b3e72dfc": {
    "source": "Server mode",
    "text": "服务器模式"
+  },
+  "ef6e5d90b67f8e4e": {
+   "source": "<g1>\"Hide tab\" was cut in longer languages</g1> (German \"Registerkarte au...\"): the button grows to fit its label where there is room, through a shared helper other buttons can use.",
+   "text": "<g1>“隐藏选项卡”在较长的语言中被截断</g1>（德语“Registerkarte au...”）：按钮会根据标签的长度自动扩展，只要有空间，通过一个共享的辅助功能，其他按钮也可以使用此功能。"
   },
   "ef8cedcbdccdaf85": {
    "source": "The code is filled in when you scanned the QR code; otherwise type it. Give the phone a name, and tap <g1>Pair</g1>. The window on the computer says so, and closes with <g2>Done</g2>.",

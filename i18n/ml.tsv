@@ -295,6 +295,10 @@
 #. button in the browser extension's window: open the extension's page in that browser
 #, machine
 	Add the extension	എക്സ്റ്റൻഷൻ ചേർക്കുക
+#. window title in extension.rs
+#. title of the window that shows how to turn on the Safari extension
+#, machine
+	Add the extension to Safari	Safari-യിലേക്ക് എക്സ്റ്റൻഷൻ ചേർക്കുക
 #. text in extension.rs
 #, machine
 	Add the free extension: files you download in your browser come here, and videos get a Download button.	സൗജന്യ എക്സ്റ്റൻഷൻ ചേർക്കുക: നിങ്ങളുടെ ബ്രൗസറിൽ ഡൗൺലോഡ് ചെയ്യുന്ന ഫയലുകൾ ഇവിടെയെത്തും, വീഡിയോകൾക്ക് ഒരു ഡൗൺലോഡ് ബട്ടൺ ലഭിക്കും.
@@ -1932,6 +1936,10 @@
 #. a country's name (where a download's server is)
 #, machine
 	Hong Kong	ഹോങ്കോങ്
+#. text in extension.rs
+#. button in the browser extension's window, on Safari's row: open the steps that turn the extension on
+#, machine
+	How to Add	ചേർക്കേണ്ട വിധം
 #. text in the Scheduler window
 #. link after why the computer can't be woken (Linux, macOS): opens the guide's page that shows how an administrator can allow it
 #, machine
@@ -3066,6 +3074,14 @@
 #. text in the tray icon's menu
 #, machine
 	Open Mister Download Manager	Mister Download Manager തുറക്കുക
+#. text in extension.rs
+#. step 2 of turning on the Safari extension; Cmd is the Command key
+#, machine
+	Open Safari's settings (Cmd+,).	Safari ക്രമീകരണങ്ങൾ തുറക്കുക (Cmd+,).
+#. text in extension.rs
+#. step 1 of turning on the Safari extension
+#, machine
+	Open Safari.	Safari തുറക്കുക.
 #. text in the Scheduler window
 #, machine
 	Open the following file when done	പൂർത്തിയാകുമ്പോൾ താഴെ പറയുന്ന ഫയൽ തുറക്കുക
@@ -3500,6 +3516,9 @@
 #. Saturday, as short as a calendar's column head (two letters in English)
 #, machine
 	Sa	ശനി
+#. text in extension.rs
+#, machine
+	Safari turns "Allow unsigned extensions" off each time it quits: do steps 1 to 6 again after restarting it.	Safari അടയ്ക്കുമ്പോഴെല്ലാം "Allow unsigned extensions" ഓഫാക്കുന്നു: വീണ്ടും തുറന്നശേഷം 1 മുതൽ 6 വരെയുള്ള ഘട്ടങ്ങൾ ആവർത്തിക്കുക.
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -4088,6 +4107,18 @@
 #. a country's name (where a download's server is)
 #, machine
 	Sweden	സ്വീഡൻ
+#. text in extension.rs
+#. step 3 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+#, machine
+	Switch to the "Advanced" tab (the cogwheels).	"Advanced" ടാബിലേക്ക് മാറുക (ഗിയർ ചിഹ്നങ്ങൾ).
+#. text in extension.rs
+#. step 5 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+#, machine
+	Switch to the "Developer" tab (the screwdriver and spanner).	"Developer" ടാബിലേക്ക് മാറുക (സ്ക്രൂഡ്രൈവറും സ്പാനറും).
+#. text in extension.rs
+#. step 7 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+#, machine
+	Switch to the "Extensions" tab (the puzzle piece).	"Extensions" ടാബിലേക്ക് മാറുക (പസിൽ കഷണം).
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -4266,6 +4297,9 @@
 #. text in errors.rs
 #, machine
 	the drive or network share is no longer available	ഡ്രൈവോ നെറ്റ്‌വർക്ക് പങ്കിടലോ ലഭ്യമല്ല
+#. text in extension.rs
+#, machine
+	The extension is already in this app. Apple hasn't notarized this build, so Safari needs these steps to allow it.	എക്സ്റ്റൻഷൻ ഇതിനകം ഈ ആപ്പിലുണ്ട്. ഈ ബിൽഡ് Apple നോട്ടറൈസ് ചെയ്തിട്ടില്ലാത്തതിനാൽ, അനുവദിക്കാൻ Safari-ക്ക് ഈ ഘട്ടങ്ങൾ ആവശ്യമാണ്.
 #. text in errors.rs
 #, machine
 	the file changed on the server	സെർവറിൽ ഫയൽ മാറി
@@ -4724,6 +4758,22 @@
 #. verb: turn the Speed Limiter on
 #, machine
 	Turn on	ഓൺ ചെയ്യുക
+#. text in extension.rs
+#. step 6 of turning on the Safari extension; the quoted switch name is what Safari's settings show in this language: use Apple's own words for it, or keep the English name when unsure
+#, machine
+	Turn on "Allow unsigned extensions".	"Allow unsigned extensions" ഓണാക്കുക.
+#. text in extension.rs
+#. step 8 of turning on the Safari extension
+#, machine
+	Turn on "Mister Download Manager" and allow it on all websites.	"Mister Download Manager" ഓണാക്കി എല്ലാ വെബ്‌സൈറ്റുകളിലും അനുവദിക്കുക.
+#. text in extension.rs
+#. step 4 of turning on the Safari extension; the quoted switch name is what Safari's settings show in this language: use Apple's own words for it, or keep the English name when unsure
+#, machine
+	Turn on "Show features for web developers".	"Show features for web developers" ഓണാക്കുക.
+#. text in extension.rs
+#. the headline of the window that shows how to turn on the Safari extension
+#, machine
+	Turn on the extension in Safari	Safari-യിൽ എക്സ്റ്റൻഷൻ ഓണാക്കുക
 #. tooltip (why a control is greyed) in the Options window
 #. why Options → Remote → Pair a device... is greyed
 #, machine
@@ -5520,6 +5570,10 @@ extension	Browser extension	ബ്രൗസർ എക്സ്റ്റൻഷൻ
 #, machine
 extension	Button settings...	ബട്ടൺ ക്രമീകരണങ്ങൾ...
 #. text in the browser extension
+#. shown briefly on the download button when nothing on the page says which video the player is playing, so nothing was sent
+#, machine
+extension	Can't tell which video this is: open its own page and try there	ഇത് ഏത് വീഡിയോ ആണെന്ന് അറിയാൻ കഴിയുന്നില്ല: അതിന്റെ സ്വന്തം പേജ് തുറന്ന് അവിടെ ശ്രമിക്കുക
+#. text in the browser extension
 #. the toolbar button's status when the browser reaches the app; keep the name Mister Download Manager as it is
 #, machine
 extension	Connected to Mister Download Manager	Mister Download Manager എന്നതുമായി ബന്ധിപ്പിച്ചു
@@ -5730,6 +5784,10 @@ extension	Support MDM	MDM-നെ പിന്തുണയ്ക്കുക
 #, machine
 extension	Take downloads from this browser	ഈ ബ്രൗസറിൽ നിന്ന് ഡൗൺലോഡുകൾ എടുക്കുക
 #. text in the browser extension
+#. in the toolbar button's popup, on a site where the Chrome Web Store's copy of the extension shows no download button; Help is the link at the bottom of the popup
+#, machine
+extension	The Chrome Web Store's rules keep this copy of the add-on away from this site's videos. Help says what you can do.	Chrome Web Store-ന്റെ നിയമങ്ങൾ ആഡ്-ഓണിന്റെ ഈ പകർപ്പിനെ ഈ സൈറ്റിലെ വീഡിയോകളിൽ നിന്ന് അകറ്റി നിർത്തുന്നു. എന്തു ചെയ്യാമെന്ന് «സഹായം» പറയുന്നു.
+#. text in the browser extension
 #. status when the connection to the app broke off (often security software blocking it); keep the name Mister Download Manager as it is
 #, machine
 extension	The connection to Mister Download Manager failed	Mister Download Manager ലേക്കുള്ള കണക്ഷൻ പരാജയപ്പെട്ടു
@@ -5757,6 +5815,10 @@ extension	This computer	ഈ കമ്പ്യൂട്ടർ
 #. status when a download carried too much data (very large cookies) to give to the app
 #, machine
 extension	This download's details were too large to hand over	ഈ ഡൗൺലോഡിന്റെ വിശദാംശങ്ങൾ കൈമാറാൻ കഴിയാത്തത്ര വലുതായിരുന്നു
+#. text in the browser extension
+#. in the toolbar button's popup, when the page's player plays from a stream built in the page (a blob:): the list of the page's media has nothing to show; Download video is the name of the button over videos
+#, machine
+extension	This page's player streams its video in pieces, so there's no file to list. Point at the video and use its Download video button.	ഈ പേജിലെ പ്ലെയർ വീഡിയോ കഷണങ്ങളായി സ്ട്രീം ചെയ്യുന്നു, അതിനാൽ പട്ടികയിൽ കാണിക്കാൻ ഫയൽ ഒന്നുമില്ല. വീഡിയോയിലേക്ക് പോയിന്റ് ചെയ്ത് അതിന്റെ «വീഡിയോ ഡൗൺലോഡ് ചെയ്യുക» ബട്ടൺ ഉപയോഗിക്കുക.
 #. text in the browser extension
 #. status when the app is older than the extension; keep the name Mister Download Manager as it is
 #, machine
@@ -6274,6 +6336,10 @@ menu	OpenGL	OpenGL
 #. noun: opens the category's properties
 #, machine
 menu	Properties	പ്രോപ്പർട്ടികൾ
+#. menu command in the main window
+#. View → Theme: the colours of pywal (a program making colour schemes from the wallpaper), followed as they change; a name: keep "pywal" as written
+#, machine
+menu	pywal	പൈവാൽ
 #. menu command in the main window
 #. verb: download the file again from the start
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation

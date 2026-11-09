@@ -1150,10 +1150,6 @@
    "source": "Make it",
    "text": "Oluşturun"
   },
-  "12c5a9fe21646b92": {
-   "source": "<g1>MDM's programs are a third of their size, its download about half</g1> (<g2>#25</g2>): on Windows, the programs went from 93 MB to 33 MB (<x3/> from 61 MB to 29 MB, the command line from 28 MB to a 0.2 MB launcher), and setup.exe from 23 MB to 12 MB. On Linux the AppImage went from 36 MB to 16 MB, the .deb from 27 MB to 13 MB.",
-   "text": "<g1>MDM'nin programları boyutlarının üçte biri, indirmesi yaklaşık yarısı kadar</g1> (<g2>#25</g2>): Windows'ta, programlar 93 MB'tan 33 MB'a düştü (<x3/> 61 MB'tan 29 MB'a, komut satırı 28 MB'tan 0.2 MB'lık bir başlatıcıya), ve setup.exe 23 MB'tan 12 MB'a düştü. Linux'ta AppImage 36 MB'tan 16 MB'a, .deb 27 MB'tan 13 MB'a düştü."
-  },
   "12ed54fb5407aa89": {
    "source": "The website has <x1/> and <x2/>, and every help page as Markdown, for AI tools.",
    "text": "Web sitesinde, yapay zekâ araçları için <x1/>, <x2/> ve tüm yardım sayfalarının Markdown sürümleri bulunur."
@@ -7378,6 +7374,10 @@
    "source": "Options, General with Test browser integration...",
    "text": "Seçenekler, Tarayıcı entegrasyonunu test et... ile Genel"
   },
+  "73c46eea77b3659f": {
+   "source": "<g1>MDM's programs and downloads are much smaller</g1> (<g2>#25</g2>): on Windows, the programs went from 93 MB to 41 MB (<x3/> from 61 MB to 38 MB, the command line from 28 MB to a 0.2 MB launcher), and setup.exe from 23 MB to 16 MB. On Linux the AppImage went from 36 MB to 20 MB, the .deb from 27 MB to 17 MB.",
+   "text": "<g1>MDM programları ve indirmeleri çok daha küçük</g1> (<g2>#25</g2>): Windows'ta programlar 93 MB'tan 41 MB'a düştü (<x3/> komut satırı 28 MB'tan 0,2 MB başlatıcıya, 61 MB'tan 38 MB'a), setup.exe ise 23 MB'tan 16 MB'a düştü. Linux'ta AppImage 36 MB'tan 20 MB'a, .deb ise 27 MB'tan 17 MB'a düştü."
+  },
   "73ee1eb7251e220f": {
    "source": "Video and Images",
    "text": "Video ve Resimler"
@@ -7829,10 +7829,6 @@
   "7b96ddc4c567caf5": {
    "source": "Browsers installed as a Flatpak or a Snap run in a sandbox, which decides whether they can reach MDM.",
    "text": "Flatpak veya Snap olarak yüklenen tarayıcılar, MDM'ye erişip erişemeyeceklerine karar veren bir korumalı alanda (sandbox) çalışır."
-  },
-  "7bab57d3591ffa30": {
-   "source": "<g1>Two smaller macOS downloads</g1> (<g2>#25</g2>): a .dmg for Apple Silicon (<x3/>, about 10 MB) and one for Intel (<x4/>, about 13 MB) instead of one universal .dmg of 80 MB. From 0.2.4 or older, update once by hand: <g5>Download</g5> in Check for updates opens the release; pick your Mac's .dmg. <g6>Update now</g6> works again after that.",
-   "text": "<g1>İki daha küçük macOS indirmesi</g1> (<g2>#25</g2>): 80 MB'lık tek bir evrensel .dmg yerine Apple Silicon için bir .dmg (<x3/>, yaklaşık 10 MB) ve Intel için bir .dmg (<x4/>, yaklaşık 13 MB). 0.2.4 veya daha eski bir sürümden, bir kez elle güncelleştirin: Güncelleştirmeleri denetle'deki <g5>İndir</g5> sürümü açar; Mac'inizin .dmg'sini seçin. Bundan sonra <g6>Şimdi güncelle</g6> tekrar çalışır."
   },
   "7bbfd6a588b5c2c4": {
    "source": "Where a tooltip's text wraps",
@@ -9122,10 +9118,6 @@
    "source": "Download Mister Download Manager 0.5.0 — free for Windows, macOS and Linux",
    "text": "Mister Download Manager 0.5.0 İndir — Windows, macOS ve Linux için ücretsiz"
   },
-  "8f937668a1130538": {
-   "source": "<g1>0.5.0</g1> <g2>24.1 MB</g2>",
-   "text": "<g1>0.5.0</g1> <g2>24.1 MB</g2>"
-  },
   "8fabf2cac610e9a8": {
    "source": "Cinnamon.",
    "text": "Cinnamon."
@@ -9785,6 +9777,10 @@
   "99605902518653e2": {
    "source": "The same programs without an installer. It keeps its data in <x1/>, like an installed copy.",
    "text": "Yükleyici olmadan aynı programlar. Verilerini yüklü bir kopya gibi <x1/> içinde tutar."
+  },
+  "99711c45fa3147e5": {
+   "source": "<g1>0.5.0</g1> <g2>16.9 MB</g2>",
+   "text": "<g1>0.5.0</g1> <g2>16.9 MB</g2>"
   },
   "997cc2f8f3474ae1": {
    "source": "Windows<g1><g2>3</g2></g1>",
@@ -10749,6 +10745,10 @@
   "a84e33bb5d1bc55c": {
    "source": "The <g1>command line guide</g1> lists everything <x2/> takes.",
    "text": "<g1>Komut satırı kılavuzu</g1>, <x2/>'nin aldığı her şeyi listeler."
+  },
+  "a8562e95bb3fa120": {
+   "source": "<g1>Two smaller macOS downloads</g1> (<g2>#25</g2>): a .dmg for Apple Silicon (<x3/>, about 14 MB) and one for Intel (<x4/>, about 16 MB) instead of one universal .dmg of 80 MB. From 0.2.4 or older, update once by hand: <g5>Download</g5> in Check for updates opens the release; pick your Mac's .dmg. <g6>Update now</g6> works again after that.",
+   "text": "<g1>İki küçük macOS indirmesi</g1> (<g2>#25</g2>): 80 MB'lık tek bir evrensel .dmg yerine Apple Silicon için bir .dmg (<x3/>, yaklaşık 14 MB) ve Intel için bir .dmg (<x4/>, yaklaşık 16 MB). 0.2.4 veya daha eski bir sürümden, bir kez elle güncelleme yapın: Güncelleştirmeleri denetle içindeki <g5>İndir</g5> sürümü açar; Mac'inizin .dmg dosyasını seçin. Bundan sonra <g6>Şimdi güncelle</g6> tekrar çalışır."
   },
   "a856aa8d56dfc9ae": {
    "source": "<g1>Dark mode: grey notes and error texts are easier to read</g1> (<g2>#45</g2>): they now have the contrast WCAG asks for (4.5:1) on every dark surface, Options' failed checks no longer use light mode's dark red on the dark dialog, and an editable drop-down's arrow is tinted dark under the pointer.",
@@ -12562,6 +12562,10 @@
    "source": "<g1>The system:</g1> MDM's version and how you installed it, your operating system and its version, the processor, the language and theme, and how many downloads and queues you have. These are counts only.",
    "text": "<g1>Sistem:</g1> MDM'nin sürümü ve nasıl kurduğunuz, işletim sisteminiz ve sürümü, işlemci, dil ve tema ile sahip olduğunuz indirme ve kuyruk sayısı. Bunlar sadece sayılardır."
   },
+  "c5ddef5d4d228288": {
+   "source": "Downloads are smaller: setup.exe 23 → 16 MB, AppImage 36 → 20 MB, .deb 27 → 17 MB.",
+   "text": "İndirilenler daha küçük: setup.exe 23 → 16 MB, AppImage 36 → 20 MB, .deb 27 → 17 MB."
+  },
   "c5ea65c70393f2d1": {
    "source": "<g1>Hang up modem when done</g1> — ends a dial-up connection, if you use one.",
    "text": "<g1>İşlem bitince modemi kapat</g1> — eğer kullanıyorsanız, çevirmeli bağlantıyı sonlandırır."
@@ -12925,10 +12929,6 @@
   "cb797c11de6612fd": {
    "source": "3. Choose how many run at once",
    "text": "3. Aynı anda çalışacak indirme sayısını seçin"
-  },
-  "cb7d403b3b59f081": {
-   "source": "Downloads are about half the size: setup.exe 23 → 12 MB, AppImage 36 → 16 MB, .deb 27 → 13 MB.",
-   "text": "İndirmeler yaklaşık yarı boyutunda: setup.exe 23 → 12 MB, AppImage 36 → 16 MB, .deb 27 → 13 MB."
   },
   "cb8376955028cc1c": {
    "source": "<g1>Linux: uninstalling the .deb or .rpm leaves no browser files behind</g1> (<g2>#266</g2>): MDM wrote the files that tell each browser where its helper is in every user's home folder, and <x3/> or <x4/> left them there, naming a program that was gone. The packages now install them for everyone, in each browser's own folder (Chrome and Brave, Chromium and Vivaldi, Edge, Firefox, the Snap Firefox included), and remove them with the package; MDM writes none in the home folder for those browsers, and takes away the ones an earlier version wrote. The AppImage and the tar.gz, and Opera, Helium, Thorium and Firefox's forks (which read them only in the home folder), still get them there.",

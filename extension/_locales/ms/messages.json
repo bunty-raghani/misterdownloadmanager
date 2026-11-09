@@ -164,6 +164,12 @@
   "popup_media_none": {
     "message": "Tiada video atau bunyi ditemui pada halaman ini lagi. Mainkannya, kemudian buka ini semula."
   },
+  "popup_media_streamed": {
+    "message": "Pemain halaman ini menstrim video secara berkeping-keping, jadi tiada fail untuk disenaraikan. Tuding pada video dan gunakan butang Muat turun videonya."
+  },
+  "popup_media_store": {
+    "message": "Peraturan Chrome Web Store menjauhkan salinan alat tambah ini daripada video tapak ini. Bantuan menerangkan perkara yang boleh anda lakukan."
+  },
   "popup_media_download": {
     "message": "Muat turun"
   },
@@ -178,6 +184,9 @@
   },
   "video_drm": {
     "message": "Video dilindungi: tidak boleh disimpan"
+  },
+  "video_unnamed": {
+    "message": "Tidak dapat dipastikan video yang mana ini: buka halamannya sendiri dan cuba di sana"
   },
   "popup_send_to": {
     "message": "Hantar muat turun ke"

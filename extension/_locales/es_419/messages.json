@@ -164,6 +164,12 @@
   "popup_media_none": {
     "message": "Aún no se encontró ningún video ni sonido en esta página. Reprodúcelo y vuelve a abrir esto."
   },
+  "popup_media_streamed": {
+    "message": "El reproductor de esta página transmite el video por partes, así que no hay ningún archivo que mostrar. Señala el video y usa su botón «Descargar video»."
+  },
+  "popup_media_store": {
+    "message": "Las reglas de Chrome Web Store mantienen esta copia del complemento alejada de los videos de este sitio. En «Ayuda» se explica qué puedes hacer."
+  },
   "popup_media_download": {
     "message": "Descargar"
   },
@@ -178,6 +184,9 @@
   },
   "video_drm": {
     "message": "Video protegido: no se puede guardar"
+  },
+  "video_unnamed": {
+    "message": "No se puede saber qué video es: abre su propia página e inténtalo ahí"
   },
   "popup_send_to": {
     "message": "Enviar descargas a"

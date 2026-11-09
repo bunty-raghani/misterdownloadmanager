@@ -571,6 +571,14 @@
             "string",
             "null"
           ]
+        },
+        "video_title": {
+          "default": null,
+          "description": "The title of the page the button was clicked on: a video yt-dlp knows only by its address\nis named by it.",
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "required": [

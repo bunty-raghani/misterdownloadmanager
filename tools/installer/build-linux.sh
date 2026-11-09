@@ -7,7 +7,7 @@
 #   MisterDownloadManager-<version>-linux-x86_64.rpm             Fedora, RHEL, openSUSE
 # Update now (crates/tools/src/update.rs), the website (tools/website/build.py) and the docs
 # look for these names, and still for the "-experimental" ones of older releases.
-# Needs: cargo, pwsh (the extension), python3 with Pillow (the icon), dpkg-deb, rpmbuild, curl (appimagetool is fetched),
+# Needs: cargo, pwsh (the extension), python3 with Pillow (the icon), dpkg-deb, rpmbuild, network access (appimagetool is fetched),
 # and zsyncmake if the appimagetool fetched doesn't write the .zsync itself.
 # Build on the oldest Ubuntu you want to support: the programs need its glibc or newer.
 #   tools/installer/build-linux.sh [--no-build]
@@ -157,8 +157,7 @@ ln -s usr/bin/misterdownloadmanager "$appdir/AppRun"
 cp "$tree/usr/share/applications/misterdownloadmanager.desktop" "$appdir/"
 cp "$tree/usr/share/icons/hicolor/256x256/apps/misterdownloadmanager.png" "$appdir/"
 tool="$stage/appimagetool"
-curl -fsSL -o "$tool" \
-  https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
+python3 "$root/tools/installer/fetch_release.py" AppImage/appimagetool continuous appimagetool-x86_64.AppImage "$tool"
 chmod +x "$tool"
 # Update information (#24): AppImageLauncher, Gear Lever and AppImageUpdate read it from the
 # AppImage, find the latest release's .zsync and download only the parts that changed. MDM's own

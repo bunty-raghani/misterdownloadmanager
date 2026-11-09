@@ -164,6 +164,12 @@
   "popup_media_none": {
     "message": "Nu s-a găsit încă niciun videoclip sau sunet pe această pagină. Redați-l, apoi deschideți din nou."
   },
+  "popup_media_streamed": {
+    "message": "Playerul acestei pagini transmite videoclipul pe bucăți, așa că nu există niciun fișier de afișat. Indicați videoclipul și folosiți butonul său „Descărcați videoclipul”."
+  },
+  "popup_media_store": {
+    "message": "Regulile Magazinului web Chrome țin această copie a suplimentului departe de videoclipurile acestui site. La „Ajutor” găsiți ce puteți face."
+  },
   "popup_media_download": {
     "message": "Descărcați"
   },
@@ -178,6 +184,9 @@
   },
   "video_drm": {
     "message": "Videoclip protejat: nu poate fi salvat"
+  },
+  "video_unnamed": {
+    "message": "Nu se poate stabili ce videoclip este: deschideți pagina proprie a videoclipului și încercați acolo"
   },
   "popup_send_to": {
     "message": "Trimite descărcările la"

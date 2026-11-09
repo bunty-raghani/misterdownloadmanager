@@ -295,6 +295,10 @@
 #. button in the browser extension's window: open the extension's page in that browser
 #, machine
 	Add the extension	ଏକ୍ସଟେନସନ୍ ଯୋଡ଼ନ୍ତୁ
+#. window title in extension.rs
+#. title of the window that shows how to turn on the Safari extension
+#, machine
+	Add the extension to Safari	Safariରେ ଏକ୍ସଟେନସନ୍ ଯୋଡ଼ନ୍ତୁ
 #. text in extension.rs
 #, machine
 	Add the free extension: files you download in your browser come here, and videos get a Download button.	ମାଗଣା ଏକ୍ସଟେନସନ୍ ଯୋଡ଼ନ୍ତୁ: ଆପଣଙ୍କ ବ୍ରାଉଜର୍‌ରେ ଡାଉନଲୋଡ୍ ହୋଇଥିବା ଫାଇଲ୍‌ଗୁଡ଼ିକ ଏଠାକୁ ଆସେ ଏବଂ ଭିଡିଓଗୁଡ଼ିକରେ ଡାଉନଲୋଡ୍ ବଟନ୍ ଦେଖାଯାଏ।
@@ -1932,6 +1936,10 @@
 #. a country's name (where a download's server is)
 #, machine
 	Hong Kong	ହଂକଂ
+#. text in extension.rs
+#. button in the browser extension's window, on Safari's row: open the steps that turn the extension on
+#, machine
+	How to Add	କିପରି ଯୋଡ଼ିବେ
 #. text in the Scheduler window
 #. link after why the computer can't be woken (Linux, macOS): opens the guide's page that shows how an administrator can allow it
 #, machine
@@ -3066,6 +3074,14 @@
 #. text in the tray icon's menu
 #, machine
 	Open Mister Download Manager	Mister Download Manager ଖୋଲନ୍ତୁ
+#. text in extension.rs
+#. step 2 of turning on the Safari extension; Cmd is the Command key
+#, machine
+	Open Safari's settings (Cmd+,).	Safariର ସେଟିଂସ୍ ଖୋଲନ୍ତୁ (Cmd+,)।
+#. text in extension.rs
+#. step 1 of turning on the Safari extension
+#, machine
+	Open Safari.	Safari ଖୋଲନ୍ତୁ।
 #. text in the Scheduler window
 #, machine
 	Open the following file when done	ସମାପ୍ତ ହେଲେ ନିମ୍ନଲିଖିତ ଫାଇଲ୍ ଖୋଲନ୍ତୁ
@@ -3500,6 +3516,9 @@
 #. Saturday, as short as a calendar's column head (two letters in English)
 #, machine
 	Sa	ଶନି
+#. text in extension.rs
+#, machine
+	Safari turns "Allow unsigned extensions" off each time it quits: do steps 1 to 6 again after restarting it.	Safari ବନ୍ଦ ହେଲେ ପ୍ରତିଥର "Allow unsigned extensions" ବନ୍ଦ କରିଦିଏ: ଏହାକୁ ପୁଣି ଚାଲୁ କରିବା ପରେ 1 ରୁ 6 ପର୍ଯ୍ୟନ୍ତ ପଦକ୍ଷେପ ପୁନର୍ବାର କରନ୍ତୁ।
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -4088,6 +4107,18 @@
 #. a country's name (where a download's server is)
 #, machine
 	Sweden	ସ୍ୱିଡେନ୍
+#. text in extension.rs
+#. step 3 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+#, machine
+	Switch to the "Advanced" tab (the cogwheels).	"Advanced" ଟ୍ୟାବ୍‌କୁ ଯାଆନ୍ତୁ (ଗିଅର୍ ଚିହ୍ନ)।
+#. text in extension.rs
+#. step 5 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+#, machine
+	Switch to the "Developer" tab (the screwdriver and spanner).	"Developer" ଟ୍ୟାବ୍‌କୁ ଯାଆନ୍ତୁ (ସ୍କ୍ରୁଡ୍ରାଇଭର୍ ଓ ସ୍ପାନର୍)।
+#. text in extension.rs
+#. step 7 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+#, machine
+	Switch to the "Extensions" tab (the puzzle piece).	"Extensions" ଟ୍ୟାବ୍‌କୁ ଯାଆନ୍ତୁ (ପଜଲ୍ ଖଣ୍ଡ)।
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -4266,6 +4297,9 @@
 #. text in errors.rs
 #, machine
 	the drive or network share is no longer available	ଡ୍ରାଇଭ୍ କିମ୍ବା ନେଟୱର୍କ ସେୟାର୍ ଆଉ ଉପଲବ୍ଧ ନାହିଁ
+#. text in extension.rs
+#, machine
+	The extension is already in this app. Apple hasn't notarized this build, so Safari needs these steps to allow it.	ଏକ୍ସଟେନସନ୍ ପୂର୍ବରୁ ଏହି ଆପ୍‌ରେ ଅଛି। Apple ଏହି ବିଲ୍ଡ୍‌କୁ ନୋଟାରାଇଜ୍ କରିନାହିଁ, ତେଣୁ ଏହାକୁ ଅନୁମତି ଦେବା ପାଇଁ Safariକୁ ଏହି ପଦକ୍ଷେପଗୁଡ଼ିକ ଦରକାର।
 #. text in errors.rs
 #, machine
 	the file changed on the server	ସର୍ଭରରେ ଫାଇଲ୍ ପରିବର୍ତ୍ତନ ହୋଇଛି
@@ -4724,6 +4758,22 @@
 #. verb: turn the Speed Limiter on
 #, machine
 	Turn on	ଚାଲୁ କରନ୍ତୁ
+#. text in extension.rs
+#. step 6 of turning on the Safari extension; the quoted switch name is what Safari's settings show in this language: use Apple's own words for it, or keep the English name when unsure
+#, machine
+	Turn on "Allow unsigned extensions".	"Allow unsigned extensions" ଚାଲୁ କରନ୍ତୁ।
+#. text in extension.rs
+#. step 8 of turning on the Safari extension
+#, machine
+	Turn on "Mister Download Manager" and allow it on all websites.	"Mister Download Manager" ଚାଲୁ କରନ୍ତୁ ଏବଂ ଏହାକୁ ସମସ୍ତ ୱେବସାଇଟ୍‌ରେ ଅନୁମତି ଦିଅନ୍ତୁ।
+#. text in extension.rs
+#. step 4 of turning on the Safari extension; the quoted switch name is what Safari's settings show in this language: use Apple's own words for it, or keep the English name when unsure
+#, machine
+	Turn on "Show features for web developers".	"Show features for web developers" ଚାଲୁ କରନ୍ତୁ।
+#. text in extension.rs
+#. the headline of the window that shows how to turn on the Safari extension
+#, machine
+	Turn on the extension in Safari	Safariରେ ଏକ୍ସଟେନସନ୍ ଚାଲୁ କରନ୍ତୁ
 #. tooltip (why a control is greyed) in the Options window
 #. why Options → Remote → Pair a device... is greyed
 #, machine
@@ -5520,6 +5570,10 @@ extension	Browser extension	ବ୍ରାଉଜର୍ ଏକ୍ସଟେନ୍ସ
 #, machine
 extension	Button settings...	ବଟନ୍ ସେଟିଙ୍ଗ୍ସ...
 #. text in the browser extension
+#. shown briefly on the download button when nothing on the page says which video the player is playing, so nothing was sent
+#, machine
+extension	Can't tell which video this is: open its own page and try there	ଏହା କେଉଁ ଭିଡିଓ ତାହା ଜଣାପଡୁନାହିଁ: ଏହାର ନିଜ ପୃଷ୍ଠା ଖୋଲି ସେଠାରେ ଚେଷ୍ଟା କରନ୍ତୁ
+#. text in the browser extension
 #. the toolbar button's status when the browser reaches the app; keep the name Mister Download Manager as it is
 #, machine
 extension	Connected to Mister Download Manager	Mister Download Manager ସହିତ ସଂଯୁକ୍ତ
@@ -5730,6 +5784,10 @@ extension	Support MDM	MDMକୁ ସମର୍ଥନ କରନ୍ତୁ
 #, machine
 extension	Take downloads from this browser	ଏହି ବ୍ରାଉଜର୍‌ରୁ ଡାଉନଲୋଡ୍ ନିଅନ୍ତୁ
 #. text in the browser extension
+#. in the toolbar button's popup, on a site where the Chrome Web Store's copy of the extension shows no download button; Help is the link at the bottom of the popup
+#, machine
+extension	The Chrome Web Store's rules keep this copy of the add-on away from this site's videos. Help says what you can do.	Chrome Web Storeର ନିୟମ ଯୋଗୁଁ ଏକ୍ସଟେନସନ୍‌ର ଏହି କପି ଏହି ସାଇଟ୍‌ର ଭିଡିଓରେ କାମ କରିପାରିବ ନାହିଁ। ଆପଣ କ'ଣ କରିପାରିବେ ତାହା ସହାୟତାରେ ଅଛି।
+#. text in the browser extension
 #. status when the connection to the app broke off (often security software blocking it); keep the name Mister Download Manager as it is
 #, machine
 extension	The connection to Mister Download Manager failed	Mister Download Manager ସହିତ ସଂଯୋଗ ବିଫଳ ହେଲା
@@ -5757,6 +5815,10 @@ extension	This computer	ଏହି କମ୍ପ୍ୟୁଟର
 #. status when a download carried too much data (very large cookies) to give to the app
 #, machine
 extension	This download's details were too large to hand over	ଏହି ଡାଉନଲୋଡ୍‌ର ବିବରଣୀ ହସ୍ତାନ୍ତର କରିବା ପାଇଁ ବହୁତ ବଡ଼ ଥିଲା
+#. text in the browser extension
+#. in the toolbar button's popup, when the page's player plays from a stream built in the page (a blob:): the list of the page's media has nothing to show; Download video is the name of the button over videos
+#, machine
+extension	This page's player streams its video in pieces, so there's no file to list. Point at the video and use its Download video button.	ଏହି ପୃଷ୍ଠାର ପ୍ଲେୟର୍ ଭିଡିଓକୁ ଖଣ୍ଡ ଖଣ୍ଡ କରି ଷ୍ଟ୍ରିମ୍ କରେ, ତେଣୁ ତାଲିକାଭୁକ୍ତ କରିବାକୁ କୌଣସି ଫାଇଲ୍ ନାହିଁ। ଭିଡିଓ ଉପରେ କର୍ସର୍ ରଖି ଏହାର ଭିଡିଓ ଡାଉନଲୋଡ୍ କରନ୍ତୁ ବଟନ୍ ବ୍ୟବହାର କରନ୍ତୁ।
 #. text in the browser extension
 #. status when the app is older than the extension; keep the name Mister Download Manager as it is
 #, machine
@@ -6000,6 +6062,10 @@ menu	Add &batch download	ବ୍ୟାଚ୍ ଡାଉନଲୋଡ୍ ଯୋଗ �
 #. the trailing ... means it opens a window: keep it
 #, machine
 menu	Add &magnet link...	ମ୍ୟାଗ୍ନେଟ୍ ଲିଙ୍କ୍ ଯୋଗ କରନ୍ତୁ(&m)...
+#. menu command in the main window
+#. View → Theme: picks a theme file or a Base16 or pywal colour scheme, copies it into the themes folder and uses it
+#, machine
+menu	Add a theme file…	ଥିମ୍ ଫାଇଲ୍ ଯୋଡ଼ନ୍ତୁ…
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
@@ -6270,6 +6336,10 @@ menu	OpenGL	OpenGL
 #. noun: opens the category's properties
 #, machine
 menu	Properties	ଗୁଣଧର୍ମ
+#. menu command in the main window
+#. View → Theme: the colours of pywal (a program making colour schemes from the wallpaper), followed as they change; a name: keep "pywal" as written
+#, machine
+menu	pywal	pywal ରଙ୍ଗ
 #. menu command in the main window
 #. verb: download the file again from the start
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation

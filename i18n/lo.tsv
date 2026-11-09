@@ -295,6 +295,10 @@
 #. button in the browser extension's window: open the extension's page in that browser
 #, machine
 	Add the extension	ເພີ່ມສ່ວນຂະຫຍາຍ
+#. window title in extension.rs
+#. title of the window that shows how to turn on the Safari extension
+#, machine
+	Add the extension to Safari	ເພີ່ມສ່ວນຂະຫຍາຍໃສ່ Safari
 #. text in extension.rs
 #, machine
 	Add the free extension: files you download in your browser come here, and videos get a Download button.	ເພີ່ມສ່ວນຂະຫຍາຍຟຣີ: ໄຟລ໌ທີ່ທ່ານດາວໂຫຼດໃນບຣາວເຊີຂອງທ່ານຈະມາທີ່ນີ້, ແລະວິດີໂອຈະໄດ້ຮັບປຸ່ມດາວໂຫຼດ.
@@ -1932,6 +1936,10 @@
 #. a country's name (where a download's server is)
 #, machine
 	Hong Kong	ຮົງກົງ
+#. text in extension.rs
+#. button in the browser extension's window, on Safari's row: open the steps that turn the extension on
+#, machine
+	How to Add	ວິທີເພີ່ມ
 #. text in the Scheduler window
 #. link after why the computer can't be woken (Linux, macOS): opens the guide's page that shows how an administrator can allow it
 #, machine
@@ -3066,6 +3074,14 @@
 #. text in the tray icon's menu
 #, machine
 	Open Mister Download Manager	ເປີດ Mister Download Manager
+#. text in extension.rs
+#. step 2 of turning on the Safari extension; Cmd is the Command key
+#, machine
+	Open Safari's settings (Cmd+,).	ເປີດການຕັ້ງຄ່າຂອງ Safari (Cmd+,).
+#. text in extension.rs
+#. step 1 of turning on the Safari extension
+#, machine
+	Open Safari.	ເປີດ Safari.
 #. text in the Scheduler window
 #, machine
 	Open the following file when done	ເປີດໄຟລ໌ຕໍ່ໄປນີ້ເມື່ອສຳເລັດ
@@ -3500,6 +3516,9 @@
 #. Saturday, as short as a calendar's column head (two letters in English)
 #, machine
 	Sa	ເສົາ
+#. text in extension.rs
+#, machine
+	Safari turns "Allow unsigned extensions" off each time it quits: do steps 1 to 6 again after restarting it.	Safari ປິດ “Allow unsigned extensions” ທຸກຄັ້ງທີ່ອອກຈາກໂປຣແກຣມ: ເຮັດຂັ້ນຕອນ 1 ຫາ 6 ຄືນໃໝ່ຫຼັງຈາກເປີດ Safari ອີກຄັ້ງ.
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -4088,6 +4107,18 @@
 #. a country's name (where a download's server is)
 #, machine
 	Sweden	ຊູແອັດ
+#. text in extension.rs
+#. step 3 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+#, machine
+	Switch to the "Advanced" tab (the cogwheels).	ປ່ຽນໄປແຖບ “Advanced” (ຮູບເຟືອງ).
+#. text in extension.rs
+#. step 5 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+#, machine
+	Switch to the "Developer" tab (the screwdriver and spanner).	ປ່ຽນໄປແຖບ “Developer” (ຮູບໄຂຄວງແລະກະແຈ).
+#. text in extension.rs
+#. step 7 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+#, machine
+	Switch to the "Extensions" tab (the puzzle piece).	ປ່ຽນໄປແຖບ “Extensions” (ຮູບຊິ້ນຈິກຊໍ).
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -4266,6 +4297,9 @@
 #. text in errors.rs
 #, machine
 	the drive or network share is no longer available	ໄດຣຟ໌ ຫຼື ການແບ່ງປັນເຄືອຂ່າຍບໍ່ສາມາດໃຊ້ໄດ້ອີກຕໍ່ໄປ
+#. text in extension.rs
+#, machine
+	The extension is already in this app. Apple hasn't notarized this build, so Safari needs these steps to allow it.	ສ່ວນຂະຫຍາຍຢູ່ໃນແອັບນີ້ແລ້ວ. Apple ຍັງບໍ່ໄດ້ຮັບຮອງເວີຊັນນີ້, ດັ່ງນັ້ນ Safari ຈຶ່ງຕ້ອງໃຊ້ຂັ້ນຕອນເຫຼົ່ານີ້ເພື່ອອະນຸຍາດ.
 #. text in errors.rs
 #, machine
 	the file changed on the server	ໄຟລ໌ປ່ຽນແປງໃນເຊີບເວີ
@@ -4724,6 +4758,22 @@
 #. verb: turn the Speed Limiter on
 #, machine
 	Turn on	ເປີດ
+#. text in extension.rs
+#. step 6 of turning on the Safari extension; the quoted switch name is what Safari's settings show in this language: use Apple's own words for it, or keep the English name when unsure
+#, machine
+	Turn on "Allow unsigned extensions".	ເປີດ “Allow unsigned extensions”.
+#. text in extension.rs
+#. step 8 of turning on the Safari extension
+#, machine
+	Turn on "Mister Download Manager" and allow it on all websites.	ເປີດ “Mister Download Manager” ແລະອະນຸຍາດໃຫ້ໃຊ້ໄດ້ໃນທຸກເວັບໄຊ.
+#. text in extension.rs
+#. step 4 of turning on the Safari extension; the quoted switch name is what Safari's settings show in this language: use Apple's own words for it, or keep the English name when unsure
+#, machine
+	Turn on "Show features for web developers".	ເປີດ “Show features for web developers”.
+#. text in extension.rs
+#. the headline of the window that shows how to turn on the Safari extension
+#, machine
+	Turn on the extension in Safari	ເປີດສ່ວນຂະຫຍາຍໃນ Safari
 #. tooltip (why a control is greyed) in the Options window
 #. why Options → Remote → Pair a device... is greyed
 #, machine
@@ -5520,6 +5570,10 @@ extension	Browser extension	ສ່ວນຂະຫຍາຍຂອງບຣາວ�
 #, machine
 extension	Button settings...	ການຕັ້ງຄ່າປຸ່ມ...
 #. text in the browser extension
+#. shown briefly on the download button when nothing on the page says which video the player is playing, so nothing was sent
+#, machine
+extension	Can't tell which video this is: open its own page and try there	ບໍ່ສາມາດບອກໄດ້ວ່າເປັນວິດີໂອໃດ: ເປີດໜ້າຂອງວິດີໂອນັ້ນແລ້ວລອງຢູ່ບ່ອນນັ້ນ
+#. text in the browser extension
 #. the toolbar button's status when the browser reaches the app; keep the name Mister Download Manager as it is
 #, machine
 extension	Connected to Mister Download Manager	ເຊື່ອມຕໍ່ກັບ Mister Download Manager ແລ້ວ
@@ -5730,6 +5784,10 @@ extension	Support MDM	ສະໜັບສະໜູນ MDM
 #, machine
 extension	Take downloads from this browser	ເອົາການດາວໂຫຼດຈາກບຣາວເຊີນີ້
 #. text in the browser extension
+#. in the toolbar button's popup, on a site where the Chrome Web Store's copy of the extension shows no download button; Help is the link at the bottom of the popup
+#, machine
+extension	The Chrome Web Store's rules keep this copy of the add-on away from this site's videos. Help says what you can do.	ກົດລະບຽບຂອງ Chrome Web Store ບໍ່ອະນຸຍາດໃຫ້ສ່ວນຂະຫຍາຍສະບັບນີ້ໃຊ້ກັບວິດີໂອຂອງເວັບໄຊນີ້. ເບິ່ງວິທີໃຊ້ເພື່ອຮູ້ວ່າເຮັດຫຍັງໄດ້ແດ່.
+#. text in the browser extension
 #. status when the connection to the app broke off (often security software blocking it); keep the name Mister Download Manager as it is
 #, machine
 extension	The connection to Mister Download Manager failed	ການເຊື່ອມຕໍ່ກັບ Mister Download Manager ລົ້ມເຫຼວ
@@ -5757,6 +5815,10 @@ extension	This computer	ຄອມພິວເຕີເຄື່ອງນີ້
 #. status when a download carried too much data (very large cookies) to give to the app
 #, machine
 extension	This download's details were too large to hand over	ລາຍລະອຽດຂອງການດາວໂຫຼດນີ້ໃຫຍ່ເກີນໄປທີ່ຈະສົ່ງຕໍ່
+#. text in the browser extension
+#. in the toolbar button's popup, when the page's player plays from a stream built in the page (a blob:): the list of the page's media has nothing to show; Download video is the name of the button over videos
+#, machine
+extension	This page's player streams its video in pieces, so there's no file to list. Point at the video and use its Download video button.	ຕົວຫຼິ້ນຂອງໜ້ານີ້ສະຕຣີມວິດີໂອເປັນຕອນໆ ຈຶ່ງບໍ່ມີໄຟລ໌ໃຫ້ສະແດງລາຍການ. ຊີ້ໄປທີ່ວິດີໂອແລ້ວໃຊ້ປຸ່ມດາວໂຫຼດວິດີໂອ.
 #. text in the browser extension
 #. status when the app is older than the extension; keep the name Mister Download Manager as it is
 #, machine
@@ -6000,6 +6062,10 @@ menu	Add &batch download	ເພີ່ມການດາວໂຫຼດເປັ�
 #. the trailing ... means it opens a window: keep it
 #, machine
 menu	Add &magnet link...	ເພີ່ມລິ້ງ &magnet...
+#. menu command in the main window
+#. View → Theme: picks a theme file or a Base16 or pywal colour scheme, copies it into the themes folder and uses it
+#, machine
+menu	Add a theme file…	ເພີ່ມໄຟລ໌ຮູບແບບ…
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
@@ -6270,6 +6336,10 @@ menu	OpenGL	OpenGL
 #. noun: opens the category's properties
 #, machine
 menu	Properties	ຄຸນສົມບັດ
+#. menu command in the main window
+#. View → Theme: the colours of pywal (a program making colour schemes from the wallpaper), followed as they change; a name: keep "pywal" as written
+#, machine
+menu	pywal	ສີ pywal
 #. menu command in the main window
 #. verb: download the file again from the start
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation

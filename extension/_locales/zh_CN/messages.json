@@ -164,6 +164,12 @@
   "popup_media_none": {
     "message": "此页面上尚未找到视频或音频。请播放后再次打开。"
   },
+  "popup_media_streamed": {
+    "message": "此页面的播放器以分片方式串流视频，因此没有可列出的文件。请将指针移到视频上，然后使用其“下载视频”按钮。"
+  },
+  "popup_media_store": {
+    "message": "Chrome 应用商店的规则使此扩展副本不能用于此网站的视频。请查看“帮助”了解您可以怎么做。"
+  },
   "popup_media_download": {
     "message": "下载"
   },
@@ -178,6 +184,9 @@
   },
   "video_drm": {
     "message": "受保护视频: 无法保存"
+  },
+  "video_unnamed": {
+    "message": "无法判断这是哪个视频：请打开该视频自己的页面再试"
   },
   "popup_send_to": {
     "message": "将下载发送到"

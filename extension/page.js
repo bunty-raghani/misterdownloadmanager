@@ -1,20 +1,96 @@
-// Mister Download Manager's link watcher (a content script, in every page and frame): a link
-// clicked with Alt held is the browser's to download (background.js leaves its download alone),
-// the key the app's help names for it.
+// Mister Download Manager's link watcher (a content script, in every page and frame):
+//  - a link clicked with Alt held is the browser's to download (background.js leaves its download
+//    alone), the key the app's help names for it;
+//  - Safari only: it has no downloads API, so background.js can't take a download from the
+//    browser. The click on a link to a file type Options lists is held here instead and offered
+//    to the app (message `link`); if the app doesn't take it, the click goes on as if never held.
 (() => {
   // One watcher per page: a copy cut off from the extension (after an update) gives way.
   const prev = globalThis.__mdmPage;
   if (prev && typeof prev === "object" && prev.alive()) return;
   if (prev && typeof prev.stop === "function") prev.stop();
   const ext = globalThis.browser ?? globalThis.chrome;
-  const note = (e) => {
-    if (!e.altKey || !e.isTrusted || !(e.target instanceof Element)) return;
-    const a = e.target.closest("a[href]");
-    if (!a || !/^https?:/i.test(a.href)) return;
+  const SAFARI = Boolean(ext.runtime.getManifest?.().browser_specific_settings?.safari);
+
+  const tell = (message) => {
     try {
-      ext.runtime.sendMessage({ type: "bypass", url: a.href }).catch(() => {});
+      return ext.runtime.sendMessage(message).catch(() => null);
     } catch {
       // The extension was updated or removed since this page loaded: nothing to tell.
+      return Promise.resolve(null);
+    }
+  };
+
+  // ---- Safari: the file types to hold links for (Options, as background.js keeps them) --------
+
+  let patterns = [];
+  const learn = (rules) => {
+    // As background.js typePatterns reads the list: names separated by spaces, `*` any run.
+    patterns =
+      rules && rules.capture
+        ? String(rules.types || "")
+            .split(/\s+/)
+            .filter(Boolean)
+            .map((t) => new RegExp("^" + t.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*") + "$", "i"))
+        : [];
+  };
+  const onStorage = (changes, area) => {
+    if (area === "local" && changes.rules) learn(changes.rules.newValue);
+  };
+  if (SAFARI) {
+    ext.storage.local.get({ rules: null }).then((v) => learn(v.rules), () => {});
+    ext.storage.onChanged.addListener(onStorage);
+    // Safari's background script sees no downloads, so nothing else would ask the app for
+    // Options' rules once they are old: changed types, or capture turned back on, would never
+    // reach the stored copy this reads. Asked here, it refreshes them when stale (onStorage).
+    tell({ type: "rules" });
+  }
+
+  // The file type a link leads to: its `download` name's, else its path's last name's.
+  const typeOf = (a) => {
+    let name = a.getAttribute("download") || "";
+    if (!name) {
+      try {
+        name = new URL(a.href).pathname;
+      } catch {
+        return "";
+      }
+    }
+    const base = name.split("/").pop() || "";
+    const dot = base.lastIndexOf(".");
+    return dot > 0 ? base.slice(dot + 1) : "";
+  };
+
+  const hold = (e, a) => {
+    e.preventDefault();
+    // The `download` name, when the link has one: the app's rules decide by it, as page.js did.
+    const name = a.getAttribute("download") || "";
+    tell({ type: "link", url: a.href, ...(name ? { name } : {}) }).then((reply) => {
+      if (reply && reply.taken) return;
+      // Not the app's (Options, an excluded site, MDM not running): the click as it was, its
+      // Cmd/Shift/Ctrl too (a new tab or window stays one). This one isn't trusted, so `note`
+      // leaves it alone.
+      const keys = { ctrlKey: e.ctrlKey, metaKey: e.metaKey, shiftKey: e.shiftKey };
+      try {
+        a.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, button: 0, ...keys }));
+      } catch {
+        a.click();
+      }
+    });
+  };
+
+  const note = (e) => {
+    if (!e.isTrusted || !(e.target instanceof Element)) return;
+    const a = e.target.closest("a[href]");
+    if (!a || !/^https?:/i.test(a.href)) return;
+    if (e.altKey) {
+      tell({ type: "bypass", url: a.href });
+      return;
+    }
+    // Safari: a plain click (or Cmd/Shift: a link opened elsewhere is held the same).
+    if (SAFARI && e.type === "click" && e.button === 0 && patterns.length) {
+      const type = typeOf(a);
+      if (type && patterns.some((p) => p.test(type))) hold(e, a);
     }
   };
   addEventListener("click", note, true);
@@ -24,6 +100,7 @@
     stop: () => {
       removeEventListener("click", note, true);
       removeEventListener("auxclick", note, true);
+      if (SAFARI) ext.storage.onChanged.removeListener(onStorage);
     },
   };
 })();

@@ -139,6 +139,8 @@ impl Queue {
 pub enum Member {
     /// Not started, or stopped: can start now.
     Waiting,
+    /// Stopped by hand while the queue runs: left alone until started again (#341).
+    Held,
     Running,
     Complete,
     /// Failed `tries` times, last at `at`.
@@ -168,7 +170,7 @@ pub fn to_start(q: &Queue, member: impl Fn(u64) -> Member, now: Instant) -> Vec<
                 q.schedule.retries.is_none_or(|max| tries < max)
                     && now.duration_since(at) >= RETRY_DELAY
             }
-            Member::Running | Member::Complete => false,
+            Member::Running | Member::Complete | Member::Held => false,
         };
         if ready {
             out.push(*id);
@@ -184,7 +186,7 @@ pub fn finished(q: &Queue, member: impl Fn(u64) -> Member) -> bool {
     q.items.iter().all(|id| match member(*id) {
         Member::Complete => true,
         Member::Failed { tries, .. } => q.schedule.retries.is_some_and(|max| tries >= max),
-        Member::Waiting | Member::Running => false,
+        Member::Waiting | Member::Held | Member::Running => false,
     })
 }
 
@@ -231,6 +233,22 @@ mod tests {
         assert_eq!(to_start(&q(2, &[1, 2, 3]), st, now), vec![2]);
         assert_eq!(to_start(&q(3, &[1, 2, 3]), st, now), vec![2, 3]);
         assert!(to_start(&q(1, &[1, 2, 3]), st, now).is_empty());
+    }
+
+    /// #341: Stop in a running queue is left alone, and the queue isn't over because of it.
+    #[test]
+    fn a_download_stopped_by_hand_is_not_started_again() {
+        let st = |id| {
+            if id == 1 {
+                Member::Held
+            } else {
+                Member::Waiting
+            }
+        };
+        let now = Instant::now();
+        assert_eq!(to_start(&q(2, &[1, 2]), st, now), vec![2]);
+        assert!(to_start(&q(2, &[1]), st, now).is_empty());
+        assert!(!finished(&q(1, &[1]), st));
     }
 
     #[test]

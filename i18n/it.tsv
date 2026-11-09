@@ -226,6 +226,10 @@
 #. text in extension.rs
 #. button in the browser extension's window: open the extension's page in that browser
 	Add the extension	Aggiungi l'estensione
+#. window title in extension.rs
+#. title of the window that shows how to turn on the Safari extension
+#, machine
+	Add the extension to Safari	Aggiungi l'estensione a Safari
 #. text in extension.rs
 	Add the free extension: files you download in your browser come here, and videos get a Download button.	Aggiungi l'estensione gratuita: i file che scarichi nel browser arriveranno qui e sui video comparirà un pulsante di download.
 #. text in rssdlg.rs
@@ -1431,6 +1435,10 @@
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Hong Kong	Hong Kong
+#. text in extension.rs
+#. button in the browser extension's window, on Safari's row: open the steps that turn the extension on
+#, machine
+	How to Add	Come aggiungere
 #. text in the Scheduler window
 #. link after why the computer can't be woken (Linux, macOS): opens the guide's page that shows how an administrator can allow it
 	How to allow it	Come consentirlo
@@ -2264,6 +2272,14 @@
 	Open magnet links and .torrent files with Mister Download Manager	Apri i link magnet e i file .torrent con Mister Download Manager
 #. text in the tray icon's menu
 	Open Mister Download Manager	Apri Mister Download Manager
+#. text in extension.rs
+#. step 2 of turning on the Safari extension; Cmd is the Command key
+#, machine
+	Open Safari's settings (Cmd+,).	Apri le impostazioni di Safari (Cmd+,).
+#. text in extension.rs
+#. step 1 of turning on the Safari extension
+#, machine
+	Open Safari.	Apri Safari.
 #. text in the Scheduler window
 	Open the following file when done	Apri il seguente file al termine
 #. checkbox in the Scheduler window
@@ -2587,6 +2603,9 @@
 #. text in the Scheduler window
 #. Saturday, as short as a calendar's column head (two letters in English)
 	Sa	Sa
+#. text in extension.rs
+#, machine
+	Safari turns "Allow unsigned extensions" off each time it quits: do steps 1 to 6 again after restarting it.	Safari disattiva "Consenti estensioni non firmate" a ogni chiusura: ripeti i passaggi da 1 a 6 dopo averlo riavviato.
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Saint Barthélemy	Saint-Barthélemy
@@ -3019,6 +3038,18 @@
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Sweden	Svezia
+#. text in extension.rs
+#. step 3 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+#, machine
+	Switch to the "Advanced" tab (the cogwheels).	Passa alla scheda "Avanzate" (gli ingranaggi).
+#. text in extension.rs
+#. step 5 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+#, machine
+	Switch to the "Developer" tab (the screwdriver and spanner).	Passa alla scheda "Sviluppatori" (il cacciavite e la chiave inglese).
+#. text in extension.rs
+#. step 7 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+#, machine
+	Switch to the "Extensions" tab (the puzzle piece).	Passa alla scheda "Estensioni" (il pezzo di puzzle).
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Switzerland	Svizzera
@@ -3149,6 +3180,9 @@
 	The downloads you add, or drop on this window, show here.	I download che aggiungi o trascini su questa finestra compaiono qui.
 #. text in errors.rs
 	the drive or network share is no longer available	l'unità o la condivisione di rete non è più disponibile
+#. text in extension.rs
+#, machine
+	The extension is already in this app. Apple hasn't notarized this build, so Safari needs these steps to allow it.	L'estensione è già in questa app. Apple non ha notarizzato questa build, quindi per consentirla in Safari servono questi passaggi.
 #. text in errors.rs
 	the file changed on the server	il file è stato modificato sul server
 #. message or event log entry in the main window
@@ -3484,6 +3518,22 @@
 #. text in the tray icon's menu
 #. verb: turn the Speed Limiter on
 	Turn on	Attiva
+#. text in extension.rs
+#. step 6 of turning on the Safari extension; the quoted switch name is what Safari's settings show in this language: use Apple's own words for it, or keep the English name when unsure
+#, machine
+	Turn on "Allow unsigned extensions".	Attiva "Consenti estensioni non firmate".
+#. text in extension.rs
+#. step 8 of turning on the Safari extension
+#, machine
+	Turn on "Mister Download Manager" and allow it on all websites.	Attiva "Mister Download Manager" e consentine l'uso su tutti i siti web.
+#. text in extension.rs
+#. step 4 of turning on the Safari extension; the quoted switch name is what Safari's settings show in this language: use Apple's own words for it, or keep the English name when unsure
+#, machine
+	Turn on "Show features for web developers".	Attiva "Mostra funzionalità per sviluppatori web".
+#. text in extension.rs
+#. the headline of the window that shows how to turn on the Safari extension
+#, machine
+	Turn on the extension in Safari	Attiva l'estensione in Safari
 #. tooltip (why a control is greyed) in the Options window
 #. why Options → Remote → Pair a device... is greyed
 	Turn on the remote control first.	Attiva prima il controllo remoto.
@@ -4079,6 +4129,9 @@ extension	Browser extension	Estensione del browser
 #. the trailing ... means it is still going on: keep it
 extension	Button settings...	Impostazioni pulsante...
 #. text in the browser extension
+#. shown briefly on the download button when nothing on the page says which video the player is playing, so nothing was sent
+extension	Can't tell which video this is: open its own page and try there	Impossibile capire di quale video si tratta: apri la sua pagina e riprova da lì
+#. text in the browser extension
 #. the toolbar button's status when the browser reaches the app; keep the name Mister Download Manager as it is
 extension	Connected to Mister Download Manager	Connesso a Mister Download Manager
 #. text in the browser extension
@@ -4238,6 +4291,9 @@ extension	Support MDM	Sostieni MDM
 #. check box in the toolbar button's popup: on, downloads go to the app; off, the browser keeps them
 extension	Take downloads from this browser	Acquisisci i download da questo browser
 #. text in the browser extension
+#. in the toolbar button's popup, on a site where the Chrome Web Store's copy of the extension shows no download button; Help is the link at the bottom of the popup
+extension	The Chrome Web Store's rules keep this copy of the add-on away from this site's videos. Help says what you can do.	Le regole del Chrome Web Store non consentono a questa copia dell'estensione di scaricare i video di questo sito. La Guida spiega cosa puoi fare.
+#. text in the browser extension
 #. status when the connection to the app broke off (often security software blocking it); keep the name Mister Download Manager as it is
 extension	The connection to Mister Download Manager failed	La connessione a Mister Download Manager non è riuscita
 #. text in the browser extension
@@ -4258,6 +4314,9 @@ extension	This computer	Questo computer
 #. text in the browser extension
 #. status when a download carried too much data (very large cookies) to give to the app
 extension	This download's details were too large to hand over	I dati di questo download erano troppo grandi per essere trasferiti
+#. text in the browser extension
+#. in the toolbar button's popup, when the page's player plays from a stream built in the page (a blob:): the list of the page's media has nothing to show; Download video is the name of the button over videos
+extension	This page's player streams its video in pieces, so there's no file to list. Point at the video and use its Download video button.	Il lettore di questa pagina trasmette il video a pezzi, quindi non c'è nessun file da elencare. Passa il puntatore sul video e usa il suo pulsante Scarica video.
 #. text in the browser extension
 #. status when the app is older than the extension; keep the name Mister Download Manager as it is
 extension	Update Mister Download Manager to use everything this extension offers	Aggiorna Mister Download Manager per usare tutte le funzioni di questa estensione

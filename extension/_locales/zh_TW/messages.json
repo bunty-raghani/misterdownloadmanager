@@ -164,6 +164,12 @@
   "popup_media_none": {
     "message": "此頁面尚未找到任何影片或音訊。請播放後再重新開啟。"
   },
+  "popup_media_streamed": {
+    "message": "此頁面的播放器以分段方式串流影片，因此沒有可列出的檔案。請將指標移到影片上，然後使用其「下載影片」按鈕。"
+  },
+  "popup_media_store": {
+    "message": "Chrome 線上應用程式商店的規則使此擴充功能副本無法用於此網站的影片。請參閱「說明」以了解您可以怎麼做。"
+  },
   "popup_media_download": {
     "message": "下載"
   },
@@ -178,6 +184,9 @@
   },
   "video_drm": {
     "message": "受保護的影片：無法儲存"
+  },
+  "video_unnamed": {
+    "message": "無法判斷這是哪部影片：請開啟該影片本身的頁面再試一次"
   },
   "popup_send_to": {
     "message": "傳送下載項目至"

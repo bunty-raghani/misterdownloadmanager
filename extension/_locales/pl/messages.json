@@ -164,6 +164,12 @@
   "popup_media_none": {
     "message": "Nie znaleziono jeszcze żadnego wideo ani dźwięku na tej stronie. Odtwórz je, a następnie otwórz to ponownie."
   },
+  "popup_media_streamed": {
+    "message": "Odtwarzacz na tej stronie przesyła film we fragmentach, więc nie ma pliku do wyświetlenia. Wskaż film i użyj jego przycisku „Pobierz wideo”."
+  },
+  "popup_media_store": {
+    "message": "Zasady Chrome Web Store trzymają tę kopię dodatku z dala od filmów w tej witrynie. W „Pomocy” znajdziesz informacje, co możesz zrobić."
+  },
   "popup_media_download": {
     "message": "Pobierz"
   },
@@ -178,6 +184,9 @@
   },
   "video_drm": {
     "message": "Wideo chronione: nie można go zapisać"
+  },
+  "video_unnamed": {
+    "message": "Nie można ustalić, który to film: otwórz jego własną stronę i spróbuj tam"
   },
   "popup_send_to": {
     "message": "Wyślij pobrane pliki do"

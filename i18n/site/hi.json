@@ -1150,10 +1150,6 @@
    "source": "Make it",
    "text": "इसे बनाएं"
   },
-  "12c5a9fe21646b92": {
-   "source": "<g1>MDM's programs are a third of their size, its download about half</g1> (<g2>#25</g2>): on Windows, the programs went from 93 MB to 33 MB (<x3/> from 61 MB to 29 MB, the command line from 28 MB to a 0.2 MB launcher), and setup.exe from 23 MB to 12 MB. On Linux the AppImage went from 36 MB to 16 MB, the .deb from 27 MB to 13 MB.",
-   "text": "<g1>MDM के प्रोग्राम अपने आकार का एक तिहाई हैं, इसका डाउनलोड लगभग आधा है</g1> (<g2>#25</g2>): Windows पर, प्रोग्राम 93 MB से 33 MB हो गए (<x3/> 61 MB से 29 MB, कमांड लाइन 28 MB से 0.2 MB लॉन्चर तक), और setup.exe 23 MB से 12 MB हो गया। Linux पर AppImage 36 MB से 16 MB हो गया, .deb 27 MB से 13 MB हो गया।"
-  },
   "12ed54fb5407aa89": {
    "source": "The website has <x1/> and <x2/>, and every help page as Markdown, for AI tools.",
    "text": "वेबसाइट पर AI टूल के लिए <x1/>, <x2/> और हर सहायता पृष्ठ Markdown में उपलब्ध है।"
@@ -7382,6 +7378,10 @@
    "source": "Options, General with Test browser integration...",
    "text": "विकल्प, सामान्य: ब्राउज़र एकीकरण का परीक्षण करें... विकल्प के साथ"
   },
+  "73c46eea77b3659f": {
+   "source": "<g1>MDM's programs and downloads are much smaller</g1> (<g2>#25</g2>): on Windows, the programs went from 93 MB to 41 MB (<x3/> from 61 MB to 38 MB, the command line from 28 MB to a 0.2 MB launcher), and setup.exe from 23 MB to 16 MB. On Linux the AppImage went from 36 MB to 20 MB, the .deb from 27 MB to 17 MB.",
+   "text": "<g1>MDM के प्रोग्राम और डाउनलोड बहुत छोटे हो गए हैं</g1> (<g2>#25</g2>): Windows पर, प्रोग्राम 93 MB से 41 MB हो गए (<x3/> 61 MB से 38 MB, कमांड लाइन 28 MB से 0.2 MB लॉन्चर), और setup.exe 23 MB से 16 MB हो गया। Linux पर AppImage 36 MB से 20 MB हो गया, .deb 27 MB से 17 MB हो गया।"
+  },
   "73ee1eb7251e220f": {
    "source": "Video and Images",
    "text": "वीडियो और छवियां"
@@ -7833,10 +7833,6 @@
   "7b96ddc4c567caf5": {
    "source": "Browsers installed as a Flatpak or a Snap run in a sandbox, which decides whether they can reach MDM.",
    "text": "Flatpak या Snap के रूप में इंस्टॉल किए गए ब्राउज़र सैंडबॉक्स में चलते हैं। सैंडबॉक्स तय करता है कि वे MDM तक पहुँच सकते हैं या नहीं।"
-  },
-  "7bab57d3591ffa30": {
-   "source": "<g1>Two smaller macOS downloads</g1> (<g2>#25</g2>): a .dmg for Apple Silicon (<x3/>, about 10 MB) and one for Intel (<x4/>, about 13 MB) instead of one universal .dmg of 80 MB. From 0.2.4 or older, update once by hand: <g5>Download</g5> in Check for updates opens the release; pick your Mac's .dmg. <g6>Update now</g6> works again after that.",
-   "text": "<g1>दो छोटे macOS डाउनलोड</g1> (<g2>#25</g2>): Apple Silicon के लिए एक .dmg (<x3/>, लगभग 10 MB) और Intel के लिए एक (<x4/>, लगभग 13 MB) 80 MB के एक सार्वभौमिक .dmg के बजाय। 0.2.4 या पुराने से, एक बार हाथ से अपडेट करें: अपडेट के लिए जाँच करें में <g5>डाउनलोड</g5> रिलीज़ खोलता है; अपने Mac का .dmg चुनें। उसके बाद <g6>अभी अपडेट करें</g6> फिर से काम करता है।"
   },
   "7bbfd6a588b5c2c4": {
    "source": "Where a tooltip's text wraps",
@@ -9126,10 +9122,6 @@
    "source": "Download Mister Download Manager 0.5.0 — free for Windows, macOS and Linux",
    "text": "Mister Download Manager 0.5.0 डाउनलोड करें — Windows, macOS और Linux के लिए मुफ़्त"
   },
-  "8f937668a1130538": {
-   "source": "<g1>0.5.0</g1> <g2>24.1 MB</g2>",
-   "text": "<g1>0.5.0</g1> <g2>24.1 MB</g2>"
-  },
   "8fabf2cac610e9a8": {
    "source": "Cinnamon.",
    "text": "Cinnamon।"
@@ -9789,6 +9781,10 @@
   "99605902518653e2": {
    "source": "The same programs without an installer. It keeps its data in <x1/>, like an installed copy.",
    "text": "इंस्टॉलर के बिना वही प्रोग्राम। यह अपना डेटा <x1/> में रखता है, जैसे एक स्थापित कॉपी।"
+  },
+  "99711c45fa3147e5": {
+   "source": "<g1>0.5.0</g1> <g2>16.9 MB</g2>",
+   "text": "<g1>0.5.0</g1> <g2>16.9 MB</g2>"
   },
   "997cc2f8f3474ae1": {
    "source": "Windows<g1><g2>3</g2></g1>",
@@ -10753,6 +10749,10 @@
   "a84e33bb5d1bc55c": {
    "source": "The <g1>command line guide</g1> lists everything <x2/> takes.",
    "text": "<g1>कमांड लाइन गाइड</g1> वह सब सूचीबद्ध करता है जो <x2/> लेता है।"
+  },
+  "a8562e95bb3fa120": {
+   "source": "<g1>Two smaller macOS downloads</g1> (<g2>#25</g2>): a .dmg for Apple Silicon (<x3/>, about 14 MB) and one for Intel (<x4/>, about 16 MB) instead of one universal .dmg of 80 MB. From 0.2.4 or older, update once by hand: <g5>Download</g5> in Check for updates opens the release; pick your Mac's .dmg. <g6>Update now</g6> works again after that.",
+   "text": "<g1>macOS के लिए दो छोटे डाउनलोड</g1> (<g2>#25</g2>): 80 MB के एक यूनिवर्सल .dmg के बजाय Apple Silicon (<x3/>, लगभग 14 MB) के लिए एक .dmg और Intel (<x4/>, लगभग 16 MB) के लिए एक .dmg। 0.2.4 या पुराने संस्करण से, एक बार मैन्युअल रूप से अपडेट करें: अपडेट के लिए जाँच करें में <g5>डाउनलोड</g5> रिलीज़ खोलता है; अपने Mac का .dmg चुनें। उसके बाद <g6>अभी अपडेट करें</g6> फिर से काम करेगा।"
   },
   "a856aa8d56dfc9ae": {
    "source": "<g1>Dark mode: grey notes and error texts are easier to read</g1> (<g2>#45</g2>): they now have the contrast WCAG asks for (4.5:1) on every dark surface, Options' failed checks no longer use light mode's dark red on the dark dialog, and an editable drop-down's arrow is tinted dark under the pointer.",
@@ -12566,6 +12566,10 @@
    "source": "<g1>The system:</g1> MDM's version and how you installed it, your operating system and its version, the processor, the language and theme, and how many downloads and queues you have. These are counts only.",
    "text": "<g1>सिस्टम:</g1> MDM का संस्करण और इसे इंस्टॉल करने का तरीका, आपका ऑपरेटिंग सिस्टम और उसका संस्करण, प्रोसेसर, भाषा और थीम, और डाउनलोड तथा कतारों की संख्या। इसमें केवल गिनती होती है।"
   },
+  "c5ddef5d4d228288": {
+   "source": "Downloads are smaller: setup.exe 23 → 16 MB, AppImage 36 → 20 MB, .deb 27 → 17 MB.",
+   "text": "डाउनलोड छोटे हो गए हैं: setup.exe 23 → 16 MB, AppImage 36 → 20 MB, .deb 27 → 17 MB।"
+  },
   "c5ea65c70393f2d1": {
    "source": "<g1>Hang up modem when done</g1> — ends a dial-up connection, if you use one.",
    "text": "<g1>पूरा होने पर मॉडेम हैंग अप करें</g1> — अगर आप डायल-अप कनेक्शन का उपयोग करते हैं, तो यह उसे समाप्त कर देता है।"
@@ -12929,10 +12933,6 @@
   "cb797c11de6612fd": {
    "source": "3. Choose how many run at once",
    "text": "3. चुनें कि एक साथ कितने चलेंगे"
-  },
-  "cb7d403b3b59f081": {
-   "source": "Downloads are about half the size: setup.exe 23 → 12 MB, AppImage 36 → 16 MB, .deb 27 → 13 MB.",
-   "text": "डाउनलोड लगभग आधे आकार के हैं: setup.exe 23 → 12 MB, AppImage 36 → 16 MB, .deb 27 → 13 MB।"
   },
   "cb8376955028cc1c": {
    "source": "<g1>Linux: uninstalling the .deb or .rpm leaves no browser files behind</g1> (<g2>#266</g2>): MDM wrote the files that tell each browser where its helper is in every user's home folder, and <x3/> or <x4/> left them there, naming a program that was gone. The packages now install them for everyone, in each browser's own folder (Chrome and Brave, Chromium and Vivaldi, Edge, Firefox, the Snap Firefox included), and remove them with the package; MDM writes none in the home folder for those browsers, and takes away the ones an earlier version wrote. The AppImage and the tar.gz, and Opera, Helium, Thorium and Firefox's forks (which read them only in the home folder), still get them there.",

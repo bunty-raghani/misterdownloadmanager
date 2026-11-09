@@ -1150,10 +1150,6 @@
    "source": "Make it",
    "text": "Erstellen"
   },
-  "12c5a9fe21646b92": {
-   "source": "<g1>MDM's programs are a third of their size, its download about half</g1> (<g2>#25</g2>): on Windows, the programs went from 93 MB to 33 MB (<x3/> from 61 MB to 29 MB, the command line from 28 MB to a 0.2 MB launcher), and setup.exe from 23 MB to 12 MB. On Linux the AppImage went from 36 MB to 16 MB, the .deb from 27 MB to 13 MB.",
-   "text": "<g1>MDMs Programme sind ein Drittel ihrer Größe, der Download etwa die Hälfte</g1> (<g2>#25</g2>): Unter Windows schrumpften die Programme von 93 MB auf 33 MB (<x3/> von 61 MB auf 29 MB, die Kommandozeile von 28 MB auf einen 0,2 MB Launcher), und setup.exe von 23 MB auf 12 MB. Unter Linux schrumpfte das AppImage von 36 MB auf 16 MB, das .deb von 27 MB auf 13 MB."
-  },
   "12ed54fb5407aa89": {
    "source": "The website has <x1/> and <x2/>, and every help page as Markdown, for AI tools.",
    "text": "Die Website hat <x1/> und <x2/> sowie jede Hilfeseite als Markdown für KI-Tools."
@@ -2098,6 +2094,10 @@
    "source": "<g1>Look links up when they arrive (name, size, online)</g1> — Link grabber asks each server about its file (on by default).",
    "text": "<g1>Links beim Eintreffen nachschlagen (Name, Größe, online)</g1> – der Link-Grabber fragt jeden Server nach der zugehörigen Datei (standardmäßig aktiviert)."
   },
+  "214d94db10fe0954": {
+   "source": "<g1>Cookies for video sites</g1> (<g2>#229</g2>): <g3>Options → Sites Logins</g3> can let yt-dlp read a browser's cookies on this computer (Firefox, Chrome, Edge, Brave, Opera, Vivaldi, Chromium, Whale; Safari on macOS), with a profile by name or folder, so a pasted link to a video that needs you signed in (YouTube's \"Sign in to confirm you're not a bot\") works. Off by default. When the browser's extension passes the page's own cookies, those are used instead. When the browser's cookies can't be read (Chrome, Edge and Brave lock them on Windows; a locked keyring on Linux), the Download video window says so in plain words.",
+   "text": "<g1>Cookies für Videoseiten</g1> (<g2>#229</g2>): <g3>Optionen → Site-Anmeldungen</g3> kann yt-dlp erlauben, die Cookies eines Browsers auf diesem Computer zu lesen (Firefox, Chrome, Edge, Brave, Opera, Vivaldi, Chromium, Whale; Safari unter macOS), mit einem Profil nach Name oder Ordner, sodass ein eingefügter Link zu einem Video, das eine Anmeldung erfordert (YouTubes „Anmelden, um zu bestätigen, dass Sie kein Bot sind“), funktioniert. Standardmäßig deaktiviert. Wenn die Browser-Erweiterung die eigenen Cookies der Seite übergibt, werden diese stattdessen verwendet. Wenn die Browser-Cookies nicht gelesen werden können (Chrome, Edge und Brave sperren sie unter Windows; ein gesperrter Schlüsselbund unter Linux), wird dies im Fenster „Video herunterladen“ klar und deutlich angezeigt."
+  },
   "216583d42da33e52": {
    "source": "On macOS only an administrator can schedule a wake, so the option is greyed. MDM doesn't ask for an administrator's password. An administrator can have the Mac wake every day a minute before the queue starts, for example at 10:59 PM for a queue that starts at 11:00 PM:",
    "text": "Unter macOS kann nur ein Administrator ein Wecken planen. Daher ist die Option ausgegraut. MDM fragt nicht nach dem Passwort eines Administrators. Ein Administrator kann den Mac jeden Tag eine Minute vor dem Start der Warteschlange wecken lassen, zum Beispiel um 22:59 Uhr für eine Warteschlange, die um 23:00 Uhr startet:"
@@ -2437,6 +2437,10 @@
   "26389260c1c38a82": {
    "source": "Feeds and rules are kept in <x1/> in MDM's data folder. MDM reads at most 5 MB of a feed.",
    "text": "Feeds und Regeln werden in <x1/> im Datenordner von MDM gespeichert. MDM liest maximal 5 MB eines Feeds."
+  },
+  "2656643a5769e161": {
+   "source": "<g1>Real-Debrid, AllDebrid and Premiumize</g1> (<g2>#44</g2>): <g3>Options → Accounts</g3> keeps your debrid service accounts. Real-Debrid signs in by code in the browser, or with your API token; AllDebrid by a PIN in the browser or with an API key, and MDM waits while it prepares a slow link; Premiumize with its API key. A link from a file host your service supports is unlocked through your account, then downloaded with all of MDM's connections, pause and resume, from Add URL, the browser's link menu and batch downloads. When the direct link expires, MDM asks the service for a new one. The direct link is never shown or copied, and the sign-in is kept like your other passwords (the system's keychain, below). Each service is asked well under its request limit. See <g4>Debrid service accounts</g4>. Experimental: built from the services' public API documentation, not yet confirmed with a real paid account.",
+   "text": "<g1>Real-Debrid, AllDebrid und Premiumize</g1> (<g2>#44</g2>): <g3>Optionen → Konten</g3> verwaltet Ihre Debrid-Dienstkonten. Real-Debrid meldet sich per Code im Browser oder mit Ihrem API-Token an; AllDebrid per PIN im Browser oder mit einem API-Schlüssel, und MDM wartet, während es einen langsamen Link vorbereitet; Premiumize mit seinem API-Schlüssel. Ein Link von einem Dateihost, den Ihr Dienst unterstützt, wird über Ihr Konto entsperrt und dann mit allen MDM-Verbindungen, Pause und Fortsetzen, von „URL hinzufügen“, dem Link-Menü des Browsers und Batch-Downloads heruntergeladen. Wenn der direkte Link abläuft, fragt MDM den Dienst nach einem neuen. Der direkte Link wird niemals angezeigt oder kopiert, und die Anmeldung wird wie Ihre anderen Passwörter gespeichert (der System-Schlüsselbund, siehe unten). Jeder Dienst wird weit unter seinem Anfragelimit abgefragt. Siehe <g4>Debrid-Dienstkonten</g4>. Experimentell: Basierend auf der öffentlichen API-Dokumentation der Dienste, noch nicht mit einem echten bezahlten Konto bestätigt."
   },
   "2661d3801e38313e": {
    "source": "A part with no face of its own (an arrow, a column header) under the pointer",
@@ -4170,6 +4174,10 @@
    "source": "An editable drop-down's arrow zone pressed or open",
    "text": "Der Pfeilbereich einer bearbeitbaren Dropdown-Liste gedrückt oder geöffnet"
   },
+  "40381e64ad055deb": {
+   "source": "<g1>from the button over them</g1>: the button's cookies reached the Download video window's look-up but not the download's own, which then failed with \"Sign in to confirm you're not a bot\";",
+   "text": "<g1>von der Schaltfläche darüber</g1>: Die Cookies der Schaltfläche erreichten die Suchfunktion des Fensters „Video herunterladen“, aber nicht den Download selbst, der dann mit „Melden Sie sich an, um zu bestätigen, dass Sie kein Bot sind“ fehlschlug;"
+  },
   "40633c27b9a902b5": {
    "source": "The main window in Arabic: the menus, toolbar and categories run from right to left.",
    "text": "Das Hauptfenster auf Arabisch: Menüs, Symbolleiste und Kategorien laufen von rechts nach links."
@@ -5338,6 +5346,10 @@
    "source": "<g1>Stop download at</g1> — a time to stop the queue if it is still running.",
    "text": "<g1>Download beenden um</g1> – eine Uhrzeit, zu der die Warteschlange gestoppt wird, falls sie noch läuft."
   },
+  "53a9318d5be6b228": {
+   "source": "<g1>Stopping a video download left yt-dlp downloading in the background</g1> on Windows (<g2>#61</g2>): <x3/> starts a second process that does the work, and only the first was ended. Resuming then failed (\"yt-dlp did not provide information\") and a new try crawled, sharing the line with the old one. Each helper now runs in a job of its own that Stop ends whole.",
+   "text": "<g1>Das Stoppen eines Video-Downloads ließ yt-dlp im Hintergrund unter Windows weiter herunterladen</g1> (<g2>#61</g2>): <x3/> startet einen zweiten Prozess, der die Arbeit erledigt, und nur der erste wurde beendet. Das Fortsetzen schlug dann fehl („yt-dlp lieferte keine Informationen“), und ein neuer Versuch kroch, wobei er die Leitung mit dem alten teilte. Jeder Helfer läuft jetzt in einem eigenen Job, den Stopp vollständig beendet."
+  },
   "53c390f98ffa8c50": {
    "source": "Next image",
    "text": "Nächstes Bild"
@@ -5553,6 +5565,10 @@
   "573a41047704eff4": {
    "source": "On the web page, start the download again, or copy the new download link (right-click → <g1>Copy link</g1>). If the browser hands the new download to MDM, cancel it there: you only need the address.",
    "text": "Starten Sie auf der Webseite den Download erneut oder kopieren Sie den neuen Download-Link (Rechtsklick → <g1>Link kopieren</g1>). Wenn der Browser den neuen Download an MDM übergibt, brechen Sie ihn dort ab: Sie benötigen nur die Adresse."
+  },
+  "57669c2585ba41dc": {
+   "source": "<g1>Windows: Download File Info and the progress window open in front of the browser</g1> (<g2>#208</g2>): a download handed over by the browser could open its window behind the browser, and stay there. Windows lets a program in the background take the foreground only with the browser's say-so, which the user's next click or key ends, and a window refused it opens under the program in front. Every dialog and progress window of MDM that opens without the foreground now goes above the other programs' windows, without taking the keyboard from the one being typed in: a click on it does, as with Download complete.",
+   "text": "<g1>Windows: „Dateiinformationen herunterladen“ und das Fortschrittsfenster öffnen sich vor dem Browser</g1> (<g2>#208</g2>): Ein vom Browser übergebener Download konnte sein Fenster hinter dem Browser öffnen und dort bleiben. Windows lässt ein Programm im Hintergrund nur mit Zustimmung des Browsers in den Vordergrund treten, was der nächste Klick oder Tastendruck des Benutzers beendet, und ein Fenster, dem dies verweigert wird, öffnet sich unter dem Programm im Vordergrund. Jedes Dialog- und Fortschrittsfenster von MDM, das sich ohne den Vordergrund öffnet, geht jetzt über die Fenster der anderen Programme, ohne der gerade eingegebenen Anwendung die Tastatur zu entziehen: Ein Klick darauf tut dies, wie bei „Download abgeschlossen“."
   },
   "5771868f7e936b50": {
    "source": "runs MDM with its list, categories, queues, Scheduler, speed limits and torrents, but no window. Its folders and port come from flags or the environment. It stops cleanly, saving its list, when the system stops it. It runs on any Linux machine with MDM installed, and on Windows and macOS the same way.",
@@ -7046,6 +7062,10 @@
    "source": "<g1>Mister Download Manager closed unexpectedly</g1>: MDM crashed, or hit an internal error and closed.",
    "text": "<g1>Mister Download Manager wurde unerwartet geschlossen</g1>: MDM ist abgestürzt oder auf einen internen Fehler gestoßen und wurde geschlossen."
   },
+  "6f22280b42545622": {
+   "source": "<g1>Torrent commands</g1> (<g2>#39</g2>): a torrent's right-click menu has <g3>Torrent → Recheck files</g3>, <g4>Reannounce</g4>, <g5>Add trackers...</g5> and <g6>Copy magnet link</g6>. Its Files tab can tick and untick files while it runs. A <x7/> file's web address, in Add URL or from the browser, opens Add torrent with what the file holds. TORRENT is in Options → File types' defaults, so the browser hands <x8/> files over; a list saved before keeps what it had.",
+   "text": "<g1>Torrent-Befehle</g1> (<g2>#39</g2>): Das Rechtsklick-Menü eines Torrents enthält <g3>Torrent → Dateien erneut prüfen</g3>, <g4>Erneut ankündigen</g4>, <g5>Tracker hinzufügen…</g5> und <g6>Magnet-Link kopieren</g6>. Die Registerkarte „Dateien“ kann Dateien während der Ausführung an- und abwählen. Eine <x7/>-Datei-Webadresse, in „URL hinzufügen“ oder vom Browser, öffnet „Torrent hinzufügen“ mit dem Inhalt der Datei. TORRENT ist in den Standardeinstellungen von „Optionen → Dateitypen“ enthalten, sodass der Browser <x8/>-Dateien übergibt; eine zuvor gespeicherte Liste behält ihren Inhalt bei."
+  },
   "6f2f9063e93137cf": {
    "source": "<g1>Alt</g1> + an underlined letter",
    "text": "<g1>Alt</g1> + ein unterstrichener Buchstabe"
@@ -7357,6 +7377,10 @@
   "73bbfe3db01da3ea": {
    "source": "Options, General with Test browser integration...",
    "text": "Optionen, Allgemein mit Browserintegration testen..."
+  },
+  "73c46eea77b3659f": {
+   "source": "<g1>MDM's programs and downloads are much smaller</g1> (<g2>#25</g2>): on Windows, the programs went from 93 MB to 41 MB (<x3/> from 61 MB to 38 MB, the command line from 28 MB to a 0.2 MB launcher), and setup.exe from 23 MB to 16 MB. On Linux the AppImage went from 36 MB to 20 MB, the .deb from 27 MB to 17 MB.",
+   "text": "<g1>MDMs Programme und Downloads sind viel kleiner</g1> (<g2>#25</g2>): Unter Windows sind die Programme von 93 MB auf 41 MB geschrumpft (<x3/> von 61 MB auf 38 MB, die Kommandozeile von 28 MB auf einen 0,2 MB Launcher), und setup.exe von 23 MB auf 16 MB. Unter Linux ist das AppImage von 36 MB auf 20 MB geschrumpft, das .deb von 27 MB auf 17 MB."
   },
   "73ee1eb7251e220f": {
    "source": "Video and Images",
@@ -7810,10 +7834,6 @@
    "source": "Browsers installed as a Flatpak or a Snap run in a sandbox, which decides whether they can reach MDM.",
    "text": "Browser, die als Flatpak oder Snap installiert sind, laufen in einer Sandbox, die entscheidet, ob sie MDM erreichen können."
   },
-  "7bab57d3591ffa30": {
-   "source": "<g1>Two smaller macOS downloads</g1> (<g2>#25</g2>): a .dmg for Apple Silicon (<x3/>, about 10 MB) and one for Intel (<x4/>, about 13 MB) instead of one universal .dmg of 80 MB. From 0.2.4 or older, update once by hand: <g5>Download</g5> in Check for updates opens the release; pick your Mac's .dmg. <g6>Update now</g6> works again after that.",
-   "text": "<g1>Zwei kleinere macOS-Downloads</g1> (<g2>#25</g2>): ein .dmg für Apple Silicon (<x3/>, ca. 10 MB) und eines für Intel (<x4/>, ca. 13 MB) anstelle eines universellen .dmg von 80 MB. Ab Version 0.2.4 oder älter einmal manuell aktualisieren: <g5>Herunterladen</g5> unter Nach Updates suchen öffnet die Version; wählen Sie das .dmg für Ihren Mac. <g6>Jetzt aktualisieren</g6> funktioniert danach wieder."
-  },
   "7bbfd6a588b5c2c4": {
    "source": "Where a tooltip's text wraps",
    "text": "Wo der Text eines Tooltips umbricht"
@@ -8113,6 +8133,10 @@
   "7f9e86d9863d7f96": {
    "source": "A report holds the error, where it happened, MDM's recent log, and your system: MDM's version, how it was installed, your operating system, the processor, the language and theme, and how many downloads and queues you have, as counts only.",
    "text": "Ein Bericht enthält den Fehler, wo er aufgetreten ist, das aktuelle Protokoll von MDM und Ihr System: MDM-Version, Installationsart, Betriebssystem, Prozessor, Sprache und Thema sowie die Anzahl Ihrer Downloads und Warteschlangen, nur als Zählwerte."
+  },
+  "7fa6f9417a745711": {
+   "source": "<g1>Buttons fit their text in every language, in every window</g1> (<g2>#192</g2>): many windows gave their buttons a width made for English, so a longer translation was cut with \"...\" (German <g3>Später herunterla...</g3> in Download File Info, <g4>Hilfsprogramme...</g4> in Download a gallery, Russian <g5>Открыть с помощью...</g5> in Download complete, French <g6>Nouvelle file d’attente</g6> in the Scheduler). Each button is now as wide as its translated text, and the buttons beside it move along with the same gaps, the row keeping its end; a box or caption beside a widened button ends before it. Where a window has no room left, the buttons wider than their text give some back first. English is unchanged, and in Arabic and the other right-to-left languages the buttons widen the mirrored way.",
+   "text": "<g1>Schaltflächen passen sich in jeder Sprache und in jedem Fenster ihrem Text an</g1> (<g2>#192</g2>): Viele Fenster hatten Schaltflächen eine Breite zugewiesen, die für Englisch ausgelegt war, sodass eine längere Übersetzung mit „…“ abgeschnitten wurde (Deutsch <g3>Später herunterla…</g3> in Dateiinformationen herunterladen, <g4>Hilfsprogramme…</g4> in Galerie herunterladen, Russisch <g5>Открыть с помощью…</g5> in Download abgeschlossen, Französisch <g6>Nouvelle file d’attente</g6> im Zeitplaner). Jede Schaltfläche ist jetzt so breit wie ihr übersetzter Text, und die daneben liegenden Schaltflächen verschieben sich mit denselben Abständen, wobei die Reihe ihr Ende beibehält; ein Feld oder eine Beschriftung neben einer verbreiterten Schaltfläche endet davor. Wo ein Fenster keinen Platz mehr hat, geben die Schaltflächen, die breiter als ihr Text sind, zuerst etwas Platz zurück. Englisch bleibt unverändert, und in Arabisch und den anderen von rechts nach links geschriebenen Sprachen verbreitern sich die Schaltflächen spiegelverkehrt."
   },
   "7fc6f4be3515bc1a": {
    "source": "<g1>Help → Check for updates...</g1> — <g2>Check for updates at every start</g2> is in that window.",
@@ -8854,6 +8878,10 @@
    "source": "To change more than colours, make a theme file that inherits the scheme by its file name and adds what you like:",
    "text": "Um mehr als nur Farben zu ändern, erstellen Sie eine Designdatei, die das Schema anhand ihres Dateinamens erbt und das hinzufügt, was Sie möchten:"
   },
+  "8b6d6550dbca9ec8": {
+   "source": "<g1>Download video: the buttons fit their text in every language</g1> (<g2>#172</g2>): in German <g3>ffmpeg installieren</g3> showed as \"ffmpeg installie...\", and in Russian <g4>Helpers...</g4> and <g5>Install ffmpeg</g5> were cut too. Each button is now as wide as its translated text (English is unchanged), and the page's title stops before the Install button instead of running under it. In Arabic and the other right-to-left languages, a widened <g6>Hide tab</g6> in a download's window now grows into the room beside it instead of towards the window's edge.",
+   "text": "<g1>Video herunterladen: Die Schaltflächen passen sich in jeder Sprache ihrem Text an</g1> (<g2>#172</g2>): Im Deutschen wurde <g3>ffmpeg installieren</g3> als „ffmpeg installie…“ angezeigt, und im Russischen wurden <g4>Helfer…</g4> und <g5>ffmpeg installieren</g5> ebenfalls abgeschnitten. Jede Schaltfläche ist jetzt so breit wie ihr übersetzter Text (Englisch bleibt unverändert), und der Titel der Seite endet vor der Schaltfläche „Installieren“, anstatt darunter zu verlaufen. In Arabisch und den anderen von rechts nach links geschriebenen Sprachen wächst eine verbreiterte Schaltfläche <g6>Registerkarte ausblenden</g6> in einem Download-Fenster jetzt in den daneben liegenden Raum, anstatt zum Fensterrand hin zu wachsen."
+  },
   "8b8a49dba39702b6": {
    "source": "<g1>Themes</g1><g2>Nine looks, light and dark, from Classic to Aqua, or your own in a text file.</g2>",
    "text": "<g1>Designs</g1><g2>Neun Erscheinungsbilder, hell und dunkel, von Klassisch bis Aqua, oder Ihr eigenes in einer Textdatei.</g2>"
@@ -9093,10 +9121,6 @@
   "8f90808f450bcadf": {
    "source": "Download Mister Download Manager 0.5.0 — free for Windows, macOS and Linux",
    "text": "Mister Download Manager 0.5.0 herunterladen – kostenlos für Windows, macOS und Linux"
-  },
-  "8f937668a1130538": {
-   "source": "<g1>0.5.0</g1> <g2>24.1 MB</g2>",
-   "text": "<g1>0.5.0</g1> <g2>24,2 MB</g2>"
   },
   "8fabf2cac610e9a8": {
    "source": "Cinnamon.",
@@ -9753,6 +9777,10 @@
   "99605902518653e2": {
    "source": "The same programs without an installer. It keeps its data in <x1/>, like an installed copy.",
    "text": "Die gleichen Programme ohne Installationsprogramm. Es speichert seine Daten in <x1/>, wie eine installierte Kopie."
+  },
+  "99711c45fa3147e5": {
+   "source": "<g1>0.5.0</g1> <g2>16.9 MB</g2>",
+   "text": "<g1>0.5.0</g1> <g2>16,9 MB</g2>"
   },
   "997cc2f8f3474ae1": {
    "source": "Windows<g1><g2>3</g2></g1>",
@@ -10414,6 +10442,10 @@
    "source": "Torrents and your security — Mister Download Manager help",
    "text": "Torrents und Ihre Sicherheit — Hilfe zu Mister Download Manager"
   },
+  "a4106dfebeee68bc": {
+   "source": "<g1>The last languages</g1> (after #247): Options → Proxy's title takes two lines where one leaves Get System too little room (Bulgarian, Armenian, Tamil), and where it ran over the page's icon or past the window's left edge (Greek, Finnish, Catalan, Estonian, Latvian, Lithuanian, Malayalam, Serbian, Afrikaans). In Greek and Malayalam, the Scheduler's \"Turn off computer when done\" and its choices have shorter machine translations, so the drop-down fits beside the caption; in Belarusian, Welsh, French, Russian, Tamil and Ukrainian, the longer ones the translation review brought (such as Russian's Hibernate) are back to their earlier, shorter wording.",
+   "text": "<g1>Die letzten Sprachen</g1> (nach #247): Der Titel von Optionen → Proxy nimmt zwei Zeilen ein, wo eine Zeile Get System zu wenig Platz lässt (Bulgarisch, Armenisch, Tamil), und wo er über das Symbol der Seite oder über den linken Rand des Fensters hinausragte (Griechisch, Finnisch, Katalanisch, Estnisch, Lettisch, Litauisch, Malayalam, Serbisch, Afrikaans). In Griechisch und Malayalam haben „Computer nach Abschluss ausschalten“ und seine Auswahlmöglichkeiten im Zeitplaner kürzere maschinelle Übersetzungen, sodass das Dropdown-Menü neben die Beschriftung passt; in Weißrussisch, Walisisch, Französisch, Russisch, Tamil und Ukrainisch sind die längeren Übersetzungen, die die Übersetzungsprüfung ergab (wie Russisch „In den Ruhezustand versetzen“), wieder auf ihre frühere, kürzere Formulierung zurückgesetzt worden."
+  },
   "a410e1f12c6dc5bd": {
    "source": "Options, General: Use advanced browser integration and the list of browsers MDM takes downloads from",
    "text": "Optionen, Allgemein: Erweiterte Browserintegration verwenden und die Liste der Browser, von denen MDM Downloads übernimmt"
@@ -10713,6 +10745,14 @@
   "a84e33bb5d1bc55c": {
    "source": "The <g1>command line guide</g1> lists everything <x2/> takes.",
    "text": "Der <g1>Befehlszeilen-Leitfaden</g1> listet alles auf, was <x2/> akzeptiert."
+  },
+  "a8562e95bb3fa120": {
+   "source": "<g1>Two smaller macOS downloads</g1> (<g2>#25</g2>): a .dmg for Apple Silicon (<x3/>, about 14 MB) and one for Intel (<x4/>, about 16 MB) instead of one universal .dmg of 80 MB. From 0.2.4 or older, update once by hand: <g5>Download</g5> in Check for updates opens the release; pick your Mac's .dmg. <g6>Update now</g6> works again after that.",
+   "text": "<g1>Zwei kleinere macOS-Downloads</g1> (<g2>#25</g2>): ein .dmg für Apple Silicon (<x3/>, ca. 14 MB) und eines für Intel (<x4/>, ca. 16 MB) anstelle eines universellen .dmg von 80 MB. Ab Version 0.2.4 oder älter einmal manuell aktualisieren: <g5>Herunterladen</g5> in „Nach Updates suchen“ öffnet die Veröffentlichung; wählen Sie das .dmg Ihres Macs. <g6>Jetzt aktualisieren</g6> funktioniert danach wieder."
+  },
+  "a856aa8d56dfc9ae": {
+   "source": "<g1>Dark mode: grey notes and error texts are easier to read</g1> (<g2>#45</g2>): they now have the contrast WCAG asks for (4.5:1) on every dark surface, Options' failed checks no longer use light mode's dark red on the dark dialog, and an editable drop-down's arrow is tinted dark under the pointer.",
+   "text": "<g1>Dark Mode: Graue Hinweise und Fehlermeldungen sind leichter lesbar</g1> (<g2>#45</g2>): Sie haben jetzt den von WCAG geforderten Kontrast (4.5:1) auf jeder dunklen Oberfläche, die fehlgeschlagenen Prüfungen von „Optionen“ verwenden nicht mehr das dunkle Rot des Light Mode auf dem dunklen Dialog, und der Pfeil eines bearbeitbaren Dropdown-Menüs ist unter dem Zeiger dunkel getönt."
   },
   "a86574f1a42f9169": {
    "source": "Open Windows Settings → Apps, find Mister Download Manager and choose Uninstall. The uninstaller asks whether to delete your download list and settings as well. Files you downloaded are never touched. For the portable copy, delete its folder. On Linux, remove the package with your package manager, or delete the AppImage; Uninstall on Linux says what stays in your home folder and how to remove it.",
@@ -11338,6 +11378,10 @@
    "source": "Browser integration needs one more step in each browser: adding the extension. In Firefox, click <g1>Add to Firefox</g1> on <g2>its page on addons.mozilla.org</g2>; in Chrome, Edge, Brave, Opera and Vivaldi, <g3>Add to Chrome</g3> on <g4>its page in the Chrome Web Store</g4>. <g5>Browser integration</g5> shows how.",
    "text": "Die Browser-Integration erfordert in jedem Browser einen weiteren Schritt: das Hinzufügen der Erweiterung. Klicken Sie in Firefox auf <g1>Zu Firefox hinzufügen</g1> auf <g2>der Seite unter addons.mozilla.org</g2>; in Chrome, Edge, Brave, Opera und Vivaldi auf <g3>Zu Chrome hinzufügen</g3> auf <g4>der Seite im Chrome Web Store</g4>. <g5>Browser-Integration</g5> zeigt, wie es geht."
   },
+  "b25b5595e4410599": {
+   "source": "<g1>Help opens the website's help pages, in your language</g1> (<g2>#227</g2>): <g3>Help contents</g3>, <g4>Tutorials</g4>, <g5>Scheduler and queues</g5>, <g6>Video downloads</g6>, the <g7>Help</g7> buttons of Options and the Scheduler, and the browser extension window's tutorial and help links opened the docs on GitHub (the Options and Scheduler buttons a page that wasn't there). They open misterdownloadmanager.com now, at the same section, in the interface language when the website has it (else English), and <g8>Home Page</g8> opens the website too. The command line's and the MCP server's help name the website's guide. Problem reports, releases and the source stay on GitHub.",
+   "text": "<g1>Die Hilfe öffnet die Hilfeseiten der Website in Ihrer Sprache</g1> (<g2>#227</g2>): <g3>Hilfeinhalte</g3>, <g4>Tutorials</g4>, <g5>Planer und Warteschlangen</g5>, <g6>Video-Downloads</g6>, die <g7>Hilfe</g7>-Schaltflächen von Optionen und Zeitplaner sowie die Tutorial- und Hilfelinks des Browser-Erweiterungsfensters öffneten die Dokumentation auf GitHub (die Schaltflächen Optionen und Zeitplaner eine Seite, die nicht existierte). Sie öffnen jetzt misterdownloadmanager.com im selben Abschnitt, in der Sprache der Benutzeroberfläche, wenn die Website diese anbietet (ansonsten Englisch), und <g8>Startseite</g8> öffnet ebenfalls die Website. Die Hilfe der Befehlszeile und des MCP-Servers verweist auf den Leitfaden der Website. Problemberichte, Veröffentlichungen und der Quellcode bleiben auf GitHub."
+  },
   "b260dbdaf5dd80a2": {
    "source": "Add Mister Download Manager to your browser: each browser found, with a button to its store page",
    "text": "Mister Download Manager zu Ihrem Browser hinzufügen: alle gefundenen Browser mit einer Schaltfläche zur jeweiligen Store-Seite"
@@ -11689,6 +11733,10 @@
   "b774439cca0b2a3c": {
    "source": "Bullets, ticks and submenu arrows",
    "text": "Aufzählungszeichen, Häkchen und Untermenü-Pfeile"
+  },
+  "b79173d2d22ed62f": {
+   "source": "<g1>Three more controls</g1> (after #212): in Russian and a few other languages, Download File Info's <g2>Preview</g2>, Options → Proxy's <g3>Get System</g3> and the Scheduler's drop-down after <g4>Turn off computer when done</g4> still ended in \"...\". Download File Info grows by what Preview's label needs (Russian, Ukrainian, Telugu, Belarusian and a few more), the Proxy page's title moves left to give Get System its room, and the Scheduler's drop-down widens towards its caption.",
+   "text": "<g1>Drei weitere Steuerelemente</g1> (nach #212): In Russisch und einigen anderen Sprachen endeten die Schaltfläche <g2>Vorschau</g2> in Dateiinformationen herunterladen, die Schaltfläche <g3>System abrufen</g3> in Optionen → Proxy und das Dropdown-Menü im Zeitplaner nach <g4>Computer nach Abschluss ausschalten</g4> immer noch mit „…“. Dateiinformationen herunterladen wächst um den Platz, den die Beschriftung von Vorschau benötigt (Russisch, Ukrainisch, Telugu, Weißrussisch und einige weitere), der Titel der Proxy-Seite verschiebt sich nach links, um System abrufen seinen Platz zu geben, und das Dropdown-Menü des Zeitplaners verbreitert sich in Richtung seiner Beschriftung."
   },
   "b793f20aa217a8fa": {
    "source": "If MDM or this website ever needs to use a new service, this page will say so first, and the change will be listed in <g1>What's new</g1>. Past versions of this page are in the project's history on GitHub.",
@@ -12106,6 +12154,10 @@
    "source": "Benchmark",
    "text": "Benchmark"
   },
+  "befc877eb2e581be": {
+   "source": "<g1>Torrent settings: the network is yours to choose</g1> (<g2>#40</g2>): accept incoming connections or not, map the port with UPnP or not, a fixed port, the DHT, finding peers on the local network, a SOCKS5 proxy from Proxy / Socks (which turns off what would go around it), an IP blocklist (P2P or eMule format, fetched again every 7 days), and stopping the torrent engine when no torrent runs. A new help page, <g3>Torrents and your security</g3>, says what others can see and what each switch does.",
+   "text": "<g1>Torrent-Einstellungen: Das Netzwerk können Sie selbst wählen</g1> (<g2>#40</g2>): eingehende Verbindungen akzeptieren oder nicht, Port mit UPnP zuordnen oder nicht, ein fester Port, DHT, Peers im lokalen Netzwerk finden, ein SOCKS5-Proxy von „Proxy / SOCKS“ (der das, was ihn umgehen würde, deaktiviert), eine IP-Blockliste (P2P- oder eMule-Format, alle 7 Tage erneut abgerufen) und das Stoppen der Torrent-Engine, wenn kein Torrent läuft. Eine neue Hilfeseite, <g3>Torrents und Ihre Sicherheit</g3>, erklärt, was andere sehen können und was jeder Schalter bewirkt."
+  },
   "befd7691ab10546c": {
    "source": "All files, extensions and checksums →",
    "text": "Alle Dateien, Erweiterungen und Prüfsummen →"
@@ -12510,6 +12562,10 @@
    "source": "<g1>The system:</g1> MDM's version and how you installed it, your operating system and its version, the processor, the language and theme, and how many downloads and queues you have. These are counts only.",
    "text": "<g1>Das System:</g1> MDMs Version und wie Sie es installiert haben, Ihr Betriebssystem und dessen Version, der Prozessor, die Sprache und das Thema sowie die Anzahl Ihrer Downloads und Warteschlangen. Dies sind nur Zählungen."
   },
+  "c5ddef5d4d228288": {
+   "source": "Downloads are smaller: setup.exe 23 → 16 MB, AppImage 36 → 20 MB, .deb 27 → 17 MB.",
+   "text": "Downloads sind kleiner: setup.exe 23 → 16 MB, AppImage 36 → 20 MB, .deb 27 → 17 MB."
+  },
   "c5ea65c70393f2d1": {
    "source": "<g1>Hang up modem when done</g1> — ends a dial-up connection, if you use one.",
    "text": "<g1>Modem nach Abschluss auflegen</g1> – beendet eine DFÜ-Verbindung, falls Sie eine verwenden."
@@ -12750,9 +12806,17 @@
    "source": "<g1>Reannounce</g1> — asks the torrent's trackers for peers again now, instead of waiting for their next round. It works while the torrent runs or is shared.",
    "text": "<g1>Erneut ankündigen</g1> — fragt die Tracker des Torrents jetzt erneut nach Peers, anstatt auf die nächste Runde zu warten. Es funktioniert, während der Torrent läuft oder geteilt wird."
   },
+  "c996f36adbc992f8": {
+   "source": "<g1>A long file name ran out of the progress window</g1> (<g2>#62</g2>): on the <g3>Options on completion</g3> tab, a longer translation of \"Save To:\" (Turkish, German…) ran into the path, and the path ran past the window's edge. The label now takes the room its language needs, and the path is shortened in the middle, keeping the file's name in sight, and shown whole on hover; right-to-left languages included.",
+   "text": "<g1>Ein langer Dateiname ragte aus dem Fortschrittsfenster heraus</g1> (<g2>#62</g2>): Auf der Registerkarte <g3>Optionen nach Abschluss</g3> stieß eine längere Übersetzung von „Speichern in:“ (Türkisch, Deutsch…) mit dem Pfad zusammen, und der Pfad ragte über den Fensterrand hinaus. Die Beschriftung nimmt nun den Platz ein, den ihre Sprache benötigt, und der Pfad wird in der Mitte gekürzt, wobei der Dateiname sichtbar bleibt und beim Darüberfahren vollständig angezeigt wird; dies gilt auch für von rechts nach links geschriebene Sprachen."
+  },
   "c9a8324f618160c6": {
    "source": "<g1>The plain zip</g1> (<x2/>), the same programs without an installer.",
    "text": "<g1>Das einfache Zip-Archiv</g1> (<x2/>), die gleichen Programme ohne Installer."
+  },
+  "c9adce03030690a2": {
+   "source": "<g1>Seeding and upload limits, and a share ratio that lasts</g1> (<g2>#39</g2>): under \"Keep sharing torrents after they finish\", Torrent settings can stop sharing a finished torrent at a share ratio, or after it has been shared for some minutes; both off by default. A torrent stopped so says it in its event log and isn't shared again at the next start. Torrent settings can limit what all torrents together send, and a torrent's progress window can limit its own, kept with it. Its General tab now counts what it sent and how long it shared over all its runs, so the share ratio no longer starts again at 0 after a pause or a restart.",
+   "text": "<g1>Seeding- und Upload-Limits sowie ein dauerhaftes Share-Verhältnis</g1> (<g2>#39</g2>): Unter „Torrents nach Abschluss weitergeben“ können die Torrent-Einstellungen das Teilen eines abgeschlossenen Torrents bei einem bestimmten Share-Verhältnis oder nach einer bestimmten Anzahl von Minuten beenden; beides ist standardmäßig deaktiviert. Ein so gestoppter Torrent wird in seinem Ereignisprotokoll vermerkt und beim nächsten Start nicht erneut geteilt. Die Torrent-Einstellungen können begrenzen, was alle Torrents zusammen senden, und das Fortschrittsfenster eines Torrents kann sein eigenes Limit festlegen, das mit ihm gespeichert wird. Die Registerkarte „Allgemein“ zählt jetzt, was er über alle seine Läufe gesendet und wie lange er geteilt hat, sodass das Share-Verhältnis nach einer Pause oder einem Neustart nicht mehr bei 0 beginnt."
   },
   "c9bc77086f15e169": {
    "source": "<g1>From browser</g1> lists the browsers yt-dlp reads: Firefox, Chrome, Edge, Brave, Opera, Vivaldi, Chromium and Whale, and Safari on macOS. <g2>Profile</g2> is optional: a profile's name (<x3/>) or its folder; empty, the profile used last.",
@@ -12865,10 +12929,6 @@
   "cb797c11de6612fd": {
    "source": "3. Choose how many run at once",
    "text": "3. Anzahl der gleichzeitigen Downloads wählen"
-  },
-  "cb7d403b3b59f081": {
-   "source": "Downloads are about half the size: setup.exe 23 → 12 MB, AppImage 36 → 16 MB, .deb 27 → 13 MB.",
-   "text": "Downloads sind etwa halb so groß: setup.exe 23 → 12 MB, AppImage 36 → 16 MB, .deb 27 → 13 MB."
   },
   "cb8376955028cc1c": {
    "source": "<g1>Linux: uninstalling the .deb or .rpm leaves no browser files behind</g1> (<g2>#266</g2>): MDM wrote the files that tell each browser where its helper is in every user's home folder, and <x3/> or <x4/> left them there, naming a program that was gone. The packages now install them for everyone, in each browser's own folder (Chrome and Brave, Chromium and Vivaldi, Edge, Firefox, the Snap Firefox included), and remove them with the package; MDM writes none in the home folder for those browsers, and takes away the ones an earlier version wrote. The AppImage and the tar.gz, and Opera, Helium, Thorium and Firefox's forks (which read them only in the home folder), still get them there.",
@@ -14054,6 +14114,10 @@
    "source": "<g1>Sites to leave alone:</g1> <g2>Options → File types → Don't start downloading automatically from the following sites</g2>. Add the site's name, for example <x3/> or <x4/>.",
    "text": "<g1>Seiten, die in Ruhe gelassen werden sollen:</g1> <g2>Optionen → Dateitypen → Von folgenden Seiten nicht automatisch herunterladen</g2>. Fügen Sie den Namen der Seite hinzu, zum Beispiel <x3/> oder <x4/>."
   },
+  "dee8c65c52bd5601": {
+   "source": "<g1>Menus and the drop target without a black band across their top</g1> (<g2>#208</g2>): on a Windows 11 Insider build (22635), every menu and submenu showed a black band a title bar tall across its top and a thin one down its left side, its items moved down by as much and its last ones cut off; so did the drop target (Tasks → Show drop target), its icon moved down. Each of these windows had a title bar's style, hidden by MDM, and something on that build placed the window's picture where the title bar would have ended. Menus and the drop target are now plain pop-up windows, as Windows' own menus are, with nothing above their contents to take for a title bar; every window of MDM without a title bar is made one the same way.",
+   "text": "<g1>Menüs und das Ablageziel ohne schwarzen Balken oben</g1> (<g2>#208</g2>): Auf einem Windows 11 Insider Build (22635) zeigten jedes Menü und Untermenü einen schwarzen Balken in der Höhe einer Titelleiste oben und einen dünnen an der linken Seite, die Elemente waren entsprechend nach unten verschoben und die letzten abgeschnitten; dasselbe galt für das Ablageziel (Aufgaben → Ablageziel anzeigen), dessen Symbol nach unten verschoben war. Jedes dieser Fenster hatte den Stil einer Titelleiste, von MDM ausgeblendet, und etwas auf diesem Build platzierte das Fensterbild dort, wo die Titelleiste geendet hätte. Menüs und das Ablageziel sind jetzt einfache Pop-up-Fenster, wie die eigenen Menüs von Windows, ohne etwas über ihren Inhalten, das als Titelleiste dienen könnte; jedes Fenster von MDM ohne Titelleiste wird auf die gleiche Weise erstellt."
+  },
   "df260daf719b26b8": {
    "source": "1 GiB over a fast link",
    "text": "1 GiB über eine schnelle Verbindung"
@@ -14734,6 +14798,10 @@
    "source": "A helper you can check",
    "text": "Ein Helfer, den Sie überprüfen können"
   },
+  "e9de3deb5fe58030": {
+   "source": "<g1>Video subtitles</g1> (<g2>#68</g2>): Download video from a page lists the video's subtitle languages, the uploader's first, then the site's automatic captions (in the language spoken, English and yours). They're saved beside the video as <x3/>, or put into the video with ffmpeg (MP4, MKV), and the choice is offered again for the next video. Subtitles a site refuses (YouTube limits how often they may be fetched) never cost the video: MDM asks once more after a pause, then says which are missing. On the command line: <x4/>, <x5/>, <x6/>; <x7/> lists them. A finished video and its subtitles are now marked as downloaded from the internet, as other downloads are.",
+   "text": "<g1>Video-Untertitel</g1> (<g2>#68</g2>): „Video von einer Seite herunterladen“ listet die Untertitelsprachen des Videos auf, zuerst die des Uploaders, dann die automatischen Untertitel der Website (in der gesprochenen Sprache, Englisch und Ihrer). Sie werden neben dem Video als <x3/> gespeichert oder mit ffmpeg (MP4, MKV) in das Video eingefügt, und die Auswahl wird für das nächste Video erneut angeboten. Untertitel, die eine Website verweigert (YouTube begrenzt, wie oft sie abgerufen werden dürfen), kosten das Video nie: MDM fragt nach einer Pause noch einmal nach und sagt dann, welche fehlen. Auf der Kommandozeile: <x4/>, <x5/>, <x6/>; <x7/> listet sie auf. Ein fertiges Video und seine Untertitel sind jetzt als aus dem Internet heruntergeladen markiert, wie andere Downloads auch."
+  },
   "e9dfa5dcec820f03": {
    "source": "Make one",
    "text": "Erstellen"
@@ -15269,6 +15337,10 @@
   "f135b1b9671dc439": {
    "source": "Make everything larger / smaller, in every window (<g1>View → Interface size</g1>, 100 % to 200 %)",
    "text": "Alles in jedem Fenster größer / kleiner machen (<g1>Ansicht → Oberflächengröße</g1>, 100 % bis 200 %)"
+  },
+  "f1452f6e417cd255": {
+   "source": "<g1>Playlists and channels</g1> (<g2>#69</g2>): Download video from a page lists a playlist's or a channel's videos, with their lengths, all ticked, with Select all and Select none. One quality applies to all of them (the best, up to a height, the original sound, MP3, Opus or FLAC). Each video gets its own download, in a folder named after the list, and Download Now starts the main queue, which runs as many at once as its settings say. A playlist is listed as its videos come in; the listing can be stopped and taken up again (List the rest), and one the site breaks off says after how many videos and why. A channel is listed 50 videos at a time, with Load more. Lists of thousands stay quick, and adding more than 500 downloads asks first. On the command line: <x3/> and <x4/>.",
+   "text": "<g1>Wiedergabelisten und Kanäle</g1> (<g2>#69</g2>): „Video von einer Seite herunterladen“ listet die Videos einer Wiedergabeliste oder eines Kanals mit ihren Längen auf, alle angehakt, mit „Alle auswählen“ und „Nichts auswählen“. Eine Qualität gilt für alle (die beste, bis zu einer bestimmten Höhe, der Originalton, MP3, Opus oder FLAC). Jedes Video erhält einen eigenen Download in einem Ordner, der nach der Liste benannt ist, und „Jetzt herunterladen“ startet die Hauptwarteschlange, die so viele gleichzeitig ausführt, wie in den Einstellungen festgelegt. Eine Wiedergabeliste wird aufgelistet, sobald die Videos eintreffen; die Auflistung kann angehalten und wieder aufgenommen werden („Rest auflisten“), und wenn die Website abbricht, wird angegeben, nach wie vielen Videos und warum. Ein Kanal wird jeweils mit 50 Videos aufgelistet, mit „Mehr laden“. Listen von Tausenden bleiben schnell, und das Hinzufügen von mehr als 500 Downloads wird zuerst abgefragt. Auf der Kommandozeile: <x3/> und <x4/>."
   },
   "f154ebe2d1cfad18": {
    "source": "Scheduler and queues",

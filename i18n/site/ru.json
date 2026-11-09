@@ -1150,10 +1150,6 @@
    "source": "Make it",
    "text": "Создать"
   },
-  "12c5a9fe21646b92": {
-   "source": "<g1>MDM's programs are a third of their size, its download about half</g1> (<g2>#25</g2>): on Windows, the programs went from 93 MB to 33 MB (<x3/> from 61 MB to 29 MB, the command line from 28 MB to a 0.2 MB launcher), and setup.exe from 23 MB to 12 MB. On Linux the AppImage went from 36 MB to 16 MB, the .deb from 27 MB to 13 MB.",
-   "text": "<g1>Программы MDM стали на треть меньше, их загрузка примерно вдвое</g1> (<g2>#25</g2>): в Windows программы уменьшились с 93 МБ до 33 МБ (<x3/> с 61 МБ до 29 МБ, командная строка с 28 МБ до 0,2 МБ запускателя), а setup.exe с 23 МБ до 12 МБ. В Linux AppImage уменьшился с 36 МБ до 16 МБ, .deb с 27 МБ до 13 МБ."
-  },
   "12ed54fb5407aa89": {
    "source": "The website has <x1/> and <x2/>, and every help page as Markdown, for AI tools.",
    "text": "На веб-сайте есть <x1/> и <x2/>, а также каждая страница справки в формате Markdown для инструментов ИИ."
@@ -2734,6 +2730,10 @@
    "source": "<g1>One browser only:</g1> <g2>Options → General → Capture downloads from the following browsers</g2>. Untick the ones MDM should leave alone.",
    "text": "<g1>Только один браузер:</g1> <g2>Параметры → Общие → Перехватывать загрузки из следующих браузеров</g2>. Снимите галочки с тех, которые MDM должен оставить в покое."
   },
+  "2ae83cc65522b8e0": {
+   "source": "<g1>Lists read as blank items</g1> (<g2>#95</g2>): the rows of Download video's qualities, Add torrent's files, the language picker, Options (browsers, sounds, the file-type and site lists), the Scheduler and Import now have their names (a format and its size, a file's name and size), their check boxes theirs, ticked or not, and their selected row; Download video's list is called Quality, Add torrent's Files and the sounds' Sounds. Choosing a row from a screen reader (UI Automation's Select) now shows the new choice at once: it used to wait for the next mouse move.",
+   "text": "<g1>Списки читались как пустые элементы</g1> (<g2>#95</g2>): строки качеств «Скачать видео», файлов «Добавить торрент», выбора языка, «Параметры» (браузеры, звуки, списки типов файлов и сайтов), «Планировщик» и «Импорт» теперь имеют свои имена (формат и его размер, имя и размер файла), свои флажки, отмеченные или нет, и свою выбранную строку; список «Скачать видео» называется «Качество», «Добавить торрент» — «Файлы», а звуки — «Звуки». Выбор строки из программы чтения с экрана (UI Automation's Select) теперь сразу показывает новый выбор: раньше он ждал следующего движения мыши."
+  },
   "2aeea5baa745863b": {
    "source": "<g1><g2>Not listed</g2></g1><g3>closed, freeware</g3>",
    "text": "<g1><g2>Не указано</g2></g1><g3>закрытое, бесплатное ПО</g3>"
@@ -3033,6 +3033,10 @@
   "2f275664e916b164": {
    "source": "Every language Windows offers",
    "text": "Все языки, предлагаемые Windows"
+  },
+  "2f308e07588a7fa0": {
+   "source": "<g1>Speed limits now work as they do for other downloads</g1> (<g2>#39</g2>): a limit set in a torrent's progress window changed every torrent's limit, a remembered limit was ignored, the Speed Limiter's \"for one file\" was shared by all torrents together, and \"Limit all downloads together\" left torrents out. Each torrent now has a limit of its own, a remembered one applies again when it resumes, and torrents and other downloads share the global cap evenly: each side gets at least half of it, and the rest when the other side needs less. A limit under 16 KB/s, which made a torrent drop its peers and stall, gives it 16 KB/s. A torrent started again while its files were still being checked no longer stays paused, and of two torrents started at the same moment, the second no longer fails with \"the torrent is no longer there\".",
+   "text": "<g1>Ограничения скорости теперь работают так же, как и для других загрузок</g1> (<g2>#39</g2>): ограничение, установленное в окне хода торрента, меняло ограничение для всех торрентов, запомненное ограничение игнорировалось, «для одного файла» в «Ограничитель скорости» было общим для всех торрентов, а «Ограничить все загрузки вместе» не включало торренты. Теперь каждый торрент имеет собственное ограничение, запомненное ограничение снова применяется при возобновлении, а торренты и другие загрузки равномерно делят глобальный лимит: каждая сторона получает не менее половины, а остальное, когда другая сторона нуждается в меньшем. Ограничение менее 16 КБ/с, которое приводило к потере пиров торрентом и его остановке, теперь дает ему 16 КБ/с. Торрент, запущенный снова, пока его файлы все еще проверялись, больше не остается на паузе, и из двух торрентов, запущенных одновременно, второй больше не завершается ошибкой «торрент больше не существует»."
   },
   "2f3617b88cae837c": {
    "source": "On <g1>Source</g1>, tick only <g2>Torrent</g2>.",
@@ -4006,6 +4010,10 @@
    "source": "Or the variable",
    "text": "Или переменная"
   },
+  "3dae09c1521075dc": {
+   "source": "<g1>Every row of a list, not only those in view</g1> (<g2>#111</g2>): a list's rows out of view (the last qualities of Download video, a long playlist, the downloads) are there too, named, with their place (\"12 of 40\"), and can be scrolled into view or selected. A list of thousands offers 300 rows around the view, so it stays as fast.",
+   "text": "<g1>Каждая строка списка, а не только видимые</g1> (<g2>#111</g2>): строки списка вне поля зрения (последние качества «Скачать видео», длинный плейлист, загрузки) также присутствуют, названы, с указанием их места («12 из 40»), и могут быть прокручены в поле зрения или выбраны. Список из тысяч предлагает 300 строк вокруг видимой области, поэтому он остается таким же быстрым."
+  },
   "3db8482f7cd4bff5": {
    "source": "Download File Info and the progress window open in front of the browser.",
    "text": "«Информация о загружаемом файле» и окно прогресса открываются поверх браузера."
@@ -4421,6 +4429,10 @@
   "4428868981ef6556": {
    "source": "n",
    "text": "n"
+  },
+  "4447a34a8cbe1ae6": {
+   "source": "<g1>The Categories pane and the menus</g1> (<g2>#113</g2>): the pane reads as a tree (each category named with its count, open or shut, selected), the menu bar and every right-click menu as menus whose items can be run, and <g3>Shift+F10</g3> or the <g4>Menu</g4> key opens the selected category's menu. A menu opened from the keyboard no longer stays invisible until the mouse moves.",
+   "text": "<g1>Панель «Категории» и меню</g1> (<g2>#113</g2>): панель читается как дерево (каждая категория названа с указанием количества, открыта или закрыта, выбрана), строка меню и каждое контекстное меню читаются как меню, элементы которых могут быть запущены, а <g3>Shift+F10</g3> или клавиша <g4>Menu</g4> открывает меню выбранной категории. Меню, открытое с клавиатуры, больше не остается невидимым, пока не будет перемещена мышь."
   },
   "445e6378c12f1e16": {
    "source": "<g1>Image gallery support:</g1> download whole galleries (Flickr, Imgur, DeviantArt and more) with gallery-dl.",
@@ -5837,6 +5849,10 @@
   "5c048bb2fcbcc1ce": {
    "source": "Who makes Mister Download Manager? — Mister Download Manager",
    "text": "Кто создал Mister Download Manager? — Mister Download Manager"
+  },
+  "5c2835f4bf5e979e": {
+   "source": "<g1>List rows sit inside their list</g1> (<g2>#102</g2>): they used to be listed beside it. A screen reader now says which row of how many (\"4 of 12\"), choosing from the list itself works (UI Automation's Selection), and a tree's check box belongs to its file's row. The language picker's list and the Options browser list and the Scheduler's two lists have names now too.",
+   "text": "<g1>Строки списка находятся внутри своего списка</g1> (<g2>#102</g2>): раньше они отображались рядом с ним. Программа чтения с экрана теперь сообщает, какая строка из скольких («4 из 12»), выбор из самого списка работает (UI Automation's Selection), а флажок дерева принадлежит строке его файла. Список выбора языка, список браузеров в «Параметрах» и два списка «Планировщика» теперь также имеют названия."
   },
   "5c32b466414eb19d": {
    "source": "Limit seeding and upload, recheck files, reannounce, add trackers, and block IPs with a blocklist.",
@@ -7362,6 +7378,10 @@
    "source": "Options, General with Test browser integration...",
    "text": "Параметры, Общие с кнопкой «Проверка интеграции с браузером...»"
   },
+  "73c46eea77b3659f": {
+   "source": "<g1>MDM's programs and downloads are much smaller</g1> (<g2>#25</g2>): on Windows, the programs went from 93 MB to 41 MB (<x3/> from 61 MB to 38 MB, the command line from 28 MB to a 0.2 MB launcher), and setup.exe from 23 MB to 16 MB. On Linux the AppImage went from 36 MB to 20 MB, the .deb from 27 MB to 17 MB.",
+   "text": "<g1>Программы и загрузки MDM стали намного меньше</g1> (<g2>#25</g2>): в Windows программы уменьшились с 93 МБ до 41 МБ (<x3/> с 61 МБ до 38 МБ, командная строка с 28 МБ до 0,2 МБ), а setup.exe с 23 МБ до 16 МБ. В Linux AppImage уменьшился с 36 МБ до 20 МБ, .deb с 27 МБ до 17 МБ."
+  },
   "73ee1eb7251e220f": {
    "source": "Video and Images",
    "text": "Видео и изображения"
@@ -7813,10 +7833,6 @@
   "7b96ddc4c567caf5": {
    "source": "Browsers installed as a Flatpak or a Snap run in a sandbox, which decides whether they can reach MDM.",
    "text": "Браузеры, установленные как Flatpak или Snap, работают в «песочнице», которая определяет, могут ли они получить доступ к MDM."
-  },
-  "7bab57d3591ffa30": {
-   "source": "<g1>Two smaller macOS downloads</g1> (<g2>#25</g2>): a .dmg for Apple Silicon (<x3/>, about 10 MB) and one for Intel (<x4/>, about 13 MB) instead of one universal .dmg of 80 MB. From 0.2.4 or older, update once by hand: <g5>Download</g5> in Check for updates opens the release; pick your Mac's .dmg. <g6>Update now</g6> works again after that.",
-   "text": "<g1>Две меньшие загрузки для macOS</g1> (<g2>#25</g2>): .dmg для Apple Silicon (<x3/>, около 10 МБ) и для Intel (<x4/>, около 13 МБ) вместо одного универсального .dmg размером 80 МБ. С версии 0.2.4 или старше обновитесь один раз вручную: <g5>Загрузить</g5> в Проверить обновления открывает выпуск; выберите .dmg для вашего Mac. <g6>Обновить сейчас</g6> снова заработает после этого."
   },
   "7bbfd6a588b5c2c4": {
    "source": "Where a tooltip's text wraps",
@@ -9102,10 +9118,6 @@
    "source": "Download Mister Download Manager 0.5.0 — free for Windows, macOS and Linux",
    "text": "Скачать Mister Download Manager 0.5.0 — бесплатно для Windows, macOS и Linux"
   },
-  "8f937668a1130538": {
-   "source": "<g1>0.5.0</g1> <g2>24.1 MB</g2>",
-   "text": "<g1>0.5.0</g1> <g2>24,1 МБ</g2>"
-  },
   "8fabf2cac610e9a8": {
    "source": "Cinnamon.",
    "text": "Cinnamon."
@@ -9758,6 +9770,10 @@
    "source": "The same programs without an installer. It keeps its data in <x1/>, like an installed copy.",
    "text": "Те же программы без установщика. Он хранит свои данные в <x1/>, как установленная копия."
   },
+  "99711c45fa3147e5": {
+   "source": "<g1>0.5.0</g1> <g2>16.9 MB</g2>",
+   "text": "<g1>0.5.0</g1> <g2>16,9 МБ</g2>"
+  },
   "997cc2f8f3474ae1": {
    "source": "Windows<g1><g2>3</g2></g1>",
    "text": "Windows<g1><g2>3</g2></g1>"
@@ -10346,6 +10362,10 @@
    "source": "Mister Download Manager isn't running",
    "text": "Mister Download Manager не запущен"
   },
+  "a29c315dcb4443e0": {
+   "source": "<g1>A finished torrent's progress window lost its tabs while it was still shared</g1>: Files, Peers, Trackers, Pieces and General (with the share ratio) said \"Shown while the torrent is downloading.\" They now stay for as long as the torrent is shared.",
+   "text": "<g1>Окно хода завершенного торрента теряло свои вкладки, пока он еще раздавался</g1>: «Файлы», «Пиры», «Трекеры», «Части» и «Общие» (с коэффициентом раздачи) показывали «Показывается во время загрузки торрента». Теперь они остаются до тех пор, пока торрент раздается."
+  },
   "a29e92c362e1ff2c": {
    "source": "A button's border",
    "text": "Граница кнопки"
@@ -10714,6 +10734,10 @@
    "source": "The <g1>command line guide</g1> lists everything <x2/> takes.",
    "text": "<g1>Руководство по командной строке</g1> содержит список всех параметров, которые принимает <x2/>."
   },
+  "a8562e95bb3fa120": {
+   "source": "<g1>Two smaller macOS downloads</g1> (<g2>#25</g2>): a .dmg for Apple Silicon (<x3/>, about 14 MB) and one for Intel (<x4/>, about 16 MB) instead of one universal .dmg of 80 MB. From 0.2.4 or older, update once by hand: <g5>Download</g5> in Check for updates opens the release; pick your Mac's .dmg. <g6>Update now</g6> works again after that.",
+   "text": "<g1>Две меньшие загрузки для macOS</g1> (<g2>#25</g2>): .dmg для Apple Silicon (<x3/>, около 14 МБ) и для Intel (<x4/>, около 16 МБ) вместо одного универсального .dmg размером 80 МБ. С версии 0.2.4 или старше обновитесь один раз вручную: <g5>Загрузить</g5> в «Проверить обновления» открывает релиз; выберите .dmg для вашего Mac. <g6>Обновить сейчас</g6> снова будет работать после этого."
+  },
   "a856aa8d56dfc9ae": {
    "source": "<g1>Dark mode: grey notes and error texts are easier to read</g1> (<g2>#45</g2>): they now have the contrast WCAG asks for (4.5:1) on every dark surface, Options' failed checks no longer use light mode's dark red on the dark dialog, and an editable drop-down's arrow is tinted dark under the pointer.",
    "text": "<g1>Темный режим: серые примечания и тексты ошибок легче читать</g1> (<g2>#45</g2>): теперь они имеют контраст, требуемый WCAG (4.5:1) на любой темной поверхности, неудачные проверки в «Параметрах» больше не используют темно-красный цвет светлого режима на темном диалоговом окне, а стрелка редактируемого выпадающего списка затемняется при наведении указателя."
@@ -10877,6 +10901,10 @@
   "aa841f364038c810": {
    "source": "Each column title has a faint funnel. Click it to keep only some rows:",
    "text": "В заголовке каждого столбца есть значок воронки. Нажмите на него, чтобы оставить только некоторые строки:"
+  },
+  "aa96ab75fe37ecf8": {
+   "source": "<g1>A window's contents the first time they read it</g1> (<g2>#131</g2>): a window read for the first time (Link grabber, Options, About...) showed only its title bar until it was drawn again. It now answers with what it shows at once, as soon as a screen reader is running.",
+   "text": "<g1>Содержимое окна при первом чтении</g1> (<g2>#131</g2>): окно, прочитанное в первый раз («Перехват ссылок», «Параметры», «О программе»...), показывало только свою строку заголовка, пока не было перерисовано. Теперь оно сразу отвечает тем, что показывает, как только запущена программа чтения с экрана."
   },
   "aa9ee64ba69f2d26": {
    "source": "A download that stopped halfway doesn't have to start over. MDM keeps what it has and continues from there.",
@@ -12522,6 +12550,10 @@
    "source": "<g1>The system:</g1> MDM's version and how you installed it, your operating system and its version, the processor, the language and theme, and how many downloads and queues you have. These are counts only.",
    "text": "<g1>Система:</g1> версия MDM и способ его установки, ваша операционная система и ее версия, процессор, язык и тема, а также количество загрузок и очередей. Это только счетчики."
   },
+  "c5ddef5d4d228288": {
+   "source": "Downloads are smaller: setup.exe 23 → 16 MB, AppImage 36 → 20 MB, .deb 27 → 17 MB.",
+   "text": "Размер загрузок уменьшился: setup.exe с 23 до 16 МБ, AppImage с 36 до 20 МБ, .deb с 27 до 17 МБ."
+  },
   "c5ea65c70393f2d1": {
    "source": "<g1>Hang up modem when done</g1> — ends a dial-up connection, if you use one.",
    "text": "<g1>Отключить модем по завершении</g1> — завершает коммутируемое соединение, если вы его используете."
@@ -12885,10 +12917,6 @@
   "cb797c11de6612fd": {
    "source": "3. Choose how many run at once",
    "text": "3. Выберите, сколько загрузок выполнять одновременно"
-  },
-  "cb7d403b3b59f081": {
-   "source": "Downloads are about half the size: setup.exe 23 → 12 MB, AppImage 36 → 16 MB, .deb 27 → 13 MB.",
-   "text": "Размер загрузок уменьшился примерно вдвое: setup.exe 23 → 12 МБ, AppImage 36 → 16 МБ, .deb 27 → 13 МБ."
   },
   "cb8376955028cc1c": {
    "source": "<g1>Linux: uninstalling the .deb or .rpm leaves no browser files behind</g1> (<g2>#266</g2>): MDM wrote the files that tell each browser where its helper is in every user's home folder, and <x3/> or <x4/> left them there, naming a program that was gone. The packages now install them for everyone, in each browser's own folder (Chrome and Brave, Chromium and Vivaldi, Edge, Firefox, the Snap Firefox included), and remove them with the package; MDM writes none in the home folder for those browsers, and takes away the ones an earlier version wrote. The AppImage and the tar.gz, and Opera, Helium, Thorium and Firefox's forks (which read them only in the home folder), still get them there.",

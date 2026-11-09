@@ -15,6 +15,8 @@ pub fn describe(e: &Error) -> String {
             t("the server answered {status}"),
             &[("status", &ltr(&s.to_string()))],
         ),
+        // i18n: why a download failed: the site's bot check (Cloudflare) lets browsers through, not programs. Alt+click: the link clicked with the Alt key held, which leaves the download to the browser
+        Error::BotCheck => t("this site lets only browsers through; Alt+click the link").to_owned(),
         Error::Throttled(s, _) => fmt(
             t("the server is busy ({status}); try again later"),
             &[("status", &ltr(&s.to_string()))],

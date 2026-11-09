@@ -1150,10 +1150,6 @@
    "source": "Make it",
    "text": "Tạo chủ đề"
   },
-  "12c5a9fe21646b92": {
-   "source": "<g1>MDM's programs are a third of their size, its download about half</g1> (<g2>#25</g2>): on Windows, the programs went from 93 MB to 33 MB (<x3/> from 61 MB to 29 MB, the command line from 28 MB to a 0.2 MB launcher), and setup.exe from 23 MB to 12 MB. On Linux the AppImage went from 36 MB to 16 MB, the .deb from 27 MB to 13 MB.",
-   "text": "<g1>Các chương trình của MDM có kích thước bằng một phần ba, lượt tải xuống của nó khoảng một nửa</g1> (<g2>#25</g2>): trên Windows, các chương trình giảm từ 93 MB xuống 33 MB (<x3/> từ 61 MB xuống 29 MB, dòng lệnh từ 28 MB xuống một trình khởi chạy 0.2 MB), và setup.exe từ 23 MB xuống 12 MB. Trên Linux, AppImage giảm từ 36 MB xuống 16 MB, .deb từ 27 MB xuống 13 MB."
-  },
   "12ed54fb5407aa89": {
    "source": "The website has <x1/> and <x2/>, and every help page as Markdown, for AI tools.",
    "text": "Trang web có <x1/> và <x2/>, cùng mọi trang trợ giúp ở định dạng Markdown, dành cho các công cụ AI."
@@ -2734,6 +2730,10 @@
    "source": "<g1>One browser only:</g1> <g2>Options → General → Capture downloads from the following browsers</g2>. Untick the ones MDM should leave alone.",
    "text": "<g1>Chỉ một trình duyệt:</g1> <g2>Tùy chọn → Chung → Bắt các lượt tải xuống từ các trình duyệt sau</g2>. Bỏ chọn những trình duyệt mà MDM nên bỏ qua."
   },
+  "2ae83cc65522b8e0": {
+   "source": "<g1>Lists read as blank items</g1> (<g2>#95</g2>): the rows of Download video's qualities, Add torrent's files, the language picker, Options (browsers, sounds, the file-type and site lists), the Scheduler and Import now have their names (a format and its size, a file's name and size), their check boxes theirs, ticked or not, and their selected row; Download video's list is called Quality, Add torrent's Files and the sounds' Sounds. Choosing a row from a screen reader (UI Automation's Select) now shows the new choice at once: it used to wait for the next mouse move.",
+   "text": "<g1>Các danh sách được đọc là mục trống</g1> (<g2>#95</g2>): các hàng chất lượng của Tải xuống video, các tệp của Thêm torrent, bộ chọn ngôn ngữ, Tùy chọn (trình duyệt, âm thanh, danh sách loại tệp và trang web), Bộ lập lịch và Nhập giờ đã có tên của chúng (định dạng và kích thước, tên tệp và kích thước), hộp kiểm của chúng, được chọn hoặc không, và hàng được chọn của chúng; danh sách của Tải xuống video được gọi là Chất lượng, Tệp của Thêm torrent và Âm thanh của các âm thanh. Chọn một hàng từ trình đọc màn hình (UI Automation's Select) giờ hiển thị lựa chọn mới ngay lập tức: trước đây nó phải đợi lần di chuyển chuột tiếp theo."
+  },
   "2aeea5baa745863b": {
    "source": "<g1><g2>Not listed</g2></g1><g3>closed, freeware</g3>",
    "text": "<g1><g2>Không liệt kê</g2></g1><g3>đóng, phần mềm miễn phí</g3>"
@@ -3033,6 +3033,10 @@
   "2f275664e916b164": {
    "source": "Every language Windows offers",
    "text": "Mọi ngôn ngữ Windows cung cấp"
+  },
+  "2f308e07588a7fa0": {
+   "source": "<g1>Speed limits now work as they do for other downloads</g1> (<g2>#39</g2>): a limit set in a torrent's progress window changed every torrent's limit, a remembered limit was ignored, the Speed Limiter's \"for one file\" was shared by all torrents together, and \"Limit all downloads together\" left torrents out. Each torrent now has a limit of its own, a remembered one applies again when it resumes, and torrents and other downloads share the global cap evenly: each side gets at least half of it, and the rest when the other side needs less. A limit under 16 KB/s, which made a torrent drop its peers and stall, gives it 16 KB/s. A torrent started again while its files were still being checked no longer stays paused, and of two torrents started at the same moment, the second no longer fails with \"the torrent is no longer there\".",
+   "text": "<g1>Giới hạn tốc độ giờ hoạt động như đối với các tệp tải xuống khác</g1> (<g2>#39</g2>): giới hạn đặt trong cửa sổ tiến trình của torrent đã thay đổi giới hạn của mọi torrent, giới hạn đã nhớ bị bỏ qua, “cho một tệp” của Giới hạn tốc độ được chia sẻ bởi tất cả các torrent cùng nhau, và “Giới hạn tất cả các tệp tải xuống cùng nhau” đã bỏ qua các torrent. Mỗi torrent giờ có giới hạn riêng, giới hạn đã nhớ sẽ được áp dụng lại khi tiếp tục, và các torrent cùng các tệp tải xuống khác chia sẻ giới hạn toàn cầu đều nhau: mỗi bên nhận ít nhất một nửa, và phần còn lại khi bên kia cần ít hơn. Giới hạn dưới 16 KB/s, vốn khiến torrent mất người ngang hàng và bị kẹt, giờ sẽ được đặt là 16 KB/s. Một torrent được khởi động lại trong khi các tệp của nó vẫn đang được kiểm tra sẽ không còn bị tạm dừng, và trong hai torrent được khởi động cùng lúc, torrent thứ hai sẽ không còn báo lỗi “torrent không còn ở đó”."
   },
   "2f3617b88cae837c": {
    "source": "On <g1>Source</g1>, tick only <g2>Torrent</g2>.",
@@ -4006,6 +4010,10 @@
    "source": "Or the variable",
    "text": "Hoặc biến"
   },
+  "3dae09c1521075dc": {
+   "source": "<g1>Every row of a list, not only those in view</g1> (<g2>#111</g2>): a list's rows out of view (the last qualities of Download video, a long playlist, the downloads) are there too, named, with their place (\"12 of 40\"), and can be scrolled into view or selected. A list of thousands offers 300 rows around the view, so it stays as fast.",
+   "text": "<g1>Mọi hàng trong danh sách, không chỉ những hàng đang hiển thị</g1> (<g2>#111</g2>): các hàng ngoài vùng hiển thị của danh sách (các chất lượng cuối cùng của Tải xuống video, danh sách phát dài, các tệp tải xuống) cũng có mặt, được đặt tên, với vị trí của chúng (“12 trên 40”), và có thể cuộn vào vùng hiển thị hoặc chọn. Danh sách hàng nghìn mục sẽ cung cấp 300 hàng xung quanh vùng hiển thị, để duy trì tốc độ."
+  },
   "3db8482f7cd4bff5": {
    "source": "Download File Info and the progress window open in front of the browser.",
    "text": "Thông tin tệp tải xuống và cửa sổ tiến trình mở lên trước trình duyệt."
@@ -4421,6 +4429,10 @@
   "4428868981ef6556": {
    "source": "n",
    "text": "n"
+  },
+  "4447a34a8cbe1ae6": {
+   "source": "<g1>The Categories pane and the menus</g1> (<g2>#113</g2>): the pane reads as a tree (each category named with its count, open or shut, selected), the menu bar and every right-click menu as menus whose items can be run, and <g3>Shift+F10</g3> or the <g4>Menu</g4> key opens the selected category's menu. A menu opened from the keyboard no longer stays invisible until the mouse moves.",
+   "text": "<g1>Ngăn Danh mục và các menu</g1> (<g2>#113</g2>): ngăn đọc dưới dạng cây (mỗi danh mục được đặt tên với số lượng, mở hoặc đóng, được chọn), thanh menu và mọi menu chuột phải dưới dạng menu có các mục có thể chạy, và <g3>Shift+F10</g3> hoặc phím <g4>Menu</g4> mở menu của danh mục được chọn. Menu mở từ bàn phím không còn vô hình cho đến khi chuột di chuyển."
   },
   "445e6378c12f1e16": {
    "source": "<g1>Image gallery support:</g1> download whole galleries (Flickr, Imgur, DeviantArt and more) with gallery-dl.",
@@ -5837,6 +5849,10 @@
   "5c048bb2fcbcc1ce": {
    "source": "Who makes Mister Download Manager? — Mister Download Manager",
    "text": "Ai tạo ra Mister Download Manager? — Mister Download Manager"
+  },
+  "5c2835f4bf5e979e": {
+   "source": "<g1>List rows sit inside their list</g1> (<g2>#102</g2>): they used to be listed beside it. A screen reader now says which row of how many (\"4 of 12\"), choosing from the list itself works (UI Automation's Selection), and a tree's check box belongs to its file's row. The language picker's list and the Options browser list and the Scheduler's two lists have names now too.",
+   "text": "<g1>Các hàng danh sách nằm trong danh sách của chúng</g1> (<g2>#102</g2>): trước đây chúng được liệt kê bên cạnh. Trình đọc màn hình giờ nói rõ hàng nào trong tổng số bao nhiêu (“4 trên 12”), chọn từ chính danh sách hoạt động (UI Automation's Selection), và hộp kiểm của cây thuộc về hàng tệp của nó. Danh sách bộ chọn ngôn ngữ và danh sách trình duyệt Tùy chọn cùng hai danh sách của Bộ lập lịch giờ cũng có tên."
   },
   "5c32b466414eb19d": {
    "source": "Limit seeding and upload, recheck files, reannounce, add trackers, and block IPs with a blocklist.",
@@ -7362,6 +7378,10 @@
    "source": "Options, General with Test browser integration...",
    "text": "Tùy chọn, Chung với mục Kiểm tra tích hợp trình duyệt..."
   },
+  "73c46eea77b3659f": {
+   "source": "<g1>MDM's programs and downloads are much smaller</g1> (<g2>#25</g2>): on Windows, the programs went from 93 MB to 41 MB (<x3/> from 61 MB to 38 MB, the command line from 28 MB to a 0.2 MB launcher), and setup.exe from 23 MB to 16 MB. On Linux the AppImage went from 36 MB to 20 MB, the .deb from 27 MB to 17 MB.",
+   "text": "<g1>Các chương trình và tệp tải xuống của MDM nhỏ hơn đáng kể</g1> (<g2>#25</g2>): trên Windows, các chương trình giảm từ 93 MB xuống 41 MB (<x3/> từ 61 MB xuống 38 MB, dòng lệnh từ 28 MB xuống trình khởi chạy 0.2 MB), và setup.exe từ 23 MB xuống 16 MB. Trên Linux, AppImage giảm từ 36 MB xuống 20 MB, .deb từ 27 MB xuống 17 MB."
+  },
   "73ee1eb7251e220f": {
    "source": "Video and Images",
    "text": "Video và hình ảnh"
@@ -7813,10 +7833,6 @@
   "7b96ddc4c567caf5": {
    "source": "Browsers installed as a Flatpak or a Snap run in a sandbox, which decides whether they can reach MDM.",
    "text": "Các trình duyệt được cài đặt dưới dạng Flatpak hoặc Snap chạy trong một sandbox, sandbox này sẽ quyết định liệu chúng có thể kết nối với MDM hay không."
-  },
-  "7bab57d3591ffa30": {
-   "source": "<g1>Two smaller macOS downloads</g1> (<g2>#25</g2>): a .dmg for Apple Silicon (<x3/>, about 10 MB) and one for Intel (<x4/>, about 13 MB) instead of one universal .dmg of 80 MB. From 0.2.4 or older, update once by hand: <g5>Download</g5> in Check for updates opens the release; pick your Mac's .dmg. <g6>Update now</g6> works again after that.",
-   "text": "<g1>Hai bản tải xuống macOS nhỏ hơn</g1> (<g2>#25</g2>): một .dmg cho Apple Silicon (<x3/>, khoảng 10 MB) và một cho Intel (<x4/>, khoảng 13 MB) thay vì một .dmg phổ quát 80 MB. Từ 0.2.4 trở xuống, cập nhật thủ công một lần: <g5>Tải xuống</g5> trong Kiểm tra bản cập nhật sẽ mở bản phát hành; chọn .dmg của máy Mac của bạn. <g6>Cập nhật ngay</g6> hoạt động lại sau đó."
   },
   "7bbfd6a588b5c2c4": {
    "source": "Where a tooltip's text wraps",
@@ -9106,10 +9122,6 @@
    "source": "Download Mister Download Manager 0.5.0 — free for Windows, macOS and Linux",
    "text": "Tải xuống Mister Download Manager 0.5.0 — miễn phí cho Windows, macOS và Linux"
   },
-  "8f937668a1130538": {
-   "source": "<g1>0.5.0</g1> <g2>24.1 MB</g2>",
-   "text": "<g1>0.5.0</g1> <g2>24.1 MB</g2>"
-  },
   "8fabf2cac610e9a8": {
    "source": "Cinnamon.",
    "text": "Cinnamon."
@@ -9766,6 +9778,10 @@
    "source": "The same programs without an installer. It keeps its data in <x1/>, like an installed copy.",
    "text": "Các chương trình tương tự nhưng không có trình cài đặt. Dữ liệu được lưu trong <x1/>, như bản đã cài đặt."
   },
+  "99711c45fa3147e5": {
+   "source": "<g1>0.5.0</g1> <g2>16.9 MB</g2>",
+   "text": "<g1>0.5.0</g1> <g2>16.9 MB</g2>"
+  },
   "997cc2f8f3474ae1": {
    "source": "Windows<g1><g2>3</g2></g1>",
    "text": "Windows<g1><g2>3</g2></g1>"
@@ -10354,6 +10370,10 @@
    "source": "Mister Download Manager isn't running",
    "text": "Mister Download Manager chưa chạy"
   },
+  "a29c315dcb4443e0": {
+   "source": "<g1>A finished torrent's progress window lost its tabs while it was still shared</g1>: Files, Peers, Trackers, Pieces and General (with the share ratio) said \"Shown while the torrent is downloading.\" They now stay for as long as the torrent is shared.",
+   "text": "<g1>Cửa sổ tiến trình của torrent đã hoàn tất bị mất các tab khi vẫn đang chia sẻ</g1>: các tab Tệp, Người ngang hàng, Trình theo dõi, Các phần và Chung (với tỷ lệ chia sẻ) đều hiển thị “Hiển thị trong khi torrent đang tải xuống”. Giờ đây, chúng sẽ hiển thị miễn là torrent còn được chia sẻ."
+  },
   "a29e92c362e1ff2c": {
    "source": "A button's border",
    "text": "Viền của nút"
@@ -10726,6 +10746,10 @@
    "source": "The <g1>command line guide</g1> lists everything <x2/> takes.",
    "text": "<g1>Hướng dẫn dòng lệnh</g1> liệt kê mọi thứ mà <x2/> nhận."
   },
+  "a8562e95bb3fa120": {
+   "source": "<g1>Two smaller macOS downloads</g1> (<g2>#25</g2>): a .dmg for Apple Silicon (<x3/>, about 14 MB) and one for Intel (<x4/>, about 16 MB) instead of one universal .dmg of 80 MB. From 0.2.4 or older, update once by hand: <g5>Download</g5> in Check for updates opens the release; pick your Mac's .dmg. <g6>Update now</g6> works again after that.",
+   "text": "<g1>Hai tệp tải xuống macOS nhỏ hơn</g1> (<g2>#25</g2>): một tệp .dmg cho Apple Silicon (<x3/>, khoảng 14 MB) và một cho Intel (<x4/>, khoảng 16 MB) thay vì một tệp .dmg chung 80 MB. Từ phiên bản 0.2.4 trở xuống, hãy cập nhật thủ công một lần: <g5>Tải xuống</g5> trong Kiểm tra bản cập nhật sẽ mở bản phát hành; chọn tệp .dmg phù hợp với máy Mac của bạn. <g6>Cập nhật ngay</g6> sẽ hoạt động lại sau đó."
+  },
   "a856aa8d56dfc9ae": {
    "source": "<g1>Dark mode: grey notes and error texts are easier to read</g1> (<g2>#45</g2>): they now have the contrast WCAG asks for (4.5:1) on every dark surface, Options' failed checks no longer use light mode's dark red on the dark dialog, and an editable drop-down's arrow is tinted dark under the pointer.",
    "text": "<g1>Chế độ tối: các ghi chú và văn bản lỗi màu xám dễ đọc hơn</g1> (<g2>#45</g2>): chúng giờ đây có độ tương phản mà WCAG yêu cầu (4.5:1) trên mọi bề mặt tối, các kiểm tra không thành công của Tùy chọn không còn sử dụng màu đỏ sẫm của chế độ sáng trên hộp thoại tối, và mũi tên của một hộp thả xuống có thể chỉnh sửa được tô màu tối dưới con trỏ."
@@ -10889,6 +10913,10 @@
   "aa841f364038c810": {
    "source": "Each column title has a faint funnel. Click it to keep only some rows:",
    "text": "Mỗi tiêu đề cột có một biểu tượng phễu mờ. Nhấp vào đó để chỉ giữ lại một số hàng:"
+  },
+  "aa96ab75fe37ecf8": {
+   "source": "<g1>A window's contents the first time they read it</g1> (<g2>#131</g2>): a window read for the first time (Link grabber, Options, About...) showed only its title bar until it was drawn again. It now answers with what it shows at once, as soon as a screen reader is running.",
+   "text": "<g1>Nội dung cửa sổ lần đầu tiên được đọc</g1> (<g2>#131</g2>): một cửa sổ được đọc lần đầu (Trình lấy liên kết, Tùy chọn, Giới thiệu...) chỉ hiển thị thanh tiêu đề cho đến khi nó được vẽ lại. Giờ đây, nó trả lời bằng những gì nó hiển thị ngay lập tức, ngay khi trình đọc màn hình đang chạy."
   },
   "aa9ee64ba69f2d26": {
    "source": "A download that stopped halfway doesn't have to start over. MDM keeps what it has and continues from there.",
@@ -12530,6 +12558,10 @@
    "source": "<g1>The system:</g1> MDM's version and how you installed it, your operating system and its version, the processor, the language and theme, and how many downloads and queues you have. These are counts only.",
    "text": "<g1>Hệ thống:</g1> phiên bản MDM và cách cài đặt, hệ điều hành và phiên bản, bộ xử lý, ngôn ngữ và giao diện, cùng số lượt tải xuống và hàng đợi. Báo cáo chỉ chứa các con số này."
   },
+  "c5ddef5d4d228288": {
+   "source": "Downloads are smaller: setup.exe 23 → 16 MB, AppImage 36 → 20 MB, .deb 27 → 17 MB.",
+   "text": "Tệp cài đặt nhỏ hơn: setup.exe từ 23 → 16 MB, AppImage từ 36 → 20 MB, .deb từ 27 → 17 MB."
+  },
   "c5ea65c70393f2d1": {
    "source": "<g1>Hang up modem when done</g1> — ends a dial-up connection, if you use one.",
    "text": "<g1>Ngắt kết nối modem khi hoàn tất</g1> — kết thúc kết nối quay số, nếu bạn dùng."
@@ -12893,10 +12925,6 @@
   "cb797c11de6612fd": {
    "source": "3. Choose how many run at once",
    "text": "3. Chọn số lượng chạy cùng lúc"
-  },
-  "cb7d403b3b59f081": {
-   "source": "Downloads are about half the size: setup.exe 23 → 12 MB, AppImage 36 → 16 MB, .deb 27 → 13 MB.",
-   "text": "Kích thước tải xuống giảm khoảng một nửa: setup.exe 23 → 12 MB, AppImage 36 → 16 MB, .deb 27 → 13 MB."
   },
   "cb8376955028cc1c": {
    "source": "<g1>Linux: uninstalling the .deb or .rpm leaves no browser files behind</g1> (<g2>#266</g2>): MDM wrote the files that tell each browser where its helper is in every user's home folder, and <x3/> or <x4/> left them there, naming a program that was gone. The packages now install them for everyone, in each browser's own folder (Chrome and Brave, Chromium and Vivaldi, Edge, Firefox, the Snap Firefox included), and remove them with the package; MDM writes none in the home folder for those browsers, and takes away the ones an earlier version wrote. The AppImage and the tar.gz, and Opera, Helium, Thorium and Firefox's forks (which read them only in the home folder), still get them there.",

@@ -164,6 +164,12 @@
   "popup_media_none": {
     "message": "Na tej strani še ni videoposnetkov ali zvoka. Predvajajte jih, nato pa to znova odprite."
   },
+  "popup_media_streamed": {
+    "message": "Predvajalnik na tej strani pretaka video po delih, zato ni datoteke za prikaz. Pokažite na video in uporabite njegov gumb »Prenesi video«."
+  },
+  "popup_media_store": {
+    "message": "Pravila Spletne trgovine Chrome držijo to kopijo dodatka stran od videov na tem spletnem mestu. V Pomoči piše, kaj lahko storite."
+  },
   "popup_media_download": {
     "message": "Prenesi"
   },
@@ -178,6 +184,9 @@
   },
   "video_drm": {
     "message": "Zaščiten videoposnetek: ni ga mogoče shraniti"
+  },
+  "video_unnamed": {
+    "message": "Ni mogoče ugotoviti, kateri videoposnetek je to: odprite njegovo stran in poskusite tam"
   },
   "popup_send_to": {
     "message": "Pošlji prenose v"

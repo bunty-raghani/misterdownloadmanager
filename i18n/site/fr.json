@@ -1150,10 +1150,6 @@
    "source": "Make it",
    "text": "Le créer"
   },
-  "12c5a9fe21646b92": {
-   "source": "<g1>MDM's programs are a third of their size, its download about half</g1> (<g2>#25</g2>): on Windows, the programs went from 93 MB to 33 MB (<x3/> from 61 MB to 29 MB, the command line from 28 MB to a 0.2 MB launcher), and setup.exe from 23 MB to 12 MB. On Linux the AppImage went from 36 MB to 16 MB, the .deb from 27 MB to 13 MB.",
-   "text": "<g1>Les programmes de MDM font un tiers de leur taille, son téléchargement environ la moitié</g1> (<g2>#25</g2>) : sous Windows, les programmes sont passés de 93 Mo à 33 Mo (<x3/> de 61 Mo à 29 Mo, la ligne de commande de 28 Mo à un lanceur de 0,2 Mo), et setup.exe de 23 Mo à 12 Mo. Sous Linux, l’AppImage est passée de 36 Mo à 16 Mo, le .deb de 27 Mo à 13 Mo."
-  },
   "12ed54fb5407aa89": {
    "source": "The website has <x1/> and <x2/>, and every help page as Markdown, for AI tools.",
    "text": "Le site web contient <x1/> et <x2/>, et chaque page d'aide au format Markdown, pour les outils d'IA."
@@ -7382,6 +7378,10 @@
    "source": "Options, General with Test browser integration...",
    "text": "Options, Général avec Tester l’intégration du navigateur..."
   },
+  "73c46eea77b3659f": {
+   "source": "<g1>MDM's programs and downloads are much smaller</g1> (<g2>#25</g2>): on Windows, the programs went from 93 MB to 41 MB (<x3/> from 61 MB to 38 MB, the command line from 28 MB to a 0.2 MB launcher), and setup.exe from 23 MB to 16 MB. On Linux the AppImage went from 36 MB to 20 MB, the .deb from 27 MB to 17 MB.",
+   "text": "<g1>Les programmes et les téléchargements de MDM sont beaucoup plus petits</g1> (<g2>#25</g2>) : sous Windows, les programmes sont passés de 93 Mo à 41 Mo (<x3/> de 61 Mo à 38 Mo, la ligne de commande de 28 Mo à un lanceur de 0,2 Mo), et setup.exe de 23 Mo à 16 Mo. Sous Linux, l’AppImage est passée de 36 Mo à 20 Mo, le .deb de 27 Mo à 17 Mo."
+  },
   "73ee1eb7251e220f": {
    "source": "Video and Images",
    "text": "Vidéo et images"
@@ -7833,10 +7833,6 @@
   "7b96ddc4c567caf5": {
    "source": "Browsers installed as a Flatpak or a Snap run in a sandbox, which decides whether they can reach MDM.",
    "text": "Les navigateurs installés au format Flatpak ou Snap s’exécutent dans un bac à sable qui détermine s’ils peuvent accéder à MDM."
-  },
-  "7bab57d3591ffa30": {
-   "source": "<g1>Two smaller macOS downloads</g1> (<g2>#25</g2>): a .dmg for Apple Silicon (<x3/>, about 10 MB) and one for Intel (<x4/>, about 13 MB) instead of one universal .dmg of 80 MB. From 0.2.4 or older, update once by hand: <g5>Download</g5> in Check for updates opens the release; pick your Mac's .dmg. <g6>Update now</g6> works again after that.",
-   "text": "<g1>Deux téléchargements macOS plus petits</g1> (<g2>#25</g2>) : un .dmg pour Apple Silicon (<x3/>, environ 10 Mo) et un pour Intel (<x4/>, environ 13 Mo) au lieu d’un seul .dmg universel de 80 Mo. À partir de la version 0.2.4 ou antérieure, mettez à jour une fois manuellement : <g5>Télécharger</g5> dans Rechercher les mises à jour ouvre la version ; choisissez le .dmg de votre Mac. <g6>Mettre à jour maintenant</g6> fonctionne à nouveau après cela."
   },
   "7bbfd6a588b5c2c4": {
    "source": "Where a tooltip's text wraps",
@@ -9126,10 +9122,6 @@
    "source": "Download Mister Download Manager 0.5.0 — free for Windows, macOS and Linux",
    "text": "Télécharger Mister Download Manager 0.5.0 — gratuit pour Windows, macOS et Linux"
   },
-  "8f937668a1130538": {
-   "source": "<g1>0.5.0</g1> <g2>24.1 MB</g2>",
-   "text": "<g1>0.5.0</g1> <g2>24,1 Mo</g2>"
-  },
   "8fabf2cac610e9a8": {
    "source": "Cinnamon.",
    "text": "Cinnamon."
@@ -9789,6 +9781,10 @@
   "99605902518653e2": {
    "source": "The same programs without an installer. It keeps its data in <x1/>, like an installed copy.",
    "text": "Les mêmes programmes sans installateur. Cette version conserve ses données dans <x1/>, comme une copie installée."
+  },
+  "99711c45fa3147e5": {
+   "source": "<g1>0.5.0</g1> <g2>16.9 MB</g2>",
+   "text": "<g1>0.5.0</g1> <g2>16,9 Mo</g2>"
   },
   "997cc2f8f3474ae1": {
    "source": "Windows<g1><g2>3</g2></g1>",
@@ -10753,6 +10749,10 @@
   "a84e33bb5d1bc55c": {
    "source": "The <g1>command line guide</g1> lists everything <x2/> takes.",
    "text": "Le <g1>guide de la ligne de commande</g1> liste tout ce que <x2/> prend."
+  },
+  "a8562e95bb3fa120": {
+   "source": "<g1>Two smaller macOS downloads</g1> (<g2>#25</g2>): a .dmg for Apple Silicon (<x3/>, about 14 MB) and one for Intel (<x4/>, about 16 MB) instead of one universal .dmg of 80 MB. From 0.2.4 or older, update once by hand: <g5>Download</g5> in Check for updates opens the release; pick your Mac's .dmg. <g6>Update now</g6> works again after that.",
+   "text": "<g1>Deux téléchargements macOS plus petits</g1> (<g2>#25</g2>) : un .dmg pour Apple Silicon (<x3/>, environ 14 Mo) et un pour Intel (<x4/>, environ 16 Mo) au lieu d’un seul .dmg universel de 80 Mo. À partir de la version 0.2.4 ou antérieure, mettez à jour une fois manuellement : <g5>Télécharger</g5> dans Rechercher les mises à jour ouvre la version ; choisissez le .dmg de votre Mac. <g6>Mettre à jour maintenant</g6> fonctionnera à nouveau après cela."
   },
   "a856aa8d56dfc9ae": {
    "source": "<g1>Dark mode: grey notes and error texts are easier to read</g1> (<g2>#45</g2>): they now have the contrast WCAG asks for (4.5:1) on every dark surface, Options' failed checks no longer use light mode's dark red on the dark dialog, and an editable drop-down's arrow is tinted dark under the pointer.",
@@ -12566,6 +12566,10 @@
    "source": "<g1>The system:</g1> MDM's version and how you installed it, your operating system and its version, the processor, the language and theme, and how many downloads and queues you have. These are counts only.",
    "text": "<g1>Le système :</g1> la version de MDM et la façon dont vous l’avez installé, votre système d’exploitation et sa version, le processeur, la langue et le thème, et le nombre de téléchargements et de files d’attente que vous avez. Ce ne sont que des décomptes."
   },
+  "c5ddef5d4d228288": {
+   "source": "Downloads are smaller: setup.exe 23 → 16 MB, AppImage 36 → 20 MB, .deb 27 → 17 MB.",
+   "text": "Les téléchargements sont plus petits : setup.exe 23 → 16 Mo, AppImage 36 → 20 Mo, .deb 27 → 17 Mo."
+  },
   "c5ea65c70393f2d1": {
    "source": "<g1>Hang up modem when done</g1> — ends a dial-up connection, if you use one.",
    "text": "<g1>Raccrocher le modem une fois terminé</g1> — met fin à une connexion d’accès à distance, si vous en utilisez une."
@@ -12929,10 +12933,6 @@
   "cb797c11de6612fd": {
    "source": "3. Choose how many run at once",
    "text": "3. Choisir le nombre de téléchargements simultanés"
-  },
-  "cb7d403b3b59f081": {
-   "source": "Downloads are about half the size: setup.exe 23 → 12 MB, AppImage 36 → 16 MB, .deb 27 → 13 MB.",
-   "text": "Les téléchargements sont environ deux fois moins volumineux : setup.exe 23 → 12 Mo, AppImage 36 → 16 Mo, .deb 27 → 13 Mo."
   },
   "cb8376955028cc1c": {
    "source": "<g1>Linux: uninstalling the .deb or .rpm leaves no browser files behind</g1> (<g2>#266</g2>): MDM wrote the files that tell each browser where its helper is in every user's home folder, and <x3/> or <x4/> left them there, naming a program that was gone. The packages now install them for everyone, in each browser's own folder (Chrome and Brave, Chromium and Vivaldi, Edge, Firefox, the Snap Firefox included), and remove them with the package; MDM writes none in the home folder for those browsers, and takes away the ones an earlier version wrote. The AppImage and the tar.gz, and Opera, Helium, Thorium and Firefox's forks (which read them only in the home folder), still get them there.",

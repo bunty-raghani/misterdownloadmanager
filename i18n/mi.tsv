@@ -295,6 +295,10 @@
 #. button in the browser extension's window: open the extension's page in that browser
 #, machine
 	Add the extension	Tāpiri i te toronga
+#. window title in extension.rs
+#. title of the window that shows how to turn on the Safari extension
+#, machine
+	Add the extension to Safari	Tāpirihia te toronga ki Safari
 #. text in extension.rs
 #, machine
 	Add the free extension: files you download in your browser come here, and videos get a Download button.	Tāpiri i te toronga koreutu: ka tae mai ngā kōnae ka tikiakehia e koe i tō pūtirotiro ki konei, ā, ka whiwhi ngā ataata i te pātene Tikiake.
@@ -1932,6 +1936,10 @@
 #. a country's name (where a download's server is)
 #, machine
 	Hong Kong	Hong Kong
+#. text in extension.rs
+#. button in the browser extension's window, on Safari's row: open the steps that turn the extension on
+#, machine
+	How to Add	Pēhea te tāpiri
 #. text in the Scheduler window
 #. link after why the computer can't be woken (Linux, macOS): opens the guide's page that shows how an administrator can allow it
 #, machine
@@ -3066,6 +3074,14 @@
 #. text in the tray icon's menu
 #, machine
 	Open Mister Download Manager	Whakatuwheratia a Mister Download Manager
+#. text in extension.rs
+#. step 2 of turning on the Safari extension; Cmd is the Command key
+#, machine
+	Open Safari's settings (Cmd+,).	Whakatuwhera i ngā tautuhinga a Safari (Cmd+,).
+#. text in extension.rs
+#. step 1 of turning on the Safari extension
+#, machine
+	Open Safari.	Whakatuwhera i a Safari.
 #. text in the Scheduler window
 #, machine
 	Open the following file when done	Whakatuwheratia te kōnae e whai ake nei ina oti
@@ -3500,6 +3516,9 @@
 #. Saturday, as short as a calendar's column head (two letters in English)
 #, machine
 	Sa	Rāh
+#. text in extension.rs
+#, machine
+	Safari turns "Allow unsigned extensions" off each time it quits: do steps 1 to 6 again after restarting it.	Ka whakawetohia e Safari te “Allow unsigned extensions” i ia wā ka kati: me mahi anō i ngā takahanga 1 ki te 6 i muri i te tīmata anō i a Safari.
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -4088,6 +4107,18 @@
 #. a country's name (where a download's server is)
 #, machine
 	Sweden	Huitene
+#. text in extension.rs
+#. step 3 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+#, machine
+	Switch to the "Advanced" tab (the cogwheels).	Whakawhitia ki te ripa “Advanced” (ngā wīra niho).
+#. text in extension.rs
+#. step 5 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+#, machine
+	Switch to the "Developer" tab (the screwdriver and spanner).	Whakawhitia ki te ripa “Developer” (ngā taputapu).
+#. text in extension.rs
+#. step 7 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+#, machine
+	Switch to the "Extensions" tab (the puzzle piece).	Whakawhitia ki te ripa “Extensions” (te wāhanga tīwekaweka).
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -4266,6 +4297,9 @@
 #. text in errors.rs
 #, machine
 	the drive or network share is no longer available	kāore te puku, te tiri whatunga rānei e wātea ana
+#. text in extension.rs
+#, machine
+	The extension is already in this app. Apple hasn't notarized this build, so Safari needs these steps to allow it.	Kei roto kē te toronga i tēnei taupānga. Kāore a Apple i whakamana i tēnei whakaputanga, nō reira me whai ēnei takahanga kia whakaaetia e Safari.
 #. text in errors.rs
 #, machine
 	the file changed on the server	i rerekē te kōnae i runga i te tūmau
@@ -4724,6 +4758,22 @@
 #. verb: turn the Speed Limiter on
 #, machine
 	Turn on	Whakakā
+#. text in extension.rs
+#. step 6 of turning on the Safari extension; the quoted switch name is what Safari's settings show in this language: use Apple's own words for it, or keep the English name when unsure
+#, machine
+	Turn on "Allow unsigned extensions".	Whakakāhia te “Allow unsigned extensions”.
+#. text in extension.rs
+#. step 8 of turning on the Safari extension
+#, machine
+	Turn on "Mister Download Manager" and allow it on all websites.	Whakakāhia te “Mister Download Manager” ka whakaaetia ki ngā paetukutuku katoa.
+#. text in extension.rs
+#. step 4 of turning on the Safari extension; the quoted switch name is what Safari's settings show in this language: use Apple's own words for it, or keep the English name when unsure
+#, machine
+	Turn on "Show features for web developers".	Whakakāhia te “Show features for web developers”.
+#. text in extension.rs
+#. the headline of the window that shows how to turn on the Safari extension
+#, machine
+	Turn on the extension in Safari	Whakakāhia te toronga i Safari
 #. tooltip (why a control is greyed) in the Options window
 #. why Options → Remote → Pair a device... is greyed
 #, machine
@@ -5520,6 +5570,10 @@ extension	Browser extension	Toronga pūtirotiro
 #, machine
 extension	Button settings...	Tautuhinga pātene...
 #. text in the browser extension
+#. shown briefly on the download button when nothing on the page says which video the player is playing, so nothing was sent
+#, machine
+extension	Can't tell which video this is: open its own page and try there	Kāore e mōhiotia ko tēhea ataata tēnei: whakatuwheratia tōna ake whārangi, ka whakamātau i reira
+#. text in the browser extension
 #. the toolbar button's status when the browser reaches the app; keep the name Mister Download Manager as it is
 #, machine
 extension	Connected to Mister Download Manager	Kua hono ki a Mister Download Manager
@@ -5730,6 +5784,10 @@ extension	Support MDM	Tautoko i a MDM
 #, machine
 extension	Take downloads from this browser	Tangohia ngā tikiake mai i tēnei pūtirotiro
 #. text in the browser extension
+#. in the toolbar button's popup, on a site where the Chrome Web Store's copy of the extension shows no download button; Help is the link at the bottom of the popup
+#, machine
+extension	The Chrome Web Store's rules keep this copy of the add-on away from this site's videos. Help says what you can do.	Nā ngā ture a Chrome Web Store i kore ai e whai wāhi tēnei kape o te tāpiri ki ngā ataata o tēnei pae. Mā Āwhina e kī mai ngā mea ka taea e koe.
+#. text in the browser extension
 #. status when the connection to the app broke off (often security software blocking it); keep the name Mister Download Manager as it is
 #, machine
 extension	The connection to Mister Download Manager failed	I rahua te hononga ki a Mister Download Manager
@@ -5757,6 +5815,10 @@ extension	This computer	Tēnei rorohiko
 #. status when a download carried too much data (very large cookies) to give to the app
 #, machine
 extension	This download's details were too large to hand over	He nui rawa ngā taipitopito o tēnei tikiake kia tukuna atu
+#. text in the browser extension
+#. in the toolbar button's popup, when the page's player plays from a stream built in the page (a blob:): the list of the page's media has nothing to show; Download video is the name of the button over videos
+#, machine
+extension	This page's player streams its video in pieces, so there's no file to list. Point at the video and use its Download video button.	Ka rere te ataata a tēnei kaitākaro mā ngā wāhanga, nō reira kāore he kōnae hei rārangi. Tohua te ataata, ka whakamahia tōna pātene Tikiake ataata.
 #. text in the browser extension
 #. status when the app is older than the extension; keep the name Mister Download Manager as it is
 #, machine

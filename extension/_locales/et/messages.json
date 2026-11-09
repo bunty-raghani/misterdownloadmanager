@@ -164,6 +164,12 @@
   "popup_media_none": {
     "message": "Sellelt lehelt pole veel videot ega heli leitud. Esitage seda ja avage seejärel see uuesti."
   },
+  "popup_media_streamed": {
+    "message": "Selle lehe mängija voogedastab videot tükkidena, seega pole ühtegi faili, mida loetleda. Osuta videole ja kasuta selle nuppu „Laadi video alla“."
+  },
+  "popup_media_store": {
+    "message": "Chrome'i veebipoe reeglid hoiavad selle lisandmooduli koopia selle saidi videotest eemal. „Abi“ ütleb, mida saad teha."
+  },
   "popup_media_download": {
     "message": "Laadi alla"
   },
@@ -178,6 +184,9 @@
   },
   "video_drm": {
     "message": "Kaitstud videot ei saa salvestada"
+  },
+  "video_unnamed": {
+    "message": "Ei saa aru, mis video see on: ava video enda leht ja proovi seal"
   },
   "popup_send_to": {
     "message": "Saada allalaadimised asukohta"

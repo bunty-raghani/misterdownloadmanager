@@ -295,6 +295,10 @@
 #. button in the browser extension's window: open the extension's page in that browser
 #, machine
 	Add the extension	Ychwanegu'r estyniad
+#. window title in extension.rs
+#. title of the window that shows how to turn on the Safari extension
+#, machine
+	Add the extension to Safari	Ychwanegu'r estyniad at Safari
 #. text in extension.rs
 #, machine
 	Add the free extension: files you download in your browser come here, and videos get a Download button.	Ychwanegu'r estyniad am ddim: daw ffeiliau rydych chi'n eu lawrlwytho yn eich porwr yma, ac mae fideos yn cael botwm Lawrlwytho.
@@ -1932,6 +1936,10 @@
 #. a country's name (where a download's server is)
 #, machine
 	Hong Kong	Hong Kong
+#. text in extension.rs
+#. button in the browser extension's window, on Safari's row: open the steps that turn the extension on
+#, machine
+	How to Add	Sut i ychwanegu
 #. text in the Scheduler window
 #. link after why the computer can't be woken (Linux, macOS): opens the guide's page that shows how an administrator can allow it
 #, machine
@@ -3066,6 +3074,14 @@
 #. text in the tray icon's menu
 #, machine
 	Open Mister Download Manager	Agor Mister Download Manager
+#. text in extension.rs
+#. step 2 of turning on the Safari extension; Cmd is the Command key
+#, machine
+	Open Safari's settings (Cmd+,).	Agorwch osodiadau Safari (Cmd+,).
+#. text in extension.rs
+#. step 1 of turning on the Safari extension
+#, machine
+	Open Safari.	Agorwch Safari.
 #. text in the Scheduler window
 #, machine
 	Open the following file when done	Agor y ffeil ganlynol pan fydd wedi'i gwneud
@@ -3500,6 +3516,9 @@
 #. Saturday, as short as a calendar's column head (two letters in English)
 #, machine
 	Sa	Dy
+#. text in extension.rs
+#, machine
+	Safari turns "Allow unsigned extensions" off each time it quits: do steps 1 to 6 again after restarting it.	Mae Safari yn diffodd “Allow unsigned extensions” bob tro y bydd yn cau: gwnewch gamau 1 i 6 eto ar ôl ei ailgychwyn.
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -4088,6 +4107,18 @@
 #. a country's name (where a download's server is)
 #, machine
 	Sweden	Sweden
+#. text in extension.rs
+#. step 3 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+#, machine
+	Switch to the "Advanced" tab (the cogwheels).	Newidiwch i'r tab “Advanced” (yr olwynion cocos).
+#. text in extension.rs
+#. step 5 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+#, machine
+	Switch to the "Developer" tab (the screwdriver and spanner).	Newidiwch i'r tab “Developer” (y sgriwdreifer a'r sbaner).
+#. text in extension.rs
+#. step 7 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+#, machine
+	Switch to the "Extensions" tab (the puzzle piece).	Newidiwch i'r tab “Extensions” (y darn jig-so).
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -4266,6 +4297,9 @@
 #. text in errors.rs
 #, machine
 	the drive or network share is no longer available	nid yw'r gyriant neu'r rhwydwaith a rennir ar gael mwyach
+#. text in extension.rs
+#, machine
+	The extension is already in this app. Apple hasn't notarized this build, so Safari needs these steps to allow it.	Mae'r estyniad eisoes yn yr ap hwn. Nid yw Apple wedi notareiddio'r fersiwn hon, felly mae angen y camau hyn er mwyn i Safari ei ganiatáu.
 #. text in errors.rs
 #, machine
 	the file changed on the server	newidiodd y ffeil ar y gweinydd
@@ -4724,6 +4758,22 @@
 #. verb: turn the Speed Limiter on
 #, machine
 	Turn on	Troi ymlaen
+#. text in extension.rs
+#. step 6 of turning on the Safari extension; the quoted switch name is what Safari's settings show in this language: use Apple's own words for it, or keep the English name when unsure
+#, machine
+	Turn on "Allow unsigned extensions".	Trowch “Allow unsigned extensions” ymlaen.
+#. text in extension.rs
+#. step 8 of turning on the Safari extension
+#, machine
+	Turn on "Mister Download Manager" and allow it on all websites.	Trowch “Mister Download Manager” ymlaen a'i ganiatáu ar bob gwefan.
+#. text in extension.rs
+#. step 4 of turning on the Safari extension; the quoted switch name is what Safari's settings show in this language: use Apple's own words for it, or keep the English name when unsure
+#, machine
+	Turn on "Show features for web developers".	Trowch “Show features for web developers” ymlaen.
+#. text in extension.rs
+#. the headline of the window that shows how to turn on the Safari extension
+#, machine
+	Turn on the extension in Safari	Troi'r estyniad ymlaen yn Safari
 #. tooltip (why a control is greyed) in the Options window
 #. why Options → Remote → Pair a device... is greyed
 #, machine
@@ -5520,6 +5570,10 @@ extension	Browser extension	Estyniad porwr
 #, machine
 extension	Button settings...	Gosodiadau botwm...
 #. text in the browser extension
+#. shown briefly on the download button when nothing on the page says which video the player is playing, so nothing was sent
+#, machine
+extension	Can't tell which video this is: open its own page and try there	Methu dweud pa fideo yw hwn: agorwch ei dudalen ei hun a rhowch gynnig arni yno
+#. text in the browser extension
 #. the toolbar button's status when the browser reaches the app; keep the name Mister Download Manager as it is
 #, machine
 extension	Connected to Mister Download Manager	Wedi cysylltu â Mister Download Manager
@@ -5730,6 +5784,10 @@ extension	Support MDM	Cefnogi MDM
 #, machine
 extension	Take downloads from this browser	Cymerwch lawrlwythiadau o'r porwr hwn
 #. text in the browser extension
+#. in the toolbar button's popup, on a site where the Chrome Web Store's copy of the extension shows no download button; Help is the link at the bottom of the popup
+#, machine
+extension	The Chrome Web Store's rules keep this copy of the add-on away from this site's videos. Help says what you can do.	Mae rheolau Chrome Web Store yn cadw'r copi hwn o'r estyniad draw o fideos y wefan hon. Mae Cymorth yn dweud beth allwch chi ei wneud.
+#. text in the browser extension
 #. status when the connection to the app broke off (often security software blocking it); keep the name Mister Download Manager as it is
 #, machine
 extension	The connection to Mister Download Manager failed	Methodd y cysylltiad â Mister Download Manager
@@ -5757,6 +5815,10 @@ extension	This computer	Y cyfrifiadur hwn
 #. status when a download carried too much data (very large cookies) to give to the app
 #, machine
 extension	This download's details were too large to hand over	Roedd manylion y lawrlwythiad hwn yn rhy fawr i'w trosglwyddo
+#. text in the browser extension
+#. in the toolbar button's popup, when the page's player plays from a stream built in the page (a blob:): the list of the page's media has nothing to show; Download video is the name of the button over videos
+#, machine
+extension	This page's player streams its video in pieces, so there's no file to list. Point at the video and use its Download video button.	Mae chwaraewr y dudalen hon yn ffrydio ei fideo mewn darnau, felly nid oes ffeil i'w rhestru. Pwyntiwch at y fideo a defnyddiwch ei fotwm Lawrlwytho fideo.
 #. text in the browser extension
 #. status when the app is older than the extension; keep the name Mister Download Manager as it is
 #, machine

@@ -92,6 +92,14 @@ jobs:
       - name: Tests
         run: cargo test --workspace
 
+      # Safari's extension (macOS): its native half relays to the helper from inside the
+      # sandbox Safari makes it run in. Safari itself isn't needed.
+      - name: Safari extension's relay and helper, sandboxed
+        if: runner.os == 'macOS'
+        run: |
+          cargo build --release -p mdm-nmhost
+          tools/safari/selftest.sh target/release/misterdownloadmanager-nmhost
+
   # A translator's reviewed rows (no "#, machine" line) must survive every pull request: no
   # tool or merge may drop them or hand them back to machine translation.
   translations:

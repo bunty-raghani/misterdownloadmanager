@@ -3,7 +3,7 @@ resolver = "3"
 members = ["crates/*"]
 
 [workspace.package]
-version = "0.5.0"
+version = "0.5.1"
 edition = "2024"
 rust-version = "1.95"
 license = "GPL-3.0-or-later"
@@ -186,7 +186,7 @@ debug = "line-tables-only"
 # can ask for a pass (Context::request_ui_pass: a dialog opened while minimized, #162); OpenGL
 # without a usable configuration is an error, not a panic, so the next renderer is tried; a main
 # window built hidden stays hidden after its first frame (a start with the session waits in the
-# notification area, #226). craft-libs can take the same commits to share one egui again.
+# notification area, #226); a monitor that has just gone away has no size instead of a panic (#335). craft-libs can take the same commits to share one egui again.
 [patch.crates-io]
 # librqbit 9.1.0 with per-torrent rate limits that change while a torrent runs (#39), and a
 # magnet lookup's progress counted (#92), and every socket bound to one address (`bind_ip`,
@@ -204,14 +204,14 @@ librqbit-peer-protocol = { git = "https://github.com/anefzaoui/rqbit.git", rev =
 librqbit-sha1-wrapper = { git = "https://github.com/anefzaoui/rqbit.git", rev = "ef50d87f4a9d5be9e3951b74f722433f9b46bd76" }
 librqbit-tracker-comms = { git = "https://github.com/anefzaoui/rqbit.git", rev = "ef50d87f4a9d5be9e3951b74f722433f9b46bd76" }
 librqbit-upnp = { git = "https://github.com/anefzaoui/rqbit.git", rev = "ef50d87f4a9d5be9e3951b74f722433f9b46bd76" }
-ecolor = { git = "https://github.com/anefzaoui/egui.git", rev = "517027e916d11183b65b0cd9e5066154dbc7324b" }
-emath = { git = "https://github.com/anefzaoui/egui.git", rev = "517027e916d11183b65b0cd9e5066154dbc7324b" }
-epaint = { git = "https://github.com/anefzaoui/egui.git", rev = "517027e916d11183b65b0cd9e5066154dbc7324b" }
-epaint_default_fonts = { git = "https://github.com/anefzaoui/egui.git", rev = "517027e916d11183b65b0cd9e5066154dbc7324b" }
-egui = { git = "https://github.com/anefzaoui/egui.git", rev = "517027e916d11183b65b0cd9e5066154dbc7324b" }
-egui-winit = { git = "https://github.com/anefzaoui/egui.git", rev = "517027e916d11183b65b0cd9e5066154dbc7324b" }
-egui_glow = { git = "https://github.com/anefzaoui/egui.git", rev = "517027e916d11183b65b0cd9e5066154dbc7324b" }
-egui-wgpu = { git = "https://github.com/anefzaoui/egui.git", rev = "517027e916d11183b65b0cd9e5066154dbc7324b" }
-egui_extras = { git = "https://github.com/anefzaoui/egui.git", rev = "517027e916d11183b65b0cd9e5066154dbc7324b" }
-eframe = { git = "https://github.com/anefzaoui/egui.git", rev = "517027e916d11183b65b0cd9e5066154dbc7324b" }
+ecolor = { git = "https://github.com/anefzaoui/egui.git", rev = "d110a3ccf2f1710f3e67db3f910b18003732c1df" }
+emath = { git = "https://github.com/anefzaoui/egui.git", rev = "d110a3ccf2f1710f3e67db3f910b18003732c1df" }
+epaint = { git = "https://github.com/anefzaoui/egui.git", rev = "d110a3ccf2f1710f3e67db3f910b18003732c1df" }
+epaint_default_fonts = { git = "https://github.com/anefzaoui/egui.git", rev = "d110a3ccf2f1710f3e67db3f910b18003732c1df" }
+egui = { git = "https://github.com/anefzaoui/egui.git", rev = "d110a3ccf2f1710f3e67db3f910b18003732c1df" }
+egui-winit = { git = "https://github.com/anefzaoui/egui.git", rev = "d110a3ccf2f1710f3e67db3f910b18003732c1df" }
+egui_glow = { git = "https://github.com/anefzaoui/egui.git", rev = "d110a3ccf2f1710f3e67db3f910b18003732c1df" }
+egui-wgpu = { git = "https://github.com/anefzaoui/egui.git", rev = "d110a3ccf2f1710f3e67db3f910b18003732c1df" }
+egui_extras = { git = "https://github.com/anefzaoui/egui.git", rev = "d110a3ccf2f1710f3e67db3f910b18003732c1df" }
+eframe = { git = "https://github.com/anefzaoui/egui.git", rev = "d110a3ccf2f1710f3e67db3f910b18003732c1df" }
 winit = { git = "https://github.com/storytold/winit.git", rev = "a517b3846ee8457d84ee4975110bfda6797c44dc" }

@@ -295,6 +295,10 @@
 #. button in the browser extension's window: open the extension's page in that browser
 #, machine
 	Add the extension	एक्सटेन्सन थप्नुहोस्
+#. window title in extension.rs
+#. title of the window that shows how to turn on the Safari extension
+#, machine
+	Add the extension to Safari	Safari मा एक्सटेन्सन थप्नुहोस्
 #. text in extension.rs
 #, machine
 	Add the free extension: files you download in your browser come here, and videos get a Download button.	नि:शुल्क एक्सटेन्सन थप्नुहोस्: तपाईंले आफ्नो ब्राउजरमा डाउनलोड गर्नुभएका फाइलहरू यहाँ आउँछन्, र भिडियोहरूमा डाउनलोड बटन आउँछ।
@@ -1932,6 +1936,10 @@
 #. a country's name (where a download's server is)
 #, machine
 	Hong Kong	हङकङ
+#. text in extension.rs
+#. button in the browser extension's window, on Safari's row: open the steps that turn the extension on
+#, machine
+	How to Add	कसरी थप्ने
 #. text in the Scheduler window
 #. link after why the computer can't be woken (Linux, macOS): opens the guide's page that shows how an administrator can allow it
 #, machine
@@ -3066,6 +3074,14 @@
 #. text in the tray icon's menu
 #, machine
 	Open Mister Download Manager	Mister Download Manager खोल्नुहोस्
+#. text in extension.rs
+#. step 2 of turning on the Safari extension; Cmd is the Command key
+#, machine
+	Open Safari's settings (Cmd+,).	Safari को सेटिङहरू खोल्नुहोस् (Cmd+,)।
+#. text in extension.rs
+#. step 1 of turning on the Safari extension
+#, machine
+	Open Safari.	Safari खोल्नुहोस्।
 #. text in the Scheduler window
 #, machine
 	Open the following file when done	सकिएपछि निम्न फाइल खोल्नुहोस्
@@ -3500,6 +3516,9 @@
 #. Saturday, as short as a calendar's column head (two letters in English)
 #, machine
 	Sa	शनि
+#. text in extension.rs
+#, machine
+	Safari turns "Allow unsigned extensions" off each time it quits: do steps 1 to 6 again after restarting it.	Safari बन्द हुँदा हरेक पटक “Allow unsigned extensions” बन्द हुन्छ: पुनः सुरु गरेपछि चरण 1 देखि 6 सम्म फेरि गर्नुहोस्।
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -4088,6 +4107,18 @@
 #. a country's name (where a download's server is)
 #, machine
 	Sweden	स्विडेन
+#. text in extension.rs
+#. step 3 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+#, machine
+	Switch to the "Advanced" tab (the cogwheels).	“Advanced” ट्याबमा जानुहोस् (गियर चिन्ह)।
+#. text in extension.rs
+#. step 5 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+#, machine
+	Switch to the "Developer" tab (the screwdriver and spanner).	“Developer” ट्याबमा जानुहोस् (स्क्रुड्राइभर र स्प्यानर)।
+#. text in extension.rs
+#. step 7 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+#, machine
+	Switch to the "Extensions" tab (the puzzle piece).	“Extensions” ट्याबमा जानुहोस् (पजलको टुक्रा)।
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -4266,6 +4297,9 @@
 #. text in errors.rs
 #, machine
 	the drive or network share is no longer available	ड्राइभ वा नेटवर्क साझेदारी अब उपलब्ध छैन
+#. text in extension.rs
+#, machine
+	The extension is already in this app. Apple hasn't notarized this build, so Safari needs these steps to allow it.	एक्सटेन्सन यही एपमा पहिल्यै छ। Apple ले यो बिल्डलाई नोटराइज गरेको छैन, त्यसैले Safari ले अनुमति दिनका लागि यी चरणहरू आवश्यक पर्छन्।
 #. text in errors.rs
 #, machine
 	the file changed on the server	सर्भरमा फाइल परिवर्तन भयो
@@ -4724,6 +4758,22 @@
 #. verb: turn the Speed Limiter on
 #, machine
 	Turn on	चालु गर्नुहोस्
+#. text in extension.rs
+#. step 6 of turning on the Safari extension; the quoted switch name is what Safari's settings show in this language: use Apple's own words for it, or keep the English name when unsure
+#, machine
+	Turn on "Allow unsigned extensions".	“Allow unsigned extensions” सक्रिय गर्नुहोस्।
+#. text in extension.rs
+#. step 8 of turning on the Safari extension
+#, machine
+	Turn on "Mister Download Manager" and allow it on all websites.	“Mister Download Manager” सक्रिय गर्नुहोस् र सबै वेबसाइटमा अनुमति दिनुहोस्।
+#. text in extension.rs
+#. step 4 of turning on the Safari extension; the quoted switch name is what Safari's settings show in this language: use Apple's own words for it, or keep the English name when unsure
+#, machine
+	Turn on "Show features for web developers".	“Show features for web developers” सक्रिय गर्नुहोस्।
+#. text in extension.rs
+#. the headline of the window that shows how to turn on the Safari extension
+#, machine
+	Turn on the extension in Safari	Safari मा एक्सटेन्सन सक्रिय गर्नुहोस्
 #. tooltip (why a control is greyed) in the Options window
 #. why Options → Remote → Pair a device... is greyed
 #, machine
@@ -5520,6 +5570,10 @@ extension	Browser extension	ब्राउजर एक्सटेन्सन
 #, machine
 extension	Button settings...	बटन सेटिङहरू...
 #. text in the browser extension
+#. shown briefly on the download button when nothing on the page says which video the player is playing, so nothing was sent
+#, machine
+extension	Can't tell which video this is: open its own page and try there	कुन भिडियो हो भन्न सकिएन: यसको आफ्नै पेज खोलेर त्यहीँ प्रयास गर्नुहोस्
+#. text in the browser extension
 #. the toolbar button's status when the browser reaches the app; keep the name Mister Download Manager as it is
 #, machine
 extension	Connected to Mister Download Manager	Mister Download Manager मा जडान भयो
@@ -5730,6 +5784,10 @@ extension	Support MDM	MDM लाई समर्थन गर्नुहोस�
 #, machine
 extension	Take downloads from this browser	यो ब्राउजरबाट डाउनलोडहरू लिनुहोस्
 #. text in the browser extension
+#. in the toolbar button's popup, on a site where the Chrome Web Store's copy of the extension shows no download button; Help is the link at the bottom of the popup
+#, machine
+extension	The Chrome Web Store's rules keep this copy of the add-on away from this site's videos. Help says what you can do.	Chrome वेब स्टोरका नियमहरूले यस एड-अनको प्रतिलाई यस साइटका भिडियोहरूबाट टाढा राख्छन्। के गर्न सकिन्छ भन्ने कुरा मद्दतमा छ।
+#. text in the browser extension
 #. status when the connection to the app broke off (often security software blocking it); keep the name Mister Download Manager as it is
 #, machine
 extension	The connection to Mister Download Manager failed	Mister Download Manager मा जडान असफल भयो
@@ -5757,6 +5815,10 @@ extension	This computer	यो कम्प्युटर
 #. status when a download carried too much data (very large cookies) to give to the app
 #, machine
 extension	This download's details were too large to hand over	यो डाउनलोडको विवरण पठाउन धेरै ठूलो थियो
+#. text in the browser extension
+#. in the toolbar button's popup, when the page's player plays from a stream built in the page (a blob:): the list of the page's media has nothing to show; Download video is the name of the button over videos
+#, machine
+extension	This page's player streams its video in pieces, so there's no file to list. Point at the video and use its Download video button.	यस पेजको प्लेयरले भिडियो टुक्राटुक्रामा स्ट्रिम गर्छ, त्यसैले सूचीमा देखाउने फाइल छैन। भिडियोमा कर्सर राखेर यसको “भिडियो डाउनलोड गर्नुहोस्” बटन प्रयोग गर्नुहोस्।
 #. text in the browser extension
 #. status when the app is older than the extension; keep the name Mister Download Manager as it is
 #, machine
@@ -6274,6 +6336,10 @@ menu	OpenGL	OpenGL
 #. noun: opens the category's properties
 #, machine
 menu	Properties	गुणहरू
+#. menu command in the main window
+#. View → Theme: the colours of pywal (a program making colour schemes from the wallpaper), followed as they change; a name: keep "pywal" as written
+#, machine
+menu	pywal	pywal रङ
 #. menu command in the main window
 #. verb: download the file again from the start
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation

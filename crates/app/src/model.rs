@@ -642,6 +642,21 @@ fn push_log(log: &mut Vec<(i64, String)>, at: i64, text: String) {
     log.push((at, text));
 }
 
+/// The size a row shows after a snapshot: the server's when it said one, else what was known. A
+/// download that ended without one is as long as what came down, not what the browser announced
+/// for the file it was going to fetch (#374).
+fn size_after(
+    state: State,
+    server: Option<u64>,
+    downloaded: u64,
+    known: Option<u64>,
+) -> Option<u64> {
+    match server {
+        None if state == State::Done => Some(downloaded),
+        server => server.or(known),
+    }
+}
+
 impl Item {
     /// Add an app-side event (added, started, stopped …) to the log.
     pub fn note(&mut self, text: impl Into<String>) {
@@ -726,7 +741,7 @@ impl Item {
             self.server = Some(crate::whereis::Seen::from(server));
         }
         self.downloaded = s.downloaded;
-        self.size = s.size.or(self.size);
+        self.size = size_after(s.state, s.size, s.downloaded, self.size);
         self.resumable = s.resumable.or(self.resumable);
         if let Some(f) = &s.file {
             // Named now: a later start from scratch keeps this name.
@@ -1072,6 +1087,25 @@ pub fn time(secs: f64) -> String {
 }
 
 #[cfg(test)]
+mod size_tests {
+    use super::*;
+
+    #[test]
+    fn a_finished_download_is_as_long_as_what_came_down() {
+        // The browser announced 178 MB; the server sent a 15 KB page and no size.
+        assert_eq!(
+            size_after(State::Done, None, 14473, Some(186662440)),
+            Some(14473)
+        );
+        assert_eq!(
+            size_after(State::Downloading, None, 14473, Some(186662440)),
+            Some(186662440)
+        );
+        assert_eq!(size_after(State::Done, Some(100), 100, None), Some(100));
+    }
+}
+
+#[cfg(test)]
 mod tests {
     use super::*;
 
@@ -1153,5 +1187,34 @@ mod address_tests {
         assert_eq!(u.as_str(), "https://www.example.com/a.zip");
         assert_eq!(super::parse_address("ftp://h/f").unwrap().scheme(), "ftp");
         assert!(super::parse_address("not an address").is_err());
+    }
+}
+
+/// A finished download whose file was moved or deleted (#342). Not when its folder is gone too:
+/// that is more likely a drive that is unplugged, and the file may come back.
+pub fn finished_file_gone(status: Status, dest: &std::path::Path) -> bool {
+    status == Status::Complete && !dest.exists() && dest.parent().is_some_and(|d| d.is_dir())
+}
+
+#[cfg(test)]
+mod finished_file_gone_tests {
+    use super::*;
+
+    #[test]
+    fn only_a_finished_file_gone_from_a_folder_that_is_there() {
+        let dir = std::env::temp_dir().join(format!("mdm-342-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let there = dir.join("there.bin");
+        std::fs::write(&there, b"x").unwrap();
+        assert!(!finished_file_gone(Status::Complete, &there));
+        assert!(finished_file_gone(Status::Complete, &dir.join("gone.bin")));
+        // Not finished: its file isn't expected yet.
+        assert!(!finished_file_gone(Status::Queued, &dir.join("gone.bin")));
+        // Its folder is gone too: maybe a drive that is unplugged.
+        assert!(!finished_file_gone(
+            Status::Complete,
+            &dir.join("no").join("gone.bin")
+        ));
+        std::fs::remove_dir_all(&dir).unwrap();
     }
 }

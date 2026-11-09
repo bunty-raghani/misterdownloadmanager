@@ -203,6 +203,21 @@ pub(crate) async fn page(RawQuery(q): RawQuery) -> Response {
     resp
 }
 
+/// `/leadon?to=PATH`: a page that goes to `to` by script as it loads, as a download site's
+/// thank-you page does (#374).
+pub(crate) async fn leadon(RawQuery(q): RawQuery) -> Response {
+    let pairs = pairs(q);
+    let to = pairs
+        .iter()
+        .find(|(k, _)| k == "to")
+        .map_or("/", |(_, v)| v.as_str());
+    let to = to.replace('\\', "\\\\").replace('"', "\\\"");
+    html(format!(
+        "{}Thank you<script>location.href = \"{to}\";</script>",
+        head("Thank you")
+    ))
+}
+
 /// `/formpage?size=1M&name=report.zip&token=abc&with=QUERY`: three forms that post to `/form`
 /// (urlencoded, multipart, and urlencoded answered with 303).
 pub(crate) async fn formpage(RawQuery(q): RawQuery) -> Response {

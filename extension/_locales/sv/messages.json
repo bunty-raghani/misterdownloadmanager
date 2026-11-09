@@ -164,6 +164,12 @@
   "popup_media_none": {
     "message": "Ingen video eller ljud hittades på den här sidan än. Spela upp det och öppna sedan detta igen."
   },
+  "popup_media_streamed": {
+    "message": "Spelaren på den här sidan strömmar videon i delar, så det finns ingen fil att visa. Peka på videon och använd dess knapp Hämta video."
+  },
+  "popup_media_store": {
+    "message": "Chrome Web Stores regler håller den här kopian av tillägget borta från webbplatsens videor. Under Hjälp står vad du kan göra."
+  },
   "popup_media_download": {
     "message": "Ladda ned"
   },
@@ -178,6 +184,9 @@
   },
   "video_drm": {
     "message": "Skyddad video: den kan inte sparas"
+  },
+  "video_unnamed": {
+    "message": "Det går inte att avgöra vilken video det här är: öppna videons egen sida och försök där"
   },
   "popup_send_to": {
     "message": "Skicka nedladdningar till"

@@ -164,6 +164,12 @@
   "popup_media_none": {
     "message": "Na této stránce zatím nebylo nalezeno žádné video ani zvuk. Spusťte přehrávání a poté toto znovu otevřete."
   },
+  "popup_media_streamed": {
+    "message": "Přehrávač na této stránce streamuje video po částech, takže tu není žádný soubor k zobrazení. Najeďte na video a použijte jeho tlačítko „Stáhnout video“."
+  },
+  "popup_media_store": {
+    "message": "Pravidla Internetového obchodu Chrome drží tuto kopii doplňku mimo videa tohoto webu. V „Nápovědě“ se dozvíte, co můžete udělat."
+  },
   "popup_media_download": {
     "message": "Stáhnout"
   },
@@ -178,6 +184,9 @@
   },
   "video_drm": {
     "message": "Chráněné video: nelze uložit"
+  },
+  "video_unnamed": {
+    "message": "Nelze zjistit, o které video jde: otevřete jeho vlastní stránku a zkuste to tam"
   },
   "popup_send_to": {
     "message": "Odeslat stahování do"

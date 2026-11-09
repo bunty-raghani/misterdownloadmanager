@@ -295,6 +295,10 @@
 #. button in the browser extension's window: open the extension's page in that browser
 #, machine
 	Add the extension	Voeg die uitbreiding by
+#. window title in extension.rs
+#. title of the window that shows how to turn on the Safari extension
+#, machine
+	Add the extension to Safari	Voeg die uitbreiding by Safari by
 #. text in extension.rs
 #, machine
 	Add the free extension: files you download in your browser come here, and videos get a Download button.	Voeg die gratis uitbreiding by: lêers wat jy in jou blaaier aflaai, kom hierheen, en video's kry 'n Aflaai-knoppie.
@@ -1932,6 +1936,10 @@
 #. a country's name (where a download's server is)
 #, machine
 	Hong Kong	Hongkong
+#. text in extension.rs
+#. button in the browser extension's window, on Safari's row: open the steps that turn the extension on
+#, machine
+	How to Add	Hoe om by te voeg
 #. text in the Scheduler window
 #. link after why the computer can't be woken (Linux, macOS): opens the guide's page that shows how an administrator can allow it
 #, machine
@@ -3066,6 +3074,14 @@
 #. text in the tray icon's menu
 #, machine
 	Open Mister Download Manager	Maak Mister Download Manager oop
+#. text in extension.rs
+#. step 2 of turning on the Safari extension; Cmd is the Command key
+#, machine
+	Open Safari's settings (Cmd+,).	Maak Safari se instellings oop (Cmd+,).
+#. text in extension.rs
+#. step 1 of turning on the Safari extension
+#, machine
+	Open Safari.	Maak Safari oop.
 #. text in the Scheduler window
 #, machine
 	Open the following file when done	Maak die volgende lêer oop wanneer klaar
@@ -3500,6 +3516,9 @@
 #. Saturday, as short as a calendar's column head (two letters in English)
 #, machine
 	Sa	Sa
+#. text in extension.rs
+#, machine
+	Safari turns "Allow unsigned extensions" off each time it quits: do steps 1 to 6 again after restarting it.	Safari skakel “Allow unsigned extensions” af elke keer as dit afsluit: doen stap 1 tot 6 weer nadat jy dit herbegin het.
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -4088,6 +4107,18 @@
 #. a country's name (where a download's server is)
 #, machine
 	Sweden	Swede
+#. text in extension.rs
+#. step 3 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+#, machine
+	Switch to the "Advanced" tab (the cogwheels).	Skakel oor na die “Advanced”-oortjie (die tandwiele).
+#. text in extension.rs
+#. step 5 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+#, machine
+	Switch to the "Developer" tab (the screwdriver and spanner).	Skakel oor na die “Developer”-oortjie (die skroewedraaier en moersleutel).
+#. text in extension.rs
+#. step 7 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+#, machine
+	Switch to the "Extensions" tab (the puzzle piece).	Skakel oor na die “Extensions”-oortjie (die legkaartstuk).
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -4266,6 +4297,9 @@
 #. text in errors.rs
 #, machine
 	the drive or network share is no longer available	die skyf of netwerkdeling is nie meer beskikbaar nie
+#. text in extension.rs
+#, machine
+	The extension is already in this app. Apple hasn't notarized this build, so Safari needs these steps to allow it.	Die uitbreiding is reeds in hierdie toepassing. Apple het nie hierdie weergawe genotariseer nie, so Safari het hierdie stappe nodig om dit toe te laat.
 #. text in errors.rs
 #, machine
 	the file changed on the server	die lêer het op die bediener verander
@@ -4724,6 +4758,22 @@
 #. verb: turn the Speed Limiter on
 #, machine
 	Turn on	Skakel aan
+#. text in extension.rs
+#. step 6 of turning on the Safari extension; the quoted switch name is what Safari's settings show in this language: use Apple's own words for it, or keep the English name when unsure
+#, machine
+	Turn on "Allow unsigned extensions".	Skakel “Allow unsigned extensions” aan.
+#. text in extension.rs
+#. step 8 of turning on the Safari extension
+#, machine
+	Turn on "Mister Download Manager" and allow it on all websites.	Skakel “Mister Download Manager” aan en laat dit op alle webwerwe toe.
+#. text in extension.rs
+#. step 4 of turning on the Safari extension; the quoted switch name is what Safari's settings show in this language: use Apple's own words for it, or keep the English name when unsure
+#, machine
+	Turn on "Show features for web developers".	Skakel “Show features for web developers” aan.
+#. text in extension.rs
+#. the headline of the window that shows how to turn on the Safari extension
+#, machine
+	Turn on the extension in Safari	Skakel die uitbreiding in Safari aan
 #. tooltip (why a control is greyed) in the Options window
 #. why Options → Remote → Pair a device... is greyed
 #, machine
@@ -5520,6 +5570,10 @@ extension	Browser extension	Blaaieruitbreiding
 #, machine
 extension	Button settings...	Knoppie-instellings...
 #. text in the browser extension
+#. shown briefly on the download button when nothing on the page says which video the player is playing, so nothing was sent
+#, machine
+extension	Can't tell which video this is: open its own page and try there	Kan nie sê watter video dit is nie: maak sy eie bladsy oop en probeer daar
+#. text in the browser extension
 #. the toolbar button's status when the browser reaches the app; keep the name Mister Download Manager as it is
 #, machine
 extension	Connected to Mister Download Manager	Gekoppel aan Mister Download Manager
@@ -5730,6 +5784,10 @@ extension	Support MDM	Ondersteun MDM
 #, machine
 extension	Take downloads from this browser	Neem aflaaie van hierdie blaaier
 #. text in the browser extension
+#. in the toolbar button's popup, on a site where the Chrome Web Store's copy of the extension shows no download button; Help is the link at the bottom of the popup
+#, machine
+extension	The Chrome Web Store's rules keep this copy of the add-on away from this site's videos. Help says what you can do.	Die Chrome Web Store se reëls hou hierdie kopie van die uitbreiding weg van die video’s op hierdie webwerf. Hulp wys wat jy kan doen.
+#. text in the browser extension
 #. status when the connection to the app broke off (often security software blocking it); keep the name Mister Download Manager as it is
 #, machine
 extension	The connection to Mister Download Manager failed	Die verbinding met Mister Download Manager het misluk
@@ -5757,6 +5815,10 @@ extension	This computer	Hierdie rekenaar
 #. status when a download carried too much data (very large cookies) to give to the app
 #, machine
 extension	This download's details were too large to hand over	Hierdie aflaai se besonderhede was te groot om oor te dra
+#. text in the browser extension
+#. in the toolbar button's popup, when the page's player plays from a stream built in the page (a blob:): the list of the page's media has nothing to show; Download video is the name of the button over videos
+#, machine
+extension	This page's player streams its video in pieces, so there's no file to list. Point at the video and use its Download video button.	Hierdie bladsy se speler stroom sy video in stukke, so daar is geen lêer om te lys nie. Wys na die video en gebruik sy “Laai video af”-knoppie.
 #. text in the browser extension
 #. status when the app is older than the extension; keep the name Mister Download Manager as it is
 #, machine
@@ -6000,6 +6062,10 @@ menu	Add &batch download	Voeg &bondelaflaai by
 #. the trailing ... means it opens a window: keep it
 #, machine
 menu	Add &magnet link...	Voeg &magneetskakel by...
+#. menu command in the main window
+#. View → Theme: picks a theme file or a Base16 or pywal colour scheme, copies it into the themes folder and uses it
+#, machine
+menu	Add a theme file…	Voeg ’n temalêer by…
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine

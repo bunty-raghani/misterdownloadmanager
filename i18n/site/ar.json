@@ -1150,10 +1150,6 @@
    "source": "Make it",
    "text": "أنشئها"
   },
-  "12c5a9fe21646b92": {
-   "source": "<g1>MDM's programs are a third of their size, its download about half</g1> (<g2>#25</g2>): on Windows, the programs went from 93 MB to 33 MB (<x3/> from 61 MB to 29 MB, the command line from 28 MB to a 0.2 MB launcher), and setup.exe from 23 MB to 12 MB. On Linux the AppImage went from 36 MB to 16 MB, the .deb from 27 MB to 13 MB.",
-   "text": "<g1>برامج MDM ثلث حجمها، وتنزيلها حوالي النصف</g1> (<g2>#25</g2>): في Windows، انتقلت البرامج من 93 ميغابايت إلى 33 ميغابايت (<x3/> من 61 ميغابايت إلى 29 ميغابايت، سطر الأوامر من 28 ميغابايت إلى مشغل 0.2 ميغابايت)، وملف setup.exe من 23 ميغابايت إلى 12 ميغابايت. في Linux، انتقل AppImage من 36 ميغابايت إلى 16 ميغابايت، وملف .deb من 27 ميغابايت إلى 13 ميغابايت."
-  },
   "12ed54fb5407aa89": {
    "source": "The website has <x1/> and <x2/>, and every help page as Markdown, for AI tools.",
    "text": "يحتوي الموقع على <x1/> و<x2/>، وعلى كل صفحات المساعدة بصيغة Markdown، لتستخدمها أدوات الذكاء الاصطناعي."
@@ -2614,6 +2610,10 @@
    "source": "A text box's border",
    "text": "حد مربع النص"
   },
+  "28a0353a83207f33": {
+   "source": "<g1>Open folder no longer freezes the window</g1> (<g2>#222</g2>): Download complete's <g3>Open folder</g3> asks the desktop's file manager (over D-Bus) to show the file, and MDM waited for its answer on the window's own thread. A file manager slow to start, or one that never answered (seen on Pop!_OS), froze the window until the freeze report caught it. MDM now asks in the background and, when the file manager hasn't answered within 5 seconds, opens the folder instead. Every other program MDM starts from a window goes the same way, on every system: Test browser integration's <g4>Set it up</g4>, moving an extracted archive to the Trash (on a Mac the Finder may ask first), putting an update in place (<g5>Installing the update...</g5>, with Cancel greyed while it runs), opening pages and folders, reading the icon theme on Linux and, on a Mac, the accent colour (every 2 seconds with the Native theme) and the system's version for a bug report.",
+   "text": "<g1>لم يعد «فتح المجلد» يجمد النافذة</g1> (<g2>#222</g2>): يطلب <g3>فتح المجلد</g3> في اكتمل التنزيل من مدير الملفات الخاص بسطح المكتب (عبر D-Bus) عرض الملف، وكان MDM ينتظر رده على مؤشر ترابط النافذة الخاص بها. مدير الملفات البطيء في البدء، أو الذي لم يرد أبدا (شوهد على Pop!_OS)، كان يجمد النافذة حتى يلتقطه تقرير التجميد. يطلب MDM الآن في الخلفية، وعندما لا يرد مدير الملفات في غضون 5 ثوان، يفتح المجلد بدلا من ذلك. كل برنامج آخر يبدأه MDM من نافذة يسير بنفس الطريقة، على كل نظام: <g4>إعداده</g4> في اختبار الربط بالمستعرض، نقل أرشيف مستخرج إلى سلة المهملات (على جهاز Mac قد يطلب Finder أولا)، وضع تحديث في مكانه (<g5>قيد تثبيت التحديث...</g5>، مع تظليل إلغاء أثناء تشغيله)، فتح الصفحات والمجلدات، قراءة سمة الأيقونات على Linux، وعلى جهاز Mac، لون التمييز (كل ثانيتين مع السمة الأصلية) وإصدار النظام لتقرير الأخطاء."
+  },
   "28a8a7183e41f557": {
    "source": "<g1>Zen, Helium and other browsers built on Firefox or Chromium</g1> (<g2>#41</g2>): the extension reaches MDM in them, also when one is the only browser on Linux or macOS (Zen reads Firefox's folder, which MDM now creates; Helium its own). <g3>Add Mister Download Manager to your browser</g3> lists them, Zen, LibreWolf, Floorp and Waterfox by their own names (Options too), and sends Firefox's family to the right page. On Windows MDM lists the browsers Windows itself lists, so Helium is no longer taken for Chrome. Flatpak browsers can't start MDM's helper, which the help page now says.",
    "text": "<g1>Zen وHelium والمستعرضات الأخرى المبنية على Firefox أو Chromium</g1> (<g2>#41</g2>): يصل الملحق إلى MDM فيها، حتى عندما يكون أحدها هو المستعرض الوحيد على Linux أو macOS (يقرأ Zen مجلد Firefox، الذي ينشئه MDM الآن؛ Helium مجلده الخاص). <g3>أضف Mister Download Manager إلى مستعرضك</g3> يسردها، Zen وLibreWolf وFloorp وWaterfox بأسمائها الخاصة (الخيارات أيضا)، ويرسل عائلة Firefox إلى الصفحة الصحيحة. على Windows، يسرد MDM المستعرضات التي يسردها Windows نفسه، لذا لم يعد Helium يعتبر Chrome. لا يمكن لمستعرضات Flatpak بدء مساعد MDM، وهو ما تقوله صفحة التعليمات الآن."
@@ -3653,6 +3653,10 @@
   "39202940bfd37e73": {
    "source": "<g1>Your own copy:</g1> <g2>Helpers...</g2> (in the gallery window or the video window) lists yt-dlp, ffmpeg and gallery-dl, and <g3>Use another program...</g3> takes your own copy of each instead of MDM's.",
    "text": "<g1>نسختك الخاصة:</g1> تعرض <g2>البرامج المساعدة...</g2> (في نافذة المعرض أو الفيديو) yt-dlp وffmpeg وgallery-dl، ويتيح لك <g3>استخدام برنامج آخر...</g3> استخدام نسختك الخاصة من كل برنامج بدلا من نسخة MDM."
+  },
+  "3928b858acc4258f": {
+   "source": "<g1>Update now asks the package manager which package MDM is</g1>: a copy in /usr/bin was taken for the .deb on a Debian-like system and for the .rpm anywhere else, so a copy installed with another package manager (pacman on Arch) would have fetched and opened an .rpm. MDM now asks dpkg, rpm and pacman which one owns its program; the .deb and .rpm update as before, and a copy of another package manager is left to the system's updates: Check for updates shows the new version's notes and says to update it there.",
+   "text": "<g1>يطلب «تحديث الآن» من مدير الحزم أي حزمة MDM هي</g1>: تم اعتبار نسخة في /usr/bin لملف .deb على نظام شبيه بـ Debian ولملف .rpm في أي مكان آخر، لذلك فإن نسخة مثبتة بمدير حزم آخر (pacman على Arch) كانت ستجلب وتفتح ملف .rpm. يطلب MDM الآن من dpkg وrpm وpacman أي منها يمتلك برنامجه؛ يتم تحديث .deb و.rpm كما كان من قبل، وتترك نسخة من مدير حزم آخر لتحديثات النظام: يعرض التحقق من وجود تحديثات ملاحظات الإصدار الجديد ويطلب تحديثه هناك."
   },
   "392a4c3d29401ba8": {
    "source": "To see it again, right-click the tray icon and choose it under <g1>Downloads in progress</g1>, which lists every running download. Double-clicking the download in the list brings its window back too.",
@@ -5037,6 +5041,10 @@
   "4e4d590e10d29607": {
    "source": "Scripts welcome. IDM's switches included.",
    "text": "البرامج النصية مرحب بها. مفاتيح IDM مضمنة."
+  },
+  "4e56d054c4ea1845": {
+   "source": "<g1>A minimized MDM keeps working</g1>: with the main window minimized (not to the notification area), queues didn't start their next file, the Scheduler's starts and stops didn't fire, download limits, the network adapter's kill switch, the clipboard monitor, the update check, the taskbar's progress and saving the list all waited until the window was restored. They run in every window state now, and their windows (Download complete, a limit's notice) open at once.",
+   "text": "<g1>يستمر MDM المصغر في العمل</g1>: مع تصغير النافذة الرئيسية (وليس إلى منطقة الإشعارات)، لم تبدأ قوائم الانتظار ملفها التالي، ولم يتم تشغيل عمليات بدء وإيقاف المجدول، وانتظرت حدود التنزيل، ومفتاح إيقاف محول الشبكة، ومراقب الحافظة، والتحقق من التحديث، وتقدم شريط المهام، وحفظ القائمة، حتى تم استعادة النافذة. تعمل الآن في كل حالات النافذة، وتفتح نوافذها (اكتمل التنزيل، إشعار الحد) على الفور."
   },
   "4f07dda13d242d23": {
    "source": "Options on its Connection page: connections per download, per-server exceptions, Download limits and the DNS list",
@@ -7106,6 +7114,10 @@
    "source": "Contributing",
    "text": "المساهمة"
   },
+  "6fe2dcd2583ba8b7": {
+   "source": "MDM closed with an internal error when a window opened while the main window was minimized or hidden in the notification area, for example Download File Info for a download from the browser, or Add torrent for a magnet link opened in the browser (<g1>#22</g1>, <g2>#145</g2>). The cause was in egui, the toolkit MDM is drawn with (<g3>emilk/egui#8470</g3>), and is fixed in MDM's copy of it.",
+   "text": "أغلق MDM بخطأ داخلي عندما فتحت نافذة بينما كانت النافذة الرئيسية مصغرة أو مخفية في منطقة الإشعارات، على سبيل المثال معلومات ملف التنزيل لتنزيل من المستعرض، أو إضافة تورنت لرابط مغناطيسي مفتوح في المستعرض (<g1>#22</g1>، <g2>#145</g2>). كان السبب في egui، مجموعة الأدوات التي يرسم بها MDM (<g3>emilk/egui#8470</g3>)، وتم إصلاحه في نسخة MDM منها."
+  },
   "6ffa7e77fe9e6b56": {
    "source": "The <g1>Q</g1> column shows which downloads are in a queue. Under <g2>Queues</g2> in the categories pane, select a queue to see only its downloads.",
    "text": "يعرض العمود <g1>Q</g1> التنزيلات الموجودة في قائمة انتظار. ضمن <g2>قوائم الانتظار</g2> في جزء الفئات، حدد قائمة انتظار لعرض تنزيلاتها فقط."
@@ -7365,6 +7377,10 @@
   "73bbfe3db01da3ea": {
    "source": "Options, General with Test browser integration...",
    "text": "الخيارات، عام، مع «اختبار الربط بالمستعرض...»"
+  },
+  "73c46eea77b3659f": {
+   "source": "<g1>MDM's programs and downloads are much smaller</g1> (<g2>#25</g2>): on Windows, the programs went from 93 MB to 41 MB (<x3/> from 61 MB to 38 MB, the command line from 28 MB to a 0.2 MB launcher), and setup.exe from 23 MB to 16 MB. On Linux the AppImage went from 36 MB to 20 MB, the .deb from 27 MB to 17 MB.",
+   "text": "<g1>أصبحت برامج وتنزيلات MDM أصغر بكثير</g1> (<g2>#25</g2>): على Windows، انخفض حجم البرامج من 93 ميغابايت إلى 41 ميغابايت (<x3/> من 61 ميغابايت إلى 38 ميغابايت، سطر الأوامر من 28 ميغابايت إلى مشغل بحجم 0.2 ميغابايت)، وsetup.exe من 23 ميغابايت إلى 16 ميغابايت. على Linux، انخفض حجم AppImage من 36 ميغابايت إلى 20 ميغابايت، و.deb من 27 ميغابايت إلى 17 ميغابايت."
   },
   "73ee1eb7251e220f": {
    "source": "Video and Images",
@@ -7718,6 +7734,10 @@
    "source": "Add a download (<g1>Add URL</g1>)",
    "text": "إضافة تنزيل (<g1>إضافة URL</g1>)"
   },
+  "7a31f6dd87f98452": {
+   "source": "<g1>The window no longer freezes when the system's sleep or keychain service is slow</g1> (follows <g2>#222</g2>): a queue set to <g3>Wake the computer to run this queue</g3> asks the system to keep the computer awake while it runs. On Linux that is logind, which can be slow to answer just after the computer wakes, exactly when such a queue starts, and MDM waited for it on the window's own thread (asking again every 5 seconds while it refused). It is now asked in the background, on every system; the queue's downloads, retries and log lines are the same. A keyring that doesn't answer at start (a stopped GNOME Keyring) is now waited for once, at most 5 seconds, instead of once per saved password, and saving the list no longer asks it at all. On Linux the check for a tray to hide windows in, and in Download File Info the check that <g4>Save As</g4> isn't a folder (slow on a network share that doesn't answer), no longer run on the window's thread on every frame.",
+   "text": "<g1>لم تعد النافذة تتجمد عندما تكون خدمة السكون أو سلسلة المفاتيح بطيئة</g1> (تتبع <g2>#222</g2>): قائمة انتظار مضبوطة على <g3>إيقاظ الكمبيوتر لتشغيل قائمة الانتظار هذه</g3> تطلب من النظام إبقاء الكمبيوتر مستيقظا أثناء تشغيلها. على Linux، هذا هو logind، والذي يمكن أن يكون بطيئا في الرد بعد استيقاظ الكمبيوتر مباشرة، بالضبط عندما تبدأ قائمة انتظار كهذه، وكان MDM ينتظرها على مؤشر ترابط النافذة الخاص بها (يطلب مرة أخرى كل 5 ثوان بينما يرفض). يتم طلبها الآن في الخلفية، على كل نظام؛ تنزيلات قائمة الانتظار، وإعادة المحاولات، وخطوط السجل هي نفسها. سلسلة مفاتيح لا ترد عند البدء (GNOME Keyring متوقف) يتم انتظارها الآن مرة واحدة، بحد أقصى 5 ثوان، بدلا من مرة واحدة لكل كلمة مرور محفوظة، وحفظ القائمة لم يعد يطلبها على الإطلاق. على Linux، لم يعد التحقق من وجود علبة لإخفاء النوافذ فيها، وفي معلومات ملف التنزيل، لم يعد التحقق من أن <g4>حفظ باسم</g4> ليس مجلدا (بطيء على مشاركة شبكة لا ترد)، يعمل على مؤشر ترابط النافذة في كل إطار."
+  },
   "7a431c024b9ed18e": {
    "source": "Choose <g1>Subtitles</g1> if you want them (see below).",
    "text": "اختر <g1>الترجمات</g1> إذا أردتها (انظر أدناه)."
@@ -7813,10 +7833,6 @@
   "7b96ddc4c567caf5": {
    "source": "Browsers installed as a Flatpak or a Snap run in a sandbox, which decides whether they can reach MDM.",
    "text": "تعمل المستعرضات المثبتة كـ Flatpak أو Snap في بيئة معزولة (sandbox)، وهي التي تحدد ما إذا كان بإمكانها الوصول إلى MDM."
-  },
-  "7bab57d3591ffa30": {
-   "source": "<g1>Two smaller macOS downloads</g1> (<g2>#25</g2>): a .dmg for Apple Silicon (<x3/>, about 10 MB) and one for Intel (<x4/>, about 13 MB) instead of one universal .dmg of 80 MB. From 0.2.4 or older, update once by hand: <g5>Download</g5> in Check for updates opens the release; pick your Mac's .dmg. <g6>Update now</g6> works again after that.",
-   "text": "<g1>تنزيلان أصغر لـ macOS</g1> (<g2>#25</g2>): ملف .dmg لـ Apple Silicon (<x3/>، حوالي 10 ميغابايت) وآخر لـ Intel (<x4/>، حوالي 13 ميغابايت) بدلا من ملف .dmg عالمي واحد بحجم 80 ميغابايت. من الإصدار 0.2.4 أو أقدم، قم بالتحديث يدويا مرة واحدة: يفتح <g5>تنزيل</g5> في «التحقق من وجود تحديثات» الإصدار؛ اختر ملف .dmg الخاص بجهاز Mac الخاص بك. يعمل <g6>تحديث الآن</g6> مرة أخرى بعد ذلك."
   },
   "7bbfd6a588b5c2c4": {
    "source": "Where a tooltip's text wraps",
@@ -9106,10 +9122,6 @@
    "source": "Download Mister Download Manager 0.5.0 — free for Windows, macOS and Linux",
    "text": "تنزيل Mister Download Manager 0.5.0 — مجاني لـ Windows و macOS و Linux"
   },
-  "8f937668a1130538": {
-   "source": "<g1>0.5.0</g1> <g2>24.1 MB</g2>",
-   "text": "<g1>0.5.0</g1> <g2>24.1 ميغابايت</g2>"
-  },
   "8fabf2cac610e9a8": {
    "source": "Cinnamon.",
    "text": "Cinnamon."
@@ -9766,6 +9778,10 @@
    "source": "The same programs without an installer. It keeps its data in <x1/>, like an installed copy.",
    "text": "نفس البرامج بدون برنامج تثبيت. يحتفظ ببياناته في <x1/>، مثل النسخة المثبتة."
   },
+  "99711c45fa3147e5": {
+   "source": "<g1>0.5.0</g1> <g2>16.9 MB</g2>",
+   "text": "<g1>0.5.0</g1> <g2>16.9 ميغابايت</g2>"
+  },
   "997cc2f8f3474ae1": {
    "source": "Windows<g1><g2>3</g2></g1>",
    "text": "Windows<g1><g2>3</g2></g1>"
@@ -10073,6 +10089,10 @@
   "9e48d0887ea7d226": {
    "source": "<g1>Version 0.2.3</g1> <g2>and later</g2>",
    "text": "<g1>الإصدار 0.2.3</g1> <g2>وما بعده</g2>"
+  },
+  "9e583f3f6cc8d5af": {
+   "source": "<g1>Update now finds the Linux and macOS files by either name</g1>: a release's AppImage, .deb, .rpm, .tar.gz and .dmg were named <x2/>; MDM now looks for the name without it first and still takes the older one, so Update now keeps working whichever a release uses.",
+   "text": "<g1>يجد «تحديث الآن» ملفات Linux وmacOS بأي من الاسمين</g1>: تم تسمية AppImage و.deb و.rpm و.tar.gz و.dmg للإصدار <x2/>؛ يبحث MDM الآن عن الاسم بدونه أولا ولا يزال يأخذ الاسم الأقدم، لذلك يستمر «تحديث الآن» في العمل بغض النظر عن الاسم الذي يستخدمه الإصدار."
   },
   "9e5f6ea1de61f755": {
    "source": "Blocking addresses",
@@ -10550,6 +10570,10 @@
    "source": "<g1>Add to queue</g1> adds them to the <g2>Main download queue</g2> without starting them, as IDM's import does.",
    "text": "<g1>إضافة إلى قائمة الانتظار</g1> يضيفها إلى <g2>قائمة انتظار التنزيل الرئيسية</g2> دون بدء تشغيلها، كما يفعل استيراد IDM."
   },
+  "a5892ca94d1d1ab0": {
+   "source": "<g1>A download or magnet link sent while the window is minimized opens at once</g1> (<g2>#162</g2>): with the main window minimized (not to the notification area), a download from the browser or a magnet link was accepted but its window waited until MDM was restored. Download File Info and Add torrent now open right away, as they do with the window open or in the notification area.",
+   "text": "<g1>يفتح رابط التنزيل أو الرابط المغناطيسي المرسل أثناء تصغير النافذة على الفور</g1> (<g2>#162</g2>): مع تصغير النافذة الرئيسية (وليس إلى منطقة الإشعارات)، تم قبول تنزيل من المستعرض أو رابط مغناطيسي ولكن نافذته انتظرت حتى تم استعادة MDM. تفتح معلومات ملف التنزيل وإضافة تورنت الآن على الفور، كما تفعل مع النافذة المفتوحة أو في منطقة الإشعارات."
+  },
   "a5afb35a23f4a21e": {
    "source": "Speed limiter",
    "text": "محدد السرعة"
@@ -10721,6 +10745,10 @@
   "a84e33bb5d1bc55c": {
    "source": "The <g1>command line guide</g1> lists everything <x2/> takes.",
    "text": "يسرد <g1>دليل سطر الأوامر</g1> كل ما يأخذه <x2/>."
+  },
+  "a8562e95bb3fa120": {
+   "source": "<g1>Two smaller macOS downloads</g1> (<g2>#25</g2>): a .dmg for Apple Silicon (<x3/>, about 14 MB) and one for Intel (<x4/>, about 16 MB) instead of one universal .dmg of 80 MB. From 0.2.4 or older, update once by hand: <g5>Download</g5> in Check for updates opens the release; pick your Mac's .dmg. <g6>Update now</g6> works again after that.",
+   "text": "<g1>تنزيلان أصغر لنظام macOS</g1> (<g2>#25</g2>): ملف .dmg لمعالجات Apple Silicon (<x3/>، حوالي 14 ميغابايت) وآخر لمعالجات Intel (<x4/>، حوالي 16 ميغابايت) بدلا من ملف .dmg واحد شامل بحجم 80 ميغابايت. من الإصدار 0.2.4 أو أقدم، قم بالتحديث يدويا مرة واحدة: <g5>تنزيل</g5> في التحقق من وجود تحديثات يفتح الإصدار؛ اختر ملف .dmg الخاص بجهاز Mac الخاص بك. يعمل <g6>تحديث الآن</g6> مرة أخرى بعد ذلك."
   },
   "a856aa8d56dfc9ae": {
    "source": "<g1>Dark mode: grey notes and error texts are easier to read</g1> (<g2>#45</g2>): they now have the contrast WCAG asks for (4.5:1) on every dark surface, Options' failed checks no longer use light mode's dark red on the dark dialog, and an editable drop-down's arrow is tinted dark under the pointer.",
@@ -12434,6 +12462,10 @@
    "source": "50 MiB, every 2nd connection cut after 2 MiB, 4 MB/s",
    "text": "50 ميبيبايت، يقطع كل اتصال ثان بعد 2 ميبيبايت، بسرعة 4 ميغابايت/ثانية"
   },
+  "c413bff1e7aee244": {
+   "source": "<g1>Galleries work with the gallery-dl a Linux distribution ships</g1> (<g2>#236</g2>): with Ubuntu 24.04's gallery-dl 1.26.9 chosen in Helpers, every gallery failed at once (\"unrecognized arguments: --no-input\"): MDM passed options that only newer releases know. MDM now reads the chosen gallery-dl's version and passes only what that release accepts, from 1.20 (Ubuntu 22.04) to today's; checked against every release from 1.17 to 1.32. An older one (Debian 11's 1.17) is refused when chosen, saying it is too old and which version MDM needs, and one chosen before is passed over for MDM's own copy, which Helpers says. gallery-dl 1.30.0, whose version starts with an empty line, is no longer taken for another program.",
+   "text": "<g1>تعمل المعارض مع gallery-dl الذي يأتي مع توزيعة Linux</g1> (<g2>#236</g2>): مع gallery-dl 1.26.9 الخاص بـ Ubuntu 24.04 المختار في البرامج المساعدة، فشل كل معرض على الفور (\"وسيطات غير معروفة: --no-input\"): مرر MDM خيارات لا تعرفها إلا الإصدارات الأحدث. يقرأ MDM الآن إصدار gallery-dl المختار ويمرر فقط ما يقبله هذا الإصدار، من 1.20 (Ubuntu 22.04) إلى اليوم؛ تم التحقق منه مقابل كل إصدار من 1.17 إلى 1.32. يتم رفض الإصدار الأقدم (1.17 الخاص بـ Debian 11) عند اختياره، قائلا إنه قديم جدا ويذكر الإصدار الذي يحتاجه MDM، ويتم تجاوز الإصدار المختار سابقا لنسخة MDM الخاصة به، وهو ما تقوله البرامج المساعدة. لم يعد gallery-dl 1.30.0، الذي يبدأ إصداره بسطر فارغ، يعتبر برنامجا آخر."
+  },
   "c41cf3697bdcc8d7": {
    "source": "The extension asks the host which file types to take, checks each download against them, and cancels the browser's download only after the app has accepted it; otherwise the browser keeps it, and the extension says why.",
    "text": "يطلب الملحق من المضيف أنواع الملفات التي يجب أخذها، ويتحقق من كل تنزيل مقابلها، ويلغي تنزيل المستعرض فقط بعد أن يقبله التطبيق؛ وإلا يحتفظ المستعرض به، ويذكر الملحق السبب."
@@ -12529,6 +12561,10 @@
   "c5980664ded251b8": {
    "source": "<g1>The system:</g1> MDM's version and how you installed it, your operating system and its version, the processor, the language and theme, and how many downloads and queues you have. These are counts only.",
    "text": "<g1>النظام:</g1> إصدار MDM وكيف قمت بتثبيته، نظام التشغيل الخاص بك وإصداره، المعالج، اللغة والمظهر، وعدد التنزيلات وقوائم الانتظار لديك. هذه مجرد أعداد."
+  },
+  "c5ddef5d4d228288": {
+   "source": "Downloads are smaller: setup.exe 23 → 16 MB, AppImage 36 → 20 MB, .deb 27 → 17 MB.",
+   "text": "أصبحت التنزيلات أصغر: setup.exe من 23 إلى 16 ميغابايت، AppImage من 36 إلى 20 ميغابايت، .deb من 27 إلى 17 ميغابايت."
   },
   "c5ea65c70393f2d1": {
    "source": "<g1>Hang up modem when done</g1> — ends a dial-up connection, if you use one.",
@@ -12893,10 +12929,6 @@
   "cb797c11de6612fd": {
    "source": "3. Choose how many run at once",
    "text": "3. اختر عدد الملفات التي تنزل في الوقت نفسه"
-  },
-  "cb7d403b3b59f081": {
-   "source": "Downloads are about half the size: setup.exe 23 → 12 MB, AppImage 36 → 16 MB, .deb 27 → 13 MB.",
-   "text": "أصبحت التنزيلات حوالي نصف الحجم: setup.exe 23 ← 12 ميغابايت، AppImage 36 ← 16 ميغابايت، .deb 27 ← 13 ميغابايت."
   },
   "cb8376955028cc1c": {
    "source": "<g1>Linux: uninstalling the .deb or .rpm leaves no browser files behind</g1> (<g2>#266</g2>): MDM wrote the files that tell each browser where its helper is in every user's home folder, and <x3/> or <x4/> left them there, naming a program that was gone. The packages now install them for everyone, in each browser's own folder (Chrome and Brave, Chromium and Vivaldi, Edge, Firefox, the Snap Firefox included), and remove them with the package; MDM writes none in the home folder for those browsers, and takes away the ones an earlier version wrote. The AppImage and the tar.gz, and Opera, Helium, Thorium and Firefox's forks (which read them only in the home folder), still get them there.",

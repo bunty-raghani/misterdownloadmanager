@@ -107,7 +107,7 @@ The right-click menu has everything you can do with a download: **Open**, **Open
 ![File Properties: the file's name, address, folder, size, status and description](images/help/properties.webp)
 *File Properties: change the address or the folder of a download.*
 
-**Move/Rename** (**Ctrl+M**) moves or renames the file of a finished download, or of one that hasn't started yet.
+**Move/Rename** (**Ctrl+M**) moves or renames the file of a finished download, or of one that hasn't started yet. With several downloads selected it asks for a folder and moves them all there, each under its own name.
 
 ## Verify checksum
 

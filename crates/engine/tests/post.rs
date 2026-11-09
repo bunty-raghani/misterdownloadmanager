@@ -216,6 +216,40 @@ async fn fetch(s: &Server, path: &str, opts: Options, want: &[u8]) -> String {
     out.path.file_name().unwrap().to_string_lossy().into_owned()
 }
 
+/// #376: Cloudflare's challenge, as it marks it, is reported as the site's bot check, with no
+/// retries; another 403 stays a 403.
+#[tokio::test]
+async fn a_bot_check_is_named() {
+    let s = Server::start(|seen| {
+        let headers = if seen.path.starts_with("/challenge") {
+            vec![("Cf-Mitigated".into(), "challenge".into())]
+        } else {
+            Vec::new()
+        };
+        (403, headers, b"forbidden".to_vec())
+    })
+    .await;
+    let dir = tempfile::tempdir().unwrap();
+    let attempt = |path: &str| {
+        Download::start(
+            Request {
+                url: s.url(path),
+                headers: HeaderMap::new(),
+                dest: Destination::Dir(dir.path().to_owned()),
+            },
+            Options::default(),
+        )
+    };
+    let challenge = attempt("/challenge/f.dat").wait().await.unwrap_err();
+    assert!(
+        matches!(challenge, mdm_engine::Error::BotCheck),
+        "{challenge:?}"
+    );
+    assert_eq!(s.seen.lock().unwrap().len(), 1, "a bot check isn't retried");
+    let plain = attempt("/plain/f.dat").wait().await.unwrap_err();
+    assert!(matches!(plain, mdm_engine::Error::Status(_)), "{plain:?}");
+}
+
 fn is_form_post(r: &Seen) -> bool {
     r.method == "POST"
         && r.body == FORM

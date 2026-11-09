@@ -164,6 +164,12 @@
   "popup_media_none": {
     "message": "Walang video o tunog na nakita sa pahinang ito. I-play ito, pagkatapos ay buksan muli ito."
   },
+  "popup_media_streamed": {
+    "message": "Ini-stream ng player ng page na ito ang video nang piraso-piraso, kaya walang file na maililista. Ituro ang video at gamitin ang button nitong I-download ang video."
+  },
+  "popup_media_store": {
+    "message": "Pinapanatili ng mga patakaran ng Chrome Web Store ang kopyang ito ng add-on na malayo sa mga video ng site na ito. Sinasabi ng Tulong kung ano ang magagawa mo."
+  },
   "popup_media_download": {
     "message": "I-download"
   },
@@ -178,6 +184,9 @@
   },
   "video_drm": {
     "message": "Protektadong video: hindi ito mase-save"
+  },
+  "video_unnamed": {
+    "message": "Hindi matukoy kung aling video ito: buksan ang sarili nitong page at subukan doon"
   },
   "popup_send_to": {
     "message": "Ipadala ang mga download sa"

@@ -5,6 +5,9 @@
 //! tutorial that adds it by hand as the fallback. Chrome may ask by itself too: registering the
 //! host also names the store's extension to it (crates/nmhost). "Don't ask again" stops the
 //! offer; `/show extension` brings it back.
+//!
+//! Safari (macOS) has its extension in the app already (tools/safari): its row says "How to
+//! Add", which opens the steps that turn on an extension Apple hasn't notarized.
 
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
@@ -18,6 +21,8 @@ use crate::winui::{self, ButtonKind, r};
 const W: f32 = 520.0;
 const BANNER: f32 = 84.0;
 const ROW: f32 = 34.0;
+/// Safari's row (macOS), as Options and the native host name it.
+const SAFARI: &str = "Apple Safari";
 
 /// Whether to offer the extension at this start: browser integration on and registered (not a
 /// portable copy, which registers nothing), no browser's extension seen yet, not refused.
@@ -41,6 +46,8 @@ pub struct Extension {
     looked: std::time::Instant,
     /// Set it up's runs seen finished ([`set_up_finished`]).
     set_up_seen: u64,
+    /// The steps that add Safari's extension, while that window is open.
+    steps: Option<SafariSteps>,
 }
 
 /// Whether `row` (a browser as the window lists it) is among the browsers seen (as Options
@@ -76,6 +83,10 @@ impl Extension {
                 .position(|b| b.name == n.as_str())
                 .unwrap_or(usize::MAX)
         });
+        // Safari comes with the app (macOS only): a row of its own, after the others.
+        if safari_here() {
+            browsers.push((SAFARI.to_owned(), None));
+        }
         if browsers.is_empty() {
             browsers.push((String::new(), None));
         }
@@ -86,7 +97,13 @@ impl Extension {
             registered: registered(),
             looked: std::time::Instant::now(),
             set_up_seen: 0,
+            steps: None,
         }
+    }
+
+    /// The Safari steps, open at once (`/show safari-steps`: screenshots).
+    pub fn open_safari_steps(&mut self) {
+        self.steps = Some(SafariSteps);
     }
 
     /// Open until closed; Done when "Don't ask again" was pressed.
@@ -105,7 +122,8 @@ impl Extension {
         // A long translation's subline makes the banner taller (winui::banner).
         let extra = crate::dialogs::grow_extra(ctx, "extension-banner");
         let mut answer = None;
-        window(
+        let mut open_steps = false;
+        let outcome = window(
             ctx,
             "extension",
             // i18n: title of the window that offers the browser extension
@@ -114,18 +132,35 @@ impl Extension {
             false,
             winui::BG(),
             |ui, o| {
-                self.body(ui, o, h, &mut answer);
+                self.body(ui, o, h, &mut answer, &mut open_steps);
                 match answer.take() {
                     Some(true) => Outcome::Done(()),
                     Some(false) => Outcome::Closed,
-                    None if winui::escape_pressed(ui) => Outcome::Closed,
+                    // Escape closes the steps first, when they are open.
+                    None if self.steps.is_none() && winui::escape_pressed(ui) => Outcome::Closed,
                     None => Outcome::Open,
                 }
             },
-        )
+        );
+        if open_steps && self.steps.is_none() {
+            self.steps = Some(SafariSteps);
+        }
+        if let Some(steps) = &mut self.steps
+            && !matches!(steps.show(ctx), Outcome::Open)
+        {
+            self.steps = None;
+        }
+        outcome
     }
 
-    fn body(&mut self, ui: &mut Ui, o: Pos2, h: f32, answer: &mut Option<bool>) {
+    fn body(
+        &mut self,
+        ui: &mut Ui,
+        o: Pos2,
+        h: f32,
+        answer: &mut Option<bool>,
+        open_steps: &mut bool,
+    ) {
         let p = ui.painter().clone();
         let (ink, muted) = (winui::TEXT(), winui::MUTED());
         // The banner: the logo, what the extension does, in one line, and how.
@@ -168,7 +203,11 @@ impl Extension {
                 },
                 ink,
             );
-            let label = if page.is_none() {
+            let safari = name == SAFARI;
+            let label = if safari {
+                // i18n: button in the browser extension's window, on Safari's row: open the steps that turn the extension on
+                "How to Add"
+            } else if page.is_none() {
                 // i18n: button in the browser extension's window: open the tutorial that adds the extension
                 "Show me how"
             } else {
@@ -204,7 +243,9 @@ impl Extension {
                 false,
                 None,
             );
-            if add.clicked() {
+            if add.clicked() && safari {
+                *open_steps = true;
+            } else if add.clicked() {
                 // No store page: the tutorial on the website, in the interface language.
                 let url = page.clone().unwrap_or_else(|| {
                     crate::help::page_url(mdm_ipc::extension::GUIDE_DOC, crate::i18n::code())
@@ -325,6 +366,137 @@ impl Extension {
         }
     }
 }
+
+/// Is Safari on this computer (macOS)? Its extension is in the app.
+fn safari_here() -> bool {
+    cfg!(target_os = "macos")
+        && [
+            "/Applications/Safari.app",
+            "/System/Cryptexes/App/System/Applications/Safari.app",
+        ]
+        .iter()
+        .any(|p| std::path::Path::new(p).exists())
+}
+
+/// The steps that turn Safari's extension on. It is in the app, but an app Apple has not
+/// notarized (a build of our own, the experimental downloads) has Safari list its extension only
+/// while it allows unsigned ones, which it forgets each time it quits.
+pub struct SafariSteps;
+
+impl SafariSteps {
+    pub fn show(&mut self, ctx: &egui::Context) -> Outcome<()> {
+        // The banner and the steps are taller than planned in a language that wraps them.
+        let extra = crate::dialogs::grow_extra(ctx, "safari-banner")
+            + crate::dialogs::grow_extra(ctx, "safari-steps");
+        let h = BANNER + 18.0 + STEPS.len() as f32 * STEP + 10.0 + NOTE + 54.0;
+        window(
+            ctx,
+            "safari-steps",
+            // i18n: title of the window that shows how to turn on the Safari extension
+            "Add the extension to Safari",
+            [W, h + extra],
+            false,
+            winui::BG(),
+            |ui, o| {
+                let h = h + extra;
+                let p = ui.painter().clone();
+                let banner_extra = winui::banner(
+                    ui,
+                    &p,
+                    o,
+                    W,
+                    "safari-banner",
+                    // i18n: the headline of the window that shows how to turn on the Safari extension
+                    crate::i18n::t("Turn on the extension in Safari"),
+                    crate::i18n::t(
+                        "The extension is already in this app. Apple hasn't notarized this build, so Safari needs these steps to allow it.",
+                    ),
+                );
+                let o = o + egui::vec2(0.0, banner_extra);
+                let (ink, muted) = (winui::TEXT(), winui::MUTED());
+                let mut y = BANNER + 18.0;
+                let mut lines_extra = 0.0;
+                for (k, step) in STEPS.iter().enumerate() {
+                    winui::text(
+                        &p,
+                        o.x + 22.0,
+                        o.y + y + 12.0,
+                        &format!("{}.", k + 1),
+                        muted,
+                    );
+                    let lines = winui::paragraph(
+                        &p,
+                        o.x + 48.0,
+                        o.y + y + 12.0,
+                        crate::i18n::t(step),
+                        ink,
+                        o.x + W - 18.0,
+                        14.0,
+                    );
+                    let more = 14.0 * (lines.max(1) as f32 - 1.0);
+                    y += STEP + more;
+                    lines_extra += more;
+                }
+                // Safari forgets the unsigned setting when it quits.
+                let note = winui::paragraph(
+                    &p,
+                    o.x + 22.0,
+                    o.y + y + 14.0,
+                    crate::i18n::t(
+                        "Safari turns \"Allow unsigned extensions\" off each time it quits: do steps 1 to 6 again after restarting it.",
+                    ),
+                    muted,
+                    o.x + W - 18.0,
+                    14.0,
+                );
+                // NOTE plans two lines for it; a language that wraps it more grows the window.
+                lines_extra += 14.0 * (note.max(2) as f32 - 2.0);
+                crate::dialogs::grow_px(ui.ctx(), "safari-steps", lines_extra);
+                // `o` moved down with the banner, which `h` already counts: the bottom row is
+                // placed from the window's own top.
+                winui::etched_h(&p, o.x + 16.0, o.y + h - 46.0 - banner_extra, W - 32.0);
+                let placed = winui::buttons_to_right(&p, W - 18.0, 8.0, &[("Close", 90.0)], 200.0);
+                let close = winui::button(
+                    ui,
+                    r(o, placed[0].0, h - 36.0 - banner_extra, placed[0].1, 25.0),
+                    "Close",
+                    ButtonKind::Default,
+                    false,
+                    None,
+                );
+                if close.clicked() || winui::enter_pressed(ui) || winui::escape_pressed(ui) {
+                    Outcome::Closed
+                } else {
+                    Outcome::Open
+                }
+            },
+        )
+    }
+}
+
+/// A step's height when it fits one line, and the note's under them.
+const STEP: f32 = 24.0;
+const NOTE: f32 = 34.0;
+
+/// The steps, in Safari's own words for its tabs and switches.
+const STEPS: [&str; 8] = [
+    // i18n: step 1 of turning on the Safari extension
+    "Open Safari.",
+    // i18n: step 2 of turning on the Safari extension; Cmd is the Command key
+    "Open Safari's settings (Cmd+,).",
+    // i18n: step 3 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+    "Switch to the \"Advanced\" tab (the cogwheels).",
+    // i18n: step 4 of turning on the Safari extension; the quoted switch name is what Safari's settings show in this language: use Apple's own words for it, or keep the English name when unsure
+    "Turn on \"Show features for web developers\".",
+    // i18n: step 5 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+    "Switch to the \"Developer\" tab (the screwdriver and spanner).",
+    // i18n: step 6 of turning on the Safari extension; the quoted switch name is what Safari's settings show in this language: use Apple's own words for it, or keep the English name when unsure
+    "Turn on \"Allow unsigned extensions\".",
+    // i18n: step 7 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+    "Switch to the \"Extensions\" tab (the puzzle piece).",
+    // i18n: step 8 of turning on the Safari extension
+    "Turn on \"Mister Download Manager\" and allow it on all websites.",
+];
 
 /// The browsers whose extension reached the app, by Options' names.
 fn seen_names() -> Vec<String> {
@@ -535,6 +707,21 @@ mod tests {
         assert!(is_seen(&seen, "Zen Browser"));
         assert!(!is_seen(&seen, "Mozilla Firefox") && !is_seen(&seen, "Brave"));
         assert!(is_seen(&["Brave Browser".to_owned()], "Brave"));
+    }
+
+    /// Safari's steps: a sentence each, all there, and Safari is named as the native host and
+    /// Options name it (the row reads its status by that name).
+    #[test]
+    fn safari_steps_are_complete() {
+        assert_eq!(STEPS.len(), 8);
+        assert!(STEPS.iter().all(|s| s.ends_with('.')));
+        assert!(is_seen(&[SAFARI.to_owned()], SAFARI));
+        assert_eq!(SAFARI, "Apple Safari");
+        assert!(
+            mdm_ipc::capture::browser_of(
+                "Mozilla/5.0 (Macintosh) AppleWebKit/605.1.15 Version/18.0 Safari/605.1.15"
+            ) == SAFARI
+        );
     }
 
     /// Firefox's family gets the tutorial, whatever the store has.

@@ -167,8 +167,14 @@ function said(text, bad) {
 async function showMedia(tab, connected) {
   const r = await ask({ type: "media", tab: tab.id });
   const list = (r && r.media) || [];
+  const kept = Boolean(r && r.keptOff);
   $("media").hidden = false;
-  $("media-none").hidden = list.length > 0;
+  // Why there's nothing to list, honestly: this copy leaves the site alone (Help says what's left
+  // to do), the player streams pieces no address names, or the page hasn't loaded any yet.
+  const none = $("media-none");
+  none.hidden = list.length > 0 && !kept;
+  none.textContent = t(kept ? "popup_media_store" : r && r.streamed ? "popup_media_streamed" : "popup_media_none");
+  $("help").href = kept ? `${HELP}#store-youtube` : HELP;
   const ul = $("media-list");
   ul.replaceChildren();
   for (const m of list) {

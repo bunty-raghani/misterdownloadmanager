@@ -164,6 +164,12 @@
   "popup_media_none": {
     "message": "Még nem található videó vagy hang ezen az oldalon. Indítsa el a lejátszást, majd nyissa meg újra."
   },
+  "popup_media_streamed": {
+    "message": "Ennek az oldalnak a lejátszója darabokban streameli a videót, így nincs felsorolható fájl. Mutasson a videóra, és használja a „Videó letöltése” gombját."
+  },
+  "popup_media_store": {
+    "message": "A Chrome Internetes áruház szabályai távol tartják a bővítmény e példányát az oldal videóitól. A Súgó elmondja, mit tehet."
+  },
   "popup_media_download": {
     "message": "Letöltés"
   },
@@ -178,6 +184,9 @@
   },
   "video_drm": {
     "message": "Védett videó: nem menthető"
+  },
+  "video_unnamed": {
+    "message": "Nem állapítható meg, melyik videóról van szó: nyissa meg a saját oldalát, és próbálja ott"
   },
   "popup_send_to": {
     "message": "Letöltések küldése ide"

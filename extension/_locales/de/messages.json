@@ -164,6 +164,12 @@
   "popup_media_none": {
     "message": "Auf dieser Seite wurden noch keine Videos oder Sounds gefunden. Spielen Sie ein Video oder einen Sound ab und öffnen Sie dieses Fenster dann erneut."
   },
+  "popup_media_streamed": {
+    "message": "Der Player dieser Seite streamt das Video in Stücken, daher gibt es keine Datei zum Auflisten. Zeigen Sie auf das Video und nutzen Sie seine Schaltfläche „Video herunterladen“."
+  },
+  "popup_media_store": {
+    "message": "Die Regeln des Chrome Web Store halten diese Kopie des Add-ons von den Videos dieser Website fern. Unter „Hilfe“ steht, was Sie tun können."
+  },
   "popup_media_download": {
     "message": "Herunterladen"
   },
@@ -178,6 +184,9 @@
   },
   "video_drm": {
     "message": "Geschütztes Video: kann nicht gespeichert werden"
+  },
+  "video_unnamed": {
+    "message": "Nicht erkennbar, welches Video das ist: Öffnen Sie seine eigene Seite und versuchen Sie es dort"
   },
   "popup_send_to": {
     "message": "Downloads senden an"

@@ -164,6 +164,12 @@
   "popup_media_none": {
     "message": "Der er endnu ikke fundet video eller lyd på denne side. Afspil den, og åbn derefter dette igen."
   },
+  "popup_media_streamed": {
+    "message": "Afspilleren på denne side streamer videoen i stykker, så der er ingen fil at vise. Peg på videoen, og brug dens knap Download video."
+  },
+  "popup_media_store": {
+    "message": "Chrome Webshops regler holder denne kopi af tilføjelsen væk fra videoerne på dette websted. Hjælp fortæller, hvad du kan gøre."
+  },
   "popup_media_download": {
     "message": "Download"
   },
@@ -178,6 +184,9 @@
   },
   "video_drm": {
     "message": "Beskyttet video: den kan ikke gemmes"
+  },
+  "video_unnamed": {
+    "message": "Kan ikke se, hvilken video det er: Åbn videoens egen side, og prøv der"
   },
   "popup_send_to": {
     "message": "Send downloads til"

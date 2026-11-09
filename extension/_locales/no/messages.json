@@ -164,6 +164,12 @@
   "popup_media_none": {
     "message": "Ingen video eller lyd funnet på denne siden ennå. Spill den av, og åpne dette igjen."
   },
+  "popup_media_streamed": {
+    "message": "Spilleren på denne siden strømmer videoen i biter, så det finnes ingen fil å vise. Pek på videoen og bruk knappen Last ned video."
+  },
+  "popup_media_store": {
+    "message": "Reglene til Chrome Nettmarked holder denne kopien av tillegget unna videoene på dette nettstedet. Hjelp forteller hva du kan gjøre."
+  },
   "popup_media_download": {
     "message": "Last ned"
   },
@@ -178,6 +184,9 @@
   },
   "video_drm": {
     "message": "Beskyttet video: kan ikke lagres"
+  },
+  "video_unnamed": {
+    "message": "Kan ikke se hvilken video dette er: åpne videoens egen side og prøv der"
   },
   "popup_send_to": {
     "message": "Send nedlastinger til"

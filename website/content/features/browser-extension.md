@@ -48,8 +48,7 @@ extension: Firefox 140 or later takes it from addons.mozilla.org, and Chrome, Ed
 and Vivaldi from the Chrome Web Store. The browser keeps it updated.
 
 Some limits, plainly: the portable copy can't connect to a browser, since it writes nothing
-outside its folder. The Chrome Web Store copy shows no button over YouTube videos, which the
-store's policy forbids; **Tasks → Download video from a page** still takes any page.
+outside its folder.
 
 ## More of the browser, in version 0.5.0
 

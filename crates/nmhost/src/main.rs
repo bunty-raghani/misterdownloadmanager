@@ -20,6 +20,8 @@
 //!   installer step), or the system-wide ones with `--all-users`. A browser that reads a
 //!   system-wide manifest naming this same program (the .deb's or .rpm's) gets none in the home
 //!   folder: the package manager removes the package's with it (#266).
+//! - `misterdownloadmanager-nmhost --safari` (macOS): the same host for Safari, started by the
+//!   app's Safari extension (tools/safari), which passes each message on; nothing to register.
 //! - `misterdownloadmanager-nmhost --package-manifests <root>` (Linux, the .deb and .rpm build):
 //!   writes the system-wide manifests under `<root>`, naming the packaged helper
 //!   (`/usr/bin/misterdownloadmanager-nmhost`). Nothing else.
@@ -112,6 +114,8 @@ struct Message {
     /// The qualities the page's own player response already lists (YouTube), sent in a second
     /// message so the window can show them before yt-dlp's look-up finishes.
     heights: Vec<u32>,
+    /// The page's title (`video`).
+    title: Option<String>,
     /// The button's menu: keep it off this site (a host name).
     hide_site: Option<String>,
     /// The button's menu: open its settings in Options (`page`: the toolbar button's popup asks
@@ -487,6 +491,7 @@ fn video_command(
     Ok(mdm_ipc::Command {
         video_page: Some(src.unwrap_or_else(|| m.url.clone())),
         video_heights: m.heights.clone(),
+        video_title: m.title.clone().filter(|t| !t.trim().is_empty()),
         referer,
         cookies: m.cookies.clone().filter(|c| !c.is_empty()),
         cookie_jar: m.cookie_jar.clone(),
@@ -630,6 +635,18 @@ enum Undelivered {
 /// slow disk or an antivirus scan can take a while); the browser's download waits meanwhile.
 const START_WAIT: Duration = Duration::from_secs(20);
 
+/// Started by Safari's app extension (`--safari`): inside its sandbox, which a program started from
+/// here would inherit, so the app is started through LaunchServices (`open`) instead.
+static SAFARI: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// The app this helper belongs to, when it is the copy inside Safari's extension
+/// (`X.app/Contents/PlugIns/Y.appex/Contents/MacOS/this`): its bundle.
+fn bundle_of(exe: &std::path::Path) -> Option<PathBuf> {
+    exe.ancestors()
+        .find(|p| p.extension().is_some_and(|e| e == "app"))
+        .map(PathBuf::from)
+}
+
 /// Hand `cmd` to Mister Download Manager, starting it only if none is running.
 fn deliver(cmd: &mdm_ipc::Command) -> Result<(), Undelivered> {
     // Whatever it asks may open a window: the app may bring it to the front (Windows only: Linux
@@ -654,8 +671,23 @@ fn deliver(cmd: &mdm_ipc::Command) -> Result<(), Undelivered> {
             "misterdownloadmanager"
         }),
     };
-    let mut child = start_detached(&app)
-        .map_err(|e| Undelivered::NotRunning(format!("cannot start {}: {e}", app.display())))?;
+    let safari = SAFARI.load(std::sync::atomic::Ordering::Relaxed);
+    let mut child = if safari {
+        let exe = this_program().map_err(Undelivered::NotRunning)?;
+        let bundle = bundle_of(&exe)
+            .ok_or_else(|| Undelivered::NotRunning(format!("{} is in no app", exe.display())))?;
+        // -g: the app opens behind Safari, as it does for the other browsers.
+        std::process::Command::new("/usr/bin/open")
+            .arg("-g")
+            .arg(&bundle)
+            .spawn()
+            .map_err(|e| {
+                Undelivered::NotRunning(format!("cannot start {}: {e}", bundle.display()))
+            })?
+    } else {
+        start_detached(&app)
+            .map_err(|e| Undelivered::NotRunning(format!("cannot start {}: {e}", app.display())))?
+    };
     #[cfg(windows)]
     win32::allow_foreground(child.id());
     let started = std::time::Instant::now();
@@ -667,7 +699,11 @@ fn deliver(cmd: &mdm_ipc::Command) -> Result<(), Undelivered> {
             Err(mdm_ipc::SendError::NotRunning(_)) => {}
         }
         // It quit (another copy took over, or it failed to start): that one may answer still.
-        if child.try_wait().is_ok_and(|s| s.is_some()) && started.elapsed() > START_WAIT / 4 {
+        // (`open` returns at once, the app being another process.)
+        if !safari
+            && child.try_wait().is_ok_and(|s| s.is_some())
+            && started.elapsed() > START_WAIT / 4
+        {
             break;
         }
     }
@@ -1073,6 +1109,12 @@ fn main() {
         "--register" => register(all_users),
         "--unregister" => unregister(all_users),
         "--package-manifests" => package_manifests(args.get(1).map(String::as_str)),
+        // Safari's extension has no host manifest: its app extension (tools/safari) starts this
+        // program from inside the app, which is the only caller there is.
+        "--safari" => {
+            SAFARI.store(true, std::sync::atomic::Ordering::Relaxed);
+            serve().map_err(|e| e.to_string())
+        }
         // Browsers start the host naming the caller: serve only our own extension (the
         // manifests' allowed_origins / allowed_extensions say the same; this is a second check).
         _ if our_caller(&args) => serve().map_err(|e| e.to_string()),
@@ -1098,6 +1140,19 @@ fn downloadable(url: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Safari's copy of the helper, inside the app's extension, finds the app it opens.
+    #[test]
+    fn safari_helper_finds_its_app() {
+        let exe = std::path::Path::new(
+            "/Applications/Mister Download Manager.app/Contents/PlugIns/Mister Download Manager.appex/Contents/MacOS/misterdownloadmanager-nmhost",
+        );
+        assert_eq!(
+            bundle_of(exe),
+            Some(PathBuf::from("/Applications/Mister Download Manager.app"))
+        );
+        assert_eq!(bundle_of(std::path::Path::new("/usr/bin/nmhost")), None);
+    }
 
     /// The Chrome Web Store's copy and the app folder's (unpacked) both connect, and both are
     /// served: the manifest's allowed_origins and the host's own caller check agree.

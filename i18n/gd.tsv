@@ -295,6 +295,10 @@
 #. button in the browser extension's window: open the extension's page in that browser
 #, machine
 	Add the extension	Cuir ris an leudachan
+#. window title in extension.rs
+#. title of the window that shows how to turn on the Safari extension
+#, machine
+	Add the extension to Safari	Cuir an leudachan ri Safari
 #. text in extension.rs
 #, machine
 	Add the free extension: files you download in your browser come here, and videos get a Download button.	Cuir ris an leudachan an-asgaidh: thig faidhlichean a luchdaicheas tu sìos sa bhrabhsair agad an-seo, agus gheibh bhideothan putan Luchdaich sìos.
@@ -1932,6 +1936,10 @@
 #. a country's name (where a download's server is)
 #, machine
 	Hong Kong	Hong Kong
+#. text in extension.rs
+#. button in the browser extension's window, on Safari's row: open the steps that turn the extension on
+#, machine
+	How to Add	Mar a chuireas tu ris
 #. text in the Scheduler window
 #. link after why the computer can't be woken (Linux, macOS): opens the guide's page that shows how an administrator can allow it
 #, machine
@@ -3066,6 +3074,14 @@
 #. text in the tray icon's menu
 #, machine
 	Open Mister Download Manager	Fosgail Mister Download Manager
+#. text in extension.rs
+#. step 2 of turning on the Safari extension; Cmd is the Command key
+#, machine
+	Open Safari's settings (Cmd+,).	Fosgail roghainnean Safari (Cmd+,).
+#. text in extension.rs
+#. step 1 of turning on the Safari extension
+#, machine
+	Open Safari.	Fosgail Safari.
 #. text in the Scheduler window
 #, machine
 	Open the following file when done	Fosgail am faidhle a leanas nuair a bhios e deiseil
@@ -3500,6 +3516,9 @@
 #. Saturday, as short as a calendar's column head (two letters in English)
 #, machine
 	Sa	Sa
+#. text in extension.rs
+#, machine
+	Safari turns "Allow unsigned extensions" off each time it quits: do steps 1 to 6 again after restarting it.	Cuiridh Safari “Allow unsigned extensions” dheth a h-uile turas a dùineas e: dèan ceumannan 1 gu 6 a-rithist às dèidh dhut a thòiseachadh às ùr.
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -4088,6 +4107,18 @@
 #. a country's name (where a download's server is)
 #, machine
 	Sweden	An t-Suain
+#. text in extension.rs
+#. step 3 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+#, machine
+	Switch to the "Advanced" tab (the cogwheels).	Rach dhan taba “Advanced” (na cuibhlichean-fiaclach).
+#. text in extension.rs
+#. step 5 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+#, machine
+	Switch to the "Developer" tab (the screwdriver and spanner).	Rach dhan taba “Developer” (an sgriubhaire is an spanair).
+#. text in extension.rs
+#. step 7 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
+#, machine
+	Switch to the "Extensions" tab (the puzzle piece).	Rach dhan taba “Extensions” (am pìos-tòimhseachain).
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -4266,6 +4297,9 @@
 #. text in errors.rs
 #, machine
 	the drive or network share is no longer available	chan eil an draibh no an roinn lìonraidh ri fhaighinn tuilleadh
+#. text in extension.rs
+#, machine
+	The extension is already in this app. Apple hasn't notarized this build, so Safari needs these steps to allow it.	Tha an leudachan san aplacaid seo mu thràth. Cha do dhearbh Apple an togail seo, agus mar sin feumaidh Safari na ceumannan seo mus ceadaich e e.
 #. text in errors.rs
 #, machine
 	the file changed on the server	dh’atharraich am faidhle air an fhrithealaiche
@@ -4724,6 +4758,22 @@
 #. verb: turn the Speed Limiter on
 #, machine
 	Turn on	Cuir air
+#. text in extension.rs
+#. step 6 of turning on the Safari extension; the quoted switch name is what Safari's settings show in this language: use Apple's own words for it, or keep the English name when unsure
+#, machine
+	Turn on "Allow unsigned extensions".	Cuir air “Allow unsigned extensions”.
+#. text in extension.rs
+#. step 8 of turning on the Safari extension
+#, machine
+	Turn on "Mister Download Manager" and allow it on all websites.	Cuir air “Mister Download Manager” agus ceadaich e air a h-uile làrach-lìn.
+#. text in extension.rs
+#. step 4 of turning on the Safari extension; the quoted switch name is what Safari's settings show in this language: use Apple's own words for it, or keep the English name when unsure
+#, machine
+	Turn on "Show features for web developers".	Cuir air “Show features for web developers”.
+#. text in extension.rs
+#. the headline of the window that shows how to turn on the Safari extension
+#, machine
+	Turn on the extension in Safari	Cuir an leudachan air ann an Safari
 #. tooltip (why a control is greyed) in the Options window
 #. why Options → Remote → Pair a device... is greyed
 #, machine
@@ -5520,6 +5570,10 @@ extension	Browser extension	Leudachan brabhsair
 #, machine
 extension	Button settings...	Roghainnean a' phutan...
 #. text in the browser extension
+#. shown briefly on the download button when nothing on the page says which video the player is playing, so nothing was sent
+#, machine
+extension	Can't tell which video this is: open its own page and try there	Chan urrainn dhuinn innse dè am video a tha seo: fosgail an duilleag aige fhèin agus feuch ann an sin e
+#. text in the browser extension
 #. the toolbar button's status when the browser reaches the app; keep the name Mister Download Manager as it is
 #, machine
 extension	Connected to Mister Download Manager	Ceangailte ri Mister Download Manager
@@ -5730,6 +5784,10 @@ extension	Support MDM	Thoir taic do MDM
 #, machine
 extension	Take downloads from this browser	Gabh luchdadh a-nuas bhon bhrabhsair seo
 #. text in the browser extension
+#. in the toolbar button's popup, on a site where the Chrome Web Store's copy of the extension shows no download button; Help is the link at the bottom of the popup
+#, machine
+extension	The Chrome Web Store's rules keep this copy of the add-on away from this site's videos. Help says what you can do.	Chan eil riaghailtean Chrome Web Store a’ leigeil leis an lethbhreac seo dhen leudachan obrachadh air videothan na làraich seo. Tha Cobhair ag innse dè as urrainn dhut a dhèanamh.
+#. text in the browser extension
 #. status when the connection to the app broke off (often security software blocking it); keep the name Mister Download Manager as it is
 #, machine
 extension	The connection to Mister Download Manager failed	Dh’fhàillig an ceangal ri Mister Download Manager
@@ -5757,6 +5815,10 @@ extension	This computer	An coimpiutair seo
 #. status when a download carried too much data (very large cookies) to give to the app
 #, machine
 extension	This download's details were too large to hand over	Bha mion-fhiosrachadh an luchdadh a-nuas seo ro mhòr airson a thoirt seachad
+#. text in the browser extension
+#. in the toolbar button's popup, when the page's player plays from a stream built in the page (a blob:): the list of the page's media has nothing to show; Download video is the name of the button over videos
+#, machine
+extension	This page's player streams its video in pieces, so there's no file to list. Point at the video and use its Download video button.	Bidh cluicheadair na duilleige seo a’ sruthadh a video ann am pìosan, mar sin chan eil faidhle ri liostadh. Dèan puing air a’ video agus cleachd am putan Luchdaich a-nuas video aige.
 #. text in the browser extension
 #. status when the app is older than the extension; keep the name Mister Download Manager as it is
 #, machine
