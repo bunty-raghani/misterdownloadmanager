@@ -39,6 +39,11 @@ const BATCH: usize = 256 * 1024;
 /// Received bytes are written at least this often, so a slow connection shows progress and a
 /// pause keeps what arrived.
 const FLUSH_EVERY: Duration = Duration::from_secs(1);
+/// While the resume save flushes the part file to the disk (`Shared::flushing`), the connections
+/// keep what they receive in memory, at most this much for the whole download, instead of
+/// waiting on the disk (#361): on NTFS a file's writes wait for its flush, whatever their
+/// handle (measured: 8 connections' writes held for each whole flush, 3-10 s on a slow disk).
+const FLUSH_HOLD_MAX: usize = 256 << 20;
 
 /// Shedding a slow connection (`Options::shed_slow`): after `SHED_GRACE` on a response, a
 /// connection under 1/`SHED_RATIO` of the best speed one connection reached, with more than
@@ -76,6 +81,11 @@ pub struct Options {
     /// The first retry is immediate (as IDM, lab S5); then this delay, doubling, capped at 30 s.
     pub retry_delay: Duration,
     pub user_agent: String,
+    /// Asked with instead of `user_agent` when the server refuses the first request with 403
+    /// (#372): a browser's User-Agent on a connection that isn't a browser's trips some sites'
+    /// bot checks (Cloudflare, seen on a public PDF), while MDM's own passes. Set when
+    /// `user_agent` is the browser's. A later 403 is left to the download.
+    pub agent_fallback: Option<String>,
     /// How often resume state is saved (IDM: "several times per minute").
     pub save_interval: Duration,
     /// Speed limit for this download, bytes/s (IDM's limiter is per file). None = unlimited.
@@ -132,6 +142,23 @@ pub struct Options {
     /// name, so whatever the hook attaches to it — Windows' Mark of the Web stream, macOS'
     /// quarantine attribute — stays with the finished file.
     pub on_file_created: Option<FileHook>,
+    /// From the browser: the MIME type its own download had. A web page where it had another
+    /// type is the server refusing MDM (a firewall's "The requested URL was rejected"), an error
+    /// and never saved as the file (#533, `expects_other_file`).
+    pub expected_type: Option<String>,
+    /// Tests: a disk whose flush takes this long and holds every write to the file meanwhile
+    /// (as NTFS does, #361). None: the real disk.
+    #[doc(hidden)]
+    pub slow_flush: Option<SlowFlush>,
+}
+
+/// A disk whose flush takes `takes` and, as NTFS's does, makes every write to the file wait for
+/// it: the gate is held exclusively for the flush and shared for each write (`Options::slow_flush`).
+#[doc(hidden)]
+#[derive(Clone, Debug)]
+pub struct SlowFlush {
+    pub takes: Duration,
+    pub gate: Arc<std::sync::RwLock<()>>,
 }
 
 /// A callback given the path of a file the engine created (`Options::on_file_created`).
@@ -191,6 +218,7 @@ impl Default for Options {
             max_retries: 5,
             retry_delay: Duration::from_secs(1),
             user_agent: DEFAULT_USER_AGENT.to_owned(),
+            agent_fallback: None,
             save_interval: Duration::from_secs(2),
             speed_limit: None,
             verify_overlap: 64,
@@ -209,6 +237,8 @@ impl Default for Options {
             extra_roots: Vec::new(),
             post: None,
             on_file_created: None,
+            expected_type: None,
+            slow_flush: None,
         }
     }
 }
@@ -794,15 +824,38 @@ pub async fn probe_kept(
     };
     let seen = Arc::new(crate::server::ServerSeen::default());
     let client = client(opts, &target, &as_get, &seen)?;
-    let (resp, headers, took) = get(
+    let expects = expects_other_file(opts.expected_type.as_deref(), None, &url);
+    // A browser's User-Agent refused (#372): asked once more as MDM.
+    let (client, asked) = match get(
         &client,
-        target,
-        headers,
+        target.clone(),
+        headers.clone(),
         opts.post.as_ref(),
         &opts.user_agent,
+        expects,
         &CancellationToken::new(),
     )
-    .await?;
+    .await
+    {
+        Err(e) if agent_refused(&e) && opts.agent_fallback.is_some() => {
+            let mut plain = opts.clone();
+            plain.user_agent = opts.agent_fallback.clone().unwrap_or_default();
+            let client = self::client(&plain, &target, &as_get, &seen)?;
+            let asked = get(
+                &client,
+                target,
+                headers,
+                opts.post.as_ref(),
+                &plain.user_agent,
+                expects,
+                &CancellationToken::new(),
+            )
+            .await;
+            (client, asked)
+        }
+        asked => (client, asked),
+    };
+    let (resp, headers, took) = asked?;
     seen.answered(&resp);
     let final_url = resp.url().clone();
     let (size, from_zero) = match resp.status() {
@@ -965,6 +1018,8 @@ impl Download {
             planner: Mutex::new(None),
             limiter: Limiter::new(None),
             best_speed: Default::default(),
+            flushing: Default::default(),
+            held: Default::default(),
         });
         let task = tokio::spawn(f(shared.clone(), cancel.clone()));
         Download {
@@ -1048,6 +1103,12 @@ struct Shared {
     /// The best speed one connection of this download sustained (≥ 1 s), bytes/s: what a good
     /// connection to this server does, the yardstick for shedding.
     best_speed: std::sync::atomic::AtomicU64,
+    /// The resume save is flushing the part file to the disk right now (`save_state`): the
+    /// connections hold what they receive (`hold_cap`).
+    flushing: std::sync::atomic::AtomicBool,
+    /// Bytes received and claimed but not yet written, in the connections' buffers: shown as
+    /// downloaded (they are), but never saved as such.
+    held: std::sync::atomic::AtomicU64,
 }
 
 impl Shared {
@@ -1055,7 +1116,7 @@ impl Shared {
         let mut s = self.view.lock().unwrap().clone();
         s.server = self.seen.get().and_then(|seen| seen.get());
         if let Some(p) = self.planner.lock().unwrap().as_ref() {
-            s.downloaded = p.downloaded();
+            s.downloaded = p.downloaded() + self.held.load(Ordering::Relaxed);
             s.segments = p
                 .segments()
                 .iter()
@@ -1439,7 +1500,12 @@ async fn run(
     });
     let mut v = shared.view.lock().unwrap();
     v.state = match &result {
-        Ok(_) => State::Done,
+        Ok(o) => {
+            // Where it really is: `finish` numbers the name when another file took it meanwhile,
+            // and whoever reads the view (the app's row) goes by this.
+            v.file = Some(o.path.clone());
+            State::Done
+        }
         Err(Error::Cancelled) => State::Cancelled,
         Err(e) => {
             v.error = Some(e.to_string());
@@ -1459,12 +1525,25 @@ async fn run_fresh(
     kept: Option<KeptAnswer>,
 ) -> Result<Outcome, Error> {
     let mut opts = opts;
+    // The first request had to give up the browser's User-Agent (#372).
+    let mut asked_as_mdm = false;
     shared.limiter.set(opts.speed_limit);
     let (shared, cancel) = (&shared, &cancel);
     shared.conn(0, |_| {});
     // Probe on connection 0: a plain GET (or the form's POST) whose body becomes the segment
     // starting at 0; or the look's answer kept for it (#28), not asked for again.
-    let kept = kept.filter(|k| k.url == req.url && k.at.elapsed() < KEEP_ANSWER_FOR);
+    // A web page where the download expects another kind of file is an error (#533): the look's
+    // answer, asked before the file's name was settled, is asked for again then (`get` says so).
+    let expects = expects_other_file(
+        opts.expected_type.as_deref(),
+        dest_name(&req.dest),
+        &req.url,
+    );
+    let kept = kept.filter(|k| {
+        k.url == req.url
+            && k.at.elapsed() < KEEP_ANSWER_FOR
+            && !(expects && is_web_page(k.resp.headers()) && !named(k.resp.headers()))
+    });
     let mut unlocked = kept.as_ref().and_then(|k| k.unlocked.clone());
     let (as_get, client0, (resp, headers), ttfb) = match kept {
         Some(k) => {
@@ -1486,8 +1565,26 @@ async fn run_fresh(
             let as_get = AsGet::default();
             let seen = shared.seen.get_or_init(Default::default).clone();
             let client0 = client(&opts, &target, &as_get, &seen)?;
-            let (answer, ttfb) =
-                first_get(&client0, &target, &asked, &opts, shared, cancel).await?;
+            let (client0, first) = match first_get(
+                &client0, &target, &asked, &opts, expects, shared, cancel,
+            )
+            .await
+            {
+                Err(e) if agent_refused(&e) && opts.agent_fallback.is_some() => {
+                    // #372: the rest of the download goes as MDM too.
+                    opts.user_agent = opts.agent_fallback.take().unwrap_or_default();
+                    asked_as_mdm = true;
+                    shared.event(
+                            "The server refused the browser's User-Agent; asking as Mister Download Manager",
+                        );
+                    let client1 = client(&opts, &target, &as_get, &seen)?;
+                    let first =
+                        first_get(&client1, &target, &asked, &opts, expects, shared, cancel).await;
+                    (client1, first)
+                }
+                first => (client0, first),
+            };
+            let (answer, ttfb) = first?;
             seen.answered(&answer.0);
             (as_get, client0, answer, ttfb)
         }
@@ -1587,6 +1684,7 @@ async fn run_fresh(
         saved.content_type = content_type.clone();
         saved.checksum = checksum.clone();
         saved.final_get = opts.post.is_some() && post.is_none();
+        saved.asked_as_mdm = asked_as_mdm;
         let ctx = Arc::new(Ctx {
             client: client0.clone(),
             validators: Mutex::new(validators),
@@ -1621,8 +1719,16 @@ async fn run_fresh(
                 *shared.planner.lock().unwrap() = None;
                 shared.view.lock().unwrap().resumable = Some(false);
                 let agent = &opts.user_agent;
-                let (resp, ..) =
-                    get(&client0, final_url, headers, post.as_ref(), agent, cancel).await?;
+                let (resp, ..) = get(
+                    &client0,
+                    final_url,
+                    headers,
+                    post.as_ref(),
+                    agent,
+                    expects,
+                    cancel,
+                )
+                .await?;
                 let body = Body::Http(resp);
                 single_stream(body, &file, shared, opts.global.as_deref(), cancel).await?
             }
@@ -1833,6 +1939,12 @@ async fn run_resume(
     shared: Arc<Shared>,
     cancel: CancellationToken,
 ) -> Result<Outcome, Error> {
+    let mut opts = opts;
+    if saved.asked_as_mdm
+        && let Some(agent) = opts.agent_fallback.take()
+    {
+        opts.user_agent = agent;
+    }
     shared.limiter.set(opts.speed_limit);
     let bad = |what: &str| Error::BadState(format!("{}: {what}", state_file.display()));
     if state_file != state_path(&saved.dest) {
@@ -2006,7 +2118,9 @@ async fn refresh_final_url(
         None => (origin.clone(), headers.clone()),
     };
     asked.insert(header::RANGE, HeaderValue::from_static("bytes=0-0"));
-    let (resp, mut headers, _) = get(client, target, asked, post, agent, cancel).await.ok()?;
+    let (resp, mut headers, _) = get(client, target, asked, post, agent, false, cancel)
+        .await
+        .ok()?;
     headers.remove(header::RANGE);
     if resp.status() != StatusCode::PARTIAL_CONTENT {
         return None;
@@ -2102,6 +2216,7 @@ async fn segmented(
     let mut synced = Synced {
         at: std::time::Instant::now(),
         bytes: 0,
+        took: Duration::ZERO,
     };
     save_state(&ctx, &mut saved, &path, &mut synced, true).await?;
     let interval = ctx.opts.save_interval;
@@ -2148,25 +2263,49 @@ async fn segmented(
 }
 
 /// While downloading, the part file is flushed (and the state rewritten) only after 1/16 of
-/// the file (1–64 MiB) has arrived or this long, at most once per save tick, and always when
+/// the file (1-64 MiB) has arrived or this long, at most once per save tick, and always when
 /// the connections stop. Flushing every tick stalled HDDs and churned antivirus; IDM saves
-/// "several times per minute" [IDM-doc]. A crash costs at most that much re-download.
+/// "several times per minute" [IDM-doc].
+///
+/// A flush holds every write to the file for as long as it runs (NTFS, measured, #361), so on a
+/// disk where it takes seconds, flushing as often as the file grows left the download frozen
+/// most of the time. The next flush therefore waits nine times as long as the last flush during
+/// the transfer took (`forced_gap`), at most `SYNC_GAP_MAX`: at most a tenth of the time goes
+/// to flushing, and on a fast disk (a flush of a few milliseconds) nothing changes. What it
+/// gives up: after a power cut or a crash the bytes since the last flush are downloaded again,
+/// so on a slow disk up to `SYNC_GAP_MAX` of them (at 1 Gbit/s about 7 GB) instead of about 2 s
+/// of them. The saved positions still never claim bytes that weren't flushed.
 const SYNC_BYTES_MAX: u64 = 64 << 20;
 const SYNC_BYTES_MIN: u64 = 1 << 20;
 const SYNC_EVERY: Duration = Duration::from_secs(30);
+const SYNC_GAP_MAX: Duration = Duration::from_secs(60);
 
 fn sync_bytes(size: u64) -> u64 {
     (size / 16).clamp(SYNC_BYTES_MIN, SYNC_BYTES_MAX)
 }
 
-/// When the part file was last flushed, and how many bytes were on disk then.
+/// How long to wait after a flush that took `took` before the next.
+fn flush_gap(took: Duration) -> Duration {
+    took.saturating_mul(9).min(SYNC_GAP_MAX)
+}
+
+/// When the part file was last flushed, how many bytes were on disk then, and how long it took.
 struct Synced {
     at: std::time::Instant,
     bytes: u64,
+    took: Duration,
+}
+
+impl Synced {
+    /// Is a flush due with `bytes` on disk now, `elapsed` since the last one ended?
+    fn due(&self, bytes: u64, size: u64, elapsed: Duration) -> bool {
+        elapsed >= flush_gap(self.took)
+            && (bytes >= self.bytes.saturating_add(sync_bytes(size)) || elapsed >= SYNC_EVERY)
+    }
 }
 
 /// Save the resume state if it is due (`force`: always). `saved` is the state last written; it
-/// never claims bytes that weren't flushed (snapshot → flush → write).
+/// never claims bytes that weren't flushed (snapshot -> flush -> write).
 async fn save_state(
     ctx: &Ctx,
     saved: &mut ResumeState,
@@ -2182,9 +2321,7 @@ async fn save_state(
         || final_url != saved.final_url
         || final_get != saved.final_get;
     let bytes: u64 = segments.iter().map(|s| s.cursor - s.start).sum();
-    let due = force
-        || bytes >= synced.bytes.saturating_add(sync_bytes(ctx.size))
-        || synced.at.elapsed() >= SYNC_EVERY;
+    let due = force || synced.due(bytes, ctx.size, synced.at.elapsed());
     let file = ctx.file.clone();
     let path = path.to_owned();
     if !due {
@@ -2200,21 +2337,58 @@ async fn save_state(
         }
         return Ok(());
     }
-    *synced = Synced {
-        at: std::time::Instant::now(),
-        bytes,
-    };
     if segments == saved.segments && !meta_changed && path.exists() {
-        return Ok(()); // nothing new since the last write
+        // Nothing new since the last write.
+        *synced = Synced {
+            at: std::time::Instant::now(),
+            bytes,
+            took: Duration::ZERO,
+        };
+        return Ok(());
     }
     let mut s = saved.clone();
     s.validators = validators;
     s.final_url = final_url;
     s.final_get = final_get;
-    *saved = tokio::task::spawn_blocking(move || s.save(&path, segments, &file).map(|()| s))
-        .await
-        .expect("state writer panicked")?;
+    // Tests' slow disk (not for the forced saves at the start and the end).
+    let slow = if force {
+        None
+    } else {
+        ctx.opts.slow_flush.clone()
+    };
+    ctx.shared.flushing.store(true, Ordering::Release);
+    let began = std::time::Instant::now();
+    let done = tokio::task::spawn_blocking(move || {
+        if let Some(slow) = slow {
+            let _writes_wait = slow.gate.write().unwrap();
+            std::thread::sleep(slow.takes);
+        }
+        s.save(&path, segments, &file).map(|()| s)
+    })
+    .await
+    .expect("state writer panicked");
+    ctx.shared.flushing.store(false, Ordering::Release);
+    *saved = done?;
+    *synced = Synced {
+        at: std::time::Instant::now(),
+        bytes,
+        took: forced_gap(force, began.elapsed()),
+    };
     Ok(())
+}
+
+/// The flush time that spaces out the next flush. A forced save runs while no connection
+/// writes (before they start, after they stop), so it holds no transfer up and doesn't push the
+/// next save back: the first one at the start, which also pays for creating the part file, once
+/// delayed the first save of progress past the end of a short download (#518).
+fn forced_gap(force: bool, took: Duration) -> Duration {
+    if force { Duration::ZERO } else { took }
+}
+
+/// A plain 403, which a browser's User-Agent may have brought on (#372). A site's bot check
+/// isn't asked again: that one stays the site's call (#376).
+fn agent_refused(e: &Error) -> bool {
+    matches!(e, Error::Status(s) if s.as_u16() == 403)
 }
 
 /// A plain `GET` (no Range), or a POST of `post`, that must answer 200 or 206. A GET follows
@@ -2227,17 +2401,21 @@ async fn save_state(
 /// A site whose links aren't the file's address (`sites`, #34: Google Drive) is asked its own
 /// way: its link goes to the file's address first, its pages say where to go next or why it
 /// refuses (`Error::Refused`), and a page of its where the file was expected is an error, never
-/// the file.
+/// the file. So is any web page when the download `expects` another kind of file (#533,
+/// `expects_other_file`): a server's refusal, a sign-in wall. A small answer without a type is
+/// looked into then, and asked for again if it isn't a page.
 ///
 /// With the answer, `headers` as the download goes on with them at the address it ended at:
 /// credentials scoped to it (`scoped_headers`), the pages' cookies added; and how long the last
 /// request took to answer (a page's wait and its own request not counted: the time to first byte).
+#[allow(clippy::too_many_arguments)]
 async fn get(
     client: &Client,
     url: Url,
     headers: HeaderMap,
     post: Option<&Bytes>,
     agent: &str,
+    expects: bool,
     cancel: &CancellationToken,
 ) -> Result<(Response, HeaderMap, Duration), Error> {
     let (mut url, mut headers) = (url, headers);
@@ -2311,8 +2489,16 @@ async fn get(
         let site_page = post.is_none()
             && resp.status() == StatusCode::OK
             && is_web_page(resp.headers())
-            && !resp.headers().contains_key(header::CONTENT_DISPOSITION)
-            && sites::expects_file(&from);
+            && !named(resp.headers())
+            && (sites::expects_file(&from) || expects);
+        // No type said where another kind of file is expected (#533): small, it is looked into.
+        let untyped = post.is_none()
+            && expects
+            && hops < MAX_PAGE_REDIRECTS
+            && resp.status() == StatusCode::OK
+            && !resp.headers().contains_key(header::CONTENT_TYPE)
+            && !named(resp.headers())
+            && resp.content_length().is_none_or(|n| n <= PAGE_PEEK as u64);
         // A form is never posted again, and a page's own redirects end somewhere.
         if post.is_some() || resp.status() != StatusCode::OK || hops >= MAX_PAGE_REDIRECTS {
             if site_page {
@@ -2332,11 +2518,19 @@ async fn get(
             next
         } else if let Some(next) = site_link {
             (Duration::ZERO, next)
-        } else if is_web_page(resp.headers())
+        } else if (is_web_page(resp.headers()) || untyped)
             // A web page small enough to look into (larger ones aren't waiting pages).
             && resp.content_length().is_none_or(|n| n <= PAGE_PEEK as u64)
         {
             let page = read_up_to(resp, PAGE_PEEK, cancel).await?;
+            // Without a type and not a page: the file, asked for again as is.
+            let site_page = site_page || (untyped && sniffs_as_html(&page));
+            if untyped && !site_page {
+                add_cookies(&mut headers, &cookies);
+                url = from;
+                hops = MAX_PAGE_REDIRECTS;
+                continue;
+            }
             match sites::read_page(&from, &page) {
                 PageSays::Next(next) => (Duration::ZERO, next),
                 PageSays::Refused(r) => match sites::second_look(&from).filter(|_| !looked) {
@@ -2495,6 +2689,7 @@ async fn first_get(
     url: &Url,
     headers: &HeaderMap,
     opts: &Options,
+    expects: bool,
     shared: &Shared,
     cancel: &CancellationToken,
 ) -> Result<((Response, HeaderMap), Duration), Error> {
@@ -2505,6 +2700,7 @@ async fn first_get(
             headers.clone(),
             opts.post.as_ref(),
             &opts.user_agent,
+            expects,
             cancel,
         )
     })
@@ -2932,6 +3128,136 @@ fn is_web_page_type(content_type: &str) -> bool {
     mime.eq_ignore_ascii_case("text/html") || mime.eq_ignore_ascii_case("application/xhtml+xml")
 }
 
+/// The server names what it sends (`Content-Disposition`): its own file, page or not.
+fn named(h: &HeaderMap) -> bool {
+    h.contains_key(header::CONTENT_DISPOSITION)
+}
+
+/// Where a download is saved under a name of its own (the browser's, the user's), that name.
+fn dest_name(dest: &Destination) -> Option<&str> {
+    match dest {
+        Destination::File(p) => p.file_name().and_then(|n| n.to_str()),
+        Destination::Dir(_) => None,
+    }
+}
+
+/// Types of file a web page never is, by extension: documents, archives, programs, disk images,
+/// audio, video and pictures. A name without one of these (a page's `.php`, no extension at all)
+/// says nothing.
+const FILE_EXTENSIONS: &[&str] = &[
+    "doc",
+    "docx",
+    "docm",
+    "dot",
+    "dotx",
+    "xls",
+    "xlsx",
+    "xlsm",
+    "xlsb",
+    "ppt",
+    "pptx",
+    "pps",
+    "ppsx",
+    "odt",
+    "ods",
+    "odp",
+    "rtf",
+    "pdf",
+    "epub",
+    "mobi",
+    "djvu",
+    "zip",
+    "rar",
+    "7z",
+    "gz",
+    "tgz",
+    "bz2",
+    "xz",
+    "zst",
+    "tar",
+    "cab",
+    "arj",
+    "lz",
+    "lzh",
+    "exe",
+    "msi",
+    "msix",
+    "msixbundle",
+    "appx",
+    "apk",
+    "deb",
+    "rpm",
+    "appimage",
+    "dmg",
+    "pkg",
+    "jar",
+    "iso",
+    "img",
+    "vhd",
+    "vhdx",
+    "mp3",
+    "m4a",
+    "aac",
+    "flac",
+    "wav",
+    "wma",
+    "ogg",
+    "opus",
+    "mp4",
+    "m4v",
+    "mkv",
+    "avi",
+    "mov",
+    "wmv",
+    "flv",
+    "webm",
+    "mpg",
+    "mpeg",
+    "jpg",
+    "jpeg",
+    "png",
+    "gif",
+    "bmp",
+    "webp",
+    "tif",
+    "tiff",
+    "psd",
+    "torrent",
+];
+
+/// The download expects a kind of file a web page isn't (#533): the browser's own download had
+/// another type (`expected_type`), or its name (`name`, else the address's) is a file's. A web
+/// page in its place, without a name of the server's, is an error (`Error::GotWebPage`). A page
+/// the browser saved as one (`text/html`), a `.html` link, or a server's own type for the file
+/// (`application/octet-stream`) are downloads like any other.
+fn expects_other_file(expected_type: Option<&str>, name: Option<&str>, url: &Url) -> bool {
+    if let Some(t) = expected_type.map(str::trim).filter(|t| !t.is_empty()) {
+        return !is_web_page_type(t);
+    }
+    let name = name.map_or_else(|| naming::file_name(None, url), str::to_owned);
+    Path::new(&name)
+        .extension()
+        .and_then(|e| e.to_str())
+        .is_some_and(|e| FILE_EXTENSIONS.iter().any(|x| e.eq_ignore_ascii_case(x)))
+}
+
+/// Bytes that start as an HTML document (after a byte order mark and white space).
+fn sniffs_as_html(body: &[u8]) -> bool {
+    let body = body.strip_prefix(b"\xEF\xBB\xBF").unwrap_or(body);
+    let start = body
+        .iter()
+        .position(|b| !b.is_ascii_whitespace())
+        .unwrap_or(body.len());
+    let head: Vec<u8> = body[start..]
+        .iter()
+        .take(16)
+        .map(u8::to_ascii_lowercase)
+        .collect();
+    ["<!doctype html", "<html", "<head", "<body", "<title"]
+        .iter()
+        .any(|t| head.starts_with(t.as_bytes()))
+}
+
 /// Whether the download is itself a web page (it was served as one, or is named like one).
 fn expects_web_page(dest: &Path, content_type: Option<&str>) -> bool {
     content_type.is_some_and(is_web_page_type)
@@ -2962,6 +3288,9 @@ async fn receive(
     let mut buf = Vec::with_capacity(BATCH);
     let mut flushed_at = std::time::Instant::now();
     let started = std::time::Instant::now();
+    // Time spent waiting for the disk (`flush`): a connection isn't slow for that (#361), it
+    // wasn't reading the network then.
+    let mut on_disk = Duration::ZERO;
     let mut received = 0u64;
     let mut checked = started;
     loop {
@@ -3054,16 +3383,22 @@ async fn receive(
                     limits.working(ctx.target().url.host_str().unwrap_or(""), now);
                 }
                 buf.extend_from_slice(&chunk[..n as usize]);
+                ctx.shared.held.fetch_add(n, Ordering::Relaxed);
                 received += n;
                 if checked.elapsed() >= Duration::from_millis(500) {
                     checked = std::time::Instant::now();
-                    let speed = (received as f64 / started.elapsed().as_secs_f64()) as u64;
+                    let on_net = started.elapsed().saturating_sub(on_disk);
+                    let speed = (received as f64 / on_net.as_secs_f64()) as u64;
                     ctx.shared.conn(id, |c| c.speed = speed);
-                    note_best(ctx, received, started);
-                    if should_shed(ctx, id, speed, started.elapsed(), pos + buf.len() as u64) {
+                    note_best(ctx, received, on_net);
+                    if should_shed(ctx, id, speed, on_net, pos + buf.len() as u64) {
                         flush(ctx, id, &mut pos, &mut buf).await?;
                         return Err(Error::SlowConnection);
                     }
+                }
+                if !full && buf.len() < hold_cap(ctx) && ctx.shared.flushing.load(Ordering::Acquire)
+                {
+                    continue; // the disk is busy flushing: this waits in memory (#361)
                 }
                 if buf.len() < BATCH && !full && flushed_at.elapsed() < FLUSH_EVERY {
                     continue;
@@ -3073,10 +3408,13 @@ async fn receive(
             Err(e) => (true, Some(e)),
             Ok(None) => (true, None),
         };
+        let waiting = std::time::Instant::now();
+        let flushed = flush(ctx, id, &mut pos, &mut buf).await?;
         flushed_at = std::time::Instant::now();
-        match flush(ctx, id, &mut pos, &mut buf).await? {
+        on_disk += flushed_at - waiting;
+        match flushed {
             Some(end) => {
-                note_best(ctx, received, started);
+                note_best(ctx, received, started.elapsed().saturating_sub(on_disk));
                 // A segment another connection shortened leaves an HTTP body far from its end
                 // (dropped); an FTP session is kept either way.
                 if err.is_none() && (pos >= to || matches!(body, Body::Ftp(_))) {
@@ -3094,10 +3432,16 @@ async fn receive(
     }
 }
 
+/// How much a connection may hold in memory while the part file is flushed (`FLUSH_HOLD_MAX`,
+/// shared by the connections this download may open).
+fn hold_cap(ctx: &Ctx) -> usize {
+    FLUSH_HOLD_MAX / ctx.opts.connections().max(1) as usize
+}
+
 /// Remember the speed of a response that carried enough (256 KiB) to say what this server can
-/// do over one connection.
-fn note_best(ctx: &Ctx, received: u64, started: std::time::Instant) {
-    let secs = started.elapsed().as_secs_f64();
+/// do over one connection (`on_net`: the time it took, waits for the disk not counted).
+fn note_best(ctx: &Ctx, received: u64, on_net: Duration) {
+    let secs = on_net.as_secs_f64();
     if received >= 256 * 1024 && secs > 0.0 {
         ctx.shared
             .best_speed
@@ -3134,9 +3478,15 @@ async fn flush(
     if n > 0 {
         let file = ctx.file.clone();
         let at = *pos;
-        tokio::task::spawn_blocking(move || write_all_at(&file, at, &data))
-            .await
-            .expect("writer panicked")?;
+        let slow = ctx.opts.slow_flush.clone();
+        let written = tokio::task::spawn_blocking(move || {
+            let _waits_for_flush = slow.as_ref().map(|s| s.gate.read().unwrap());
+            write_all_at(&file, at, &data)
+        })
+        .await
+        .expect("writer panicked");
+        ctx.shared.held.fetch_sub(n, Ordering::Relaxed);
+        written?;
     }
     *pos += n;
     ctx.shared.conn(id, |c| c.downloaded += n);
@@ -3327,6 +3677,43 @@ mod tests {
             header_str(&h, header::COOKIE),
             Some("a=1; session=new; xsrf=t")
         );
+    }
+
+    /// #361: a flush that took a while pushes the next one back, on a fast disk nothing changes.
+    #[test]
+    fn a_slow_flush_makes_the_next_one_wait() {
+        let s = Duration::from_secs;
+        let at = |took| Synced {
+            at: std::time::Instant::now(),
+            bytes: 0,
+            took,
+        };
+        let gb = 1u64 << 30;
+        // 3 s for the last flush: not again before 27 s, however many bytes came.
+        assert!(!at(s(3)).due(gb, 45 * gb, s(20)));
+        assert!(at(s(3)).due(gb, 45 * gb, s(27)));
+        // At most SYNC_GAP_MAX, whatever the flush took.
+        assert!(at(s(30)).due(gb, 45 * gb, s(61)));
+        // A flush of a few milliseconds: the old rules (each tick once 64 MiB have arrived).
+        assert!(at(Duration::from_millis(8)).due(128 << 20, 45 * gb, s(2)));
+        assert!(!at(Duration::from_millis(8)).due(1 << 20, 45 * gb, s(2)));
+        // Few bytes on a fast disk: still the long wait.
+        assert!(at(Duration::from_millis(8)).due(1 << 20, 45 * gb, s(30)));
+    }
+
+    /// #518: when the forced save at the start (no connection writing yet) takes 0.5 s on a busy
+    /// disk, the first save of progress still comes at the first tick, not 4.5 s later.
+    #[test]
+    fn a_forced_save_does_not_push_the_next_back() {
+        let at = |took| Synced {
+            at: std::time::Instant::now(),
+            bytes: 0,
+            took,
+        };
+        let (slow, tick) = (Duration::from_millis(500), Duration::from_secs(2));
+        assert!(at(forced_gap(true, slow)).due(15 << 20, 24 << 20, tick));
+        // A save during the transfer still does.
+        assert!(!at(forced_gap(false, slow)).due(15 << 20, 24 << 20, tick));
     }
 
     #[test]

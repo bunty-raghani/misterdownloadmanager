@@ -41,6 +41,10 @@ async fn killed_download_resumes_correctly() {
         {
             break st.downloaded();
         }
+        // A download that ends first never saves progress for this test to find (#518).
+        if let Some(status) = child.try_wait().unwrap() {
+            panic!("the download ended ({status}) before saving any progress");
+        }
         tokio::time::sleep(Duration::from_millis(100)).await;
     };
     child.kill().unwrap();

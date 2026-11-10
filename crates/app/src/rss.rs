@@ -504,6 +504,16 @@ fn default_minutes() -> u32 {
     DEFAULT_MINUTES
 }
 
+/// `rss.json` written as `json` through a temporary file ([`Store::encode`]).
+pub fn write(path: &Path, json: &[u8]) -> std::io::Result<()> {
+    if let Some(dir) = path.parent() {
+        std::fs::create_dir_all(dir)?;
+    }
+    let tmp = path.with_extension("json.tmp");
+    std::fs::write(&tmp, json)?;
+    std::fs::rename(&tmp, path)
+}
+
 impl Default for Store {
     fn default() -> Self {
         Store {
@@ -547,17 +557,9 @@ impl Store {
         }
     }
 
-    /// Written through a temporary file.
-    pub fn save(&self, path: &Path) -> std::io::Result<()> {
-        if let Some(dir) = path.parent() {
-            std::fs::create_dir_all(dir)?;
-        }
-        let tmp = path.with_extension("json.tmp");
-        std::fs::write(
-            &tmp,
-            serde_json::to_vec_pretty(self).map_err(std::io::Error::other)?,
-        )?;
-        std::fs::rename(&tmp, path)
+    /// As `rss.json` holds it ([`write`]; the window hands it to a saver thread: app.rs).
+    pub fn encode(&self) -> std::io::Result<Vec<u8>> {
+        serde_json::to_vec_pretty(self).map_err(std::io::Error::other)
     }
 
     pub fn new_id(&mut self) -> u64 {
@@ -826,7 +828,7 @@ mod tests {
         // Saved and read back; removing a feed takes it out of the rules.
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("rss.json");
-        s.save(&path).unwrap();
+        write(&path, &s.encode().unwrap()).unwrap();
         let back = Store::load(&path);
         assert_eq!(back, s);
         let mut back = back;

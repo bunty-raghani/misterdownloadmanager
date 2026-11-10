@@ -99,13 +99,13 @@ impl GalleryDialog {
             |ui, o| self.body(ui, o, rt),
         );
         if let Some(h) = &mut self.helpers
-            && !matches!(h.show(ctx), Outcome::Open)
+            && !matches!(h.show(ctx, rt), Outcome::Open)
         {
             self.helpers = None;
             self.tool = None;
             self.checked = None;
         }
-        let folder = PathBuf::from(self.folder.trim());
+        let folder = crate::dialogs::resolve_path(&self.folder);
         match crate::dialogs::ensure_folder(ctx, &mut self.asking, out, &folder) {
             Outcome::Open => Outcome::Open,
             Outcome::Closed => Outcome::Closed,

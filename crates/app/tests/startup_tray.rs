@@ -54,7 +54,9 @@ fn wait_for(app: &mut Child, data: &Path, line: &str, wait: Duration) {
 fn env<'a>(cmd: &'a mut Command, data: &Path, startup: &Startup) -> &'a mut Command {
     cmd.env("MDM_DATA_DIR", data)
         .env("MDM_OFFSCREEN", "1")
-        .env("MDM_TEST_TRAY", "1");
+        .env("MDM_TEST_TRAY", "1")
+        // A test's shell isn't asked where the icon is: say it is shown (app.rs tray_shown).
+        .env("MDM_TEST_TRAY_VISIBLE", "1");
     #[cfg(windows)]
     cmd.env("MDM_TEST_RUN_VALUE", &startup.name);
     #[cfg(unix)]

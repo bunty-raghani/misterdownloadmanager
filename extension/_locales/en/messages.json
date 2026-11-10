@@ -306,5 +306,9 @@
   "remote_device_name": {
     "message": "Browser extension",
     "description": "the name this browser gets in the other MDM's list of paired devices"
+  },
+  "popup_media_title_name": {
+    "message": "Prefix media file names with the page title",
+    "description": "Option in the browser extension media list: put the page title before the original file name when downloading a detected media file"
   }
 }

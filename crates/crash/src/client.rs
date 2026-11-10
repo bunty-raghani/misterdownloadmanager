@@ -29,7 +29,7 @@ impl Reporter {
             .arg(data)
             .arg("--parent")
             .arg(std::process::id().to_string());
-        let child = match cmd.spawn() {
+        let mut child = match cmd.spawn() {
             Ok(c) => c,
             Err(e) => {
                 tracing::warn!("crash monitor didn't start: {e}");
@@ -41,10 +41,19 @@ impl Reporter {
             match minidumper::Client::with_name(minidumper::SocketName::Path(&socket)) {
                 Ok(c) => break c,
                 Err(_) if Instant::now() < deadline => {
+                    // A monitor that couldn't open its socket has already said why in its own
+                    // log and gone: don't make the app wait the whole five seconds for it.
+                    if let Ok(Some(_)) = child.try_wait() {
+                        tracing::warn!("crash monitor exited before it listened");
+                        return None;
+                    }
                     std::thread::sleep(Duration::from_millis(25))
                 }
                 Err(e) => {
                     tracing::warn!("crash monitor didn't answer: {e}");
+                    // It can never answer now: don't leave a second MDM process behind.
+                    let _ = child.kill();
+                    let _ = child.wait();
                     return None;
                 }
             }
@@ -111,5 +120,32 @@ impl Reporter {
     /// crash-handler). True when it was written.
     pub fn dump(&self, context: &crash_handler::CrashContext) -> bool {
         self.client.request_dump(context).is_ok()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A monitor that couldn't open its socket exits at once: the app doesn't wait its five
+    /// seconds for a process that is already gone.
+    #[test]
+    fn a_monitor_that_exits_before_listening_is_not_waited_for() {
+        let dir = tempfile::tempdir().unwrap();
+        // A system program that starts and exits at once; the monitor's arguments mean nothing
+        // to it.
+        let exe = if cfg!(windows) {
+            "whoami.exe"
+        } else {
+            // macOS has no /bin/true: found on the PATH.
+            "true"
+        };
+        let started = Instant::now();
+        assert!(Reporter::start(Path::new(exe), dir.path()).is_none());
+        assert!(
+            started.elapsed() < Duration::from_secs(2),
+            "waited {:?} for a monitor that had already gone",
+            started.elapsed()
+        );
     }
 }

@@ -771,8 +771,8 @@ impl RssWindow {
         );
         // What the rules did last, at the bottom.
         if let Some((t, what)) = store.log.last() {
-            let at = chrono::DateTime::from_timestamp(*t, 0)
-                .map(|d| d.with_timezone(&chrono::Local).format("%H:%M").to_string())
+            let at = crate::clock::local_at(*t)
+                .map(|d| d.format("%H:%M").to_string())
                 .unwrap_or_default();
             winui::fit(
                 ui,

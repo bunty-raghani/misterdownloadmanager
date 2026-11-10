@@ -53,6 +53,9 @@ pub struct Faults {
     pub require_cookie: Option<String>,
     /// 403 unless the request's `Referer` starts with this (hotlink protection).
     pub require_referer: Option<String>,
+    /// 403 when the request's `User-Agent` contains this (a bot check that refuses a
+    /// browser's User-Agent on a connection that isn't a browser's, #372).
+    pub refuse_agent: Option<String>,
     /// A one-time link: the first request for this path and query is served, every later one
     /// (HEAD and ranges included) gets 410 Gone.
     #[serde(deserialize_with = "flag_opt")]
@@ -89,6 +92,7 @@ impl Faults {
             range_latency_ms: over.range_latency_ms.or(self.range_latency_ms),
             range_rate: over.range_rate.or(self.range_rate),
             require_cookie: over.require_cookie.clone().or(self.require_cookie.clone()),
+            refuse_agent: over.refuse_agent.clone().or(self.refuse_agent.clone()),
             require_referer: over
                 .require_referer
                 .clone()

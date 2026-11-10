@@ -238,5 +238,8 @@
   },
   "remote_device_name": {
     "message": "ملحق المتصفح"
+  },
+  "popup_media_title_name": {
+    "message": "إضافة عنوان الصفحة قبل أسماء ملفات الوسائط"
   }
 }

@@ -78,10 +78,6 @@
    "source": "Open <g1>View → Theme</g1> and click a theme: the whole window changes at once, nothing to restart. <g2>View → Dark Mode support</g2> and <g3>View → Always dark</g3> then choose its light or dark side, as for the classic look (<g4>Dark mode</g4>).",
    "text": "打开<g1>视图 → 主题</g1>，然后点击一个主题：整个窗口会立即改变，无需重启。然后，<g2>视图 → 深色模式支持</g2>和<g3>视图 → 始终为深色</g3>会选择其浅色或深色模式，就像经典外观一样（<g4>深色模式</g4>）。"
   },
-  "018b2949529218d0": {
-   "source": "<g1>Options → File types → Automatically start downloading the following file types</g1> must list the file's type. The list starts with the usual ones: ZIP, RAR, 7Z, EXE, MSI, ISO, DMG, DEB, RPM, APPIMAGE, MP3, MP4, MKV, WEBM, PDF and many more.",
-   "text": "<g1>选项 → 文件类型 → 自动下载以下文件类型</g1>中必须列出文件类型。列表以常用类型开头：ZIP、RAR、7Z、EXE、MSI、ISO、DMG、DEB、RPM、APPIMAGE、MP3、MP4、MKV、WEBM、PDF 等等。"
-  },
   "01bcaeaab78b066e": {
    "source": "A page address that points at one video inside a playlist or a mix (for example <x1/>) downloads that one video, never the whole list.",
    "text": "如果页面地址指向播放列表或混音中的某个视频（例如 <x1/>），只会下载该视频，不会下载整个列表。"
@@ -305,6 +301,10 @@
   "050edc04316dd70a": {
    "source": "On the command line",
    "text": "在命令行中"
+  },
+  "052e65771dfdbc15": {
+   "source": "While the app is not notarized by Apple (the experimental builds are not), Safari lists the extension only with unsigned extensions allowed: <g1>Settings → Advanced</g1> → <g2>Show features for web developers</g2>, then <g3>Settings → Developer</g3> → <g4>Allow unsigned extensions</g4>. Safari forgets that setting each time it quits.",
+   "text": "由于此应用程序未经 Apple 公证（实验版本未经公证），Safari 仅在允许未签名扩展程序时才列出此扩展程序：<g1>设置 → 高级</g1> → <g2>显示网页开发者功能</g2>，然后<g3>设置 → 开发者</g3> → <g4>允许未签名扩展程序</g4>。Safari 每次退出时都会忘记此设置。"
   },
   "053263e0b7c48cfa": {
    "source": "What reaches your computer",
@@ -1210,6 +1210,10 @@
    "source": "Server allowing 2 connections",
    "text": "服务器允许 2 个连接"
   },
+  "13c0cbe9a49058cb": {
+   "source": "Last updated 2026-11-09 · applies to the app, the browser extension and misterdownloadmanager.com",
+   "text": "最后更新日期：2026年11月9日 · 适用于应用程序、浏览器扩展和 misterdownloadmanager.com"
+  },
   "13c8ca45329dbe19": {
    "source": "Windows, Mac and Linux",
    "text": "Windows、Mac 和 Linux"
@@ -1389,6 +1393,10 @@
   "167e0568310b7eb2": {
    "source": "Download video from a page: the qualities on offer, from 2160p 60fps down, with their sizes.",
    "text": "从页面下载视频：显示可选画质及文件大小，从 2160p 60fps 到更低画质。"
+  },
+  "168f5a002ae6d1c7": {
+   "source": "<g1>Coming with version 0.5.2</g1> <g2>It's in the source code now, not yet in the download (version 0.5.0).</g2>",
+   "text": "<g1>0.5.2 版即将推出</g1> <g2>主题功能已在源代码中，但尚未包含在当前下载版本 (0.5.0) 中。</g2>"
   },
   "1691dcacfd0943ed": {
    "source": "Text on a chip",
@@ -1570,6 +1578,10 @@
    "source": "<g1>The help shows what it describes</g1> (<g2>#228</g2>): every guide and the main help pages now have pictures of the windows they explain, cropped to what matters, numbered where a step points at one control, and step strips for the usual flows (a download from the browser, a first download, a video, a torrent, a queue overnight). On the website they follow its light or dark theme, keep their place while they load, and open larger with a click; their descriptions and captions are translated with the page. The pictures are made by a script from one list (<x3/>), so they can all be taken again in one go.",
    "text": "<g1>帮助文档所见即所得</g1>（<g2>#228</g2>）：所有指南和主要帮助页面现在都配有其所解释窗口的图片，图片经过裁剪以突出重点，步骤指向某个控件时会进行编号，并为常见流程（从浏览器下载、首次下载、视频、种子、夜间队列）提供步骤条。在网站上，它们会根据网站的明暗主题显示，加载时保持原位，点击后可放大；图片描述和标题会随页面一起翻译。这些图片由脚本根据一个列表（<x3/>）生成，因此可以一次性全部重新拍摄。"
   },
+  "1962902ce083389d": {
+   "source": "If they match, it is the file we published. Every release is built on GitHub from the <g1>public source code</g1>, so anyone can read what went into it.",
+   "text": "如果匹配，则说明是官方发布的文件。每个版本都是在 GitHub 上从<g1>公开源代码</g1>构建的，因此任何人都可以查看其内容。"
+  },
   "19686779e1123d73": {
    "source": "To open the page by the server's name (<x1/>), give MDM that name: <x2/> (several: separated by commas). Other names are refused, so that no web page can reach MDM through a name of its own.",
    "text": "要通过服务器名称（<x1/>）打开页面，请为 MDM 提供该名称：<x2/>（多个名称用逗号分隔）。其他名称将被拒绝，这样任何网页都无法通过其自己的名称访问 MDM。"
@@ -1737,6 +1749,10 @@
   "1bad738cb3cea90f": {
    "source": "Select or unselect the download with the dotted outline",
    "text": "选择或取消选择带虚线轮廓的下载"
+  },
+  "1badff5f5fc8b6a9": {
+   "source": "Download MDM only from <g1>the website</g1> or <g2>GitHub Releases</g2>.",
+   "text": "仅从<g1>官网</g1>或 <g2>GitHub Releases</g2> 下载 MDM。"
   },
   "1bc816518d6f87cb": {
    "source": "<g1>Save to</g1>: the folder its torrents go to; empty, the Torrents category's folder. <g2>Add them without starting them</g2> adds them as <g3>Download Later</g3> would.",
@@ -1906,10 +1922,6 @@
    "source": "Add your account",
    "text": "添加您的帐户"
   },
-  "1e00cc7bf8c490d3": {
-   "source": "Last updated 2026-11-08",
-   "text": "上次更新：2026年11月8日"
-  },
   "1e06a14724b6ac4b": {
    "source": "MDM downloads the pictures of a gallery (a Wikimedia Commons category, a Flickr album, a DeviantArt gallery, an Imgur album and many more) with gallery-dl…",
    "text": "MDM 使用 gallery-dl 下载图库（维基共享资源分类、Flickr 相册、DeviantArt 图库、Imgur 相册等）中的图片..."
@@ -1977,6 +1989,10 @@
   "1f6d9db77baccf7e": {
    "source": "Click <g1>Download Now</g1>, or <g2>Later</g2> to add it to the list without starting.",
    "text": "点击<g1>立即下载</g1>，或点击<g2>稍后</g2>将其添加到列表而不开始下载。"
+  },
+  "1f73edb3d8f37ba8": {
+   "source": "Some limits, plainly: the portable copy can't connect to a browser, since it writes nothing outside its folder.",
+   "text": "一些限制，请注意：便携版无法连接到浏览器，因为它不会在其文件夹之外写入任何内容。"
   },
   "1f74308b96409089": {
    "source": "Project",
@@ -2426,6 +2442,10 @@
    "source": "Select one or more downloads and press <g1>Delete</g1>, click <g2>Delete</g2> on the toolbar, or choose <g3>File → Remove</g3>. MDM asks first:",
    "text": "选择一个或多个下载，然后按 <g1>Delete</g1>、单击工具栏上的<g2>删除</g2>，或选择<g3>文件 → 删除</g3>。MDM 会先询问："
   },
+  "260aedba82916fcb": {
+   "source": "<g1>Not available:</g1> sharing the browser's proxy or VPN, and a download from a form.",
+   "text": "<g1>不可用：</g1>共享浏览器的代理或 VPN，以及表单下载。"
+  },
   "26233472fae39b0b": {
    "source": "Choose what MDM takes",
    "text": "选择 MDM 捕获的内容"
@@ -2593,6 +2613,10 @@
   "28303c1fbe9c6009": {
    "source": "Firefox, Chrome, Edge, Brave, Opera, Vivaldi, from their stores",
    "text": "Firefox、Chrome、Edge、Brave、Opera、Vivaldi，从其商店获取"
+  },
+  "2834c1ae042f4d5f": {
+   "source": "Share ratio",
+   "text": "共享率"
   },
   "28363ce0cfaf4e8e": {
    "source": "The browser extension, from the browsers' own stores: the Chrome Web Store's is for Edge, Brave, Opera and Vivaldi too. It also comes with the app and as <g1>its own download</g1>, to add by hand. Every file is built from the public source by GitHub Actions and listed with its SHA-256 checksum.",
@@ -3389,6 +3413,10 @@
   "35092e177f7efaa5": {
    "source": "Download complete with Open and Open folder",
    "text": "“下载完成”显示“打开”和“打开文件夹”"
+  },
+  "3512eeafea5246da": {
+   "source": "<g1>Catching problems.</g1> When MDM crashes (a Windows exception, a signal on Linux, a Mach exception on macOS), panics, or freezes, it asks the monitor for a dump. A freeze is a frame of the window running more than 8 s, seen by a watchdog thread that ignores time spent asleep. It times both parts of a frame: what MDM handles (the commands that come in, the clock of downloads, queues and the Scheduler), which runs minimized too, and the drawing; never the wait between frames. The watchdog also measures how much processor time the window thread got meanwhile, and the report says what that means: it ran all along (a loop), it waited in a lock or on I/O (a deadlock), or it hardly ran in ordinary code, which is a computer too busy to run MDM or slow to load it from disk, most likely not MDM's bug (those share one signature, <x2/>). When the window thread is already back in the event loop by the time the dump is written, the freeze was over before the snapshot, so its stack can't explain it; those reports say so and share the signature <x3/>. macOS doesn't measure it yet. The monitor then writes a <g4>minidump</g4> of every thread from outside, through <x5/> and <x6/>. A crashed process never writes its own dump, which is how Firefox, Crashpad and Sentry do it too.",
+   "text": "<g1>捕获问题。</g1> 当 MDM 崩溃（Windows 异常、Linux 信号、macOS Mach 异常）、程序异常终止或冻结时，它会向监视器请求一个转储。冻结是指窗口运行超过 8 秒的帧，由一个忽略休眠时间的看门狗线程检测。它会测量帧的两个部分：MDM 处理的部分（接收到的命令、下载时钟、队列和计划程序），这部分在最小化时也会运行，以及绘图部分；但不测量帧之间的等待时间。看门狗还会测量在此期间窗口线程获得了多少处理器时间，报告会说明这意味着什么：它一直在运行（一个循环），它在锁或 I/O 上等待（死锁），或者它几乎没有在普通代码中运行，这表示计算机太忙而无法运行 MDM 或从磁盘加载 MDM 太慢，这很可能不是 MDM 的错误（这些情况共享一个签名，<x2/>）。如果转储写入时窗口线程已经回到事件循环中，则冻结在快照之前已经结束，因此其堆栈无法解释冻结；这些报告会说明这一点并共享签名 <x3/>。macOS 尚未测量此项。然后，监视器通过 <x5/> 和 <x6/> 从外部写入每个线程的<g4>小型转储</g4>。崩溃的进程从不写入自己的转储，Firefox、Crashpad 和 Sentry 也是如此。"
   },
   "3513f93cb0fa7d72": {
    "source": "<g1>Far</g1> (red): over 150 ms, usually another continent. A far server is often slower, and more connections help it most.",
@@ -4310,9 +4338,9 @@
    "source": "Before you click <g1>OK</g1>, the window shows the <g2>First file</g2>, <g3>Second file</g3> and <g4>Last file</g4>, so a typo shows up before anything downloads. If the server needs a login, tick <g5>Use authorization</g5>. Copied the address already? <g6>Tasks → Add batch download from clipboard</g6> fills it in.",
    "text": "在点击<g1>确定</g1>之前，窗口会显示<g2>第一个文件</g2>、<g3>第二个文件</g3>和<g4>最后一个文件</g4>，这样在下载开始前就能发现输入错误。如果服务器需要登录，请勾选<g5>使用授权</g5>。已经复制了地址？<g6>任务 → 从剪贴板添加批处理下载</g6>会自动填写。"
   },
-  "424df5ff0d11d26b": {
-   "source": "<g1>Automatically start downloading the following file types</g1> — the file types the browser hands over (and the clipboard picks up). Separate them by spaces; <x2/> matches any characters, as in <x3/>. <g4>Default</g4> puts the original list back. The list starts with the usual archives, programs and installers (Windows, macOS and Linux ones: DMG, PKG, DEB, RPM, APPIMAGE, MSIX), music and videos, and PDF. A list you never changed gains the types a new version adds; one you edited stays as it is.",
-   "text": "<g1>自动下载以下文件类型</g1> — 浏览器移交（和剪贴板获取）的文件类型。用空格分隔；<x2/> 匹配任何字符，如 <x3/>。<g4>默认</g4> 恢复原始列表。列表以常见的压缩包、程序和安装程序（Windows、macOS 和 Linux：DMG、PKG、DEB、RPM、APPIMAGE、MSIX）、音乐和视频以及 PDF 开头。您从未更改的列表会添加新版本增加的类型；您编辑过的列表保持不变。"
+  "42719c02fcae1f7c": {
+   "source": "The copy of the extension from the Chrome Web Store showed no <g1>Download video</g1> button on YouTube before version 0.5.1. From 0.5.1 it shows it. Your browser updates extensions by itself; to get it sooner, open its extensions page and update them there.",
+   "text": "Chrome 网上应用店中的扩展程序副本在 0.5.1 版本之前，YouTube 页面上不显示<g1>下载视频</g1>按钮。从 0.5.1 版本开始，该按钮会显示。您的浏览器会自行更新扩展程序；要更快获取更新，请打开浏览器的扩展程序页面并在那里更新。"
   },
   "427cc05e98da7048": {
    "source": "<g1>Extract when done</g1>: ticked by itself when the package holds an archive.",
@@ -4377,10 +4405,6 @@
   "437098c2f3d487d8": {
    "source": "The file host's link, MDM's download",
    "text": "文件主机链接，MDM 下载"
-  },
-  "437da174af682fe3": {
-   "source": "Minimize hides the main window there too, while <g1>Minimize to the notification area</g1> is on in <g2>Options → General</g2>. It is on by default.",
-   "text": "当<g1>最小化到通知区域</g1>在<g2>选项 → 常规</g2>中开启时，最小化也会将主窗口隐藏到那里。此选项默认开启。"
   },
   "438a47f34fb3d4b7": {
    "source": "Browser integration — Mister Download Manager help",
@@ -4606,10 +4630,6 @@
    "source": "keeps the list, the settings, the certificate and the paired devices.",
    "text": "保留列表、设置、证书和已配对设备。"
   },
-  "477f6fc974aad0d3": {
-   "source": "Some limits, plainly: the portable copy can't connect to a browser, since it writes nothing outside its folder. The Chrome Web Store copy shows no button over YouTube videos, which the store's policy forbids; <g1>Tasks → Download video from a page</g1> still takes any page.",
-   "text": "一些限制，明确说明：便携版无法连接到浏览器，因为它不会在其文件夹之外写入任何内容。Chrome 网上应用店版本不会在 YouTube 视频上方显示按钮，这是商店政策禁止的；<g1>任务 → 从页面下载视频</g1>仍然可以处理任何页面。"
-  },
   "478b98971f744119": {
    "source": "Deleting a queue asks first; a running queue stops when deleted; the toolbar's Start / Stop Queue arrows always work.",
    "text": "删除队列前会先询问；删除正在运行的队列时，队列会停止；工具栏中的“开始队列”/“停止队列”箭头始终有效。"
@@ -4734,6 +4754,10 @@
    "source": "<g1>Linux: torrents work on a system without CA certificates too</g1> (part of <g2>#264</g2>): the torrent engine built its own connection for the trackers, which can't be made without them, so no torrent or magnet link started there. It now uses MDM's: peers, the DHT and <x3/> trackers work, and an <x4/> tracker fails saying there are no certificates to check it with.",
    "text": "<g1>Linux：在没有 CA 证书的系统上，种子下载也能工作</g1>（<g2>#264</g2> 的一部分）：种子引擎为跟踪器构建了自己的连接，没有证书就无法建立，因此无法启动任何种子或磁力链接。现在它使用 MDM 的连接：对等点、DHT 和 <x3/> 跟踪器可以工作，而 <x4/> 跟踪器会因没有证书可供检查而失败。"
   },
+  "49a674222f02e4a1": {
+   "source": "<g1>Options → File types → Automatically start downloading the following file types</g1> must list the file's type. The list starts with the usual ones: ZIP, RAR, 7Z, EXE, MSI, ISO, DMG, DEB, RPM, APPIMAGE, MP3, MP4, MKV, WEBM, PDF, AI models such as GGUF and SAFETENSORS, 3D files such as GLB and STL, and many more. Anything else can be added to the list.",
+   "text": "<g1>选项 → 文件类型 → 自动开始下载以下文件类型</g1>必须列出文件类型。列表以常用类型开头：ZIP、RAR、7Z、EXE、MSI、ISO、DMG、DEB、RPM、APPIMAGE、MP3、MP4、MKV、WEBM、PDF、GGUF 和 SAFETENSORS 等 AI 模型、GLB 和 STL 等 3D 文件，以及更多。其他任何类型都可以添加到列表中。"
+  },
   "49affaa512196498": {
    "source": "Queues and the Scheduler",
    "text": "队列和计划程序"
@@ -4809,6 +4833,10 @@
   "4adee382f13592b9": {
    "source": "Cap MDM as a whole (recommended)",
    "text": "限制 MDM 的整体速度（推荐）"
+  },
+  "4afb7a591038aead": {
+   "source": "You can always save a video without the button: in MDM, open <g1>Tasks → Download video from a page</g1> and paste the video's address.",
+   "text": "您始终可以在没有按钮的情况下保存视频：在 MDM 中，打开<g1>任务 → 从页面下载视频</g1>并粘贴视频地址即可。"
   },
   "4b088cdb90c95ad4": {
    "source": "If the server needs a user name and password, tick <g1>Use authorization</g1> and type them.",
@@ -5242,6 +5270,10 @@
    "source": "Open source, GNU GPL 3.0",
    "text": "开源，GNU GPL 3.0"
   },
+  "5216194011d6d772": {
+   "source": "Safari (macOS)",
+   "text": "Safari (macOS)"
+  },
   "521a3abe287f879e": {
    "source": "In the window:",
    "text": "在窗口中："
@@ -5289,6 +5321,10 @@
   "52ebbc26d1011b47": {
    "source": "The free MDM extension hands each download you click over to MDM, with the page it came from and your sign-in for the site. A button over videos sends them to MDM too.",
    "text": "免费的 MDM 扩展会将您点击的每个下载任务交给 MDM，同时附带来源页面和您在该网站的登录信息。视频上方的按钮也会将视频发送到 MDM。"
+  },
+  "52fc7550762441e8": {
+   "source": "A few antivirus programs flag new installers just because they have rarely seen them, and machine-learning engines do this the most. On VirusTotal, a handful of small engines flagging a new setup while the big ones stay clean is usually a false positive. We report these to the vendors when we see them.",
+   "text": "一些杀毒软件会标记不常见的安装程序，尤其是那些使用机器学习引擎的。在 VirusTotal 上，如果只有少数小型引擎标记了一个新的安装程序，而主流引擎没有，这通常是误报。我们发现此类情况时会向厂商报告。"
   },
   "53060965f7a26125": {
    "source": "Tick <g1>Send torrents and magnet links to the first account instead of to peers</g1>, and a magnet link or a <x2/> file goes to the service. It downloads the torrent on its own servers while the list shows how far it is (<g3>45% at Real-Debrid</g3>). MDM then fetches the files over HTTP and removes the torrent from the account's list. Your computer never connects to the torrent's peers.",
@@ -5386,10 +5422,6 @@
    "source": "Does it run on Windows 7 or 8?",
    "text": "它能在 Windows 7 或 8 上运行吗？"
   },
-  "547a72b540a365fd": {
-   "source": "<g1>Minimize to the notification area</g1> — Minimize hides the main window, and a download's progress window, in the notification area, as closing the main window does; downloads go on. On by default. Greyed where no tray shows MDM's icon (some Linux desktops); in a Wayland session the main window stays minimized in the dock, since Wayland can't hide a window.",
-   "text": "<g1>最小化到通知区域</g1> — 最小化会将主窗口和下载进度窗口隐藏到通知区域，就像关闭主窗口一样；下载会继续。默认开启。在不显示 MDM 图标的托盘中（某些 Linux 桌面）会变灰；在 Wayland 会话中，主窗口会保持最小化在任务栏中，因为 Wayland 无法隐藏窗口。"
-  },
   "54886fa73a0a4643": {
    "source": "sets single colour roles on both sides, <x1/> and <x2/> on one side only: <x3/>, or <x4/> with transparency.",
    "text": "设置两侧的单一颜色角色，<x1/> 和 <x2/> 仅设置一侧：<x3/>，或带有透明度的 <x4/>。"
@@ -5477,6 +5509,10 @@
   "55a523d7ca4b905f": {
    "source": "Thanks to",
    "text": "鸣谢"
+  },
+  "55d1512f7b2971e2": {
+   "source": "One egui window painted to fixed pixel coordinates, plus one immediate viewport per dialog. <x1/> holds the state (downloads, queues, settings, the list's selection) and turns menu, toolbar, key and IPC commands into actions. Each dialog is its own module and returns an <x2/> (open, closed, done with a value). Windows-only calls are confined to <x3/> and their Linux and macOS counterparts to <x4/> (starting with the session, the browsers' host, sounds, show in folder, the crash handler); every other file is safe, portable Rust. Fonts come from the system: Windows' Fonts folder, macOS's system fonts, fontconfig on Linux (<x5/>). On Windows, Latin, Greek and Cyrillic text is drawn by DirectWrite in GDI-classic mode (<x6/>, through egui's glyph rasterizer hook), so each letter's hinted shape and whole-pixel width come together; other scripts are shaped and drawn by egui.",
+   "text": "一个 egui 窗口绘制到固定的像素坐标，每个对话框一个即时视口。<x1/> 维护状态（下载、队列、设置、列表选择），并将菜单、工具栏、按键和 IPC 命令转换为操作。每个对话框都是独立的模块，并返回一个 <x2/>（打开、关闭、完成并带有一个值）。仅限 Windows 的调用限于 <x3/>，其 Linux 和 macOS 对应部分限于 <x4/>（会话启动、浏览器主机、声音、在文件夹中显示、崩溃处理程序）；其他所有文件都是安全、可移植的 Rust 代码。字体来自系统：Windows 的 Fonts 文件夹、macOS 的系统字体、Linux 上的 fontconfig (<x5/>)。在 Windows 上，拉丁文、希腊文和西里尔文文本由 DirectWrite 在 GDI 经典模式下绘制 (<x6/>，通过 egui 的字形栅格化器钩子)，因此每个字母的提示形状和整像素宽度得以结合；其他脚本由 egui 进行整形和绘制。"
   },
   "55ecea9df3d3ed23": {
    "source": "Paste the address of a playlist (<x1/>) or a channel's videos (<x2/>) and click <g3>Look up</g3>. Instead of one video's qualities, the window lists the list's videos, each with its length.",
@@ -5898,6 +5934,10 @@
    "source": "downloads a gallery into a folder named after it. See <g1>Command line and automation</g1>.",
    "text": "将图库下载到以图库命名的文件夹中。请参阅<g1>命令行和自动化</g1>。"
   },
+  "5d07ba5f9c5ab43c": {
+   "source": "If your antivirus quarantined MDM, restore it and add an exception for its folder. If it flags something other than the setup or MDM's own programs, or a copy from anywhere else, don't run it, and please <g1>tell us</g1>.",
+   "text": "如果您的杀毒软件隔离了 MDM，请恢复它并为其文件夹添加例外。如果它标记了安装程序或 MDM 自身程序以外的内容，或者来自其他来源的副本，请不要运行它，并<g1>告知我们</g1>。"
+  },
   "5d0bbcc71d941fe0": {
    "source": "misterdownloadmanager.com's own pages (home, download, features, themes, FAQ); <x1/> adds the help from <x2/> and the news from the CHANGELOG, in 22 languages, and GitHub Pages publishes it",
    "text": "misterdownloadmanager.com 自己的页面（主页、下载、功能、主题、常见问题）；<x1/> 添加了来自 <x2/> 的帮助和来自 CHANGELOG 的新闻，共 22 种语言，由 GitHub Pages 发布"
@@ -6029,6 +6069,10 @@
   "5ea31b9a4b8d8d46": {
    "source": "Every release is built from the public source code by <g1>GitHub Actions</g1>, on GitHub's servers; the build logs are public.",
    "text": "每个版本都由 <g1>GitHub Actions</g1> 在 GitHub 的服务器上从公共源代码构建；构建日志是公开的。"
+  },
+  "5ecbcb580e32c28b": {
+   "source": "Last updated 2026-11-09",
+   "text": "上次更新：2026年11月9日"
   },
   "5ecd9e0a59e0c6c6": {
    "source": "RSS feeds for torrents, with download rules",
@@ -6973,6 +7017,10 @@
   "6de62748781cd023": {
    "source": "100 MiB, 2 MB/s per connection",
    "text": "100 MiB，每个连接 2 MB/秒"
+  },
+  "6df2f21ef2bda8e4": {
+   "source": "<g1>Offer to download links copied to the clipboard</g1> — when you copy a link whose file type is on the <g2>File types</g2> page, <g3>Download File Info</g3> opens with it, ready to start (or the download starts at once, with <g4>Show start download dialog</g4> off). It keeps to archives, programs, music, videos, PDF and any type you added yourself, so copying the address of a picture, a font or a 3D model to use somewhere else never starts a download. On by default.",
+   "text": "<g1>提供下载复制到剪贴板的链接</g1> — 当您复制的链接文件类型在<g2>文件类型</g2>页面上时，<g3>下载文件信息</g3>会随之打开，准备开始下载（如果<g4>显示开始下载对话框</g4>关闭，则立即开始下载）。它仅限于压缩包、程序、音乐、视频、PDF 和您自己添加的任何类型，因此复制图片、字体或 3D 模型的地址以在其他地方使用时，绝不会开始下载。默认开启。"
   },
   "6dfbefa6080fe200": {
    "source": "Where links come from",
@@ -8258,6 +8306,10 @@
    "source": "<g1>Star the project</g1><g2>It helps other people find it.</g2>",
    "text": "<g1>为项目点赞</g1><g2>这有助于其他人找到它。</g2>"
   },
+  "810aeb3bcab43ab3": {
+   "source": "A torrent: what it has sent to peers against what it took.",
+   "text": "洪流任务上传给对等方的数据量与从对等方下载的数据量之比。"
+  },
   "8144fd9d669ebeed": {
    "source": "Does it download torrents? — Mister Download Manager",
    "text": "MDM 能下载种子文件吗？ — Mister Download Manager"
@@ -8345,6 +8397,10 @@
   "82a5d8b104cd86f2": {
    "source": "The same setting is in <g1>Options → Connection</g1>.",
    "text": "相同的设置位于<g1>选项 → 连接</g1>中。"
+  },
+  "82aaa69856a510cf": {
+   "source": "The extension works in <g1>Google Chrome</g1>, <g2>Microsoft Edge</g2>, <g3>Brave</g3>, <g4>Opera</g4> and <g5>Vivaldi</g5>, in <g6>Firefox</g6> 140 or later, and in <g7>Safari</g7> 17 or later on a Mac (see <g8>Safari</g8>).",
+   "text": "此扩展程序适用于 <g1>Google Chrome</g1>、<g2>Microsoft Edge</g2>、<g3>Brave</g3>、<g4>Opera</g4> 和 <g5>Vivaldi</g5>，以及 <g6>Firefox</g6> 140 或更高版本，和 Mac 上的 <g7>Safari</g7> 17 或更高版本（请参阅 <g8>Safari</g8>）。"
   },
   "82c502e4717e8e1a": {
    "source": "Check your download",
@@ -8441,6 +8497,10 @@
   "842fc0e6d2b7d24d": {
    "source": "At the start time the queue starts on its own. In the morning, the finished files are under <g1>Finished</g1> in the categories.",
    "text": "到达开始时间后，队列会自动启动。早上，可以在类别下的<g1>已完成</g1>中找到已完成的文件。"
+  },
+  "8449c6a51ad2bdb6": {
+   "source": "A torrent's connected peers while it runs, seeders and leechers alike.",
+   "text": "洪流任务运行时连接的对等方，包括做种者和下载者。"
   },
   "844d3712af7e5da9": {
    "source": "<g1>Brave Origin connects, and the AppImage's helper is always there</g1> (<g2>#253</g2>): Brave Origin keeps its settings in a folder of its own (<x3/>), which MDM didn't know, so its extension said MDM wasn't installed. MDM now sets up Brave Origin, the Beta, Dev and Nightly versions of Brave, Chrome and Edge, and Vivaldi's snapshot; on macOS, Brave reads Chrome's folder, which MDM now writes for it. From the AppImage, MDM copies the helper program the browsers start out of the AppImage under a new name and swaps it in, so a browser still running the old copy no longer keeps the new one out, and puts it back at each start if it went missing. A copy or setup that fails is written to MDM's log, and <g4>Test browser integration</g4> says when the helper program is missing, when no browser was found, or why setting it up failed.",
@@ -9306,6 +9366,10 @@
    "source": "How do I install the browser extension? — Mister Download Manager",
    "text": "如何安装浏览器扩展？— Mister Download Manager"
   },
+  "92abe6de5cd6999e": {
+   "source": "<g1>Hide tab</g1> takes a tab off this download's window and goes back to <g2>Download status</g2>. To bring the tabs back, right-click the tab row and choose <g3>Show hidden tabs</g3>; closing the window and opening it again brings them back too.",
+   "text": "<g1>隐藏选项卡</g1>会将当前选项卡从下载窗口中移除，并返回到<g2>下载状态</g2>。要恢复选项卡，请右键点击选项卡行并选择<g3>显示隐藏的选项卡</g3>；关闭窗口再重新打开也能恢复。"
+  },
   "92bc3a4d66867ccb": {
    "source": "A tab page's body",
    "text": "选项卡页的主体"
@@ -9374,6 +9438,10 @@
    "source": "Tick <g1>Use Speed Limiter</g1>.",
    "text": "勾选<g1>使用限速器</g1>。"
   },
+  "93c39d173fb1932a": {
+   "source": "<g1>A click on a link to a file type MDM takes</g1> goes to MDM. A download the page starts by itself (a script, or a link with no file name in its address that the server answers with a file) stays with Safari: use right-click → <g2>Download with Mister Download Manager</g2> for those.",
+   "text": "<g1>点击 MDM 支持的文件类型链接</g1>会转到 MDM。页面自行启动的下载（脚本，或地址中没有文件名的链接，服务器以文件响应）会留在 Safari 中：对于这些下载，请使用右键点击 → <g2>使用 Mister Download Manager 下载</g2>。"
+  },
   "93d2b396cc0f64ed": {
    "source": "The extension is called <g1>Mister Download Manager</g1>.",
    "text": "扩展名为<g1>Mister Download Manager</g1>。"
@@ -9389,10 +9457,6 @@
   "93f335b0185aba7d": {
    "source": "Keep some speed for everything else →",
    "text": "为其他一切保留一些速度 →"
-  },
-  "93f8e4db17db5b9a": {
-   "source": "<g1>Dates and times</g1> in the list (<g2>Last Try Date</g2>, <g3>Added</g3>) and the Scheduler follow the system's region by default (on Windows <g4>Settings → Time &amp; language → Language &amp; region → Regional format</g4>; on macOS and Linux, your language's usual way), or your own date order, clock and first day of the week in <g5>Options → Regional</g5>. In English the list keeps IDM's own date text (<x6/>).",
-   "text": "列表中的<g1>日期和时间</g1>（<g2>上次尝试日期</g2>、<g3>已添加。</g3>）和计划程序默认遵循系统区域设置（在 Windows 上为<g4>设置 → 时间和语言 → 语言和区域 → 区域格式</g4>；在 macOS 和 Linux 上，遵循您语言的常用方式），或者您在<g5>选项 → 区域</g5>中设置的日期顺序、时钟和每周第一天。在英语中，列表保留 IDM 自己的日期文本（<x6/>）。"
   },
   "940b9b61593ef30c": {
    "source": "<g1><x2/></g1> — the shape of text boxes, check boxes, buttons, progress bars, scroll bars, the focus mark and the title bar.",
@@ -9526,10 +9590,6 @@
    "source": "Filter the list",
    "text": "筛选列表"
   },
-  "95f874ce586a0506": {
-   "source": "<g1>Catching problems.</g1> When MDM crashes (a Windows exception, a signal on Linux, a Mach exception on macOS), panics, or freezes, it asks the monitor for a dump. A freeze is a frame of the window running more than 8 s, seen by a watchdog thread that ignores time spent asleep. It times both parts of a frame: what MDM handles (the commands that come in, the clock of downloads, queues and the Scheduler), which runs minimized too, and the drawing; never the wait between frames. The watchdog also measures how much processor time the window thread got meanwhile, and the report says what that means: it ran all along (a loop), it waited in a lock or on I/O (a deadlock), or it hardly ran in ordinary code, which is a computer too busy to run MDM or slow to load it from disk, most likely not MDM's bug (those share one signature, <x2/>). macOS doesn't measure it yet. The monitor then writes a <g3>minidump</g3> of every thread from outside, through <x4/> and <x5/>. A crashed process never writes its own dump, which is how Firefox, Crashpad and Sentry do it too.",
-   "text": "<g1>捕获问题。</g1>MDM 崩溃（Windows 异常、Linux 信号或 macOS Mach 异常）、发生恐慌或冻结时，会向监视器请求转储。窗口一帧运行超过 8 秒就被视为冻结；看门狗线程会检测这种情况，且不计入休眠时间。看门狗会测量一帧中的两个部分：MDM 处理的部分（收到的命令、下载时钟、队列和计划程序；即使窗口最小化，这部分也会运行），以及绘制部分；帧与帧之间的等待时间不计入。看门狗还会测量这段时间内窗口线程获得了多少处理器时间，报告会说明其含义：线程一直在运行（循环）；线程在锁或 I/O 上等待（死锁）；或者线程几乎没有运行普通代码，这通常表示计算机太忙而无法运行 MDM，或从磁盘加载 MDM 的速度太慢，很可能不是 MDM 的问题（这两种情况共用一个特征，<x2/>）。macOS 目前还不会测量这一项。随后，监视器会通过<x4/>和<x5/>从外部为每个线程写入一份<g3>小型转储</g3>。进程崩溃后不会自行写入转储，Firefox、Crashpad 和 Sentry 也采用这种方式。"
-  },
   "95ff4e3f1e52b773": {
    "source": "portable.zip — runs from a folder or USB stick",
    "text": "portable.zip — 可从文件夹或 U 盘运行"
@@ -9605,6 +9665,10 @@
   "970430e3defd4e45": {
    "source": "Browser integration →",
    "text": "浏览器集成 →"
+  },
+  "970641facab3170c": {
+   "source": "<g1>Move/Rename</g1> (<g2>Ctrl+M</g2>) moves or renames the file of a finished download, or of one that hasn't started yet. With several downloads selected it asks for a folder and moves them all there, each under its own name.",
+   "text": "<g1>移动/重命名</g1> (<g2>Ctrl+M</g2>) 用于移动或重命名已完成下载的文件，或尚未开始下载的文件。如果选中了多个下载任务，它会要求选择一个文件夹，然后将所有文件移动到该文件夹，每个文件保留其原有名称。"
   },
   "970b4b0f622b3cc5": {
    "source": "<g1>Start download on Mister Download Manager startup</g1> — start the queue whenever MDM starts.",
@@ -9821,6 +9885,10 @@
   "9a06d15d874052f0": {
    "source": "MDM has to be running for a schedule to fire. Closing the main window is fine: MDM keeps going in the notification area.",
    "text": "MDM 必须运行才能触发计划。关闭主窗口没关系：MDM 会在通知区域继续运行。"
+  },
+  "9a10fba01a90016a": {
+   "source": "<g1>Works as in the other browsers:</g1> the right-click items, the button over videos, <g2>Media on this page</g2>, the toolbar button, <g3>Alt</g3>-click, MDM starting by itself, and every rule in Options.",
+   "text": "<g1>与其他浏览器中的工作方式相同：</g1>右键菜单项、视频上方的按钮、<g2>此页面上的媒体</g2>、工具栏按钮、<g3>Alt</g3>+点击、MDM 自动启动，以及“选项”中的所有规则。"
   },
   "9a2260db9068e047": {
    "source": "More to script",
@@ -10042,6 +10110,10 @@
    "source": "<g1>Options → Remote</g1>.",
    "text": "<g1>选项 → 远程</g1>。"
   },
+  "9df4b353c5463d72": {
+   "source": "Get your file's SHA-256. On Windows, run <x1/>; on Linux, <x2/> and the file's name.",
+   "text": "获取您文件的 SHA-256 值。在 Windows 上，运行 <x1/>；在 Linux 上，运行 <x2/> 并加上文件名。"
+  },
   "9e0019721ea3837e": {
    "source": "Install it from the Chrome Web Store or Firefox Add-ons.",
    "text": "从 Chrome 网上应用店或 Firefox 附加组件安装。"
@@ -10206,10 +10278,6 @@
    "source": "MDM contains no adware, spyware, bundled offers or tracking. Its whole source code is public, so anyone can check what it does, and every release is built…",
    "text": "MDM 不含广告软件、间谍软件、捆绑软件或跟踪功能。它的全部源代码都是公开的，任何人都可以检查其功能；每个版本都由 GitHub 的服务器根据这份代码构建，构建过程也可以检查。"
   },
-  "a02445ca780f3ef8": {
-   "source": "One egui window painted to fixed pixel coordinates, plus one immediate viewport per dialog. <x1/> holds the state (downloads, queues, settings, the list's selection) and turns menu, toolbar, key and IPC commands into actions. Each dialog is its own module and returns an <x2/> (open, closed, done with a value). Windows-only calls are confined to <x3/> and their Linux and macOS counterparts to <x4/> (starting with the session, the browsers' host, sounds, show in folder, the crash handler); every other file is safe, portable Rust. Fonts come from the system: Windows' Fonts folder, macOS's system fonts, fontconfig on Linux (<x5/>).",
-   "text": "一个 egui 窗口绘制到固定的像素坐标，每个对话框一个即时视口。<x1/> 保存状态（下载、队列、设置、列表选择），并将菜单、工具栏、按键和 IPC 命令转换为操作。每个对话框都是自己的模块，并返回一个 <x2/>（打开、关闭、完成并带有一个值）。仅限 Windows 的调用限制在 <x3/> 中，其 Linux 和 macOS 对应项限制在 <x4/> 中（从会话、浏览器主机、声音、在文件夹中显示、崩溃处理程序开始）；其他所有文件都是安全、可移植的 Rust。字体来自系统：Windows 的字体文件夹、macOS 的系统字体、Linux 上的 fontconfig (<x5/>)。"
-  },
   "a02c94e070503928": {
    "source": "Browsers built on them work too: Chromium and Helium take the extension as Chrome does, Brave Origin as Brave does, Zen and LibreWolf as Firefox does. On Windows, Zen has a bug of its own (see <g1>The browser and MDM aren't connected</g1>).",
    "text": "基于这些浏览器构建的其他浏览器也同样适用：Chromium 和 Helium 像 Chrome 一样安装扩展，Brave Origin 像 Brave 一样，Zen 和 LibreWolf 像 Firefox 一样。在 Windows 上，Zen 自身存在一个错误（请参阅<g1>浏览器与 MDM 未连接</g1>）。"
@@ -10333,6 +10401,10 @@
   "a1afb9d26b290530": {
    "source": "<g1>Batch downloads</g1><g2>Mister Download Manager</g2>",
    "text": "<g1>批量下载</g1><g2>Mister Download Manager</g2>"
+  },
+  "a1b29b6dc03c2789": {
+   "source": "If MDM says it's up to date, there's nothing for you to do. The extension updates by itself through its store and can get ahead of the app for a while. Everything keeps working, and the message goes away with the next version of MDM.",
+   "text": "如果 MDM 提示已是最新版本，则无需进行任何操作。扩展程序会通过其商店自行更新，有时会比应用程序版本更新得快。所有功能仍可正常使用，此消息将在 MDM 的下一个版本中消失。"
   },
   "a1b776b1a0548526": {
    "source": "MDM's main window on KDE Plasma",
@@ -10789,6 +10861,10 @@
   "a905582aea5b0712": {
    "source": "A greyed button's border",
    "text": "置灰按钮边框"
+  },
+  "a907f4484df884cd": {
+   "source": "<g1>Keep running when closing the window</g1> — closing the main window hides it in the notification area instead of quitting, and downloads, queues and schedules go on. On by default; unticked, closing quits MDM (so a <g2>portable copy</g2>'s folder can then be deleted). If there is no icon for MDM at all — not even behind the ^ hidden icons — the window minimizes to the taskbar instead, so downloads continue and the window stays reachable; an icon behind ^ can be clicked to bring it back, or start MDM again. Greyed where no tray shows MDM's icon (some Linux desktops): closing quits there.",
+   "text": "<g1>关闭窗口时保持运行</g1> — 关闭主窗口时，它会隐藏到通知区域而不是退出，下载、队列和计划会继续进行。默认开启；如果取消勾选，关闭窗口会退出 MDM（这样<g2>便携版</g2>的文件夹就可以被删除）。如果完全没有 MDM 的图标 — 甚至在 ^ 隐藏图标后面也没有 — 窗口会最小化到任务栏，这样下载会继续，窗口也保持可访问；可以点击 ^ 后面的图标将其恢复，或再次启动 MDM。在没有托盘显示 MDM 图标的地方（某些 Linux 桌面）会变灰：关闭时会退出。"
   },
   "a90ae03353c0b71c": {
    "source": "The Scheduler's Schedule tab: Start download at, Once at or Daily, and Stop download at",
@@ -11346,6 +11422,10 @@
    "source": "runs unit tests and end-to-end downloads against <x1/> with injected faults (slow, dropped and refused connections, servers without ranges, changing files). <x2/> runs the published speed comparison; its raw data is in <x3/>.",
    "text": "针对注入故障（慢速、丢弃和拒绝连接、无范围服务器、文件更改）的 <x1/> 运行单元测试和端到端下载。<x2/> 运行已发布的速度比较；其原始数据在 <x3/> 中。"
   },
+  "b1ea4cd6806043cd": {
+   "source": "<g1>Minimize to the notification area</g1> — Minimize hides the main window, and a download's progress window, in the notification area; downloads go on. On by default. Where the tray has no icon, the main window minimizes to the taskbar instead. The close setting above is separate; when it is on, closing hides there too (or minimizes to the taskbar if there is no icon at all). Greyed where no tray shows MDM's icon (some Linux desktops); in a Wayland session the main window stays minimized in the dock, since Wayland can't hide a window.",
+   "text": "<g1>最小化到通知区域</g1> — 最小化会将主窗口和下载进度窗口隐藏到通知区域；下载会继续进行。默认开启。在托盘没有图标的地方，主窗口会最小化到任务栏。上面的关闭设置是独立的；当它开启时，关闭也会隐藏到通知区域（如果完全没有图标，则最小化到任务栏）。在没有托M盘显示 MDM 图标的地方（某些 Linux 桌面）会变灰；在 Wayland 会话中，主窗口会保持最小化在 Dock 中，因为 Wayland 无法隐藏窗口。"
+  },
   "b1f35176aca676c5": {
    "source": "While the queue runs, the computer doesn't go to sleep. When the queue is done, the computer's own sleep settings apply again: a computer nobody is using goes back to sleep by itself. <g1>Turn off computer when done → Sleep</g1> sends it back to sleep at once.",
    "text": "队列运行时，电脑不会进入睡眠状态。队列完成后，电脑自身的睡眠设置将再次生效：无人使用的电脑会自行进入睡眠状态。<g1>完成后关闭计算机 → 睡眠</g1>会立即让电脑进入睡眠状态。"
@@ -11413,10 +11493,6 @@
   "b27995b1d5cff0b2": {
    "source": "A calendar's day or arrow pressed",
    "text": "日历日期或箭头被按下时"
-  },
-  "b27e59917bb7f695": {
-   "source": "Last updated 2026-11-08 · applies to the app, the browser extension and misterdownloadmanager.com",
-   "text": "最后更新于 2026-11-08 · 适用于应用程序、浏览器扩展和 misterdownloadmanager.com"
   },
   "b298f93960114202": {
    "source": ", with or without <x1/>;",
@@ -11698,10 +11774,6 @@
    "source": "The menu before / after; in a submenu, <g1>Left</g1> closes it",
    "text": "前一个/后一个菜单；在子菜单中，<g1>向左</g1>关闭子菜单"
   },
-  "b7037d71c5917f53": {
-   "source": "<g1>Hide tab</g1> goes back to <g2>Download status</g2>.",
-   "text": "<g1>隐藏选项卡</g1>返回<g2>下载状态</g2>。"
-  },
   "b706522e2a61060f": {
    "source": "Theme files you make or download go in MDM's themes folder. <g1>View → Theme → Open themes folder</g1> opens it (and makes it the first time). It is in MDM's data folder:",
    "text": "您创建或下载的主题文件存放在 MDM 的主题文件夹中。<g1>视图 → 主题 → 打开主题文件夹</g1>会打开它（首次打开时会创建）。它位于 MDM 的数据文件夹中："
@@ -11890,6 +11962,10 @@
    "source": "When the video has subtitles, the <g1>Subtitles</g1> list offers them: the uploader's own languages first (and <g2>All the uploader's</g2> when there are several), then the site's automatic captions, marked <g3>automatic</g3>. Of those, only the ones in the language spoken and their translations into English and your interface language are listed; sites like YouTube offer a machine translation into every language they know.",
    "text": "视频有字幕时，<g1>字幕</g1>列表会显示可用字幕：首先是上传者提供的语言（有多种时会显示<g2>上传者所有</g2>），然后是网站自动生成的字幕，并标记为<g3>自动</g3>。自动字幕只会列出视频原声语言的字幕，以及它们的英语和界面语言翻译。YouTube 等网站还会提供机器翻译，支持其提供的所有语言。"
   },
+  "ba5be854c2e3600d": {
+   "source": "My antivirus or VirusTotal flags MDM",
+   "text": "我的杀毒软件或 VirusTotal 标记 MDM"
+  },
   "ba699d4f38020fb7": {
    "source": "<g1>Tasks → Import → From text file</g1> reads a text file and picks out every web address in it. You can also drop a <x2/> or <x3/> list straight onto the download list. Untick what you don't want, and add the rest to the queue.",
    "text": "<g1>任务 → 导入 → 从文本文件</g1>会读取一个文本文件并从中提取所有网址。您也可以直接将 <x2/> 或 <x3/> 列表拖放到下载列表中。取消勾选您不想要的，然后将其余的添加到队列。"
@@ -11897,10 +11973,6 @@
   "ba6ae97de31c9f2e": {
    "source": "<g1></g1>Ahead on that line. Timings are medians of alternating runs on one computer and server; the bars are to scale.",
    "text": "<g1></g1>在这方面领先。时间是在同一台计算机和服务器上交替运行的中位数；条形图按比例显示。"
-  },
-  "ba71746213a31b99": {
-   "source": "The extension works in <g1>Google Chrome</g1>, <g2>Microsoft Edge</g2>, <g3>Brave</g3>, <g4>Opera</g4> and <g5>Vivaldi</g5>, and in <g6>Firefox</g6> 140 or later.",
-   "text": "此扩展程序适用于 <g1>Google Chrome</g1>、<g2>Microsoft Edge</g2>、<g3>Brave</g3>、<g4>Opera</g4> 和 <g5>Vivaldi</g5>，以及 <g6>Firefox</g6> 140 或更高版本。"
   },
   "ba7398fafefc4533": {
    "source": "Peak memory",
@@ -12073,6 +12145,10 @@
   "bd171409c60c0172": {
    "source": "Options → Connection",
    "text": "选项 → 连接"
+  },
+  "bd3527667ef96098": {
+   "source": "The Mac app carries the Safari extension: there is nothing to download. Safari 17 or later and macOS 14 or later are needed.",
+   "text": "Mac 应用程序自带 Safari 扩展程序：无需下载。需要 Safari 17 或更高版本以及 macOS 14 或更高版本。"
   },
   "bd38ebc1b5f00936": {
    "source": "Scenario",
@@ -12418,6 +12494,10 @@
    "source": "A greyed button's face",
    "text": "置灰按钮表面"
   },
+  "c30f4658e7e28160": {
+   "source": "Start the video first: the list fills as the page loads things, and it's emptied when the tab goes to another page. With <g1>Prefix media file names with the page title</g1> on, a file from the list is named after the page, then its own name (<x2/>). Click <g3>Download</g3> beside one: a stream opens MDM's <g4>Download video from a page</g4> window, which reads its qualities (yt-dlp does the work); a file goes to MDM's list like any other download. Your cookies for its server, the page as the referrer and your browser's User-Agent go with it, as they do for a link you click.",
+   "text": "请先播放视频：列表会随着页面加载内容而填充，并在标签页转到其他页面时清空。启用<g1>在媒体文件名前加上页面标题</g1>后，列表中的文件将以页面名称命名，然后是其自身名称（<x2/>）。点击其中一个旁边的<g3>下载</g3>：流媒体会打开 MDM 的<g4>从页面下载视频</g4>窗口，该窗口会读取其质量（yt-dlp 完成此工作）；文件会像其他下载一样添加到 MDM 的列表。您为此服务器的 Cookie、页面作为引用者以及您的浏览器用户代理都会随之发送，就像您点击链接时一样。"
+  },
   "c31622b1a542c888": {
    "source": "<g1>.dmg</g1> for Intel Macs",
    "text": "适用于 Intel Mac 的 <g1>.dmg</g1>"
@@ -12469,6 +12549,10 @@
   "c41cf3697bdcc8d7": {
    "source": "The extension asks the host which file types to take, checks each download against them, and cancels the browser's download only after the app has accepted it; otherwise the browser keeps it, and the extension says why.",
    "text": "扩展程序会询问主机要获取哪些文件类型，对照这些类型检查每个下载，并且仅在应用程序接受后才取消浏览器的下载；否则浏览器会保留它，扩展程序会说明原因。"
+  },
+  "c488af9290492a52": {
+   "source": "Closing the main window doesn't quit MDM. It hides in the notification area, and downloads, queues and schedules carry on. To make closing quit (a portable copy's folder can then be deleted), untick <g1>Options → General → Keep running when closing the window</g1>. If there is no icon for MDM at all — not in the notification area, nor behind the ^ hidden icons — the window minimizes to the taskbar instead, so downloads continue and there is a way back. An icon behind ^ can be clicked to bring the window back, and starting MDM again always does.",
+   "text": "关闭主窗口不会退出 MDM。它会隐藏在通知区域，下载、队列和计划会继续运行。要使关闭窗口即退出（之后便可删除便携版副本的文件夹），请取消勾选<g1>选项 → 常规 → 关闭窗口时保持运行</g1>。如果通知区域或“^ 隐藏图标”后面都没有 MDM 图标，则窗口会最小化到任务栏，这样下载仍会继续，并且可以找回窗口。点击“^”后面的图标可以恢复窗口，再次启动 MDM 也能恢复。"
   },
   "c48962c07ea187bc": {
    "source": "The video helpers window: yt-dlp and ffmpeg, each with its version and Use another program...",
@@ -13270,6 +13354,10 @@
    "source": "A download's details were too large",
    "text": "下载详情过大"
   },
+  "d0d09410613074ec": {
+   "source": "Drag MDM to Applications and start it once. MDM's <g1>Add Mister Download Manager to your browser</g1> window lists Safari: <g2>How to Add</g2> shows the steps below.",
+   "text": "将 MDM 拖到“应用程序”文件夹并启动一次。MDM 的<g1>将 Mister Download Manager 添加到您的浏览器</g1>窗口会列出 Safari：<g2>添加方法</g2>显示以下步骤。"
+  },
   "d100800d4f0e156a": {
    "source": "MDM downloads BitTorrent files from magnet links and .torrent files. Torrents appear in the same list as other downloads, marked Torrent in the Source…",
    "text": "MDM 可通过磁力链接和 .torrent 文件下载 BitTorrent 文件。种子会与其他下载一起显示在同一列表中，并在“源”列中标记为“种子”…"
@@ -13490,6 +13578,10 @@
    "source": "Honest about the translations",
    "text": "关于翻译的说明"
   },
+  "d4a032f906bd077e": {
+   "source": "No Download video button on YouTube in Chrome, Edge or Brave",
+   "text": "Chrome、Edge 或 Brave 浏览器中 YouTube 页面没有“下载视频”按钮"
+  },
   "d4a589b33d49fa7c": {
    "source": "\"Remove the finished downloads from the list but keep the files.\"",
    "text": "“从列表中删除已完成的下载，但保留文件。”"
@@ -13497,10 +13589,6 @@
   "d4a71e10d53850e6": {
    "source": "<g1><g2>Catch downloads from your browser</g2></g1> — set up the extension so clicked downloads go to MDM.",
    "text": "<g1><g2>从浏览器捕获下载</g2></g1> — 设置扩展程序，让点击下载的文件通过 MDM 下载。"
-  },
-  "d4c66a15e09e8ca8": {
-   "source": "<g1>Offer to download links copied to the clipboard</g1> — when you copy a link whose file type is on the <g2>File types</g2> page, <g3>Download File Info</g3> opens with it, ready to start (or the download starts at once, with <g4>Show start download dialog</g4> off). On by default.",
-   "text": "<g1>提供下载复制到剪贴板的链接</g1> — 当您复制的文件类型在<g2>文件类型</g2>页面上时，<g3>下载文件信息</g3>会随之打开，准备开始下载（如果<g4>显示开始下载对话框</g4>关闭，则下载会立即开始）。默认开启。"
   },
   "d4c9212e6107e470": {
    "source": "Playlists and channels",
@@ -13722,6 +13810,10 @@
    "source": "Yes. When a video has subtitles, the <g1>Subtitles</g1> list in the video window offers them: the uploader's languages and the site's automatic captions. They're saved beside the video as an <x2/> file, or put inside it with <g3>Put them into the video</g3>. See <g4>Subtitles</g4>.",
    "text": "是。如果视频有字幕，视频窗口中的<g1>字幕</g1>列表会提供它们：上传者使用的语言和网站的自动字幕。它们会作为<x2/>文件保存在视频旁边，或者通过<g3>将它们放入视频</g3>嵌入到视频中。请参阅<g4>字幕</g4>。"
   },
+  "d79ad01ff4322b0a": {
+   "source": "<g1>Automatically start downloading the following file types</g1> — the file types the browser hands over (and the clipboard picks up). Separate them by spaces; <x2/> matches any characters, as in <x3/>. <g4>Default</g4> puts the original list back. The list starts with the usual archives, programs and installers (Windows, macOS and Linux ones: DMG, PKG, DEB, RPM, APPIMAGE, MSIX), music and videos, PDF and Office files, AI models and datasets (GGUF, SAFETENSORS, CKPT, PT, ONNX, PARQUET), 3D and CAD files (GLB, FBX, OBJ, STL, BLEND, STEP), design and camera RAW files, ebooks, disk images and split archives. Pages, scripts, plain text and web images are left out on purpose, so saving a picture or a page stays with the browser; add any type you need, or put a single <x5/> in the box to take every file that has an extension. A list you never changed gains the types a new version adds; one you edited stays as it is.",
+   "text": "<g1>自动下载以下文件类型</g1> — 浏览器移交（和剪贴板获取）的文件类型。用空格分隔；<x2/> 匹配任何字符，如 <x3/>。点击<g4>默认</g4>会恢复原始列表。列表最初包含常见的压缩包、程序和安装程序（Windows、macOS 和 Linux：DMG、PKG、DEB、RPM、APPIMAGE、MSIX）、音乐和视频、PDF 和 Office 文件、AI 模型和数据集（GGUF、SAFETENSORS、CKPT、PT、ONNX、PARQUET）、3D 和 CAD 文件（GLB、FBX、OBJ、STL、BLEND、STEP）、设计和相机 RAW 文件、电子书、磁盘映像和分卷压缩包。页面、脚本、纯文本和网页图片被有意排除，因此保存图片或页面仍由浏览器处理；添加您需要的任何类型，或在框中输入单个 <x5/> 以获取所有带扩展名的文件。您从未更改过的列表会添加新版本增加的类型；您编辑过的列表则保持不变。"
+  },
   "d7a59305d1341d4e": {
    "source": "The app and the extension hold no personal data about you, so there is nothing for us to show, correct or delete there. The website's visit statistics are held by Statcounter; to have records of your visits removed, open an issue with the date and time of your visit, or ask Statcounter directly. Data that you send to GitHub (an issue, for example) is handled by GitHub and can be edited or deleted there.",
    "text": "应用和扩展程序不保存您的任何个人数据，因此我们无从查看、更正或删除这些数据。网站的访问统计数据由 Statcounter 保存；如需删除您的访问记录，请提交问题并注明访问日期和时间，或直接联系 Statcounter。您发送给 GitHub 的数据（例如提交的问题）由 GitHub 处理，您可以在 GitHub 上编辑或删除。"
@@ -13777,10 +13869,6 @@
   "d840a217a694ce9e": {
    "source": "5. No warranty",
    "text": "5. 无担保"
-  },
-  "d8456502c3302d77": {
-   "source": "Start the video first: the list fills as the page loads things, and it's emptied when the tab goes to another page. Click <g1>Download</g1> beside one: a stream opens MDM's <g2>Download video from a page</g2> window, which reads its qualities (yt-dlp does the work); a file goes to MDM's list like any other download. Your cookies for its server, the page as the referrer and your browser's User-Agent go with it, as they do for a link you click.",
-   "text": "先播放视频：页面加载内容时，列表会逐渐填充；切换到其他页面后，列表会清空。点击某项旁边的<g1>下载</g1>：如果是流媒体，会打开 MDM 的“<g2>从页面下载视频</g2>”窗口并读取其画质（由 yt-dlp 处理）；如果是文件，则会像其他下载一样进入 MDM 的列表。下载时还会发送该服务器所需的 Cookie、作为引荐来源的页面，以及浏览器的 User-Agent，就像您点击链接时一样。"
   },
   "d878d923ca93995a": {
    "source": "Open <x1/> (the codes are in <g2><x3/></g2>).",
@@ -14014,6 +14102,10 @@
    "source": "<g1>The extension's toolbar button</g1> says whether the browser reaches MDM. When it doesn't, a red <g2>!</g2> and <g3>How to fix it</g3> lead to the new help page, <g4>The browser and MDM aren't connected</g4>, at the section for the reason. Its popup also pauses taking downloads, leaves the current site to the browser for good, and opens MDM or its Options.",
    "text": "<g1>扩展的工具栏按钮</g1>会显示浏览器是否连接到 MDM。如果未连接，红色<g2>!</g2>和<g3>如何修复</g3>会引导至新的帮助页面<g4>浏览器与 MDM 未连接</g4>，并跳转到相应原因的章节。其弹出窗口还可以暂停接管下载、永久将当前站点留给浏览器处理，以及打开 MDM 或其“选项”。"
   },
+  "dc93b881572cb1c5": {
+   "source": "Peers",
+   "text": "对等方"
+  },
   "dcabc8a97e80dd97": {
    "source": "Downloads → Speed Limiter → Settings...: one speed for all of MDM.",
    "text": "下载 → 速度限制器 → 速度限制器设置...：MDM 的所有下载共享一个速度。"
@@ -14062,10 +14154,6 @@
    "source": "Runs nearly everywhere, with HTTP, BitTorrent, magnet and ed2k, and a REST API",
    "text": "几乎可在所有地方运行，支持 HTTP、BitTorrent、磁力链接和 ed2k，并提供 REST API"
   },
-  "dda60fa3176775af": {
-   "source": "<g1>Move/Rename</g1> (<g2>Ctrl+M</g2>) moves or renames the file of a finished download, or of one that hasn't started yet.",
-   "text": "<g1>移动/重命名</g1>（<g2>Ctrl+M</g2>）可移动或重命名已完成或尚未开始下载的文件。"
-  },
   "ddb6d067aabbbb96": {
    "source": "Command line and automation — Mister Download Manager help",
    "text": "命令行与自动化 — Mister Download Manager 帮助"
@@ -14077,10 +14165,6 @@
   "dddc4b4555b211bf": {
    "source": "the pause-and-resume and event-log tests no longer depend on how fast the machine is: the lab server can hold a byte back until a test lets it go (<x1/>), and a test can wait until every request it made is in the server's log (#123);",
    "text": "暂停-恢复和事件日志测试不再依赖于机器速度：实验室服务器可以保留一个字节，直到测试允许其释放（<x1/>），并且测试可以等待直到其发出的每个请求都记录在服务器日志中（#123）；"
-  },
-  "ddf53195ff2cd6d1": {
-   "source": "Closing the main window doesn't quit MDM. It hides in the notification area, and downloads, queues and schedules carry on.",
-   "text": "关闭主窗口不会退出 MDM。它会隐藏在通知区域，下载、队列和计划会继续进行。"
   },
   "de05be78a1ac8ebe": {
    "source": "Can it resume broken downloads? — Mister Download Manager",
@@ -14105,6 +14189,10 @@
   "deb3f2db3855218f": {
    "source": "<g1>Never take downloads from</g1> the current site: adds it to MDM's excluded sites.",
    "text": "<g1>从不接管来自</g1> 当前网站的下载：将其添加到 MDM 的排除网站列表。"
+  },
+  "debac78242ebe5d9": {
+   "source": "Minimize hides the main window there too, while <g1>Minimize to the notification area</g1> is on in <g2>Options → General</g2>. It is on by default; where the tray has no icon, Minimize sends the window to the taskbar instead.",
+   "text": "当<g1>选项 → 常规</g1>中的<g2>最小化到通知区域</g2>开启时，“最小化”也会将主窗口隐藏到通知区域。此选项默认开启；如果通知区域没有图标，“最小化”会将窗口发送到任务栏。"
   },
   "dee4ab42b514acda": {
    "source": "The language list on first start: every language with its flag, its own name and its English name",
@@ -15006,6 +15094,10 @@
    "source": "Download a video from a page",
    "text": "从网页下载视频"
   },
+  "ece3601cb88a5ef9": {
+   "source": "Safari lets an extension neither see nor stop the browser's downloads, so what works differs from the other browsers:",
+   "text": "Safari 不允许扩展程序查看或停止浏览器的下载，因此其工作方式与其他浏览器不同："
+  },
   "ece9fd24c79f10c2": {
    "source": "The windows are the ones described in this help, with the desktop's fonts, file icons and title bars:",
    "text": "窗口是本帮助中描述的那些，带有桌面字体、文件图标和标题栏："
@@ -15570,6 +15662,10 @@
    "source": "<g1>Metro</g1>, after Windows 8's flat look: square corners, flat buttons, boxes that take an accent border when focused, check boxes with a tick, a bordered progress bar, scroll bars with their arrows always shown, one-colour icons (Microsoft's Fluent UI System Icons, MIT) and a title bar in the theme's colour with the title centred.",
    "text": "<g1>现代</g1>，仿照 Windows 8 的扁平化外观：方角、扁平按钮、获得焦点时带有强调色边框的方框、带勾选标记的复选框、带边框的进度条、始终显示箭头的滚动条、单色图标（Microsoft 的 Fluent UI System Icons，MIT 许可）以及主题色标题栏，标题居中显示。"
   },
+  "f554a7b471d1c8c4": {
+   "source": "To check that your copy is the real one:",
+   "text": "要检查您的副本是否为正版："
+  },
   "f55e431df0898bf7": {
    "source": "Corner radius of a popup in a window (a calendar, a filter box)",
    "text": "窗口中弹出框的圆角半径（日历、筛选框）"
@@ -15597,6 +15693,10 @@
   "f5d0db4c9a23ece3": {
    "source": "<g1><g2>Adding downloads</g2></g1> — Add URL, the clipboard, the drop target, batch downloads and lists of links, and Start Download versus Download Later.",
    "text": "<g1><g2>添加下载</g2></g1> — 介绍“添加 URL”、剪贴板、拖放目标、批量下载和链接列表，以及“开始下载”与“稍后下载”的区别。"
+  },
+  "f5d1e8a8bc6e8e59": {
+   "source": "Compare it with the same file's line in that release's <x1/>.",
+   "text": "将其与该版本 <x1/> 中对应文件的行进行比较。"
   },
   "f5e911e1675285c5": {
    "source": "Add the extension to each browser you use, as below: Firefox from its add-ons store, the others from the Chrome Web Store. Until a browser's extension has reached MDM, MDM's <g1>Add Mister Download Manager to your browser</g1> window opens at each start: it lists the browsers it found, and <g2>Add the extension</g2> opens the store's page in that browser. <g3>Install it by hand</g3> opens the steps for loading it without the store; <g4>Don't ask again</g4> stops the window.",
@@ -16006,6 +16106,10 @@
    "source": "Click <g1>Load unpacked</g1> and choose the <x2/> folder.",
    "text": "点击<g1>加载已解压的扩展</g1>，然后选择<x2/>文件夹。"
   },
+  "fbb8c948c7d5543c": {
+   "source": "<g1>Dates and times</g1> in the list (<g2>Last Try Date</g2>, <g3>Added</g3>) and the Scheduler follow the system's region by default (on Windows <g4>Settings → Time &amp; language → Language &amp; region → Regional format</g4>; on macOS and Linux, your language's usual way), or your own date order, clock and first day of the week in <g5>Options → Regional</g5>. In English the list keeps IDM's own date text (<x6/>), on the system's 12- or 24-hour clock (<x7/>).",
+   "text": "列表中（<g2>上次尝试日期</g2>、<g3>已添加</g3>）和计划程序中的<g1>日期和时间</g1>默认遵循系统区域设置（在 Windows 上为<g4>设置 → 时间和语言 → 语言和区域 → 区域格式</g4>；在 macOS 和 Linux 上为您的语言常用方式），或者您可以在<g5>选项 → 区域</g5>中自定义日期顺序、时钟和每周的第一天。在英文界面中，列表会保留 IDM 自己的日期文本（<x6/>），并使用系统的 12 小时制或 24 小时制（<x7/>）。"
+  },
   "fbba8f18d2fae06e": {
    "source": "A text box's bottom line while it can be typed in",
    "text": "可输入时文本框的底线"
@@ -16089,6 +16193,10 @@
   "fd2f8ecc1dec89a7": {
    "source": "Does it keep uploading after a torrent finishes? — Mister Download Manager",
    "text": "种子下载完成后会继续上传吗？— Mister Download Manager"
+  },
+  "fd36b355f1d75039": {
+   "source": "In Safari open <g1>Settings → Extensions</g1> and tick <g2>Mister Download Manager</g2>. Click <g3>Always Allow on Every Website</g3>: the extension needs to read the site to pass your sign-in on.",
+   "text": "在 Safari 中打开<g1>设置 → 扩展</g1>，然后勾选<g2>Mister Download Manager</g2>。点击<g3>始终允许在每个网站上</g3>：扩展程序需要读取网站才能传递您的登录信息。"
   },
   "fd40efe02c1179f3": {
    "source": "The examples use Windows' paths; on macOS and Linux the programs have the same names without <x1/>.",

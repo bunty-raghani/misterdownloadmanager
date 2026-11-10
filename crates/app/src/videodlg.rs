@@ -112,14 +112,14 @@ type Tools = (
 /// stops working. Once per session, when the video window opens and yt-dlp is installed, the
 /// newest release is fetched in the background (mdm_tools::install_latest: signed by yt-dlp's
 /// developers, never older, switched atomically, the previous version kept). Quiet: a failure
-/// leaves the installed version in use.
+/// leaves the installed version in use. A system copy is left to its package manager.
 pub fn refresh_ytdlp(rt: &tokio::runtime::Handle) {
     use std::sync::atomic::{AtomicBool, Ordering};
     static DONE: AtomicBool = AtomicBool::new(false);
     let Some(dir) = mdm_tools::tools_dir() else {
         return;
     };
-    if mdm_tools::installed(&dir).is_none() || DONE.swap(true, Ordering::SeqCst) {
+    if !mdm_tools::refreshable(&dir) || DONE.swap(true, Ordering::SeqCst) {
         return;
     }
     rt.spawn(async move {
@@ -183,8 +183,14 @@ impl VideoDialog {
 
     /// Opened for `page` (Add URL was given a video's page, or the browser's button was
     /// clicked with `context`): looks it up at once.
-    pub fn for_page(folder: PathBuf, page: &str, context: mdm_ipc::Command) -> Self {
-        let page = mdm_tools::pages::video_address(page);
+    pub fn for_page(folder: PathBuf, page: &str, mut context: mdm_ipc::Command) -> Self {
+        let own = mdm_tools::pages::video_address(page);
+        // An embedded player taken to the video's own page (#359): the site that embedded it
+        // isn't that page's referer, and Dailymotion refuses its own page asked with one (403).
+        if own != page {
+            context.referer = None;
+        }
+        let page = own;
         VideoDialog {
             page: page.clone(),
             from_browser: page,
@@ -495,7 +501,7 @@ impl VideoDialog {
         );
         // Helpers... open: on Close, the helpers are read again (another program, or MDM's own).
         if let Some(h) = &mut self.helpers
-            && !matches!(h.show(ctx), Outcome::Open)
+            && !matches!(h.show(ctx, rt), Outcome::Open)
         {
             self.helpers = None;
             self.tools = None;
@@ -503,7 +509,7 @@ impl VideoDialog {
                 self.set_video(v);
             }
         }
-        let folder = PathBuf::from(self.folder.trim());
+        let folder = crate::dialogs::resolve_path(&self.folder);
         let out = crate::dialogs::ensure_folder(ctx, &mut self.asking, out, &folder);
         // A playlist's videos, each its own download.
         if let (Some(list), Outcome::Done(())) = (&self.list, &out) {
@@ -535,7 +541,7 @@ impl VideoDialog {
                 Outcome::Done(VideoOut::One(VideoAdd {
                     page,
                     selector: c.selector.clone(),
-                    dest: PathBuf::from(self.folder.trim()).join(name),
+                    dest: crate::dialogs::resolve_path(&self.folder).join(name),
                     size: c.size,
                     start_now,
                     info,
@@ -554,6 +560,11 @@ impl VideoDialog {
                 }))
             }
         }
+    }
+
+    /// The Save to folder: the one a playlist's own folder goes under, too.
+    pub fn save_folder(&self) -> PathBuf {
+        crate::dialogs::resolve_path(&self.folder)
     }
 
     fn name_from_choice(&mut self) {
@@ -796,7 +807,14 @@ impl VideoDialog {
         {
             self.install(tool, dir, rt, ui.ctx());
         }
-        if let Some(e) = &self.error {
+        // An error too long for its line, with no choices below it: read whole in their place.
+        let error_in_list = self.video.is_none()
+            && self.list.is_none()
+            && self
+                .error
+                .as_ref()
+                .is_some_and(|e| winui::text_width(&p, e) > 478.0);
+        if let Some(e) = self.error.as_ref().filter(|_| !error_in_list) {
             let (rect, cut) =
                 winui::text_fit(&p, o.x + 11.0, o.y + 86.0, e, winui::ERROR(), o.x + 489.0);
             if cut {
@@ -885,6 +903,18 @@ impl VideoDialog {
             if let Some(i) = picked {
                 self.chosen = i;
                 self.name_from_choice();
+            }
+            // Wrapped in the empty list (#317).
+            if let Some(e) = self.error.as_ref().filter(|_| error_in_list) {
+                winui::paragraph(
+                    &p.with_clip_rect(list),
+                    list.left() + 8.0,
+                    list.top() + 18.0,
+                    e,
+                    winui::ERROR(),
+                    list.right() - 8.0,
+                    16.0,
+                );
             }
         }
 
@@ -1285,7 +1315,22 @@ fn lookup_error(e: &str, sent: bool, store: Option<&mdm_tools::proc::BrowserCook
             )
         };
     }
-    let plain = if lower.contains("drm") {
+    // A site's bot check turned yt-dlp away (#317).
+    let plain = if lower.contains("anti-bot") {
+        if store.is_some() {
+            // i18n: the Download video window: the site's bot check (Cloudflare) turned yt-dlp away though it had the cookies of the browser chosen in Options; {browser} = its name
+            return named(
+                "The site's bot check (Cloudflare) refused yt-dlp, even with {browser}'s cookies. Use the Download video button over the video in {browser}, or try the page again later.",
+            );
+        }
+        if sent {
+            // i18n: the Download video window: the site's bot check (Cloudflare) turned yt-dlp away though the browser's extension passed the page's cookies
+            "The site's bot check (Cloudflare) refused yt-dlp, even with your browser's cookies for this page. Try again later, or from another browser."
+        } else {
+            // i18n: the Download video window: the site's bot check (Cloudflare) turned yt-dlp away and no browser cookies were used
+            "The site's bot check (Cloudflare) refused yt-dlp. If the page opens in your browser, choose that browser in Options → Sites Logins → Cookies for video sites and look the page up again, or use the Download video button over the video."
+        }
+    } else if lower.contains("drm") {
         // i18n: the Download video window: the page's video is copy-protected
         "This video is protected (DRM): no tool can save it."
     } else if lower.contains("unsupported url") {
@@ -1337,6 +1382,48 @@ pub(crate) fn choice_label(label: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// #359: a Dailymotion player embedded in another site is looked up at the video's own page,
+    /// without that site as its Referer (Dailymotion answers 403); any other page keeps it.
+    #[test]
+    fn an_embedded_player_taken_to_its_page_drops_the_embedding_sites_referer() {
+        let from = |page: &str| {
+            let context = mdm_ipc::Command {
+                referer: Some("https://news.test/article".into()),
+                ..Default::default()
+            };
+            VideoDialog::for_page(PathBuf::from("v"), page, context)
+        };
+        let embed = from("https://geo.dailymotion.com/player/x1abc.html?video=x9xyz12");
+        assert_eq!(embed.page, "https://www.dailymotion.com/video/x9xyz12");
+        assert_eq!(embed.context().referer, None);
+        let plain = from("https://player.vimeo.test/video/1");
+        assert_eq!(
+            plain.context().referer.as_deref(),
+            Some("https://news.test/article")
+        );
+    }
+
+    /// #317: Cloudflare's check in plain words, saying what to try for each kind of cookies had.
+    #[test]
+    fn a_bot_check_says_what_to_try() {
+        let check = "yt-dlp failed: [generic] Got HTTP Error 403 caused by Cloudflare anti-bot challenge; try again with --extractor-args \"generic:impersonate\"";
+        let none = lookup_error(check, false, None);
+        assert!(none.contains("bot check"), "{none}");
+        assert!(none.contains("Cookies for video sites"), "{none}");
+        let sent = lookup_error(check, true, None);
+        assert!(sent.contains("even with your browser's cookies"), "{sent}");
+        let firefox = mdm_tools::proc::BrowserCookies::new("firefox", "").unwrap();
+        let chrome_had = lookup_error(check, false, Some(&firefox));
+        assert!(
+            chrome_had.contains("even with Firefox's cookies"),
+            "{chrome_had}"
+        );
+        assert_eq!(
+            lookup_error("yt-dlp failed: Video unavailable", false, None),
+            "yt-dlp failed: Video unavailable"
+        );
+    }
 
     /// #229: yt-dlp's refusals and its trouble with a browser's cookies, in MDM's words, saying
     /// which cookies it had.

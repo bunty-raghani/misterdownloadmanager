@@ -134,6 +134,8 @@ fn load_from(p: &Path, empty: Loaded) -> Loaded {
                 if i.status != Status::Complete
                     && i.video.is_none()
                     && let Ok(st) = ResumeState::load(&state_path(&i.dest))
+                    // A state under this name for another address is another row's (#442).
+                    && st.url == i.url
                 {
                     i.downloaded = st.downloaded();
                     i.size = Some(st.size);
@@ -301,7 +303,9 @@ fn write(p: &Path, json: &[u8]) -> std::io::Result<()> {
 /// Saves the list on a thread of its own. The write ends with a flush to the disk, which waited
 /// for every byte a big download had written meanwhile: on the window's thread it froze MDM for
 /// seconds (a crash report caught it: "freeze in store::save"). The newest list waiting replaces
-/// an older one not yet written.
+/// an older one not yet written. Any file the window keeps saving goes the same way
+/// ([`Saver::writing`]): Windows holding every write on C: for a shadow copy held the window
+/// with it (#513).
 pub struct Saver {
     shared: std::sync::Arc<(std::sync::Mutex<SaverState>, std::sync::Condvar)>,
 }
@@ -315,14 +319,21 @@ struct SaverState {
 }
 
 impl Saver {
+    /// The download list's.
     pub fn new() -> Saver {
+        Saver::writing("list saver", write)
+    }
+
+    /// A saver thread of its own, `name`, writing what it is handed with `write` (the RSS feeds',
+    /// rss.rs).
+    pub fn writing(name: &str, write: fn(&Path, &[u8]) -> std::io::Result<()>) -> Saver {
         let shared = std::sync::Arc::new((
             std::sync::Mutex::new(SaverState::default()),
             std::sync::Condvar::new(),
         ));
         let worker = shared.clone();
         let _ = std::thread::Builder::new()
-            .name("list saver".into())
+            .name(name.into())
             .spawn(move || {
                 let (lock, cv) = &*worker;
                 loop {
@@ -359,7 +370,8 @@ impl Saver {
         Ok(())
     }
 
-    fn queue(&self, p: std::path::PathBuf, json: Vec<u8>) {
+    /// Hand `json` to the saver thread, to be written as `p`.
+    pub fn queue(&self, p: std::path::PathBuf, json: Vec<u8>) {
         let (lock, cv) = &*self.shared;
         lock.lock().unwrap_or_else(|e| e.into_inner()).waiting = Some((p, json));
         cv.notify_all();
@@ -412,6 +424,40 @@ mod tests {
         saver.flush();
         assert_eq!(saver.outcome(), Some(Ok(())));
         assert_eq!(load_from(&p, empty()).next_id, 5);
+    }
+
+    /// #513: handing a file to a saver never waits for the disk (Windows held every write on C:
+    /// for 8 s while it made a shadow copy, and the window with them when it wrote itself); it
+    /// is written once the disk lets go, the newest handed over.
+    #[test]
+    fn a_saver_hands_over_at_once_while_the_disk_holds_its_writes() {
+        use std::sync::{Condvar, Mutex};
+        static HELD: (Mutex<bool>, Condvar) = (Mutex::new(true), Condvar::new());
+        fn held_write(p: &Path, bytes: &[u8]) -> std::io::Result<()> {
+            let (held, cv) = &HELD;
+            let mut held = held.lock().unwrap();
+            while *held {
+                held = cv.wait(held).unwrap();
+            }
+            crate::rss::write(p, bytes)
+        }
+        let dir = tempfile::tempdir().unwrap();
+        let p = dir.path().join("rss.json");
+        let saver = Saver::writing("test saver", held_write);
+        let start = std::time::Instant::now();
+        for n in 0..50u8 {
+            saver.queue(p.clone(), vec![b'0' + n % 10]);
+        }
+        assert!(start.elapsed() < Duration::from_secs(1));
+        assert!(
+            !p.exists() && saver.outcome().is_none(),
+            "the disk holds it"
+        );
+        *HELD.0.lock().unwrap() = false;
+        HELD.1.notify_all();
+        saver.flush();
+        assert_eq!(saver.outcome(), Some(Ok(())));
+        assert_eq!(std::fs::read(&p).unwrap(), b"9");
     }
 
     #[test]
@@ -544,6 +590,35 @@ mod tests {
         let edited = format!("{old} NZB");
         std::fs::write(&p, list(&edited)).unwrap();
         assert_eq!(load_from(&p, empty()).settings.auto_types, edited);
+    }
+
+    /// #442: two rows of one name, a resume state on the disk: only the row of its address
+    /// takes the progress (the other would take the data for its own and resume it).
+    #[test]
+    fn a_resume_state_is_read_by_the_row_it_belongs_to() {
+        let dir = tempfile::tempdir().unwrap();
+        let p = dir.path().join("downloads.json");
+        let dest = dir.path().join("master.mp4");
+        let url = "http://files.test/a/master.mp4";
+        let row = |id: u64, url: &str| {
+            serde_json::json!({
+                "id": id, "url": url, "file_name": "master.mp4", "dest": dest, "size": 100,
+                "downloaded": 0, "status": "Queued", "category": "Video", "description": "",
+                "last_try": null, "error": null, "resumable": null,
+            })
+        };
+        let list = serde_json::json!({
+            "next_id": 3, "version": 2,
+            "items": [row(1, url), row(2, "http://files.test/b/master.mp4")],
+        });
+        std::fs::write(&p, list.to_string()).unwrap();
+        let (a, b): (url::Url, url::Url) = (url.parse().unwrap(), url.parse().unwrap());
+        ResumeState::new(a, b, dest.clone(), 777, Default::default())
+            .write(&state_path(&dest))
+            .unwrap();
+        let loaded = load_from(&p, empty());
+        assert_eq!(loaded.items[0].size, Some(777));
+        assert_eq!(loaded.items[1].size, Some(100));
     }
 
     #[test]

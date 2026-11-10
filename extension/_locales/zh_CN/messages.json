@@ -238,5 +238,8 @@
   },
   "remote_device_name": {
     "message": "浏览器扩展"
+  },
+  "popup_media_title_name": {
+    "message": "在媒体文件名前加上页面标题"
   }
 }

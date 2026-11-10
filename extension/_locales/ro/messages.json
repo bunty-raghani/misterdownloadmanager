@@ -238,5 +238,8 @@
   },
   "remote_device_name": {
     "message": "Extensie de browser"
+  },
+  "popup_media_title_name": {
+    "message": "Adaugă titlul paginii înaintea numelor fișierelor media"
   }
 }

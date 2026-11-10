@@ -238,5 +238,8 @@
   },
   "remote_device_name": {
     "message": "ブラウザー拡張機能"
+  },
+  "popup_media_title_name": {
+    "message": "メディアファイル名の前にページのタイトルを付ける"
   }
 }

@@ -39,6 +39,10 @@ pub struct ResumeState {
     /// The hash the finished file must have (the user's or the server's), if known.
     #[serde(default)]
     pub checksum: Option<crate::verify::Hash>,
+    /// The first run got past a refusal by asking with `Options::agent_fallback` instead of the
+    /// browser's User-Agent (#372): a resume asks the same way.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub asked_as_mdm: bool,
     /// A POST download (`Options::post`, its body not stored) whose redirects turned it into
     /// a GET (301, 302, 303): `final_url` is asked with GET.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
@@ -58,6 +62,7 @@ impl ResumeState {
             segments: Vec::new(),
             content_type: None,
             checksum: None,
+            asked_as_mdm: false,
             final_get: false,
         }
     }

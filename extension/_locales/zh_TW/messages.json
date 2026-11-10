@@ -238,5 +238,8 @@
   },
   "remote_device_name": {
     "message": "瀏覽器擴充功能"
+  },
+  "popup_media_title_name": {
+    "message": "在媒體檔案名稱前加上頁面標題"
   }
 }

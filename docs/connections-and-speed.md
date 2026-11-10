@@ -56,7 +56,7 @@ Two more tabs:
 - **Speed Limiter** — a limit for this download only. See below.
 - **Options on completion** — shows where the file will be saved. Untick **Show download complete dialog** to skip the **Download complete** box for this file only.
 
-**Hide tab** goes back to **Download status**.
+**Hide tab** takes a tab off this download's window and goes back to **Download status**. To bring the tabs back, right-click the tab row and choose **Show hidden tabs**; closing the window and opening it again brings them back too.
 
 ## When a download finishes
 

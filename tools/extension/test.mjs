@@ -134,8 +134,8 @@ function fakeApi({
           return { ok: true, version: "0.2.5", types, capture: true, excludedSites: "*.update.microsoft.com", excludedAddresses: [], opened: true, ...rules };
         }
         calls.push(["native", name, m]);
-        // The video button: "may it show" follows `panelOn`.
-        if (m.panel) return { ok: panelOn !== false };
+        // The video button: "may it show" follows `panelOn` (a function: the app's answer now).
+        if (m.panel) return { ok: typeof panelOn === "function" ? panelOn(m) : panelOn !== false };
         // A notice of a download left alone (#208): an older host, which knows none, takes it
         // for an address it can't download (`noticeReply`).
         if (m.declined) return noticeReply || { ok: true };
@@ -231,7 +231,8 @@ async function fakeFetch(url, opts) {
 const complaints = [];
 const quietConsole = { ...console, error: (...a) => complaints.push(["error", ...a]), warn: (...a) => complaints.push(["warn", ...a]) };
 
-function load(api, firefox) {
+// `extra`: more of the script's globals (a `Date` whose clock the test moves).
+function load(api, firefox, extra = {}) {
   const ctx = {
     fetch: fakeFetch,
     navigator: { userAgent: "UA", userAgentData: { brands: [{ brand: "Chromium" }, { brand: "Brave" }] } },
@@ -245,6 +246,7 @@ function load(api, firefox) {
   };
   if (firefox) ctx.browser = api;
   else ctx.chrome = api;
+  Object.assign(ctx, extra);
   vm.runInNewContext(code, ctx);
 }
 
@@ -676,6 +678,44 @@ const ok = (what) => {
   assert.ok(calls.some((c) => c[0] === "cookies" && c[1].url === "https://other.test/x/main.mpd"), "the button: the stream's cookies");
   ok("#155: the right-click menu on a stream's player sends its manifest; cookies of the stream");
 }
+// #532: Options changed while a page with a video is open: the app's answer is kept a few
+// seconds, not a minute, so the button follows (the page asks again: video.js ASK_MS). An
+// embedded player asks with its tab's address, so the site in the address bar counts too.
+{
+  const clock = { t: Date.now() };
+  class FakeDate extends Date {
+    static now() {
+      return clock.t;
+    }
+  }
+  let appSays = true;
+  const { api, calls, listeners } = fakeApi({ firefox: false, panelOn: () => appSays });
+  load(api, false, { Date: FakeDate });
+  const embed = { id: "ours", url: "https://tube.test/embed/1", frameId: 3, tab: { url: "https://blog.test/post" } };
+  const top = { id: "ours", url: "https://tube.test/watch", frameId: 0, tab: { url: "https://tube.test/watch" } };
+  const ask = (sender) =>
+    new Promise((r) => listeners.message({ type: "panel" }, sender, (v) => r(JSON.parse(JSON.stringify(v)))));
+  assert.deepEqual(await ask(embed), { on: true });
+  const asked = () => natives(calls).filter((m) => m.panel);
+  assert.equal(asked()[0].referrer, "https://blog.test/post", "the tab's address with an embedded player's question");
+  assert.deepEqual(await ask(top), { on: true });
+  assert.equal(asked()[1].referrer, undefined, "none for the tab's own page");
+  appSays = false;
+  clock.t += 1000;
+  assert.deepEqual(await ask(top), { on: true }, "kept a moment (the page's frames ask together)");
+  assert.equal(asked().length, 2);
+  clock.t += 5000;
+  assert.deepEqual(await ask(top), { on: false }, "switched off in Options: the next question has it");
+  assert.deepEqual(await ask(embed), { on: false });
+  appSays = true;
+  clock.t += 6000;
+  assert.deepEqual(await ask(embed), { on: true }, "and on again");
+  // "Never on this site" from the embed: off at once, in its tab and in any other.
+  await new Promise((r) => listeners.message({ type: "hide-site" }, embed, r));
+  assert.deepEqual(await ask(embed), { on: false });
+  assert.deepEqual(await ask({ ...embed, tab: { url: "https://news.test/" } }), { on: false }, "whatever the tab");
+  ok("#532: the video button follows Options within seconds; an embed asks with its tab's address");
+}
 {
   const { api, listeners } = fakeApi({ firefox: true, panelOn: false });
   load(api, true);
@@ -807,12 +847,24 @@ const MPD = (protect) => `<?xml version="1.0"?>
   const f = natives(calls).find((m) => m.url === "https://files.test/movie.mp4");
   assert.deepEqual([f.explicit, f.referrer, f.size, f.mime, f.video], [true, "https://watch.test/v/1", 52428800, "video/mp4", undefined]);
   assert.equal(f.filename, "", "a file with a name of its own is named by its address");
+  await api.storage.local.set({ mediaTitleName: true });
+  await popupAsk(listeners, { type: "media-download", tab: 9, url: "https://files.test/movie.mp4" });
+  assert.equal(natives(calls).filter((m) => m.url === "https://files.test/movie.mp4").at(-1).filename, "A film - movie.mp4");
   // #345: an address that ends in a long hash names nothing: the tab's title does.
   const hashed = "https://files.test/SFp1NUcrZFRkRUVrUWlqM3paMitkakJIUW9JSFhOeEZkd0ZMNEc5UHpnZm5hRkY4Vis5MjlJU00xdDVqTk1vaw.mp4";
   listeners.responseStarted({ tabId: 9, frameId: 0, type: "media", url: hashed, responseHeaders: [{ name: "Content-Type", value: "video/mp4" }, { name: "Content-Length", value: "52428800" }] });
   await settle();
   await popupAsk(listeners, { type: "media-download", tab: 9, url: hashed });
+  // A hash isn't worth keeping, with the switch on too: the title alone names it.
+  assert.equal(natives(calls).filter((m) => m.url === hashed).at(-1).filename, "A film.mp4");
+  await api.storage.local.set({ mediaTitleName: false });
   assert.equal(natives(calls).find((m) => m.url === hashed).filename, "A film.mp4");
+  // #493: X's video server names each file with a short random id: the tab's title names it.
+  const random = "https://video.twimg.com/ext_tw_video/1900000000000000000/pu/vid/avc1/720x1280/7HbL0kYxzF-fGjqd.mp4?tag=12";
+  listeners.responseStarted({ tabId: 9, frameId: 0, type: "media", url: random, responseHeaders: [{ name: "Content-Type", value: "video/mp4" }, { name: "Content-Length", value: "52428800" }] });
+  await settle();
+  await popupAsk(listeners, { type: "media-download", tab: 9, url: random });
+  assert.equal(natives(calls).find((m) => m.url === random).filename, "A film.mp4");
   const before = natives(calls).length;
   assert.deepEqual(await popupAsk(listeners, { type: "media-download", tab: 9, url: "https://drm.test/p/manifest.mpd" }), { ok: false, why: "drm" });
   assert.deepEqual(await popupAsk(listeners, { type: "media-download", tab: 9, url: "https://evil.test/x.mp4" }), { ok: false, why: "gone" });
@@ -822,7 +874,7 @@ const MPD = (protect) => `<?xml version="1.0"?>
   // A move within the page keeps the list; another page clears it; so does closing the tab.
   listeners.tabUpdated(9, { url: "https://watch.test/v/1#t=30" });
   await settle();
-  assert.equal((await popupAsk(listeners, { type: "media", tab: 9 })).media.length, 10);
+  assert.equal((await popupAsk(listeners, { type: "media", tab: 9 })).media.length, 11);
   listeners.tabUpdated(9, { url: "https://watch.test/v/2" });
   await settle();
   assert.equal((await popupAsk(listeners, { type: "media", tab: 9 })).media.length, 0);
@@ -1650,6 +1702,32 @@ const ask = (listeners) => (m, sender) => new Promise((r) => listeners.message(m
   assert.equal(natives(calls).length, 1);
   assert.deepEqual(steps(calls), []);
   ok("#208 Firefox: a download caught from its answer, before the browser's dialog");
+}
+// #447: Firefox hands a header's value over byte for byte, each byte one character. A name sent as
+// raw UTF-8 is read as UTF-8; bytes that aren't valid UTF-8 (ISO-8859-1) and a real percent sign stay.
+{
+  const asBytes = (text) => String.fromCharCode(...new TextEncoder().encode(text));
+  for (const [value, want] of [
+    [`attachment; filename="${asBytes("تقرير.pdf")}"`, "تقرير.pdf"],
+    [`attachment; filename="${asBytes("été à Paris.pdf")}"`, "été à Paris.pdf"],
+    [`attachment; filename="${asBytes("日本語.pdf")}"`, "日本語.pdf"],
+    ["attachment; filename=\"plain report.pdf\"", "plain report.pdf"],
+    // ISO-8859-1 bytes (é alone is not valid UTF-8).
+    ["attachment; filename=\"caf\u00e9.pdf\"", "café.pdf"],
+    // Percent-encoded UTF-8 in the plain name, as Firefox and the app read it.
+    ["attachment; filename=\"%D8%AA%D9%82%D8%B1%D9%8A%D8%B1.pdf\"", "تقرير.pdf"],
+    ["attachment; filename=\"100%25.pdf\"", "100%25.pdf"],
+    ["attachment; filename=\"50%.pdf\"", "50%.pdf"],
+    // RFC 8187 keeps winning, ASCII as it comes.
+    ["attachment; filename=\"fallback.pdf\"; filename*=UTF-8''%D8%AA%D9%82%D8%B1%D9%8A%D8%B1.pdf", "تقرير.pdf"],
+  ]) {
+    const { api, calls, listeners } = fakeApi({ firefox: true });
+    load(api, true);
+    await settle();
+    await held(listeners, answer("https://dl.test/get?id=2", { "Content-Type": "application/octet-stream", "Content-Disposition": value }));
+    assert.equal(natives(calls)[0].filename, want, value);
+  }
+  ok("#447 Firefox: a raw UTF-8 file name in a header reaches the app readable, other names as they were");
 }
 // A download taken from its answer (#208) is cancelled, so its response never starts: the proxy a
 // VPN add-on chose for it (proxy.onRequest, in the answer's proxyInfo) still goes with it.

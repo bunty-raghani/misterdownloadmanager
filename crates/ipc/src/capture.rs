@@ -222,16 +222,22 @@ impl CaptureRules {
 impl CaptureRules {
     /// May the download button show over videos on `page` (its address) in `browser`?
     /// Integration on, that browser captured, the button on and the site not one it stays off.
-    pub fn panel_on(&self, page: &str, browser: &str) -> bool {
-        self.captures(browser) && self.video_panel && !self.panel_hidden_on(page)
+    /// `top`: the tab's address when `page` is a frame of another page's (a player embedded from
+    /// another site): the site in the address bar is the one a person lists (#532).
+    pub fn panel_on(&self, page: &str, top: Option<&str>, browser: &str) -> bool {
+        self.captures(browser)
+            && self.video_panel
+            && !self.panel_hidden_on(page)
+            && !top.is_some_and(|t| !t.is_empty() && self.panel_hidden_on(t))
     }
 
-    /// Is `page` (an address) on a site the button stays off?
+    /// Is `page` (an address) on a site the button stays off? A name without `*.` takes its
+    /// subdomains too (#532: `youtube.com` listed, the button still showed on www.youtube.com).
     pub fn panel_hidden_on(&self, page: &str) -> bool {
         let host = host_of(page);
         self.video_panel_sites
             .split_whitespace()
-            .any(|p| host_matches(&host, p))
+            .any(|p| host_matches(&host, p) || host_matches(&host, &format!("*.{p}")))
     }
 }
 
@@ -252,6 +258,35 @@ pub fn add_site(sites: &str, host: &str) -> String {
     }
     out.push_str(&host);
     out
+}
+
+/// The sites a list holds (space-separated), as a file: one a line (Options → Download panels,
+/// #424).
+pub fn sites_to_text(sites: &str) -> String {
+    sites.split_whitespace().fold(String::new(), |mut out, s| {
+        out.push_str(s);
+        out.push('\n');
+        out
+    })
+}
+
+/// `sites` with the patterns of a file (one or more names a line, or space-separated) added, those
+/// not there already whatever their case, and how many that was. A name holding anything else
+/// than a host pattern's characters is left out.
+pub fn merge_sites(sites: &str, text: &str) -> (String, usize) {
+    let mut out: Vec<String> = sites.split_whitespace().map(str::to_owned).collect();
+    let mut added = 0;
+    for name in text.split_whitespace().take(5000) {
+        let usable = name.len() <= 253
+            && name.chars().all(|c| {
+                c.is_alphanumeric() || matches!(c, '.' | '-' | '_' | ':' | '[' | ']' | '*' | '/')
+            });
+        if usable && !out.iter().any(|s| s.eq_ignore_ascii_case(name)) {
+            out.push(name.to_owned());
+            added += 1;
+        }
+    }
+    (out.join(" "), added)
 }
 
 /// Does `name`'s extension appear in `types` (Options → File types: `EXE ZIP R0*`)?
@@ -405,6 +440,21 @@ mod tests {
     const EDGE: &str = "Microsoft Edge";
     const FIREFOX: &str = "Mozilla Firefox";
 
+    /// #424: the list of sites as a file and back: one a line, duplicates (whatever their case)
+    /// not added, what isn't a site left out.
+    #[test]
+    fn sites_export_and_import() {
+        assert_eq!(sites_to_text("a.test *.b.test"), "a.test\n*.b.test\n");
+        assert_eq!(sites_to_text(""), "");
+        let (merged, added) = merge_sites(
+            "a.test b.test",
+            "A.TEST\r\nc.test  d.test\n*.e.test\nbad<name\n",
+        );
+        assert_eq!(merged, "a.test b.test c.test d.test *.e.test");
+        assert_eq!(added, 3);
+        assert_eq!(merge_sites("a.test", "").0, "a.test");
+    }
+
     #[test]
     fn browsers_by_name() {
         assert_eq!(browser_named(CHROME_UA, &[]), CHROME);
@@ -443,27 +493,45 @@ mod tests {
             video_panel_sites: "*.example.com tube.test".into(),
             ..CaptureRules::default()
         };
-        assert!(r.panel_on("https://videos.site/watch?v=1", CHROME));
+        assert!(r.panel_on("https://videos.site/watch?v=1", None, CHROME));
         assert!(
-            !r.panel_on("https://www.example.com/v", CHROME),
+            !r.panel_on("https://www.example.com/v", None, CHROME),
             "a listed site"
         );
         assert!(
-            !r.panel_on("https://example.com/v", CHROME),
+            !r.panel_on("https://example.com/v", None, CHROME),
             "*. takes the domain too"
         );
-        assert!(!r.panel_on("https://TUBE.test/v", FIREFOX));
+        assert!(!r.panel_on("https://TUBE.test/v", None, FIREFOX));
         r.browsers = vec![("Mozilla Firefox".into(), false)];
         assert!(
-            !r.panel_on("https://videos.site/", FIREFOX),
+            !r.panel_on("https://videos.site/", None, FIREFOX),
             "a browser not captured"
         );
-        assert!(r.panel_on("https://videos.site/", CHROME));
+        assert!(r.panel_on("https://videos.site/", None, CHROME));
         r.video_panel = false;
-        assert!(!r.panel_on("https://videos.site/", CHROME));
+        assert!(!r.panel_on("https://videos.site/", None, CHROME));
+        // #532: a name without `*.` takes its subdomains (www. above all); a player embedded
+        // from another site follows the tab's site.
+        r.video_panel = true;
+        r.video_panel_sites = "quiet.test".into();
+        assert!(!r.panel_on("https://www.quiet.test/v", None, CHROME));
+        assert!(!r.panel_on("https://quiet.test/v", None, CHROME));
+        assert!(r.panel_on("https://notquiet.test/v", None, CHROME));
+        assert!(!r.panel_on(
+            "https://videos.site/embed/1",
+            Some("https://www.quiet.test/post"),
+            CHROME
+        ));
+        assert!(r.panel_on(
+            "https://videos.site/embed/1",
+            Some("https://blog.site/"),
+            CHROME
+        ));
+        assert!(r.panel_on("https://videos.site/embed/1", Some(""), CHROME));
         r.video_panel = true;
         r.advanced_integration = false;
-        assert!(!r.panel_on("https://videos.site/", CHROME));
+        assert!(!r.panel_on("https://videos.site/", None, CHROME));
     }
 
     #[test]

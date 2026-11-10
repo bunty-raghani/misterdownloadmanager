@@ -58,7 +58,7 @@ NAME = "Mister Download Manager"
 # says "Coming with version <this>" (coming_banner(): the feature pages, the Themes page, the
 # features' tiles), shown for a feature whose `since` is this version or later. At that release
 # set it to "" and every banner goes at once; a published release at or past it hides them too.
-UPCOMING = "0.5.1"
+UPCOMING = "0.5.2"
 CARGO_VERSION = re.search(r'(?m)^version\s*=\s*"([^"]+)"', (ROOT / "Cargo.toml").read_text("utf-8")).group(1)
 
 

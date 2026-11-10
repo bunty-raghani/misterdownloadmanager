@@ -136,9 +136,31 @@
   const dismissed = new WeakSet();
   const dismissedSrc = new Set();
   const isDismissed = (v) => dismissed.has(v) || (v.currentSrc && dismissedSrc.has(v.currentSrc));
-  let allowed = null; // asked once per page: may it show here?
+  // May it show here? The app's answer (Options: the button on, the site not listed), asked
+  // again when older than ASK_MS, so a change in Options reaches a page already open (#532: one
+  // that never reloads, as YouTube's, kept the button for good). `never`: this page's own
+  // "Never on this site".
+  let allowed = null;
+  let askedAt = 0;
+  let asking = null;
+  let never = false;
+  let placed = false;
+  const ASK_MS = 5000;
+  const answered = () => allowed !== null && Date.now() - askedAt < ASK_MS;
   let place = { x: 1, y: 0 }; // where on the edge: fractions of the room, top right by default
+  let chosen = false; // the user put it where it is (dragged it, on this site): theirs, never moved for a page's control
+  let auto = { v: null, at: null, t: 0 }; // the spot found for this video, kept for a moment
+  const AUTO_MS = 400;
   let video = null; // the video it is over
+  // A video gone from under its button (#503): a hover-to-play preview (YouTube's thumbnails)
+  // stops as soon as the pointer leaves it for the button, since the page sees the pointer go.
+  // The button stays where it was, for that video, while the pointer is on it (or its menu is
+  // open), or for HOLD_MS while the pointer is still over where the video was, on its way to it;
+  // a click downloads what the video was playing.
+  let held = null; // { r: the video's last rectangle, at: the button's spot, d: what download sends, since }
+  const HOLD_MS = 1500;
+  let lastRect = null; // the video's rectangle when the button was last placed over it
+  let entered = null; // what download would send, taken as the pointer reached the button: { v, d, t }
   let lastMove = 0;
   let pointer = { x: -1, y: -1 };
   let menuOpen = false;
@@ -153,7 +175,8 @@
     Boolean(shadow.activeElement && shadow.activeElement.matches(":focus-visible")) || playerFocused();
   let focusedPlayer = null;
   const playerFocused = () =>
-    Boolean(video && focusedPlayer && document.activeElement === focusedPlayer && focusedPlayer.contains(video));
+    Boolean(video && focusedPlayer && document.activeElement === focusedPlayer &&
+      focusedPlayer.contains(video) && focusedPlayer.matches(":focus-visible"));
 
   // ---- the button: a closed shadow tree the page's styles and scripts can't reach ----------
   const root = document.createElement("mdm-video-button");
@@ -319,10 +342,55 @@ button:focus-visible { outline: 2px solid #2a78d6; outline-offset: -2px; }
   // `place` is where it sits in the room the video leaves around it: x and y from 0 to 1, one of
   // them 0 or 1 (on an edge).
   function rects() {
-    const r = video.getBoundingClientRect();
+    const r = held ? held.r : (lastRect = video.getBoundingClientRect());
     const w = pill.offsetWidth || 150;
     const h = pill.offsetHeight || 32;
     return { r, w, h, roomX: Math.max(0, r.width - w - 2 * INSET), roomY: Math.max(0, r.height - h - 2 * INSET) };
+  }
+
+  // Is a control of the page under this spot (a viewport rectangle)? What counts is something
+  // on top of the video that the user clicks and that is much smaller than the video: a button,
+  // a small link, a watch-later or menu button on a preview (#421); a link or layer over the
+  // whole video isn't one. On the video itself, and below it, is nothing to cover.
+  function onControl(b, video, videoRect) {
+    const area = (x) => Math.max(0, x.width) * Math.max(0, x.height);
+    const small = (el) => area(el.getBoundingClientRect()) < area(videoRect) / 5;
+    const points = [
+      [(b.left + b.right) / 2, (b.top + b.bottom) / 2],
+      [b.left + 4, b.top + 4],
+      [b.right - 4, b.top + 4],
+      [b.left + 4, b.bottom - 4],
+      [b.right - 4, b.bottom - 4],
+    ];
+    for (const [x, y] of points) {
+      for (const el of document.elementsFromPoint(x, y)) {
+        if (el === root) continue;
+        if (el === video || el.contains(video)) break;
+        const control = el.closest("button, [role=button], a[href], input, select, [onclick]");
+        if (control && !control.contains(video) && small(control)) return true;
+        if (small(el) && getComputedStyle(el).cursor === "pointer") return true;
+      }
+    }
+    return false;
+  }
+
+  // Where it goes now: the place the user gave it, else the default corner, or the next corner
+  // free of the page's own controls (a thumbnail's watch-later button at the top right, #421).
+  function spot(r, w, h, roomX, roomY) {
+    if (chosen) return place;
+    const now = Date.now();
+    if (auto.v === video && now - auto.t < AUTO_MS) return auto.at;
+    let at = place;
+    for (const c of [place, { x: 0, y: 0 }, { x: 0, y: 1 }, { x: 1, y: 1 }]) {
+      const left = r.left + INSET + c.x * roomX;
+      const top = r.top + INSET + c.y * roomY;
+      if (!onControl({ left, top, right: left + w, bottom: top + h }, video, r)) {
+        at = c;
+        break;
+      }
+    }
+    auto = { v: video, at, t: now };
+    return at;
   }
 
   function position() {
@@ -330,7 +398,9 @@ button:focus-visible { outline: 2px solid #2a78d6; outline-offset: -2px; }
     const { r, w, roomX, roomY } = rects();
     // A narrow video gets the icon only.
     pill.classList.toggle("compact", r.width < 360);
-    const at = dragging ? dragging.at : place;
+    // Held for a video gone (#503): where it was, not a corner found anew over what the page
+    // shows there now.
+    const at = dragging ? dragging.at : held && !chosen ? held.at : spot(r, w, pill.offsetHeight || 32, roomX, roomY);
     const left = r.left + INSET + at.x * roomX;
     // In the part of the video on screen: one scrolled half out keeps its button in view.
     const h = pill.offsetHeight || 32;
@@ -378,6 +448,7 @@ button:focus-visible { outline: 2px solid #2a78d6; outline-offset: -2px; }
   function show(v) {
     if (video !== v) {
       video = v;
+      held = null;
       closeMenu();
     }
     if (!attach()) return hide(true);
@@ -391,6 +462,7 @@ button:focus-visible { outline: 2px solid #2a78d6; outline-offset: -2px; }
   function hide(now) {
     if (!now && (menuOpen || dragging || keyboardOn())) return;
     if (now) {
+      held = null;
       closeMenu();
       shadow.activeElement?.blur();
     }
@@ -403,17 +475,50 @@ button:focus-visible { outline: 2px solid #2a78d6; outline-offset: -2px; }
     }, now || reduced ? 0 : 180);
   }
 
+  // What the button sends for `v` (its rectangle `r`): see `download`.
+  function describe(v, r) {
+    return {
+      drm: Boolean(v.mediaKeys),
+      src: /^https?:/i.test(v.currentSrc || "") ? v.currentSrc : "",
+      url: videoPage(v),
+      // The middle of the video: where the background asks the page's own player what it plays.
+      at: { x: r.left + r.width / 2, y: r.top + r.height / 2 },
+    };
+  }
+
+  // The video just went from under the button (#503): what it was, kept. What was taken as the
+  // pointer reached the button, when that was a moment ago; else the video as it is now.
+  function hold() {
+    const now = Date.now();
+    const d = entered && entered.v === video && now - entered.t < 1000 ? entered.d : describe(video, lastRect);
+    return { r: lastRect, at: chosen ? place : (auto.v === video && auto.at) || place, d, since: now };
+  }
+
   // While shown: follow the video (scrolling, layout) and fade when the pointer rests.
   function tick() {
     raf = 0;
-    if (!video || !video.isConnected || !eligible(video)) {
-      video = null;
-      return hide(true);
+    if (!video) return hide(true);
+    const onButton = root.matches(":hover");
+    if (!video.isConnected || !eligible(video)) {
+      if (!held && lastRect && !isDismissed(video)) held = hold();
+      const r = held && held.r;
+      const over =
+        r && pointer.x >= r.left && pointer.x <= r.right && pointer.y >= r.top && pointer.y <= r.bottom;
+      if (!held || !(onButton || menuOpen || dragging || keyboardOn() || (over && Date.now() - held.since < HOLD_MS))) {
+        const was = held;
+        held = null;
+        video = null;
+        // Left after it was held: it fades, as when the pointer leaves a video.
+        return was ? hide() : hide(true);
+      }
+      position();
+      raf = requestAnimationFrame(tick);
+      return;
     }
+    held = null;
     const r = video.getBoundingClientRect();
     const over =
       pointer.x >= r.left && pointer.x <= r.right && pointer.y >= r.top && pointer.y <= r.bottom;
-    const onButton = root.matches(":hover");
     if (!onButton && !menuOpen && !dragging && !keyboardOn() && (!over || Date.now() - lastMove > IDLE_MS)) {
       return hide();
     }
@@ -430,26 +535,42 @@ button:focus-visible { outline: 2px solid #2a78d6; outline-offset: -2px; }
 
   function look() {
     scan = 0;
-    if (dragging || allowed === false) return;
+    if (dragging || never || (allowed === false && answered())) return;
     const v = videoAt(pointer.x, pointer.y);
     if (!v) return;
-    if (allowed === null) return void ask().then(() => allowed && look());
+    if (!answered()) return void ask().then(() => allowed && look());
     show(v);
   }
 
-  async function ask() {
-    if (allowed !== null) return;
-    allowed = false; // until answered: one question per page
-    const r = await send({ type: "panel" });
-    allowed = Boolean(r && r.on);
-    if (allowed) {
-      try {
-        const { positions } = await ext.storage.local.get({ positions: {} });
-        if (positions[host]) place = snap(positions[host]);
-      } catch {
-        // Default spot.
-      }
+  // One question at a time; while it is out, the button waits for its answer.
+  function ask() {
+    if (never) {
+      allowed = false;
+      return Promise.resolve();
     }
+    if (answered()) return Promise.resolve();
+    asking = asking || send({ type: "panel" }).then(async (r) => {
+      allowed = !never && Boolean(r && r.on);
+      askedAt = Date.now();
+      // Switched off meanwhile: gone now, unless the menu or a drag has it in hand.
+      if (!allowed && video && !menuOpen && !dragging) {
+        video = null;
+        hide(true);
+      }
+      if (allowed && !placed) {
+        placed = true;
+        try {
+          const { positions } = await ext.storage.local.get({ positions: {} });
+          if (positions[host]) {
+            place = snap(positions[host]);
+            chosen = true;
+          }
+        } catch {
+          // Default spot.
+        }
+      }
+    }).finally(() => (asking = null));
+    return asking;
   }
 
   // ---- acting ---------------------------------------------------------------------------------
@@ -629,9 +750,11 @@ button:focus-visible { outline: 2px solid #2a78d6; outline-offset: -2px; }
     busy = true;
     try {
       closeMenu();
+      // Asked now, not kept: one <video> plays many videos at the same address (a feed's
+      // previews). A video gone from under the button: what it played then (#503).
+      const { drm, src, url, at } = held ? held.d : describe(video, video.getBoundingClientRect());
       // Encrypted (DRM): no tool can save it; say so rather than send it.
-      if (video.mediaKeys) return flash("err", t("video_drm"));
-      const src = /^(https?|blob):/i.test(video.currentSrc || "") ? video.currentSrc : "";
+      if (drm) return flash("err", t("video_drm"));
       // A page that moved in place keeps its first page's og:title; its document title follows.
       const og = location.href === landedAt ? document.querySelector('meta[property="og:title"]')?.content : "";
       const title = (og || document.title || "").trim();
@@ -641,17 +764,7 @@ button:focus-visible { outline: 2px solid #2a78d6; outline-offset: -2px; }
         await startTelegramDownload(src, title);
         return;
       }
-      // The middle of the video: where the background asks the page's own player what it plays.
-      const box = video.getBoundingClientRect();
-      const at = { x: box.left + box.width / 2, y: box.top + box.height / 2 };
-      // Asked now, not kept: one <video> plays many videos at the same address (a feed's previews).
-      const r = await send({
-        type: "video",
-        src: /^https?:/i.test(src) ? src : "",
-        title,
-        url: videoPage(video),
-        at,
-      });
+      const r = await send({ type: "video", src, title, url, at });
       if (r.gone) return;
       flash(r.ok ? "ok" : "err", t(r.ok ? "video_sent" : r.why === "options" ? "video_off" : r.why === "unnamed" ? "video_unnamed" : "video_failed"));
     } finally {
@@ -700,12 +813,14 @@ button:focus-visible { outline: 2px solid #2a78d6; outline-offset: -2px; }
     if (act === "download") return download();
     closeMenu();
     if (act === "hide") {
+      held = null;
       dismissed.add(video);
       if (video.currentSrc) dismissedSrc.add(video.currentSrc);
       video = null;
       return hide(true);
     }
     if (act === "never") {
+      never = true;
       allowed = false;
       video = null;
       hide(true);
@@ -715,6 +830,14 @@ button:focus-visible { outline: 2px solid #2a78d6; outline-offset: -2px; }
   }
 
   more.addEventListener("click", () => (menuOpen ? closeMenu() : openMenu()));
+
+  // The pointer reached the button: what the video plays now, kept in case the page stops it for
+  // that (a hover-to-play preview, #503).
+  root.addEventListener("pointerenter", () => {
+    if (video && !held && video.isConnected && eligible(video)) {
+      entered = { v: video, d: describe(video, video.getBoundingClientRect()), t: Date.now() };
+    }
+  });
 
   // Keys: Escape closes the menu, arrows move through it.
   shadow.addEventListener("keydown", (e) => {
@@ -744,9 +867,9 @@ button:focus-visible { outline: 2px solid #2a78d6; outline-offset: -2px; }
       startX: e.clientX,
       startY: e.clientY,
       // Where in the button it was taken.
-      dx: e.clientX - (r.left + INSET + place.x * roomX),
-      dy: e.clientY - (r.top + INSET + place.y * roomY),
-      at: place,
+      dx: e.clientX - (r.left + INSET + (chosen ? place : auto.at || place).x * roomX),
+      dy: e.clientY - (r.top + INSET + (chosen ? place : auto.at || place).y * roomY),
+      at: chosen ? place : auto.at || place,
       moved: false,
     };
     go.setPointerCapture(e.pointerId);
@@ -778,6 +901,7 @@ button:focus-visible { outline: 2px solid #2a78d6; outline-offset: -2px; }
       return;
     }
     place = snap(d.at);
+    chosen = true;
     position();
     lastMove = Date.now();
     // Remembered per site, not in a private window (it would keep the site's name), and the
@@ -814,6 +938,7 @@ button:focus-visible { outline: 2px solid #2a78d6; outline-offset: -2px; }
     removeEventListener("pointermove", onMove, true);
     removeEventListener("keydown", onTab, true);
     root.remove();
+    never = true;
     allowed = false;
     video = null;
   }

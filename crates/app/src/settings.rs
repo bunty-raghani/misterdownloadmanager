@@ -140,6 +140,10 @@ pub struct Settings {
     /// notification area, as closing the main window does (#63). On by default (the
     /// maintainer's choice), for existing lists too. Only where a tray shows MDM's icon.
     pub minimize_to_tray: bool,
+    /// General: closing the main window keeps MDM running, hidden in the notification area (else
+    /// closing quits). On by default, for existing lists too, in every copy. Only where a tray
+    /// shows MDM's icon.
+    pub close_to_tray: bool,
     pub mv2_extensions: bool,
     pub advanced_integration: bool,
     /// General: "Capture downloads from the following browsers" (name, on).
@@ -376,6 +380,7 @@ impl Default for Settings {
             extension_never_ask: false,
             clipboard_autostart: true,
             minimize_to_tray: true,
+            close_to_tray: true,
             mv2_extensions: true,
             advanced_integration: true,
             browsers: BROWSERS.iter().map(|b| (b.to_string(), true)).collect(),
@@ -780,6 +785,21 @@ impl Settings {
         }
     }
 
+    /// The folder just saved into becomes the category's, when it is another one (an unchanged
+    /// folder stays "the default", following Downloads). True when the folder changed.
+    pub fn keep_category_dir(
+        &mut self,
+        cat: crate::model::Category,
+        dir: &std::path::Path,
+        downloads: &std::path::Path,
+    ) -> bool {
+        if dir.as_os_str().is_empty() || dir == self.category_dir(cat, downloads) {
+            return false;
+        }
+        self.set_category_dir(cat, Some(dir.display().to_string()));
+        true
+    }
+
     /// Both category registries (the user's and the built-in ones' edits) from these settings,
     /// for code that only has a `Category`.
     pub fn publish_categories(&self) {
@@ -931,6 +951,8 @@ static OWN_DNS: std::sync::RwLock<Option<mdm_engine::DnsChoice>> = std::sync::Rw
 
 /// Keep [`own_net`] on the settings' proxy (cheap when it didn't change).
 pub fn share_proxy(proxy: mdm_engine::Proxy) {
+    // yt-dlp and gallery-dl go through it too (#363).
+    mdm_tools::proc::set_proxy(proxy.clone());
     if OWN_PROXY.read().unwrap().as_ref() != Some(&proxy) {
         *OWN_PROXY.write().unwrap() = Some(proxy);
     }
@@ -993,6 +1015,29 @@ pub fn own_net() -> mdm_engine::Options {
 
 #[cfg(test)]
 mod tests {
+    use std::path::Path;
+
+    /// #475: a folder chosen for a video is the Video category's next time; the category's own
+    /// folder stays "the default", following Downloads, and other categories stay as they were.
+    #[test]
+    fn a_folder_saved_into_becomes_the_categorys() {
+        use crate::model::Category;
+        let root = std::env::temp_dir();
+        let downloads = root.join("Downloads");
+        let downloads = downloads.as_path();
+        let mut s = super::Settings::default();
+        let default_video = s.category_dir(Category::Video, downloads);
+        assert!(!s.keep_category_dir(Category::Video, &default_video, downloads));
+        assert!(s.category_dirs.is_empty(), "the default stays the default");
+        assert!(!s.keep_category_dir(Category::Video, Path::new(""), downloads));
+        let chosen = root.join("clips");
+        let chosen = chosen.as_path();
+        assert!(s.keep_category_dir(Category::Video, chosen, downloads));
+        assert_eq!(s.category_dir(Category::Video, downloads), chosen);
+        assert_ne!(s.category_dir(Category::Music, downloads), chosen);
+        assert!(!s.keep_category_dir(Category::Video, chosen, downloads));
+    }
+
     #[test]
     fn a_dialog_keeps_what_changed_elsewhere_meanwhile() {
         let from = super::Settings::default();
@@ -1307,6 +1352,19 @@ pub(crate) mod sealed {
             let plain = serde_json::json!({ "site_logins": [["a.test", "u", "pw"]] });
             let old: crate::settings::Settings = serde_json::from_value(plain).unwrap();
             assert_eq!(old.site_logins[0].2, "pw");
+        }
+
+        #[test]
+        fn the_close_button_keeps_mdm_running_unless_told_otherwise() {
+            let s: crate::settings::Settings =
+                serde_json::from_value(serde_json::json!({})).unwrap();
+            assert!(
+                s.close_to_tray,
+                "a list from before the option goes on hiding"
+            );
+            let s: crate::settings::Settings =
+                serde_json::from_value(serde_json::json!({ "close_to_tray": false })).unwrap();
+            assert!(!s.close_to_tray);
         }
     }
 }

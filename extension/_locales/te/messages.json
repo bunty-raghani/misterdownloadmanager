@@ -238,5 +238,8 @@
   },
   "remote_device_name": {
     "message": "బ్రౌజర్ పొడిగింపు"
+  },
+  "popup_media_title_name": {
+    "message": "మీడియా ఫైల్ పేర్ల ముందు పేజీ శీర్షికను జోడించు"
   }
 }

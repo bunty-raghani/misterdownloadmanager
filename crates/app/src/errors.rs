@@ -191,6 +191,13 @@ fn refusal(r: &Refusal) -> String {
             // i18n: a download's error: the address is a Google Drive folder, which isn't one file
             t("this is a Google Drive folder, not a file").to_owned()
         }
+        Refusal::NeedsBrowser { site } => fmt(
+            // i18n: a download's error: the address is a site's web page that needs a browser, not the file; {site} = the site's name (gofile)
+            t(
+                "this {site} link is a web page, not the file: open it in your browser and download from there",
+            ),
+            &[("site", &ltr(site))],
+        ),
         Refusal::Service { service, fault } => self::service(service, fault),
     }
 }

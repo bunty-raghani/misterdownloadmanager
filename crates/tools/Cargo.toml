@@ -40,6 +40,11 @@ test-update = []
 name = "fake_ytdlp"
 harness = false
 
+# System helpers use a PATH of their own in a child process, without changing the test runner's.
+[[test]]
+name = "system_helpers"
+harness = false
+
 [lints]
 workspace = true
 

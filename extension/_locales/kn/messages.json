@@ -238,5 +238,8 @@
   },
   "remote_device_name": {
     "message": "ಬ್ರೌಸರ್ ವಿಸ್ತರಣೆ"
+  },
+  "popup_media_title_name": {
+    "message": "ಮಾಧ್ಯಮ ಫೈಲ್ ಹೆಸರುಗಳ ಮುಂದೆ ಪುಟದ ಶೀರ್ಷಿಕೆಯನ್ನು ಸೇರಿಸಿ"
   }
 }

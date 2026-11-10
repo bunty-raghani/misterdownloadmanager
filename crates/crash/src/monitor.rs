@@ -26,6 +26,8 @@ pub enum Event {
     },
     /// The window answers again after a freeze.
     Recovered,
+    /// The socket couldn't be opened: the app can never connect, so stop waiting for it.
+    ServeFailed(String),
     /// The app is gone: `clean` when it closed normally.
     Gone { clean: bool, notes: Notes },
 }
@@ -82,6 +84,9 @@ impl minidumper::ServerHandler for Handler {
     ) -> minidumper::LoopAction {
         let notes = self.notes();
         let kind = notes.dump_kind();
+        if let Ok(mut n) = self.notes.lock() {
+            n.dump_done();
+        }
         match result {
             Ok(mut bin) => {
                 use std::io::Write;

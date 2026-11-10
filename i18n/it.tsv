@@ -56,7 +56,7 @@
 #. in a download's log, after extracting: entries of the archive not written (links, names that would leave the folder)
 #. {n} = a number (keep the braces as they are)
 @plural	{n} entry was left out (a link, or a name leading outside the folder)|{n} entries were left out (links, or names leading outside the folder)	{n} voce è stata esclusa (un collegamento o un nome che porta fuori dalla cartella)|{n} voci sono state escluse (collegamenti o nomi che portano fuori dalla cartella)
-#. count in the Batch download window; count in the Link grabber window; count in the Add torrent window
+#. count in the Batch download window; count in the Link grabber window; count in the Add torrent window; count in torrentfiles.rs
 #. how many files the pattern gives in all
 #. Link grabber: a package's row: {n} is its number of links
 #. {n} = a number (keep the braces as they are)
@@ -615,6 +615,10 @@
 	Check for updates at every start	Verifica aggiornamenti a ogni avvio
 #. text in helpers.rs
 	Check your connection, then try again, or get them later from the video window.	Controlla la connessione e riprova, oppure scaricali più tardi dalla finestra dei video.
+#. text in the Options window
+#. tooltip of the close-setting: checked keeps MDM running when the window closes, in the notification area when available or else the taskbar; downloads continue; unchecked closing quits
+#, machine
+	Checked, closing the window keeps MDM running: it hides in the notification area when available, or minimizes to the taskbar otherwise, and downloads continue; unchecked, closing quits MDM	Se selezionata, chiudendo la finestra MDM resta in esecuzione: si nasconde nell'area di notifica quando disponibile oppure si riduce a icona nella barra delle applicazioni, e i download continuano; se deselezionata, chiudendo la finestra MDM si chiude
 #. message or event log entry in the main window
 #. event log entry after Recheck: {have} and {total} are sizes ("1.2 GB of 4 GB there")
 	Checked: {have} of {total} there	Verifica completata: presenti {have} di {total}
@@ -641,6 +645,10 @@
 #. {name} = a file name; {n} = a number (keep the braces as they are)
 #. the trailing ... means it is still going on: keep it
 	Checking {name} ({n} of {total})...	Verifica di {name} ({n} di {total})...
+#. text in the download list (sizes, speeds, status)
+#. a torrent's status while its files are read and checked; {percent} is how much is checked, e.g. "42%"
+#, machine
+	Checking {percent}	Verifica in corso {percent}
 #. text in the Checksum window; text in the Link grabber window
 #. the trailing ... means it is still going on: keep it
 	Checking...	Verifica in corso...
@@ -674,11 +682,12 @@
 	Client	Client
 #. text in the Options window
 	Clock:	Formato ora:
-#. text in the Checksum window; text in the main window (menus, toolbar, Categories pane); button in crashui.rs; button in a dialog box; button in extension.rs; button in the Help menu's windows (About, updates, shortcuts, Tell a friend); button in helpers.rs; button in the download list; button in the Options window; button in rssdlg.rs; text in standard windows
+#. text in the Checksum window; text in the main window (menus, toolbar, Categories pane); button in crashui.rs; button in a dialog box; button in extension.rs; button in the Help menu's windows (About, updates, shortcuts, Tell a friend); button in helpers.rs; button in the download list; button in the Options window; button in rssdlg.rs; button in torrentfiles.rs; text in standard windows
 #. both verbs: Verify = check the file now; Close = close the window
 #. tooltip of the × that closes the Categories pane
 #. verb: closes this window
 #. verb: closes the filter box
+#. button that closes the torrent file list window
 #. a window's title-bar button: closes the window
 	Close	Chiudi
 #. what a keyboard shortcut does in the Help menu's windows (About, updates, shortcuts, Tell a friend)
@@ -1202,6 +1211,11 @@
 	Files go to: {folder}	I file verranno salvati in: {folder}
 #. text in the Scheduler window; tab in the Scheduler window
 	Files in the queue	File nella coda
+#. button in a download's Properties window
+#. File Properties button that opens the selected torrent's file list
+#. the trailing ... means it opens a window: keep it
+#, machine
+	Files...	File...
 #. button in the Find window
 #. verb: button that starts the search
 	Find	Trova
@@ -1597,6 +1611,10 @@
 	Kazakhstan	Kazakistan
 #. text in a dialog box; text in a download's progress window; text in the Add torrent window
 	KBytes/sec	KB/sec
+#. text in the Options window
+#. checkbox: closing keeps MDM running, in the notification area when available or else the taskbar, instead of quitting
+#, machine
+	Keep running when closing the window	Mantieni in esecuzione alla chiusura della finestra
 #. checkbox in the Add torrent window
 	Keep sharing torrents after they finish	Continua a condividere i torrent dopo il completamento
 #. text in countries.rs
@@ -2260,13 +2278,14 @@
 	Only the first {n} videos are listed.	Sono elencati solo i primi {n} video.
 #. checkbox in a dialog box
 	Only while I'm using the computer	Solo mentre uso il computer
-#. button in a dialog box; text in a dialog box; button in a download's Properties window
+#. button in a dialog box; text in a dialog box; button in a download's Properties window; button in torrentfiles.rs
 #. verb: opens the downloaded file
 #. title of the message when a downloaded file can't be opened
 #. verb: opens the file
 	Open	Apri
-#. button in crashui.rs; button in a dialog box
+#. button in crashui.rs; button in a dialog box; button in torrentfiles.rs
 #. crash report window button: show the report's file in its folder
+#. button that opens the torrent's containing folder in the file manager
 	Open folder	Apri cartella
 #. checkbox in the Add torrent window
 	Open magnet links and .torrent files with Mister Download Manager	Apri i link magnet e i file .torrent con Mister Download Manager
@@ -2672,7 +2691,7 @@
 #. text in a dialog box
 #. title of the folder picker
 	Select a folder	Seleziona una cartella
-#. button in playlistdlg.rs; button in the Add torrent window
+#. button in playlistdlg.rs; button in the Add torrent window; text in torrentfiles.rs
 #. button in Download video for a playlist: tick every video
 	Select all	Seleziona tutto
 #. what a keyboard shortcut does in the Help menu's windows (About, updates, shortcuts, Tell a friend)
@@ -2856,8 +2875,9 @@
 	size unknown	dimensione sconosciuta
 #. text in a download's Properties window
 	Size:	Dimensione:
-#. text in a download's progress window
+#. text in a download's progress window; text in torrentfiles.rs
 #. a torrent file the user chose not to download
+#. status of a torrent file the user chose not to download
 	Skipped	Saltato
 #. text in the queues
 #. what the computer does when the queue is done (verb: put it to sleep)
@@ -3397,6 +3417,10 @@
 #. error: a program chosen as yt-dlp or ffmpeg didn't answer as one; {name} = yt-dlp or ffmpeg
 #. {name} = a file name (keep the braces as they are)
 	this program isn't {name}	questo programma non è {name}
+#. text in errors.rs
+#. why a download failed: the site's bot check (Cloudflare) lets browsers through, not programs. Alt+click: the link clicked with the Alt key held, which leaves the download to the browser
+#, machine
+	this site lets only browsers through; Alt+click the link	questo sito consente solo ai browser di passare; fai clic con Alt sul collegamento
 #. text in a download's progress window
 	This system has no dial-up connections to hang up	Questo sistema non ha connessioni remote da disconnettere
 #. text in errors.rs
@@ -3459,8 +3483,9 @@
 	Torrent	Torrent
 #. text in the download list (sizes, speeds, status)
 	Torrent downloads (magnet links and .torrent files)	Download torrent (link magnet e file .torrent)
-#. message or event log entry in the main window; text in the Add torrent window
+#. message or event log entry in the main window; text in the Add torrent window; window title in torrentfiles.rs
 #. the kind of file the Open dialog lists
+#. title of the separate window listing a torrent's files
 	Torrent files	File torrent
 #. window title in the Add torrent window
 	Torrent settings	Impostazioni torrent
@@ -4100,11 +4125,19 @@ column	File Name	Nome file
 #. column title in the download list in the download list
 column	Last Try Date	Data ultimo tentativo
 #. column title in the download list in the download list
+#. column title: how many peers a torrent is connected to now (seeders and leechers)
+#, machine
+column	Peers	Peer
+#. column title in the download list in the download list
 #. column title: one letter for Queue (the column is narrow)
 column	Q	C
 #. column title in the main window; column title in the download list
 #. tooltip of the narrow "Q" column's title
 column	Queue	Coda
+#. column title in the download list in the download list
+#. column title: what a torrent has sent to peers against what it took
+#, machine
+column	Share ratio	Rapporto di condivisione
 #. column title in the download list in the download list
 #. noun: the file's size
 column	Size	Dimensione
@@ -4118,6 +4151,10 @@ column	Status	Stato
 column	Time left	Tempo rimanente
 #. column title in the download list in the download list
 column	Transfer rate	Velocità di trasferimento
+#. column title in the download list in the download list
+#. column title: what a torrent sends to peers, bytes per second
+#, machine
+column	Upload speed	Velocità di upload
 #. text in the browser extension
 #. choice under Send downloads to: an MDM running on another computer of the network, such as a home server; keep the name Mister Download Manager as it is
 extension	Another Mister Download Manager (a server)	Un altro Mister Download Manager (un server)
@@ -4269,6 +4306,10 @@ extension	Pairing code	Codice di associazione
 #. text in the browser extension
 #. status when the user switched off taking downloads in the toolbar button's popup
 extension	Paused: downloads stay with the browser	In pausa: i download restano al browser
+#. text in the browser extension
+#. Option in the browser extension media list: put the page title before the original file name when downloading a detected media file
+#, machine
+extension	Prefix media file names with the page title	Aggiungi il titolo della pagina davanti ai nomi dei file multimediali
 #. text in the browser extension
 #. shown instead of the Download button beside a copy-protected (DRM) stream in the toolbar button's popup: it can't be downloaded; short
 extension	Protected	Protetto
@@ -4477,6 +4518,11 @@ menu	&RSS feeds...	Feed &RSS...
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 menu	&Scheduler and queues	&Pianificatore e code
+#. menu command in a download's progress window
+#. right-click menu of a download window's tab row: bring back the tabs taken off with "Hide tab"
+#. & marks the keyboard shortcut letter: keep one & before a letter of the translation
+#, machine
+menu	&Show hidden tabs	Mo&stra schede nascoste
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 menu	&Stop All	&Interrompi tutto
@@ -4623,6 +4669,11 @@ menu	Edit queue	Modifica coda
 #. menu command in the main window
 #. verb: unpack the downloaded archive (zip, 7z, rar) into its folder
 menu	Extract	Estrai
+#. menu command in the main window
+#. right-click → Torrent submenu: open the selected torrent's file list
+#. the trailing ... means it opens a window: keep it
+#, machine
+menu	Files...	File...
 #. menu command in the main window
 menu	Find (Ctrl-F)	Trova (Ctrl+F)
 #. menu command in the main window

@@ -238,5 +238,8 @@
   },
   "remote_device_name": {
     "message": "Webbläsartillägg"
+  },
+  "popup_media_title_name": {
+    "message": "Lägg till sidtiteln framför mediefilernas namn"
   }
 }

@@ -16,13 +16,17 @@
 // The cases (per browser): link (a .zip link, throttled and not), ask (Firefox set to ask what to
 // do with each new type, as Waterfox is: caught before its dialog, #208), cookie (cookies and referrer
 // forwarded), names (Content-Disposition), redirect, leadon (a page going to the file by script, #374), form (POST, 303), alt (Alt+click leaves it
-// to the browser), opened (a PDF or MP3 the browser would show or play), csp (the video button
+// to the browser), opened (a PDF or MP3 the browser would show or play), spot (the video button
+// clear of the page's controls, #421), preview (the video button kept over a hover-to-play
+// preview the page stopped as the pointer went to it, #503), csp (the video button
 // under a strict CSP), hls (the stream a player loaded), streams (HLS and DASH players handed over
 // by the button, the right-click menu and the media list, and read by yt-dlp; #155; also with no
 // .m3u8 or .mpd, served as text/plain or octet-stream, #171), sniffed (#171 without yt-dlp: such
 // streams found only when asked, by the button and the media list, a text decoy never), media (the
 // toolbar button's list of the media a tab loaded: streams, files, a protected stream; #38), video (shown, clicked, dragged,
-// kept; "never on the site" in the last browser), start (MDM not running: the host starts it),
+// kept; "never on the site" in the last browser), panelOptions (the button follows Options in
+// an open tab: off, on, the site listed; #532), videoFocus (mouse idle/fullscreen and keyboard
+// focus, #480), start (MDM not running: the host starts it),
 // remote (Send downloads to → Another MDM, #157: paired from the popup, a link downloaded by a
 // headless MDM; E2E_REMOTE_URL for one running elsewhere, such as the Docker image: remoteServer).
 //
@@ -221,6 +225,8 @@ async function chromium(bin, profile, dl, page, ready) {
       "--ignore-certificate-errors",
       // Linux: no keyring prompt for the test profile.
       ...(WIN ? [] : ["--password-store=basic"]),
+      // E2E_CHROMIUM_ARGS: more switches, space separated (screenshots: --lang=de, --force-dark-mode).
+      ...(process.env.E2E_CHROMIUM_ARGS || "").split(" ").filter(Boolean),
       "about:blank",
     ],
     { env: process.env, stdio: ["ignore", "ignore", "ignore", "pipe", "pipe"], windowsHide: true },
@@ -299,7 +305,7 @@ async function chromium(bin, profile, dl, page, ready) {
         await cdp.send("Input.dispatchMouseEvent", { type: "mouseReleased", ...at, buttons: 0, clickCount: 1 }, sessionId);
       }
     };
-    const KEYS = { ArrowDown: 40, Enter: 13 };
+    const KEYS = { ArrowDown: 40, Enter: 13, Tab: 9 };
     const key = async (k) => {
       for (const type of ["keyDown", "keyUp"]) {
         // Enter carries its text, as a real key press does.
@@ -342,6 +348,10 @@ async function chromium(bin, profile, dl, page, ready) {
       major,
       evaluate,
       mouse,
+      screenshot: async (file) => {
+        const { data } = await cdp.send("Page.captureScreenshot", { format: "png" }, sessionId);
+        fs.writeFileSync(file, Buffer.from(data, "base64"));
+      },
       navigate,
       key,
       pill,
@@ -475,7 +485,7 @@ async function firefox(bin, profile, dl, page, ready) {
       await bidi.send("input.performActions", { context, actions: sources });
     };
     // WebDriver key codes.
-    const KEYS = { ArrowDown: "\uE015", Enter: "\uE007" };
+    const KEYS = { ArrowDown: "\uE015", Enter: "\uE007", Tab: "\uE004" };
     const key = (k) =>
       bidi.send("input.performActions", {
         context,
@@ -940,6 +950,82 @@ const rect = (session, sel) =>
     if (!e || (e.localName === "mdm-video-button" && e.style.display !== "block")) return null;
     const r = e.getBoundingClientRect(); return { l: r.left, t: r.top, r: r.right, b: r.bottom }; })()`);
 
+// #480: a mouse-focused player must still fade, including after entering fullscreen. Run
+// against a local player so YouTube's network, sign-in and changing layout aren't involved.
+export async function videoFocus(session) {
+  await session.navigate(`${LAB}/page?video=${encodeURIComponent("/gen/1M/clip.mp4")}`);
+  await session.evaluate(`(() => {
+    const v = document.querySelector("#video");
+    const player = document.createElement("div");
+    player.id = "focus-player";
+    player.tabIndex = 0;
+    player.style.cssText = "width:640px;height:360px;background:#18212d";
+    v.before(player);
+    player.append(v);
+    v.controls = false;
+    v.tabIndex = -1;
+    v.style.cssText = "width:100%;height:100%;pointer-events:none";
+    const after = document.createElement("button");
+    after.id = "after-player";
+    after.textContent = "After the player";
+    player.after(after);
+  })()`);
+  const focused = (id) => session.evaluate(`document.activeElement?.id === ${JSON.stringify(id)}`);
+  const keyboard = () => session.evaluate('document.querySelector("#focus-player").matches(":focus-visible")');
+  const shown = () => rect(session, "mdm-video-button");
+  const idle = () => sleep(3100); // 2600 ms idle + the 180 ms fade, with room for a slow frame.
+  const v = await rect(session, "#video");
+  await session.mouse((v.l + v.r) / 2, (v.t + v.b) / 2, "click");
+  if (!(await focused("focus-player")) || await keyboard()) throw new Error("player did not receive mouse focus");
+  await until("the video button", 5000, shown);
+  await idle();
+  if (await shown()) throw new Error("#480: mouse focus keeps the video button visible after idle");
+
+  await session.evaluate('document.querySelector("#focus-player").requestFullscreen()');
+  if (!(await session.evaluate('document.fullscreenElement?.id === "focus-player"'))) throw new Error("player did not enter fullscreen");
+  const fs = await rect(session, "#video");
+  await session.mouse((fs.l + fs.r) / 2, (fs.t + fs.b) / 2);
+  await until("the fullscreen video button", 5000, shown);
+  if (!(await session.evaluate('document.querySelector("mdm-video-button").parentNode === document.fullscreenElement'))) throw new Error("button is outside fullscreen player");
+  await idle();
+  if (await shown()) throw new Error("#480: mouse focus keeps the fullscreen video button visible after idle");
+  await session.evaluate("document.exitFullscreen()");
+
+  // Tab into the player from a preceding control, without a pointer over the video.
+  await session.evaluate(`(() => {
+    const before = document.createElement("button");
+    before.textContent = "Before the player";
+    document.querySelector("#focus-player").before(before);
+    before.focus();
+  })()`);
+  await session.mouse(1, 1);
+  await session.key("Tab");
+  if (!(await focused("focus-player")) || !(await keyboard())) throw new Error("Tab did not give the player keyboard focus");
+  await until("the keyboard video button", 5000, shown);
+  await idle();
+  if (!(await shown())) throw new Error("keyboard-focused player lost its video button");
+  await session.key("Tab");
+  if (!(await session.evaluate('document.activeElement?.localName === "mdm-video-button"'))) throw new Error("Tab skipped the video button");
+  await idle();
+  if (!(await shown())) throw new Error("keyboard-focused video button faded");
+  await session.key("Tab"); // Back through the player to the next page control.
+  if (!(await focused("after-player"))) throw new Error("Tab could not leave the video button");
+  await until("the video button hidden after focus leaves", 5000, async () => !(await shown()));
+
+  // Return to the player by mouse after using the keyboard.
+  await session.mouse((v.l + v.r) / 2, (v.t + v.b) / 2, "click");
+  if (await keyboard()) throw new Error("mouse click did not clear keyboard focus");
+  await until("the player button again", 5000, shown);
+  await idle();
+  if (await shown()) throw new Error("switching to the mouse kept the button visible");
+  // Hover shows it again; Tab from a clicked player must still reach the button.
+  await session.mouse((v.l + v.r) / 2 + 1, (v.t + v.b) / 2);
+  await until("the hovered video button", 5000, shown);
+  await session.key("Tab");
+  if (!(await session.evaluate('document.activeElement?.localName === "mdm-video-button"'))) throw new Error("Tab from a mouse-focused player skipped the video button");
+  return "mouse focus fades in normal view and fullscreen; keyboard focus stays, Tab enters and leaves, switching to the mouse fades again";
+}
+
 // Point at the video (rectangle `v`) until the button shows; its rectangle, or null.
 async function hover(session, v) {
   for (let i = 0; i < 40; i++) {
@@ -1015,6 +1101,58 @@ async function videoButton(session, never) {
   await session.navigate(page);
   if (await hover(session, v)) throw new Error("the button still shows on a site it should never show on");
   return "shown, clicked (the video's file), dragged, kept, never on the site";
+}
+
+// How long the page and the extension keep the app's "may it show here" (video.js ASK_MS,
+// background.js PANEL_KEEP_MS), with room for the question.
+const PANEL_KEPT_MS = 5000 + 1500;
+
+// Options → General → Download panels, changed as its OK does: the settings saved in
+// downloads.json, which the host reads at each question. Changed with the app stopped, so its own
+// next save doesn't put them back.
+async function panelSettings(change) {
+  await stopApp();
+  const file = path.join(data, "downloads.json");
+  const saved = JSON.parse(fs.readFileSync(file, "utf8").replace(/^﻿/, ""));
+  Object.assign(saved.settings, change);
+  fs.writeFileSync(file, JSON.stringify(saved));
+  await startApp();
+}
+
+// #532: the button follows Options in a tab already open (no reload: YouTube never reloads),
+// switched off, on again, and off on the site; and after a reload.
+async function videoButtonFollowsOptions(session) {
+  const page = `${LAB}/page?video=${encodeURIComponent("/gen/1M/clip.mp4")}`;
+  await session.navigate(page);
+  const v = await rect(session, "#video");
+  const away = async () => {
+    await session.mouse(5, 5);
+    await sleep(PANEL_KEPT_MS);
+  };
+  const done = [];
+  try {
+    if (!(await hover(session, v))) throw new Error("no button over the video");
+    await panelSettings({ video_panel: false });
+    await away();
+    if (await hover(session, v)) throw new Error("switched off in Options: the button still shows in the open tab");
+    done.push("off: gone in the open tab");
+    await session.mouse(5, 5);
+    await session.navigate(page);
+    if (await hover(session, v)) throw new Error("switched off in Options: the button shows after a reload");
+    done.push("and after a reload");
+    await panelSettings({ video_panel: true });
+    await away();
+    if (!(await hover(session, v))) throw new Error("switched on again: no button in the open tab");
+    done.push("on again: back in the open tab");
+    await panelSettings({ video_panel_sites: "127.0.0.1" });
+    await away();
+    if (await hover(session, v)) throw new Error("the site listed in Options: the button still shows in the open tab");
+    done.push("the site listed: gone in the open tab");
+  } finally {
+    await session.mouse(5, 5);
+    await panelSettings({ video_panel: true, video_panel_sites: "" });
+  }
+  return done.join("; ");
 }
 
 // ---- the cases ---------------------------------------------------------------------------------
@@ -1423,9 +1561,14 @@ const CASES = {
     await clickLink(t, `/gen/1M/get?cdstar=${encodeURIComponent(star)}`);
     await arrived(star, 1 << 20);
     await keptNothing(t.dl);
+    // #447: raw UTF-8 in filename=, no filename* (Firefox gives extensions its bytes).
+    const raw = `تقرير-e2e-${t.name}.zip`;
+    await clickLink(t, `/gen/1M/raw.php?cd=${encodeURIComponent(raw)}`);
+    await arrived(raw, 1 << 20);
+    await keptNothing(t.dl);
     const wrong = fs.readdirSync(path.join(downloads, "Compressed")).filter((f) => /^(download\.php|get|fallback-name\.zip)/.test(f));
     if (wrong.length) throw new Error(`saved under the address's or the fallback name too: ${wrong.join(", ")}`);
-    return `${plain}, ${star}`;
+    return `${plain}, ${star}, ${raw}`;
   },
 
   // A redirect: MDM keeps the address clicked (it asks it again to renew the link).
@@ -1555,6 +1698,78 @@ const CASES = {
     const want = `${LAB}/gen/1M/clip.mp4?inline=1`;
     if (address !== want) throw new Error(`the video window got ${address}, not ${want}`);
     return `styled (${Math.round(pill.h)}px, ${pill.image.slice(0, 15)}...), sent ${address.replace(LAB, "")}`;
+  },
+
+  // The button doesn't sit on a control of the page (#421: a thumbnail's watch-later button at
+  // the top right): it moves to a free corner.
+  async spot(t) {
+    // E2E_SPOT_SHOT: a screenshot of the page with the button shown, for a PR's body.
+    const shoot = async () => {
+      if (process.env.E2E_SPOT_SHOT && t.session.screenshot) await t.session.screenshot(process.env.E2E_SPOT_SHOT);
+    };
+    await t.session.navigate(`${LAB}/page?video=${encodeURIComponent("/gen/1M/clip.mp4")}`);
+    await t.session.evaluate(`(() => {
+      const r = document.querySelector("#video").getBoundingClientRect();
+      const c = document.createElement("button");
+      c.id = "page-control";
+      c.textContent = "x";
+      c.style.cssText = "position:fixed;left:" + (r.right - 44) + "px;top:" + (r.top + 4) + "px;width:40px;height:40px;z-index:9";
+      document.body.appendChild(c);
+      return true;
+    })()`);
+    const v = await rect(t.session, "#video");
+    const b = await hover(t.session, v);
+    if (!b) throw new Error("no button over the video");
+    await shoot();
+    const c = await rect(t.session, "#page-control");
+    const overlaps = b.l < c.r && b.r > c.l && b.t < c.b && b.b > c.t;
+    if (overlaps) throw new Error(`the button covers the page's control: ${JSON.stringify({ b, c })}`);
+    return `at ${Math.round(b.l - v.l)},${Math.round(b.t - v.t)}, clear of the page's control`;
+  },
+
+  // #503: a hover-to-play preview (YouTube's thumbnails) stops as soon as the pointer leaves the
+  // video for the button, the page seeing the pointer go: hidden, or taken out of the page. The
+  // button stays where it was while the pointer is on it, a click sends the video it was over,
+  // and it fades once the pointer leaves.
+  async preview(t) {
+    // E2E_PREVIEW_SHOT: screenshots of the page with the preview stopped, for a PR's body.
+    const shoot = async (name) => {
+      if (process.env.E2E_PREVIEW_SHOT && t.session.screenshot) await t.session.screenshot(`${process.env.E2E_PREVIEW_SHOT}-${name}.png`);
+    };
+    const done = [];
+    for (const stop of ["hidden", "removed"]) {
+      await t.session.navigate(`${LAB}/page?video=${encodeURIComponent("/gen/1M/clip.mp4")}`);
+      await t.session.evaluate(`(() => {
+        const v = document.querySelector("#video");
+        v.addEventListener("mouseleave", () => {
+          if (${JSON.stringify(stop)} === "hidden") v.style.display = "none"; else v.remove();
+          document.body.dataset.preview = "stopped";
+        });
+        return true;
+      })()`);
+      const v = await rect(t.session, "#video");
+      const b = await hover(t.session, v);
+      if (!b) throw new Error(`${stop}: no button over the video`);
+      // Onto the button: the page stops its preview.
+      await t.session.mouse(b.l + 14, (b.t + b.b) / 2);
+      await until(`${stop}: the page's preview stopped`, 3000, () => t.session.evaluate(`document.body.dataset.preview === "stopped"`));
+      await sleep(500);
+      await shoot(stop);
+      const kept = await rect(t.session, "mdm-video-button");
+      if (!kept) throw new Error(`${stop}: the button went with the preview`);
+      near(kept.l, b.l, `${stop}: kept, left edge`);
+      near(kept.t, b.t, `${stop}: kept, top`);
+      // Still there with the pointer resting on it, past the time the pointer is given to reach it.
+      await sleep(2000);
+      if (!(await rect(t.session, "mdm-video-button"))) throw new Error(`${stop}: the button went while the pointer rested on it`);
+      const address = await clickButton(t.session, kept);
+      if (address !== `${LAB}/gen/1M/clip.mp4`) throw new Error(`${stop}: the video window got ${address}`);
+      // The pointer leaves: it fades, as over any video.
+      await t.session.mouse(5, 5);
+      await until(`${stop}: the button gone after the pointer left`, 3000, async () => !(await rect(t.session, "mdm-video-button")));
+      done.push(`${stop}: kept, sent ${address.replace(LAB, "")}, gone after`);
+    }
+    return done.join("; ");
   },
 
   // A player playing a stream (a blob: in the page): the button sends the manifest it loaded.
@@ -1780,6 +1995,18 @@ const CASES = {
     const want = `${LAB}/page?video=moved`;
     if (address !== want) throw new Error(`the video window got ${address}, not ${want}`);
     return `sent ${address.replace(LAB, "")}`;
+  },
+
+  // Before `video`, which ends with "Never on this site" for the lab in the last browser.
+  async panelOptions(t) {
+    return videoButtonFollowsOptions(t.session);
+  },
+
+  // Before `video`: its last step turns the button off for the lab's site in the last browser.
+  async videoFocus(t) {
+    // Headless Firefox refuses the player's fullscreen request and Tab's focus on it here.
+    if (t.kind === "firefox") throw new Skip("headless Firefox denies fullscreen and keyboard focus to the test page");
+    return videoFocus(t.session);
   },
 
   async video(t) {

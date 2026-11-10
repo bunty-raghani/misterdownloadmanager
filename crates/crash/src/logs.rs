@@ -1,12 +1,17 @@
 //! The log MDM keeps in release builds too: `<data>/logs/mdm.log`, rolled over at a size into
 //! `mdm.1.log` … `mdm.3.log` (the crash monitor keeps `monitor.log` the same way). Each line is
-//! written through at once (a crash loses nothing that was logged), and a report takes the last
-//! lines of MDM's.
+//! handed to the log's own thread, which writes it at once; a report takes the last lines of
+//! MDM's ([`flush`] first, so it has them all).
+//!
+//! The window's thread never writes the file itself (#513): while Windows held every write on
+//! C: for a shadow copy, a line logged there (or one waiting behind another thread's held write)
+//! kept the window from answering until the writes were let go.
 
-use std::fs::{self, File, OpenOptions};
+use std::fs::{self, OpenOptions};
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex};
+use std::sync::mpsc;
+use std::time::Duration;
 
 /// A log file grows to this, then rolls over.
 pub const MAX_BYTES: u64 = 2 * 1024 * 1024;
@@ -30,16 +35,25 @@ fn rolled(dir: &Path, name: &str, n: usize) -> PathBuf {
     dir.join(format!("{name}.{n}.log"))
 }
 
-/// The writer behind the log: appends to `mdm.log`, rolling it over past [`MAX_BYTES`].
+/// What the log's thread is handed.
+enum Msg {
+    Line(Vec<u8>),
+    /// Answered once everything handed over before it is written.
+    Flush(mpsc::Sender<()>),
+}
+
+/// The writer behind the log: hands each line to the log's thread, which appends it to
+/// `mdm.log`, rolling it over past [`MAX_BYTES`]. Writing never waits for the disk.
 #[derive(Clone)]
 pub struct Rolling {
-    inner: Arc<Mutex<Inner>>,
+    tx: mpsc::Sender<Msg>,
 }
 
 struct Inner {
     dir: PathBuf,
     name: &'static str,
-    file: Option<File>,
+    /// The open log file (another writer in a test).
+    file: Option<Box<dyn Write + Send>>,
     size: u64,
 }
 
@@ -49,14 +63,41 @@ impl Rolling {
         let path = current(&dir, name);
         let file = OpenOptions::new().create(true).append(true).open(&path)?;
         let size = file.metadata().map(|m| m.len()).unwrap_or(0);
-        Ok(Rolling {
-            inner: Arc::new(Mutex::new(Inner {
-                dir,
-                name,
-                file: Some(file),
-                size,
-            })),
+        Rolling::over(Inner {
+            dir,
+            name,
+            file: Some(Box::new(file)),
+            size,
         })
+    }
+
+    /// The log's thread, writing into `inner`.
+    fn over(mut inner: Inner) -> io::Result<Rolling> {
+        let name = inner.name;
+        let (tx, rx) = mpsc::channel();
+        std::thread::Builder::new()
+            .name(format!("{name} log"))
+            .spawn(move || {
+                for msg in rx {
+                    match msg {
+                        Msg::Line(line) => inner.append(&line),
+                        Msg::Flush(done) => {
+                            if let Some(f) = inner.file.as_mut() {
+                                let _ = f.flush();
+                            }
+                            let _ = done.send(());
+                        }
+                    }
+                }
+            })?;
+        Ok(Rolling { tx })
+    }
+
+    /// Wait, up to `within`, until every line handed over so far is written. False when it
+    /// wasn't (the disk held, or the log's thread gone).
+    pub fn flush_within(&self, within: Duration) -> bool {
+        let (done, written) = mpsc::channel();
+        self.tx.send(Msg::Flush(done)).is_ok() && written.recv_timeout(within).is_ok()
     }
 }
 
@@ -72,32 +113,50 @@ impl Inner {
             .create(true)
             .append(true)
             .open(current(dir, name))
-            .ok();
+            .ok()
+            .map(|f| Box::new(f) as Box<dyn Write + Send>);
         self.size = 0;
+    }
+
+    fn append(&mut self, line: &[u8]) {
+        if self.size + line.len() as u64 > MAX_BYTES {
+            self.roll();
+        }
+        if let Some(f) = self.file.as_mut()
+            && f.write_all(line).is_ok()
+        {
+            self.size += line.len() as u64;
+        }
     }
 }
 
 impl Write for Rolling {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        // A poisoned lock (a panic while logging) must not stop the log: take it back.
-        let mut inner = self.inner.lock().unwrap_or_else(|e| e.into_inner());
-        if inner.size + buf.len() as u64 > MAX_BYTES {
-            inner.roll();
-        }
-        if let Some(f) = inner.file.as_mut() {
-            f.write_all(buf)?;
-            inner.size += buf.len() as u64;
-        }
+        self.tx
+            .send(Msg::Line(buf.to_vec()))
+            .map_err(|_| io::Error::other("the log's thread is gone"))?;
         Ok(buf.len())
     }
 
+    /// Waits for the log's thread to have written everything (tests, [`flush`]).
     fn flush(&mut self) -> io::Result<()> {
-        let mut inner = self.inner.lock().unwrap_or_else(|e| e.into_inner());
-        match inner.file.as_mut() {
-            Some(f) => f.flush(),
-            None => Ok(()),
-        }
+        let (done, written) = mpsc::channel();
+        self.tx
+            .send(Msg::Flush(done))
+            .ok()
+            .and_then(|()| written.recv().ok())
+            .ok_or_else(|| io::Error::other("the log's thread is gone"))
     }
+}
+
+/// The log [`init`] started in this process.
+static LOG: std::sync::OnceLock<Rolling> = std::sync::OnceLock::new();
+
+/// Wait, up to `within`, until every line logged so far is in the file: before a report reads
+/// the log's end, and as MDM ends (lines still on their way would be lost with the process).
+/// True when they are, or when there is no log.
+pub fn flush(within: Duration) -> bool {
+    LOG.get().is_none_or(|log| log.flush_within(within))
 }
 
 impl<'a> tracing_subscriber::fmt::MakeWriter<'a> for Rolling {
@@ -115,6 +174,7 @@ pub fn init(data: &Path, name: &'static str) -> bool {
     let Ok(writer) = Rolling::new(dir(data), name) else {
         return false;
     };
+    let _ = LOG.set(writer.clone());
     let filter = std::env::var("MDM_LOG")
         .ok()
         .and_then(|f| EnvFilter::try_new(f).ok())
@@ -162,9 +222,77 @@ mod tests {
             w.write_all(line.as_bytes()).unwrap();
         }
         writeln!(w, "last").unwrap();
+        w.flush().unwrap();
         assert!(rolled(&dir(tmp.path()), APP, 1).exists());
         let t = tail(tmp.path(), 20);
         assert_eq!(t.len(), 20);
         assert_eq!(t.last().unwrap(), "last");
+    }
+
+    /// #513: a line is logged at once while the disk holds the log's writes (Windows making a
+    /// shadow copy held every write on C: for 8 s, and the window with them): only the log's
+    /// own thread waits, and the lines are all written, in order, once the disk lets go.
+    #[test]
+    fn logging_never_waits_for_the_disk() {
+        use std::sync::{Arc, Condvar, Mutex};
+        use std::time::Instant;
+
+        /// A file whose writes wait until it is let go, then land in `out`.
+        struct Held {
+            gate: Arc<(Mutex<bool>, Condvar)>,
+            out: Arc<Mutex<Vec<u8>>>,
+        }
+        impl Write for Held {
+            fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+                let (open, cv) = &*self.gate;
+                let mut open = open.lock().unwrap();
+                while !*open {
+                    open = cv.wait(open).unwrap();
+                }
+                self.out.lock().unwrap().extend_from_slice(buf);
+                Ok(buf.len())
+            }
+            fn flush(&mut self) -> io::Result<()> {
+                Ok(())
+            }
+        }
+        let gate = Arc::new((Mutex::new(false), Condvar::new()));
+        let out = Arc::new(Mutex::new(Vec::new()));
+        let tmp = tempfile::tempdir().unwrap();
+        let log = Rolling::over(Inner {
+            dir: tmp.path().to_owned(),
+            name: APP,
+            file: Some(Box::new(Held {
+                gate: gate.clone(),
+                out: out.clone(),
+            })),
+            size: 0,
+        })
+        .unwrap();
+
+        // The window's thread logs while the disk holds the first line.
+        let (said, done) = mpsc::channel();
+        let mut w = log.clone();
+        let window = std::thread::spawn(move || {
+            let start = Instant::now();
+            for n in 0..100 {
+                writeln!(w, "line {n}").unwrap();
+            }
+            said.send(start.elapsed()).unwrap();
+        });
+        let took = done
+            .recv_timeout(Duration::from_secs(5))
+            .expect("logging waited for the held disk");
+        assert!(took < Duration::from_secs(1), "{took:?}");
+        window.join().unwrap();
+        assert!(!log.flush_within(Duration::from_millis(100)), "still held");
+
+        *gate.0.lock().unwrap() = true;
+        gate.1.notify_all();
+        assert!(log.flush_within(Duration::from_secs(5)));
+        let text = String::from_utf8(out.lock().unwrap().clone()).unwrap();
+        let lines: Vec<&str> = text.lines().collect();
+        assert_eq!(lines.len(), 100);
+        assert_eq!((lines[0], lines[99]), ("line 0", "line 99"));
     }
 }

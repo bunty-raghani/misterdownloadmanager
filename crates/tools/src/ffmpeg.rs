@@ -62,9 +62,9 @@ fn best_build(release: &Release) -> Option<&Asset> {
 /// own. Its `exe` is `ffmpeg(.exe)`; yt-dlp is given its folder.
 pub fn installed(dir: &Path) -> Option<Installed> {
     let own = crate::chosen::chosen(dir, crate::chosen::Helper::Ffmpeg).or_else(|| own(dir));
-    #[cfg(not(windows))]
-    return own.or_else(system);
-    #[cfg(windows)]
+    #[cfg(unix)]
+    return own.or_else(|| crate::system::installed("ffmpeg"));
+    #[cfg(not(unix))]
     own
 }
 
@@ -74,22 +74,6 @@ fn own(dir: &Path) -> Option<Installed> {
         .ok()
         .and_then(|text| serde_json::from_slice::<Installed>(&text).ok())
         .filter(|i| i.exe.is_file())
-}
-
-/// Linux and macOS: the ffmpeg the package manager or Homebrew installed (BtbN builds only for
-/// Windows here). Homebrew's folders are looked in too: an app started from the Dock doesn't
-/// get the shell's PATH.
-#[cfg(not(windows))]
-fn system() -> Option<Installed> {
-    let path = std::env::var_os("PATH").unwrap_or_default();
-    std::env::split_paths(&path)
-        .chain(["/opt/homebrew/bin", "/usr/local/bin", "/usr/bin"].map(PathBuf::from))
-        .map(|d| d.join("ffmpeg"))
-        .find(|f| f.is_file())
-        .map(|exe| Installed {
-            version: "system".into(),
-            exe,
-        })
 }
 
 /// Install the newest stable LGPL build into `dir` unless the installed one is as new, the zip

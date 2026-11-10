@@ -238,5 +238,8 @@
   },
   "remote_device_name": {
     "message": "Browserextensie"
+  },
+  "popup_media_title_name": {
+    "message": "Voeg de paginatitel toe vóór de namen van mediabestanden"
   }
 }

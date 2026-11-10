@@ -315,31 +315,15 @@ fn upper_list(exts: &[String]) -> String {
 /// The category's folder: the one chosen in Options → Save to (or remembered from Download
 /// File Info), else the default.
 pub fn category_folder(cat: Category, downloads: &Path, dirs: &[(String, String)]) -> PathBuf {
-    let folder = if cat.is_custom() {
-        cat.folder(downloads)
-    } else {
-        let key = cat.key();
-        dirs.iter()
-            .find(|(c, _)| *c == *key)
-            .map(|(_, d)| PathBuf::from(d))
-            .unwrap_or_else(|| cat.folder(downloads))
-    };
-    // A folder shown under the user's profile (`Downloads/Video`) is under it: that is how
-    // Download File Info and Options show it. Resolved from the process's working directory
-    // instead, a desktop launch made it `/Downloads/Video`, on the read-only system volume.
-    if folder.is_absolute() || windows_path(&folder) {
-        folder
-    } else {
-        dirs::home_dir().map_or(folder.clone(), |h| h.join(folder))
+    if cat.is_custom() {
+        return cat.folder(downloads);
     }
-}
-
-/// A path written for Windows (`E:\Songs`, `\\server\share`): not a path under this user's
-/// profile, even when this system reads it as a relative Unix path (the tests' Windows folders).
-fn windows_path(p: &Path) -> bool {
-    let s = p.to_string_lossy();
-    s.contains('\\')
-        || (s.len() >= 2 && s.as_bytes()[1] == b':' && s.as_bytes()[0].is_ascii_alphabetic())
+    let key = cat.key();
+    dirs.iter()
+        .find(|(c, _)| *c == *key)
+        // A folder may be saved as shown, relative to the user's home.
+        .map(|(_, d)| crate::dialogs::resolve_path(d))
+        .unwrap_or_else(|| cat.folder(downloads))
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -419,6 +403,9 @@ pub struct Item {
     /// into `media.rs`): there is no engine job to ask. Memory only.
     #[serde(skip)]
     pub stream_rate: f64,
+    /// The session's temporary view while a torrent is being checked; never saved.
+    #[serde(skip)]
+    pub torrent_check: Option<(u64, u64)>,
     /// The engine's last view of this download (segments, connections).
     #[serde(skip)]
     pub snap: Option<mdm_engine::Snapshot>,
@@ -668,7 +655,6 @@ impl Item {
 
     /// The last `n` log entries as tooltip lines ("14:02:11  Connected to …").
     pub fn log_lines(&self, n: usize) -> String {
-        use chrono::TimeZone;
         self.log
             .iter()
             .rev()
@@ -676,9 +662,8 @@ impl Item {
             .rev()
             .map(|(at, text)| {
                 // In the interface's way (English month names in every language before).
-                let t = chrono::Local
-                    .timestamp_opt(*at, 0)
-                    .single()
+                // With the offset of now (crate::clock, #536).
+                let t = crate::clock::local_at(*at)
                     .map(|t| when_text(t.naive_local()))
                     .unwrap_or_default();
                 format!("{t}  {text}")
@@ -719,12 +704,32 @@ impl Item {
             remote: None,
             live: None,
             stream_rate: 0.0,
+            torrent_check: None,
             snap: None,
             login: None,
             context: Default::default(),
             notices: Vec::new(),
         }
     }
+    /// This row's resume state is at its place. `downloaded` can't say: after a crash the list
+    /// holds what it held at its last save, often nothing.
+    pub fn owns_resume_state(&self) -> bool {
+        let state = mdm_engine::state::state_path(&self.dest);
+        mdm_engine::state::ResumeState::load(&state).is_ok_and(|s| s.url == self.url)
+    }
+
+    /// Whether this row has its place on the disk: running, part-way (its pieces and resume
+    /// state are there), or finished with the file still there. A row not started yet holds
+    /// nothing: several may wait under one name, and the first to start keeps it.
+    pub fn holds_place(&self) -> bool {
+        self.live.is_some()
+            || if self.status == Status::Complete {
+                self.dest.exists()
+            } else {
+                self.downloaded > 0 || self.owns_resume_state()
+            }
+    }
+
     /// Pull the engine's snapshot into the row. Returns true when the download just ended.
     pub fn poll(&mut self) -> bool {
         let Some(live) = &mut self.live else {
@@ -813,20 +818,11 @@ impl Item {
                         .map(|p| sub_notice(p, site))
                         .collect();
                     let side = done.side_files;
-                    for f in s.file.iter().chain(side.iter()) {
-                        #[cfg(windows)]
-                        crate::win32::mark_downloaded(
-                            f,
-                            url.as_str(),
-                            self.context.referer.as_deref(),
-                        );
-                        #[cfg(unix)]
-                        crate::unix::mark_downloaded(
-                            f,
-                            url.as_str(),
-                            self.context.referer.as_deref(),
-                        );
-                    }
+                    crate::app::mark_finished(
+                        s.file.iter().chain(side.iter()).cloned().collect(),
+                        url.to_string(),
+                        self.context.referer.clone(),
+                    );
                 }
                 // A gallery's files (#58), each marked as downloaded from the web, as above.
                 if status == Status::Complete
@@ -836,18 +832,16 @@ impl Item {
                     }) = &self.live
                     && matches!(url.scheme(), "http" | "https")
                 {
-                    for f in &job.saved() {
-                        #[cfg(windows)]
-                        crate::win32::mark_downloaded(f, url.as_str(), None);
-                        #[cfg(unix)]
-                        crate::unix::mark_downloaded(f, url.as_str(), None);
-                    }
+                    crate::app::mark_finished(job.saved(), url.to_string(), None);
                 }
                 for n in &notices {
                     self.note(n.clone());
                 }
                 self.notices = notices;
                 self.live = None;
+                // The session's last check numbers belong to the run just ended (a finished
+                // torrent leaves the session): not left saying "Checking" until the next tick.
+                self.torrent_check = None;
                 true
             }
             None => false,
@@ -866,6 +860,20 @@ impl Item {
 
     pub fn rate(&self) -> f64 {
         self.live.as_ref().map_or(self.stream_rate, |l| l.rate)
+    }
+
+    /// How much has come, 0 to 1, or None without a size to take a share of (a live stream,
+    /// some HLS, a server that doesn't say): no percentage rather than 0 %. A video reads at
+    /// most 99.9 % until the file is finished: another stream or the merge may still follow
+    /// (#344), and the sizes beside it stay the real ones.
+    pub fn fraction(&self) -> Option<f64> {
+        let total = self.size.filter(|t| *t > 0)?;
+        let f = (self.downloaded as f64 / total as f64).clamp(0.0, 1.0);
+        Some(if self.video.is_some() && self.status != Status::Complete {
+            f.min(mdm_tools::video::MAX_WHILE_RUNNING)
+        } else {
+            f
+        })
     }
 
     /// The Status column: `13.38%`, `Complete`, `Error`, or blank.
@@ -892,9 +900,37 @@ impl Item {
         ))
     }
 
+    /// "Checking 42%" while a torrent's files are read and checked (added over files already
+    /// there, Recheck): a running one from its live numbers (librqbit counts the bytes checked),
+    /// one not running from the session's (`torrent_check`, every 2 s). Whole percents: the
+    /// list's Status column is narrow.
+    pub fn torrent_checking(&self) -> Option<String> {
+        self.torrent.as_ref()?;
+        let (checked, total) = match (&self.live, &self.snap) {
+            (Some(_), Some(s)) if s.state == State::Verifying => {
+                (s.downloaded, s.size.unwrap_or(0))
+            }
+            (Some(_), _) => return None,
+            (None, _) => self.torrent_check?,
+        };
+        let ratio = if total > 0 {
+            checked as f64 / total as f64
+        } else {
+            0.0
+        };
+        Some(crate::i18n::fmt(
+            // i18n: a torrent's status while its files are read and checked; {percent} is how much is checked, e.g. "42%"
+            crate::i18n::t("Checking {percent}"),
+            &[("percent", &crate::i18n::percent(ratio.min(1.0), 0))],
+        ))
+    }
+
     pub fn status_text(&self) -> String {
         if let Some(at) = self.at_service() {
             return at;
+        }
+        if let Some(checking) = self.torrent_checking() {
+            return checking;
         }
         if self
             .snap
@@ -912,8 +948,8 @@ impl Item {
             // says what the download is doing.
             // i18n: a download's status (state it is in, not a command): waiting in a queue for its turn
             Status::Queued if self.downloaded == 0 => crate::i18n::t("Waiting").into(),
-            _ => match (self.size, self.status) {
-                (Some(t), _) if t > 0 => percent(self.downloaded as f64 / t as f64),
+            _ => match (self.fraction(), self.status) {
+                (Some(f), _) => percent(f),
                 // i18n: a download's status (state it is in, not a command): stopped by the user
                 (_, Status::Stopped) => crate::i18n::t("Stopped").into(),
                 (_, Status::Queued) => crate::i18n::t("Waiting").into(),
@@ -937,7 +973,7 @@ impl Item {
 /// The "Last Try Date" and "Added" columns as stored, e.g. `Oct 28 21:44:12 2026` (the list's
 /// format; read back by `stamp_time`).
 pub fn now_stamp() -> String {
-    chrono::Local::now().format(STAMP).to_string()
+    crate::clock::now().format(STAMP).to_string()
 }
 
 const STAMP: &str = "%b %d %H:%M:%S %Y";
@@ -948,32 +984,43 @@ pub fn stamp_time(stored: &str) -> Option<chrono::NaiveDateTime> {
 }
 
 /// A stored stamp as the list shows it: in the formats chosen in Options → Regional; else IDM's
-/// own text in English, and the user's Windows region format in other languages (its digits and
-/// order; month names would be in the region's language).
+/// own text in English (on the system's 12- or 24-hour clock), and the user's Windows region
+/// format in other languages (its digits and order; month names would be in the region's
+/// language).
 pub fn date_text(stored: &str) -> String {
     let Some(t) = stamp_time(stored) else {
         return stored.to_owned();
     };
-    if english() && !crate::regional::current().custom {
-        return stored.to_owned();
-    }
     when_text(t)
 }
 
 /// A local time as the interface writes dates and times (Options → Regional; IDM's text in
-/// English; the Windows region's elsewhere).
+/// English, on the system's clock; the Windows region's elsewhere).
 pub fn when_text(t: chrono::NaiveDateTime) -> String {
-    if crate::regional::current().custom {
+    let formats = crate::regional::current();
+    if formats.custom {
         return crate::i18n::ltr(&crate::regional::short_date_time(t));
     }
     if english() {
-        return t.format(STAMP).to_string();
+        return stamp_text(t, formats.clock24);
     }
     #[cfg(windows)]
     if let Some(s) = crate::win32::local_date_time(t) {
         return crate::i18n::ltr(&s);
     }
     crate::i18n::ltr(&crate::regional::short_date_time(t))
+}
+
+/// IDM's text for a time, as stored (`Oct 28 21:44:12 2026`) on a 24-hour clock, and with the
+/// system's 12-hour clock (#392) `Oct 28 9:44:12 PM 2026`.
+fn stamp_text(t: chrono::NaiveDateTime, clock24: bool) -> String {
+    use chrono::Timelike;
+    format!(
+        "{} {} {}",
+        t.format("%b %d"),
+        crate::regional::time_text(t.hour(), t.minute(), t.second(), clock24),
+        t.format("%Y")
+    )
 }
 
 /// Whether numbers are written IDM's way (English): `7.05 MB`, `13.38%`, `1 min 22 sec`.
@@ -1109,6 +1156,56 @@ mod size_tests {
 mod tests {
     use super::*;
 
+    fn video_item(size: Option<u64>, downloaded: u64, status: Status) -> Item {
+        let url = Url::parse("https://example.org/a.mp4").unwrap();
+        let mut it = Item::new(1, url, PathBuf::from("a.mp4"), Category::Video);
+        it.size = size;
+        it.downloaded = downloaded;
+        it.status = status;
+        it.video = Some(VideoSpec {
+            selector: "18".into(),
+            subs: Default::default(),
+        });
+        it
+    }
+
+    /// Without a size there's no share to show: no 0 % (from #384).
+    #[test]
+    fn no_size_no_percentage() {
+        let it = video_item(None, 5_000_000, Status::Downloading);
+        assert_eq!(it.fraction(), None);
+        assert_eq!(video_item(Some(0), 5, Status::Downloading).fraction(), None);
+    }
+
+    /// A video with all its bytes in may still be merging: 99.9 % until the file is finished,
+    /// with the real sizes beside it.
+    #[test]
+    fn a_video_reads_100_only_when_finished() {
+        let m = 1 << 20;
+        let running = video_item(Some(100 * m), 100 * m, Status::Downloading);
+        assert_eq!(running.fraction(), Some(0.999));
+        let done = video_item(Some(100 * m), 100 * m, Status::Complete);
+        assert_eq!(done.fraction(), Some(1.0));
+        let mut file = video_item(Some(100), 100, Status::Downloading);
+        file.video = None;
+        assert_eq!(file.fraction(), Some(1.0));
+    }
+
+    #[test]
+    fn a_folder_saved_as_shown_is_under_home() {
+        let home = dirs::home_dir().unwrap();
+        let dirs = vec![("Video".to_owned(), "Downloads/Video".to_owned())];
+        let got = category_folder(Category::Video, Path::new("x"), &dirs);
+        assert_eq!(got, home.join("Downloads/Video"));
+        assert!(got.is_absolute());
+        let whole = home.join("Elsewhere").display().to_string();
+        let dirs = vec![("Video".to_owned(), whole.clone())];
+        assert_eq!(
+            category_folder(Category::Video, Path::new("x"), &dirs),
+            PathBuf::from(whole)
+        );
+    }
+
     #[test]
     fn categories() {
         assert_eq!(Category::of("a.ZIP"), Category::Compressed);
@@ -1158,6 +1255,28 @@ mod stamp_tests {
         let oct = super::stamp_time("Oct 28 21:44:12 2026").unwrap();
         assert!(oct < apr, "October 2026 comes before April 2027");
         assert!(super::stamp_time("not a date").is_none());
+    }
+
+    #[test]
+    fn english_stamps_follow_the_clock() {
+        let at = |s| super::stamp_time(s).unwrap();
+        // 24-hour: exactly as stored.
+        for s in ["Oct 28 21:44:12 2026", "Jan 01 00:05:09 2027"] {
+            assert_eq!(super::stamp_text(at(s), true), s);
+        }
+        // 12-hour (#392): midnight and noon are 12.
+        assert_eq!(
+            super::stamp_text(at("Oct 28 21:44:12 2026"), false),
+            "Oct 28 9:44:12 PM 2026"
+        );
+        assert_eq!(
+            super::stamp_text(at("Jan 01 00:05:09 2027"), false),
+            "Jan 01 12:05:09 AM 2027"
+        );
+        assert_eq!(
+            super::stamp_text(at("Jun 15 12:00:00 2027"), false),
+            "Jun 15 12:00:00 PM 2027"
+        );
     }
 }
 

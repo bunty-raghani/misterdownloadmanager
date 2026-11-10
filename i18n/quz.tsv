@@ -70,7 +70,7 @@
 #. {n} = a number (keep the braces as they are)
 #, machine
 @plural	{n} entry was left out (a link, or a name leading outside the folder)|{n} entries were left out (links, or names leading outside the folder)	Huk {n} qillqa saqisqa karqa (huk t'inkiq, utaq huk suti qillqaqta hawaman apaq)
-#. count in the Batch download window; count in the Link grabber window; count in the Add torrent window
+#. count in the Batch download window; count in the Link grabber window; count in the Add torrent window; count in torrentfiles.rs
 #. how many files the pattern gives in all
 #. Link grabber: a package's row: {n} is its number of links
 #. {n} = a number (keep the braces as they are)
@@ -820,6 +820,10 @@
 #. text in helpers.rs
 #, machine
 	Check your connection, then try again, or get them later from the video window.	T'inkiykita qhawariy, chaymanta huk kutita yapamanta ruway, utaq qhipaman videok'anallamanta chaskiy.
+#. text in the Options window
+#. tooltip of the close-setting: checked keeps MDM running when the window closes, in the notification area when available or else the taskbar; downloads continue; unchecked closing quits
+#, machine
+	Checked, closing the window keeps MDM running: it hides in the notification area when available, or minimizes to the taskbar otherwise, and downloads continue; unchecked, closing quits MDM	Akllasqa kaptinqa, windowta wisq'aspa MDM llamk'achkan: willay patapi pakakun, utaq mana kaptinqa, llamk'ana pataman pisiyachikun, chaymanta uraykachiykuna qatiqkun; mana akllasqa kaptinqa, wisq'aspa MDM tukukun.
 #. message or event log entry in the main window
 #. event log entry after Recheck: {have} and {total} are sizes ("1.2 GB of 4 GB there")
 #, machine
@@ -853,6 +857,10 @@
 #. the trailing ... means it is still going on: keep it
 #, machine
 	Checking {name} ({n} of {total})...	{name}ta qhawachkan ({n} {total}manta)...
+#. text in the download list (sizes, speeds, status)
+#. a torrent's status while its files are read and checked; {percent} is how much is checked, e.g. "42%"
+#, machine
+	Checking {percent}	Qhawachkan {percent}
 #. text in the Checksum window; text in the Link grabber window
 #. the trailing ... means it is still going on: keep it
 #, machine
@@ -898,11 +906,12 @@
 #. text in the Options window
 #, machine
 	Clock:	Pacha:
-#. text in the Checksum window; text in the main window (menus, toolbar, Categories pane); button in crashui.rs; button in a dialog box; button in extension.rs; button in the Help menu's windows (About, updates, shortcuts, Tell a friend); button in helpers.rs; button in the download list; button in the Options window; button in rssdlg.rs; text in standard windows
+#. text in the Checksum window; text in the main window (menus, toolbar, Categories pane); button in crashui.rs; button in a dialog box; button in extension.rs; button in the Help menu's windows (About, updates, shortcuts, Tell a friend); button in helpers.rs; button in the download list; button in the Options window; button in rssdlg.rs; button in torrentfiles.rs; text in standard windows
 #. both verbs: Verify = check the file now; Close = close the window
 #. tooltip of the × that closes the Categories pane
 #. verb: closes this window
 #. verb: closes the filter box
+#. button that closes the torrent file list window
 #. a window's title-bar button: closes the window
 #, machine
 	Close	Wichq'ay
@@ -1619,6 +1628,11 @@
 #. text in the Scheduler window; tab in the Scheduler window
 #, machine
 	Files in the queue	Waqaychasqapi willañiqikuna
+#. button in a download's Properties window
+#. File Properties button that opens the selected torrent's file list
+#. the trailing ... means it opens a window: keep it
+#, machine
+	Files...	Khipukuna...
 #. button in the Find window
 #. verb: button that starts the search
 #, machine
@@ -2155,6 +2169,10 @@
 #. text in a dialog box; text in a download's progress window; text in the Add torrent window
 #, machine
 	KBytes/sec	KBytes/seg
+#. text in the Options window
+#. checkbox: closing keeps MDM running, in the notification area when available or else the taskbar, instead of quitting
+#, machine
+	Keep running when closing the window	Windowta wisq'aspa llamk'achun
 #. checkbox in the Add torrent window
 #, machine
 	Keep sharing torrents after they finish	Tukusqaña kaspapas torrentkunata rakinalla
@@ -3058,14 +3076,15 @@
 #. checkbox in a dialog box
 #, machine
 	Only while I'm using the computer	Ñuqa llamk'achisqay pacha sapallanpi
-#. button in a dialog box; text in a dialog box; button in a download's Properties window
+#. button in a dialog box; text in a dialog box; button in a download's Properties window; button in torrentfiles.rs
 #. verb: opens the downloaded file
 #. title of the message when a downloaded file can't be opened
 #. verb: opens the file
 #, machine
 	Open	Kichay
-#. button in crashui.rs; button in a dialog box
+#. button in crashui.rs; button in a dialog box; button in torrentfiles.rs
 #. crash report window button: show the report's file in its folder
+#. button that opens the torrent's containing folder in the file manager
 #, machine
 	Open folder	Karpitata kichay
 #. checkbox in the Add torrent window
@@ -3608,7 +3627,7 @@
 #. title of the folder picker
 #, machine
 	Select a folder	Huk karpetata akllay
-#. button in playlistdlg.rs; button in the Add torrent window
+#. button in playlistdlg.rs; button in the Add torrent window; text in torrentfiles.rs
 #. button in Download video for a playlist: tick every video
 #, machine
 	Select all	Tukuyta akllay
@@ -3861,8 +3880,9 @@
 #. text in a download's Properties window
 #, machine
 	Size:	Sayay:
-#. text in a download's progress window
+#. text in a download's progress window; text in torrentfiles.rs
 #. a torrent file the user chose not to download
+#. status of a torrent file the user chose not to download
 #, machine
 	Skipped	Mana ruwasqa
 #. text in the queues
@@ -4593,6 +4613,10 @@
 #. {name} = a file name (keep the braces as they are)
 #, machine
 	this program isn't {name}	Kay churayqa manam {name}chu
+#. text in errors.rs
+#. why a download failed: the site's bot check (Cloudflare) lets browsers through, not programs. Alt+click: the link clicked with the Alt key held, which leaves the download to the browser
+#, machine
+	this site lets only browsers through; Alt+click the link	kay web p'anqaqa wampunapaqllata saqillan; Alt+clicllay t'inkita
 #. text in a download's progress window
 #, machine
 	This system has no dial-up connections to hang up	Kay sistemapi manam kanchu dial-up t'inkikuna ch'iqtana
@@ -4678,8 +4702,9 @@
 #. text in the download list (sizes, speeds, status)
 #, machine
 	Torrent downloads (magnet links and .torrent files)	Torrent ura k'uchukuna (magnet chiqaqchaykuna chaymanta .torrent willañiqikuna)
-#. message or event log entry in the main window; text in the Add torrent window
+#. message or event log entry in the main window; text in the Add torrent window; window title in torrentfiles.rs
 #. the kind of file the Open dialog lists
+#. title of the separate window listing a torrent's files
 #, machine
 	Torrent files	Torrent willañiqikuna
 #. window title in the Add torrent window
@@ -5531,6 +5556,10 @@ column	File Name	Willañiqip sutin
 #, machine
 column	Last Try Date	Qhipa Yachay P'unchaw
 #. column title in the download list in the download list
+#. column title: how many peers a torrent is connected to now (seeders and leechers)
+#, machine
+column	Peers	Waqkuna
+#. column title in the download list in the download list
 #. column title: one letter for Queue (the column is narrow)
 #, machine
 column	Q	Q
@@ -5538,6 +5567,10 @@ column	Q	Q
 #. tooltip of the narrow "Q" column's title
 #, machine
 column	Queue	Sut'uchiy
+#. column title in the download list in the download list
+#. column title: what a torrent has sent to peers against what it took
+#, machine
+column	Share ratio	Rakiy tupuy
 #. column title in the download list in the download list
 #. noun: the file's size
 #, machine
@@ -5556,6 +5589,10 @@ column	Time left	Pacha qhipaq
 #. column title in the download list in the download list
 #, machine
 column	Transfer rate	Chimpachiy tupu
+#. column title in the download list in the download list
+#. column title: what a torrent sends to peers, bytes per second
+#, machine
+column	Upload speed	Kachasqa utqay
 #. text in the browser extension
 #. choice under Send downloads to: an MDM running on another computer of the network, such as a home server; keep the name Mister Download Manager as it is
 #, machine
@@ -5755,6 +5792,10 @@ extension	Pairing code	Chawpinchay mayt'u
 #. status when the user switched off taking downloads in the toolbar button's popup
 #, machine
 extension	Paused: downloads stay with the browser	Sayachisqa: urquykuna wampunawan qhipakun
+#. text in the browser extension
+#. Option in the browser extension media list: put the page title before the original file name when downloading a detected media file
+#, machine
+extension	Prefix media file names with the page title	P'anqapa sutinwan ñawpaqta churay willakuy khipu sutikunata
 #. text in the browser extension
 #. shown instead of the Download button beside a copy-protected (DRM) stream in the toolbar button's popup: it can't be downloaded; short
 #, machine
@@ -6029,6 +6070,11 @@ menu	&RSS feeds...	&RSS kawsaykuna...
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
 menu	&Scheduler and queues	&Kawsachiykuna chaymanta siq'ikuna
+#. menu command in a download's progress window
+#. right-click menu of a download window's tab row: bring back the tabs taken off with "Hide tab"
+#. & marks the keyboard shortcut letter: keep one & before a letter of the translation
+#, machine
+menu	&Show hidden tabs	&Pakasqa tabkunata rikuchiy
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
@@ -6224,6 +6270,11 @@ menu	Edit queue	Churanata allichay
 #. verb: unpack the downloaded archive (zip, 7z, rar) into its folder
 #, machine
 menu	Extract	Lluqsichiy
+#. menu command in the main window
+#. right-click → Torrent submenu: open the selected torrent's file list
+#. the trailing ... means it opens a window: keep it
+#, machine
+menu	Files...	Khipukuna...
 #. menu command in the main window
 #, machine
 menu	Find (Ctrl-F)	Maskay (Ctrl-F)

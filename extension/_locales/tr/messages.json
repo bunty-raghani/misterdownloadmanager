@@ -238,5 +238,8 @@
   },
   "remote_device_name": {
     "message": "Tarayıcı uzantısı"
+  },
+  "popup_media_title_name": {
+    "message": "Medya dosyası adlarının önüne sayfa başlığını ekle"
   }
 }

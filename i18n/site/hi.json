@@ -78,10 +78,6 @@
    "source": "Open <g1>View → Theme</g1> and click a theme: the whole window changes at once, nothing to restart. <g2>View → Dark Mode support</g2> and <g3>View → Always dark</g3> then choose its light or dark side, as for the classic look (<g4>Dark mode</g4>).",
    "text": "<g1>देखें → थीम</g1> खोलें और एक थीम पर क्लिक करें: पूरी विंडो एक साथ बदल जाती है, कुछ भी पुनरारंभ करने की आवश्यकता नहीं होती। फिर <g2>देखें → डार्क मोड समर्थन</g2> और <g3>देखें → हमेशा गहरा</g3> इसका हल्का या गहरा पक्ष चुनते हैं, जैसा कि क्लासिक लुक (<g4>डार्क मोड</g4>) के लिए होता है।"
   },
-  "018b2949529218d0": {
-   "source": "<g1>Options → File types → Automatically start downloading the following file types</g1> must list the file's type. The list starts with the usual ones: ZIP, RAR, 7Z, EXE, MSI, ISO, DMG, DEB, RPM, APPIMAGE, MP3, MP4, MKV, WEBM, PDF and many more.",
-   "text": "<g1>विकल्प → फ़ाइल प्रकार → निम्नलिखित फ़ाइल प्रकारों को स्वचालित रूप से डाउनलोड करना शुरू करें</g1> में फ़ाइल का प्रकार सूचीबद्ध होना चाहिए। सूची सामान्य प्रकारों से शुरू होती है: ZIP, RAR, 7Z, EXE, MSI, ISO, DMG, DEB, RPM, APPIMAGE, MP3, MP4, MKV, WEBM, PDF और कई अन्य।"
-  },
   "01bcaeaab78b066e": {
    "source": "A page address that points at one video inside a playlist or a mix (for example <x1/>) downloads that one video, never the whole list.",
    "text": "प्लेलिस्ट या मिक्स में मौजूद किसी एक वीडियो पर जाने वाला पृष्ठ पता (<x1/> जैसे) केवल उस वीडियो को डाउनलोड करता है, पूरी सूची को नहीं।"
@@ -305,6 +301,10 @@
   "050edc04316dd70a": {
    "source": "On the command line",
    "text": "कमांड लाइन पर"
+  },
+  "052e65771dfdbc15": {
+   "source": "While the app is not notarized by Apple (the experimental builds are not), Safari lists the extension only with unsigned extensions allowed: <g1>Settings → Advanced</g1> → <g2>Show features for web developers</g2>, then <g3>Settings → Developer</g3> → <g4>Allow unsigned extensions</g4>. Safari forgets that setting each time it quits.",
+   "text": "जब तक ऐप Apple द्वारा नोटराइज़ नहीं किया जाता है (प्रायोगिक बिल्ड नहीं हैं), Safari एक्सटेंशन को केवल अहस्ताक्षरित एक्सटेंशन की अनुमति होने पर ही सूचीबद्ध करता है: <g1>सेटिंग्स → उन्नत</g1> → <g2>वेब डेवलपर्स के लिए सुविधाएँ दिखाएँ</g2>, फिर <g3>सेटिंग्स → डेवलपर</g3> → <g4>अहस्ताक्षरित एक्सटेंशन की अनुमति दें</g4>। Safari हर बार बंद होने पर उस सेटिंग को भूल जाता है।"
   },
   "053263e0b7c48cfa": {
    "source": "What reaches your computer",
@@ -1210,6 +1210,10 @@
    "source": "Server allowing 2 connections",
    "text": "सर्वर 2 कनेक्शन की अनुमति देता है"
   },
+  "13c0cbe9a49058cb": {
+   "source": "Last updated 2026-11-09 · applies to the app, the browser extension and misterdownloadmanager.com",
+   "text": "अंतिम अपडेट: 2026-11-09 · ऐप, ब्राउज़र एक्सटेंशन और misterdownloadmanager.com पर लागू होता है"
+  },
   "13c8ca45329dbe19": {
    "source": "Windows, Mac and Linux",
    "text": "Windows, Mac और Linux"
@@ -1389,6 +1393,10 @@
   "167e0568310b7eb2": {
    "source": "Download video from a page: the qualities on offer, from 2160p 60fps down, with their sizes.",
    "text": "एक पृष्ठ से वीडियो डाउनलोड करें: 2160p 60fps से नीचे तक उपलब्ध गुणवत्ताएँ, उनके आकारों के साथ।"
+  },
+  "168f5a002ae6d1c7": {
+   "source": "<g1>Coming with version 0.5.2</g1> <g2>It's in the source code now, not yet in the download (version 0.5.0).</g2>",
+   "text": "<g1>संस्करण 0.5.2 के साथ आ रहा है</g1> <g2>यह अब स्रोत कोड में है, डाउनलोड में अभी तक नहीं (संस्करण 0.5.0)।</g2>"
   },
   "1691dcacfd0943ed": {
    "source": "Text on a chip",
@@ -1570,6 +1578,10 @@
    "source": "<g1>The help shows what it describes</g1> (<g2>#228</g2>): every guide and the main help pages now have pictures of the windows they explain, cropped to what matters, numbered where a step points at one control, and step strips for the usual flows (a download from the browser, a first download, a video, a torrent, a queue overnight). On the website they follow its light or dark theme, keep their place while they load, and open larger with a click; their descriptions and captions are translated with the page. The pictures are made by a script from one list (<x3/>), so they can all be taken again in one go.",
    "text": "<g1>सहायता वही दिखाती है जिसका वह वर्णन करती है</g1> (<g2>#228</g2>): हर गाइड और मुख्य सहायता पृष्ठों में अब उन विंडोज़ की तस्वीरें हैं जिनकी वे व्याख्या करते हैं, जो महत्वपूर्ण हैं उन्हें क्रॉप किया गया है, जहाँ एक चरण एक नियंत्रण की ओर इशारा करता है वहाँ क्रमांकित किया गया है, और सामान्य प्रवाह के लिए चरण-पट्टी (ब्राउज़र से डाउनलोड, पहला डाउनलोड, एक वीडियो, एक टॉरेंट, रात भर की कतार)। वेबसाइट पर वे अपनी हल्की या गहरी थीम का पालन करते हैं, लोड होने के दौरान अपनी जगह बनाए रखते हैं, और क्लिक करने पर बड़े खुलते हैं; उनके विवरण और कैप्शन पृष्ठ के साथ अनुवादित होते हैं। तस्वीरें एक सूची (<x3/>) से एक स्क्रिप्ट द्वारा बनाई गई हैं, ताकि उन्हें एक साथ फिर से लिया जा सके।"
   },
+  "1962902ce083389d": {
+   "source": "If they match, it is the file we published. Every release is built on GitHub from the <g1>public source code</g1>, so anyone can read what went into it.",
+   "text": "यदि वे मेल खाते हैं, तो यह वही फ़ाइल है जिसे हमने प्रकाशित किया है। प्रत्येक रिलीज़ GitHub पर <g1>सार्वजनिक स्रोत कोड</g1> से बनाई जाती है, इसलिए कोई भी पढ़ सकता है कि इसमें क्या शामिल है।"
+  },
   "19686779e1123d73": {
    "source": "To open the page by the server's name (<x1/>), give MDM that name: <x2/> (several: separated by commas). Other names are refused, so that no web page can reach MDM through a name of its own.",
    "text": "सर्वर के नाम से पेज खोलने के लिए (<x1/>), MDM को वह नाम दें: <x2/> (कई: अल्पविराम से अलग किए गए)। अन्य नाम अस्वीकार कर दिए जाते हैं, ताकि कोई भी वेब पेज अपने नाम के माध्यम से MDM तक न पहुँच सके।"
@@ -1737,6 +1749,10 @@
   "1bad738cb3cea90f": {
    "source": "Select or unselect the download with the dotted outline",
    "text": "बिंदीदार रूपरेखा वाले डाउनलोड को चुनें या अचयनित करें"
+  },
+  "1badff5f5fc8b6a9": {
+   "source": "Download MDM only from <g1>the website</g1> or <g2>GitHub Releases</g2>.",
+   "text": "MDM को केवल <g1>वेबसाइट</g1> या <g2>GitHub रिलीज़</g2> से डाउनलोड करें।"
   },
   "1bc816518d6f87cb": {
    "source": "<g1>Save to</g1>: the folder its torrents go to; empty, the Torrents category's folder. <g2>Add them without starting them</g2> adds them as <g3>Download Later</g3> would.",
@@ -1906,10 +1922,6 @@
    "source": "Add your account",
    "text": "अपना खाता जोड़ें"
   },
-  "1e00cc7bf8c490d3": {
-   "source": "Last updated 2026-11-08",
-   "text": "अंतिम अपडेट: 2026-11-08"
-  },
   "1e06a14724b6ac4b": {
    "source": "MDM downloads the pictures of a gallery (a Wikimedia Commons category, a Flickr album, a DeviantArt gallery, an Imgur album and many more) with gallery-dl…",
    "text": "MDM gallery-dl के साथ गैलरी की तस्वीरें डाउनलोड करता है। गैलरी Wikimedia Commons की श्रेणी, Flickr का एल्बम, DeviantArt की गैलरी, Imgur का एल्बम और ऐसी कई चीज़ें हो सकती हैं..."
@@ -1977,6 +1989,10 @@
   "1f6d9db77baccf7e": {
    "source": "Click <g1>Download Now</g1>, or <g2>Later</g2> to add it to the list without starting.",
    "text": "<g1>अभी डाउनलोड करें</g1> पर क्लिक करें, या सूची में जोड़े बिना शुरू करने के लिए <g2>बाद में</g2> पर क्लिक करें।"
+  },
+  "1f73edb3d8f37ba8": {
+   "source": "Some limits, plainly: the portable copy can't connect to a browser, since it writes nothing outside its folder.",
+   "text": "कुछ सीमाएँ, सीधे शब्दों में: पोर्टेबल कॉपी किसी ब्राउज़र से कनेक्ट नहीं हो सकती, क्योंकि यह अपने फ़ोल्डर के बाहर कुछ भी नहीं लिखती।"
   },
   "1f74308b96409089": {
    "source": "Project",
@@ -2426,6 +2442,10 @@
    "source": "Select one or more downloads and press <g1>Delete</g1>, click <g2>Delete</g2> on the toolbar, or choose <g3>File → Remove</g3>. MDM asks first:",
    "text": "एक या अधिक डाउनलोड का चयन करें और <g1>हटाएँ</g1> दबाएँ, टूलबार पर <g2>हटाएँ</g2> पर क्लिक करें, या <g3>फ़ाइल → हटाएँ</g3> चुनें। MDM पहले पूछता है:"
   },
+  "260aedba82916fcb": {
+   "source": "<g1>Not available:</g1> sharing the browser's proxy or VPN, and a download from a form.",
+   "text": "<g1>उपलब्ध नहीं:</g1> ब्राउज़र के प्रॉक्सी या VPN को साझा करना, और एक फ़ॉर्म से डाउनलोड।"
+  },
   "26233472fae39b0b": {
    "source": "Choose what MDM takes",
    "text": "MDM किन डाउनलोड को लेता है, यह चुनें"
@@ -2593,6 +2613,10 @@
   "28303c1fbe9c6009": {
    "source": "Firefox, Chrome, Edge, Brave, Opera, Vivaldi, from their stores",
    "text": "Firefox, Chrome, Edge, Brave, Opera, Vivaldi, उनके स्टोर से"
+  },
+  "2834c1ae042f4d5f": {
+   "source": "Share ratio",
+   "text": "शेयर अनुपात"
   },
   "28363ce0cfaf4e8e": {
    "source": "The browser extension, from the browsers' own stores: the Chrome Web Store's is for Edge, Brave, Opera and Vivaldi too. It also comes with the app and as <g1>its own download</g1>, to add by hand. Every file is built from the public source by GitHub Actions and listed with its SHA-256 checksum.",
@@ -3389,6 +3413,10 @@
   "35092e177f7efaa5": {
    "source": "Download complete with Open and Open folder",
    "text": "खोलें और फ़ोल्डर खोलें के साथ डाउनलोड पूरा"
+  },
+  "3512eeafea5246da": {
+   "source": "<g1>Catching problems.</g1> When MDM crashes (a Windows exception, a signal on Linux, a Mach exception on macOS), panics, or freezes, it asks the monitor for a dump. A freeze is a frame of the window running more than 8 s, seen by a watchdog thread that ignores time spent asleep. It times both parts of a frame: what MDM handles (the commands that come in, the clock of downloads, queues and the Scheduler), which runs minimized too, and the drawing; never the wait between frames. The watchdog also measures how much processor time the window thread got meanwhile, and the report says what that means: it ran all along (a loop), it waited in a lock or on I/O (a deadlock), or it hardly ran in ordinary code, which is a computer too busy to run MDM or slow to load it from disk, most likely not MDM's bug (those share one signature, <x2/>). When the window thread is already back in the event loop by the time the dump is written, the freeze was over before the snapshot, so its stack can't explain it; those reports say so and share the signature <x3/>. macOS doesn't measure it yet. The monitor then writes a <g4>minidump</g4> of every thread from outside, through <x5/> and <x6/>. A crashed process never writes its own dump, which is how Firefox, Crashpad and Sentry do it too.",
+   "text": "<g1>समस्याओं को पकड़ना।</g1> जब MDM क्रैश होता है (Windows पर अपवाद, Linux पर सिग्नल, macOS पर Mach अपवाद), पैनिक होता है, या फ्रीज़ होता है, तो यह मॉनिटर से डंप मांगता है। फ्रीज़ का मतलब है कि विंडो का एक फ्रेम 8 सेकंड से अधिक समय तक चल रहा है, जिसे एक वॉचडॉग थ्रेड देखता है जो स्लीप में बिताए गए समय को अनदेखा करता है। यह एक फ्रेम के दोनों हिस्सों का समय मापता है: MDM क्या संभालता है (आने वाले कमांड, डाउनलोड की घड़ी, कतारें और शेड्यूलर), जो मिनिमाइज़ होने पर भी चलता है, और ड्राइंग; फ्रेम के बीच के इंतजार को कभी नहीं। वॉचडॉग यह भी मापता है कि इस बीच विंडो थ्रेड को कितना प्रोसेसर समय मिला, और रिपोर्ट बताती है कि इसका क्या मतलब है: यह लगातार चल रहा था (एक लूप), यह एक लॉक में या I/O पर इंतजार कर रहा था (एक डेडलॉक), या यह सामान्य कोड में मुश्किल से चला, जिसका मतलब है कि कंप्यूटर MDM चलाने के लिए बहुत व्यस्त है या डिस्क से इसे लोड करने में धीमा है, जो शायद MDM का बग नहीं है (वे एक ही सिग्नेचर साझा करते हैं, <x2/>)। जब डंप लिखे जाने तक विंडो थ्रेड पहले से ही इवेंट लूप में वापस आ जाता है, तो स्नैपशॉट से पहले फ्रीज़ खत्म हो गया था, इसलिए इसका स्टैक इसे समझा नहीं सकता; वे रिपोर्ट ऐसा कहती हैं और सिग्नेचर <x3/> साझा करती हैं। macOS अभी इसे नहीं मापता है। मॉनिटर फिर <x5/> और <x6/> के माध्यम से बाहर से हर थ्रेड का <g4>मिनीडंप</g4> लिखता है। एक क्रैश हुई प्रक्रिया कभी भी अपना डंप नहीं लिखती है, जो कि Firefox, Crashpad और Sentry भी इसी तरह करते हैं।"
   },
   "3513f93cb0fa7d72": {
    "source": "<g1>Far</g1> (red): over 150 ms, usually another continent. A far server is often slower, and more connections help it most.",
@@ -4310,9 +4338,9 @@
    "source": "Before you click <g1>OK</g1>, the window shows the <g2>First file</g2>, <g3>Second file</g3> and <g4>Last file</g4>, so a typo shows up before anything downloads. If the server needs a login, tick <g5>Use authorization</g5>. Copied the address already? <g6>Tasks → Add batch download from clipboard</g6> fills it in.",
    "text": "<g1>ठीक है</g1> पर क्लिक करने से पहले, विंडो <g2>पहली फ़ाइल</g2>, <g3>दूसरी फ़ाइल</g3> और <g4>अंतिम फ़ाइल</g4> दिखाती है, ताकि कुछ भी डाउनलोड होने से पहले कोई टाइपो दिख जाए। यदि सर्वर को लॉगिन की आवश्यकता है, तो <g5>प्राधिकरण का उपयोग करें</g5> पर टिक करें। क्या आपने पता पहले ही कॉपी कर लिया है? <g6>कार्य → क्लिपबोर्ड से बैच डाउनलोड जोड़ें</g6> इसे भर देता है।"
   },
-  "424df5ff0d11d26b": {
-   "source": "<g1>Automatically start downloading the following file types</g1> — the file types the browser hands over (and the clipboard picks up). Separate them by spaces; <x2/> matches any characters, as in <x3/>. <g4>Default</g4> puts the original list back. The list starts with the usual archives, programs and installers (Windows, macOS and Linux ones: DMG, PKG, DEB, RPM, APPIMAGE, MSIX), music and videos, and PDF. A list you never changed gains the types a new version adds; one you edited stays as it is.",
-   "text": "<g1>इन फ़ाइल प्रकारों को स्वचालित रूप से डाउनलोड करना शुरू करें</g1> — वे फ़ाइल प्रकार जो ब्राउज़र सौंपता है (और क्लिपबोर्ड उठाता है)। उन्हें स्पेस से अलग करें; <x2/> किसी भी वर्ण से मेल खाता है, जैसे <x3/> में। <g4>डिफ़ॉल्ट</g4> मूल सूची को वापस लाता है। सूची सामान्य आर्काइव, प्रोग्राम और इंस्टॉलर (Windows, macOS और Linux वाले: DMG, PKG, DEB, RPM, APPIMAGE, MSIX), संगीत और वीडियो, और PDF से शुरू होती है। एक सूची जिसे आपने कभी नहीं बदला है, उसमें नए संस्करण द्वारा जोड़े गए प्रकार शामिल हो जाते हैं; एक जिसे आपने संपादित किया है, वह वैसी ही रहती है।"
+  "42719c02fcae1f7c": {
+   "source": "The copy of the extension from the Chrome Web Store showed no <g1>Download video</g1> button on YouTube before version 0.5.1. From 0.5.1 it shows it. Your browser updates extensions by itself; to get it sooner, open its extensions page and update them there.",
+   "text": "Chrome वेब स्टोर से एक्सटेंशन की कॉपी में संस्करण 0.5.1 से पहले YouTube पर <g1>वीडियो डाउनलोड करें</g1> बटन नहीं दिखता था। 0.5.1 से यह दिखता है। आपका ब्राउज़र एक्सटेंशन को स्वयं अपडेट करता है; इसे जल्दी प्राप्त करने के लिए, इसके एक्सटेंशन पेज को खोलें और उन्हें वहीं अपडेट करें।"
   },
   "427cc05e98da7048": {
    "source": "<g1>Extract when done</g1>: ticked by itself when the package holds an archive.",
@@ -4377,10 +4405,6 @@
   "437098c2f3d487d8": {
    "source": "The file host's link, MDM's download",
    "text": "फ़ाइल होस्ट का लिंक, MDM का डाउनलोड"
-  },
-  "437da174af682fe3": {
-   "source": "Minimize hides the main window there too, while <g1>Minimize to the notification area</g1> is on in <g2>Options → General</g2>. It is on by default.",
-   "text": "जब <g2>विकल्प → सामान्य</g2> में <g1>सूचना क्षेत्र में छोटा करें</g1> चालू हो, तो छोटा करें मुख्य विंडो को भी सूचना क्षेत्र में छिपा देता है। यह सेटिंग डिफ़ॉल्ट रूप से चालू होती है।"
   },
   "438a47f34fb3d4b7": {
    "source": "Browser integration — Mister Download Manager help",
@@ -4606,10 +4630,6 @@
    "source": "keeps the list, the settings, the certificate and the paired devices.",
    "text": "सूची, सेटिंग्स, प्रमाणपत्र और युग्मित डिवाइस रखता है।"
   },
-  "477f6fc974aad0d3": {
-   "source": "Some limits, plainly: the portable copy can't connect to a browser, since it writes nothing outside its folder. The Chrome Web Store copy shows no button over YouTube videos, which the store's policy forbids; <g1>Tasks → Download video from a page</g1> still takes any page.",
-   "text": "कुछ सीमाएँ, स्पष्ट रूप से: पोर्टेबल कॉपी ब्राउज़र से कनेक्ट नहीं हो सकती है, क्योंकि यह अपने फ़ोल्डर के बाहर कुछ भी नहीं लिखती है। Chrome वेब स्टोर कॉपी YouTube वीडियो पर कोई बटन नहीं दिखाती है, जिसे स्टोर की नीति मना करती है; <g1>कार्य → एक पृष्ठ से वीडियो डाउनलोड करें</g1> अभी भी किसी भी पृष्ठ को लेता है।"
-  },
   "478b98971f744119": {
    "source": "Deleting a queue asks first; a running queue stops when deleted; the toolbar's Start / Stop Queue arrows always work.",
    "text": "कतार हटाने से पहले पुष्टि माँगी जाती है; चलती हुई कतार हटाने पर रुक जाती है; टूलबार के Start / Stop Queue तीर हमेशा काम करते हैं।"
@@ -4734,6 +4754,10 @@
    "source": "<g1>Linux: torrents work on a system without CA certificates too</g1> (part of <g2>#264</g2>): the torrent engine built its own connection for the trackers, which can't be made without them, so no torrent or magnet link started there. It now uses MDM's: peers, the DHT and <x3/> trackers work, and an <x4/> tracker fails saying there are no certificates to check it with.",
    "text": "<g1>Linux: CA प्रमाणपत्रों के बिना सिस्टम पर भी टॉरेंट काम करते हैं</g1> (<g2>#264</g2> का हिस्सा): टॉरेंट इंजन ने ट्रैकर्स के लिए अपना खुद का कनेक्शन बनाया, जिसे उनके बिना नहीं बनाया जा सकता, इसलिए वहाँ कोई टॉरेंट या मैग्नेट लिंक शुरू नहीं हुआ। यह अब MDM का उपयोग करता है: पीयर, DHT और <x3/> ट्रैकर्स काम करते हैं, और एक <x4/> ट्रैकर यह कहते हुए विफल हो जाता है कि इसे जाँचने के लिए कोई प्रमाणपत्र नहीं हैं।"
   },
+  "49a674222f02e4a1": {
+   "source": "<g1>Options → File types → Automatically start downloading the following file types</g1> must list the file's type. The list starts with the usual ones: ZIP, RAR, 7Z, EXE, MSI, ISO, DMG, DEB, RPM, APPIMAGE, MP3, MP4, MKV, WEBM, PDF, AI models such as GGUF and SAFETENSORS, 3D files such as GLB and STL, and many more. Anything else can be added to the list.",
+   "text": "<g1>विकल्प → फ़ाइल प्रकार → निम्नलिखित फ़ाइल प्रकारों को स्वचालित रूप से डाउनलोड करना शुरू करें</g1> में फ़ाइल का प्रकार सूचीबद्ध होना चाहिए। सूची सामान्य फ़ाइलों से शुरू होती है: ZIP, RAR, 7Z, EXE, MSI, ISO, DMG, DEB, RPM, APPIMAGE, MP3, MP4, MKV, WEBM, PDF, AI मॉडल जैसे GGUF और SAFETENSORS, 3D फ़ाइलें जैसे GLB और STL, और भी बहुत कुछ। सूची में कुछ भी जोड़ा जा सकता है।"
+  },
   "49affaa512196498": {
    "source": "Queues and the Scheduler",
    "text": "कतारें और शेड्यूलर"
@@ -4809,6 +4833,10 @@
   "4adee382f13592b9": {
    "source": "Cap MDM as a whole (recommended)",
    "text": "MDM को समग्र रूप से सीमित करें (अनुशंसित)"
+  },
+  "4afb7a591038aead": {
+   "source": "You can always save a video without the button: in MDM, open <g1>Tasks → Download video from a page</g1> and paste the video's address.",
+   "text": "आप बटन के बिना भी वीडियो सहेज सकते हैं: MDM में, <g1>कार्य → एक पृष्ठ से वीडियो डाउनलोड करें</g1> खोलें और वीडियो का पता पेस्ट करें।"
   },
   "4b088cdb90c95ad4": {
    "source": "If the server needs a user name and password, tick <g1>Use authorization</g1> and type them.",
@@ -5242,6 +5270,10 @@
    "source": "Open source, GNU GPL 3.0",
    "text": "ओपन सोर्स, GNU GPL 3.0"
   },
+  "5216194011d6d772": {
+   "source": "Safari (macOS)",
+   "text": "Safari (macOS)"
+  },
   "521a3abe287f879e": {
    "source": "In the window:",
    "text": "विंडो में:"
@@ -5289,6 +5321,10 @@
   "52ebbc26d1011b47": {
    "source": "The free MDM extension hands each download you click over to MDM, with the page it came from and your sign-in for the site. A button over videos sends them to MDM too.",
    "text": "मुफ़्त MDM एक्सटेंशन आपके द्वारा क्लिक किए गए प्रत्येक डाउनलोड को MDM को भेजता है, जिसमें वह पृष्ठ भी शामिल होता है जहाँ से वह आया था और साइट के लिए आपका साइन-इन भी। वीडियो पर एक बटन उन्हें भी MDM पर भेजता है।"
+  },
+  "52fc7550762441e8": {
+   "source": "A few antivirus programs flag new installers just because they have rarely seen them, and machine-learning engines do this the most. On VirusTotal, a handful of small engines flagging a new setup while the big ones stay clean is usually a false positive. We report these to the vendors when we see them.",
+   "text": "कुछ एंटीवायरस प्रोग्राम नए इंस्टॉलर को सिर्फ़ इसलिए फ़्लैग करते हैं क्योंकि उन्होंने उन्हें शायद ही कभी देखा हो, और मशीन-लर्निंग इंजन ऐसा सबसे ज़्यादा करते हैं। VirusTotal पर, कुछ छोटे इंजन द्वारा एक नए सेटअप को फ़्लैग करना जबकि बड़े इंजन उसे क्लीन बताते हैं, आमतौर पर एक फ़ॉल्स पॉज़िटिव होता है। जब हम इन्हें देखते हैं तो हम विक्रेताओं को इसकी रिपोर्ट करते हैं।"
   },
   "53060965f7a26125": {
    "source": "Tick <g1>Send torrents and magnet links to the first account instead of to peers</g1>, and a magnet link or a <x2/> file goes to the service. It downloads the torrent on its own servers while the list shows how far it is (<g3>45% at Real-Debrid</g3>). MDM then fetches the files over HTTP and removes the torrent from the account's list. Your computer never connects to the torrent's peers.",
@@ -5386,10 +5422,6 @@
    "source": "Does it run on Windows 7 or 8?",
    "text": "क्या यह Windows 7 या 8 पर चलता है?"
   },
-  "547a72b540a365fd": {
-   "source": "<g1>Minimize to the notification area</g1> — Minimize hides the main window, and a download's progress window, in the notification area, as closing the main window does; downloads go on. On by default. Greyed where no tray shows MDM's icon (some Linux desktops); in a Wayland session the main window stays minimized in the dock, since Wayland can't hide a window.",
-   "text": "<g1>सूचना क्षेत्र में छोटा करें</g1> — छोटा करने पर मुख्य विंडो और डाउनलोड की प्रगति विंडो सूचना क्षेत्र में छिप जाती हैं, जैसे मुख्य विंडो बंद करने पर होता है; डाउनलोड जारी रहते हैं। यह डिफ़ॉल्ट रूप से चालू है। जिन सिस्टम में ट्रे MDM का आइकन नहीं दिखाती (कुछ Linux डेस्कटॉप), वहाँ यह विकल्प धूसर रहता है; Wayland सत्र में मुख्य विंडो डॉक में छोटी रहती है, क्योंकि Wayland विंडो छिपा नहीं सकता।"
-  },
   "54886fa73a0a4643": {
    "source": "sets single colour roles on both sides, <x1/> and <x2/> on one side only: <x3/>, or <x4/> with transparency.",
    "text": "दोनों तरफ एकल रंग भूमिकाएँ सेट करता है, <x1/> और <x2/> केवल एक तरफ: <x3/>, या पारदर्शिता के साथ <x4/>।"
@@ -5477,6 +5509,10 @@
   "55a523d7ca4b905f": {
    "source": "Thanks to",
    "text": "धन्यवाद"
+  },
+  "55d1512f7b2971e2": {
+   "source": "One egui window painted to fixed pixel coordinates, plus one immediate viewport per dialog. <x1/> holds the state (downloads, queues, settings, the list's selection) and turns menu, toolbar, key and IPC commands into actions. Each dialog is its own module and returns an <x2/> (open, closed, done with a value). Windows-only calls are confined to <x3/> and their Linux and macOS counterparts to <x4/> (starting with the session, the browsers' host, sounds, show in folder, the crash handler); every other file is safe, portable Rust. Fonts come from the system: Windows' Fonts folder, macOS's system fonts, fontconfig on Linux (<x5/>). On Windows, Latin, Greek and Cyrillic text is drawn by DirectWrite in GDI-classic mode (<x6/>, through egui's glyph rasterizer hook), so each letter's hinted shape and whole-pixel width come together; other scripts are shaped and drawn by egui.",
+   "text": "एक egui विंडो निश्चित पिक्सेल निर्देशांक पर चित्रित होती है, साथ ही प्रति संवाद एक तात्कालिक व्यूपोर्ट। <x1/> स्थिति (डाउनलोड, कतारें, सेटिंग्स, सूची का चयन) को रखता है और मेनू, टूलबार, कुंजी और IPC कमांड को क्रियाओं में बदलता है। प्रत्येक संवाद अपना मॉड्यूल है और एक <x2/> (खुला, बंद, एक मान के साथ किया गया) लौटाता है। केवल Windows-विशिष्ट कॉल <x3/> तक सीमित हैं और उनके Linux और macOS समकक्ष <x4/> तक (सत्र के साथ शुरू करना, ब्राउज़र का होस्ट, ध्वनियाँ, फ़ोल्डर में दिखाना, क्रैश हैंडलर); हर दूसरी फ़ाइल सुरक्षित, पोर्टेबल Rust है। फ़ॉन्ट सिस्टम से आते हैं: Windows का फ़ॉन्ट फ़ोल्डर, macOS के सिस्टम फ़ॉन्ट, Linux पर fontconfig (<x5/>)। Windows पर, लैटिन, ग्रीक और सिरिलिक टेक्स्ट GDI-क्लासिक मोड में DirectWrite द्वारा खींचा जाता है (<x6/>, egui के ग्लिफ़ रास्टराइज़र हुक के माध्यम से), ताकि प्रत्येक अक्षर का संकेतित आकार और पूर्ण-पिक्सेल चौड़ाई एक साथ आए; अन्य स्क्रिप्ट egui द्वारा आकारित और खींची जाती हैं।"
   },
   "55ecea9df3d3ed23": {
    "source": "Paste the address of a playlist (<x1/>) or a channel's videos (<x2/>) and click <g3>Look up</g3>. Instead of one video's qualities, the window lists the list's videos, each with its length.",
@@ -5902,6 +5938,10 @@
    "source": "downloads a gallery into a folder named after it. See <g1>Command line and automation</g1>.",
    "text": "एक गैलरी को उसके नाम पर एक फ़ोल्डर में डाउनलोड करता है। <g1>कमांड लाइन और ऑटोमेशन</g1> देखें।"
   },
+  "5d07ba5f9c5ab43c": {
+   "source": "If your antivirus quarantined MDM, restore it and add an exception for its folder. If it flags something other than the setup or MDM's own programs, or a copy from anywhere else, don't run it, and please <g1>tell us</g1>.",
+   "text": "यदि आपके एंटीवायरस ने MDM को क्वारंटाइन कर दिया है, तो इसे पुनर्स्थापित करें और इसके फ़ोल्डर के लिए एक अपवाद जोड़ें। यदि यह सेटअप या MDM के अपने प्रोग्राम के अलावा किसी और चीज़ को फ़्लैग करता है, या कहीं और से कॉपी को फ़्लैग करता है, तो इसे न चलाएँ, और कृपया <g1>हमें बताएँ</g1>।"
+  },
   "5d0bbcc71d941fe0": {
    "source": "misterdownloadmanager.com's own pages (home, download, features, themes, FAQ); <x1/> adds the help from <x2/> and the news from the CHANGELOG, in 22 languages, and GitHub Pages publishes it",
    "text": "misterdownloadmanager.com के अपने पेज (होम, डाउनलोड, फीचर्स, थीम्स, FAQ); <x1/> <x2/> से मदद और CHANGELOG से समाचार, 22 भाषाओं में जोड़ता है, और GitHub Pages इसे प्रकाशित करता है।"
@@ -6033,6 +6073,10 @@
   "5ea31b9a4b8d8d46": {
    "source": "Every release is built from the public source code by <g1>GitHub Actions</g1>, on GitHub's servers; the build logs are public.",
    "text": "प्रत्येक रिलीज़ GitHub के सर्वर पर <g1>GitHub Actions</g1> द्वारा सार्वजनिक स्रोत कोड से बनाई जाती है; बिल्ड लॉग सार्वजनिक होते हैं।"
+  },
+  "5ecbcb580e32c28b": {
+   "source": "Last updated 2026-11-09",
+   "text": "अंतिम अपडेट: 2026-11-09"
   },
   "5ecd9e0a59e0c6c6": {
    "source": "RSS feeds for torrents, with download rules",
@@ -6977,6 +7021,10 @@
   "6de62748781cd023": {
    "source": "100 MiB, 2 MB/s per connection",
    "text": "100 MiB, 2 MB/s प्रति कनेक्शन"
+  },
+  "6df2f21ef2bda8e4": {
+   "source": "<g1>Offer to download links copied to the clipboard</g1> — when you copy a link whose file type is on the <g2>File types</g2> page, <g3>Download File Info</g3> opens with it, ready to start (or the download starts at once, with <g4>Show start download dialog</g4> off). It keeps to archives, programs, music, videos, PDF and any type you added yourself, so copying the address of a picture, a font or a 3D model to use somewhere else never starts a download. On by default.",
+   "text": "<g1>क्लिपबोर्ड पर कॉपी किए गए लिंक डाउनलोड करने की पेशकश करें</g1> — जब आप किसी ऐसे लिंक को कॉपी करते हैं जिसका फ़ाइल प्रकार <g2>फ़ाइल प्रकार</g2> पृष्ठ पर है, तो <g3>फ़ाइल जानकारी डाउनलोड करें</g3> उसके साथ खुलता है, जो डाउनलोड शुरू करने के लिए तैयार होता है (या <g4>डाउनलोड प्रारंभ करें संवाद दिखाएँ</g4> बंद होने पर डाउनलोड तुरंत शुरू हो जाता है)। यह संग्रह, प्रोग्राम, संगीत, वीडियो, PDF और आपके द्वारा जोड़े गए किसी भी प्रकार तक सीमित रहता है, इसलिए किसी चित्र, फ़ॉन्ट या 3D मॉडल का पता कॉपी करने से डाउनलोड कभी शुरू नहीं होता है। डिफ़ॉल्ट रूप से चालू।"
   },
   "6dfbefa6080fe200": {
    "source": "Where links come from",
@@ -8262,6 +8310,10 @@
    "source": "<g1>Star the project</g1><g2>It helps other people find it.</g2>",
    "text": "<g1>प्रोजेक्ट को स्टार करें</g1><g2>यह दूसरों को इसे खोजने में मदद करता है।</g2>"
   },
+  "810aeb3bcab43ab3": {
+   "source": "A torrent: what it has sent to peers against what it took.",
+   "text": "एक टॉरेंट: इसने पीयर को कितना भेजा और उनसे कितना लिया।"
+  },
   "8144fd9d669ebeed": {
    "source": "Does it download torrents? — Mister Download Manager",
    "text": "क्या यह टॉरेंट डाउनलोड करता है? — Mister Download Manager"
@@ -8349,6 +8401,10 @@
   "82a5d8b104cd86f2": {
    "source": "The same setting is in <g1>Options → Connection</g1>.",
    "text": "वही सेटिंग <g1>विकल्प → कनेक्शन</g1> में है।"
+  },
+  "82aaa69856a510cf": {
+   "source": "The extension works in <g1>Google Chrome</g1>, <g2>Microsoft Edge</g2>, <g3>Brave</g3>, <g4>Opera</g4> and <g5>Vivaldi</g5>, in <g6>Firefox</g6> 140 or later, and in <g7>Safari</g7> 17 or later on a Mac (see <g8>Safari</g8>).",
+   "text": "यह एक्सटेंशन <g1>Google Chrome</g1>, <g2>Microsoft Edge</g2>, <g3>Brave</g3>, <g4>Opera</g4> और <g5>Vivaldi</g5> में, <g6>Firefox</g6> 140 या उसके बाद के संस्करण में, और Mac पर <g7>Safari</g7> 17 या उसके बाद के संस्करण में काम करता है (देखें <g8>Safari</g8>)।"
   },
   "82c502e4717e8e1a": {
    "source": "Check your download",
@@ -8445,6 +8501,10 @@
   "842fc0e6d2b7d24d": {
    "source": "At the start time the queue starts on its own. In the morning, the finished files are under <g1>Finished</g1> in the categories.",
    "text": "प्रारंभ समय पर कतार अपने आप शुरू हो जाती है। सुबह, पूरी हो चुकी फ़ाइलें श्रेणियों में <g1>पूर्ण</g1> के तहत मिलेंगी।"
+  },
+  "8449c6a51ad2bdb6": {
+   "source": "A torrent's connected peers while it runs, seeders and leechers alike.",
+   "text": "टॉरेंट के चलने के दौरान उससे जुड़े पीयर, सीडर और लीचर दोनों।"
   },
   "844d3712af7e5da9": {
    "source": "<g1>Brave Origin connects, and the AppImage's helper is always there</g1> (<g2>#253</g2>): Brave Origin keeps its settings in a folder of its own (<x3/>), which MDM didn't know, so its extension said MDM wasn't installed. MDM now sets up Brave Origin, the Beta, Dev and Nightly versions of Brave, Chrome and Edge, and Vivaldi's snapshot; on macOS, Brave reads Chrome's folder, which MDM now writes for it. From the AppImage, MDM copies the helper program the browsers start out of the AppImage under a new name and swaps it in, so a browser still running the old copy no longer keeps the new one out, and puts it back at each start if it went missing. A copy or setup that fails is written to MDM's log, and <g4>Test browser integration</g4> says when the helper program is missing, when no browser was found, or why setting it up failed.",
@@ -9310,6 +9370,10 @@
    "source": "How do I install the browser extension? — Mister Download Manager",
    "text": "ब्राउज़र एक्सटेंशन कैसे इंस्टॉल करें? — Mister Download Manager"
   },
+  "92abe6de5cd6999e": {
+   "source": "<g1>Hide tab</g1> takes a tab off this download's window and goes back to <g2>Download status</g2>. To bring the tabs back, right-click the tab row and choose <g3>Show hidden tabs</g3>; closing the window and opening it again brings them back too.",
+   "text": "<g1>टैब छुपाएँ</g1> इस डाउनलोड की विंडो से एक टैब हटा देता है और <g2>डाउनलोड स्थिति</g2> पर वापस चला जाता है। टैब वापस लाने के लिए, टैब पंक्ति पर राइट-क्लिक करें और <g3>छिपे हुए टैब दिखाएँ</g3> चुनें; विंडो को बंद करके फिर से खोलने से भी वे वापस आ जाते हैं।"
+  },
   "92bc3a4d66867ccb": {
    "source": "A tab page's body",
    "text": "एक टैब पेज का मुख्य भाग"
@@ -9378,6 +9442,10 @@
    "source": "Tick <g1>Use Speed Limiter</g1>.",
    "text": "<g1>स्पीड लिमिटर का उपयोग करें</g1> पर टिक करें।"
   },
+  "93c39d173fb1932a": {
+   "source": "<g1>A click on a link to a file type MDM takes</g1> goes to MDM. A download the page starts by itself (a script, or a link with no file name in its address that the server answers with a file) stays with Safari: use right-click → <g2>Download with Mister Download Manager</g2> for those.",
+   "text": "<g1>MDM द्वारा लिए गए फ़ाइल प्रकार के लिंक पर क्लिक करना</g1> MDM पर जाता है। एक डाउनलोड जो पृष्ठ अपने आप शुरू करता है (एक स्क्रिप्ट, या उसके पते में फ़ाइल नाम के बिना एक लिंक जिसका सर्वर एक फ़ाइल के साथ जवाब देता है) Safari के साथ रहता है: उनके लिए राइट-क्लिक → <g2>Mister Download Manager से डाउनलोड करें</g2> का उपयोग करें।"
+  },
   "93d2b396cc0f64ed": {
    "source": "The extension is called <g1>Mister Download Manager</g1>.",
    "text": "एक्सटेंशन को <g1>Mister Download Manager</g1> कहा जाता है।"
@@ -9393,10 +9461,6 @@
   "93f335b0185aba7d": {
    "source": "Keep some speed for everything else →",
    "text": "बाकी सब के लिए कुछ गति रखें →"
-  },
-  "93f8e4db17db5b9a": {
-   "source": "<g1>Dates and times</g1> in the list (<g2>Last Try Date</g2>, <g3>Added</g3>) and the Scheduler follow the system's region by default (on Windows <g4>Settings → Time &amp; language → Language &amp; region → Regional format</g4>; on macOS and Linux, your language's usual way), or your own date order, clock and first day of the week in <g5>Options → Regional</g5>. In English the list keeps IDM's own date text (<x6/>).",
-   "text": "सूची में <g1>दिनांक और समय</g1> (<g2>अंतिम प्रयास की तिथि</g2>, <g3>जोड़ा गया।</g3>) और शेड्यूलर डिफ़ॉल्ट रूप से सिस्टम के क्षेत्र का पालन करते हैं (Windows पर <g4>सेटिंग्स → समय और भाषा → भाषा और क्षेत्र → क्षेत्रीय प्रारूप</g4>; macOS और Linux पर, आपकी भाषा का सामान्य तरीका), या <g5>विकल्प → क्षेत्रीय</g5> में आपका अपना दिनांक क्रम, घड़ी और सप्ताह का पहला दिन। अंग्रेज़ी में सूची IDM के अपने दिनांक टेक्स्ट को रखती है (<x6/>)।"
   },
   "940b9b61593ef30c": {
    "source": "<g1><x2/></g1> — the shape of text boxes, check boxes, buttons, progress bars, scroll bars, the focus mark and the title bar.",
@@ -9530,10 +9594,6 @@
    "source": "Filter the list",
    "text": "सूची फ़िल्टर करें"
   },
-  "95f874ce586a0506": {
-   "source": "<g1>Catching problems.</g1> When MDM crashes (a Windows exception, a signal on Linux, a Mach exception on macOS), panics, or freezes, it asks the monitor for a dump. A freeze is a frame of the window running more than 8 s, seen by a watchdog thread that ignores time spent asleep. It times both parts of a frame: what MDM handles (the commands that come in, the clock of downloads, queues and the Scheduler), which runs minimized too, and the drawing; never the wait between frames. The watchdog also measures how much processor time the window thread got meanwhile, and the report says what that means: it ran all along (a loop), it waited in a lock or on I/O (a deadlock), or it hardly ran in ordinary code, which is a computer too busy to run MDM or slow to load it from disk, most likely not MDM's bug (those share one signature, <x2/>). macOS doesn't measure it yet. The monitor then writes a <g3>minidump</g3> of every thread from outside, through <x4/> and <x5/>. A crashed process never writes its own dump, which is how Firefox, Crashpad and Sentry do it too.",
-   "text": "<g1>समस्याओं का पता लगाना।</g1> MDM क्रैश होने पर (Windows में कोई अपवाद, Linux में कोई सिग्नल या macOS में Mach अपवाद), पैनिक होने पर या अटकने पर, यह मॉनिटर से डंप माँगता है। विंडो का कोई फ़्रेम 8 s से ज़्यादा समय तक चलने पर उसे अटका हुआ माना जाता है। इसका पता एक वॉचडॉग थ्रेड लगाता है, जो सोने में बिताए गए समय को नहीं गिनता। यह फ़्रेम के दोनों हिस्सों का समय मापता है: MDM जो काम संभालता है (आने वाले कमांड, डाउनलोड की घड़ी, कतारें और Scheduler), जो मिनिमाइज़ होने पर भी चलता है, और ड्रॉइंग; फ़्रेमों के बीच के इंतज़ार का समय नहीं। वॉचडॉग यह भी मापता है कि इस दौरान विंडो थ्रेड को कितना प्रोसेसर समय मिला। रिपोर्ट बताती है कि इसका क्या मतलब है: थ्रेड लगातार चलता रहा (लूप), लॉक या I/O का इंतज़ार करता रहा (डेडलॉक), या सामान्य कोड में बहुत कम चला। आखिरी स्थिति का मतलब है कि कंप्यूटर MDM चलाने में बहुत व्यस्त था या डिस्क से MDM को लोड करने में धीमा था। इसकी वजह MDM में कोई बग होने की संभावना बहुत कम है (इन दोनों स्थितियों का सिग्नेचर एक ही होता है, <x2/>)। macOS अभी इसका मापन नहीं करता। फिर मॉनिटर <x4/> और <x5/> के ज़रिए बाहर से हर थ्रेड का <g3>मिनीडंप</g3> लिखता है। क्रैश हुई प्रक्रिया कभी अपना डंप नहीं लिखती। Firefox, Crashpad और Sentry भी इसी तरह काम करते हैं।"
-  },
   "95ff4e3f1e52b773": {
    "source": "portable.zip — runs from a folder or USB stick",
    "text": "portable.zip — एक फ़ोल्डर या USB स्टिक से चलता है"
@@ -9609,6 +9669,10 @@
   "970430e3defd4e45": {
    "source": "Browser integration →",
    "text": "ब्राउज़र एकीकरण →"
+  },
+  "970641facab3170c": {
+   "source": "<g1>Move/Rename</g1> (<g2>Ctrl+M</g2>) moves or renames the file of a finished download, or of one that hasn't started yet. With several downloads selected it asks for a folder and moves them all there, each under its own name.",
+   "text": "<g1>ले जाएँ/नाम बदलें</g1> (<g2>Ctrl+M</g2>) एक पूरे हो चुके डाउनलोड की फ़ाइल को, या जो अभी शुरू नहीं हुआ है, उसे स्थानांतरित या उसका नाम बदलता है। कई डाउनलोड चुने होने पर यह एक फ़ोल्डर पूछता है और उन सभी को उनके अपने नाम से वहाँ ले जाता है।"
   },
   "970b4b0f622b3cc5": {
    "source": "<g1>Start download on Mister Download Manager startup</g1> — start the queue whenever MDM starts.",
@@ -9825,6 +9889,10 @@
   "9a06d15d874052f0": {
    "source": "MDM has to be running for a schedule to fire. Closing the main window is fine: MDM keeps going in the notification area.",
    "text": "शेड्यूल के चलने के लिए MDM का चलना आवश्यक है। मुख्य विंडो बंद करना ठीक है: MDM नोटिफिकेशन क्षेत्र में चलता रहता है।"
+  },
+  "9a10fba01a90016a": {
+   "source": "<g1>Works as in the other browsers:</g1> the right-click items, the button over videos, <g2>Media on this page</g2>, the toolbar button, <g3>Alt</g3>-click, MDM starting by itself, and every rule in Options.",
+   "text": "<g1>अन्य ब्राउज़रों की तरह काम करता है:</g1> राइट-क्लिक आइटम, वीडियो पर बटन, <g2>इस पृष्ठ का मीडिया</g2>, टूलबार बटन, <g3>Alt</g3>-क्लिक, MDM का अपने आप शुरू होना, और विकल्प में हर नियम।"
   },
   "9a2260db9068e047": {
    "source": "More to script",
@@ -10046,6 +10114,10 @@
    "source": "<g1>Options → Remote</g1>.",
    "text": "<g1>विकल्प → रिमोट</g1>।"
   },
+  "9df4b353c5463d72": {
+   "source": "Get your file's SHA-256. On Windows, run <x1/>; on Linux, <x2/> and the file's name.",
+   "text": "अपनी फ़ाइल का SHA-256 प्राप्त करें। Windows पर, <x1/> चलाएँ; Linux पर, <x2/> और फ़ाइल का नाम।"
+  },
   "9e0019721ea3837e": {
    "source": "Install it from the Chrome Web Store or Firefox Add-ons.",
    "text": "इसे Chrome वेब स्टोर या Firefox ऐड-ऑन से इंस्टॉल करें।"
@@ -10210,10 +10282,6 @@
    "source": "MDM contains no adware, spyware, bundled offers or tracking. Its whole source code is public, so anyone can check what it does, and every release is built…",
    "text": "MDM में कोई एडवेयर, स्पाईवेयर, बंडल किए गए ऑफ़र या ट्रैकिंग नहीं है। इसका पूरा सोर्स कोड सार्वजनिक है, इसलिए कोई भी यह जाँच सकता है कि यह क्या करता है, और हर रिलीज़ उसी कोड से बनाई जाती है…"
   },
-  "a02445ca780f3ef8": {
-   "source": "One egui window painted to fixed pixel coordinates, plus one immediate viewport per dialog. <x1/> holds the state (downloads, queues, settings, the list's selection) and turns menu, toolbar, key and IPC commands into actions. Each dialog is its own module and returns an <x2/> (open, closed, done with a value). Windows-only calls are confined to <x3/> and their Linux and macOS counterparts to <x4/> (starting with the session, the browsers' host, sounds, show in folder, the crash handler); every other file is safe, portable Rust. Fonts come from the system: Windows' Fonts folder, macOS's system fonts, fontconfig on Linux (<x5/>).",
-   "text": "एक egui विंडो जो निश्चित पिक्सेल निर्देशांक पर चित्रित है, साथ ही प्रत्येक डायलॉग के लिए एक तात्कालिक व्यूपोर्ट। <x1/> स्थिति (डाउनलोड, कतारें, सेटिंग्स, सूची का चयन) रखता है और मेनू, टूलबार, कुंजी और IPC कमांड को क्रियाओं में बदलता है। प्रत्येक डायलॉग अपना मॉड्यूल है और एक <x2/> (खुला, बंद, एक मान के साथ पूरा) लौटाता है। केवल Windows-विशिष्ट कॉल <x3/> तक सीमित हैं और उनके Linux और macOS समकक्ष <x4/> तक सीमित हैं (सत्र से शुरू होकर, ब्राउज़र का होस्ट, ध्वनियाँ, फ़ोल्डर में दिखाएँ, क्रैश हैंडलर); हर दूसरी फ़ाइल सुरक्षित, पोर्टेबल Rust है। फ़ॉन्ट सिस्टम से आते हैं: Windows का फ़ॉन्ट फ़ोल्डर, macOS के सिस्टम फ़ॉन्ट, Linux पर fontconfig (<x5/>)।"
-  },
   "a02c94e070503928": {
    "source": "Browsers built on them work too: Chromium and Helium take the extension as Chrome does, Brave Origin as Brave does, Zen and LibreWolf as Firefox does. On Windows, Zen has a bug of its own (see <g1>The browser and MDM aren't connected</g1>).",
    "text": "उन पर बने ब्राउज़र भी काम करते हैं: Chromium और Helium एक्सटेंशन को Chrome की तरह लेते हैं, Brave Origin Brave की तरह, Zen और LibreWolf Firefox की तरह। Windows पर, Zen में अपनी एक त्रुटि है (देखें <g1>ब्राउज़र और MDM कनेक्टेड नहीं हैं</g1>)।"
@@ -10337,6 +10405,10 @@
   "a1afb9d26b290530": {
    "source": "<g1>Batch downloads</g1><g2>Mister Download Manager</g2>",
    "text": "<g1>बैच डाउनलोड</g1><g2>Mister Download Manager</g2>"
+  },
+  "a1b29b6dc03c2789": {
+   "source": "If MDM says it's up to date, there's nothing for you to do. The extension updates by itself through its store and can get ahead of the app for a while. Everything keeps working, and the message goes away with the next version of MDM.",
+   "text": "यदि MDM कहता है कि यह अद्यतित है, तो आपको कुछ भी करने की आवश्यकता नहीं है। एक्सटेंशन अपने स्टोर के माध्यम से स्वयं अपडेट होता है और कुछ समय के लिए ऐप से आगे निकल सकता है। सब कुछ काम करता रहता है, और MDM के अगले संस्करण के साथ संदेश चला जाता है।"
   },
   "a1b776b1a0548526": {
    "source": "MDM's main window on KDE Plasma",
@@ -10793,6 +10865,10 @@
   "a905582aea5b0712": {
    "source": "A greyed button's border",
    "text": "एक धूसर बटन की सीमा"
+  },
+  "a907f4484df884cd": {
+   "source": "<g1>Keep running when closing the window</g1> — closing the main window hides it in the notification area instead of quitting, and downloads, queues and schedules go on. On by default; unticked, closing quits MDM (so a <g2>portable copy</g2>'s folder can then be deleted). If there is no icon for MDM at all — not even behind the ^ hidden icons — the window minimizes to the taskbar instead, so downloads continue and the window stays reachable; an icon behind ^ can be clicked to bring it back, or start MDM again. Greyed where no tray shows MDM's icon (some Linux desktops): closing quits there.",
+   "text": "<g1>विंडो बंद करते समय चालू रखें</g1> — मुख्य विंडो को बंद करने पर यह बंद होने के बजाय सूचना क्षेत्र में छिप जाती है, और डाउनलोड, कतारें और शेड्यूल जारी रहते हैं। डिफ़ॉल्ट रूप से चालू; अनटिक करने पर, बंद करने से MDM बंद हो जाता है (ताकि <g2>पोर्टेबल कॉपी</g2> का फ़ोल्डर हटाया जा सके)। यदि MDM के लिए कोई आइकन नहीं है — ^ छिपे हुए आइकन के पीछे भी नहीं — तो विंडो इसके बजाय टास्कबार में छोटी हो जाती है, ताकि डाउनलोड जारी रहें और विंडो पहुंच योग्य रहे; इसे वापस लाने के लिए ^ के पीछे एक आइकन पर क्लिक किया जा सकता है, या MDM को फिर से शुरू किया जा सकता है। जहां कोई ट्रे MDM का आइकन नहीं दिखाती है (कुछ Linux डेस्कटॉप): वहां बंद करने पर यह बंद हो जाता है।"
   },
   "a90ae03353c0b71c": {
    "source": "The Scheduler's Schedule tab: Start download at, Once at or Daily, and Stop download at",
@@ -11350,6 +11426,10 @@
    "source": "runs unit tests and end-to-end downloads against <x1/> with injected faults (slow, dropped and refused connections, servers without ranges, changing files). <x2/> runs the published speed comparison; its raw data is in <x3/>.",
    "text": "इंजेक्टेड फ़ॉल्ट्स (धीमे, छोड़े गए और अस्वीकृत कनेक्शन, बिना रेंज वाले सर्वर, बदलती फ़ाइलें) के साथ <x1/> के विरुद्ध यूनिट टेस्ट और एंड-टू-एंड डाउनलोड चलाता है। <x2/> प्रकाशित गति तुलना चलाता है; इसका कच्चा डेटा <x3/> में है।"
   },
+  "b1ea4cd6806043cd": {
+   "source": "<g1>Minimize to the notification area</g1> — Minimize hides the main window, and a download's progress window, in the notification area; downloads go on. On by default. Where the tray has no icon, the main window minimizes to the taskbar instead. The close setting above is separate; when it is on, closing hides there too (or minimizes to the taskbar if there is no icon at all). Greyed where no tray shows MDM's icon (some Linux desktops); in a Wayland session the main window stays minimized in the dock, since Wayland can't hide a window.",
+   "text": "<g1>सूचना क्षेत्र में छोटा करें</g1> — छोटा करने पर मुख्य विंडो, और डाउनलोड की प्रगति विंडो, सूचना क्षेत्र में छिप जाती है; डाउनलोड जारी रहते हैं। डिफ़ॉल्ट रूप से चालू। जहां ट्रे में कोई आइकन नहीं है, वहां मुख्य विंडो इसके बजाय टास्कबार में छोटी हो जाती है। ऊपर दी गई बंद करने की सेटिंग अलग है; जब यह चालू होती है, तो बंद करने पर भी यह वहां छिप जाती है (या यदि कोई आइकन नहीं है तो टास्कबार में छोटी हो जाती है)। जहां कोई ट्रे MDM का आइकन नहीं दिखाती है (कुछ Linux डेस्कटॉप): Wayland सत्र में मुख्य विंडो डॉक में छोटी रहती है, क्योंकि Wayland एक विंडो को छिपा नहीं सकता है।"
+  },
   "b1f35176aca676c5": {
    "source": "While the queue runs, the computer doesn't go to sleep. When the queue is done, the computer's own sleep settings apply again: a computer nobody is using goes back to sleep by itself. <g1>Turn off computer when done → Sleep</g1> sends it back to sleep at once.",
    "text": "कतार चलने के दौरान कंप्यूटर स्लीप मोड में नहीं जाता। कतार पूरी होने पर कंप्यूटर की अपनी स्लीप सेटिंग्स फिर से लागू होती हैं: उपयोग में न होने पर कंप्यूटर अपने आप स्लीप मोड में चला जाता है। <g1>पूरा होने पर कंप्यूटर बंद करें → स्लीप</g1> चुनने से कंप्यूटर तुरंत स्लीप मोड में चला जाता है।"
@@ -11417,10 +11497,6 @@
   "b27995b1d5cff0b2": {
    "source": "A calendar's day or arrow pressed",
    "text": "एक कैलेंडर का दिन या तीर दबाया गया"
-  },
-  "b27e59917bb7f695": {
-   "source": "Last updated 2026-11-08 · applies to the app, the browser extension and misterdownloadmanager.com",
-   "text": "अंतिम अपडेट: 2026-11-08 · ऐप, ब्राउज़र एक्सटेंशन और misterdownloadmanager.com पर लागू होता है"
   },
   "b298f93960114202": {
    "source": ", with or without <x1/>;",
@@ -11702,10 +11778,6 @@
    "source": "The menu before / after; in a submenu, <g1>Left</g1> closes it",
    "text": "पहले / बाद का मेनू; सबमेनू में, <g1>बाएँ</g1> उसे बंद करता है"
   },
-  "b7037d71c5917f53": {
-   "source": "<g1>Hide tab</g1> goes back to <g2>Download status</g2>.",
-   "text": "<g1>टैब छुपाएँ</g1> <g2>डाउनलोड स्थिति</g2> पर वापस जाता है।"
-  },
   "b706522e2a61060f": {
    "source": "Theme files you make or download go in MDM's themes folder. <g1>View → Theme → Open themes folder</g1> opens it (and makes it the first time). It is in MDM's data folder:",
    "text": "आपके द्वारा बनाई या डाउनलोड की गई थीम फ़ाइलें MDM के थीम फ़ोल्डर में जाती हैं। <g1>देखें → थीम → थीम फ़ोल्डर खोलें</g1> इसे खोलता है (और पहली बार इसे बनाता है)। यह MDM के डेटा फ़ोल्डर में है:"
@@ -11894,6 +11966,10 @@
    "source": "When the video has subtitles, the <g1>Subtitles</g1> list offers them: the uploader's own languages first (and <g2>All the uploader's</g2> when there are several), then the site's automatic captions, marked <g3>automatic</g3>. Of those, only the ones in the language spoken and their translations into English and your interface language are listed; sites like YouTube offer a machine translation into every language they know.",
    "text": "वीडियो में उपशीर्षक होने पर, <g1>उपशीर्षक</g1> सूची में वे दिखते हैं: पहले अपलोडर की अपनी भाषाएँ (और कई भाषाएँ होने पर <g2>अपलोडर के सभी</g2>), फिर साइट के स्वचालित कैप्शन, जिन पर <g3>स्वचालित</g3> लिखा होता है। इनमें सिर्फ़ बोली जाने वाली भाषा और उसके अंग्रेज़ी तथा आपकी इंटरफ़ेस भाषा में अनुवाद दिखते हैं। YouTube जैसी साइटें अपनी उपलब्ध हर भाषा में मशीन से अनुवाद देती हैं।"
   },
+  "ba5be854c2e3600d": {
+   "source": "My antivirus or VirusTotal flags MDM",
+   "text": "मेरा एंटीवायरस या VirusTotal MDM को फ़्लैग करता है"
+  },
   "ba699d4f38020fb7": {
    "source": "<g1>Tasks → Import → From text file</g1> reads a text file and picks out every web address in it. You can also drop a <x2/> or <x3/> list straight onto the download list. Untick what you don't want, and add the rest to the queue.",
    "text": "<g1>कार्य → आयात करें → टेक्स्ट फ़ाइल से</g1> एक टेक्स्ट फ़ाइल पढ़ता है और उसमें हर वेब पते को चुनता है। आप सीधे डाउनलोड सूची पर एक <x2/> या <x3/> सूची भी छोड़ सकते हैं। जो आप नहीं चाहते उसे अनटिक करें, और बाकी को कतार में जोड़ें।"
@@ -11901,10 +11977,6 @@
   "ba6ae97de31c9f2e": {
    "source": "<g1></g1>Ahead on that line. Timings are medians of alternating runs on one computer and server; the bars are to scale.",
    "text": "<g1></g1>उस पंक्ति पर आगे। समय एक कंप्यूटर और सर्वर पर वैकल्पिक रनों का माध्य है; बार पैमाने पर हैं।"
-  },
-  "ba71746213a31b99": {
-   "source": "The extension works in <g1>Google Chrome</g1>, <g2>Microsoft Edge</g2>, <g3>Brave</g3>, <g4>Opera</g4> and <g5>Vivaldi</g5>, and in <g6>Firefox</g6> 140 or later.",
-   "text": "यह एक्सटेंशन <g1>Google Chrome</g1>, <g2>Microsoft Edge</g2>, <g3>Brave</g3>, <g4>Opera</g4> और <g5>Vivaldi</g5> में, और <g6>Firefox</g6> 140 या उसके बाद के संस्करणों में काम करता है।"
   },
   "ba7398fafefc4533": {
    "source": "Peak memory",
@@ -12077,6 +12149,10 @@
   "bd171409c60c0172": {
    "source": "Options → Connection",
    "text": "विकल्प → कनेक्शन"
+  },
+  "bd3527667ef96098": {
+   "source": "The Mac app carries the Safari extension: there is nothing to download. Safari 17 or later and macOS 14 or later are needed.",
+   "text": "Mac ऐप में Safari एक्सटेंशन होता है: कुछ भी डाउनलोड करने की आवश्यकता नहीं है। Safari 17 या उसके बाद के संस्करण और macOS 14 या उसके बाद के संस्करण की आवश्यकता है।"
   },
   "bd38ebc1b5f00936": {
    "source": "Scenario",
@@ -12422,6 +12498,10 @@
    "source": "A greyed button's face",
    "text": "एक धूसर बटन का चेहरा"
   },
+  "c30f4658e7e28160": {
+   "source": "Start the video first: the list fills as the page loads things, and it's emptied when the tab goes to another page. With <g1>Prefix media file names with the page title</g1> on, a file from the list is named after the page, then its own name (<x2/>). Click <g3>Download</g3> beside one: a stream opens MDM's <g4>Download video from a page</g4> window, which reads its qualities (yt-dlp does the work); a file goes to MDM's list like any other download. Your cookies for its server, the page as the referrer and your browser's User-Agent go with it, as they do for a link you click.",
+   "text": "पहले वीडियो शुरू करें: पृष्ठ लोड होने पर सूची भर जाती है, और जब टैब दूसरे पृष्ठ पर जाता है तो यह खाली हो जाती है। <g1>मीडिया फ़ाइलों के नामों से पहले पेज का शीर्षक जोड़ें</g1> चालू होने पर, सूची से एक फ़ाइल का नाम पृष्ठ के नाम पर रखा जाता है, फिर उसका अपना नाम (<x2/>)। किसी एक के बगल में <g3>डाउनलोड करें</g3> पर क्लिक करें: एक स्ट्रीम MDM की <g4>एक पृष्ठ से वीडियो डाउनलोड करें</g4> विंडो खोलती है, जो उसकी गुणवत्ता पढ़ती है (yt-dlp काम करता है); एक फ़ाइल किसी अन्य डाउनलोड की तरह MDM की सूची में जाती है। उसके सर्वर के लिए आपकी कुकीज़, रेफरर के रूप में पृष्ठ और आपके ब्राउज़र का User-Agent उसके साथ जाते हैं, जैसे कि आप जिस लिंक पर क्लिक करते हैं उसके लिए जाते हैं।"
+  },
   "c31622b1a542c888": {
    "source": "<g1>.dmg</g1> for Intel Macs",
    "text": "Intel Mac के लिए <g1>.dmg</g1>"
@@ -12473,6 +12553,10 @@
   "c41cf3697bdcc8d7": {
    "source": "The extension asks the host which file types to take, checks each download against them, and cancels the browser's download only after the app has accepted it; otherwise the browser keeps it, and the extension says why.",
    "text": "एक्सटेंशन होस्ट से पूछता है कि कौन से फ़ाइल प्रकार लेने हैं, प्रत्येक डाउनलोड की उनके खिलाफ जाँच करता है, और ऐप द्वारा स्वीकार किए जाने के बाद ही ब्राउज़र के डाउनलोड को रद्द करता है; अन्यथा ब्राउज़र इसे रखता है, और एक्सटेंशन कारण बताता है।"
+  },
+  "c488af9290492a52": {
+   "source": "Closing the main window doesn't quit MDM. It hides in the notification area, and downloads, queues and schedules carry on. To make closing quit (a portable copy's folder can then be deleted), untick <g1>Options → General → Keep running when closing the window</g1>. If there is no icon for MDM at all — not in the notification area, nor behind the ^ hidden icons — the window minimizes to the taskbar instead, so downloads continue and there is a way back. An icon behind ^ can be clicked to bring the window back, and starting MDM again always does.",
+   "text": "मुख्य विंडो बंद करने से MDM बंद नहीं होता है। यह सूचना क्षेत्र में छिप जाता है, और डाउनलोड, कतारें और शेड्यूल जारी रहते हैं। बंद करने पर MDM को पूरी तरह से बंद करने के लिए (ताकि पोर्टेबल कॉपी का फ़ोल्डर हटाया जा सके), <g1>विकल्प → सामान्य → विंडो बंद करते समय चालू रखें</g1> से सही का निशान हटा दें। यदि MDM का कोई आइकन बिल्कुल नहीं है — न तो सूचना क्षेत्र में, न ही ^ छिपे हुए आइकनों के पीछे — तो विंडो टास्कबार में छोटी हो जाती है, ताकि डाउनलोड जारी रहें और वापस आने का एक तरीका हो। ^ के पीछे के आइकन पर क्लिक करके विंडो को वापस लाया जा सकता है, और MDM को फिर से शुरू करने पर भी ऐसा ही होता है।"
   },
   "c48962c07ea187bc": {
    "source": "The video helpers window: yt-dlp and ffmpeg, each with its version and Use another program...",
@@ -13274,6 +13358,10 @@
    "source": "A download's details were too large",
    "text": "एक डाउनलोड का विवरण बहुत बड़ा था"
   },
+  "d0d09410613074ec": {
+   "source": "Drag MDM to Applications and start it once. MDM's <g1>Add Mister Download Manager to your browser</g1> window lists Safari: <g2>How to Add</g2> shows the steps below.",
+   "text": "MDM को Applications में खींचें और एक बार शुरू करें। MDM की <g1>Mister Download Manager को अपने ब्राउज़र में जोड़ें</g1> विंडो में Safari सूचीबद्ध है: <g2>जोड़ने का तरीका</g2> नीचे दिए गए चरणों को दिखाता है।"
+  },
   "d100800d4f0e156a": {
    "source": "MDM downloads BitTorrent files from magnet links and .torrent files. Torrents appear in the same list as other downloads, marked Torrent in the Source…",
    "text": "MDM मैग्नेट लिंक और .torrent फ़ाइलों से BitTorrent फ़ाइलें डाउनलोड करता है। टोरेंट अन्य डाउनलोड की तरह ही सूची में दिखाई देते हैं और स्रोत में टॉरेंट के रूप में चिह्नित होते हैं…"
@@ -13494,6 +13582,10 @@
    "source": "Honest about the translations",
    "text": "अनुवादों के बारे में ईमानदार"
   },
+  "d4a032f906bd077e": {
+   "source": "No Download video button on YouTube in Chrome, Edge or Brave",
+   "text": "Chrome, Edge या Brave में YouTube पर “एक पृष्ठ से वीडियो डाउनलोड करें” बटन नहीं दिख रहा है"
+  },
   "d4a589b33d49fa7c": {
    "source": "\"Remove the finished downloads from the list but keep the files.\"",
    "text": "“पूरे हो चुके डाउनलोड सूची से हटाएँ, लेकिन फ़ाइलें रहने दें।”"
@@ -13501,10 +13593,6 @@
   "d4a71e10d53850e6": {
    "source": "<g1><g2>Catch downloads from your browser</g2></g1> — set up the extension so clicked downloads go to MDM.",
    "text": "<g1><g2>अपने ब्राउज़र से डाउनलोड पकड़ें</g2></g1> — एक्सटेंशन सेट करें ताकि क्लिक किए गए डाउनलोड MDM पर जाएँ।"
-  },
-  "d4c66a15e09e8ca8": {
-   "source": "<g1>Offer to download links copied to the clipboard</g1> — when you copy a link whose file type is on the <g2>File types</g2> page, <g3>Download File Info</g3> opens with it, ready to start (or the download starts at once, with <g4>Show start download dialog</g4> off). On by default.",
-   "text": "<g1>क्लिपबोर्ड पर कॉपी किए गए लिंक डाउनलोड करने की पेशकश करें</g1> — जब आप किसी ऐसे लिंक को कॉपी करते हैं जिसका फ़ाइल प्रकार <g2>फ़ाइल प्रकार</g2> पृष्ठ पर है, तो <g3>फ़ाइल जानकारी डाउनलोड करें</g3> उसके साथ खुलता है, शुरू करने के लिए तैयार (या डाउनलोड तुरंत शुरू हो जाता है, <g4>डाउनलोड प्रारंभ करें संवाद दिखाएँ</g4> बंद होने पर)। डिफ़ॉल्ट रूप से चालू।"
   },
   "d4c9212e6107e470": {
    "source": "Playlists and channels",
@@ -13726,6 +13814,10 @@
    "source": "Yes. When a video has subtitles, the <g1>Subtitles</g1> list in the video window offers them: the uploader's languages and the site's automatic captions. They're saved beside the video as an <x2/> file, or put inside it with <g3>Put them into the video</g3>. See <g4>Subtitles</g4>.",
    "text": "हाँ। वीडियो में उपशीर्षक उपलब्ध होने पर, वीडियो विंडो की <g1>उपशीर्षक</g1> सूची में अपलोडर की भाषाओं के उपशीर्षक और साइट के अपने-आप बनाए गए कैप्शन दिखते हैं। ये वीडियो के साथ वाली <x2/> फ़ाइल में सहेजे जाते हैं, या <g3>उन्हें वीडियो में डालें</g3> से वीडियो में जोड़े जाते हैं। <g4>उपशीर्षक</g4> देखें।"
   },
+  "d79ad01ff4322b0a": {
+   "source": "<g1>Automatically start downloading the following file types</g1> — the file types the browser hands over (and the clipboard picks up). Separate them by spaces; <x2/> matches any characters, as in <x3/>. <g4>Default</g4> puts the original list back. The list starts with the usual archives, programs and installers (Windows, macOS and Linux ones: DMG, PKG, DEB, RPM, APPIMAGE, MSIX), music and videos, PDF and Office files, AI models and datasets (GGUF, SAFETENSORS, CKPT, PT, ONNX, PARQUET), 3D and CAD files (GLB, FBX, OBJ, STL, BLEND, STEP), design and camera RAW files, ebooks, disk images and split archives. Pages, scripts, plain text and web images are left out on purpose, so saving a picture or a page stays with the browser; add any type you need, or put a single <x5/> in the box to take every file that has an extension. A list you never changed gains the types a new version adds; one you edited stays as it is.",
+   "text": "<g1>निम्नलिखित फ़ाइल प्रकारों को स्वचालित रूप से डाउनलोड करना प्रारंभ करें</g1> — वे फ़ाइल प्रकार जो ब्राउज़र सौंपता है (और क्लिपबोर्ड उठाता है)। उन्हें स्पेस से अलग करें; <x2/> किसी भी वर्ण से मेल खाता है, जैसे <x3/> में। <g4>डिफ़ॉल्ट</g4> मूल सूची को वापस लाता है। सूची सामान्य संग्रह, प्रोग्राम और इंस्टॉलर (Windows, macOS और Linux वाले: DMG, PKG, DEB, RPM, APPIMAGE, MSIX), संगीत और वीडियो, PDF और Office फ़ाइलें, AI मॉडल और डेटासेट (GGUF, SAFETENSORS, CKPT, PT, ONNX, PARQUET), 3D और CAD फ़ाइलें (GLB, FBX, OBJ, STL, BLEND, STEP), डिज़ाइन और कैमरा RAW फ़ाइलें, ईबुक, डिस्क इमेज और विभाजित संग्रह से शुरू होती है। पृष्ठ, स्क्रिप्ट, सादा पाठ और वेब इमेज जानबूझकर छोड़ी गई हैं, ताकि किसी चित्र या पृष्ठ को सहेजना ब्राउज़र के साथ रहे; आपको जिस भी प्रकार की आवश्यकता हो उसे जोड़ें, या एक्सटेंशन वाली हर फ़ाइल को लेने के लिए बॉक्स में एक <x5/> डालें। एक सूची जिसे आपने कभी नहीं बदला है, उसमें एक नया संस्करण जो प्रकार जोड़ता है वह जुड़ जाता है; एक जिसे आपने संपादित किया है वह वैसा ही रहता है।"
+  },
   "d7a59305d1341d4e": {
    "source": "The app and the extension hold no personal data about you, so there is nothing for us to show, correct or delete there. The website's visit statistics are held by Statcounter; to have records of your visits removed, open an issue with the date and time of your visit, or ask Statcounter directly. Data that you send to GitHub (an issue, for example) is handled by GitHub and can be edited or deleted there.",
    "text": "ऐप और एक्सटेंशन में आपके बारे में कोई व्यक्तिगत डेटा नहीं रखा जाता, इसलिए हमारे पास वहाँ दिखाने, सुधारने या हटाने के लिए कुछ नहीं है। वेबसाइट के विज़िट आँकड़े Statcounter के पास रखे जाते हैं; अपनी विज़िट के रिकॉर्ड हटवाने के लिए, अपनी विज़िट की तारीख और समय के साथ एक issue दर्ज करें या सीधे Statcounter से संपर्क करें। GitHub को भेजा गया डेटा (उदाहरण के लिए, कोई issue) GitHub संभालता है और वहाँ उसे संपादित या हटाया जा सकता है।"
@@ -13781,10 +13873,6 @@
   "d840a217a694ce9e": {
    "source": "5. No warranty",
    "text": "5. कोई वारंटी नहीं"
-  },
-  "d8456502c3302d77": {
-   "source": "Start the video first: the list fills as the page loads things, and it's emptied when the tab goes to another page. Click <g1>Download</g1> beside one: a stream opens MDM's <g2>Download video from a page</g2> window, which reads its qualities (yt-dlp does the work); a file goes to MDM's list like any other download. Your cookies for its server, the page as the referrer and your browser's User-Agent go with it, as they do for a link you click.",
-   "text": "पहले वीडियो चलाएँ: पृष्ठ चीज़ें लोड करता है, वैसे-वैसे सूची भरती जाती है। टैब के दूसरे पृष्ठ पर जाने पर सूची खाली हो जाती है। किसी चीज़ के पास <g1>डाउनलोड करें</g1> पर क्लिक करें: स्ट्रीम से MDM की <g2>एक पृष्ठ से वीडियो डाउनलोड करें</g2> विंडो खुलती है, जो उसकी क्वालिटी पढ़ती है (यह काम yt-dlp करता है)। फ़ाइल MDM की सूची में दूसरे डाउनलोड की तरह जुड़ जाती है। उसके साथ स्ट्रीम के सर्वर की आपकी कुकीज़, रेफ़रर के रूप में पृष्ठ और आपके ब्राउज़र का User-Agent भी भेजे जाते हैं, ठीक वैसे ही जैसे आपके क्लिक किए हुए लिंक के साथ।"
   },
   "d878d923ca93995a": {
    "source": "Open <x1/> (the codes are in <g2><x3/></g2>).",
@@ -14018,6 +14106,10 @@
    "source": "<g1>The extension's toolbar button</g1> says whether the browser reaches MDM. When it doesn't, a red <g2>!</g2> and <g3>How to fix it</g3> lead to the new help page, <g4>The browser and MDM aren't connected</g4>, at the section for the reason. Its popup also pauses taking downloads, leaves the current site to the browser for good, and opens MDM or its Options.",
    "text": "<g1>एक्सटेंशन का टूलबार बटन</g1> बताता है कि ब्राउज़र MDM तक पहुँचता है या नहीं। जब ऐसा नहीं होता है, तो एक लाल <g2>!</g2> और <g3>इसे कैसे ठीक करें</g3> नए सहायता पृष्ठ, <g4>ब्राउज़र और MDM कनेक्ट नहीं हैं</g4>, के कारण वाले अनुभाग पर ले जाते हैं। इसका पॉपअप डाउनलोड लेने को भी रोकता है, वर्तमान साइट को ब्राउज़र के लिए हमेशा के लिए छोड़ देता है, और MDM या उसके विकल्प खोलता है।"
   },
+  "dc93b881572cb1c5": {
+   "source": "Peers",
+   "text": "पीयर"
+  },
   "dcabc8a97e80dd97": {
    "source": "Downloads → Speed Limiter → Settings...: one speed for all of MDM.",
    "text": "डाउनलोड → गति सीमित करने वाला → सेटिंग्स...: MDM के सभी डाउनलोड के लिए एक गति।"
@@ -14066,10 +14158,6 @@
    "source": "Runs nearly everywhere, with HTTP, BitTorrent, magnet and ed2k, and a REST API",
    "text": "लगभग हर जगह चलता है, HTTP, BitTorrent, मैग्नेट और ed2k के साथ, और एक REST API"
   },
-  "dda60fa3176775af": {
-   "source": "<g1>Move/Rename</g1> (<g2>Ctrl+M</g2>) moves or renames the file of a finished download, or of one that hasn't started yet.",
-   "text": "<g1>ले जाएँ/नाम बदलें</g1> (<g2>Ctrl+M</g2>) एक पूरी हुई डाउनलोड की फ़ाइल को, या जो अभी शुरू नहीं हुई है, उसे स्थानांतरित या नाम बदलता है।"
-  },
   "ddb6d067aabbbb96": {
    "source": "Command line and automation — Mister Download Manager help",
    "text": "कमांड लाइन और ऑटोमेशन — Mister Download Manager सहायता"
@@ -14081,10 +14169,6 @@
   "dddc4b4555b211bf": {
    "source": "the pause-and-resume and event-log tests no longer depend on how fast the machine is: the lab server can hold a byte back until a test lets it go (<x1/>), and a test can wait until every request it made is in the server's log (#123);",
    "text": "रोकने और फिर से शुरू करने और इवेंट-लॉग परीक्षण अब इस बात पर निर्भर नहीं करते कि मशीन कितनी तेज़ है: लैब सर्वर एक बाइट को तब तक रोक सकता है जब तक एक परीक्षण उसे जाने नहीं देता (<x1/>), और एक परीक्षण तब तक प्रतीक्षा कर सकता है जब तक उसके द्वारा किए गए हर अनुरोध सर्वर के लॉग में न हो जाए (#123);"
-  },
-  "ddf53195ff2cd6d1": {
-   "source": "Closing the main window doesn't quit MDM. It hides in the notification area, and downloads, queues and schedules carry on.",
-   "text": "मुख्य विंडो बंद करने से MDM बंद नहीं होता। यह सूचना क्षेत्र में छिप जाता है और डाउनलोड, कतारें तथा शेड्यूल चलते रहते हैं।"
   },
   "de05be78a1ac8ebe": {
    "source": "Can it resume broken downloads? — Mister Download Manager",
@@ -14109,6 +14193,10 @@
   "deb3f2db3855218f": {
    "source": "<g1>Never take downloads from</g1> the current site: adds it to MDM's excluded sites.",
    "text": "वर्तमान साइट से <g1>कभी डाउनलोड न लें</g1>: इससे साइट MDM की बहिष्कृत साइटों में जुड़ जाती है।"
+  },
+  "debac78242ebe5d9": {
+   "source": "Minimize hides the main window there too, while <g1>Minimize to the notification area</g1> is on in <g2>Options → General</g2>. It is on by default; where the tray has no icon, Minimize sends the window to the taskbar instead.",
+   "text": "जब <g1>सूचना क्षेत्र में छोटा करें</g1> <g2>विकल्प → सामान्य</g2> में चालू होता है, तो छोटा करें मुख्य विंडो को वहीं छिपा देता है। यह डिफ़ॉल्ट रूप से चालू होता है; जहाँ ट्रे में कोई आइकन नहीं होता, वहाँ छोटा करें विंडो को टास्कबार में भेज देता है।"
   },
   "dee4ab42b514acda": {
    "source": "The language list on first start: every language with its flag, its own name and its English name",
@@ -15010,6 +15098,10 @@
    "source": "Download a video from a page",
    "text": "एक पेज से वीडियो डाउनलोड करें"
   },
+  "ece3601cb88a5ef9": {
+   "source": "Safari lets an extension neither see nor stop the browser's downloads, so what works differs from the other browsers:",
+   "text": "Safari एक एक्सटेंशन को ब्राउज़र के डाउनलोड देखने या रोकने की अनुमति नहीं देता है, इसलिए जो काम करता है वह अन्य ब्राउज़रों से अलग है:"
+  },
   "ece9fd24c79f10c2": {
    "source": "The windows are the ones described in this help, with the desktop's fonts, file icons and title bars:",
    "text": "विंडो वही हैं जो इस सहायता में वर्णित हैं, डेस्कटॉप के फ़ॉन्ट, फ़ाइल आइकन और शीर्षक बार के साथ:"
@@ -15574,6 +15666,10 @@
    "source": "<g1>Metro</g1>, after Windows 8's flat look: square corners, flat buttons, boxes that take an accent border when focused, check boxes with a tick, a bordered progress bar, scroll bars with their arrows always shown, one-colour icons (Microsoft's Fluent UI System Icons, MIT) and a title bar in the theme's colour with the title centred.",
    "text": "<g1>मेट्रो</g1>, Windows 8 के फ्लैट लुक के बाद: चौकोर कोने, फ्लैट बटन, बॉक्स जो फोकस होने पर एक एक्सेंट बॉर्डर लेते हैं, टिक वाले चेक बॉक्स, एक बॉर्डर वाली प्रगति पट्टी, हमेशा अपने तीर के साथ स्क्रॉल बार, एक-रंग के आइकन (Microsoft के Fluent UI System Icons, MIT) और शीर्षक केंद्रित होने के साथ थीम के रंग में एक शीर्षक पट्टी।"
   },
+  "f554a7b471d1c8c4": {
+   "source": "To check that your copy is the real one:",
+   "text": "यह जाँचने के लिए कि आपकी कॉपी असली है:"
+  },
   "f55e431df0898bf7": {
    "source": "Corner radius of a popup in a window (a calendar, a filter box)",
    "text": "एक विंडो में पॉपअप का कोना रेडियस (एक कैलेंडर, एक फ़िल्टर बॉक्स)"
@@ -15601,6 +15697,10 @@
   "f5d0db4c9a23ece3": {
    "source": "<g1><g2>Adding downloads</g2></g1> — Add URL, the clipboard, the drop target, batch downloads and lists of links, and Start Download versus Download Later.",
    "text": "<g1><g2>डाउनलोड जोड़ना</g2></g1> — URL जोड़ें, क्लिपबोर्ड, ड्रॉप टारगेट, बैच डाउनलोड और लिंक की सूचियाँ, और डाउनलोड प्रारंभ करें बनाम बाद में डाउनलोड करें।"
+  },
+  "f5d1e8a8bc6e8e59": {
+   "source": "Compare it with the same file's line in that release's <x1/>.",
+   "text": "इसकी तुलना उस रिलीज़ के <x1/> में उसी फ़ाइल की लाइन से करें।"
   },
   "f5e911e1675285c5": {
    "source": "Add the extension to each browser you use, as below: Firefox from its add-ons store, the others from the Chrome Web Store. Until a browser's extension has reached MDM, MDM's <g1>Add Mister Download Manager to your browser</g1> window opens at each start: it lists the browsers it found, and <g2>Add the extension</g2> opens the store's page in that browser. <g3>Install it by hand</g3> opens the steps for loading it without the store; <g4>Don't ask again</g4> stops the window.",
@@ -16010,6 +16110,10 @@
    "source": "Click <g1>Load unpacked</g1> and choose the <x2/> folder.",
    "text": "<g1>अनपैक्ड लोड करें</g1> पर क्लिक करें और <x2/> फ़ोल्डर चुनें।"
   },
+  "fbb8c948c7d5543c": {
+   "source": "<g1>Dates and times</g1> in the list (<g2>Last Try Date</g2>, <g3>Added</g3>) and the Scheduler follow the system's region by default (on Windows <g4>Settings → Time &amp; language → Language &amp; region → Regional format</g4>; on macOS and Linux, your language's usual way), or your own date order, clock and first day of the week in <g5>Options → Regional</g5>. In English the list keeps IDM's own date text (<x6/>), on the system's 12- or 24-hour clock (<x7/>).",
+   "text": "सूची में <g1>दिनांक और समय</g1> (<g2>अंतिम प्रयास की तिथि</g2>, <g3>जोड़ा गया।</g3>) और शेड्यूलर डिफ़ॉल्ट रूप से सिस्टम के क्षेत्र का पालन करते हैं (Windows पर <g4>सेटिंग्स → समय और भाषा → भाषा और क्षेत्र → क्षेत्रीय प्रारूप</g4>; macOS और Linux पर, आपकी भाषा का सामान्य तरीका), या <g5>विकल्प → क्षेत्रीय</g5> में आपका अपना दिनांक क्रम, घड़ी और सप्ताह का पहला दिन। अंग्रेज़ी में सूची IDM का अपना दिनांक पाठ (<x6/>) रखती है, सिस्टम की 12- या 24-घंटे की घड़ी पर (<x7/>)।"
+  },
   "fbba8f18d2fae06e": {
    "source": "A text box's bottom line while it can be typed in",
    "text": "एक टेक्स्ट बॉक्स की निचली रेखा जब उसमें टाइप किया जा सकता हो"
@@ -16093,6 +16197,10 @@
   "fd2f8ecc1dec89a7": {
    "source": "Does it keep uploading after a torrent finishes? — Mister Download Manager",
    "text": "क्या टॉरेंट पूरा होने के बाद भी अपलोड होता रहता है? — Mister Download Manager"
+  },
+  "fd36b355f1d75039": {
+   "source": "In Safari open <g1>Settings → Extensions</g1> and tick <g2>Mister Download Manager</g2>. Click <g3>Always Allow on Every Website</g3>: the extension needs to read the site to pass your sign-in on.",
+   "text": "Safari में <g1>सेटिंग्स → एक्सटेंशन</g1> खोलें और <g2>Mister Download Manager</g2> पर टिक करें। <g3>हर वेबसाइट पर हमेशा अनुमति दें</g3> पर क्लिक करें: एक्सटेंशन को आपकी साइन-इन जानकारी पास करने के लिए साइट को पढ़ने की आवश्यकता होती है।"
   },
   "fd40efe02c1179f3": {
    "source": "The examples use Windows' paths; on macOS and Linux the programs have the same names without <x1/>.",

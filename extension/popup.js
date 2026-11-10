@@ -218,6 +218,14 @@ async function showMedia(tab, connected) {
   }
 }
 
+// This applies to files chosen in the media list, not ordinary browser downloads or streams.
+const mediaTitleName = $("media-title-name");
+ext.storage.local.get({ mediaTitleName: false })
+  .then((v) => (mediaTitleName.checked = Boolean(v.mediaTitleName)))
+  .catch(() => {});
+mediaTitleName.addEventListener("change", () =>
+  ext.storage.local.set({ mediaTitleName: mediaTitleName.checked }).catch(() => {}));
+
 // #42: reading the browser's proxy (a VPN or proxy extension's) is an opt-in, this switch, off as
 // installed. Firefox: the optional "proxy" permission, asked for on it. Chromium can't make that
 // permission optional, so the extension has it from the install, and the switch is a setting of

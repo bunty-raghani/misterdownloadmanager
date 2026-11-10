@@ -238,5 +238,8 @@
   },
   "remote_device_name": {
     "message": "Extension de navigateur"
+  },
+  "popup_media_title_name": {
+    "message": "Ajouter le titre de la page devant les noms des fichiers multimédias"
   }
 }

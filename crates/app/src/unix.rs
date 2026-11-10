@@ -607,11 +607,16 @@ static XSETTINGS_THEME: std::sync::Mutex<Option<String>> = std::sync::Mutex::new
 ///   program (xfsettingsd, mate-, cinnamon- and gnome-settings-daemon, LXDE's, Budgie's);
 /// - the desktop's own setting: XFCE's `xfconf` xsettings channel, MATE's and Cinnamon's
 ///   `gtk-theme`, GNOME's (Wayland without XWayland's daemon);
-/// - GTK's `settings.ini` (window managers with no settings daemon).
+/// - GTK's `settings.ini` (window managers with no settings daemon);
+/// - on a window manager's session (`window_manager_session`), GNOME's `gtk-theme` when it names
+///   a dark theme: Hyprland's, sway's and the others' guides set it with `gsettings`, and a light
+///   value there is only the key's default.
 ///
 /// A theme is dark when a word of its name is "dark" (Adwaita-dark, Yaru-dark, Mint-Y-Dark-Aqua,
 /// Greybird-dark, Breeze-Dark); not "Arc-Darker", whose views are light. Another desktop's
-/// leftover settings are not read: GNOME's dconf keys stay after a switch to XFCE.
+/// leftover settings are not read: GNOME's dconf keys stay after a switch to XFCE. A window
+/// manager's session has no theme setting of its own, so GNOME's `color-scheme` and `gtk-theme`
+/// are the ones its users set for GTK programs (#324).
 #[cfg(target_os = "linux")]
 fn theme_settings_dark() -> Option<(bool, &'static str)> {
     let desktop = std::env::var("XDG_CURRENT_DESKTOP")
@@ -626,7 +631,8 @@ fn theme_settings_dark() -> Option<(bool, &'static str)> {
         "pantheon",
         "gnome-classic",
     ]);
-    if gnome
+    let window_manager = window_manager_session(&desktop);
+    if (gnome || window_manager)
         && let Some(dark) =
             gsetting("org.gnome.desktop.interface", "color-scheme").and_then(|s| scheme_word(&s))
     {
@@ -661,11 +667,52 @@ fn theme_settings_dark() -> Option<(bool, &'static str)> {
     let config = std::env::var_os("XDG_CONFIG_HOME")
         .map(PathBuf::from)
         .filter(|p| p.is_absolute())
-        .or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".config")))?;
-    ["gtk-4.0/settings.ini", "gtk-3.0/settings.ini"]
-        .iter()
-        .find_map(|f| gtk_settings_dark(&std::fs::read_to_string(config.join(f)).ok()?))
-        .map(|dark| (dark, "GTK's settings.ini"))
+        .or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".config")));
+    let settings_ini = config.and_then(|config| {
+        ["gtk-4.0/settings.ini", "gtk-3.0/settings.ini"]
+            .iter()
+            .find_map(|f| gtk_settings_dark(&std::fs::read_to_string(config.join(f)).ok()?))
+    });
+    if let Some(dark) = settings_ini {
+        return Some((dark, "GTK's settings.ini"));
+    }
+    // After settings.ini: a key's default ('Adwaita') says nothing here, only a dark name does.
+    if window_manager
+        && gsetting("org.gnome.desktop.interface", "gtk-theme").is_some_and(|t| theme_name_dark(&t))
+    {
+        return Some((true, "GNOME's gtk-theme"));
+    }
+    None
+}
+
+/// Is `desktop` (`XDG_CURRENT_DESKTOP`, lower case) a window manager's session rather than a
+/// desktop with theme settings of its own (Hyprland, sway, i3, niri, an unset value)? There the
+/// freedesktop portal is often missing its Settings part (no `xdg-desktop-portal-gtk`), so what
+/// its users set for GTK programs, `gsettings set org.gnome.desktop.interface color-scheme`, is
+/// the only theme setting there is (#324).
+#[cfg(target_os = "linux")]
+fn window_manager_session(desktop: &str) -> bool {
+    const DESKTOPS: &[&str] = &[
+        "gnome",
+        "gnome-classic",
+        "unity",
+        "ubuntu",
+        "budgie",
+        "pantheon",
+        "xfce",
+        "mate",
+        "x-cinnamon",
+        "cinnamon",
+        "kde",
+        "plasma",
+        "lxqt",
+        "lxde",
+        "cosmic",
+        "deepin",
+        "dde",
+        "ukui",
+    ];
+    !desktop.split(':').any(|d| DESKTOPS.contains(&d))
 }
 
 /// One GSettings key's value, unquoted (`gsettings get`); None without gsettings or the schema.
@@ -2114,6 +2161,27 @@ ID_LIKE=arch
         }
         for light in ["Adwaita", "Yaru", "Arc-Darker", "Greybird", "Darkroom", ""] {
             assert!(!super::theme_name_dark(light), "{light}");
+        }
+    }
+
+    /// A window manager's session reads GNOME's dark settings (what its users set for GTK
+    /// programs, #324); a desktop with theme settings of its own keeps to those.
+    #[test]
+    fn window_managers_read_gnomes_settings() {
+        for wm in ["hyprland", "sway", "i3", "niri", "river", "wayfire", ""] {
+            assert!(super::window_manager_session(wm), "{wm:?}");
+        }
+        for desktop in [
+            "gnome",
+            "ubuntu:gnome",
+            "kde",
+            "xfce",
+            "x-cinnamon",
+            "mate",
+            "lxqt",
+            "cosmic",
+        ] {
+            assert!(!super::window_manager_session(desktop), "{desktop:?}");
         }
     }
 

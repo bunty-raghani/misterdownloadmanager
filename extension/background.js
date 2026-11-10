@@ -917,15 +917,21 @@ async function mediaList(tabId) {
   return out;
 }
 
-// A file's name from the tab's title when its address ends in a long hash (#345), else none: the
-// app names it from the address, as for any download.
-function titledName(url, title) {
+// A file's name from the tab's title when its address ends in a long hash (#345) or is on a
+// server whose names are all random ids (#493: X's video.twimg.com, too short for the hash test);
+// else, with the popup's switch on (`includeOriginal`), the title before the address's own name;
+// else none: the app names it from the address, as for any download.
+function titledName(url, title, includeOriginal = false) {
   const last = pathOf(url).split("/").pop() || "";
   const dot = last.lastIndexOf(".");
   const stem = dot > 0 ? last.slice(0, dot) : last;
   const name = String(title || "").replace(/[\\/:*?"<>|]/g, " ").trim().slice(0, 150);
   const hash = stem.length >= 24 && /^[A-Za-z0-9=_-]+$/.test(stem) && (stem.match(/[-_]/g) || []).length <= 2;
-  return hash && name ? `${name}${dot > 0 ? last.slice(dot) : ""}` : "";
+  const randomServer = siteOf(url).toLowerCase() === "video.twimg.com";
+  if ((hash || randomServer) && name) return `${name}${dot > 0 ? last.slice(dot) : ""}`;
+  if (!includeOriginal || !name) return "";
+  const original = addressName(url).replace(/[\\/:*?"<>|\x00-\x1f]/g, " ").trim();
+  return original && original !== "." && original !== ".." ? `${name} - ${original}` : "";
 }
 
 // One of the tab's media, handed to the app as the popup asked: a stream to the Download video
@@ -960,7 +966,8 @@ async function mediaDownload(tabId, url) {
       ...(ctx.incognito ? { private: true } : {}),
     });
   }
-  return handOff({ url: it.url, referrer: page, size: it.size, mime: it.mime, explicit: true, filename: titledName(it.url, tab.title), ...ctx });
+  const { mediaTitleName } = await ext.storage.local.get({ mediaTitleName: false });
+  return handOff({ url: it.url, referrer: page, size: it.size, mime: it.mime, explicit: true, filename: titledName(it.url, tab.title, mediaTitleName), ...ctx });
 }
 
 // ---- the hand-off ------------------------------------------------------------------------
@@ -1620,7 +1627,32 @@ function dispositionName(cd) {
   }
   const plain = /(?:^|;)\s*filename\s*=\s*("((?:[^"\\]|\\.)*)"|[^;]+)/i.exec(cd);
   if (!plain) return "";
-  return (plain[2] !== undefined ? plain[2].replace(/\\(.)/g, "$1") : plain[1]).trim();
+  return decodedPlain((plain[2] !== undefined ? plain[2].replace(/\\(.)/g, "$1") : plain[1]).trim());
+}
+
+// A plain `filename` as sent, or its percent-encoded UTF-8 decoded when that is what it holds
+// (non-ASCII once decoded: `100%25.txt` stays as it is), as the app reads it (naming.rs).
+function decodedPlain(name) {
+  if (!name.includes("%")) return name;
+  try {
+    const decoded = decodeURIComponent(name);
+    return /[^\x00-\x7f]/.test(decoded) ? decoded : name;
+  } catch {
+    return name; // not percent-encoded UTF-8
+  }
+}
+
+// A response header's value as text. Firefox gives its bytes one character each (ISO-8859-1), so
+// a name sent as raw UTF-8 (`filename="تقرير.pdf"`) arrived as `ØªÙ…` (#447). It is read as UTF-8
+// when those bytes are valid UTF-8, as Firefox reads the name for its own downloads and the app
+// for its own requests; bytes that aren't (ISO-8859-1's `café`) stay as they came.
+function headerText(value) {
+  if (!/[\x80-\xff]/.test(value) || /[^\x00-\xff]/.test(value)) return value;
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(Uint8Array.from(value, (c) => c.charCodeAt(0)));
+  } catch {
+    return value;
+  }
 }
 
 // {name, size, mime, opened} when this answer to a page load becomes a download (or is one of
@@ -1638,7 +1670,7 @@ function answerFile(d) {
   // No type: the browser guesses from the bytes (a page, mostly); a download it becomes is
   // still seen by onCreated.
   if (!attachment && !opened && (!mime || SHOWN.test(mime))) return null;
-  let name = dispositionName(cd);
+  let name = dispositionName(headerText(cd));
   if (!name) {
     try {
       name = decodeURIComponent(pathOf(d.url).split("/").pop() || "");
@@ -2096,17 +2128,25 @@ async function injectOpenTabs() {
 // ---- messages from the page (video.js, page.js) and the popup (popup.js) -------------------
 
 // The download button over videos asks: may it show on this page, the button was clicked, its
-// menu. The app decides through the native host; its answer for a site is kept a minute (one
-// question per page load at most). A failure to reach it isn't kept.
+// menu. The app decides through the native host, from Options as saved now; its answer for a
+// site is kept a few seconds (the page's frames ask together, and each page asks again when its
+// answer is older: video.js ASK_MS), so a change in Options reaches the pages already open
+// (#532: it was kept a minute, and by the page for good). A failure to reach it isn't kept.
+// `top`: the tab's address, when the frame asking is another page's (a player embedded from
+// another site): the button stays off there too when the tab's site is listed.
+const PANEL_KEEP_MS = 5000;
 const panelCache = new Map();
-async function panelOn(page) {
+async function panelOn(page, top) {
   // The host name without a port: as video.js names the site, and as the app matches sites.
   const site = new URL(page).hostname;
-  forget(panelCache, 60000);
-  const kept = panelCache.get(site);
+  const tabSite = top ? new URL(top).hostname : "";
+  const key = tabSite && tabSite !== site ? `${site} ${tabSite}` : site;
+  forget(panelCache, PANEL_KEEP_MS);
+  if (panelCache.get(site)?.hidden) return false;
+  const kept = panelCache.get(key);
   if (kept) return kept.on;
-  const reply = await native({ panel: true, url: page });
-  if (reply.ok || !reply.why) panelCache.set(site, { on: Boolean(reply.ok), at: Date.now() });
+  const reply = await native({ panel: true, url: page, ...(key !== site ? { referrer: top } : {}) });
+  if (reply.ok || !reply.why) panelCache.set(key, { on: Boolean(reply.ok), at: Date.now() });
   return Boolean(reply.ok);
 }
 
@@ -2259,7 +2299,10 @@ async function pageMessage(m, sender) {
       ? m.page
       : await currentPage(sender);
   const tab = sender.tab || {};
-  if (m.type === "panel") return { on: page ? await panelOn(page) : false };
+  if (m.type === "panel") {
+    const top = tab.url && /^https?:/i.test(tab.url) ? tab.url : "";
+    return { on: page ? await panelOn(page, top) : false };
+  }
   if (m.type === "media-server") {
     const r = await native({ media: true });
     return { ok: Boolean(r && r.ok), port: r && r.mediaPort, token: r && r.mediaToken };
@@ -2341,7 +2384,8 @@ async function pageMessage(m, sender) {
   }
   if (m.type === "hide-site" && page) {
     const host = new URL(page).hostname;
-    panelCache.set(host, { on: false, at: Date.now() });
+    // Off at once on this site, whatever the tab around it, while the app saves it.
+    panelCache.set(host, { on: false, hidden: true, at: Date.now() });
     const reply = await native({ hideSite: host });
     return { ok: Boolean(reply.ok) };
   }

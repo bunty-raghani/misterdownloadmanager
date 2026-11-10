@@ -424,7 +424,8 @@ MDM is young: the engine, the main window and the browser integration are solid 
 Linux, and some corners are still "good enough for now".
 
 - **Translations are machine-made.** Rows marked `#, machine` in [`i18n/`](i18n) wait for a
-  native speaker; fixing one is a one-line pull request ([how](docs/languages.md)).
+  native speaker; fixing one is a one-line pull request ([how](docs/languages.md)). Malay's
+  menus, toolbar and download-list columns have been reviewed by a native speaker.
 - Not yet: code signing. The macOS builds are untested; on Linux, screen readers (Orca) and
   Flatpak browsers aren't supported yet.
 

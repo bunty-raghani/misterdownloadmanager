@@ -238,5 +238,8 @@
   },
   "remote_device_name": {
     "message": "Nettleserutvidelse"
+  },
+  "popup_media_title_name": {
+    "message": "Legg til sidetittelen foran navn på mediefiler"
   }
 }

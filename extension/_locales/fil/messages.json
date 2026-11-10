@@ -238,5 +238,8 @@
   },
   "remote_device_name": {
     "message": "Extension ng browser"
+  },
+  "popup_media_title_name": {
+    "message": "Idagdag ang pamagat ng page bago ang mga pangalan ng media file"
   }
 }

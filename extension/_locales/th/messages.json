@@ -238,5 +238,8 @@
   },
   "remote_device_name": {
     "message": "ส่วนขยายเบราว์เซอร์"
+  },
+  "popup_media_title_name": {
+    "message": "เพิ่มชื่อหน้าไว้หน้าชื่อไฟล์สื่อ"
   }
 }

@@ -78,10 +78,6 @@
    "source": "Open <g1>View → Theme</g1> and click a theme: the whole window changes at once, nothing to restart. <g2>View → Dark Mode support</g2> and <g3>View → Always dark</g3> then choose its light or dark side, as for the classic look (<g4>Dark mode</g4>).",
    "text": "เปิด <g1>มุมมอง → ชุดรูปแบบ</g1> แล้วคลิกชุดรูปแบบที่ต้องการ หน้าต่างทั้งหมดจะเปลี่ยนทันทีโดยไม่ต้องรีสตาร์ท จากนั้นใช้ <g2>มุมมอง → รองรับโหมดมืด</g2> และ <g3>มุมมอง → มืดตลอดเวลา</g3> เพื่อเลือกโหมดสว่างหรือมืด เช่นเดียวกับรูปลักษณ์แบบคลาสสิก (<g4>โหมดมืด</g4>)"
   },
-  "018b2949529218d0": {
-   "source": "<g1>Options → File types → Automatically start downloading the following file types</g1> must list the file's type. The list starts with the usual ones: ZIP, RAR, 7Z, EXE, MSI, ISO, DMG, DEB, RPM, APPIMAGE, MP3, MP4, MKV, WEBM, PDF and many more.",
-   "text": "<g1>ตัวเลือก → ชนิดไฟล์ → เริ่มดาวน์โหลดชนิดไฟล์ต่อไปนี้โดยอัตโนมัติ</g1> ต้องแสดงชนิดของไฟล์ รายการเริ่มต้นด้วยชนิดไฟล์ทั่วไป: ZIP, RAR, 7Z, EXE, MSI, ISO, DMG, DEB, RPM, APPIMAGE, MP3, MP4, MKV, WEBM, PDF และอื่น ๆ อีกมากมาย"
-  },
   "01bcaeaab78b066e": {
    "source": "A page address that points at one video inside a playlist or a mix (for example <x1/>) downloads that one video, never the whole list.",
    "text": "หากที่อยู่หน้าชี้ไปยังวิดีโอรายการเดียวในเพลย์ลิสต์หรือมิกซ์ (เช่น <x1/>) ระบบจะดาวน์โหลดเฉพาะวิดีโอนั้น ไม่ดาวน์โหลดทั้งรายการ"
@@ -305,6 +301,10 @@
   "050edc04316dd70a": {
    "source": "On the command line",
    "text": "บนบรรทัดคำสั่ง"
+  },
+  "052e65771dfdbc15": {
+   "source": "While the app is not notarized by Apple (the experimental builds are not), Safari lists the extension only with unsigned extensions allowed: <g1>Settings → Advanced</g1> → <g2>Show features for web developers</g2>, then <g3>Settings → Developer</g3> → <g4>Allow unsigned extensions</g4>. Safari forgets that setting each time it quits.",
+   "text": "ในขณะที่แอปยังไม่ได้รับการรับรองจาก Apple (เวอร์ชันทดลองยังไม่ได้รับการรับรอง) Safari จะแสดงส่วนขยายนี้เมื่ออนุญาตส่วนขยายที่ไม่ได้ลงชื่อเท่านั้น: <g1>การตั้งค่า → ขั้นสูง</g1> → <g2>แสดงคุณสมบัติสำหรับนักพัฒนาเว็บ</g2> จากนั้น <g3>การตั้งค่า → นักพัฒนา</g3> → <g4>อนุญาตส่วนขยายที่ไม่ได้ลงชื่อ</g4> Safari จะลืมการตั้งค่านี้ทุกครั้งที่ปิด"
   },
   "053263e0b7c48cfa": {
    "source": "What reaches your computer",
@@ -1210,6 +1210,10 @@
    "source": "Server allowing 2 connections",
    "text": "เซิร์ฟเวอร์อนุญาต 2 การเชื่อมต่อ"
   },
+  "13c0cbe9a49058cb": {
+   "source": "Last updated 2026-11-09 · applies to the app, the browser extension and misterdownloadmanager.com",
+   "text": "อัปเดตล่าสุด 9 พฤศจิกายน 2569 · ใช้กับแอปพลิเคชัน, ส่วนขยายเบราว์เซอร์ และ misterdownloadmanager.com"
+  },
   "13c8ca45329dbe19": {
    "source": "Windows, Mac and Linux",
    "text": "Windows, Mac และ Linux"
@@ -1389,6 +1393,10 @@
   "167e0568310b7eb2": {
    "source": "Download video from a page: the qualities on offer, from 2160p 60fps down, with their sizes.",
    "text": "ดาวน์โหลดวิดีโอจากหน้า: คุณภาพที่มีให้เลือก ตั้งแต่ 2160p 60fps ลงมา พร้อมขนาดของไฟล์"
+  },
+  "168f5a002ae6d1c7": {
+   "source": "<g1>Coming with version 0.5.2</g1> <g2>It's in the source code now, not yet in the download (version 0.5.0).</g2>",
+   "text": "<g1>มาพร้อมกับเวอร์ชัน 0.5.2</g1> <g2>อยู่ในซอร์สโค้ดแล้ว แต่ยังไม่มีให้ดาวน์โหลด (เวอร์ชัน 0.5.0)</g2>"
   },
   "1691dcacfd0943ed": {
    "source": "Text on a chip",
@@ -1570,6 +1578,10 @@
    "source": "<g1>The help shows what it describes</g1> (<g2>#228</g2>): every guide and the main help pages now have pictures of the windows they explain, cropped to what matters, numbered where a step points at one control, and step strips for the usual flows (a download from the browser, a first download, a video, a torrent, a queue overnight). On the website they follow its light or dark theme, keep their place while they load, and open larger with a click; their descriptions and captions are translated with the page. The pictures are made by a script from one list (<x3/>), so they can all be taken again in one go.",
    "text": "<g1>ความช่วยเหลือแสดงสิ่งที่อธิบาย</g1> (<g2>#228</g2>): คู่มือและหน้าช่วยเหลือหลักทุกหน้ามีรูปภาพของหน้าต่างที่อธิบาย โดยตัดส่วนที่สำคัญออก กำหนดหมายเลขในส่วนที่ขั้นตอนชี้ไปยังส่วนควบคุม และมีแถบขั้นตอนสำหรับขั้นตอนปกติ (การดาวน์โหลดจากเบราว์เซอร์ การดาวน์โหลดครั้งแรก วิดีโอ ทอร์เรนต์ คิวข้ามคืน) บนเว็บไซต์ รูปภาพจะปรับตามธีมสว่างหรือมืด คงตำแหน่งเดิมขณะโหลด และเปิดใหญ่ขึ้นเมื่อคลิก คำอธิบายและคำบรรยายใต้ภาพจะได้รับการแปลพร้อมกับหน้า รูปภาพสร้างขึ้นด้วยสคริปต์จากรายการเดียว (<x3/>) ดังนั้นจึงสามารถถ่ายใหม่ทั้งหมดได้ในครั้งเดียว"
   },
+  "1962902ce083389d": {
+   "source": "If they match, it is the file we published. Every release is built on GitHub from the <g1>public source code</g1>, so anyone can read what went into it.",
+   "text": "หากตรงกัน แสดงว่าเป็นไฟล์ที่เราเผยแพร่ ทุกรุ่นสร้างขึ้นบน GitHub จาก <g1>ซอร์สโค้ดสาธารณะ</g1> ดังนั้นทุกคนสามารถอ่านสิ่งที่อยู่ในนั้นได้"
+  },
   "19686779e1123d73": {
    "source": "To open the page by the server's name (<x1/>), give MDM that name: <x2/> (several: separated by commas). Other names are refused, so that no web page can reach MDM through a name of its own.",
    "text": "หากต้องการเปิดหน้าด้วยชื่อเซิร์ฟเวอร์ (<x1/>) ให้ MDM ทราบชื่อนั้น: <x2/> (หลายชื่อ: คั่นด้วยเครื่องหมายจุลภาค) ชื่ออื่น ๆ จะถูกปฏิเสธ เพื่อไม่ให้หน้าเว็บใด ๆ สามารถเข้าถึง MDM ผ่านชื่อของตัวเองได้"
@@ -1737,6 +1749,10 @@
   "1bad738cb3cea90f": {
    "source": "Select or unselect the download with the dotted outline",
    "text": "เลือกหรือยกเลิกการเลือกการดาวน์โหลดที่มีเส้นประ"
+  },
+  "1badff5f5fc8b6a9": {
+   "source": "Download MDM only from <g1>the website</g1> or <g2>GitHub Releases</g2>.",
+   "text": "ดาวน์โหลด MDM จาก <g1>เว็บไซต์</g1> หรือ <g2>GitHub Releases</g2> เท่านั้น"
   },
   "1bc816518d6f87cb": {
    "source": "<g1>Save to</g1>: the folder its torrents go to; empty, the Torrents category's folder. <g2>Add them without starting them</g2> adds them as <g3>Download Later</g3> would.",
@@ -1906,10 +1922,6 @@
    "source": "Add your account",
    "text": "เพิ่มบัญชีของคุณ"
   },
-  "1e00cc7bf8c490d3": {
-   "source": "Last updated 2026-11-08",
-   "text": "อัปเดตล่าสุด 8 พฤศจิกายน 2569"
-  },
   "1e06a14724b6ac4b": {
    "source": "MDM downloads the pictures of a gallery (a Wikimedia Commons category, a Flickr album, a DeviantArt gallery, an Imgur album and many more) with gallery-dl…",
    "text": "MDM ดาวน์โหลดรูปภาพจากแกลเลอรี (เช่น หมวดหมู่ Wikimedia Commons, อัลบั้ม Flickr, แกลเลอรี DeviantArt, อัลบั้ม Imgur และอื่น ๆ อีกมากมาย) ด้วย gallery-dl..."
@@ -1977,6 +1989,10 @@
   "1f6d9db77baccf7e": {
    "source": "Click <g1>Download Now</g1>, or <g2>Later</g2> to add it to the list without starting.",
    "text": "คลิก <g1>ดาวน์โหลดเดี๋ยวนี้</g1> หรือ <g2>ภายหลัง</g2> เพื่อเพิ่มลงในรายการโดยไม่ต้องเริ่มดาวน์โหลด"
+  },
+  "1f73edb3d8f37ba8": {
+   "source": "Some limits, plainly: the portable copy can't connect to a browser, since it writes nothing outside its folder.",
+   "text": "ข้อจำกัดบางประการที่ชัดเจน: โปรแกรมแบบพกพาไม่สามารถเชื่อมต่อกับเบราว์เซอร์ได้ เนื่องจากไม่ได้เขียนข้อมูลใด ๆ นอกโฟลเดอร์ของตัวเอง"
   },
   "1f74308b96409089": {
    "source": "Project",
@@ -2426,6 +2442,10 @@
    "source": "Select one or more downloads and press <g1>Delete</g1>, click <g2>Delete</g2> on the toolbar, or choose <g3>File → Remove</g3>. MDM asks first:",
    "text": "เลือกรายการดาวน์โหลดหนึ่งรายการหรือมากกว่าแล้วกด <g1>Delete</g1> คลิก <g2>ลบ</g2> บนแถบเครื่องมือ หรือเลือก <g3>ไฟล์ → เอาออก</g3> MDM จะถามก่อน:"
   },
+  "260aedba82916fcb": {
+   "source": "<g1>Not available:</g1> sharing the browser's proxy or VPN, and a download from a form.",
+   "text": "<g1>ไม่สามารถใช้งานได้:</g1> การแชร์พร็อกซีหรือ VPN ของเบราว์เซอร์ และการดาวน์โหลดจากฟอร์ม"
+  },
   "26233472fae39b0b": {
    "source": "Choose what MDM takes",
    "text": "เลือกสิ่งที่ MDM จะรับ"
@@ -2593,6 +2613,10 @@
   "28303c1fbe9c6009": {
    "source": "Firefox, Chrome, Edge, Brave, Opera, Vivaldi, from their stores",
    "text": "Firefox, Chrome, Edge, Brave, Opera, Vivaldi จากสโตร์ของเบราว์เซอร์"
+  },
+  "2834c1ae042f4d5f": {
+   "source": "Share ratio",
+   "text": "อัตราส่วนการแชร์"
   },
   "28363ce0cfaf4e8e": {
    "source": "The browser extension, from the browsers' own stores: the Chrome Web Store's is for Edge, Brave, Opera and Vivaldi too. It also comes with the app and as <g1>its own download</g1>, to add by hand. Every file is built from the public source by GitHub Actions and listed with its SHA-256 checksum.",
@@ -3389,6 +3413,10 @@
   "35092e177f7efaa5": {
    "source": "Download complete with Open and Open folder",
    "text": "ดาวน์โหลดเสร็จสมบูรณ์ พร้อมปุ่ม เปิด และ เปิดโฟลเดอร์"
+  },
+  "3512eeafea5246da": {
+   "source": "<g1>Catching problems.</g1> When MDM crashes (a Windows exception, a signal on Linux, a Mach exception on macOS), panics, or freezes, it asks the monitor for a dump. A freeze is a frame of the window running more than 8 s, seen by a watchdog thread that ignores time spent asleep. It times both parts of a frame: what MDM handles (the commands that come in, the clock of downloads, queues and the Scheduler), which runs minimized too, and the drawing; never the wait between frames. The watchdog also measures how much processor time the window thread got meanwhile, and the report says what that means: it ran all along (a loop), it waited in a lock or on I/O (a deadlock), or it hardly ran in ordinary code, which is a computer too busy to run MDM or slow to load it from disk, most likely not MDM's bug (those share one signature, <x2/>). When the window thread is already back in the event loop by the time the dump is written, the freeze was over before the snapshot, so its stack can't explain it; those reports say so and share the signature <x3/>. macOS doesn't measure it yet. The monitor then writes a <g4>minidump</g4> of every thread from outside, through <x5/> and <x6/>. A crashed process never writes its own dump, which is how Firefox, Crashpad and Sentry do it too.",
+   "text": "<g1>การตรวจจับปัญหา</g1> เมื่อ MDM หยุดทำงาน (ข้อผิดพลาดของ Windows, สัญญาณบน Linux, ข้อผิดพลาดของ Mach บน macOS), เกิดข้อผิดพลาดร้ายแรง หรือค้าง โปรแกรมจะขอให้มอนิเตอร์สร้างไฟล์ดัมพ์ การค้างคือหน้าต่างที่แสดงผลนานกว่า 8 วินาที ซึ่งถูกตรวจจับโดยเธรดเฝ้าระวังที่ไม่นับรวมเวลาที่โปรแกรมหยุดทำงานชั่วคราว โดยจะจับเวลาทั้งสองส่วนของการแสดงผล: สิ่งที่ MDM จัดการ (คำสั่งที่เข้ามา, นาฬิกาของการดาวน์โหลด, คิว และตัวจัดกำหนดการ) ซึ่งทำงานแบบย่อหน้าต่างด้วย และการวาดภาพ; ไม่นับรวมเวลารอระหว่างเฟรม เธรดเฝ้าระวังยังวัดว่าเธรดหน้าต่างใช้เวลาประมวลผลไปเท่าใด และรายงานจะบอกความหมายของสิ่งนั้น: ทำงานตลอดเวลา (วนซ้ำ), รออยู่ในล็อกหรือ I/O (การติดตาย), หรือแทบไม่ได้ทำงานในโค้ดปกติ ซึ่งหมายถึงคอมพิวเตอร์ยุ่งเกินไปที่จะรัน MDM หรือโหลดจากดิสก์ช้า ซึ่งส่วนใหญ่ไม่ใช่ข้อผิดพลาดของ MDM (สิ่งเหล่านี้มีลายเซ็นเดียวกัน <x2/>) เมื่อเธรดหน้าต่างกลับมาอยู่ในลูปเหตุการณ์แล้วในขณะที่เขียนไฟล์ดัมพ์ การค้างได้สิ้นสุดลงก่อนที่จะมีการบันทึกภาพ ดังนั้นสแต็กจึงไม่สามารถอธิบายได้; รายงานเหล่านั้นจะระบุเช่นนั้นและมีลายเซ็น <x3/> macOS ยังไม่ได้วัดค่านี้ มอนิเตอร์จะเขียน <g4>มินิดัมพ์</g4> ของทุกเธรดจากภายนอก ผ่าน <x5/> และ <x6/> กระบวนการที่หยุดทำงานจะไม่เขียนไฟล์ดัมพ์ของตัวเอง ซึ่งเป็นวิธีที่ Firefox, Crashpad และ Sentry ทำเช่นกัน"
   },
   "3513f93cb0fa7d72": {
    "source": "<g1>Far</g1> (red): over 150 ms, usually another continent. A far server is often slower, and more connections help it most.",
@@ -4310,9 +4338,9 @@
    "source": "Before you click <g1>OK</g1>, the window shows the <g2>First file</g2>, <g3>Second file</g3> and <g4>Last file</g4>, so a typo shows up before anything downloads. If the server needs a login, tick <g5>Use authorization</g5>. Copied the address already? <g6>Tasks → Add batch download from clipboard</g6> fills it in.",
    "text": "ก่อนคลิก <g1>ตกลง</g1> หน้าต่างจะแสดง <g2>ไฟล์แรก</g2>, <g3>ไฟล์ที่สอง</g3> และ <g4>ไฟล์สุดท้าย</g4> เพื่อให้เห็นข้อผิดพลาดก่อนที่จะดาวน์โหลด หากเซิร์ฟเวอร์ต้องการการเข้าสู่ระบบ ให้ทำเครื่องหมายที่ <g5>ใช้การอนุญาต</g5> คัดลอกที่อยู่แล้วใช่ไหม? <g6>งาน → เพิ่มการดาวน์โหลดเป็นชุดจากคลิปบอร์ด</g6> จะกรอกให้"
   },
-  "424df5ff0d11d26b": {
-   "source": "<g1>Automatically start downloading the following file types</g1> — the file types the browser hands over (and the clipboard picks up). Separate them by spaces; <x2/> matches any characters, as in <x3/>. <g4>Default</g4> puts the original list back. The list starts with the usual archives, programs and installers (Windows, macOS and Linux ones: DMG, PKG, DEB, RPM, APPIMAGE, MSIX), music and videos, and PDF. A list you never changed gains the types a new version adds; one you edited stays as it is.",
-   "text": "<g1>เริ่มดาวน์โหลดประเภทไฟล์ต่อไปนี้โดยอัตโนมัติ</g1> — ประเภทไฟล์ที่เบราว์เซอร์ส่งมาให้ (และคลิปบอร์ดรับมา) คั่นด้วยช่องว่าง <x2/> ตรงกับอักขระใดก็ได้ เช่น <x3/> <g4>ค่าเริ่มต้น</g4> จะคืนค่ารายการเดิม รายการเริ่มต้นด้วยไฟล์เก็บถาวร โปรแกรม และตัวติดตั้งทั่วไป (สำหรับ Windows, macOS และ Linux: DMG, PKG, DEB, RPM, APPIMAGE, MSIX) เพลง วิดีโอ และ PDF รายการที่คุณไม่เคยแก้ไขจะได้รับประเภทไฟล์ที่เวอร์ชันใหม่เพิ่มเข้ามา ส่วนรายการที่คุณแก้ไขแล้วจะยังคงเดิม"
+  "42719c02fcae1f7c": {
+   "source": "The copy of the extension from the Chrome Web Store showed no <g1>Download video</g1> button on YouTube before version 0.5.1. From 0.5.1 it shows it. Your browser updates extensions by itself; to get it sooner, open its extensions page and update them there.",
+   "text": "ส่วนขยายที่ได้จาก Chrome Web Store ไม่แสดงปุ่ม <g1>ดาวน์โหลดวิดีโอ</g1> บน YouTube ก่อนเวอร์ชัน 0.5.1 ตั้งแต่เวอร์ชัน 0.5.1 เป็นต้นไปจะแสดงปุ่มนี้ เบราว์เซอร์ของคุณจะอัปเดตส่วนขยายเอง หากต้องการอัปเดตเร็วขึ้น ให้เปิดหน้าส่วนขยายของเบราว์เซอร์แล้วอัปเดตที่นั่น"
   },
   "427cc05e98da7048": {
    "source": "<g1>Extract when done</g1>: ticked by itself when the package holds an archive.",
@@ -4377,10 +4405,6 @@
   "437098c2f3d487d8": {
    "source": "The file host's link, MDM's download",
    "text": "ลิงก์จากโฮสต์ไฟล์, การดาวน์โหลดของ MDM"
-  },
-  "437da174af682fe3": {
-   "source": "Minimize hides the main window there too, while <g1>Minimize to the notification area</g1> is on in <g2>Options → General</g2>. It is on by default.",
-   "text": "การย่อเล็กสุดจะซ่อนหน้าต่างหลักไว้ในพื้นที่แจ้งเตือนด้วย หากเปิด <g1>ย่อเล็กสุดไปยังพื้นที่แจ้งเตือน</g1> ใน <g2>ตัวเลือก → ทั่วไป</g2> ซึ่งเปิดไว้เป็นค่าเริ่มต้น"
   },
   "438a47f34fb3d4b7": {
    "source": "Browser integration — Mister Download Manager help",
@@ -4606,10 +4630,6 @@
    "source": "keeps the list, the settings, the certificate and the paired devices.",
    "text": "เก็บรายการ, การตั้งค่า, ใบรับรอง และอุปกรณ์ที่จับคู่"
   },
-  "477f6fc974aad0d3": {
-   "source": "Some limits, plainly: the portable copy can't connect to a browser, since it writes nothing outside its folder. The Chrome Web Store copy shows no button over YouTube videos, which the store's policy forbids; <g1>Tasks → Download video from a page</g1> still takes any page.",
-   "text": "ข้อจำกัดบางประการ: MDM แบบพกพาไม่สามารถเชื่อมต่อกับเบราว์เซอร์ได้ เนื่องจากไม่ได้เขียนอะไรไว้นอกโฟลเดอร์ ส่วนขยายจาก Chrome Web Store จะไม่แสดงปุ่มเหนือวิดีโอ YouTube ซึ่งนโยบายของสโตร์ห้ามไว้ <g1>งาน → ดาวน์โหลดวิดีโอจากหน้า</g1> ยังคงสามารถดาวน์โหลดได้ทุกหน้า"
-  },
   "478b98971f744119": {
    "source": "Deleting a queue asks first; a running queue stops when deleted; the toolbar's Start / Stop Queue arrows always work.",
    "text": "เมื่อลบคิว ระบบจะถามยืนยันก่อน; คิวที่กำลังทำงานจะหยุดเมื่อถูกลบ; ลูกศรเริ่ม/หยุดคิวบนแถบเครื่องมือทำงานได้เสมอ"
@@ -4734,6 +4754,10 @@
    "source": "<g1>Linux: torrents work on a system without CA certificates too</g1> (part of <g2>#264</g2>): the torrent engine built its own connection for the trackers, which can't be made without them, so no torrent or magnet link started there. It now uses MDM's: peers, the DHT and <x3/> trackers work, and an <x4/> tracker fails saying there are no certificates to check it with.",
    "text": "<g1>Linux: ทอร์เรนต์ทำงานบนระบบที่ไม่มีใบรับรอง CA ได้ด้วย</g1> (ส่วนหนึ่งของ <g2>#264</g2>): เอนจินทอร์เรนต์สร้างการเชื่อมต่อของตัวเองสำหรับตัวติดตาม ซึ่งไม่สามารถสร้างได้หากไม่มีใบรับรอง ดังนั้นจึงไม่มีทอร์เรนต์หรือลิงก์แม่เหล็กใด ๆ เริ่มต้นที่นั่น ตอนนี้ใช้ของ MDM: เพียร์, DHT และตัวติดตาม <x3/> ทำงานได้ และตัวติดตาม <x4/> ล้มเหลวโดยระบุว่าไม่มีใบรับรองให้ตรวจสอบ"
   },
+  "49a674222f02e4a1": {
+   "source": "<g1>Options → File types → Automatically start downloading the following file types</g1> must list the file's type. The list starts with the usual ones: ZIP, RAR, 7Z, EXE, MSI, ISO, DMG, DEB, RPM, APPIMAGE, MP3, MP4, MKV, WEBM, PDF, AI models such as GGUF and SAFETENSORS, 3D files such as GLB and STL, and many more. Anything else can be added to the list.",
+   "text": "<g1>ตัวเลือก → ชนิดไฟล์ → เริ่มดาวน์โหลดชนิดไฟล์ต่อไปนี้โดยอัตโนมัติ</g1> ต้องระบุชนิดไฟล์นั้น รายการเริ่มต้นด้วยชนิดไฟล์ทั่วไป: ZIP, RAR, 7Z, EXE, MSI, ISO, DMG, DEB, RPM, APPIMAGE, MP3, MP4, MKV, WEBM, PDF, โมเดล AI เช่น GGUF และ SAFETENSORS, ไฟล์ 3D เช่น GLB และ STL และอื่น ๆ อีกมากมาย สามารถเพิ่มชนิดไฟล์อื่น ๆ ลงในรายการได้"
+  },
   "49affaa512196498": {
    "source": "Queues and the Scheduler",
    "text": "คิวและตัวจัดกำหนดการ"
@@ -4809,6 +4833,10 @@
   "4adee382f13592b9": {
    "source": "Cap MDM as a whole (recommended)",
    "text": "จำกัด MDM ทั้งหมด (แนะนำ)"
+  },
+  "4afb7a591038aead": {
+   "source": "You can always save a video without the button: in MDM, open <g1>Tasks → Download video from a page</g1> and paste the video's address.",
+   "text": "คุณสามารถบันทึกวิดีโอได้เสมอโดยไม่ต้องใช้ปุ่ม: ใน MDM ให้เปิด <g1>งาน → ดาวน์โหลดวิดีโอจากหน้า</g1> แล้ววางที่อยู่ของวิดีโอ"
   },
   "4b088cdb90c95ad4": {
    "source": "If the server needs a user name and password, tick <g1>Use authorization</g1> and type them.",
@@ -5242,6 +5270,10 @@
    "source": "Open source, GNU GPL 3.0",
    "text": "โอเพนซอร์ส, GNU GPL 3.0"
   },
+  "5216194011d6d772": {
+   "source": "Safari (macOS)",
+   "text": "Safari (macOS)"
+  },
   "521a3abe287f879e": {
    "source": "In the window:",
    "text": "ในหน้าต่าง:"
@@ -5289,6 +5321,10 @@
   "52ebbc26d1011b47": {
    "source": "The free MDM extension hands each download you click over to MDM, with the page it came from and your sign-in for the site. A button over videos sends them to MDM too.",
    "text": "ส่วนขยาย MDM ฟรีจะส่งการดาวน์โหลดแต่ละรายการที่คุณคลิกไปยัง MDM พร้อมกับหน้าเว็บที่มาและข้อมูลการลงชื่อเข้าใช้ของคุณสำหรับเว็บไซต์นั้น ปุ่มที่อยู่เหนือวิดีโอจะส่งวิดีโอเหล่านั้นไปยัง MDM ด้วย"
+  },
+  "52fc7550762441e8": {
+   "source": "A few antivirus programs flag new installers just because they have rarely seen them, and machine-learning engines do this the most. On VirusTotal, a handful of small engines flagging a new setup while the big ones stay clean is usually a false positive. We report these to the vendors when we see them.",
+   "text": "โปรแกรมแอนติไวรัสบางโปรแกรมจะแจ้งเตือนโปรแกรมติดตั้งใหม่เพียงเพราะไม่เคยเห็นมาก่อน และกลไกการเรียนรู้ของเครื่องมักจะทำเช่นนี้มากที่สุด ใน VirusTotal หากมีกลไกขนาดเล็กจำนวนหนึ่งแจ้งเตือนโปรแกรมติดตั้งใหม่ในขณะที่กลไกขนาดใหญ่ไม่แจ้งเตือน มักจะเป็นผลบวกปลอม เราจะรายงานเรื่องเหล่านี้ไปยังผู้จำหน่ายเมื่อเราพบเห็น"
   },
   "53060965f7a26125": {
    "source": "Tick <g1>Send torrents and magnet links to the first account instead of to peers</g1>, and a magnet link or a <x2/> file goes to the service. It downloads the torrent on its own servers while the list shows how far it is (<g3>45% at Real-Debrid</g3>). MDM then fetches the files over HTTP and removes the torrent from the account's list. Your computer never connects to the torrent's peers.",
@@ -5386,10 +5422,6 @@
    "source": "Does it run on Windows 7 or 8?",
    "text": "รองรับ Windows 7 หรือ 8 หรือไม่"
   },
-  "547a72b540a365fd": {
-   "source": "<g1>Minimize to the notification area</g1> — Minimize hides the main window, and a download's progress window, in the notification area, as closing the main window does; downloads go on. On by default. Greyed where no tray shows MDM's icon (some Linux desktops); in a Wayland session the main window stays minimized in the dock, since Wayland can't hide a window.",
-   "text": "<g1>ย่อเล็กสุดไปยังพื้นที่แจ้งเตือน</g1> — การย่อเล็กสุดจะซ่อนหน้าต่างหลักและหน้าต่างแสดงความคืบหน้าของการดาวน์โหลดไว้ในพื้นที่แจ้งเตือน เช่นเดียวกับการปิดหน้าต่างหลัก โดยที่การดาวน์โหลดจะยังคงดำเนินต่อไป เปิดใช้งานโดยค่าเริ่มต้น จะเป็นสีเทาเมื่อไม่มีถาดแสดงไอคอนของ MDM (เดสก์ท็อป Linux บางตัว) ในเซสชัน Wayland หน้าต่างหลักจะยังคงย่อเล็กสุดอยู่ใน Dock เนื่องจาก Wayland ไม่สามารถซ่อนหน้าต่างได้"
-  },
   "54886fa73a0a4643": {
    "source": "sets single colour roles on both sides, <x1/> and <x2/> on one side only: <x3/>, or <x4/> with transparency.",
    "text": "กำหนดบทบาทสีเดียวทั้งสองโหมด, <x1/> และ <x2/> กำหนดบทบาทสีเดียวในโหมดเดียวเท่านั้น: <x3/> หรือ <x4/> ที่มีความโปร่งใส"
@@ -5477,6 +5509,10 @@
   "55a523d7ca4b905f": {
    "source": "Thanks to",
    "text": "ขอขอบคุณ"
+  },
+  "55d1512f7b2971e2": {
+   "source": "One egui window painted to fixed pixel coordinates, plus one immediate viewport per dialog. <x1/> holds the state (downloads, queues, settings, the list's selection) and turns menu, toolbar, key and IPC commands into actions. Each dialog is its own module and returns an <x2/> (open, closed, done with a value). Windows-only calls are confined to <x3/> and their Linux and macOS counterparts to <x4/> (starting with the session, the browsers' host, sounds, show in folder, the crash handler); every other file is safe, portable Rust. Fonts come from the system: Windows' Fonts folder, macOS's system fonts, fontconfig on Linux (<x5/>). On Windows, Latin, Greek and Cyrillic text is drawn by DirectWrite in GDI-classic mode (<x6/>, through egui's glyph rasterizer hook), so each letter's hinted shape and whole-pixel width come together; other scripts are shaped and drawn by egui.",
+   "text": "หน้าต่าง egui หนึ่งบานจะถูกวาดไปยังพิกเซลพิกัดคงที่ และมีวิวพอร์ตแบบทันทีหนึ่งวิวพอร์ตต่อหนึ่งกล่องโต้ตอบ <x1/> เก็บสถานะ (การดาวน์โหลด, คิว, การตั้งค่า, การเลือกรายการ) และเปลี่ยนคำสั่งเมนู, แถบเครื่องมือ, คีย์ และ IPC ให้เป็นการดำเนินการ กล่องโต้ตอบแต่ละกล่องเป็นโมดูลของตัวเองและส่งคืน <x2/> (เปิด, ปิด, เสร็จสิ้นพร้อมค่า) การเรียกใช้เฉพาะ Windows จะถูกจำกัดอยู่ใน <x3/> และคู่ของ Linux และ macOS จะอยู่ใน <x4/> (เริ่มต้นด้วยเซสชัน, โฮสต์ของเบราว์เซอร์, เสียง, แสดงในโฟลเดอร์, ตัวจัดการข้อผิดพลาด); ไฟล์อื่น ๆ ทั้งหมดปลอดภัยและเป็น Rust แบบพกพา ฟอนต์มาจากระบบ: โฟลเดอร์ Fonts ของ Windows, ฟอนต์ระบบของ macOS, fontconfig บน Linux (<x5/>) บน Windows ข้อความภาษาละติน, กรีก และซีริลลิกจะถูกวาดโดย DirectWrite ในโหมด GDI-classic (<x6/> ผ่าน egui's glyph rasterizer hook) เพื่อให้รูปร่างที่บอกใบ้ของแต่ละตัวอักษรและความกว้างเต็มพิกเซลมารวมกัน; สคริปต์อื่น ๆ จะถูกจัดรูปและวาดโดย egui"
   },
   "55ecea9df3d3ed23": {
    "source": "Paste the address of a playlist (<x1/>) or a channel's videos (<x2/>) and click <g3>Look up</g3>. Instead of one video's qualities, the window lists the list's videos, each with its length.",
@@ -5902,6 +5938,10 @@
    "source": "downloads a gallery into a folder named after it. See <g1>Command line and automation</g1>.",
    "text": "ดาวน์โหลดแกลเลอรีลงในโฟลเดอร์ที่ตั้งชื่อตามแกลเลอรีนั้น ดู <g1>บรรทัดคำสั่งและการทำงานอัตโนมัติ</g1>"
   },
+  "5d07ba5f9c5ab43c": {
+   "source": "If your antivirus quarantined MDM, restore it and add an exception for its folder. If it flags something other than the setup or MDM's own programs, or a copy from anywhere else, don't run it, and please <g1>tell us</g1>.",
+   "text": "หากโปรแกรมแอนติไวรัสของคุณกักกัน MDM ให้กู้คืนและเพิ่มข้อยกเว้นสำหรับโฟลเดอร์ หากแจ้งเตือนสิ่งอื่นที่ไม่ใช่โปรแกรมติดตั้งหรือโปรแกรมของ MDM เอง หรือสำเนาจากที่อื่น ห้ามรัน และโปรด<g1>แจ้งให้เราทราบ</g1>"
+  },
   "5d0bbcc71d941fe0": {
    "source": "misterdownloadmanager.com's own pages (home, download, features, themes, FAQ); <x1/> adds the help from <x2/> and the news from the CHANGELOG, in 22 languages, and GitHub Pages publishes it",
    "text": "หน้าเว็บของ misterdownloadmanager.com เอง (หน้าแรก, ดาวน์โหลด, คุณสมบัติ, ชุดรูปแบบ, คำถามที่พบบ่อย); <x1/> เพิ่มความช่วยเหลือจาก <x2/> และข่าวสารจาก CHANGELOG ใน 22 ภาษา และ GitHub Pages เป็นผู้เผยแพร่"
@@ -6033,6 +6073,10 @@
   "5ea31b9a4b8d8d46": {
    "source": "Every release is built from the public source code by <g1>GitHub Actions</g1>, on GitHub's servers; the build logs are public.",
    "text": "ทุกการเผยแพร่ถูกสร้างขึ้นจากซอร์สโค้ดสาธารณะโดย <g1>GitHub Actions</g1> บนเซิร์ฟเวอร์ของ GitHub; บันทึกการสร้างเป็นสาธารณะ"
+  },
+  "5ecbcb580e32c28b": {
+   "source": "Last updated 2026-11-09",
+   "text": "อัปเดตล่าสุด: 9 พฤศจิกายน 2569"
   },
   "5ecd9e0a59e0c6c6": {
    "source": "RSS feeds for torrents, with download rules",
@@ -6977,6 +7021,10 @@
   "6de62748781cd023": {
    "source": "100 MiB, 2 MB/s per connection",
    "text": "100 MiB, 2 MB/s ต่อการเชื่อมต่อ"
+  },
+  "6df2f21ef2bda8e4": {
+   "source": "<g1>Offer to download links copied to the clipboard</g1> — when you copy a link whose file type is on the <g2>File types</g2> page, <g3>Download File Info</g3> opens with it, ready to start (or the download starts at once, with <g4>Show start download dialog</g4> off). It keeps to archives, programs, music, videos, PDF and any type you added yourself, so copying the address of a picture, a font or a 3D model to use somewhere else never starts a download. On by default.",
+   "text": "<g1>เสนอให้ดาวน์โหลดลิงก์ที่คัดลอกไปยังคลิปบอร์ด</g1> — เมื่อคัดลอกลิงก์ที่มีชนิดไฟล์อยู่ในหน้า <g2>ชนิดไฟล์</g2> โปรแกรมจะเปิด <g3>ข้อมูลไฟล์ดาวน์โหลด</g3> พร้อมลิงก์นั้น เพื่อให้พร้อมเริ่มดาวน์โหลด (หรือเริ่มดาวน์โหลดทันที หากปิด <g4>แสดงกล่องโต้ตอบเริ่มการดาวน์โหลด</g4> ไว้) คุณสมบัตินี้จะใช้กับไฟล์เก็บถาวร โปรแกรม เพลง วิดีโอ PDF และชนิดไฟล์ใด ๆ ที่คุณเพิ่มเองเท่านั้น ดังนั้น การคัดลอกที่อยู่ของรูปภาพ ฟอนต์ หรือโมเดล 3D เพื่อนำไปใช้ที่อื่น จะไม่เริ่มการดาวน์โหลด เปิดใช้งานโดยค่าเริ่มต้น"
   },
   "6dfbefa6080fe200": {
    "source": "Where links come from",
@@ -8262,6 +8310,10 @@
    "source": "<g1>Star the project</g1><g2>It helps other people find it.</g2>",
    "text": "<g1>ติดดาวโปรเจกต์</g1><g2>ช่วยให้ผู้อื่นค้นพบโปรเจกต์</g2>"
   },
+  "810aeb3bcab43ab3": {
+   "source": "A torrent: what it has sent to peers against what it took.",
+   "text": "ทอร์เรนต์: สิ่งที่ส่งให้เพียร์เทียบกับสิ่งที่ได้รับ"
+  },
   "8144fd9d669ebeed": {
    "source": "Does it download torrents? — Mister Download Manager",
    "text": "ดาวน์โหลดทอร์เรนต์ได้ไหม — Mister Download Manager"
@@ -8349,6 +8401,10 @@
   "82a5d8b104cd86f2": {
    "source": "The same setting is in <g1>Options → Connection</g1>.",
    "text": "การตั้งค่าเดียวกันนี้อยู่ใน <g1>ตัวเลือก → การเชื่อมต่อ</g1>"
+  },
+  "82aaa69856a510cf": {
+   "source": "The extension works in <g1>Google Chrome</g1>, <g2>Microsoft Edge</g2>, <g3>Brave</g3>, <g4>Opera</g4> and <g5>Vivaldi</g5>, in <g6>Firefox</g6> 140 or later, and in <g7>Safari</g7> 17 or later on a Mac (see <g8>Safari</g8>).",
+   "text": "ส่วนขยายนี้ทำงานใน <g1>Google Chrome</g1>, <g2>Microsoft Edge</g2>, <g3>Brave</g3>, <g4>Opera</g4> และ <g5>Vivaldi</g5>, ใน <g6>Firefox</g6> เวอร์ชัน 140 ขึ้นไป และใน <g7>Safari</g7> เวอร์ชัน 17 ขึ้นไปบน Mac (ดู <g8>Safari</g8>)"
   },
   "82c502e4717e8e1a": {
    "source": "Check your download",
@@ -8445,6 +8501,10 @@
   "842fc0e6d2b7d24d": {
    "source": "At the start time the queue starts on its own. In the morning, the finished files are under <g1>Finished</g1> in the categories.",
    "text": "เมื่อถึงเวลาเริ่มต้น คิวจะเริ่มทำงานเอง ในตอนเช้า ไฟล์ที่ดาวน์โหลดเสร็จสิ้นจะอยู่ใน <g1>เสร็จสิ้น</g1> ในหมวดหมู่ต่างๆ"
+  },
+  "8449c6a51ad2bdb6": {
+   "source": "A torrent's connected peers while it runs, seeders and leechers alike.",
+   "text": "เพียร์ที่เชื่อมต่อของทอร์เรนต์ขณะทำงาน ทั้งซีดเดอร์และลีเชอร์"
   },
   "844d3712af7e5da9": {
    "source": "<g1>Brave Origin connects, and the AppImage's helper is always there</g1> (<g2>#253</g2>): Brave Origin keeps its settings in a folder of its own (<x3/>), which MDM didn't know, so its extension said MDM wasn't installed. MDM now sets up Brave Origin, the Beta, Dev and Nightly versions of Brave, Chrome and Edge, and Vivaldi's snapshot; on macOS, Brave reads Chrome's folder, which MDM now writes for it. From the AppImage, MDM copies the helper program the browsers start out of the AppImage under a new name and swaps it in, so a browser still running the old copy no longer keeps the new one out, and puts it back at each start if it went missing. A copy or setup that fails is written to MDM's log, and <g4>Test browser integration</g4> says when the helper program is missing, when no browser was found, or why setting it up failed.",
@@ -9310,6 +9370,10 @@
    "source": "How do I install the browser extension? — Mister Download Manager",
    "text": "วิธีติดตั้งส่วนขยายเบราว์เซอร์ — Mister Download Manager"
   },
+  "92abe6de5cd6999e": {
+   "source": "<g1>Hide tab</g1> takes a tab off this download's window and goes back to <g2>Download status</g2>. To bring the tabs back, right-click the tab row and choose <g3>Show hidden tabs</g3>; closing the window and opening it again brings them back too.",
+   "text": "<g1>ซ่อนแท็บ</g1> จะนำแท็บออกจากหน้าต่างดาวน์โหลดนี้และกลับไปที่ <g2>สถานะการดาวน์โหลด</g2> หากต้องการนำแท็บกลับมา ให้คลิกขวาที่แถบแท็บแล้วเลือก <g3>แสดงแท็บที่ซ่อนอยู่</g3> การปิดหน้าต่างแล้วเปิดใหม่ก็จะนำแท็บกลับมาเช่นกัน"
+  },
   "92bc3a4d66867ccb": {
    "source": "A tab page's body",
    "text": "เนื้อหาของหน้าแท็บ"
@@ -9374,6 +9438,10 @@
    "source": "Tick <g1>Use Speed Limiter</g1>.",
    "text": "ทำเครื่องหมายที่ <g1>ใช้ตัวจำกัดความเร็ว</g1>"
   },
+  "93c39d173fb1932a": {
+   "source": "<g1>A click on a link to a file type MDM takes</g1> goes to MDM. A download the page starts by itself (a script, or a link with no file name in its address that the server answers with a file) stays with Safari: use right-click → <g2>Download with Mister Download Manager</g2> for those.",
+   "text": "<g1>การคลิกลิงก์ไปยังชนิดไฟล์ที่ MDM รองรับ</g1> จะส่งไปยัง MDM การดาวน์โหลดที่หน้าเว็บเริ่มเอง (สคริปต์ หรือลิงก์ที่ไม่มีชื่อไฟล์ในที่อยู่ซึ่งเซิร์ฟเวอร์ตอบกลับด้วยไฟล์) จะยังคงอยู่กับ Safari: ใช้คลิกขวา → <g2>ดาวน์โหลดด้วย Mister Download Manager</g2> สำหรับกรณีเหล่านี้"
+  },
   "93d2b396cc0f64ed": {
    "source": "The extension is called <g1>Mister Download Manager</g1>.",
    "text": "ส่วนขยายนี้มีชื่อว่า <g1>Mister Download Manager</g1>"
@@ -9389,10 +9457,6 @@
   "93f335b0185aba7d": {
    "source": "Keep some speed for everything else →",
    "text": "คงความเร็วบางส่วนไว้สำหรับสิ่งอื่นทั้งหมด →"
-  },
-  "93f8e4db17db5b9a": {
-   "source": "<g1>Dates and times</g1> in the list (<g2>Last Try Date</g2>, <g3>Added</g3>) and the Scheduler follow the system's region by default (on Windows <g4>Settings → Time &amp; language → Language &amp; region → Regional format</g4>; on macOS and Linux, your language's usual way), or your own date order, clock and first day of the week in <g5>Options → Regional</g5>. In English the list keeps IDM's own date text (<x6/>).",
-   "text": "<g1>วันที่และเวลา</g1> ในรายการ (<g2>วันที่ลองครั้งล่าสุด</g2>, <g3>เพิ่มแล้ว</g3>) และตัวจัดกำหนดการ จะเป็นไปตามภูมิภาคของระบบโดยค่าเริ่มต้น (ใน Windows <g4>การตั้งค่า → เวลาและภาษา → ภาษาและภูมิภาค → รูปแบบภูมิภาค</g4>; ใน macOS และ Linux จะเป็นไปตามรูปแบบปกติของภาษาของคุณ) หรือตามลำดับวันที่, นาฬิกา และวันแรกของสัปดาห์ที่คุณกำหนดเองใน <g5>ตัวเลือก → ภูมิภาค</g5> ในภาษาอังกฤษ รายการจะคงข้อความวันที่ของ IDM ไว้ (<x6/>)"
   },
   "940b9b61593ef30c": {
    "source": "<g1><x2/></g1> — the shape of text boxes, check boxes, buttons, progress bars, scroll bars, the focus mark and the title bar.",
@@ -9526,10 +9590,6 @@
    "source": "Filter the list",
    "text": "กรองรายการ"
   },
-  "95f874ce586a0506": {
-   "source": "<g1>Catching problems.</g1> When MDM crashes (a Windows exception, a signal on Linux, a Mach exception on macOS), panics, or freezes, it asks the monitor for a dump. A freeze is a frame of the window running more than 8 s, seen by a watchdog thread that ignores time spent asleep. It times both parts of a frame: what MDM handles (the commands that come in, the clock of downloads, queues and the Scheduler), which runs minimized too, and the drawing; never the wait between frames. The watchdog also measures how much processor time the window thread got meanwhile, and the report says what that means: it ran all along (a loop), it waited in a lock or on I/O (a deadlock), or it hardly ran in ordinary code, which is a computer too busy to run MDM or slow to load it from disk, most likely not MDM's bug (those share one signature, <x2/>). macOS doesn't measure it yet. The monitor then writes a <g3>minidump</g3> of every thread from outside, through <x4/> and <x5/>. A crashed process never writes its own dump, which is how Firefox, Crashpad and Sentry do it too.",
-   "text": "<g1>การตรวจจับปัญหา</g1> เมื่อ MDM เกิดข้อผิดพลาด (ข้อยกเว้นของ Windows, สัญญาณบน Linux, ข้อยกเว้น Mach บน macOS), เกิดอาการ panic หรือค้าง โปรแกรมจะขอ dump จาก monitor อาการค้างคือเฟรมของหน้าต่างที่ทำงานนานกว่า 8 วินาที ซึ่งถูกตรวจจับโดยเธรด watchdog ที่ไม่สนใจเวลาที่ใช้ในการพักเครื่อง โดยจะจับเวลาทั้งสองส่วนของเฟรม: สิ่งที่ MDM จัดการ (คำสั่งที่เข้ามา, นาฬิกาของการดาวน์โหลด, คิว และตัวจัดกำหนดการ) ซึ่งทำงานแบบย่อขนาดด้วย และการวาดภาพ; ไม่ใช่การรอระหว่างเฟรม Watchdog ยังวัดว่าเธรดหน้าต่างได้รับเวลาประมวลผลเท่าใดในระหว่างนั้น และรายงานจะบอกว่านั่นหมายถึงอะไร: มันทำงานตลอดเวลา (วนลูป), มันรออยู่ใน lock หรือบน I/O (deadlock), หรือมันแทบไม่ได้ทำงานในโค้ดปกติ ซึ่งหมายถึงคอมพิวเตอร์ยุ่งเกินไปที่จะรัน MDM หรือโหลดจากดิสก์ช้า ซึ่งส่วนใหญ่มักไม่ใช่ข้อผิดพลาดของ MDM (สิ่งเหล่านี้มีลายเซ็นเดียวกัน <x2/>) macOS ยังไม่ได้วัดสิ่งนี้ จากนั้น monitor จะเขียน <g3>minidump</g3> ของทุกเธรดจากภายนอก ผ่าน <x4/> และ <x5/> กระบวนการที่ล้มเหลวจะไม่เขียน dump ของตัวเอง ซึ่งเป็นวิธีที่ Firefox, Crashpad และ Sentry ทำเช่นกัน"
-  },
   "95ff4e3f1e52b773": {
    "source": "portable.zip — runs from a folder or USB stick",
    "text": "portable.zip — รันจากโฟลเดอร์หรือ USB"
@@ -9605,6 +9665,10 @@
   "970430e3defd4e45": {
    "source": "Browser integration →",
    "text": "การรวมเบราว์เซอร์ →"
+  },
+  "970641facab3170c": {
+   "source": "<g1>Move/Rename</g1> (<g2>Ctrl+M</g2>) moves or renames the file of a finished download, or of one that hasn't started yet. With several downloads selected it asks for a folder and moves them all there, each under its own name.",
+   "text": "<g1>ย้าย/เปลี่ยนชื่อ</g1> (<g2>Ctrl+M</g2>) ใช้ย้ายหรือเปลี่ยนชื่อไฟล์ของการดาวน์โหลดที่เสร็จแล้ว หรือที่ยังไม่ได้เริ่ม หากเลือกการดาวน์โหลดหลายรายการ จะถามหาโฟลเดอร์และย้ายทั้งหมดไปที่นั่น โดยแต่ละไฟล์จะใช้ชื่อเดิม"
   },
   "970b4b0f622b3cc5": {
    "source": "<g1>Start download on Mister Download Manager startup</g1> — start the queue whenever MDM starts.",
@@ -9821,6 +9885,10 @@
   "9a06d15d874052f0": {
    "source": "MDM has to be running for a schedule to fire. Closing the main window is fine: MDM keeps going in the notification area.",
    "text": "MDM ต้องทำงานอยู่เพื่อให้กำหนดการเริ่มทำงาน การปิดหน้าต่างหลักไม่เป็นไร: MDM จะยังคงทำงานอยู่ในพื้นที่แจ้งเตือน"
+  },
+  "9a10fba01a90016a": {
+   "source": "<g1>Works as in the other browsers:</g1> the right-click items, the button over videos, <g2>Media on this page</g2>, the toolbar button, <g3>Alt</g3>-click, MDM starting by itself, and every rule in Options.",
+   "text": "<g1>ทำงานเหมือนในเบราว์เซอร์อื่น:</g1> รายการคลิกขวา, ปุ่มเหนือวิดีโอ, <g2>สื่อในหน้านี้</g2>, ปุ่มบนแถบเครื่องมือ, <g3>Alt</g3>-คลิก, MDM เริ่มทำงานเอง และกฎทุกข้อในตัวเลือก"
   },
   "9a2260db9068e047": {
    "source": "More to script",
@@ -10042,6 +10110,10 @@
    "source": "<g1>Options → Remote</g1>.",
    "text": "<g1>ตัวเลือก → ระยะไกล</g1>"
   },
+  "9df4b353c5463d72": {
+   "source": "Get your file's SHA-256. On Windows, run <x1/>; on Linux, <x2/> and the file's name.",
+   "text": "รับค่า SHA-256 ของไฟล์ของคุณ บน Windows ให้รัน <x1/>; บน Linux ให้รัน <x2/> ตามด้วยชื่อไฟล์"
+  },
   "9e0019721ea3837e": {
    "source": "Install it from the Chrome Web Store or Firefox Add-ons.",
    "text": "ติดตั้งจาก Chrome Web Store หรือ Firefox Add-ons"
@@ -10206,10 +10278,6 @@
    "source": "MDM contains no adware, spyware, bundled offers or tracking. Its whole source code is public, so anyone can check what it does, and every release is built…",
    "text": "MDM ไม่มีแอดแวร์ สปายแวร์ ข้อเสนอพ่วง หรือการติดตาม ซอร์สโค้ดทั้งหมดเปิดเผยต่อสาธารณะ ทุกคนจึงตรวจสอบได้ว่าโปรแกรมทำอะไร และทุกเวอร์ชันที่เผยแพร่สร้างขึ้น..."
   },
-  "a02445ca780f3ef8": {
-   "source": "One egui window painted to fixed pixel coordinates, plus one immediate viewport per dialog. <x1/> holds the state (downloads, queues, settings, the list's selection) and turns menu, toolbar, key and IPC commands into actions. Each dialog is its own module and returns an <x2/> (open, closed, done with a value). Windows-only calls are confined to <x3/> and their Linux and macOS counterparts to <x4/> (starting with the session, the browsers' host, sounds, show in folder, the crash handler); every other file is safe, portable Rust. Fonts come from the system: Windows' Fonts folder, macOS's system fonts, fontconfig on Linux (<x5/>).",
-   "text": "วาดหน้าต่าง egui หนึ่งบานด้วยพิกัดพิกเซลคงที่ และใช้วิวพอร์ตแบบทันทีหนึ่งวิวพอร์ตต่อกล่องโต้ตอบ <x1/> เก็บสถานะ (การดาวน์โหลด คิว การตั้งค่า และรายการที่เลือก) แล้วแปลงคำสั่งจากเมนู แถบเครื่องมือ แป้นพิมพ์ และ IPC เป็นการทำงาน กล่องโต้ตอบแต่ละกล่องเป็นโมดูลของตัวเองและส่งคืนค่า <x2/> (เปิด ปิด หรือเสร็จพร้อมค่า) การเรียกใช้เฉพาะ Windows จะอยู่ใน <x3/> ส่วนการเรียกใช้เฉพาะ Linux และ macOS จะอยู่ใน <x4/> (เช่น การเริ่มเซสชัน โฮสต์ของเบราว์เซอร์ เสียง การแสดงในโฟลเดอร์ และตัวจัดการข้อขัดข้อง); ไฟล์อื่นทั้งหมดเป็น Rust แบบพกพาที่ปลอดภัย ฟอนต์มาจากระบบ: โฟลเดอร์ Fonts ของ Windows ฟอนต์ระบบของ macOS และ fontconfig บน Linux (<x5/>)"
-  },
   "a02c94e070503928": {
    "source": "Browsers built on them work too: Chromium and Helium take the extension as Chrome does, Brave Origin as Brave does, Zen and LibreWolf as Firefox does. On Windows, Zen has a bug of its own (see <g1>The browser and MDM aren't connected</g1>).",
    "text": "เบราว์เซอร์ที่สร้างขึ้นจากเบราว์เซอร์เหล่านี้ก็ใช้งานได้เช่นกัน: Chromium และ Helium ใช้ส่วนขยายเหมือน Chrome, Brave Origin เหมือน Brave, Zen และ LibreWolf เหมือน Firefox บน Windows, Zen มีข้อผิดพลาดของตัวเอง (ดู <g1>เบราว์เซอร์และ MDM ไม่เชื่อมต่อกัน</g1>)"
@@ -10333,6 +10401,10 @@
   "a1afb9d26b290530": {
    "source": "<g1>Batch downloads</g1><g2>Mister Download Manager</g2>",
    "text": "<g1>การดาวน์โหลดแบบชุด</g1><g2>Mister Download Manager</g2>"
+  },
+  "a1b29b6dc03c2789": {
+   "source": "If MDM says it's up to date, there's nothing for you to do. The extension updates by itself through its store and can get ahead of the app for a while. Everything keeps working, and the message goes away with the next version of MDM.",
+   "text": "หาก MDM แจ้งว่าอัปเดตแล้ว คุณไม่ต้องทำอะไร ส่วนขยายจะอัปเดตเองผ่านสโตร์ และอาจนำหน้าแอปไปก่อนชั่วคราว ทุกอย่างยังคงทำงานได้ และข้อความจะหายไปเมื่อ MDM ออกเวอร์ชันถัดไป"
   },
   "a1b776b1a0548526": {
    "source": "MDM's main window on KDE Plasma",
@@ -10789,6 +10861,10 @@
   "a905582aea5b0712": {
    "source": "A greyed button's border",
    "text": "เส้นขอบของปุ่มสีเทา"
+  },
+  "a907f4484df884cd": {
+   "source": "<g1>Keep running when closing the window</g1> — closing the main window hides it in the notification area instead of quitting, and downloads, queues and schedules go on. On by default; unticked, closing quits MDM (so a <g2>portable copy</g2>'s folder can then be deleted). If there is no icon for MDM at all — not even behind the ^ hidden icons — the window minimizes to the taskbar instead, so downloads continue and the window stays reachable; an icon behind ^ can be clicked to bring it back, or start MDM again. Greyed where no tray shows MDM's icon (some Linux desktops): closing quits there.",
+   "text": "<g1>เปิดโปรแกรมทิ้งไว้เมื่อปิดหน้าต่าง</g1> — การปิดหน้าต่างหลักจะซ่อนโปรแกรมไว้ในพื้นที่แจ้งเตือนแทนการปิดโปรแกรม และการดาวน์โหลด คิว และกำหนดการจะดำเนินต่อไป เปิดใช้งานโดยค่าเริ่มต้น หากไม่ได้เลือกไว้ การปิดโปรแกรมจะทำให้ MDM ปิดตัวลง (เพื่อให้สามารถลบโฟลเดอร์ของ <g2>สำเนาแบบพกพา</g2> ได้) หากไม่มีไอคอนสำหรับ MDM เลย — แม้แต่ในส่วนไอคอนที่ซ่อนอยู่ ^ — หน้าต่างจะย่อเล็กสุดไปยังแถบงานแทน เพื่อให้การดาวน์โหลดดำเนินต่อไปและหน้าต่างยังคงเข้าถึงได้ สามารถคลิกไอคอนที่อยู่หลัง ^ เพื่อเรียกกลับมา หรือเริ่ม MDM ใหม่ได้ คุณสมบัตินี้จะเป็นสีเทาเมื่อไม่มีถาดแสดงไอคอน MDM (เดสก์ท็อป Linux บางตัว): การปิดโปรแกรมจะทำให้โปรแกรมปิดตัวลง"
   },
   "a90ae03353c0b71c": {
    "source": "The Scheduler's Schedule tab: Start download at, Once at or Daily, and Stop download at",
@@ -11346,6 +11422,10 @@
    "source": "runs unit tests and end-to-end downloads against <x1/> with injected faults (slow, dropped and refused connections, servers without ranges, changing files). <x2/> runs the published speed comparison; its raw data is in <x3/>.",
    "text": "รันการทดสอบหน่วยและการดาวน์โหลดแบบ end-to-end กับ <x1/> ด้วยข้อผิดพลาดที่ถูกแทรก (การเชื่อมต่อช้า, หลุดและถูกปฏิเสธ, เซิร์ฟเวอร์ที่ไม่มีช่วง, ไฟล์ที่เปลี่ยนแปลง) <x2/> รันการเปรียบเทียบความเร็วที่เผยแพร่; ข้อมูลดิบอยู่ใน <x3/>"
   },
+  "b1ea4cd6806043cd": {
+   "source": "<g1>Minimize to the notification area</g1> — Minimize hides the main window, and a download's progress window, in the notification area; downloads go on. On by default. Where the tray has no icon, the main window minimizes to the taskbar instead. The close setting above is separate; when it is on, closing hides there too (or minimizes to the taskbar if there is no icon at all). Greyed where no tray shows MDM's icon (some Linux desktops); in a Wayland session the main window stays minimized in the dock, since Wayland can't hide a window.",
+   "text": "<g1>ย่อเล็กสุดไปยังพื้นที่แจ้งเตือน</g1> — การย่อเล็กสุดจะซ่อนหน้าต่างหลักและหน้าต่างแสดงความคืบหน้าการดาวน์โหลดไว้ในพื้นที่แจ้งเตือน; การดาวน์โหลดจะดำเนินต่อไป เปิดใช้งานโดยค่าเริ่มต้น ในกรณีที่ถาดไม่มีไอคอน หน้าต่างหลักจะย่อเล็กสุดไปยังแถบงานแทน การตั้งค่าการปิดโปรแกรมด้านบนแยกต่างหาก; เมื่อเปิดใช้งาน การปิดโปรแกรมจะซ่อนไว้ที่นั่นด้วย (หรือย่อเล็กสุดไปยังแถบงานหากไม่มีไอคอนเลย) คุณสมบัตินี้จะเป็นสีเทาเมื่อไม่มีถาดแสดงไอคอน MDM (เดสก์ท็อป Linux บางตัว); ในเซสชัน Wayland หน้าต่างหลักจะยังคงย่อเล็กสุดอยู่ใน dock เนื่องจาก Wayland ไม่สามารถซ่อนหน้าต่างได้"
+  },
   "b1f35176aca676c5": {
    "source": "While the queue runs, the computer doesn't go to sleep. When the queue is done, the computer's own sleep settings apply again: a computer nobody is using goes back to sleep by itself. <g1>Turn off computer when done → Sleep</g1> sends it back to sleep at once.",
    "text": "ขณะที่คิวกำลังทำงาน คอมพิวเตอร์จะไม่เข้าสู่โหมดพักเครื่อง เมื่อคิวเสร็จสิ้น การตั้งค่าการพักเครื่องของคอมพิวเตอร์จะกลับมามีผลอีกครั้ง คอมพิวเตอร์ที่ไม่มีใครใช้งานจะกลับเข้าสู่โหมดพักเครื่องเอง <g1>ปิดคอมพิวเตอร์เมื่อเสร็จสิ้น → พักเครื่อง</g1> จะทำให้คอมพิวเตอร์เข้าสู่โหมดพักเครื่องทันที"
@@ -11413,10 +11493,6 @@
   "b27995b1d5cff0b2": {
    "source": "A calendar's day or arrow pressed",
    "text": "วันหรือลูกศรของปฏิทินถูกกด"
-  },
-  "b27e59917bb7f695": {
-   "source": "Last updated 2026-11-08 · applies to the app, the browser extension and misterdownloadmanager.com",
-   "text": "อัปเดตล่าสุด 8 พฤศจิกายน 2569 · ใช้กับแอป ส่วนขยายเบราว์เซอร์ และ misterdownloadmanager.com"
   },
   "b298f93960114202": {
    "source": ", with or without <x1/>;",
@@ -11698,10 +11774,6 @@
    "source": "The menu before / after; in a submenu, <g1>Left</g1> closes it",
    "text": "เมนูก่อนหน้า / ถัดไป; ในเมนูย่อย <g1>ลูกศรซ้าย</g1> จะปิดเมนูย่อยนั้น"
   },
-  "b7037d71c5917f53": {
-   "source": "<g1>Hide tab</g1> goes back to <g2>Download status</g2>.",
-   "text": "<g1>ซ่อนแท็บ</g1> กลับไปที่ <g2>สถานะการดาวน์โหลด</g2>"
-  },
   "b706522e2a61060f": {
    "source": "Theme files you make or download go in MDM's themes folder. <g1>View → Theme → Open themes folder</g1> opens it (and makes it the first time). It is in MDM's data folder:",
    "text": "ไฟล์ชุดรูปแบบที่คุณสร้างหรือดาวน์โหลดจะอยู่ในโฟลเดอร์ชุดรูปแบบของ MDM การเลือก <g1>มุมมอง → ชุดรูปแบบ → เปิดโฟลเดอร์ชุดรูปแบบ</g1> จะเปิดโฟลเดอร์นี้ (และสร้างขึ้นหากยังไม่มี) โฟลเดอร์นี้อยู่ในโฟลเดอร์ข้อมูลของ MDM:"
@@ -11890,6 +11962,10 @@
    "source": "When the video has subtitles, the <g1>Subtitles</g1> list offers them: the uploader's own languages first (and <g2>All the uploader's</g2> when there are several), then the site's automatic captions, marked <g3>automatic</g3>. Of those, only the ones in the language spoken and their translations into English and your interface language are listed; sites like YouTube offer a machine translation into every language they know.",
    "text": "หากวิดีโอมีคำบรรยาย รายการ <g1>คำบรรยาย</g1> จะแสดงคำบรรยายที่มี โดยแสดงภาษาที่ผู้เผยแพร่อัปโหลดไว้ก่อน (และ <g2>ทั้งหมดของผู้ที่อัปโหลด</g2> หากมีหลายภาษา) จากนั้นจึงแสดงคำบรรยายอัตโนมัติของเว็บไซต์ ซึ่งระบุว่า <g3>อัตโนมัติ</g3> ในบรรดาคำบรรยายเหล่านั้น จะแสดงเฉพาะภาษาที่พูดในวิดีโอ รวมถึงคำแปลเป็นภาษาอังกฤษและภาษาของอินเทอร์เฟซ เว็บไซต์อย่าง YouTube มีคำแปลอัตโนมัติเป็นทุกภาษาที่รองรับ"
   },
+  "ba5be854c2e3600d": {
+   "source": "My antivirus or VirusTotal flags MDM",
+   "text": "โปรแกรมแอนติไวรัสหรือ VirusTotal แจ้งเตือน MDM"
+  },
   "ba699d4f38020fb7": {
    "source": "<g1>Tasks → Import → From text file</g1> reads a text file and picks out every web address in it. You can also drop a <x2/> or <x3/> list straight onto the download list. Untick what you don't want, and add the rest to the queue.",
    "text": "<g1>งาน → นำเข้า → จากไฟล์ข้อความ</g1> จะอ่านไฟล์ข้อความและดึงที่อยู่เว็บทุกรายการในนั้นออกมา คุณยังสามารถลากรายการ <x2/> หรือ <x3/> ลงบนรายการดาวน์โหลดได้โดยตรง ยกเลิกการเลือกรายการที่คุณไม่ต้องการ แล้วเพิ่มส่วนที่เหลือลงในคิว"
@@ -11897,10 +11973,6 @@
   "ba6ae97de31c9f2e": {
    "source": "<g1></g1>Ahead on that line. Timings are medians of alternating runs on one computer and server; the bars are to scale.",
    "text": "<g1></g1>นำหน้าในด้านนั้น เวลาที่แสดงเป็นค่ามัธยฐานของการรันสลับกันบนคอมพิวเตอร์และเซิร์ฟเวอร์เครื่องเดียว แถบแสดงตามสัดส่วน"
-  },
-  "ba71746213a31b99": {
-   "source": "The extension works in <g1>Google Chrome</g1>, <g2>Microsoft Edge</g2>, <g3>Brave</g3>, <g4>Opera</g4> and <g5>Vivaldi</g5>, and in <g6>Firefox</g6> 140 or later.",
-   "text": "ส่วนขยายนี้ทำงานใน <g1>Google Chrome</g1>, <g2>Microsoft Edge</g2>, <g3>Brave</g3>, <g4>Opera</g4> และ <g5>Vivaldi</g5> รวมถึงใน <g6>Firefox</g6> เวอร์ชัน 140 ขึ้นไป"
   },
   "ba7398fafefc4533": {
    "source": "Peak memory",
@@ -12073,6 +12145,10 @@
   "bd171409c60c0172": {
    "source": "Options → Connection",
    "text": "ตัวเลือก → การเชื่อมต่อ"
+  },
+  "bd3527667ef96098": {
+   "source": "The Mac app carries the Safari extension: there is nothing to download. Safari 17 or later and macOS 14 or later are needed.",
+   "text": "แอป Mac มีส่วนขยาย Safari อยู่แล้ว ไม่ต้องดาวน์โหลดอะไรเพิ่มเติม ต้องใช้ Safari 17 ขึ้นไป และ macOS 14 ขึ้นไป"
   },
   "bd38ebc1b5f00936": {
    "source": "Scenario",
@@ -12414,6 +12490,10 @@
    "source": "A greyed button's face",
    "text": "พื้นผิวของปุ่มสีเทา"
   },
+  "c30f4658e7e28160": {
+   "source": "Start the video first: the list fills as the page loads things, and it's emptied when the tab goes to another page. With <g1>Prefix media file names with the page title</g1> on, a file from the list is named after the page, then its own name (<x2/>). Click <g3>Download</g3> beside one: a stream opens MDM's <g4>Download video from a page</g4> window, which reads its qualities (yt-dlp does the work); a file goes to MDM's list like any other download. Your cookies for its server, the page as the referrer and your browser's User-Agent go with it, as they do for a link you click.",
+   "text": "เริ่มเล่นวิดีโอก่อน: รายการจะปรากฏขึ้นเมื่อหน้าเว็บโหลดเนื้อหา และจะถูกล้างเมื่อแท็บเปลี่ยนไปหน้าอื่น เมื่อเปิด <g1>เพิ่มชื่อหน้าไว้หน้าชื่อไฟล์สื่อ</g1> ไฟล์จากรายการจะถูกตั้งชื่อตามชื่อหน้า จากนั้นตามด้วยชื่อไฟล์ของตัวเอง (<x2/>) คลิก <g3>ดาวน์โหลด</g3> ข้างไฟล์: สตรีมจะเปิดหน้าต่าง <g4>ดาวน์โหลดวิดีโอจากหน้า</g4> ของ MDM ซึ่งจะอ่านคุณภาพของวิดีโอ (yt-dlp ทำงานนี้); ไฟล์จะถูกเพิ่มไปยังรายการของ MDM เหมือนการดาวน์โหลดอื่น ๆ คุกกี้ของคุณสำหรับเซิร์ฟเวอร์นั้น หน้าเว็บเป็นตัวอ้างอิง และ User-Agent ของเบราว์เซอร์ของคุณจะถูกส่งไปด้วย เช่นเดียวกับลิงก์ที่คุณคลิก"
+  },
   "c31622b1a542c888": {
    "source": "<g1>.dmg</g1> for Intel Macs",
    "text": "<g1>.dmg</g1> สำหรับ Mac ที่ใช้ Intel"
@@ -12465,6 +12545,10 @@
   "c41cf3697bdcc8d7": {
    "source": "The extension asks the host which file types to take, checks each download against them, and cancels the browser's download only after the app has accepted it; otherwise the browser keeps it, and the extension says why.",
    "text": "ส่วนขยายจะถามโฮสต์ว่าต้องการไฟล์ประเภทใด ตรวจสอบการดาวน์โหลดแต่ละรายการกับประเภทเหล่านั้น และยกเลิกการดาวน์โหลดของเบราว์เซอร์หลังจากที่แอปยอมรับแล้วเท่านั้น มิฉะนั้นเบราว์เซอร์จะเก็บไว้ และส่วนขยายจะบอกเหตุผล"
+  },
+  "c488af9290492a52": {
+   "source": "Closing the main window doesn't quit MDM. It hides in the notification area, and downloads, queues and schedules carry on. To make closing quit (a portable copy's folder can then be deleted), untick <g1>Options → General → Keep running when closing the window</g1>. If there is no icon for MDM at all — not in the notification area, nor behind the ^ hidden icons — the window minimizes to the taskbar instead, so downloads continue and there is a way back. An icon behind ^ can be clicked to bring the window back, and starting MDM again always does.",
+   "text": "การปิดหน้าต่างหลักไม่ได้เป็นการออกจาก MDM โปรแกรมจะซ่อนอยู่ในพื้นที่แจ้งเตือน และการดาวน์โหลด คิว และกำหนดเวลาจะยังคงทำงานต่อไป หากต้องการให้การปิดเป็นการออกจากโปรแกรม (แล้วจึงสามารถลบโฟลเดอร์ของสำเนาแบบพกพาได้) ให้ยกเลิกการเลือก <g1>ตัวเลือก → ทั่วไป → เปิดโปรแกรมทิ้งไว้เมื่อปิดหน้าต่าง</g1> หากไม่มีไอคอนของ MDM เลย — ทั้งในพื้นที่แจ้งเตือนและหลังไอคอนที่ซ่อนอยู่ ^ — หน้าต่างจะย่อเล็กสุดไปยังแถบงานแทน เพื่อให้การดาวน์โหลดดำเนินต่อไปและมีทางกลับมาได้ สามารถคลิกไอคอนหลัง ^ เพื่อนำหน้าต่างกลับมาได้ และการเริ่ม MDM ใหม่อีกครั้งก็จะทำเช่นนั้นเสมอ"
   },
   "c48962c07ea187bc": {
    "source": "The video helpers window: yt-dlp and ffmpeg, each with its version and Use another program...",
@@ -13262,6 +13346,10 @@
    "source": "A download's details were too large",
    "text": "รายละเอียดการดาวน์โหลดมีขนาดใหญ่เกินไป"
   },
+  "d0d09410613074ec": {
+   "source": "Drag MDM to Applications and start it once. MDM's <g1>Add Mister Download Manager to your browser</g1> window lists Safari: <g2>How to Add</g2> shows the steps below.",
+   "text": "ลาก MDM ไปที่โฟลเดอร์ Applications แล้วเปิดใช้งานหนึ่งครั้ง หน้าต่าง <g1>เพิ่ม Mister Download Manager ไปยังเบราว์เซอร์ของคุณ</g1> ของ MDM จะแสดง Safari: <g2>วิธีเพิ่ม</g2> จะแสดงขั้นตอนด้านล่าง"
+  },
   "d100800d4f0e156a": {
    "source": "MDM downloads BitTorrent files from magnet links and .torrent files. Torrents appear in the same list as other downloads, marked Torrent in the Source…",
    "text": "MDM ดาวน์โหลดไฟล์ BitTorrent จากลิงก์แม่เหล็กและไฟล์ .torrent ทอร์เรนต์จะแสดงในรายการเดียวกับรายการดาวน์โหลดอื่น โดยมี Torrent กำกับใน Source…"
@@ -13482,6 +13570,10 @@
    "source": "Honest about the translations",
    "text": "ความซื่อสัตย์ในการแปล"
   },
+  "d4a032f906bd077e": {
+   "source": "No Download video button on YouTube in Chrome, Edge or Brave",
+   "text": "ไม่มีปุ่ม ดาวน์โหลดวิดีโอ บน YouTube ใน Chrome, Edge หรือ Brave"
+  },
   "d4a589b33d49fa7c": {
    "source": "\"Remove the finished downloads from the list but keep the files.\"",
    "text": "\"ลบรายการที่ดาวน์โหลดเสร็จแล้วออกจากรายการ แต่เก็บไฟล์ไว้\""
@@ -13489,10 +13581,6 @@
   "d4a71e10d53850e6": {
    "source": "<g1><g2>Catch downloads from your browser</g2></g1> — set up the extension so clicked downloads go to MDM.",
    "text": "<g1><g2>ดักจับการดาวน์โหลดจากเบราว์เซอร์ของคุณ</g2></g1> — ตั้งค่าส่วนขยายเพื่อให้การดาวน์โหลดที่คลิกไปที่ MDM"
-  },
-  "d4c66a15e09e8ca8": {
-   "source": "<g1>Offer to download links copied to the clipboard</g1> — when you copy a link whose file type is on the <g2>File types</g2> page, <g3>Download File Info</g3> opens with it, ready to start (or the download starts at once, with <g4>Show start download dialog</g4> off). On by default.",
-   "text": "<g1>เสนอให้ดาวน์โหลดลิงก์ที่คัดลอกไปยังคลิปบอร์ด</g1> — เมื่อคุณคัดลอกลิงก์ที่มีชนิดไฟล์อยู่ในหน้า <g2>ชนิดไฟล์</g2> <g3>ข้อมูลไฟล์ดาวน์โหลด</g3> จะเปิดขึ้นพร้อมกับลิงก์นั้น พร้อมที่จะเริ่ม (หรือการดาวน์โหลดจะเริ่มทันที หากปิด <g4>แสดงกล่องโต้ตอบเริ่มการดาวน์โหลด</g4>) เปิดอยู่โดยค่าเริ่มต้น"
   },
   "d4c9212e6107e470": {
    "source": "Playlists and channels",
@@ -13714,6 +13802,10 @@
    "source": "Yes. When a video has subtitles, the <g1>Subtitles</g1> list in the video window offers them: the uploader's languages and the site's automatic captions. They're saved beside the video as an <x2/> file, or put inside it with <g3>Put them into the video</g3>. See <g4>Subtitles</g4>.",
    "text": "ได้ เมื่อวิดีโอมีคำบรรยาย รายการ <g1>คำบรรยาย</g1> ในหน้าต่างวิดีโอจะแสดงคำบรรยายที่มีให้เลือก ทั้งภาษาที่ผู้อัปโหลดเพิ่มและคำบรรยายอัตโนมัติของเว็บไซต์ คำบรรยายจะบันทึกเป็นไฟล์ <x2/> ไว้ข้างวิดีโอ หรือใส่ลงในวิดีโอด้วย <g3>ใส่ลงในวิดีโอ</g3> ดู <g4>คำบรรยาย</g4>"
   },
+  "d79ad01ff4322b0a": {
+   "source": "<g1>Automatically start downloading the following file types</g1> — the file types the browser hands over (and the clipboard picks up). Separate them by spaces; <x2/> matches any characters, as in <x3/>. <g4>Default</g4> puts the original list back. The list starts with the usual archives, programs and installers (Windows, macOS and Linux ones: DMG, PKG, DEB, RPM, APPIMAGE, MSIX), music and videos, PDF and Office files, AI models and datasets (GGUF, SAFETENSORS, CKPT, PT, ONNX, PARQUET), 3D and CAD files (GLB, FBX, OBJ, STL, BLEND, STEP), design and camera RAW files, ebooks, disk images and split archives. Pages, scripts, plain text and web images are left out on purpose, so saving a picture or a page stays with the browser; add any type you need, or put a single <x5/> in the box to take every file that has an extension. A list you never changed gains the types a new version adds; one you edited stays as it is.",
+   "text": "<g1>เริ่มดาวน์โหลดชนิดไฟล์ต่อไปนี้โดยอัตโนมัติ</g1> — ชนิดไฟล์ที่เบราว์เซอร์ส่งต่อ (และคลิปบอร์ดรับ) คั่นด้วยช่องว่าง; <x2/> ตรงกับอักขระใด ๆ เช่นใน <x3/> การเลือก <g4>ค่าเริ่มต้น</g4> จะคืนค่ารายการเดิม รายการเริ่มต้นด้วยไฟล์เก็บถาวร โปรแกรม และตัวติดตั้งทั่วไป (Windows, macOS และ Linux: DMG, PKG, DEB, RPM, APPIMAGE, MSIX) เพลงและวิดีโอ ไฟล์ PDF และ Office โมเดล AI และชุดข้อมูล (GGUF, SAFETENSORS, CKPT, PT, ONNX, PARQUET) ไฟล์ 3D และ CAD (GLB, FBX, OBJ, STL, BLEND, STEP) ไฟล์ออกแบบและกล้อง RAW หนังสืออิเล็กทรอนิกส์ อิมเมจดิสก์ และไฟล์เก็บถาวรแบบแยก หน้าเว็บ สคริปต์ ข้อความธรรมดา และรูปภาพเว็บถูกละไว้โดยเจตนา เพื่อให้การบันทึกรูปภาพหรือหน้าเว็บยังคงอยู่กับเบราว์เซอร์; เพิ่มชนิดไฟล์ที่คุณต้องการ หรือใส่ <x5/> ตัวเดียวในช่องเพื่อรับไฟล์ทุกชนิดที่มีนามสกุล รายการที่คุณไม่เคยเปลี่ยนแปลงจะได้รับชนิดไฟล์ที่เวอร์ชันใหม่เพิ่มเข้ามา; รายการที่คุณแก้ไขจะยังคงเดิม"
+  },
   "d7a59305d1341d4e": {
    "source": "The app and the extension hold no personal data about you, so there is nothing for us to show, correct or delete there. The website's visit statistics are held by Statcounter; to have records of your visits removed, open an issue with the date and time of your visit, or ask Statcounter directly. Data that you send to GitHub (an issue, for example) is handled by GitHub and can be edited or deleted there.",
    "text": "แอปและส่วนขยายไม่มีข้อมูลส่วนบุคคลเกี่ยวกับคุณ เราจึงไม่มีข้อมูลให้แสดง แก้ไข หรือลบ สถิติการเข้าชมเว็บไซต์เก็บไว้โดย Statcounter หากต้องการลบบันทึกการเข้าชม ให้เปิด issue พร้อมระบุวันที่และเวลาที่เข้าชม หรือสอบถาม Statcounter โดยตรง ข้อมูลที่คุณส่งไปยัง GitHub (เช่น issue) อยู่ภายใต้การจัดการของ GitHub และแก้ไขหรือลบได้ที่นั่น"
@@ -13769,10 +13861,6 @@
   "d840a217a694ce9e": {
    "source": "5. No warranty",
    "text": "5. ไม่มีการรับประกัน"
-  },
-  "d8456502c3302d77": {
-   "source": "Start the video first: the list fills as the page loads things, and it's emptied when the tab goes to another page. Click <g1>Download</g1> beside one: a stream opens MDM's <g2>Download video from a page</g2> window, which reads its qualities (yt-dlp does the work); a file goes to MDM's list like any other download. Your cookies for its server, the page as the referrer and your browser's User-Agent go with it, as they do for a link you click.",
-   "text": "เริ่มเล่นวิดีโอก่อน: รายการจะเพิ่มขึ้นเมื่อหน้าเว็บโหลดข้อมูล และจะถูกล้างเมื่อแท็บไปยังหน้าอื่น คลิก <g1>ดาวน์โหลด</g1> ข้างรายการที่ต้องการ: หากเป็นสตรีม หน้าต่าง <g2>ดาวน์โหลดวิดีโอจากหน้า</g2> ของ MDM จะเปิดขึ้นและอ่านคุณภาพของสตรีม (yt-dlp เป็นผู้ดำเนินการ) หากเป็นไฟล์ ไฟล์จะอยู่ในรายการของ MDM เช่นเดียวกับการดาวน์โหลดอื่นๆ คุกกี้สำหรับเซิร์ฟเวอร์นั้น หน้าเว็บในฐานะหน้าผู้อ้างอิง และ User-Agent ของเบราว์เซอร์จะถูกส่งไปด้วย เช่นเดียวกับเมื่อคลิกลิงก์"
   },
   "d878d923ca93995a": {
    "source": "Open <x1/> (the codes are in <g2><x3/></g2>).",
@@ -14006,6 +14094,10 @@
    "source": "<g1>The extension's toolbar button</g1> says whether the browser reaches MDM. When it doesn't, a red <g2>!</g2> and <g3>How to fix it</g3> lead to the new help page, <g4>The browser and MDM aren't connected</g4>, at the section for the reason. Its popup also pauses taking downloads, leaves the current site to the browser for good, and opens MDM or its Options.",
    "text": "<g1>ปุ่มบนแถบเครื่องมือของส่วนขยาย</g1> จะบอกว่าเบราว์เซอร์เชื่อมต่อกับ MDM หรือไม่ หากไม่เชื่อมต่อ จะมีเครื่องหมาย <g2>!</g2> สีแดง และ <g3>วิธีแก้ไข</g3> ซึ่งจะนำไปสู่หน้าวิธีใช้ใหม่ <g4>เบราว์เซอร์และ MDM ไม่ได้เชื่อมต่อกัน</g4> ในส่วนที่เกี่ยวข้องกับสาเหตุ ป๊อปอัปยังสามารถหยุดการรับการดาวน์โหลด, ปล่อยให้ไซต์ปัจจุบันเป็นของเบราว์เซอร์อย่างถาวร และเปิด MDM หรือ ตัวเลือก ของ MDM ได้"
   },
+  "dc93b881572cb1c5": {
+   "source": "Peers",
+   "text": "เพียร์"
+  },
   "dcabc8a97e80dd97": {
    "source": "Downloads → Speed Limiter → Settings...: one speed for all of MDM.",
    "text": "การดาวน์โหลด → ตัวจำกัดความเร็ว → การตั้งค่า...: ความเร็วเดียวสำหรับ MDM ทั้งหมด"
@@ -14054,10 +14146,6 @@
    "source": "Runs nearly everywhere, with HTTP, BitTorrent, magnet and ed2k, and a REST API",
    "text": "ทำงานได้เกือบทุกที่ รองรับ HTTP, BitTorrent, magnet และ ed2k พร้อม REST API"
   },
-  "dda60fa3176775af": {
-   "source": "<g1>Move/Rename</g1> (<g2>Ctrl+M</g2>) moves or renames the file of a finished download, or of one that hasn't started yet.",
-   "text": "<g1>ย้าย/เปลี่ยนชื่อ</g1> (<g2>Ctrl+M</g2>) ย้ายหรือเปลี่ยนชื่อไฟล์ของการดาวน์โหลดที่เสร็จสมบูรณ์แล้ว หรือที่ยังไม่เริ่ม"
-  },
   "ddb6d067aabbbb96": {
    "source": "Command line and automation — Mister Download Manager help",
    "text": "บรรทัดคำสั่งและการทำงานอัตโนมัติ — วิธีใช้ Mister Download Manager"
@@ -14069,10 +14157,6 @@
   "dddc4b4555b211bf": {
    "source": "the pause-and-resume and event-log tests no longer depend on how fast the machine is: the lab server can hold a byte back until a test lets it go (<x1/>), and a test can wait until every request it made is in the server's log (#123);",
    "text": "การทดสอบหยุดชั่วคราวและดำเนินการต่อ และการทดสอบบันทึกเหตุการณ์ไม่ขึ้นอยู่กับความเร็วของเครื่องอีกต่อไป: เซิร์ฟเวอร์แล็บสามารถเก็บไบต์ไว้ได้จนกว่าการทดสอบจะปล่อยไป (<x1/>) และการทดสอบสามารถรอจนกว่าคำขอทุกรายการที่ทำจะอยู่ในบันทึกของเซิร์ฟเวอร์ (#123);"
-  },
-  "ddf53195ff2cd6d1": {
-   "source": "Closing the main window doesn't quit MDM. It hides in the notification area, and downloads, queues and schedules carry on.",
-   "text": "การปิดหน้าต่างหลักไม่ได้ทำให้ MDM ออก โปรแกรมจะซ่อนอยู่ในพื้นที่แจ้งเตือน และดาวน์โหลด คิว และกำหนดการจะยังทำงานต่อไป"
   },
   "de05be78a1ac8ebe": {
    "source": "Can it resume broken downloads? — Mister Download Manager",
@@ -14097,6 +14181,10 @@
   "deb3f2db3855218f": {
    "source": "<g1>Never take downloads from</g1> the current site: adds it to MDM's excluded sites.",
    "text": "<g1>ไม่รับการดาวน์โหลดจาก</g1> เว็บไซต์ปัจจุบัน: เพิ่มเว็บไซต์นั้นลงในรายการเว็บไซต์ที่ MDM ยกเว้น"
+  },
+  "debac78242ebe5d9": {
+   "source": "Minimize hides the main window there too, while <g1>Minimize to the notification area</g1> is on in <g2>Options → General</g2>. It is on by default; where the tray has no icon, Minimize sends the window to the taskbar instead.",
+   "text": "ย่อเล็กสุด จะซ่อนหน้าต่างหลักไว้ที่นั่นเช่นกัน เมื่อเปิด <g1>ย่อเล็กสุดไปยังพื้นที่แจ้งเตือน</g1> ใน <g2>ตัวเลือก → ทั่วไป</g2> ซึ่งเปิดใช้งานโดยค่าเริ่มต้น หากพื้นที่แจ้งเตือนไม่มีไอคอน ย่อเล็กสุด จะส่งหน้าต่างไปยังแถบงานแทน"
   },
   "dee4ab42b514acda": {
    "source": "The language list on first start: every language with its flag, its own name and its English name",
@@ -14998,6 +15086,10 @@
    "source": "Download a video from a page",
    "text": "ดาวน์โหลดวิดีโอจากหน้าเว็บ"
   },
+  "ece3601cb88a5ef9": {
+   "source": "Safari lets an extension neither see nor stop the browser's downloads, so what works differs from the other browsers:",
+   "text": "Safari ไม่อนุญาตให้ส่วนขยายเห็นหรือหยุดการดาวน์โหลดของเบราว์เซอร์ ดังนั้นการทำงานจึงแตกต่างจากเบราว์เซอร์อื่น:"
+  },
   "ece9fd24c79f10c2": {
    "source": "The windows are the ones described in this help, with the desktop's fonts, file icons and title bars:",
    "text": "หน้าต่างเป็นแบบที่อธิบายไว้ในวิธีใช้นี้ พร้อมฟอนต์, ไอคอนไฟล์ และแถบชื่อเรื่องของเดสก์ท็อป:"
@@ -15562,6 +15654,10 @@
    "source": "<g1>Metro</g1>, after Windows 8's flat look: square corners, flat buttons, boxes that take an accent border when focused, check boxes with a tick, a bordered progress bar, scroll bars with their arrows always shown, one-colour icons (Microsoft's Fluent UI System Icons, MIT) and a title bar in the theme's colour with the title centred.",
    "text": "<g1>เมโทร</g1> ตามรูปลักษณ์แบบเรียบของ Windows 8: มุมเหลี่ยม, ปุ่มแบน, กล่องที่มีขอบเน้นเมื่อโฟกัส, ช่องทำเครื่องหมายที่มีเครื่องหมายถูก, แถบความคืบหน้าที่มีขอบ, แถบเลื่อนที่มีลูกศรแสดงตลอดเวลา, ไอคอนสีเดียว (Microsoft's Fluent UI System Icons, MIT) และแถบชื่อเรื่องในสีของชุดรูปแบบพร้อมชื่อเรื่องอยู่ตรงกลาง"
   },
+  "f554a7b471d1c8c4": {
+   "source": "To check that your copy is the real one:",
+   "text": "วิธีตรวจสอบว่าสำเนาของคุณเป็นของจริง:"
+  },
   "f55e431df0898bf7": {
    "source": "Corner radius of a popup in a window (a calendar, a filter box)",
    "text": "รัศมีมุมของป๊อปอัปในหน้าต่าง (ปฏิทิน, กล่องตัวกรอง)"
@@ -15589,6 +15685,10 @@
   "f5d0db4c9a23ece3": {
    "source": "<g1><g2>Adding downloads</g2></g1> — Add URL, the clipboard, the drop target, batch downloads and lists of links, and Start Download versus Download Later.",
    "text": "<g1><g2>การเพิ่มการดาวน์โหลด</g2></g1> — เพิ่ม URL, คลิปบอร์ด, เป้าหมายการลากและวาง, การดาวน์โหลดเป็นชุดและรายการลิงก์, และ เริ่มการดาวน์โหลด เทียบกับ ดาวน์โหลดภายหลัง"
+  },
+  "f5d1e8a8bc6e8e59": {
+   "source": "Compare it with the same file's line in that release's <x1/>.",
+   "text": "เปรียบเทียบกับบรรทัดของไฟล์เดียวกันใน <x1/> ของรุ่นนั้น"
   },
   "f5e911e1675285c5": {
    "source": "Add the extension to each browser you use, as below: Firefox from its add-ons store, the others from the Chrome Web Store. Until a browser's extension has reached MDM, MDM's <g1>Add Mister Download Manager to your browser</g1> window opens at each start: it lists the browsers it found, and <g2>Add the extension</g2> opens the store's page in that browser. <g3>Install it by hand</g3> opens the steps for loading it without the store; <g4>Don't ask again</g4> stops the window.",
@@ -15998,6 +16098,10 @@
    "source": "Click <g1>Load unpacked</g1> and choose the <x2/> folder.",
    "text": "คลิก <g1>โหลดส่วนขยายที่ไม่ได้แพ็ค</g1> และเลือกโฟลเดอร์ <x2/>"
   },
+  "fbb8c948c7d5543c": {
+   "source": "<g1>Dates and times</g1> in the list (<g2>Last Try Date</g2>, <g3>Added</g3>) and the Scheduler follow the system's region by default (on Windows <g4>Settings → Time &amp; language → Language &amp; region → Regional format</g4>; on macOS and Linux, your language's usual way), or your own date order, clock and first day of the week in <g5>Options → Regional</g5>. In English the list keeps IDM's own date text (<x6/>), on the system's 12- or 24-hour clock (<x7/>).",
+   "text": "<g1>วันที่และเวลา</g1> ในรายการ (<g2>วันที่ลองครั้งล่าสุด</g2>, <g3>เพิ่มแล้ว</g3>) และตัวจัดกำหนดการ จะเป็นไปตามภูมิภาคของระบบโดยค่าเริ่มต้น (ใน Windows <g4>การตั้งค่า → เวลาและภาษา → ภาษาและภูมิภาค → รูปแบบภูมิภาค</g4>; ใน macOS และ Linux จะเป็นไปตามรูปแบบปกติของภาษาที่คุณใช้) หรือตามลำดับวันที่, รูปแบบนาฬิกา และวันแรกของสัปดาห์ที่คุณกำหนดเองใน <g5>ตัวเลือก → ภูมิภาค</g5> ในภาษาอังกฤษ รายการจะแสดงวันที่ตามรูปแบบของ IDM (<x6/>) โดยใช้รูปแบบนาฬิกา 12 หรือ 24 ชั่วโมงของระบบ (<x7/>)"
+  },
   "fbba8f18d2fae06e": {
    "source": "A text box's bottom line while it can be typed in",
    "text": "เส้นด้านล่างของกล่องข้อความขณะที่สามารถพิมพ์ได้"
@@ -16081,6 +16185,10 @@
   "fd2f8ecc1dec89a7": {
    "source": "Does it keep uploading after a torrent finishes? — Mister Download Manager",
    "text": "ทอร์เรนต์จะอัปโหลดต่อหลังดาวน์โหลดเสร็จหรือไม่ — Mister Download Manager"
+  },
+  "fd36b355f1d75039": {
+   "source": "In Safari open <g1>Settings → Extensions</g1> and tick <g2>Mister Download Manager</g2>. Click <g3>Always Allow on Every Website</g3>: the extension needs to read the site to pass your sign-in on.",
+   "text": "ใน Safari ให้เปิด <g1>การตั้งค่า → ส่วนขยาย</g1> แล้วเลือก <g2>Mister Download Manager</g2> คลิก <g3>อนุญาตเสมอในทุกเว็บไซต์</g3>: ส่วนขยายจำเป็นต้องอ่านเว็บไซต์เพื่อส่งข้อมูลการเข้าสู่ระบบของคุณ"
   },
   "fd40efe02c1179f3": {
    "source": "The examples use Windows' paths; on macOS and Linux the programs have the same names without <x1/>.",

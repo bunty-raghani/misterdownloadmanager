@@ -70,7 +70,7 @@
 #. {n} = a number (keep the braces as they are)
 #, machine
 @plural	{n} entry was left out (a link, or a name leading outside the folder)|{n} entries were left out (links, or names leading outside the folder)	{n} entri ditinggalkan (pautan, atau nama yang menuju ke luar folder)
-#. count in the Batch download window; count in the Link grabber window; count in the Add torrent window
+#. count in the Batch download window; count in the Link grabber window; count in the Add torrent window; count in torrentfiles.rs
 #. how many files the pattern gives in all
 #. Link grabber: a package's row: {n} is its number of links
 #. {n} = a number (keep the braces as they are)
@@ -820,6 +820,10 @@
 #. text in helpers.rs
 #, machine
 	Check your connection, then try again, or get them later from the video window.	Semak sambungan anda, kemudian cuba lagi, atau dapatkannya kemudian daripada tetingkap video.
+#. text in the Options window
+#. tooltip of the close-setting: checked keeps MDM running when the window closes, in the notification area when available or else the taskbar; downloads continue; unchecked closing quits
+#, machine
+	Checked, closing the window keeps MDM running: it hides in the notification area when available, or minimizes to the taskbar otherwise, and downloads continue; unchecked, closing quits MDM	Jika ditandai, MDM terus berjalan apabila tetingkap ditutup: MDM disembunyikan di kawasan pemberitahuan jika tersedia, atau diminimumkan ke bar tugas jika tidak, dan muat turun diteruskan; jika tidak ditandai, MDM akan ditutup
 #. message or event log entry in the main window
 #. event log entry after Recheck: {have} and {total} are sizes ("1.2 GB of 4 GB there")
 #, machine
@@ -853,6 +857,10 @@
 #. the trailing ... means it is still going on: keep it
 #, machine
 	Checking {name} ({n} of {total})...	Sedang menyemak {name} ({n} daripada {total})...
+#. text in the download list (sizes, speeds, status)
+#. a torrent's status while its files are read and checked; {percent} is how much is checked, e.g. "42%"
+#, machine
+	Checking {percent}	Sedang menyemak {percent}
 #. text in the Checksum window; text in the Link grabber window
 #. the trailing ... means it is still going on: keep it
 #, machine
@@ -898,11 +906,12 @@
 #. text in the Options window
 #, machine
 	Clock:	Jam:
-#. text in the Checksum window; text in the main window (menus, toolbar, Categories pane); button in crashui.rs; button in a dialog box; button in extension.rs; button in the Help menu's windows (About, updates, shortcuts, Tell a friend); button in helpers.rs; button in the download list; button in the Options window; button in rssdlg.rs; text in standard windows
+#. text in the Checksum window; text in the main window (menus, toolbar, Categories pane); button in crashui.rs; button in a dialog box; button in extension.rs; button in the Help menu's windows (About, updates, shortcuts, Tell a friend); button in helpers.rs; button in the download list; button in the Options window; button in rssdlg.rs; button in torrentfiles.rs; text in standard windows
 #. both verbs: Verify = check the file now; Close = close the window
 #. tooltip of the × that closes the Categories pane
 #. verb: closes this window
 #. verb: closes the filter box
+#. button that closes the torrent file list window
 #. a window's title-bar button: closes the window
 #, machine
 	Close	Tutup
@@ -1619,6 +1628,11 @@
 #. text in the Scheduler window; tab in the Scheduler window
 #, machine
 	Files in the queue	Fail dalam baris gilir
+#. button in a download's Properties window
+#. File Properties button that opens the selected torrent's file list
+#. the trailing ... means it opens a window: keep it
+#, machine
+	Files...	Fail...
 #. button in the Find window
 #. verb: button that starts the search
 #, machine
@@ -2155,6 +2169,10 @@
 #. text in a dialog box; text in a download's progress window; text in the Add torrent window
 #, machine
 	KBytes/sec	KBait/saat
+#. text in the Options window
+#. checkbox: closing keeps MDM running, in the notification area when available or else the taskbar, instead of quitting
+#, machine
+	Keep running when closing the window	Terus berjalan apabila tetingkap ditutup
 #. checkbox in the Add torrent window
 #, machine
 	Keep sharing torrents after they finish	Teruskan perkongsian torrent selepas selesai
@@ -3058,14 +3076,15 @@
 #. checkbox in a dialog box
 #, machine
 	Only while I'm using the computer	Hanya semasa saya menggunakan komputer
-#. button in a dialog box; text in a dialog box; button in a download's Properties window
+#. button in a dialog box; text in a dialog box; button in a download's Properties window; button in torrentfiles.rs
 #. verb: opens the downloaded file
 #. title of the message when a downloaded file can't be opened
 #. verb: opens the file
 #, machine
 	Open	Buka
-#. button in crashui.rs; button in a dialog box
+#. button in crashui.rs; button in a dialog box; button in torrentfiles.rs
 #. crash report window button: show the report's file in its folder
+#. button that opens the torrent's containing folder in the file manager
 #, machine
 	Open folder	Buka folder
 #. checkbox in the Add torrent window
@@ -3608,7 +3627,7 @@
 #. title of the folder picker
 #, machine
 	Select a folder	Pilih folder
-#. button in playlistdlg.rs; button in the Add torrent window
+#. button in playlistdlg.rs; button in the Add torrent window; text in torrentfiles.rs
 #. button in Download video for a playlist: tick every video
 #, machine
 	Select all	Pilih semua
@@ -3861,8 +3880,9 @@
 #. text in a download's Properties window
 #, machine
 	Size:	Saiz:
-#. text in a download's progress window
+#. text in a download's progress window; text in torrentfiles.rs
 #. a torrent file the user chose not to download
+#. status of a torrent file the user chose not to download
 #, machine
 	Skipped	Dilangkau
 #. text in the queues
@@ -4593,6 +4613,10 @@
 #. {name} = a file name (keep the braces as they are)
 #, machine
 	this program isn't {name}	program ini bukan {name}
+#. text in errors.rs
+#. why a download failed: the site's bot check (Cloudflare) lets browsers through, not programs. Alt+click: the link clicked with the Alt key held, which leaves the download to the browser
+#, machine
+	this site lets only browsers through; Alt+click the link	laman ini hanya membenarkan pelayar; Alt+klik pautan
 #. text in a download's progress window
 #, machine
 	This system has no dial-up connections to hang up	Sistem ini tiada sambungan dail masuk untuk ditamatkan
@@ -4678,8 +4702,9 @@
 #. text in the download list (sizes, speeds, status)
 #, machine
 	Torrent downloads (magnet links and .torrent files)	Muat turun torrent (pautan magnet dan fail .torrent)
-#. message or event log entry in the main window; text in the Add torrent window
+#. message or event log entry in the main window; text in the Add torrent window; window title in torrentfiles.rs
 #. the kind of file the Open dialog lists
+#. title of the separate window listing a torrent's files
 #, machine
 	Torrent files	Fail torrent
 #. window title in the Add torrent window
@@ -5518,44 +5543,45 @@
 	{what} could not be installed: {error}	{what} tidak dapat dipasang: {error}
 #. column title in the download list in the download list
 #. past participle: when the download was added
-#, machine
 column	Added	Ditambah
 #. column title in the download list in the download list
 #. noun: the download's description
-#, machine
-column	Description	Penerangan
+column	Description	Perihalan
 #. column title in the download list in the download list
-#, machine
 column	File Name	Nama Fail
 #. column title in the download list in the download list
+column	Last Try Date	Tarikh Cubaan Terakhir
+#. column title in the download list in the download list
+#. column title: how many peers a torrent is connected to now (seeders and leechers)
 #, machine
-column	Last Try Date	Tarikh Cuba Terakhir
+column	Peers	Rakan
 #. column title in the download list in the download list
 #. column title: one letter for Queue (the column is narrow)
-#, machine
 column	Q	Q
 #. column title in the main window; column title in the download list
 #. tooltip of the narrow "Q" column's title
-#, machine
 column	Queue	Baris Gilir
 #. column title in the download list in the download list
-#. noun: the file's size
+#. column title: what a torrent has sent to peers against what it took
 #, machine
+column	Share ratio	Nisbah kongsi
+#. column title in the download list in the download list
+#. noun: the file's size
 column	Size	Saiz
 #. column title in the download list in the download list
 #. noun: where the download comes from (Web or Torrent)
-#, machine
 column	Source	Sumber
 #. column title in the download list in the download list
 #. noun: the download's state or progress
-#, machine
 column	Status	Status
 #. column title in the download list in the download list
-#, machine
 column	Time left	Masa tinggal
 #. column title in the download list in the download list
-#, machine
 column	Transfer rate	Kadar pemindahan
+#. column title in the download list in the download list
+#. column title: what a torrent sends to peers, bytes per second
+#, machine
+column	Upload speed	Kelajuan muat naik
 #. text in the browser extension
 #. choice under Send downloads to: an MDM running on another computer of the network, such as a home server; keep the name Mister Download Manager as it is
 #, machine
@@ -5756,6 +5782,10 @@ extension	Pairing code	Kod pasangan
 #, machine
 extension	Paused: downloads stay with the browser	Dijeda: muat turun kekal bersama penyemak imbas
 #. text in the browser extension
+#. Option in the browser extension media list: put the page title before the original file name when downloading a detected media file
+#, machine
+extension	Prefix media file names with the page title	Tambahkan tajuk halaman di hadapan nama fail media
+#. text in the browser extension
 #. shown instead of the Download button beside a copy-protected (DRM) stream in the toolbar button's popup: it can't be downloaded; short
 #, machine
 extension	Protected	Dilindungi
@@ -5937,608 +5967,468 @@ key	Type a name	Taip nama
 key	Up / Down	Atas / Bawah
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	&About Mister Download Manager	&Perihal Mister Download Manager
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	&Add new download	&Tambah muat turun baharu
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #. the trailing ... means it opens a window: keep it
-#, machine
 menu	&Add new download...	&Tambah muat turun baharu...
 #. menu command in standard windows
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	&Copy	&Salin
 #. menu command in standard windows
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	&Delete	&Padam
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	&Delete All Completed	&Padam semua yang selesai
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	&Download Now	&Muat Turun Sekarang
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	&Exit	&Keluar
 #. menu command in the main window
 #. verb: load downloads from a file
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	&Import	&Import
 #. menu command in the main window
 #. View menu: submenu choosing how large MDM draws its windows and text (100 % to 200 %), as a browser's zoom
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	&Interface size	Saiz &antara muka
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	&Keyboard shortcuts	Pintasan &papan kekunci
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #. the trailing ... means it opens a window: keep it
-#, machine
 menu	&Language...	&Bahasa...
 #. menu command in the main window
 #. Tasks menu: open Link grabber (links in packages, to tick before adding)
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #. the trailing ... means it opens a window: keep it
-#, machine
 menu	&Link grabber...	Pengambil &Pautan...
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	&Options	&Pilihan
 #. menu command in standard windows
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	&Paste	&Tampal
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	&Pause All	&Jeda semua
 #. menu command in the main window
 #. verb: removes the selected download from the list
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	&Remove	&Alih keluar
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	&Report a problem	&Laporkan masalah
 #. menu command in the main window
 #. header menu: put the columns back as they first were (order, widths, all shown)
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	&Reset columns	&Set semula lajur
 #. menu command in the main window
 #. Tasks menu: the RSS feeds window (feeds of torrents, and rules that add them)
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #. the trailing ... means it opens a window: keep it
-#, machine
 menu	&RSS feeds...	Suapan &RSS...
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	&Scheduler and queues	&Penjadual dan baris gilir
-#. menu command in the main window
+#. menu command in a download's progress window
+#. right-click menu of a download window's tab row: bring back the tabs taken off with "Hide tab"
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
+menu	&Show hidden tabs	Tunjuk tab ter&sembunyi
+#. menu command in the main window
+#. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 menu	&Stop All	&Hentikan semua
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	&Stop Download	&Hentikan muat turun
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	&Tray icon	&Ikon dulang
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	&Tutorials	&Tutorial
 #. menu command in standard windows
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	&Undo	&Buat asal
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	&Video downloads	Muat turun &video
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	Add &batch download	Tambah muat turun &kelompok
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #. the trailing ... means it opens a window: keep it
-#, machine
 menu	Add &magnet link...	Tambah pautan &magnet...
 #. menu command in the main window
 #. View → Theme: picks a theme file or a Base16 or pywal colour scheme, copies it into the themes folder and uses it
-#, machine
 menu	Add a theme file…	Tambah fail tema…
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
-menu	Add batch download from &clipboard	Tambah muat turun kelompok daripada &papan keratan
+menu	Add batch download from &clipboard	Tambah muat turun kelompok daripada &papan klip
 #. menu command in the main window
-#, machine
 menu	Add category	Tambah kategori
 #. menu command in the main window
 #. the trailing ... means it opens a window: keep it
-#, machine
 menu	Add trackers...	Tambah penjejak...
 #. menu command in the main window
 #. View → Theme: a style theme's name (GNOME's look, the Linux desktop), a name: keep "Adwaita" as written
-#, machine
 menu	Adwaita	Adwaita
 #. menu command in the main window
 #. View → Theme: a style theme's name (Windows 7's glassy look), a name: keep "Aero" as written
-#, machine
 menu	Aero	Aero
 #. menu command in the main window
 #. View → Draw with: a greyed note under the choices; the choice takes effect when MDM is started again
-#, machine
-menu	Applies the next time MDM starts	Digunakan apabila MDM dimulakan semula
+menu	Applies the next time MDM starts	Digunakan pada kali berikutnya MDM dimulakan
 #. menu command in the main window
 #. View → Theme: a style theme's name (Mac OS X's look), a name: keep "Aqua" as written
-#, machine
 menu	Aqua	Aqua
 #. menu command in the main window
-#, machine
 menu	Arrange files	Susun fail
 #. menu command in the main window
 #. View → Theme: a style theme's name (KDE Plasma's look, the Linux desktop), a name: keep "Breeze" as written
-#, machine
 menu	Breeze	Breeze
 #. menu command in the main window
 #. verb: opens this category's download folder
-#, machine
 menu	Browse	Buka folder
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	By &Description	Mengikut &Perihalan
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	By &File Name	Mengikut Nama &Fail
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
-menu	By &Last Try Date	Mengikut Tarikh Cuba &Terakhir
+menu	By &Last Try Date	Mengikut Tarikh Cubaan &Terakhir
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	By &Order Of Addition	Mengikut &Susunan Penambahan
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	By &Size	Mengikut &Saiz
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	By &Time Left	Mengikut Masa &Tinggal
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	By Date &Added	Mengikut Tarikh &Ditambah
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	By Parent &Web Page	Mengikut Halaman &Web Induk
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	By R&eferer	Mengikut R&eferer
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	By Save &Path	Mengikut &Laluan Simpan
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	By St&atus	Mengikut St&atus
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
-menu	By Transfer &Rate	Mengikut Kadar &Pindahan
+menu	By Transfer &Rate	Mengikut Kadar &Pemindahan
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #. the trailing ... means it opens a window: keep it
-#, machine
-menu	C&ustomize URL List...	S&uai Senarai URL...
+menu	C&ustomize URL List...	Ses&uaikan Senarai URL...
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #. the trailing ... means it opens a window: keep it
-#, machine
 menu	Check for &updates...	Semak kemas &kini...
 #. menu command in the main window
 #. View → Theme: MDM's own look, the default (IDM's layout, Windows 11's controls)
-#, machine
 menu	Classic	Klasik
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	Clear all &filters	Kosongkan semua &penapis
 #. menu command in the main window
-#, machine
 menu	Copy magnet link	Salin pautan magnet
 #. menu command in the main window
-#, machine
 menu	Create new queue	Cipta baris gilir baharu
 #. menu command in standard windows
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	Cu&t	Po&tong
 #. menu command in the main window
-#, machine
 menu	Dark Mode support	Sokongan Mod Gelap
 #. menu command in the main window
 #. verb: deletes the category
 #. verb: deletes the queue
-#, machine
 menu	Delete	Padam
 #. menu command in the main window
-#, machine
 menu	Delete from queue	Padam daripada baris gilir
 #. menu command in the main window
 #. View → Draw with: a graphics system's name (Microsoft's), usually kept as is
-#, machine
 menu	Direct3D	Direct3D
 #. menu command in the main window
 #. View → Draw with: a greyed note; Direct3D failed on this computer, so OpenGL draws the windows
-#, machine
 menu	Direct3D didn't start here: OpenGL draws	Direct3D tidak dapat dimulakan pada komputer ini: OpenGL digunakan untuk melukis
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #. the trailing ... means it opens a window: keep it
-#, machine
 menu	Download &video from a page...	Muat turun &video daripada halaman...
 #. menu command in the main window
 #. right-click → Torrent, a choice with a check mark: download the torrent's files from their start, to watch a video while it downloads
-#, machine
 menu	Download in order	Muat turun mengikut tertib
 #. menu command in the main window
 #. View menu: submenu choosing what draws MDM's windows: OpenGL, or Direct3D, Vulkan or Metal (graphics systems)
-#, machine
 menu	Draw with	Lukis dengan
 #. menu command in the main window
 #. verb: save the download list to a file
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	E&xport	&Eksport
 #. menu command in the main window
-#, machine
 menu	Edit queue	Edit baris gilir
 #. menu command in the main window
 #. verb: unpack the downloaded archive (zip, 7z, rar) into its folder
-#, machine
 menu	Extract	Ekstrak
 #. menu command in the main window
+#. right-click → Torrent submenu: open the selected torrent's file list
+#. the trailing ... means it opens a window: keep it
 #, machine
+menu	Files...	Fail...
+#. menu command in the main window
 menu	Find (Ctrl-F)	Cari (Ctrl-F)
 #. menu command in the main window
-#, machine
 menu	Find Next (F3)	Cari Seterusnya (F3)
 #. menu command in the main window
 #. right-click → Torrent, a choice with a check mark (with Download in order): each file's first and last pieces first, which a video player needs to start
-#, machine
 menu	First and last pieces first	Cebisan pertama dan terakhir dahulu
 #. menu command in the main window
 #. noun: the list's font (submenu)
-#, machine
 menu	Font	Fon
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #. the trailing ... means it opens a window: keep it
-#, machine
 menu	From &IDM export file...	Daripada fail eksport &IDM...
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #. the trailing ... means it opens a window: keep it
-#, machine
 menu	From &text file...	Daripada fail &teks...
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	H&elp contents	&Kandungan bantuan
 #. menu command in the main window
-#, machine
 menu	Hide drop target	Sembunyikan sasaran lepas
 #. menu command in the main window
 #. View → Theme: black and white with strong edges, for low vision
-#, machine
 menu	High contrast	Kontras tinggi
 #. menu command in the main window
 #. View → Draw with: a greyed note under "… didn't start here"; why: another error, written in MDM's log
-#, machine
 menu	It couldn't start: the log says why	Ia tidak dapat dimulakan: log menyatakan sebabnya
 #. menu command in the main window
 #. View → Draw with: a greyed note under "… didn't start here"; why: the window stayed empty, so MDM started again with OpenGL
-#, machine
 menu	Its first frame didn't show within 10 seconds	Bingkai pertamanya tidak muncul dalam 10 saat
 #. menu command in the main window
 #. View → Draw with: a greyed note under "… didn't start here"; why: MDM crashed or was closed while starting with it
-#, machine
 menu	Its last start ended before its first frame	Permulaan terakhirnya berakhir sebelum bingkai pertamanya
 #. menu command in the main window
 #. View → Theme: a style theme's name (Windows XP's look), a name: keep "Luna" as written
-#, machine
 menu	Luna	Luna
 #. menu command in the main window
 #. View → Draw with: a graphics system's name (Apple's), usually kept as is
-#, machine
 menu	Metal	Metal
 #. menu command in the main window
 #. View → Draw with: a greyed note; Metal failed on this computer, so OpenGL draws the windows
-#, machine
 menu	Metal didn't start here: OpenGL draws	Metal tidak dapat dimulakan di sini: OpenGL digunakan untuk melukis
 #. menu command in the main window
 #. View → Theme: a style theme's name (Windows 8's flat look); keep "Metro" unless your language writes it otherwise
-#, machine
 menu	Metro	Metro
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
-menu	Mister Download Manager &Home Page	Halaman Utama Mister Download Manager(&H)
+menu	Mister Download Manager &Home Page	&Halaman Utama Mister Download Manager
 #. menu command in the main window
-#, machine
-menu	Move/Rename (Ctrl-M)	Alih/Nama Semula (Ctrl-M)
+menu	Move/Rename (Ctrl-M)	Alih/Namakan Semula (Ctrl-M)
 #. menu command in the main window
 #. View → Theme: the system's own colours (its accent colour, its high contrast)
-#, machine
 menu	Native	Asli
 #. menu command in the main window
 #. View → Draw with: a greyed note under "… didn't start here"; why: no graphics card here has a driver for that graphics system ("it")
-#, machine
 menu	No graphics card here has a driver for it	Tiada kad grafik di sini mempunyai pemacu untuk sistem grafik itu
 #. menu command in the main window
-#, machine
 menu	On Double click	Apabila dwiklik
 #. menu command in the main window
 #. verb: opens the downloaded file
 #. what double-clicking a download does — verb: open the file
-#, machine
 menu	Open	Buka
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #. the trailing ... means it opens a window: keep it
-#, machine
 menu	Open &torrent file...	Buka fail &torrent...
 #. menu command in the main window
-#, machine
 menu	Open folder	Buka folder
 #. menu command in the main window
 #. View → Theme: opens the folder where theme files go (TOML or JSON)
-#, machine
 menu	Open themes folder	Buka folder tema
 #. menu command in the main window
 #. the trailing ... means it opens a window: keep it
-#, machine
 menu	Open with...	Buka dengan...
 #. menu command in the main window
 #. View → Draw with: a graphics system's name, usually kept as is
-#, machine
 menu	OpenGL	OpenGL
 #. menu command in the main window
 #. what double-clicking a download does — noun: show its properties
 #. noun: opens the download's Properties window
 #. noun: opens the category's properties
-#, machine
 menu	Properties	Sifat
 #. menu command in the main window
 #. View → Theme: the colours of pywal (a program making colour schemes from the wallpaper), followed as they change; a name: keep "pywal" as written
-#, machine
 menu	pywal	pywal
 #. menu command in the main window
 #. verb: download the file again from the start
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	R&edownload	Muat &turun semula
 #. menu command in the main window
 #. right-click → Torrent: ask the torrent's trackers for peers again now
-#, machine
 menu	Reannounce	Umumkan semula
 #. menu command in the main window
 #. right-click → Torrent: read every piece of the torrent's files again and check it
-#, machine
 menu	Recheck files	Semak semula fail
 #. menu command in the main window
 #. verb: download the file again from the start
-#, machine
 menu	Redownload	Muat turun semula
 #. menu command in the main window
-#, machine
 menu	Refresh download address	Segarkan alamat muat turun
 #. menu command in the main window
 #. verb: removes the download from the list
-#, machine
 menu	Remove	Alih keluar
 #. menu command in the main window
 #. verb: removes the selected download from the list and its file from the disk
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	Remove with &files	Alih keluar dengan &fail
 #. menu command in the main window
 #. verb: removes the download from the list and its file from the disk
-#, machine
 menu	Remove with files	Alih keluar dengan fail
 #. menu command in the main window
-#, machine
 menu	Resume Download	Sambung semula muat turun
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	S&cheduler	&Penjadual
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #. the trailing ... means it opens a window: keep it
-#, machine
 menu	S&ettings...	&Tetapan...
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	S&top queue	Hentikan &baris gilir
 #. menu command in the main window
 #. command: opens this queue's schedule (when it starts and stops)
-#, machine
 menu	Schedule	Jadual
 #. menu command in the main window; menu command in standard windows
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	Select &all	Pilih &semua
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
-menu	Show &drop target	Tunjukkan sasaran &jatuhkan
+menu	Show &drop target	Tunjukkan sasaran &lepas
 #. menu command in the main window
-#, machine
 menu	Show Mister Download Manager	Tunjukkan Mister Download Manager
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	Speed &Limiter	Pengehad &Kelajuan
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	Start &queue	Mula &baris gilir
 #. menu command in the main window
-#, machine
 menu	Start now	Mula sekarang
 #. menu command in the main window
 #. verb: stops the queue
-#, machine
 menu	Stop	Hentikan
 #. menu command in the main window
-#, machine
 menu	Stop Download	Hentikan muat turun
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	Support &MDM	Sokong &MDM
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	Tell a &friend	Beritahu &rakan
 #. menu command in the main window
 #. View → Draw with: a greyed note under "… didn't start here"; why: the graphics card stopped working twice (a driver update or reset)
-#, machine
 menu	The graphics card was lost twice in 10 minutes	Kad grafik hilang dua kali dalam 10 minit
 #. menu command in the main window
 #. View menu: submenu choosing MDM's look (colours, sizes, icons): Classic, Native…
-#, machine
 menu	Theme	Tema
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #. the trailing ... means it opens a window: keep it
-#, machine
 menu	To &IDM export file...	Ke fail eksport &IDM...
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #. the trailing ... means it opens a window: keep it
-#, machine
 menu	To &text file...	Ke fail &teks...
 #. menu command in the main window
 #. noun: the toolbar (submenu of View with its settings)
-#, machine
 menu	Toolbar	Bar alat
 #. menu command in the main window
 #. right-click menu: the submenu of a torrent's own commands
-#, machine
 menu	Torrent	Torrent
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #. the trailing ... means it opens a window: keep it
-#, machine
 menu	Torrent setti&ngs...	Tetapan &torrent...
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	Turn o&n	Hidup&kan
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menu	Turn of&f	Mati&kan
 #. menu command in the main window
 #. the trailing ... means it opens a window: keep it
-#, machine
-menu	Verify checksum...	Sahkan jumlah hasil tambah...
+menu	Verify checksum...	Sahkan jumlah semak...
 #. menu command in the main window
 #. View → Draw with: a graphics system's name (Khronos', used on Linux), usually kept as is
-#, machine
 menu	Vulkan	Vulkan
 #. menu command in the main window
 #. View → Draw with: a greyed note; Vulkan failed on this computer, so OpenGL draws the windows
-#, machine
 menu	Vulkan didn't start here: OpenGL draws	Vulkan tidak bermula di sini: OpenGL digunakan untuk melukis
 #. menu bar title in the main window (menus, toolbar, Categories pane)
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menubar	&Downloads	&Muat Turun
 #. menu bar title in the main window (menus, toolbar, Categories pane)
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menubar	&File	&Fail
 #. menu bar title in the main window (menus, toolbar, Categories pane)
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menubar	&Help	&Bantuan
 #. menu bar title in the main window (menus, toolbar, Categories pane)
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menubar	&Tasks	&Tugas
 #. menu bar title in the main window (menus, toolbar, Categories pane)
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
 menubar	&View	&Lihat
 #. toolbar button in the main window
-#, machine
 toolbar	Add Torrent	Tambah Torrent
 #. toolbar button in the main window
-#, machine
 toolbar	Add URL	Tambah URL
 #. toolbar button in the main window
 #. verb: delete the selected downloads
-#, machine
 toolbar	Delete	Padam
 #. toolbar button in the main window
-#, machine
-toolbar	Delete Completed	Padam Selesai
+toolbar	Delete Completed	Padam Yang Selesai
 #. toolbar button in the main window
 #. plural noun: opens the Options window (settings)
-#, machine
 toolbar	Options	Pilihan
 #. toolbar button in the main window
 #. verb: continue the selected downloads
-#, machine
 toolbar	Resume	Sambung Semula
 #. toolbar button in the main window
 #. noun: the tool that starts and stops queues on time
-#, machine
 toolbar	Scheduler	Penjadual
 #. toolbar button in the main window
-#, machine
-toolbar	Start Queue	Mula Giliran
+toolbar	Start Queue	Mula Baris Gilir
 #. toolbar button in the main window
 #. verb: stop the selected downloads
-#, machine
 toolbar	Stop	Henti
 #. toolbar button in the main window
-#, machine
 toolbar	Stop All	Henti Semua
 #. toolbar button in the main window
-#, machine
-toolbar	Stop Queue	Henti Giliran
+toolbar	Stop Queue	Henti Baris Gilir
 #. unit after a number in the download list (sizes, speeds, status)
 #. {n} = a number (keep the braces as they are)
 #, machine

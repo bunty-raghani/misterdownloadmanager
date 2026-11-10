@@ -238,5 +238,8 @@
   },
   "remote_device_name": {
     "message": "ব্রাউজার এক্সটেনশন"
+  },
+  "popup_media_title_name": {
+    "message": "মিডিয়া ফাইলের নামের আগে পৃষ্ঠার শিরোনাম যোগ করুন"
   }
 }

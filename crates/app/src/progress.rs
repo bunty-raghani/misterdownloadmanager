@@ -26,6 +26,17 @@ const TITLE_H: f32 = if cfg!(windows) {
 /// and its system menu's "Hide to the notification area" (translated, when there is one).
 type Framed = ([f32; 2], u32, Option<String>);
 
+/// The window's title: IDM truncates the percentage in it (44.51 % → "44%"); without a size to
+/// take a share of, only the name. The name keeps its own direction (an Arabic one doesn't pull
+/// the percentage after it).
+fn window_title(frac: Option<f64>, name: &str) -> String {
+    let name = crate::i18n::isolate(name);
+    match frac {
+        Some(f) => format!("{}% {name}", (f * 100.0).floor() as u32),
+        None => name,
+    }
+}
+
 /// The title bar's buttons, from the window's end: Close, Maximize (greyed: a fixed size, as
 /// IDM's), Minimize, and with a tray our "hide to the notification area". None where the system
 /// draws the title bar.
@@ -75,7 +86,7 @@ fn seg_rows() -> impl Iterator<Item = (Color32, Color32, Color32)> {
     (0..13).map(|i| (s.missing[i], s.done[i], s.start[i]))
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Tab {
     Status,
     Limiter,
@@ -85,7 +96,7 @@ enum Tab {
 impl Progress {
     /// Open on a tab by its English name in lower case: a top tab ("status", "limit", "done") or
     /// a torrent's details tab ("peers"; /show progress:peers, for the docs' screenshots and the
-    /// fit audit); any other name leaves it as it is.
+    /// fit audit); any other name leaves it as it is. A top tab hidden with "Hide tab" comes back.
     pub fn show_tab(&mut self, name: &str) {
         let top = match name {
             "status" => Some(Tab::Status),
@@ -94,6 +105,7 @@ impl Progress {
             _ => None,
         };
         if let Some(t) = top {
+            self.hidden_tabs.retain(|h| *h != t);
             self.tab = t;
             return;
         }
@@ -127,6 +139,8 @@ pub struct Progress {
     pub id: u64,
     details: bool,
     tab: Tab,
+    /// Tabs taken off the strip with their "Hide tab" button (#326), for this window.
+    hidden_tabs: Vec<Tab>,
     ttab: TTab,
     limiter: bool,
     /// KBytes/sec typed on the Speed Limiter tab.
@@ -198,6 +212,7 @@ impl Progress {
             id,
             details: true,
             tab: Tab::Status,
+            hidden_tabs: Vec::new(),
             ttab: TTab::Files,
             limiter: false,
             limit_kb: "10".into(),
@@ -225,17 +240,8 @@ impl Progress {
 
     pub fn show(&mut self, ctx: &egui::Context, item: &Item, snap: Option<&Snapshot>) -> Action {
         crate::crash::window("progress");
-        let frac = item
-            .size
-            .filter(|t| *t > 0)
-            .map_or(0.0, |t| (item.downloaded as f64 / t as f64).clamp(0.0, 1.0));
-        // IDM truncates the percentage in the title (44.51 % → "44%").
-        // The name keeps its own direction (an Arabic one doesn't pull the percentage after it).
-        let title = format!(
-            "{}% {}",
-            (frac * 100.0).floor() as u32,
-            crate::i18n::isolate(&item.file_name)
-        );
+        let frac = item.fraction();
+        let title = window_title(frac, &item.file_name);
         let body = if self.details {
             [548.0, 412.0 + torrent_drop(item)]
         } else {
@@ -404,26 +410,33 @@ impl Progress {
         o: Pos2,
         item: &Item,
         snap: Option<&Snapshot>,
-        frac: f64,
+        frac: Option<f64>,
     ) -> Action {
         let p = ui.painter().clone();
         let hide = self.tabs(ui, o);
-        match self.tab {
-            Tab::Status => status_page(ui, o, item, snap, frac),
-            Tab::Limiter => {
-                if self.limiter_page(ui, o, item) {
-                    self.tab = Tab::Status;
-                }
+        let hide_tab = match self.tab {
+            Tab::Status => {
+                status_page(ui, o, item, snap, frac);
+                false
             }
-            Tab::Completion => {
-                if self.completion_page(ui, o, item) {
-                    self.tab = Tab::Status;
-                }
-            }
+            Tab::Limiter => self.limiter_page(ui, o, item),
+            Tab::Completion => self.completion_page(ui, o, item),
+        };
+        if hide_tab {
+            self.hide(self.tab);
+            // The strip above was drawn with the tab still on it: draw the window again at once,
+            // without showing this pass, so the tab goes in one step. A download's window
+            // otherwise waits for its next timed repaint (250 ms while it downloads) on the old page.
+            ui.ctx().request_discard("Hide tab");
+            ui.ctx().request_repaint();
         }
 
         // The progress bar: IDM's green on the shared, themed track.
-        winui::meter(&p, r(o, 17.0, 180.0, 513.0, 16.0), frac as f32);
+        winui::meter(
+            &p,
+            r(o, 17.0, 180.0, 513.0, 16.0),
+            frac.unwrap_or(0.0) as f32,
+        );
 
         let mut action = if hide { Action::Hide } else { Action::None };
         let details_label = if self.details {
@@ -543,14 +556,17 @@ impl Progress {
     fn tabs(&mut self, ui: &mut Ui, o: Pos2) -> bool {
         // The shared tab strip (the torrent tabs' too): one look in both themes, one Tab stop with
         // the arrows, sized to the translated labels. It had two of its own (classic 3-D in dark).
-        let tabs = [
+        let tabs: Vec<(Tab, &str)> = [
             // i18n: tab title: how the download is going
             (Tab::Status, crate::i18n::mark("Download status")),
             // i18n: tab title: the tool that limits the download speed
             (Tab::Limiter, crate::i18n::mark("Speed Limiter")),
             // i18n: tab title: what happens when the download finishes
             (Tab::Completion, crate::i18n::mark("Options on completion")),
-        ];
+        ]
+        .into_iter()
+        .filter(|t| !self.hidden_tabs.contains(&t.0))
+        .collect();
         let p = ui.painter().clone();
         let english: Vec<&str> = tabs.iter().map(|t| t.1).collect();
         // The hide button sits here where the system draws the title bar (Linux, macOS; on
@@ -571,6 +587,7 @@ impl Progress {
         if let Some(i) = winui::tabs_light(ui, o, r(o, 18.0, 8.0, 514.0, 165.0), &light, current) {
             self.tab = tabs[i].0;
         }
+        self.tab_row_menu(ui, r(o, 18.0, 6.0, 514.0, 22.0));
         // MDM's (#63): IDM puts this in its title bar, which here is the system's own (it takes
         // no buttons of ours), so it sits at the tab row's end, over the page's corner.
         tab_button
@@ -582,6 +599,78 @@ impl Progress {
                 crate::i18n::mark("Hide to the notification area"),
             )
             .clicked()
+    }
+
+    /// The tab row's right-click menu (#326): "Show hidden tabs" puts back the tabs hidden in
+    /// this window, greyed while none is. From the keyboard too, on the focused tab: Shift+F10
+    /// or the Menu key.
+    fn tab_row_menu(&mut self, ui: &Ui, row: egui::Rect) {
+        use crate::chrome::{MenuEntry, MenuKind, PopupResult};
+        let ctx = ui.ctx();
+        let key = egui::Id::unique(("progress-tab-menu", self.id));
+        let by_pointer = ui.input(|i| {
+            i.pointer
+                .secondary_clicked()
+                .then(|| i.pointer.interact_pos())
+                .flatten()
+                .filter(|p| row.contains(*p))
+        });
+        let by_keys = || {
+            let tab = ctx
+                .memory(|m| m.focused())
+                .and_then(|f| ctx.read_response(f))
+                .map(|r| r.rect)
+                .filter(|r| row.contains(r.center()))?;
+            ui.input_mut(|i| {
+                i.consume_key(egui::Modifiers::SHIFT, egui::Key::F10)
+                    || i.consume_key(egui::Modifiers::NONE, egui::Key::Menu)
+            })
+            // Under the tab, from its leading edge (a menu's top-right in right to left).
+            .then(|| {
+                if winui::rtl() {
+                    tab.right_bottom()
+                } else {
+                    tab.left_bottom()
+                }
+            })
+        };
+        if let Some(at) = by_pointer.or_else(by_keys) {
+            ctx.data_mut(|d| d.insert_temp(key, at));
+        }
+        let Some(at) = ctx.data(|d| d.get_temp::<Pos2>(key)) else {
+            return;
+        };
+        let entries = [MenuEntry::Item(
+            // i18n: right-click menu of a download window's tab row: bring back the tabs taken off with "Hide tab"
+            "&Show hidden tabs",
+            (),
+            !self.hidden_tabs.is_empty(),
+            false,
+        )];
+        let id = format!("progress-tab-menu-{}", self.id);
+        match crate::chrome::popup(ctx, MenuKind::Context, &id, at, &entries, &|_| None) {
+            PopupResult::Open | PopupResult::Neighbor(_) => return,
+            PopupResult::Chosen(()) => {
+                self.show_hidden_tabs();
+                ctx.request_repaint();
+            }
+            PopupResult::Dismissed => {}
+        }
+        ctx.data_mut(|d| d.remove::<Pos2>(key));
+    }
+
+    /// Puts every tab hidden with "Hide tab" back on the strip, in its own place.
+    fn show_hidden_tabs(&mut self) {
+        self.hidden_tabs.clear();
+    }
+
+    /// Takes `tab` off the strip (its "Hide tab" button, #326) and shows Download status, which
+    /// has no such button and so always stays.
+    fn hide(&mut self, tab: Tab) {
+        if tab != Tab::Status && !self.hidden_tabs.contains(&tab) {
+            self.hidden_tabs.push(tab);
+        }
+        self.tab = Tab::Status;
     }
 
     /// The Speed Limiter tab, live for this download. Returns true when "Hide tab" is pressed.
@@ -904,7 +993,7 @@ const PAGE_TEXT_RIGHT: f32 = 520.0;
 
 // The rows sit 7 px inside the page's frame at the top and at the bottom (the Server row's
 // descent included), with a slightly wider break after Status, as before.
-fn status_page(ui: &Ui, o: Pos2, item: &Item, snap: Option<&Snapshot>, frac: f64) {
+fn status_page(ui: &Ui, o: Pos2, item: &Item, snap: Option<&Snapshot>, frac: Option<f64>) {
     let p = &ui.painter().clone();
     // Long values are cut with "..." at the page edge and shown whole on hover.
     let fit = |key: &str, x: f32, base: f32, s: &str, color| {
@@ -912,6 +1001,8 @@ fn status_page(ui: &Ui, o: Pos2, item: &Item, snap: Option<&Snapshot>, frac: f64
         winui::copyable(ui, rect, key, s, cut);
     };
     let status = match item.status {
+        // A torrent reading and checking its files says so, not "Receiving data" (#39).
+        _ if let Some(checking) = item.torrent_checking() => checking,
         // A torrent its debrid service is downloading (#44).
         Status::Downloading if item.at_service().is_some() => item.at_service().unwrap_or_default(),
         Status::Downloading => {
@@ -966,14 +1057,17 @@ fn status_page(ui: &Ui, o: Pos2, item: &Item, snap: Option<&Snapshot>, frac: f64
             crate::i18n::mark("Downloaded"),
             96.0,
             135.0,
-            if crate::i18n::code() == "en" {
-                format!("{} ( {:.2} % )", size3(item.downloaded), frac * 100.0) // not translated: English path (IDM's spacing)
-            } else {
-                format!(
+            match frac {
+                // No size: only how much has come, no 0 % that never moves.
+                None => size3(item.downloaded),
+                Some(frac) if crate::i18n::code() == "en" => {
+                    format!("{} ( {:.2} % )", size3(item.downloaded), frac * 100.0) // not translated: English path (IDM's spacing)
+                }
+                Some(frac) => format!(
                     "{} ( {} )",
                     size3(item.downloaded),
                     crate::i18n::percent(frac, 2)
-                )
+                ),
             },
         ),
         (
@@ -1140,22 +1234,7 @@ impl Progress {
                     })
                     .collect();
                 let ticks: Vec<bool> = d.files.iter().map(|f| f.2).collect();
-                let clicked = table(
-                    ui,
-                    p,
-                    o,
-                    "t-files",
-                    // i18n: column titles: File (name), Size, Done (how much is downloaded)
-                    &[
-                        (25.0, crate::i18n::mark("File")),
-                        (335.0, crate::i18n::mark("Size")),
-                        (430.0, crate::i18n::mark("Done")),
-                    ],
-                    &[330.0, 425.0],
-                    &rows,
-                    true,
-                    Some(&ticks),
-                );
+                let clicked = files_table(ui, p, o, "t-files", &rows, &ticks, 6);
                 // A box ticked or unticked (#39): the torrent downloads those files from now
                 // on; the last one ticked can't be unticked (a torrent of nothing).
                 if let Some(row) = clicked {
@@ -1250,11 +1329,7 @@ impl Progress {
                 let spec = item.torrent.as_ref();
                 let sent = spec.map_or(0, |t| t.uploaded);
                 let done = st.map_or(item.downloaded, |s| s.done);
-                let ratio = if done > 0 {
-                    crate::i18n::decimal(sent as f64 / done as f64, 2)
-                } else {
-                    crate::i18n::decimal(0.0, 2)
-                };
+                let ratio = crate::torrents::share_ratio_text(sent, done);
                 let shared = spec.map_or(0, |t| t.seeded_secs);
                 let hash = item
                     .torrent
@@ -1443,6 +1518,40 @@ fn piece_grid(p: &egui::Painter, o: Pos2, pieces: &[bool]) {
     }
 }
 
+/// The Files tab's table of a torrent's files, ticked or not: the progress window's (`shown`: 6
+/// rows) and the Files window's (torrentfiles.rs, taller). The row whose box was clicked.
+pub(crate) fn files_table(
+    ui: &mut Ui,
+    p: &egui::Painter,
+    o: Pos2,
+    id: &str,
+    rows: &[Vec<String>],
+    checks: &[bool],
+    shown: usize,
+) -> Option<usize> {
+    table_sized(
+        ui,
+        p,
+        o,
+        id,
+        &[
+            (25.0, crate::i18n::mark("File")),
+            (335.0, crate::i18n::mark("Size")),
+            (430.0, crate::i18n::mark("Done")),
+        ],
+        &[330.0, 425.0],
+        rows,
+        true,
+        Some(checks),
+        shown,
+    )
+}
+
+/// The height of a [`table_sized`] of `shown` rows' body (the progress window's 6: 100 px).
+pub(crate) fn table_body_height(shown: usize) -> f32 {
+    17.0 * shown as f32 - 2.0
+}
+
 /// A table in the connections table's frame: headers at x, column lines at `seps`, rows of
 /// text cut to their column (whole on hover), scrolled by the wheel. `checks`: a check box
 /// before each row's icon, ticked or not (the Files tab); the row whose box was clicked.
@@ -1458,15 +1567,40 @@ fn table(
     icons: bool,
     checks: Option<&[bool]>,
 ) -> Option<usize> {
+    table_sized(ui, p, o, id, heads, seps, rows, icons, checks, 6)
+}
+
+/// [`table`] showing `shown` rows: it grows down from the same top.
+#[allow(clippy::too_many_arguments)]
+fn table_sized(
+    ui: &mut Ui,
+    p: &egui::Painter,
+    o: Pos2,
+    id: &str,
+    heads: &[(f32, &str)],
+    seps: &[f32],
+    rows: &[Vec<String>],
+    icons: bool,
+    checks: Option<&[bool]>,
+    shown: usize,
+) -> Option<usize> {
     let mut clicked = None;
-    let outer = r(o, 17.0, 273.0, 513.0, 128.0);
+    let body_h = table_body_height(shown);
+    let outer = r(o, 17.0, 273.0, 513.0, body_h + 28.0);
     winui::solid(p, outer, winui::FIELD_EDGE());
     let (bg, head, line) = (
         winui::FIELD(),
         winui::LIST_HEADER(),
         crate::theme::colors().header_sep,
     );
-    fill(p, o.x + 18.0, o.y + 274.0, o.x + 528.0, o.y + 399.0, bg);
+    fill(
+        p,
+        o.x + 18.0,
+        o.y + 274.0,
+        o.x + 528.0,
+        o.y + 299.0 + body_h,
+        bg,
+    );
     fill(p, o.x + 19.0, o.y + 275.0, o.x + 527.0, o.y + 298.0, head);
     for x in seps {
         fill(p, o.x + x, o.y + 275.0, o.x + x, o.y + 298.0, line);
@@ -1474,7 +1608,7 @@ fn table(
     for (x, h) in heads {
         text(p, o.x + x, o.y + 290.0, crate::i18n::t(h), winui::TEXT());
     }
-    let visible = 6usize;
+    let visible = shown;
     // Per window: each progress window scrolls its own tables.
     let key = egui::Id::unique(("torrent-table", id, ui.ctx().viewport_id()));
     let max_first = rows.len().saturating_sub(visible);
@@ -1483,9 +1617,9 @@ fn table(
         .data(|d| d.get_temp::<usize>(key))
         .unwrap_or(0)
         .min(max_first);
-    let body = r(o, 19.0, 299.0, 508.0, 100.0);
+    let body = r(o, 19.0, 299.0, 508.0, body_h);
     if ui.rect_contains_pointer(body) {
-        let step = winui::wheel_steps(ui, key, 100.0 / visible as f32, visible as f32);
+        let step = winui::wheel_steps(ui, key, body_h / visible as f32, visible as f32);
         first = first.saturating_add_signed(step).min(max_first);
         ui.ctx().data_mut(|d| d.insert_temp(key, first));
     }
@@ -1531,7 +1665,7 @@ fn table(
         if crate::scrollbar::bar(
             ui,
             key.with("bar"),
-            r(o, 511.0, 275.0, 17.0, 124.0),
+            r(o, 511.0, 275.0, 17.0, body_h + 24.0),
             true,
             rows.len() as f32,
             visible as f32,
@@ -1738,5 +1872,48 @@ fn connections(ui: &mut Ui, p: &egui::Painter, o: Pos2, snap: Option<&Snapshot>)
             let first = (pos.round().max(0.0) as usize).min(max_first);
             ui.ctx().data_mut(|d| d.insert_temp(key, first));
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A download of unknown size has no percentage in its title (from #384).
+    #[test]
+    fn the_title_has_a_percentage_only_with_a_size() {
+        assert!(!window_title(None, "clip.mp4").contains('%'));
+        assert!(window_title(Some(0.445), "clip.mp4").starts_with("44% "));
+    }
+
+    #[test]
+    fn hide_tab_takes_the_tab_off_the_strip() {
+        let mut p = Progress::new(1, true);
+        p.tab = Tab::Limiter;
+        p.hide(Tab::Limiter);
+        assert_eq!(p.tab, Tab::Status, "back on Download status");
+        assert_eq!(p.hidden_tabs, [Tab::Limiter], "Speed Limiter off the strip");
+        p.hide(Tab::Limiter);
+        p.hide(Tab::Status);
+        assert_eq!(
+            p.hidden_tabs,
+            [Tab::Limiter],
+            "once each, never Download status"
+        );
+        p.hide(Tab::Completion);
+        assert_eq!(p.hidden_tabs, [Tab::Limiter, Tab::Completion]);
+        p.show_tab("limit");
+        assert_eq!(p.tab, Tab::Limiter, "asked for, it comes back");
+        assert_eq!(p.hidden_tabs, [Tab::Completion], "the other stays hidden");
+    }
+
+    #[test]
+    fn show_hidden_tabs_brings_them_all_back() {
+        let mut p = Progress::new(1, true);
+        p.hide(Tab::Limiter);
+        p.hide(Tab::Completion);
+        p.show_hidden_tabs();
+        assert!(p.hidden_tabs.is_empty(), "every tab back on the strip");
+        assert_eq!(p.tab, Tab::Status, "the page shown stays as it was");
     }
 }

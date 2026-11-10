@@ -261,7 +261,7 @@ palette! {
     // ---- menu bar and menus ----
     menubar: "menubar", "The menu bar" = grey(0x20), grey(0xff);
     menubar_bottom: "menubar.bottom", "The menu bar's last row" = grey(0x20), grey(0xf2);
-    menubar_line: "menubar.line", "The line under the menu bar" = grey(0xf0), grey(0xf0);
+    menubar_line: "menubar.line", "The line under the menu bar" = grey(0x20), grey(0xf0);
     menubar_hot: "menubar.hot", "A menu title under the pointer" = grey(0x50), grey(0xf5);
     menubar_open: "menubar.open", "The open menu's title" = grey(0x50), grey(0xf9);
     menu: "menu", "A menu's background" = grey(0x2b), grey(0xf9);
@@ -273,8 +273,8 @@ palette! {
     menu_glyph: "menu.glyph", "Bullets, ticks and submenu arrows" = grey(0xff), grey(0x1a);
     menu_text_disabled: "menu.text.disabled", "A greyed menu item" = grey(0x6d), grey(0x9f);
     // ---- toolbar ----
-    toolbar_line: "toolbar.line", "The toolbar's top line" = grey(0xa0), grey(0xa0);
-    toolbar_line_light: "toolbar.line.light", "The highlight under it" = grey(0xff), grey(0xff);
+    toolbar_line: "toolbar.line", "The toolbar's top line" = grey(0x4a), grey(0xa0);
+    toolbar_line_light: "toolbar.line.light", "The highlight under it" = grey(0x39), grey(0xff);
     toolbar_hot: "toolbar.hot", "A toolbar button under the pointer" = rgb(0x33, 0x41, 0x4d), rgb(0xe5, 0xf3, 0xff);
     toolbar_hot_faint: "toolbar.hot.faint", "A split button's other part while one is under the pointer" = rgb(0x37, 0x3b, 0x3f), rgb(0xf3, 0xf9, 0xff);
     toolbar_pressed: "toolbar.pressed", "A toolbar button pressed" = rgb(0x2a, 0x36, 0x40), rgb(0xcc, 0xe8, 0xff);
@@ -958,6 +958,46 @@ mod tests {
         for fg in [d.muted, d.error, d.error_strong] {
             for bg in [d.window, d.tab_page, d.field] {
                 assert!(ratio(fg, bg) >= 4.5, "{fg:?} on {bg:?}: {}", ratio(fg, bg));
+            }
+        }
+    }
+
+    /// The rows between a dark variant's menu bar and its toolbar (#379): none of them stands out
+    /// against the surfaces around them. The classic dark palette's were near-white (the dark
+    /// look of IDM's era retired on 2026-11-01): a bright band across the window, under the menu
+    /// bar. High contrast's lines are meant to stand out.
+    #[test]
+    fn dark_variants_draw_no_bright_line_under_the_menu_bar() {
+        let lum = |c: Color32| {
+            let f = |v: u8| {
+                let v = v as f32 / 255.0;
+                if v <= 0.04045 {
+                    v / 12.92
+                } else {
+                    ((v + 0.055) / 1.055).powf(2.4)
+                }
+            };
+            0.2126 * f(c.r()) + 0.7152 * f(c.g()) + 0.0722 * f(c.b())
+        };
+        let ratio = |a: Color32, b: Color32| {
+            let (x, y) = (lum(a), lum(b));
+            (x.max(y) + 0.05) / (x.min(y) + 0.05)
+        };
+        for theme in builtins().iter().filter(|t| t.id != "high-contrast") {
+            let d = &theme.dark;
+            for (what, line) in [
+                ("menubar.line", d.menubar_line),
+                ("toolbar.line", d.toolbar_line),
+                ("toolbar.line.light", d.toolbar_line_light),
+            ] {
+                for bg in [d.menubar, d.window] {
+                    assert!(
+                        ratio(line, bg) <= 2.5,
+                        "{}: {what} {line:?} on {bg:?}: {}",
+                        theme.id,
+                        ratio(line, bg)
+                    );
+                }
             }
         }
     }

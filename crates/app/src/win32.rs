@@ -25,6 +25,10 @@ use windows_sys::Win32::UI::WindowsAndMessaging::{
 struct Find {
     pid: u32,
     title: Vec<u16>,
+    /// Where each window's title is read: as long as the title looked for, one more unit and the
+    /// NUL, so a longer title reads longer, never the same. A fixed 256 units cut every title to
+    /// 255, and a window named after a long file was never found (#540).
+    buf: Vec<u16>,
     found: HWND,
 }
 
@@ -36,9 +40,9 @@ unsafe extern "system" fn enum_cb(hwnd: HWND, lparam: LPARAM) -> windows_sys::co
     if pid != f.pid {
         return 1;
     }
-    let mut buf = [0u16; 256];
-    let n = unsafe { GetWindowTextW(hwnd, buf.as_mut_ptr(), buf.len() as i32) };
-    if n > 0 && buf[..n as usize] == f.title[..] {
+    // SAFETY: GetWindowTextW writes at most buf.len() units, the NUL included.
+    let n = unsafe { GetWindowTextW(hwnd, f.buf.as_mut_ptr(), f.buf.len() as i32) };
+    if n > 0 && f.buf[..n as usize] == f.title[..] {
         f.found = hwnd;
         return 0;
     }
@@ -83,9 +87,11 @@ fn own_window(title: &str, known: Option<HWND>) -> Option<HWND> {
     if let Some(h) = known.filter(|h| unsafe { IsWindow(*h) } != 0) {
         return Some(h);
     }
+    let title: Vec<u16> = title.encode_utf16().collect();
     let mut f = Find {
         pid: unsafe { GetCurrentProcessId() },
-        title: title.encode_utf16().collect(),
+        buf: vec![0; title.len() + 2],
+        title,
         found: std::ptr::null_mut(),
     };
     unsafe { EnumWindows(Some(enum_cb), &mut f as *mut Find as LPARAM) };
@@ -203,6 +209,27 @@ pub fn come_forward(title: &str) -> Option<bool> {
         unsafe { above_others(hwnd) };
     }
     Some(lift)
+}
+
+/// Whether our window titled `title` exists and is not on the screen: hidden and not minimized
+/// (a window whose owner is minimized counts: Windows hides it with its owner).
+pub fn window_hidden(title: &str) -> bool {
+    use windows_sys::Win32::UI::WindowsAndMessaging::{IsIconic, IsWindowVisible};
+    // SAFETY: plain queries about our own window.
+    find_own_window(title).is_some_and(|h| unsafe { IsWindowVisible(h) == 0 && IsIconic(h) == 0 })
+}
+
+/// Our window titled `title` shown (it was hidden behind winit's back), not activated, and above
+/// the other programs' windows ([`come_forward`]) unless off-screen.
+pub fn show_hidden(title: &str) {
+    use windows_sys::Win32::UI::WindowsAndMessaging::{SW_SHOWNOACTIVATE, ShowWindow};
+    if let Some(h) = find_own_window(title) {
+        // SAFETY: our own window, on its thread.
+        unsafe { ShowWindow(h, SW_SHOWNOACTIVATE) };
+        if !crate::offscreen() {
+            come_forward(title);
+        }
+    }
 }
 
 /// Whether a window just shown goes above the others ([`come_forward`]): it isn't the foreground
@@ -1393,6 +1420,61 @@ mod caption_less_tests {
 }
 
 #[cfg(test)]
+mod find_own_window_tests {
+    use super::*;
+    use windows_sys::Win32::UI::WindowsAndMessaging::{
+        CreateWindowExW, DefWindowProcW, DestroyWindow, RegisterClassW, WNDCLASSW,
+    };
+
+    /// Our windows are found by their whole title, however long (a progress window is named
+    /// after its file, #540), and never by a title that only starts the same.
+    #[test]
+    fn a_window_is_found_by_its_whole_title_however_long() {
+        let class: Vec<u16> = "mdm-find-own-window-test\0".encode_utf16().collect();
+        // SAFETY: a class registered with the system's own procedure, and hidden windows of it
+        // on this thread, destroyed below; the strings are NUL-terminated.
+        unsafe {
+            let mut wc: WNDCLASSW = zeroed();
+            wc.lpfnWndProc = Some(DefWindowProcW);
+            wc.lpszClassName = class.as_ptr();
+            RegisterClassW(&wc);
+            let make = |title: &str| {
+                let t: Vec<u16> = title.encode_utf16().chain(Some(0)).collect();
+                let h = CreateWindowExW(
+                    0,
+                    class.as_ptr(),
+                    t.as_ptr(),
+                    0,
+                    -20000,
+                    -20000,
+                    100,
+                    100,
+                    std::ptr::null_mut(),
+                    std::ptr::null_mut(),
+                    std::ptr::null_mut(),
+                    std::ptr::null(),
+                );
+                assert!(!h.is_null());
+                h
+            };
+            for len in [40, 255, 256, 300, 1000] {
+                let head = format!("mdm find test {} {len} ", std::process::id());
+                let title = format!("{head}{}", "x".repeat(len - head.len()));
+                assert_eq!(title.encode_utf16().count(), len);
+                // One title longer by a unit, made first: found first, were it taken for ours.
+                let longer = make(&format!("{title}x"));
+                let window = make(&title);
+                assert_eq!(find_own_window(&title), Some(window), "{len} units");
+                DestroyWindow(window);
+                assert_eq!(find_own_window(&title), None, "{len} units, gone");
+                assert_eq!(find_own_window(&format!("{title}x")), Some(longer));
+                DestroyWindow(longer);
+            }
+        }
+    }
+}
+
+#[cfg(test)]
 mod come_forward_tests {
     use super::*;
     use windows_sys::Win32::UI::WindowsAndMessaging::{
@@ -1609,6 +1691,42 @@ pub fn main_minimize_to_tray(ctx: &egui::Context, enabled: bool) -> bool {
         m.enabled = enabled;
         std::mem::take(&mut m.asked)
     })
+}
+
+/// The highest icon id [`tray_icon_held`] tries. tray-icon gives each icon an id of its own
+/// from a counter it shares with its icon names, and doesn't say which (a program's first icon
+/// has 2).
+const TRAY_ICON_IDS: u32 = 16;
+
+/// Whether the shell holds a notification-area icon of `hwnd` (the tray's own hidden window,
+/// which has one icon), and its id: `known` first, else each id up to [`TRAY_ICON_IDS`]. An
+/// empty `NIM_MODIFY` changes nothing and succeeds only for an icon the shell has, wherever it
+/// shows it: in the taskbar or in the hidden icons behind ^. Shell_NotifyIconGetRect isn't
+/// enough: it can fail for an icon behind ^ (#545, #534, #527: Windows 10 and 11, the icon
+/// there and MDM sure it had none; Windows 11 build 26200 gives such an icon the rect of ^
+/// itself). This fails, as that does, when Explorer isn't running or the icon was refused or
+/// lost.
+pub fn tray_icon_held(hwnd: HWND, known: Option<u32>) -> Option<u32> {
+    use windows_sys::Win32::UI::Shell::{NIM_MODIFY, NOTIFYICONDATAW, Shell_NotifyIconW};
+    let held = |id: u32| {
+        let nid = NOTIFYICONDATAW {
+            cbSize: size_of::<NOTIFYICONDATAW>() as u32,
+            hWnd: hwnd,
+            uID: id,
+            uFlags: 0,
+            // SAFETY: a plain C struct; all zero is its empty value.
+            ..unsafe { zeroed() }
+        };
+        // SAFETY: nid lives for the call; the shell only reads it.
+        unsafe { Shell_NotifyIconW(NIM_MODIFY, &nid) != 0 }
+    };
+    if hwnd.is_null() {
+        return None;
+    }
+    known
+        .into_iter()
+        .chain(1..=TRAY_ICON_IDS)
+        .find(|id| held(*id))
 }
 
 /// What a borderless window of ours is, for [`popup_window`]: every one is a plain popup
@@ -4633,6 +4751,109 @@ mod classic_text {
                 is_color: false,
             })
         }
+    }
+}
+
+/// The program Windows runs to open folders, when that isn't Explorer (a file manager such as
+/// Directory Opus set up to replace it, #446); None for Explorer, or when Windows doesn't say.
+pub fn folder_opener() -> Option<String> {
+    use windows_sys::Win32::UI::Shell::{ASSOCF_NONE, ASSOCSTR_EXECUTABLE, AssocQueryStringW};
+    other_folder_opener(|class, verb| {
+        let wide = |s: &str| s.encode_utf16().chain(Some(0)).collect::<Vec<u16>>();
+        let class = wide(class);
+        let verb = verb.map(wide);
+        let mut out = vec![0u16; 1024];
+        let mut len = out.len() as u32;
+        // SAFETY: the strings end in NUL and outlive the call; `len` is `out`'s size in
+        // characters, and the call writes at most that many.
+        let hr = unsafe {
+            AssocQueryStringW(
+                ASSOCF_NONE,
+                ASSOCSTR_EXECUTABLE,
+                class.as_ptr(),
+                verb.as_ref().map_or(std::ptr::null(), |v| v.as_ptr()),
+                out.as_mut_ptr(),
+                &mut len,
+            )
+        };
+        (hr == 0).then(|| {
+            let end = out.iter().position(|&c| c == 0).unwrap_or(out.len());
+            String::from_utf16_lossy(&out[..end])
+        })
+    })
+}
+
+/// Who opens a folder, asked of `executable_for(class, verb)` as the shell reads it: a folder is
+/// a `Directory` first (where a replacement registers its verb, as the default or as `open`),
+/// then a `Folder` (where Windows registers Explorer). An installed program's other verbs there
+/// ("Open with Code") are not the default and aren't asked for.
+fn other_folder_opener(
+    executable_for: impl Fn(&str, Option<&str>) -> Option<String>,
+) -> Option<String> {
+    let opener = [
+        ("Directory", None),
+        ("Directory", Some("open")),
+        ("Folder", None),
+    ]
+    .into_iter()
+    .find_map(|(class, verb)| executable_for(class, verb))?;
+    let name = opener.rsplit(['\\', '/']).next().unwrap_or(&opener);
+    (!name.is_empty() && !name.eq_ignore_ascii_case("explorer.exe")).then_some(opener)
+}
+
+#[cfg(test)]
+mod folder_opener_tests {
+    use super::other_folder_opener;
+
+    const EXPLORER: &str = r"C:\Windows\Explorer.exe";
+    const OPUS: &str = r"C:\Program Files\GPSoftware\Directory Opus\dopusrt.exe";
+
+    /// #446: as Windows is shipped (what `reg query` shows on a clean system), Explorer it is.
+    #[test]
+    fn explorer_as_shipped_is_no_other_opener() {
+        let shipped =
+            |c: &str, v: Option<&str>| (c == "Folder" && v.is_none()).then(|| EXPLORER.to_owned());
+        assert_eq!(other_folder_opener(shipped), None);
+    }
+
+    /// A replacement's default verb on `Directory` wins over Explorer on `Folder`.
+    #[test]
+    fn a_replacement_on_directory_is_the_opener() {
+        let opus = |c: &str, v: Option<&str>| match (c, v) {
+            ("Directory", None) => Some(OPUS.to_owned()),
+            ("Folder", None) => Some(EXPLORER.to_owned()),
+            _ => None,
+        };
+        assert_eq!(other_folder_opener(opus).as_deref(), Some(OPUS));
+    }
+
+    /// One that replaces `Directory`'s `open` verb, or `Folder`'s own.
+    #[test]
+    fn a_replaced_open_verb_or_folder_is_the_opener() {
+        let open = |c: &str, v: Option<&str>| match (c, v) {
+            ("Directory", Some("open")) => Some(r"C:\Apps\files.exe".to_owned()),
+            ("Folder", None) => Some(EXPLORER.to_owned()),
+            _ => None,
+        };
+        assert_eq!(
+            other_folder_opener(open).as_deref(),
+            Some(r"C:\Apps\files.exe")
+        );
+        let folder = |c: &str, v: Option<&str>| {
+            (c == "Folder" && v.is_none()).then(|| r"C:\Apps\tc.exe".to_owned())
+        };
+        assert_eq!(
+            other_folder_opener(folder).as_deref(),
+            Some(r"C:\Apps\tc.exe")
+        );
+    }
+
+    /// Explorer written any way stays Explorer; nothing registered, nothing to say.
+    #[test]
+    fn explorer_any_case_or_no_answer_is_no_other_opener() {
+        let upper = |_: &str, _: Option<&str>| Some(r"C:\WINDOWS\EXPLORER.EXE".to_owned());
+        assert_eq!(other_folder_opener(upper), None);
+        assert_eq!(other_folder_opener(|_, _| None), None);
     }
 }
 

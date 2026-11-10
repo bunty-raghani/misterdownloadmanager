@@ -56,7 +56,7 @@
 #. in a download's log, after extracting: entries of the archive not written (links, names that would leave the folder)
 #. {n} = a number (keep the braces as they are)
 @plural	{n} entry was left out (a link, or a name leading outside the folder)|{n} entries were left out (links, or names leading outside the folder)	تم تخطي {n} عنصر (ارتباط، أو اسم يؤدي إلى خارج المجلد)|تم تخطي {n} عنصر (ارتباط، أو اسم يؤدي إلى خارج المجلد)|تم تخطي {n} عنصرين (ارتباطان، أو اسمان يؤديان إلى خارج المجلد)|تم تخطي {n} عناصر (ارتباطات، أو أسماء تؤدي إلى خارج المجلد)|تم تخطي {n} عنصرا (ارتباطات، أو أسماء تؤدي إلى خارج المجلد)|تم تخطي {n} عنصر (ارتباطات، أو أسماء تؤدي إلى خارج المجلد)
-#. count in the Batch download window; count in the Link grabber window; count in the Add torrent window
+#. count in the Batch download window; count in the Link grabber window; count in the Add torrent window; count in torrentfiles.rs
 #. how many files the pattern gives in all
 #. Link grabber: a package's row: {n} is its number of links
 #. {n} = a number (keep the braces as they are)
@@ -624,6 +624,10 @@
 	Check for updates at every start	التحقق من وجود تحديثات عند كل بدء تشغيل
 #. text in helpers.rs
 	Check your connection, then try again, or get them later from the video window.	تحقق من اتصالك، ثم حاول مرة أخرى، أو احصل عليها لاحقا من نافذة الفيديو.
+#. text in the Options window
+#. tooltip of the close-setting: checked keeps MDM running when the window closes, in the notification area when available or else the taskbar; downloads continue; unchecked closing quits
+#, machine
+	Checked, closing the window keeps MDM running: it hides in the notification area when available, or minimizes to the taskbar otherwise, and downloads continue; unchecked, closing quits MDM	عند تحديد هذا الخيار، يبقى MDM قيد التشغيل عند إغلاق النافذة: يختفي في منطقة الإشعارات (system tray) عند توفرها، أو يصغر إلى شريط المهام بخلاف ذلك، وتستمر التنزيلات؛ عند إلغاء تحديده، يؤدي الإغلاق إلى إنهاء MDM
 #. message or event log entry in the main window
 #. event log entry after Recheck: {have} and {total} are sizes ("1.2 GB of 4 GB there")
 	Checked: {have} of {total} there	تم التحقق: {have} من {total} موجود
@@ -650,6 +654,10 @@
 #. {name} = a file name; {n} = a number (keep the braces as they are)
 #. the trailing ... means it is still going on: keep it
 	Checking {name} ({n} of {total})...	قيد التحقق من {name} ({n} من {total})...
+#. text in the download list (sizes, speeds, status)
+#. a torrent's status while its files are read and checked; {percent} is how much is checked, e.g. "42%"
+#, machine
+	Checking {percent}	قيد التحقق {percent}
 #. text in the Checksum window; text in the Link grabber window
 #. the trailing ... means it is still going on: keep it
 	Checking...	قيد التحقق...
@@ -684,11 +692,12 @@
 	Client	العميل
 #. text in the Options window
 	Clock:	الساعة:
-#. text in the Checksum window; text in the main window (menus, toolbar, Categories pane); button in crashui.rs; button in a dialog box; button in extension.rs; button in the Help menu's windows (About, updates, shortcuts, Tell a friend); button in helpers.rs; button in the download list; button in the Options window; button in rssdlg.rs; text in standard windows
+#. text in the Checksum window; text in the main window (menus, toolbar, Categories pane); button in crashui.rs; button in a dialog box; button in extension.rs; button in the Help menu's windows (About, updates, shortcuts, Tell a friend); button in helpers.rs; button in the download list; button in the Options window; button in rssdlg.rs; button in torrentfiles.rs; text in standard windows
 #. both verbs: Verify = check the file now; Close = close the window
 #. tooltip of the × that closes the Categories pane
 #. verb: closes this window
 #. verb: closes the filter box
+#. button that closes the torrent file list window
 #. a window's title-bar button: closes the window
 	Close	إغلاق
 #. what a keyboard shortcut does in the Help menu's windows (About, updates, shortcuts, Tell a friend)
@@ -1218,6 +1227,11 @@
 	Files go to: {folder}	وجهة الملفات: {folder}
 #. text in the Scheduler window; tab in the Scheduler window
 	Files in the queue	الملفات في قائمة الانتظار
+#. button in a download's Properties window
+#. File Properties button that opens the selected torrent's file list
+#. the trailing ... means it opens a window: keep it
+#, machine
+	Files...	الملفات...
 #. button in the Find window
 #. verb: button that starts the search
 	Find	بحث
@@ -1618,6 +1632,10 @@
 	Kazakhstan	كازاخستان
 #. text in a dialog box; text in a download's progress window; text in the Add torrent window
 	KBytes/sec	كيلوبايت/ثانية
+#. text in the Options window
+#. checkbox: closing keeps MDM running, in the notification area when available or else the taskbar, instead of quitting
+#, machine
+	Keep running when closing the window	إبقاء البرنامج قيد التشغيل عند إغلاق النافذة
 #. checkbox in the Add torrent window
 	Keep sharing torrents after they finish	متابعة بذر التورنت بعد اكتماله
 #. text in countries.rs
@@ -2304,13 +2322,14 @@
 	Only the first {n} videos are listed.	تم إدراج أول {n} مقاطع فيديو فقط.
 #. checkbox in a dialog box
 	Only while I'm using the computer	فقط أثناء استخدامي للكمبيوتر
-#. button in a dialog box; text in a dialog box; button in a download's Properties window
+#. button in a dialog box; text in a dialog box; button in a download's Properties window; button in torrentfiles.rs
 #. verb: opens the downloaded file
 #. title of the message when a downloaded file can't be opened
 #. verb: opens the file
 	Open	فتح
-#. button in crashui.rs; button in a dialog box
+#. button in crashui.rs; button in a dialog box; button in torrentfiles.rs
 #. crash report window button: show the report's file in its folder
+#. button that opens the torrent's containing folder in the file manager
 	Open folder	فتح المجلد
 #. checkbox in the Add torrent window
 	Open magnet links and .torrent files with Mister Download Manager	فتح روابط مغناطيسية وملفات .torrent باستخدام Mister Download Manager
@@ -2727,7 +2746,7 @@
 #. text in a dialog box
 #. title of the folder picker
 	Select a folder	تحديد مجلد
-#. button in playlistdlg.rs; button in the Add torrent window
+#. button in playlistdlg.rs; button in the Add torrent window; text in torrentfiles.rs
 #. button in Download video for a playlist: tick every video
 	Select all	تحديد الكل
 #. what a keyboard shortcut does in the Help menu's windows (About, updates, shortcuts, Tell a friend)
@@ -2912,8 +2931,9 @@
 	size unknown	الحجم غير معروف
 #. text in a download's Properties window
 	Size:	الحجم:
-#. text in a download's progress window
+#. text in a download's progress window; text in torrentfiles.rs
 #. a torrent file the user chose not to download
+#. status of a torrent file the user chose not to download
 	Skipped	تم التجاوز
 #. text in the queues
 #. what the computer does when the queue is done (verb: put it to sleep)
@@ -3466,6 +3486,10 @@
 #. error: a program chosen as yt-dlp or ffmpeg didn't answer as one; {name} = yt-dlp or ffmpeg
 #. {name} = a file name (keep the braces as they are)
 	this program isn't {name}	هذا البرنامج ليس {name}
+#. text in errors.rs
+#. why a download failed: the site's bot check (Cloudflare) lets browsers through, not programs. Alt+click: the link clicked with the Alt key held, which leaves the download to the browser
+#, machine
+	this site lets only browsers through; Alt+click the link	يسمح هذا الموقع للمستعرضات فقط بالمرور؛ انقر فوق الرابط مع الضغط على Alt
 #. text in a download's progress window
 	This system has no dial-up connections to hang up	لا يحتوي هذا النظام على اتصالات طلب هاتفي لقطعها
 #. text in errors.rs
@@ -3529,8 +3553,9 @@
 	Torrent	تورنت
 #. text in the download list (sizes, speeds, status)
 	Torrent downloads (magnet links and .torrent files)	تنزيلات التورنت (روابط مغناطيسية وملفات .torrent)
-#. message or event log entry in the main window; text in the Add torrent window
+#. message or event log entry in the main window; text in the Add torrent window; window title in torrentfiles.rs
 #. the kind of file the Open dialog lists
+#. title of the separate window listing a torrent's files
 	Torrent files	ملفات التورنت
 #. window title in the Add torrent window
 	Torrent settings	إعدادات التورنت
@@ -4183,11 +4208,19 @@ column	File Name	اسم الملف
 #. column title in the download list in the download list
 column	Last Try Date	تاريخ آخر محاولة
 #. column title in the download list in the download list
+#. column title: how many peers a torrent is connected to now (seeders and leechers)
+#, machine
+column	Peers	القرناء
+#. column title in the download list in the download list
 #. column title: one letter for Queue (the column is narrow)
 column	Q	ق
 #. column title in the main window; column title in the download list
 #. tooltip of the narrow "Q" column's title
 column	Queue	قائمة الانتظار
+#. column title in the download list in the download list
+#. column title: what a torrent has sent to peers against what it took
+#, machine
+column	Share ratio	نسبة المشاركة
 #. column title in the download list in the download list
 #. noun: the file's size
 column	Size	الحجم
@@ -4201,6 +4234,10 @@ column	Status	الحالة
 column	Time left	الوقت المتبقي
 #. column title in the download list in the download list
 column	Transfer rate	معدل النقل
+#. column title in the download list in the download list
+#. column title: what a torrent sends to peers, bytes per second
+#, machine
+column	Upload speed	سرعة الرفع
 #. text in the browser extension
 #. choice under Send downloads to: an MDM running on another computer of the network, such as a home server; keep the name Mister Download Manager as it is
 #, machine
@@ -4216,7 +4253,7 @@ extension	Button settings...	إعدادات الزر...
 #. text in the browser extension
 #. shown briefly on the download button when nothing on the page says which video the player is playing, so nothing was sent
 #, machine
-extension	Can't tell which video this is: open its own page and try there	تعذّر تحديد هذا الفيديو: افتح صفحته الخاصة وحاول من هناك
+extension	Can't tell which video this is: open its own page and try there	لا يمكن تحديد الفيديو: افتح صفحته الخاصة وحاول هناك
 #. text in the browser extension
 #. the toolbar button's status when the browser reaches the app; keep the name Mister Download Manager as it is
 extension	Connected to Mister Download Manager	متصل بـ Mister Download Manager
@@ -4371,6 +4408,10 @@ extension	Pairing code	رمز الإقران
 #. status when the user switched off taking downloads in the toolbar button's popup
 extension	Paused: downloads stay with the browser	متوقف مؤقتا: تبقى التنزيلات مع المستعرض
 #. text in the browser extension
+#. Option in the browser extension media list: put the page title before the original file name when downloading a detected media file
+#, machine
+extension	Prefix media file names with the page title	إضافة عنوان الصفحة قبل أسماء ملفات الوسائط
+#. text in the browser extension
 #. shown instead of the Download button beside a copy-protected (DRM) stream in the toolbar button's popup: it can't be downloaded; short
 extension	Protected	محمي
 #. text in the browser extension
@@ -4395,7 +4436,7 @@ extension	Take downloads from this browser	تلقي التنزيلات من هذ
 #. text in the browser extension
 #. in the toolbar button's popup, on a site where the Chrome Web Store's copy of the extension shows no download button; Help is the link at the bottom of the popup
 #, machine
-extension	The Chrome Web Store's rules keep this copy of the add-on away from this site's videos. Help says what you can do.	تُبقي قواعد سوق Chrome الإلكتروني هذه النسخة من الإضافة بعيدة عن مقاطع هذا الموقع. يوضّح قسم «تعليمات» ما يمكنك فعله.
+extension	The Chrome Web Store's rules keep this copy of the add-on away from this site's videos. Help says what you can do.	تحتفظ قواعد سوق Chrome الإلكتروني بهذه النسخة من الوظيفة الإضافية بعيدا عن مقاطع الفيديو في هذا الموقع. توضح التعليمات ما يمكنك فعله.
 #. text in the browser extension
 #. status when the connection to the app broke off (often security software blocking it); keep the name Mister Download Manager as it is
 extension	The connection to Mister Download Manager failed	فشل الاتصال بـ Mister Download Manager
@@ -4424,7 +4465,7 @@ extension	This download's details were too large to hand over	كانت تفاص�
 #. text in the browser extension
 #. in the toolbar button's popup, when the page's player plays from a stream built in the page (a blob:): the list of the page's media has nothing to show; Download video is the name of the button over videos
 #, machine
-extension	This page's player streams its video in pieces, so there's no file to list. Point at the video and use its Download video button.	يبثّ مشغّل هذه الصفحة الفيديو على أجزاء، فلا يوجد ملف لعرضه هنا. أشِر إلى الفيديو واستخدم زر «تنزيل الفيديو» عليه.
+extension	This page's player streams its video in pieces, so there's no file to list. Point at the video and use its Download video button.	يبث مشغل هذه الصفحة الفيديو على قطع، لذلك لا يوجد ملف لإدراجه. أشر إلى الفيديو واستخدم زر «تنزيل الفيديو» الخاص به.
 #. text in the browser extension
 #. status when the app is older than the extension; keep the name Mister Download Manager as it is
 extension	Update Mister Download Manager to use everything this extension offers	قم بتحديث Mister Download Manager لاستخدام كل ما يوفره هذا الملحق
@@ -4591,6 +4632,11 @@ menu	&RSS feeds...	موجزات &RSS...
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 menu	&Scheduler and queues	&المجدول وقوائم الانتظار
+#. menu command in a download's progress window
+#. right-click menu of a download window's tab row: bring back the tabs taken off with "Hide tab"
+#. & marks the keyboard shortcut letter: keep one & before a letter of the translation
+#, machine
+menu	&Show hidden tabs	إظهار علامات التبويب الم&خفية
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 menu	&Stop All	&إيقاف الكل
@@ -4740,6 +4786,11 @@ menu	Edit queue	تحرير قائمة الانتظار
 #. menu command in the main window
 #. verb: unpack the downloaded archive (zip, 7z, rar) into its folder
 menu	Extract	استخراج
+#. menu command in the main window
+#. right-click → Torrent submenu: open the selected torrent's file list
+#. the trailing ... means it opens a window: keep it
+#, machine
+menu	Files...	الملفات...
 #. menu command in the main window
 menu	Find (Ctrl-F)	بحث (Ctrl+F)
 #. menu command in the main window

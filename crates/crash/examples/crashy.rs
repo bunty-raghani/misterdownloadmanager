@@ -128,8 +128,11 @@ fn os_thread_id() -> u32 {
 fn run_monitor(m: mdm_crash::MonitorArgs) {
     let (tx, rx) = std::sync::mpsc::channel();
     let (socket, data) = (m.socket.clone(), m.data.clone());
+    let failed = tx.clone();
     std::thread::spawn(move || {
-        let _ = monitor::serve(&socket, &data, tx);
+        if let Err(e) = monitor::serve(&socket, &data, tx) {
+            let _ = failed.send(Event::ServeFailed(e));
+        }
     });
     while let Ok(e) = rx.recv() {
         match e {
@@ -139,6 +142,10 @@ fn run_monitor(m: mdm_crash::MonitorArgs) {
             }
             Event::DumpFailed { error, .. } => eprintln!("monitor: dump failed: {error}"),
             Event::Recovered => {}
+            Event::ServeFailed(e) => {
+                eprintln!("monitor: {e}");
+                break;
+            }
             Event::Gone { .. } => break,
         }
     }

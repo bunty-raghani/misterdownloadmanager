@@ -540,6 +540,7 @@ GET|HEAD /gen/{size}[/{name}]?seed=N&<file params>&<faults>   size: 12345, 64K, 
                    (until the server's faults change, from a test; a URL's own value stays)
     require_cookie=NAME=VALUE|NAME   403 unless the Cookie header has it
     require_referer=PREFIX           403 unless the Referer starts with PREFIX (%-encode ? & =)
+    refuse_agent=TEXT                403 when the User-Agent contains TEXT
     once=1         a one-time link: the first request for this path and query is served, every
                    later one (HEAD and ranges too) gets 410 Gone; vary seed= for a fresh link
   "every Nth" counts file requests (/gen and /form) only.
@@ -1070,6 +1071,15 @@ pub(crate) async fn serve(
     {
         shared.record(entry, 403, "fault:require_referer");
         return (StatusCode::FORBIDDEN, format!("referer {want}… required\n")).into_response();
+    }
+    if let Some(want) = &f.refuse_agent
+        && entry
+            .user_agent
+            .as_deref()
+            .is_some_and(|ua| ua.contains(want.as_str()))
+    {
+        shared.record(entry, 403, "fault:refuse_agent");
+        return (StatusCode::FORBIDDEN, format!("agent {want} refused\n")).into_response();
     }
     if let Some(ms) = f.latency_ms {
         tokio::time::sleep(Duration::from_millis(ms)).await;

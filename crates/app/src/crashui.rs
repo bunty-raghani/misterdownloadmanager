@@ -32,10 +32,12 @@ pub fn monitor_main(m: MonitorArgs) -> eframe::Result {
     );
     let (tx, rx) = channel();
     {
-        let (socket, data, tx) = (m.socket.clone(), m.data.clone(), tx.clone());
+        let (socket, data, tx, failed) = (m.socket.clone(), m.data.clone(), tx.clone(), tx.clone());
         std::thread::spawn(move || {
             if let Err(e) = monitor::serve(&socket, &data, tx) {
-                tracing::error!("crash monitor: {e}");
+                // The app can't connect: say so, rather than waiting beside it as a second
+                // process that can never report anything.
+                let _ = failed.send(Event::ServeFailed(e));
             }
         });
     }
@@ -72,6 +74,10 @@ pub fn monitor_main(m: MonitorArgs) -> eframe::Result {
                 return Ok(());
             }
             Ok(Event::Recovered) => {}
+            Ok(Event::ServeFailed(e)) => {
+                tracing::error!("crash monitor: {e}");
+                return Ok(());
+            }
             Err(_) => return Ok(()),
         }
     };
@@ -376,7 +382,7 @@ impl ReportWindow {
 
         // The app's icon and the heading.
         let icon = self.icon.get_or_insert_with(|| {
-            let i = crate::app_icon();
+            let i = crate::app_picture();
             let img = egui::ColorImage::from_rgba_unmultiplied(
                 [i.width as usize, i.height as usize],
                 &i.rgba,

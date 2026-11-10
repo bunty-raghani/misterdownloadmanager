@@ -238,5 +238,8 @@
   },
   "remote_device_name": {
     "message": "Brauserilaiend"
+  },
+  "popup_media_title_name": {
+    "message": "Lisa meediafailide nimede ette lehe pealkiri"
   }
 }

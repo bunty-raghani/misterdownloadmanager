@@ -238,5 +238,8 @@
   },
   "remote_device_name": {
     "message": "Rozszerzenie przeglądarki"
+  },
+  "popup_media_title_name": {
+    "message": "Dodaj tytuł strony przed nazwami plików multimedialnych"
   }
 }

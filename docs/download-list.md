@@ -26,6 +26,9 @@ branches and the category or queue you were looking at.
 | **Status** | How far it is, or **Complete**, **Error** and so on. |
 | **Time left** | While it downloads. |
 | **Transfer rate** | The current speed. |
+| **Upload speed** | A torrent: what it sends to peers, while it runs. |
+| **Peers** | A torrent's connected peers while it runs, seeders and leechers alike. |
+| **Share ratio** | A torrent: what it has sent to peers against what it took. |
 | **Last Try Date** | When it last ran. |
 | **Added** | When you added it. |
 | **Description** | Your note from **Download File Info** or **Properties**. |

@@ -238,5 +238,8 @@
   },
   "remote_device_name": {
     "message": "Tiện ích mở rộng trình duyệt"
+  },
+  "popup_media_title_name": {
+    "message": "Thêm tiêu đề trang vào trước tên tệp phương tiện"
   }
 }

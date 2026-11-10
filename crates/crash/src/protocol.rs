@@ -128,6 +128,9 @@ pub struct Notes {
     pub state: Option<AppState>,
     pub recovered: bool,
     pub clean: bool,
+    /// A freeze was announced and its dump hasn't arrived yet: every freeze is followed by its
+    /// own dump, however long the window took to answer meanwhile (#420).
+    pub freeze_dump_due: bool,
 }
 
 impl Notes {
@@ -140,6 +143,7 @@ impl Notes {
             kind::FREEZE => {
                 self.freeze = serde_json::from_slice(body).ok();
                 self.recovered = false;
+                self.freeze_dump_due = true;
             }
             kind::RECOVERED => self.recovered = true,
             kind::CLEAN => self.clean = true,
@@ -148,22 +152,40 @@ impl Notes {
         }
     }
 
-    /// The kind of a dump that just arrived: a panic or a freeze said so first; else a native
-    /// crash.
+    /// The kind of a dump that just arrived: a panic or a freeze said so first (a freeze's dump
+    /// is the freeze's even when the window recovered before the dump was taken, #420: it was
+    /// reported as a crash in the watchdog then); else a native crash.
     pub fn dump_kind(&self) -> Kind {
         if self.panic.is_some() {
             Kind::Panic
-        } else if self.freeze.is_some() && !self.recovered {
+        } else if self.freeze_dump_due || (self.freeze.is_some() && !self.recovered) {
             Kind::Freeze
         } else {
             Kind::Crash
         }
+    }
+
+    /// A dump was written, or failed: a freeze's dump isn't owed any more.
+    pub fn dump_done(&mut self) {
+        self.freeze_dump_due = false;
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// #420: a freeze's dump is the freeze's even if the window recovered before the dump was
+    /// taken; only a later dump counts as a crash.
+    #[test]
+    fn a_freeze_dump_taken_after_recovery_is_still_the_freeze() {
+        let mut n = Notes::default();
+        n.take(kind::FREEZE, br#"{"ui_thread":7,"seconds":8}"#);
+        n.take(kind::RECOVERED, b"");
+        assert_eq!(n.dump_kind(), Kind::Freeze);
+        n.dump_done();
+        assert_eq!(n.dump_kind(), Kind::Crash, "a later dump is a real crash");
+    }
 
     #[test]
     fn notes_follow_the_messages() {
@@ -177,6 +199,9 @@ mod tests {
         n.take(kind::FREEZE, br#"{"ui_thread":7,"seconds":9}"#);
         assert_eq!(n.dump_kind(), Kind::Freeze);
         n.take(kind::RECOVERED, b"");
+        // Its dump is still due: it's the freeze's (see the test below).
+        assert_eq!(n.dump_kind(), Kind::Freeze);
+        n.dump_done();
         assert_eq!(n.dump_kind(), Kind::Crash);
         n.take(
             kind::PANIC,

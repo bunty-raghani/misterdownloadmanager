@@ -238,5 +238,8 @@
   },
   "remote_device_name": {
     "message": "הרחבת דפדפן"
+  },
+  "popup_media_title_name": {
+    "message": "הוספת כותרת הדף לפני שמות קובצי המדיה"
   }
 }

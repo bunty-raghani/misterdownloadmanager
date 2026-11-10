@@ -437,8 +437,10 @@ fn supervise(
     }
 }
 
-/// The most the bar shows while yt-dlp still works.
-const MAX_WHILE_RUNNING: f64 = 0.999;
+/// The most the bar shows while yt-dlp still works: all the bytes in is not the end, another
+/// stream or the merge may follow (#344). The window's percentage takes it from here; the sizes
+/// stay what they are.
+pub const MAX_WHILE_RUNNING: f64 = 0.999;
 
 /// yt-dlp's progress lines (`MDMP <downloaded> <total> <estimate> <speed>`) made into one
 /// steady figure. Each stream of a merged download (video, then audio) reports from 0 with its
@@ -446,8 +448,14 @@ const MAX_WHILE_RUNNING: f64 = 0.999;
 /// fragment: the streams are added up, the total never falls below the size the video window
 /// showed (`expected`, every stream), and the fraction done goes back only when a stream's end
 /// had looked like the whole (no `expected`, the next stream starts).
+///
+/// Pieces fetched several at once ([`pace_args`]) report from each at its turn: the count can
+/// step back a little, which isn't a new stream (#531: one taken for it added a 25 MB estimate,
+/// and a 6 MB video read 66 MB). Then only a fall to under half of it, by 64 KB or more, is.
 struct Meter {
     expected: Option<u64>,
+    /// Pieces at once: the count may step back.
+    at_once: bool,
     /// The streams already finished, and the current one's last total and bytes.
     finished: u64,
     last_total: u64,
@@ -457,9 +465,10 @@ struct Meter {
 }
 
 impl Meter {
-    fn new(expected: Option<u64>) -> Self {
+    fn new(expected: Option<u64>, at_once: bool) -> Self {
         Meter {
             expected: expected.filter(|e| *e > 0),
+            at_once,
             finished: 0,
             last_total: 0,
             last_got: 0,
@@ -477,7 +486,12 @@ impl Meter {
             .or(f.get(2).copied().flatten())
             .map(|t| t.max(0.0) as u64);
         // Back near 0: the next stream started; the one before counts in full.
-        if got < self.last_got && self.last_got > 0 {
+        let next_stream = if self.at_once {
+            got.saturating_mul(2) < self.last_got && self.last_got - got >= 64 * 1024
+        } else {
+            got < self.last_got
+        };
+        if next_stream && self.last_got > 0 {
             self.finished += self.last_total.max(self.last_got);
             self.last_total = 0;
             // Without the whole size from the start, the first stream's end looked like the
@@ -507,15 +521,17 @@ impl Meter {
             p.total = None;
             return;
         }
-        // 100 % is for the end (State::Done): another stream or the merge may still follow.
         let frac = (downloaded as f64 / whole as f64).min(MAX_WHILE_RUNNING);
-        // When the estimate grew, the bar stays where it was rather than move back.
-        self.frac = self.frac.max(frac);
-        p.total = Some(
-            (downloaded as f64 / self.frac)
+        // When the estimate grew, the bar stays where it was rather than move back. Otherwise
+        // the total is the whole, as big as it is: at the end it isn't inflated to read 99.9 %.
+        p.total = Some(if frac >= self.frac {
+            self.frac = frac;
+            whole
+        } else {
+            ((downloaded as f64 / self.frac)
                 .round()
-                .max(whole.min(downloaded + 1) as f64) as u64,
-        );
+                .max(whole.min(downloaded + 1) as f64)) as u64
+        });
     }
 }
 
@@ -727,7 +743,8 @@ fn attempt(
         return failed(format!("Cannot write the video information: {e}"), rerouted);
     }
     let _cleanup = Remove(file.clone());
-    let mut meter = Meter::new(expected);
+    let at_once = ours.iter().any(|a| a == "--concurrent-fragments");
+    let mut meter = Meter::new(expected, at_once);
     let ran = match run(exe, ours, &file, progress, child, Some(&mut meter)) {
         Ok(Some(r)) => r,
         Ok(None) => return Attempt::Stopped,
@@ -848,6 +865,19 @@ fn template_text(s: &str) -> String {
     s.replace('%', "%%")
 }
 
+/// yt-dlp's speed: at most `rate` bytes/s; a stream in pieces (HLS, DASH) `fragments` pieces at
+/// once, as a file comes down over several connections (Options → Connection, #531). yt-dlp uses
+/// that for such streams only (a plain file stays one connection), and its limit holds for each
+/// piece, not for them together: with a limit, one piece at a time, so the limit stays the
+/// download's, whatever the format turns out to be.
+pub fn pace_args(rate: Option<u64>, fragments: u32) -> Vec<String> {
+    match rate {
+        Some(r) => vec!["--limit-rate".into(), r.to_string()],
+        None if fragments > 1 => vec!["--concurrent-fragments".into(), fragments.to_string()],
+        None => Vec::new(),
+    }
+}
+
 /// Our progress line: `MDMP <downloaded> <total> <estimate> <speed>` (`NA` when unknown).
 const PROGRESS: &str = "download:MDMP %(progress.downloaded_bytes)s %(progress.total_bytes)s %(progress.total_bytes_estimate)s %(progress.speed)s";
 /// The final file: `MDMF <path>`.
@@ -857,8 +887,8 @@ const FINAL: &str = "after_move:MDMF %(filepath)s";
 const QUALITY: &str = "video:MDMQ %(format_id)s %(resolution)s";
 
 impl VideoJob {
-    /// Download `url` in format `selector` to `dir/<stem>.<ext>`, at most `rate` bytes/s;
-    /// `ffmpeg` (its exe) merges separate video and audio into an MP4. `expected`: the size the
+    /// Download `url` in format `selector` to `dir/<stem>.<ext>`, at most `rate` bytes/s, a
+    /// stream in pieces `fragments` pieces at once ([`pace_args`]); `ffmpeg` (its exe) merges separate video and audio into an MP4. `expected`: the size the
     /// choice was shown with (every stream), so the progress starts from the whole. `browser`:
     /// what the browser's request for the page carried (proc::FromBrowser). `subs`: the
     /// subtitles to save with it (#68; none for a sound alone, which has no picture to put them
@@ -871,13 +901,14 @@ impl VideoJob {
         dir: &Path,
         stem: &str,
         rate: Option<u64>,
+        fragments: u32,
         ffmpeg: Option<&Path>,
         expected: Option<u64>,
         browser: &proc::FromBrowser,
         subs: &Subs,
     ) -> Result<VideoJob, ProcError> {
         Self::start_with_info(
-            exe, url, selector, dir, stem, rate, ffmpeg, expected, browser, subs, None,
+            exe, url, selector, dir, stem, rate, fragments, ffmpeg, expected, browser, subs, None,
         )
     }
 
@@ -892,6 +923,7 @@ impl VideoJob {
         dir: &Path,
         stem: &str,
         rate: Option<u64>,
+        fragments: u32,
         ffmpeg: Option<&Path>,
         expected: Option<u64>,
         browser: &proc::FromBrowser,
@@ -926,9 +958,7 @@ impl VideoJob {
             "--print".into(),
             QUALITY.into(),
         ];
-        if let Some(r) = rate {
-            ours.extend(["--limit-rate".into(), r.to_string()]);
-        }
+        ours.extend(pace_args(rate, fragments));
         // A subtitles-only second run, for the ones a site refuses (#68): the same output name.
         let mut retry_base: Vec<String> = vec![
             "-o".into(),
@@ -1045,6 +1075,18 @@ impl VideoJob {
 mod tests {
     use super::*;
 
+    /// #531: a stream in pieces comes down several at once, as many as a file's connections;
+    /// with a speed limit one at a time, as yt-dlp's limit holds for each piece (measured
+    /// against the lab server: `--limit-rate 512K -N 4` took a quarter of the time).
+    #[test]
+    fn fragments_at_once_unless_the_speed_is_limited() {
+        let s = |v: Vec<String>| v.join(" ");
+        assert_eq!(s(pace_args(None, 8)), "--concurrent-fragments 8");
+        assert_eq!(s(pace_args(None, 1)), "");
+        assert_eq!(s(pace_args(None, 0)), "");
+        assert_eq!(s(pace_args(Some(524_288), 8)), "--limit-rate 524288");
+    }
+
     /// Live (network, yt-dlp): `MDM_LIVE_YTDLP=<yt-dlp.exe> MDM_LIVE_PAGE=<video page>
     /// cargo test -p mdm-tools live_download -- --ignored --nocapture`. Downloads the smallest
     /// audio and prints the log (a swapped server shows there).
@@ -1063,6 +1105,7 @@ mod tests {
             dir.path(),
             "a",
             None,
+            1,
             ffmpeg.as_deref(),
             None,
             &Default::default(),
@@ -1105,6 +1148,7 @@ mod tests {
             dir.path(),
             "clip",
             None,
+            1,
             None,
             None,
             &Default::default(),
@@ -1134,6 +1178,7 @@ mod tests {
             dir.path(),
             "clip",
             None,
+            1,
             None,
             None,
             &Default::default(),
@@ -1154,7 +1199,11 @@ mod tests {
     }
 
     fn run(expected: Option<u64>, lines: &[&str]) -> Vec<(u64, Option<u64>)> {
-        let mut m = Meter::new(expected);
+        run_with(expected, false, lines)
+    }
+
+    fn run_with(expected: Option<u64>, at_once: bool, lines: &[&str]) -> Vec<(u64, Option<u64>)> {
+        let mut m = Meter::new(expected, at_once);
         let mut p = Progress {
             state: State::Running,
             downloaded: 0,
@@ -1198,8 +1247,54 @@ mod tests {
             assert!(w[1] >= w[0] - 1e-9, "went back: {f:?}");
         }
         let last = run(Some(1800), &lines).pop().unwrap();
-        assert_eq!(last.0, 1800);
-        assert!(f[f.len() - 1] > 0.99 && f[f.len() - 1] < 1.0, "{f:?}");
+        assert_eq!(last, (1800, Some(1800)));
+        assert!(f[f.len() - 1] > 0.99, "{f:?}");
+    }
+
+    /// #531: yt-dlp's lines with 8 pieces at once (real ones, from the lab server's HLS stream of
+    /// 6 MB), its count stepping back now and then: never more than the file, and the end is
+    /// the file. A second stream (the sound after the picture) still adds up.
+    #[test]
+    fn pieces_at_once_step_back_without_a_new_stream() {
+        let lines = [
+            "30720 NA 6905856.0 5636",
+            "26624 NA 6905856.0 5636",
+            "1304576 NA 37576704.0 911582",
+            "1961984 NA 25104384.0 911582",
+            "1830912 NA 25104384.0 911582",
+            "4061184 NA 8382464.0 1683967",
+            "3929088 NA 8382464.0 1683967",
+            "6289408 NA 7704576.0 1883540",
+            "6158336 NA 7704576.0 1883540",
+            "6291456 NA 6553600.0 1883540",
+        ];
+        let v = run_with(None, true, &lines);
+        for (d, _) in &v {
+            assert!(*d <= 6_291_456, "more than the file: {v:?}");
+        }
+        assert_eq!(v.last().unwrap().0, 6_291_456);
+        // Before, the first step back counted the 6.9 MB estimate as a finished stream.
+        assert!(run(None, &lines).iter().any(|(d, _)| *d > 6_291_456));
+        let two = run_with(
+            None,
+            true,
+            &[
+                "4000000 4000000 NA 5",
+                "1024 NA 900000 5",
+                "900000 900000 NA 5",
+            ],
+        );
+        assert_eq!(two.last().unwrap().0, 4_900_000, "{two:?}");
+    }
+
+    /// The file size stays the file's size at the end: holding the bar short of 100 % is the
+    /// window's (`Item::fraction`), not a total made 0.1 % too big (100.100 MB for 100 MB).
+    #[test]
+    fn the_size_is_not_inflated_at_the_end() {
+        let m = 1 << 20;
+        let line = format!("{} {} NA 900000", 100 * m, 100 * m);
+        let v = run(Some(100 * m), &[line.as_str()]);
+        assert_eq!(v, vec![(100 * m, Some(100 * m))]);
     }
 
     /// #344: with no size known from the start, the second stream brings the bar back from
@@ -1213,7 +1308,6 @@ mod tests {
             "400 500 NA 5",
         ];
         let f = fractions(&run(None, &lines));
-        assert!(f.iter().all(|x| *x < 1.0), "100 % before the end: {f:?}");
         assert!(f[2] < 0.75, "the first stream's 100 % stayed: {f:?}");
         assert!(f[3] > f[2], "{f:?}");
     }

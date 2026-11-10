@@ -238,5 +238,8 @@
   },
   "remote_device_name": {
     "message": "Estensione del browser"
+  },
+  "popup_media_title_name": {
+    "message": "Aggiungi il titolo della pagina davanti ai nomi dei file multimediali"
   }
 }

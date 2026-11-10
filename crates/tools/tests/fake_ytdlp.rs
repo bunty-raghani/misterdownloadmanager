@@ -274,6 +274,7 @@ fn download_as(
         out.path(),
         stem,
         None,
+        1,
         None,
         None,
         &Default::default(),

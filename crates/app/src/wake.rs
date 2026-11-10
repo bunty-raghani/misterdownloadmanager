@@ -101,7 +101,8 @@ pub fn next_wake(queues: &[Queue], now: NaiveDateTime) -> Option<Wake> {
         .min_by_key(|w| w.at)
 }
 
-/// A local time as UTC. A time the clocks skip (summer time) is taken an hour later, as the
+/// A local time as UTC (asks the system: the clock's thread uses it, `crate::clock::exact_utc`
+/// for the window). A time the clocks skip (summer time) is taken an hour later, as the
 /// clock reads then; a time they pass twice, the first time.
 pub fn to_utc(local: NaiveDateTime) -> Option<DateTime<Utc>> {
     Local
@@ -194,8 +195,18 @@ impl Waker {
     /// Set, move or cancel the system's wake for `queues` (called with the Scheduler's clock;
     /// it asks the system only when the wake changes, and once a minute).
     pub fn sync(&mut self, queues: &[Queue]) {
-        let now = Local::now().naive_local();
-        let mut want = next_wake(queues, now).and_then(|w| Some((to_utc(w.at)?, w.queue, w.start)));
+        // The local time and the start's UTC time from the clock's thread: asking the system here
+        // could hold the window (#536). Until they have come, the wake stays as it is.
+        let Some(now) = crate::clock::now_known() else {
+            return;
+        };
+        let mut want = match next_wake(queues, now.naive_local()) {
+            None => None,
+            Some(w) => match crate::clock::exact_utc(w.at) {
+                None => return,
+                Some(at) => at.map(|at| (at, w.queue, w.start)),
+            },
+        };
         // A start keeps the wake set for it: in the minute before the start, the wake worked out
         // now would be the start itself, moving a timer that is just going off.
         if let (Some(w), Some(set)) = (&mut want, &self.wanted)

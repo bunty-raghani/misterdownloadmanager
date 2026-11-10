@@ -38,7 +38,7 @@ enum Sub {
     /// Connection → New / Edit exception: (row, server, number).
     Exception(Option<usize>, String, String),
     /// General → Download panels → Edit...: (the button over videos on, the sites it stays off).
-    Panels(bool, String),
+    Panels(bool, String, String),
     /// General → Keys...: (also take the files the browser would open).
     Keys(bool),
     /// General → Test browser integration...: the checks, as found when it opened.
@@ -249,6 +249,7 @@ impl OptionsDialog {
         self.sub = Some(Sub::Panels(
             self.s.video_panel,
             self.s.video_panel_sites.clone(),
+            String::new(),
         ));
         self
     }
@@ -434,7 +435,7 @@ impl OptionsDialog {
         if portable {
             s.launch_on_startup = false;
         }
-        let checks: [(f32, &mut bool, &str); 6] = [
+        let checks: [(f32, &mut bool, &str); 7] = [
             (
                 94.0,
                 &mut s.launch_on_startup,
@@ -470,6 +471,13 @@ impl OptionsDialog {
                 // i18n: checkbox: the Minimize button hides MDM's windows to the notification area (system tray) instead of the taskbar
                 crate::i18n::mark("Minimize to the notification area"),
             ),
+            // MDM's: the × hides the window in the notification area, or quits.
+            (
+                210.0,
+                &mut s.close_to_tray,
+                // i18n: checkbox: closing keeps MDM running, in the notification area when available or else the taskbar, instead of quitting
+                crate::i18n::mark("Keep running when closing the window"),
+            ),
         ];
         // Greyed where no tray shows MDM's icon (some Linux desktops): nothing could bring the
         // window back from there.
@@ -478,7 +486,7 @@ impl OptionsDialog {
             // Portable: nothing is written to the registry, so no start with Windows. Manifest 2
             // extensions: an IDM-era Chrome policy with no meaning for MDM's extension (MV3):
             // shown as IDM has it, greyed (D-021).
-            let enabled = !(portable && i == 0) && i != 2 && (i != 5 || tray);
+            let enabled = !(portable && i == 0) && i != 2 && (i < 5 || tray);
             let check = winui::checkbox_light(ui, o + vec2(30.0, y), v, label, enabled);
             // Where a start with the session leaves the window (#226).
             if i == 0 && enabled && check.hovered() {
@@ -491,15 +499,20 @@ impl OptionsDialog {
                         "Started with the computer, it starts minimized: no notification area shows its icon here",
                     )
                 });
+            } else if i == 6 && check.hovered() {
+                // i18n: tooltip of the close-setting: checked keeps MDM running when the window closes, in the notification area when available or else the taskbar; downloads continue; unchecked closing quits
+                check.on_hover_text(crate::i18n::t(
+                    "Checked, closing the window keeps MDM running: it hides in the notification area when available, or minimizes to the taskbar otherwise, and downloads continue; unchecked, closing quits MDM",
+                ));
             }
         }
         group(
             ui,
             o,
             16.0,
-            215.0,
+            234.0,
             392.0,
-            179.0,
+            160.0,
             "Capture downloads from the following browsers:",
         );
         // Check list: one row per browser in the shared row list (Space ticks the selected
@@ -510,7 +523,7 @@ impl OptionsDialog {
         let ev = winui::row_list(
             ui,
             "browsers",
-            r(o, 30.0, 225.0, 362.0, 97.0),
+            r(o, 30.0, 244.0, 362.0, 78.0),
             browsers.len(),
             17.0,
             &mut self.browser_rows,
@@ -634,6 +647,7 @@ impl OptionsDialog {
             self.sub = Some(Sub::Panels(
                 self.s.video_panel,
                 self.s.video_panel_sites.clone(),
+                String::new(),
             ));
         }
     }
@@ -2310,7 +2324,7 @@ impl OptionsDialog {
             reg.week_start = [0, 1, 6][i];
         }
         // What it looks like, now.
-        let now = chrono::Local::now().naive_local();
+        let now = crate::clock::now().naive_local();
         let sample = crate::regional::format_with(crate::regional::effective(reg), now);
         // i18n: label before an example date and time written the chosen way
         let label = crate::i18n::t("Example:");
@@ -2734,10 +2748,8 @@ impl OptionsDialog {
             .map(|r| r.devices())
             .unwrap_or_default();
         let when = |secs: i64| {
-            chrono::DateTime::from_timestamp(secs, 0)
-                .map(|t| {
-                    crate::regional::short_date_time(t.with_timezone(&chrono::Local).naive_local())
-                })
+            crate::clock::local_at(secs)
+                .map(|t| crate::regional::short_date_time(t.naive_local()))
                 .unwrap_or_default()
         };
         let rows: Vec<Vec<String>> = devices
@@ -3128,7 +3140,7 @@ impl OptionsDialog {
                     Outcome::Closed => {}
                 }
             }
-            Sub::Panels(mut on, mut sites) => {
+            Sub::Panels(mut on, mut sites, mut said) => {
                 let out = window(
                     ctx,
                     "opt-panels",
@@ -3169,11 +3181,103 @@ impl OptionsDialog {
                             crate::i18n::t("(separate names by spaces)"),
                             LIGHT_TEXT(),
                         );
+                        // The list as a file, to keep or carry to a new installation (#424).
+                        let [export_at, import_at] = winui::button_row(
+                            &p,
+                            &[("Export...", 212.0, 73.0), ("Import...", 293.0, 73.0)],
+                            8.0,
+                            160.0,
+                            140.0,
+                        )[..] else {
+                            unreachable!("two buttons")
+                        };
+                        if winui::button_light(
+                            ui,
+                            r(o, export_at.0, 128.0, export_at.1, 21.0),
+                            "Export...",
+                            ButtonKind::Normal,
+                            false,
+                        )
+                        .clicked()
+                        {
+                            let title = crate::i18n::t("Export").to_owned();
+                            winui::start_pick(ui.ctx(), "opt-panels-export", move || {
+                                rfd::FileDialog::new()
+                                    .set_title(title)
+                                    .add_filter("TXT", &["txt"])
+                                    .set_file_name("sites.txt")
+                                    .save_file()
+                            });
+                        }
+                        if winui::button_light(
+                            ui,
+                            r(o, import_at.0, 128.0, import_at.1, 21.0),
+                            "Import...",
+                            ButtonKind::Normal,
+                            false,
+                        )
+                        .clicked()
+                        {
+                            let title = crate::i18n::t("Import").to_owned();
+                            winui::start_pick(ui.ctx(), "opt-panels-import", move || {
+                                rfd::FileDialog::new()
+                                    .set_title(title)
+                                    .add_filter("TXT", &["txt"])
+                                    .pick_file()
+                            });
+                        }
+                        if let Some(path) = winui::picked(ui.ctx(), "opt-panels-export") {
+                            said = match std::fs::write(
+                                &path,
+                                mdm_ipc::capture::sites_to_text(&sites),
+                            ) {
+                                Ok(()) => crate::i18n::tn(
+                                    sites.split_whitespace().count() as u64,
+                                    "{n} site saved to the file.",
+                                    "{n} sites saved to the file.",
+                                ),
+                                Err(e) => crate::i18n::fmt(
+                                    crate::i18n::t("The list could not be saved: {error}"),
+                                    &[("error", &e.to_string())],
+                                ),
+                            };
+                        }
+                        if let Some(path) = winui::picked(ui.ctx(), "opt-panels-import") {
+                            said = match read_sites_file(&path) {
+                                Ok(text) => {
+                                    let (merged, added) =
+                                        mdm_ipc::capture::merge_sites(&sites, &text);
+                                    sites = merged;
+                                    crate::i18n::tn(
+                                        added as u64,
+                                        "{n} site added from the file.",
+                                        "{n} sites added from the file.",
+                                    )
+                                }
+                                Err(e) => crate::i18n::fmt(
+                                    crate::i18n::t("The file could not be read: {error}"),
+                                    &[("error", &e.to_string())],
+                                ),
+                            };
+                        }
+                        if !said.is_empty() {
+                            let (rect, cut) = winui::text_fit(
+                                &p,
+                                o.x + 14.0,
+                                o.y + 163.0,
+                                &said,
+                                LIGHT_TEXT(),
+                                o.x + 205.0,
+                            );
+                            if cut {
+                                winui::full_on_hover(ui, rect, "opt-panels-said", &said);
+                            }
+                        }
                         ok_cancel(ui, o, 212.0, 157.0, true)
                     },
                 );
                 match out {
-                    Outcome::Open => self.sub = Some(Sub::Panels(on, sites)),
+                    Outcome::Open => self.sub = Some(Sub::Panels(on, sites, said)),
                     Outcome::Done(()) => {
                         self.s.video_panel = on;
                         self.s.video_panel_sites =
@@ -3882,6 +3986,17 @@ fn open_page(url: &str) {
     }
 }
 
+/// A list of sites from a file (Download panels' Import, #424): text, and no more than a list
+/// could be.
+fn read_sites_file(path: &std::path::Path) -> std::io::Result<String> {
+    use std::io::Read as _;
+    let mut text = Vec::new();
+    std::fs::File::open(path)?
+        .take(1 << 20)
+        .read_to_end(&mut text)?;
+    String::from_utf8(text).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))
+}
+
 fn ok_cancel(ui: &mut Ui, o: Pos2, x: f32, y: f32, valid: bool) -> Outcome<()> {
     let kind = if valid {
         ButtonKind::Default
@@ -4446,4 +4561,23 @@ fn kept_text(kept: crate::secrets::Kept) -> Option<&'static str> {
             "No system keyring answered, so sign-ins and passwords are kept in MDM's settings, which only you can read.",
         ),
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// #424: the list written and read back through a real file: nothing lost, nothing doubled.
+    #[test]
+    fn sites_round_trip_through_a_file() {
+        let dir = tempfile::tempdir().unwrap();
+        let file = dir.path().join("sites.txt");
+        let sites = "a.test *.b.test";
+        std::fs::write(&file, mdm_ipc::capture::sites_to_text(sites)).unwrap();
+        let text = read_sites_file(&file).unwrap();
+        assert_eq!(text, "a.test\n*.b.test\n");
+        let (back, added) = mdm_ipc::capture::merge_sites("", &text);
+        assert_eq!((back.as_str(), added), (sites, 2));
+        assert_eq!(mdm_ipc::capture::merge_sites(sites, &text).1, 0);
+    }
 }

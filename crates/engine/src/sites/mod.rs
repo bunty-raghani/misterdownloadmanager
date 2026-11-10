@@ -4,6 +4,7 @@
 //! module here.
 
 pub mod gdrive;
+mod gofile;
 
 use url::Url;
 
@@ -21,6 +22,8 @@ pub enum Refusal {
     NoAccess,
     /// A Drive folder: it lists files, it isn't one.
     Folder,
+    /// A site's link is a web page that needs a browser (`site`, its name), not the file (#346).
+    NeedsBrowser { site: String },
     /// A service account's refusal to unlock the link (#44, `crate::unlock`).
     Service {
         service: String,
@@ -46,6 +49,10 @@ impl std::fmt::Display for Refusal {
                  downloading"
             ),
             Refusal::Folder => write!(f, "this is a Google Drive folder, not a file"),
+            Refusal::NeedsBrowser { site } => write!(
+                f,
+                "this {site} link is a web page, not the file: open it in your browser and download from there"
+            ),
             Refusal::Service { service, fault } => write!(f, "{service}: {fault}"),
         }
     }
@@ -64,7 +71,7 @@ pub(crate) enum PageSays {
 
 /// A link that names something that isn't a file (a Drive folder): refused before asking.
 pub(crate) fn not_a_file(url: &Url) -> Option<Refusal> {
-    gdrive::not_a_file(url)
+    gdrive::not_a_file(url).or_else(|| gofile::not_a_file(url))
 }
 
 /// The address to ask instead of `url`, when `url` is a site's link to a file rather than the
@@ -108,4 +115,21 @@ pub(crate) fn second_look(at: &Url) -> Option<Url> {
 /// talking, never the file (it is an error, not saved).
 pub(crate) fn expects_file(at: &Url) -> bool {
     gdrive::expects_file(at)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// #346: the check `download::get` makes before asking refuses gofile's page.
+    #[test]
+    fn a_gofile_page_is_refused_before_asking() {
+        let url = Url::parse("https://gofile.io/d/AbC123").unwrap();
+        assert_eq!(
+            not_a_file(&url),
+            Some(Refusal::NeedsBrowser {
+                site: "gofile".to_owned()
+            })
+        );
+    }
 }

@@ -78,10 +78,6 @@
    "source": "Open <g1>View → Theme</g1> and click a theme: the whole window changes at once, nothing to restart. <g2>View → Dark Mode support</g2> and <g3>View → Always dark</g3> then choose its light or dark side, as for the classic look (<g4>Dark mode</g4>).",
    "text": "<g1>表示 → テーマ</g1> を開いてテーマをクリックすると、ウィンドウ全体がすぐに変更され、再起動は不要です。<g2>表示 → ダーク モードのサポート</g2> と <g3>表示 → 常にダーク</g3> で、クラシックな見た目 (<g4>ダーク モード</g4>) と同様に、ライトまたはダークの側面を選択します。"
   },
-  "018b2949529218d0": {
-   "source": "<g1>Options → File types → Automatically start downloading the following file types</g1> must list the file's type. The list starts with the usual ones: ZIP, RAR, 7Z, EXE, MSI, ISO, DMG, DEB, RPM, APPIMAGE, MP3, MP4, MKV, WEBM, PDF and many more.",
-   "text": "<g1>オプション → ファイルの種類 → 以下のファイルの種類を自動的にダウンロードする</g1>に、ファイルの種類のリストが必要です。このリストは、一般的なものから始まります。ZIP、RAR、7Z、EXE、MSI、ISO、DMG、DEB、RPM、APPIMAGE、MP3、MP4、MKV、WEBM、PDFなど、多数あります。"
-  },
   "01bcaeaab78b066e": {
    "source": "A page address that points at one video inside a playlist or a mix (for example <x1/>) downloads that one video, never the whole list.",
    "text": "プレイリストまたはミックス内の1本の動画を指すページ アドレス（例: <x1/>）の場合、その動画だけがダウンロードされ、リスト全体はダウンロードされません。"
@@ -305,6 +301,10 @@
   "050edc04316dd70a": {
    "source": "On the command line",
    "text": "コマンドラインから"
+  },
+  "052e65771dfdbc15": {
+   "source": "While the app is not notarized by Apple (the experimental builds are not), Safari lists the extension only with unsigned extensions allowed: <g1>Settings → Advanced</g1> → <g2>Show features for web developers</g2>, then <g3>Settings → Developer</g3> → <g4>Allow unsigned extensions</g4>. Safari forgets that setting each time it quits.",
+   "text": "アプリが Apple によって公証されていないため (実験的なビルドは公証されていません)、Safari は未署名の拡張機能が許可されている場合にのみ拡張機能を一覧表示します。<g1>設定 → 詳細</g1> → <g2>Web 開発者用の機能を表示</g2>、次に<g3>設定 → 開発</g3> → <g4>未署名の拡張機能を許可</g4>。Safari は終了するたびにこの設定を忘れます。"
   },
   "053263e0b7c48cfa": {
    "source": "What reaches your computer",
@@ -1210,6 +1210,10 @@
    "source": "Server allowing 2 connections",
    "text": "2接続を許可するサーバー"
   },
+  "13c0cbe9a49058cb": {
+   "source": "Last updated 2026-11-09 · applies to the app, the browser extension and misterdownloadmanager.com",
+   "text": "最終更新日: 2026-11-09 · アプリ、ブラウザ拡張機能、misterdownloadmanager.com に適用されます"
+  },
   "13c8ca45329dbe19": {
    "source": "Windows, Mac and Linux",
    "text": "Windows、Mac、Linux"
@@ -1389,6 +1393,10 @@
   "167e0568310b7eb2": {
    "source": "Download video from a page: the qualities on offer, from 2160p 60fps down, with their sizes.",
    "text": "ページからビデオをダウンロード：2160p 60fpsからそれ以下の品質まで、利用可能な品質とサイズが表示されます。"
+  },
+  "168f5a002ae6d1c7": {
+   "source": "<g1>Coming with version 0.5.2</g1> <g2>It's in the source code now, not yet in the download (version 0.5.0).</g2>",
+   "text": "<g1>バージョン 0.5.2 で登場</g1> <g2>現在ソースコードには含まれていますが、ダウンロード版 (バージョン 0.5.0) にはまだ含まれていません。</g2>"
   },
   "1691dcacfd0943ed": {
    "source": "Text on a chip",
@@ -1570,6 +1578,10 @@
    "source": "<g1>The help shows what it describes</g1> (<g2>#228</g2>): every guide and the main help pages now have pictures of the windows they explain, cropped to what matters, numbered where a step points at one control, and step strips for the usual flows (a download from the browser, a first download, a video, a torrent, a queue overnight). On the website they follow its light or dark theme, keep their place while they load, and open larger with a click; their descriptions and captions are translated with the page. The pictures are made by a script from one list (<x3/>), so they can all be taken again in one go.",
    "text": "<g1>ヘルプが説明内容を表示するようになりました</g1> (<g2>#228</g2>): すべてのガイドと主要なヘルプ ページに、説明するウィンドウの画像が追加されました。画像は重要な部分にトリミングされ、手順が特定のコントロールを指す場合は番号が付けられ、一般的なフロー (ブラウザからのダウンロード、最初のダウンロード、ビデオ、トレント、夜間のキュー) にはステップ ストリップが追加されています。ウェブサイトでは、ライトまたはダーク テーマに従い、読み込み中にその場所を保持し、クリックすると拡大表示されます。画像の説明とキャプションはページと共に翻訳されます。画像は 1 つのリスト (<x3/>) からスクリプトによって作成されるため、すべてを一度に再撮影できます。"
   },
+  "1962902ce083389d": {
+   "source": "If they match, it is the file we published. Every release is built on GitHub from the <g1>public source code</g1>, so anyone can read what went into it.",
+   "text": "一致すれば、それは当社が公開したファイルです。すべてのリリースは、<g1>公開されているソース コード</g1>から GitHub でビルドされているため、誰でもその内容を確認できます。"
+  },
   "19686779e1123d73": {
    "source": "To open the page by the server's name (<x1/>), give MDM that name: <x2/> (several: separated by commas). Other names are refused, so that no web page can reach MDM through a name of its own.",
    "text": "サーバー名（<x1/>）でページを開くには、MDMにその名前を<x2/>として指定します（複数ある場合はカンマで区切ります）。他の名前は拒否されるため、どのウェブページも独自の名前でMDMにアクセスすることはできません。"
@@ -1737,6 +1749,10 @@
   "1bad738cb3cea90f": {
    "source": "Select or unselect the download with the dotted outline",
    "text": "点線の枠線でダウンロードを選択または選択解除します"
+  },
+  "1badff5f5fc8b6a9": {
+   "source": "Download MDM only from <g1>the website</g1> or <g2>GitHub Releases</g2>.",
+   "text": "MDM は<g1>ウェブサイト</g1>または<g2>GitHub Releases</g2>からのみダウンロードしてください。"
   },
   "1bc816518d6f87cb": {
    "source": "<g1>Save to</g1>: the folder its torrents go to; empty, the Torrents category's folder. <g2>Add them without starting them</g2> adds them as <g3>Download Later</g3> would.",
@@ -1906,10 +1922,6 @@
    "source": "Add your account",
    "text": "アカウントを追加"
   },
-  "1e00cc7bf8c490d3": {
-   "source": "Last updated 2026-11-08",
-   "text": "最終更新日: 2026-11-08"
-  },
   "1e06a14724b6ac4b": {
    "source": "MDM downloads the pictures of a gallery (a Wikimedia Commons category, a Flickr album, a DeviantArt gallery, an Imgur album and many more) with gallery-dl…",
    "text": "MDM は、数百ものサイトに対応する無料プログラム gallery-dl を使って、ギャラリー (Wikimedia Commons のカテゴリ、Flickr のアルバム、DeviantArt のギャラリー、Imgur のアルバムなど) の画像をダウンロードします…"
@@ -1977,6 +1989,10 @@
   "1f6d9db77baccf7e": {
    "source": "Click <g1>Download Now</g1>, or <g2>Later</g2> to add it to the list without starting.",
    "text": "<g1>今すぐダウンロード</g1>をクリックするか、開始せずにリストに追加するには<g2>後で</g2>をクリックします。"
+  },
+  "1f73edb3d8f37ba8": {
+   "source": "Some limits, plainly: the portable copy can't connect to a browser, since it writes nothing outside its folder.",
+   "text": "ポータブル版にはいくつかの制限があります。フォルダー外に何も書き込まないため、ブラウザーに接続できません。"
   },
   "1f74308b96409089": {
    "source": "Project",
@@ -2426,6 +2442,10 @@
    "source": "Select one or more downloads and press <g1>Delete</g1>, click <g2>Delete</g2> on the toolbar, or choose <g3>File → Remove</g3>. MDM asks first:",
    "text": "1つ以上のダウンロードを選択し、<g1>Delete</g1>キーを押すか、ツールバーの<g2>削除</g2>をクリックするか、<g3>ファイル → 削除</g3>を選択します。MDMは最初に尋ねます。"
   },
+  "260aedba82916fcb": {
+   "source": "<g1>Not available:</g1> sharing the browser's proxy or VPN, and a download from a form.",
+   "text": "<g1>利用できないもの:</g1> ブラウザーのプロキシまたは VPN の共有、およびフォームからのダウンロード。"
+  },
   "26233472fae39b0b": {
    "source": "Choose what MDM takes",
    "text": "MDMが取得するものを選択する"
@@ -2593,6 +2613,10 @@
   "28303c1fbe9c6009": {
    "source": "Firefox, Chrome, Edge, Brave, Opera, Vivaldi, from their stores",
    "text": "Firefox、Chrome、Edge、Brave、Opera、Vivaldi (各ストアから)"
+  },
+  "2834c1ae042f4d5f": {
+   "source": "Share ratio",
+   "text": "共有比率"
   },
   "28363ce0cfaf4e8e": {
    "source": "The browser extension, from the browsers' own stores: the Chrome Web Store's is for Edge, Brave, Opera and Vivaldi too. It also comes with the app and as <g1>its own download</g1>, to add by hand. Every file is built from the public source by GitHub Actions and listed with its SHA-256 checksum.",
@@ -4310,9 +4334,9 @@
    "source": "Before you click <g1>OK</g1>, the window shows the <g2>First file</g2>, <g3>Second file</g3> and <g4>Last file</g4>, so a typo shows up before anything downloads. If the server needs a login, tick <g5>Use authorization</g5>. Copied the address already? <g6>Tasks → Add batch download from clipboard</g6> fills it in.",
    "text": "<g1>OK</g1> をクリックする前に、ウィンドウに <g2>最初のファイル</g2>、<g3>2 番目のファイル</g3>、<g4>最後のファイル</g4> が表示されるため、ダウンロードが始まる前に誤入力に気づくことができます。サーバーにログインが必要な場合は、<g5>認証を使用する</g5> にチェックを入れます。アドレスをすでにコピーしている場合は、<g6>タスク → クリップボードからバッチ ダウンロードを追加</g6> で自動入力されます。"
   },
-  "424df5ff0d11d26b": {
-   "source": "<g1>Automatically start downloading the following file types</g1> — the file types the browser hands over (and the clipboard picks up). Separate them by spaces; <x2/> matches any characters, as in <x3/>. <g4>Default</g4> puts the original list back. The list starts with the usual archives, programs and installers (Windows, macOS and Linux ones: DMG, PKG, DEB, RPM, APPIMAGE, MSIX), music and videos, and PDF. A list you never changed gains the types a new version adds; one you edited stays as it is.",
-   "text": "<g1>以下のファイルタイプを自動的にダウンロードする</g1> — ブラウザが引き渡し（クリップボードが取得する）ファイルタイプ。スペースで区切ります。<x2/>は<x3/>のように任意の文字に一致します。<g4>既定</g4>で元のリストに戻ります。リストは、一般的なアーカイブ、プログラム、インストーラー（Windows、macOS、Linux用：DMG、PKG、DEB、RPM、APPIMAGE、MSIX）、音楽、ビデオ、PDFから始まります。変更していないリストには新しいバージョンが追加するタイプが加わります。編集したリストはそのままです。"
+  "42719c02fcae1f7c": {
+   "source": "The copy of the extension from the Chrome Web Store showed no <g1>Download video</g1> button on YouTube before version 0.5.1. From 0.5.1 it shows it. Your browser updates extensions by itself; to get it sooner, open its extensions page and update them there.",
+   "text": "Chrome ウェブストアの拡張機能のコピーでは、バージョン 0.5.1 より前は YouTube に <g1>動画をダウンロード</g1> ボタンが表示されませんでした。0.5.1 以降では表示されます。お使いのブラウザーは拡張機能を自動的に更新します。より早く更新するには、拡張機能のページを開いてそこで更新してください。"
   },
   "427cc05e98da7048": {
    "source": "<g1>Extract when done</g1>: ticked by itself when the package holds an archive.",
@@ -4377,10 +4401,6 @@
   "437098c2f3d487d8": {
    "source": "The file host's link, MDM's download",
    "text": "ファイル ホストのリンク、MDM のダウンロード"
-  },
-  "437da174af682fe3": {
-   "source": "Minimize hides the main window there too, while <g1>Minimize to the notification area</g1> is on in <g2>Options → General</g2>. It is on by default.",
-   "text": "<g2>オプション → 一般</g2>で<g1>通知領域に最小化する</g1>がオンになっていると、最小化時にメイン ウィンドウも通知領域に隠れます。既定ではオンです。"
   },
   "438a47f34fb3d4b7": {
    "source": "Browser integration — Mister Download Manager help",
@@ -4606,10 +4626,6 @@
    "source": "keeps the list, the settings, the certificate and the paired devices.",
    "text": "リスト、設定、証明書、ペアリングされたデバイスを保持します。"
   },
-  "477f6fc974aad0d3": {
-   "source": "Some limits, plainly: the portable copy can't connect to a browser, since it writes nothing outside its folder. The Chrome Web Store copy shows no button over YouTube videos, which the store's policy forbids; <g1>Tasks → Download video from a page</g1> still takes any page.",
-   "text": "いくつかの制限事項: ポータブル版は、フォルダー外に何も書き込まないため、ブラウザーに接続できません。Chrome ウェブストア版は、ストアのポリシーで禁止されているため、YouTube 動画上にボタンを表示しません。<g1>タスク → ページからビデオをダウンロード</g1>は、引き続き任意のページを取得します。"
-  },
   "478b98971f744119": {
    "source": "Deleting a queue asks first; a running queue stops when deleted; the toolbar's Start / Stop Queue arrows always work.",
    "text": "キューを削除する前に確認するようになりました。実行中のキューは、削除すると停止します。ツールバーの［キューの開始］/［キューの停止］の矢印が常に機能するようになりました。"
@@ -4734,6 +4750,10 @@
    "source": "<g1>Linux: torrents work on a system without CA certificates too</g1> (part of <g2>#264</g2>): the torrent engine built its own connection for the trackers, which can't be made without them, so no torrent or magnet link started there. It now uses MDM's: peers, the DHT and <x3/> trackers work, and an <x4/> tracker fails saying there are no certificates to check it with.",
    "text": "<g1>Linux: CA 証明書のないシステムでもトレントが動作するようになりました</g1> (<g2>#264</g2> の一部): トレント エンジンはトラッカー用に独自の接続を構築していましたが、これがないと接続できないため、トレントやマグネット リンクが起動しませんでした。現在は MDM のものを使用しています。ピア、DHT、および <x3/> トラッカーは動作し、<x4/> トラッカーはチェックする証明書がないというメッセージで失敗します。"
   },
+  "49a674222f02e4a1": {
+   "source": "<g1>Options → File types → Automatically start downloading the following file types</g1> must list the file's type. The list starts with the usual ones: ZIP, RAR, 7Z, EXE, MSI, ISO, DMG, DEB, RPM, APPIMAGE, MP3, MP4, MKV, WEBM, PDF, AI models such as GGUF and SAFETENSORS, 3D files such as GLB and STL, and many more. Anything else can be added to the list.",
+   "text": "<g1>オプション → ファイルの種類 → 次のファイルの種類を自動的にダウンロードする</g1>に、ファイルのタイプがリストされている必要があります。リストは一般的なものから始まります: ZIP、RAR、7Z、EXE、MSI、ISO、DMG、DEB、RPM、APPIMAGE、MP3、MP4、MKV、WEBM、PDF、GGUF や SAFETENSORS などの AI モデル、GLB や STL などの 3D ファイル、その他多数。その他はリストに追加できます。"
+  },
   "49affaa512196498": {
    "source": "Queues and the Scheduler",
    "text": "キューとスケジューラ"
@@ -4809,6 +4829,10 @@
   "4adee382f13592b9": {
    "source": "Cap MDM as a whole (recommended)",
    "text": "MDM 全体の速度を制限する（推奨）"
+  },
+  "4afb7a591038aead": {
+   "source": "You can always save a video without the button: in MDM, open <g1>Tasks → Download video from a page</g1> and paste the video's address.",
+   "text": "ボタンがなくても、いつでも動画を保存できます。MDM で <g1>タスク → ページからビデオをダウンロード</g1> を開き、動画のアドレスを貼り付けてください。"
   },
   "4b088cdb90c95ad4": {
    "source": "If the server needs a user name and password, tick <g1>Use authorization</g1> and type them.",
@@ -5242,6 +5266,10 @@
    "source": "Open source, GNU GPL 3.0",
    "text": "オープンソース、GNU GPL 3.0"
   },
+  "5216194011d6d772": {
+   "source": "Safari (macOS)",
+   "text": "Safari (macOS)"
+  },
   "521a3abe287f879e": {
    "source": "In the window:",
    "text": "ウィンドウ内:"
@@ -5289,6 +5317,10 @@
   "52ebbc26d1011b47": {
    "source": "The free MDM extension hands each download you click over to MDM, with the page it came from and your sign-in for the site. A button over videos sends them to MDM too.",
    "text": "無料の MDM 拡張機能は、クリックしたダウンロードを、そのダウンロード元のページとサイトへのサインイン情報とともに MDM に渡します。動画上のボタンも MDM に送信します。"
+  },
+  "52fc7550762441e8": {
+   "source": "A few antivirus programs flag new installers just because they have rarely seen them, and machine-learning engines do this the most. On VirusTotal, a handful of small engines flagging a new setup while the big ones stay clean is usually a false positive. We report these to the vendors when we see them.",
+   "text": "一部のアンチウイルス プログラムは、新しいインストーラーをほとんど見たことがないという理由だけで検出することがあり、特に機械学習エンジンでこの傾向が顕著です。VirusTotal で、大手エンジンがクリーンであるにもかかわらず、少数の小規模エンジンが新しいセットアップを検出する場合、通常は誤検知です。このような場合は、ベンダーに報告しています。"
   },
   "53060965f7a26125": {
    "source": "Tick <g1>Send torrents and magnet links to the first account instead of to peers</g1>, and a magnet link or a <x2/> file goes to the service. It downloads the torrent on its own servers while the list shows how far it is (<g3>45% at Real-Debrid</g3>). MDM then fetches the files over HTTP and removes the torrent from the account's list. Your computer never connects to the torrent's peers.",
@@ -5386,10 +5418,6 @@
    "source": "Does it run on Windows 7 or 8?",
    "text": "Windows 7または8で動作しますか？"
   },
-  "547a72b540a365fd": {
-   "source": "<g1>Minimize to the notification area</g1> — Minimize hides the main window, and a download's progress window, in the notification area, as closing the main window does; downloads go on. On by default. Greyed where no tray shows MDM's icon (some Linux desktops); in a Wayland session the main window stays minimized in the dock, since Wayland can't hide a window.",
-   "text": "<g1>通知領域に最小化する</g1> — オンにすると、［最小化］をクリックしたときに、メインウィンドウとダウンロードの進行状況ウィンドウが通知領域に隠れます。メインウィンドウを閉じたときも同様です。ダウンロードは続行されます。既定ではオンです。MDMのアイコンを表示するトレイがない環境（一部の Linux デスクトップ）では、グレー表示されます。Wayland セッションではウィンドウを隠せないため、メインウィンドウはドックに最小化されたままになります。"
-  },
   "54886fa73a0a4643": {
    "source": "sets single colour roles on both sides, <x1/> and <x2/> on one side only: <x3/>, or <x4/> with transparency.",
    "text": "は両方のモードで単一の色の役割を設定し、<x1/> と <x2/> は片方のモードのみで設定します: <x3/>、または透明度を持つ <x4/>。"
@@ -5477,6 +5505,10 @@
   "55a523d7ca4b905f": {
    "source": "Thanks to",
    "text": "協力してくださった皆様"
+  },
+  "55d1512f7b2971e2": {
+   "source": "One egui window painted to fixed pixel coordinates, plus one immediate viewport per dialog. <x1/> holds the state (downloads, queues, settings, the list's selection) and turns menu, toolbar, key and IPC commands into actions. Each dialog is its own module and returns an <x2/> (open, closed, done with a value). Windows-only calls are confined to <x3/> and their Linux and macOS counterparts to <x4/> (starting with the session, the browsers' host, sounds, show in folder, the crash handler); every other file is safe, portable Rust. Fonts come from the system: Windows' Fonts folder, macOS's system fonts, fontconfig on Linux (<x5/>). On Windows, Latin, Greek and Cyrillic text is drawn by DirectWrite in GDI-classic mode (<x6/>, through egui's glyph rasterizer hook), so each letter's hinted shape and whole-pixel width come together; other scripts are shaped and drawn by egui.",
+   "text": "egui ウィンドウは固定ピクセル座標に描画され、ダイアログごとに即時ビューポートが 1 つあります。<x1/> は状態 (ダウンロード、キュー、設定、リストの選択) を保持し、メニュー、ツールバー、キー、IPC コマンドをアクションに変換します。各ダイアログは独自のモジュールであり、<x2/> (開いている、閉じている、値で完了) を返します。Windows 専用の呼び出しは <x3/> に限定され、Linux および macOS の対応する呼び出しは <x4/> に限定されます (セッションの開始、ブラウザのホスト、サウンド、フォルダーで表示、クラッシュ ハンドラー)。その他のファイルはすべて安全でポータブルな Rust です。フォントはシステムから取得されます: Windows の Fonts フォルダー、macOS のシステム フォント、Linux の fontconfig (<x5/>)。Windows では、ラテン文字、ギリシャ文字、キリル文字は GDI-classic モードの DirectWrite (<x6/>、egui のグリフ ラスタライザー フック経由) で描画されるため、各文字のヒント付き形状と全ピクセル幅が結合されます。その他のスクリプトは egui によって整形および描画されます。"
   },
   "55ecea9df3d3ed23": {
    "source": "Paste the address of a playlist (<x1/>) or a channel's videos (<x2/>) and click <g3>Look up</g3>. Instead of one video's qualities, the window lists the list's videos, each with its length.",
@@ -5898,6 +5930,10 @@
    "source": "downloads a gallery into a folder named after it. See <g1>Command line and automation</g1>.",
    "text": "ギャラリー名を付けたフォルダーにギャラリーをダウンロードします。<g1>コマンドラインと自動化</g1>を参照してください。"
   },
+  "5d07ba5f9c5ab43c": {
+   "source": "If your antivirus quarantined MDM, restore it and add an exception for its folder. If it flags something other than the setup or MDM's own programs, or a copy from anywhere else, don't run it, and please <g1>tell us</g1>.",
+   "text": "アンチウイルスが MDM を隔離した場合、復元してそのフォルダーの例外を追加してください。セットアップまたは MDM 自身のプログラム以外のもの、あるいは他の場所から入手したコピーが検出された場合は、実行しないでください。<g1>当社にご連絡ください</g1>。"
+  },
   "5d0bbcc71d941fe0": {
    "source": "misterdownloadmanager.com's own pages (home, download, features, themes, FAQ); <x1/> adds the help from <x2/> and the news from the CHANGELOG, in 22 languages, and GitHub Pages publishes it",
    "text": "misterdownloadmanager.com のページ (ホーム、ダウンロード、機能、テーマ、FAQ)。<x1/> が <x2/> のヘルプと CHANGELOG のニュースを 22 言語で追加し、GitHub Pages が公開します。"
@@ -6029,6 +6065,10 @@
   "5ea31b9a4b8d8d46": {
    "source": "Every release is built from the public source code by <g1>GitHub Actions</g1>, on GitHub's servers; the build logs are public.",
    "text": "すべてのリリースは、GitHubのサーバー上で<g1>GitHub Actions</g1>によって公開ソースコードからビルドされます。ビルドログは公開されています。"
+  },
+  "5ecbcb580e32c28b": {
+   "source": "Last updated 2026-11-09",
+   "text": "最終更新日: 2026-11-09"
   },
   "5ecd9e0a59e0c6c6": {
    "source": "RSS feeds for torrents, with download rules",
@@ -6973,6 +7013,10 @@
   "6de62748781cd023": {
    "source": "100 MiB, 2 MB/s per connection",
    "text": "100 MiB、接続あたり2 MB/秒"
+  },
+  "6df2f21ef2bda8e4": {
+   "source": "<g1>Offer to download links copied to the clipboard</g1> — when you copy a link whose file type is on the <g2>File types</g2> page, <g3>Download File Info</g3> opens with it, ready to start (or the download starts at once, with <g4>Show start download dialog</g4> off). It keeps to archives, programs, music, videos, PDF and any type you added yourself, so copying the address of a picture, a font or a 3D model to use somewhere else never starts a download. On by default.",
+   "text": "<g1>クリップボードにコピーされたリンクをダウンロードするよう提案する</g1>: <g2>ファイルの種類</g2>ページにあるファイル形式のリンクをコピーすると、<g3>ダウンロード ファイル情報</g3>が開き、ダウンロードを開始する準備ができます（<g4>ダウンロード開始ダイアログを表示</g4>がオフの場合、ダウンロードはすぐに開始されます）。アーカイブ、プログラム、音楽、ビデオ、PDF、および自分で追加した種類に限定されるため、写真、フォント、3Dモデルのアドレスをコピーしてもダウンロードは開始されません。既定でオンになっています。"
   },
   "6dfbefa6080fe200": {
    "source": "Where links come from",
@@ -8258,6 +8302,10 @@
    "source": "<g1>Star the project</g1><g2>It helps other people find it.</g2>",
    "text": "<g1>プロジェクトにスターを付ける</g1><g2>他の人が見つけるのに役立ちます。</g2>"
   },
+  "810aeb3bcab43ab3": {
+   "source": "A torrent: what it has sent to peers against what it took.",
+   "text": "トレントがピアに送信したデータ量と、ピアから受信したデータ量の比率。"
+  },
   "8144fd9d669ebeed": {
    "source": "Does it download torrents? — Mister Download Manager",
    "text": "トレントをダウンロードできますか？ — Mister Download Manager"
@@ -8345,6 +8393,10 @@
   "82a5d8b104cd86f2": {
    "source": "The same setting is in <g1>Options → Connection</g1>.",
    "text": "同じ設定は<g1>オプション → 接続</g1>にもあります。"
+  },
+  "82aaa69856a510cf": {
+   "source": "The extension works in <g1>Google Chrome</g1>, <g2>Microsoft Edge</g2>, <g3>Brave</g3>, <g4>Opera</g4> and <g5>Vivaldi</g5>, in <g6>Firefox</g6> 140 or later, and in <g7>Safari</g7> 17 or later on a Mac (see <g8>Safari</g8>).",
+   "text": "この拡張機能は、<g1>Google Chrome</g1>、<g2>Microsoft Edge</g2>、<g3>Brave</g3>、<g4>Opera</g4>、<g5>Vivaldi</g5>、<g6>Firefox</g6> 140 以降、および Mac の <g7>Safari</g7> 17 以降で動作します (<g8>Safari</g8> を参照)。"
   },
   "82c502e4717e8e1a": {
    "source": "Check your download",
@@ -8441,6 +8493,10 @@
   "842fc0e6d2b7d24d": {
    "source": "At the start time the queue starts on its own. In the morning, the finished files are under <g1>Finished</g1> in the categories.",
    "text": "開始時刻になるとキューが自動的に開始されます。朝には、カテゴリ内の<g1>完了</g1>にファイルが表示されます。"
+  },
+  "8449c6a51ad2bdb6": {
+   "source": "A torrent's connected peers while it runs, seeders and leechers alike.",
+   "text": "実行中のトレントに接続されているピア (シーダーとリーチャーの両方)。"
   },
   "844d3712af7e5da9": {
    "source": "<g1>Brave Origin connects, and the AppImage's helper is always there</g1> (<g2>#253</g2>): Brave Origin keeps its settings in a folder of its own (<x3/>), which MDM didn't know, so its extension said MDM wasn't installed. MDM now sets up Brave Origin, the Beta, Dev and Nightly versions of Brave, Chrome and Edge, and Vivaldi's snapshot; on macOS, Brave reads Chrome's folder, which MDM now writes for it. From the AppImage, MDM copies the helper program the browsers start out of the AppImage under a new name and swaps it in, so a browser still running the old copy no longer keeps the new one out, and puts it back at each start if it went missing. A copy or setup that fails is written to MDM's log, and <g4>Test browser integration</g4> says when the helper program is missing, when no browser was found, or why setting it up failed.",
@@ -9306,6 +9362,10 @@
    "source": "How do I install the browser extension? — Mister Download Manager",
    "text": "ブラウザ拡張機能のインストール方法 — Mister Download Manager"
   },
+  "92abe6de5cd6999e": {
+   "source": "<g1>Hide tab</g1> takes a tab off this download's window and goes back to <g2>Download status</g2>. To bring the tabs back, right-click the tab row and choose <g3>Show hidden tabs</g3>; closing the window and opening it again brings them back too.",
+   "text": "<g1>タブを非表示</g1> をクリックすると、このダウンロードのウィンドウからタブが削除され、<g2>ダウンロードの状態</g2> に戻ります。タブを元に戻すには、タブの行を右クリックして <g3>非表示のタブを表示</g3> を選択します。ウィンドウを閉じて再度開いても元に戻ります。"
+  },
   "92bc3a4d66867ccb": {
    "source": "A tab page's body",
    "text": "タブ ページの本文"
@@ -9370,6 +9430,10 @@
    "source": "Tick <g1>Use Speed Limiter</g1>.",
    "text": "<g1>速度制限を使用する</g1>にチェックを入れます。"
   },
+  "93c39d173fb1932a": {
+   "source": "<g1>A click on a link to a file type MDM takes</g1> goes to MDM. A download the page starts by itself (a script, or a link with no file name in its address that the server answers with a file) stays with Safari: use right-click → <g2>Download with Mister Download Manager</g2> for those.",
+   "text": "<g1>MDM が処理するファイル タイプへのリンクをクリックする</g1>と、MDM に移動します。ページが自動的に開始するダウンロード (スクリプト、またはアドレスにファイル名がなくサーバーがファイルで応答するリンク) は Safari に残ります。これらについては、右クリック → <g2>Mister Download Manager でダウンロード</g2>を使用してください。"
+  },
   "93d2b396cc0f64ed": {
    "source": "The extension is called <g1>Mister Download Manager</g1>.",
    "text": "拡張機能は<g1>Mister Download Manager</g1>と呼ばれます。"
@@ -9385,10 +9449,6 @@
   "93f335b0185aba7d": {
    "source": "Keep some speed for everything else →",
    "text": "他のすべてのために速度を維持する →"
-  },
-  "93f8e4db17db5b9a": {
-   "source": "<g1>Dates and times</g1> in the list (<g2>Last Try Date</g2>, <g3>Added</g3>) and the Scheduler follow the system's region by default (on Windows <g4>Settings → Time &amp; language → Language &amp; region → Regional format</g4>; on macOS and Linux, your language's usual way), or your own date order, clock and first day of the week in <g5>Options → Regional</g5>. In English the list keeps IDM's own date text (<x6/>).",
-   "text": "一覧 (<g2>最終試行日時</g2>、<g3>追加されました。</g3>) やスケジューラでの<g1>日付と時刻</g1>の表示は、既定ではシステムの地域設定 (Windows の場合: <g4>設定 → 時刻と言語 → 言語と地域 → 地域の形式</g4>。macOS および Linux の場合: お使いの言語の通常の形式) に従います。または、<g5>オプション → 地域</g5>で、独自の日付の順序、時刻、週の開始曜日を設定できます。英語の場合、一覧では IDM の日付形式が維持されます (<x6/>)。"
   },
   "940b9b61593ef30c": {
    "source": "<g1><x2/></g1> — the shape of text boxes, check boxes, buttons, progress bars, scroll bars, the focus mark and the title bar.",
@@ -9522,10 +9582,6 @@
    "source": "Filter the list",
    "text": "リストをフィルターする"
   },
-  "95f874ce586a0506": {
-   "source": "<g1>Catching problems.</g1> When MDM crashes (a Windows exception, a signal on Linux, a Mach exception on macOS), panics, or freezes, it asks the monitor for a dump. A freeze is a frame of the window running more than 8 s, seen by a watchdog thread that ignores time spent asleep. It times both parts of a frame: what MDM handles (the commands that come in, the clock of downloads, queues and the Scheduler), which runs minimized too, and the drawing; never the wait between frames. The watchdog also measures how much processor time the window thread got meanwhile, and the report says what that means: it ran all along (a loop), it waited in a lock or on I/O (a deadlock), or it hardly ran in ordinary code, which is a computer too busy to run MDM or slow to load it from disk, most likely not MDM's bug (those share one signature, <x2/>). macOS doesn't measure it yet. The monitor then writes a <g3>minidump</g3> of every thread from outside, through <x4/> and <x5/>. A crashed process never writes its own dump, which is how Firefox, Crashpad and Sentry do it too.",
-   "text": "<g1>問題の捕捉。</g1> MDMがクラッシュ（Windowsの例外、Linuxのシグナル、macOSのMach例外）、パニック、またはフリーズした場合、モニターにダンプを要求します。フリーズとは、ウィンドウのフレームが8秒以上実行された状態を指し、スリープ時間を無視するウォッチドッグスレッドによって検出されます。フレームの2つの部分の時間を計測します。MDMが処理する部分（受信コマンド、ダウンロードのクロック、キュー、スケジューラ）は最小化されていても実行され、描画も計測されます。フレーム間の待機は計測されません。ウォッチドッグは、その間にウィンドウのスレッドがどれだけのプロセッサ時間を得たかも測定し、その意味をレポートで示します。つまり、ずっと実行されていた（ループ）、ロックまたはI/Oで待機していた（デッドロック）、または通常のコードではほとんど実行されていなかった（コンピューターがMDMを実行するには忙しすぎるか、ディスクからの読み込みが遅い、MDMのバグである可能性は低い）ことを意味します（これらは1つのシグネチャ<x2/>を共有します）。macOSではまだ測定されていません。その後、モニターは<x4/>と<x5/>を介して、外部からすべてのスレッドの<g3>ミニダンプ</g3>を書き込みます。クラッシュしたプロセスは自身のダンプを書き込むことはありません。これはFirefox、Crashpad、Sentryも同様に行っています。"
-  },
   "95ff4e3f1e52b773": {
    "source": "portable.zip — runs from a folder or USB stick",
    "text": "portable.zip — フォルダーまたはUSBスティックから実行します"
@@ -9601,6 +9657,10 @@
   "970430e3defd4e45": {
    "source": "Browser integration →",
    "text": "ブラウザ統合 →"
+  },
+  "970641facab3170c": {
+   "source": "<g1>Move/Rename</g1> (<g2>Ctrl+M</g2>) moves or renames the file of a finished download, or of one that hasn't started yet. With several downloads selected it asks for a folder and moves them all there, each under its own name.",
+   "text": "<g1>移動/名前の変更</g1> (<g2>Ctrl+M</g2>) は、完了したダウンロードまたはまだ開始されていないダウンロードのファイルを移動または名前変更します。複数のダウンロードが選択されている場合、フォルダーの入力を求め、それらすべてをそれぞれの名前でそのフォルダーに移動します。"
   },
   "970b4b0f622b3cc5": {
    "source": "<g1>Start download on Mister Download Manager startup</g1> — start the queue whenever MDM starts.",
@@ -9817,6 +9877,10 @@
   "9a06d15d874052f0": {
    "source": "MDM has to be running for a schedule to fire. Closing the main window is fine: MDM keeps going in the notification area.",
    "text": "スケジュールが実行されるには MDM が実行されている必要があります。メイン ウィンドウを閉じても問題ありません。MDM は通知領域で実行され続けます。"
+  },
+  "9a10fba01a90016a": {
+   "source": "<g1>Works as in the other browsers:</g1> the right-click items, the button over videos, <g2>Media on this page</g2>, the toolbar button, <g3>Alt</g3>-click, MDM starting by itself, and every rule in Options.",
+   "text": "<g1>他のブラウザーと同様に動作するもの:</g1> 右クリック項目、動画上のボタン、<g2>このページのメディア</g2>、ツールバー ボタン、<g3>Alt</g3> キーを押しながらクリック、MDM の自動起動、および「オプション」のすべてのルール。"
   },
   "9a2260db9068e047": {
    "source": "More to script",
@@ -10038,6 +10102,10 @@
    "source": "<g1>Options → Remote</g1>.",
    "text": "<g1>オプション → リモート</g1>。"
   },
+  "9df4b353c5463d72": {
+   "source": "Get your file's SHA-256. On Windows, run <x1/>; on Linux, <x2/> and the file's name.",
+   "text": "ファイルの SHA-256 を取得します。Windows では<x1/>を実行し、Linux では<x2/>とファイル名を実行します。"
+  },
   "9e0019721ea3837e": {
    "source": "Install it from the Chrome Web Store or Firefox Add-ons.",
    "text": "Chrome Web Store または Firefox Add-ons からインストールします。"
@@ -10202,10 +10270,6 @@
    "source": "MDM contains no adware, spyware, bundled offers or tracking. Its whole source code is public, so anyone can check what it does, and every release is built…",
    "text": "MDMにはアドウェア、スパイウェア、抱き合わせ販売、トラッキングは一切含まれていません。ソースコードはすべて公開されており、誰でもその動作を確認できます。すべてのリリースはGitHubのサーバーでそのコードからビルドされ、ビルドプロセスも検査可能です。動画用に取得できるヘルパープログラムは、実行前に検証されます。yt-dlpは開発者の署名キーに対して、ffmpegは公開されているチェックサムに対して検証されます。MDMは、このサイトまたはプロジェクトのGitHubリリースからのみダウンロードしてください。"
   },
-  "a02445ca780f3ef8": {
-   "source": "One egui window painted to fixed pixel coordinates, plus one immediate viewport per dialog. <x1/> holds the state (downloads, queues, settings, the list's selection) and turns menu, toolbar, key and IPC commands into actions. Each dialog is its own module and returns an <x2/> (open, closed, done with a value). Windows-only calls are confined to <x3/> and their Linux and macOS counterparts to <x4/> (starting with the session, the browsers' host, sounds, show in folder, the crash handler); every other file is safe, portable Rust. Fonts come from the system: Windows' Fonts folder, macOS's system fonts, fontconfig on Linux (<x5/>).",
-   "text": "egui のウィンドウ1つを固定ピクセル座標に描画し、各ダイアログには即時ビューポートを1つ使用します。<x1/> がダウンロード、キュー、設定、リストの選択状態を保持し、メニュー、ツールバー、キー、IPC コマンドをアクションに変換します。各ダイアログは独自のモジュールで、<x2/> (開く、閉じる、値を返して完了) を返します。Windows 専用の呼び出しは <x3/> に、Linux と macOS 向けの呼び出しは <x4/> にまとめています (セッションの開始、ブラウザホスト、サウンド、フォルダーで表示、クラッシュハンドラー)。それ以外のファイルはすべて、安全に移植できる Rust です。フォントはシステムから取得します。Windows では Fonts フォルダー、macOS ではシステムフォント、Linux では fontconfig を使用します (<x5/>)。"
-  },
   "a02c94e070503928": {
    "source": "Browsers built on them work too: Chromium and Helium take the extension as Chrome does, Brave Origin as Brave does, Zen and LibreWolf as Firefox does. On Windows, Zen has a bug of its own (see <g1>The browser and MDM aren't connected</g1>).",
    "text": "Chromium や Helium など、これらをベースにしたブラウザも同様に動作します。Chrome と同じように拡張機能を使用でき、Brave Origin は Brave と同じように、Zen と LibreWolf は Firefox と同じように動作します。Windows では、Zen に独自のバグがあります (<g1>ブラウザと MDM が接続されていません</g1> を参照)。"
@@ -10329,6 +10393,10 @@
   "a1afb9d26b290530": {
    "source": "<g1>Batch downloads</g1><g2>Mister Download Manager</g2>",
    "text": "<g1>Mister Download Manager</g1> の<g2>バッチ ダウンロード</g2>"
+  },
+  "a1b29b6dc03c2789": {
+   "source": "If MDM says it's up to date, there's nothing for you to do. The extension updates by itself through its store and can get ahead of the app for a while. Everything keeps working, and the message goes away with the next version of MDM.",
+   "text": "MDM が最新版であると表示されている場合、お客様側で対応していただくことはありません。拡張機能はストアを通じて自動的に更新され、一時的にアプリよりも先行することがあります。すべては引き続き機能し、MDM の次期バージョンでこのメッセージは表示されなくなります。"
   },
   "a1b776b1a0548526": {
    "source": "MDM's main window on KDE Plasma",
@@ -10785,6 +10853,10 @@
   "a905582aea5b0712": {
    "source": "A greyed button's border",
    "text": "グレー表示されたボタンの境界線"
+  },
+  "a907f4484df884cd": {
+   "source": "<g1>Keep running when closing the window</g1> — closing the main window hides it in the notification area instead of quitting, and downloads, queues and schedules go on. On by default; unticked, closing quits MDM (so a <g2>portable copy</g2>'s folder can then be deleted). If there is no icon for MDM at all — not even behind the ^ hidden icons — the window minimizes to the taskbar instead, so downloads continue and the window stays reachable; an icon behind ^ can be clicked to bring it back, or start MDM again. Greyed where no tray shows MDM's icon (some Linux desktops): closing quits there.",
+   "text": "<g1>ウィンドウを閉じても実行を継続する</g1>: メイン ウィンドウを閉じると、終了する代わりに通知領域に隠され、ダウンロード、キュー、スケジュールが続行されます。既定でオンになっています。オフにすると、閉じるとMDMが終了します（そのため、<g2>ポータブル コピー</g2>のフォルダーを削除できます）。MDMのアイコンがまったく表示されない場合（^の隠れたアイコンの背後にもない場合）、ウィンドウは代わりにタスクバーに最小化され、ダウンロードが続行され、ウィンドウはアクセス可能な状態を保ちます。^の背後にあるアイコンをクリックして元に戻すか、MDMを再度起動できます。MDMのアイコンが表示されないトレイ（一部のLinuxデスクトップ）ではグレー表示され、閉じると終了します。"
   },
   "a90ae03353c0b71c": {
    "source": "The Scheduler's Schedule tab: Start download at, Once at or Daily, and Stop download at",
@@ -11342,6 +11414,10 @@
    "source": "runs unit tests and end-to-end downloads against <x1/> with injected faults (slow, dropped and refused connections, servers without ranges, changing files). <x2/> runs the published speed comparison; its raw data is in <x3/>.",
    "text": "<x1/>を対象に、接続が遅い場合や、切断・拒否される場合、範囲リクエストに対応していないサーバー、変更されるファイルなどの障害を注入して、単体テストとエンドツーエンドのダウンロードテストを実行します。<x2/>は公開されている速度比較を実行します。生データは<x3/>にあります。"
   },
+  "b1ea4cd6806043cd": {
+   "source": "<g1>Minimize to the notification area</g1> — Minimize hides the main window, and a download's progress window, in the notification area; downloads go on. On by default. Where the tray has no icon, the main window minimizes to the taskbar instead. The close setting above is separate; when it is on, closing hides there too (or minimizes to the taskbar if there is no icon at all). Greyed where no tray shows MDM's icon (some Linux desktops); in a Wayland session the main window stays minimized in the dock, since Wayland can't hide a window.",
+   "text": "<g1>通知領域に最小化する</g1>: 最小化すると、メイン ウィンドウとダウンロードの進行状況ウィンドウが通知領域に隠され、ダウンロードが続行されます。既定でオンになっています。トレイにアイコンがない場合、メイン ウィンドウは代わりにタスクバーに最小化されます。上記の閉じる設定は別です。それがオンの場合、閉じるとそこにも隠されます（アイコンがまったくない場合はタスクバーに最小化されます）。MDMのアイコンが表示されないトレイ（一部のLinuxデスクトップ）ではグレー表示されます。Waylandセッションでは、Waylandはウィンドウを隠すことができないため、メイン ウィンドウはドックに最小化されたままになります。"
+  },
   "b1f35176aca676c5": {
    "source": "While the queue runs, the computer doesn't go to sleep. When the queue is done, the computer's own sleep settings apply again: a computer nobody is using goes back to sleep by itself. <g1>Turn off computer when done → Sleep</g1> sends it back to sleep at once.",
    "text": "キューの実行中、コンピューターはスリープ状態になりません。キューが完了すると、コンピューターのスリープ設定が再び適用されます。誰も使用していないコンピューターは、自動的にスリープ状態に戻ります。<g1>完了時にコンピューターの電源を切る → スリープ</g1>を選ぶと、すぐにスリープ状態に戻ります。"
@@ -11409,10 +11485,6 @@
   "b27995b1d5cff0b2": {
    "source": "A calendar's day or arrow pressed",
    "text": "押されているカレンダーの日付または矢印"
-  },
-  "b27e59917bb7f695": {
-   "source": "Last updated 2026-11-08 · applies to the app, the browser extension and misterdownloadmanager.com",
-   "text": "最終更新日: 2026-11-08 · アプリ、ブラウザ拡張機能、misterdownloadmanager.com に適用されます"
   },
   "b298f93960114202": {
    "source": ", with or without <x1/>;",
@@ -11694,10 +11766,6 @@
    "source": "The menu before / after; in a submenu, <g1>Left</g1> closes it",
    "text": "前/次のメニュー。サブメニューでは、<g1>左</g1>で閉じる"
   },
-  "b7037d71c5917f53": {
-   "source": "<g1>Hide tab</g1> goes back to <g2>Download status</g2>.",
-   "text": "<g1>タブを非表示</g1>を選ぶと、「<g2>ダウンロードの状態</g2>」に戻ります。"
-  },
   "b706522e2a61060f": {
    "source": "Theme files you make or download go in MDM's themes folder. <g1>View → Theme → Open themes folder</g1> opens it (and makes it the first time). It is in MDM's data folder:",
    "text": "作成またはダウンロードしたテーマ ファイルは、MDM のテーマ フォルダーに保存されます。<g1>表示 → テーマ → テーマ フォルダーを開く</g1> で開くことができます (初回は作成されます)。これは MDM のデータ フォルダー内にあります。"
@@ -11886,6 +11954,10 @@
    "source": "When the video has subtitles, the <g1>Subtitles</g1> list offers them: the uploader's own languages first (and <g2>All the uploader's</g2> when there are several), then the site's automatic captions, marked <g3>automatic</g3>. Of those, only the ones in the language spoken and their translations into English and your interface language are listed; sites like YouTube offer a machine translation into every language they know.",
    "text": "動画に字幕がある場合、<g1>字幕</g1>リストに表示されます。まずアップロード者自身の言語（複数ある場合は<g2>アップロード者によるすべての字幕</g2>）、次にサイトの自動キャプション（<g3>自動</g3>と表示）が表示されます。そのうち、話されている言語のものと、その英語およびインターフェース言語への翻訳のみがリストに表示されます。YouTubeのようなサイトは、知っているすべての言語への機械翻訳を提供しています。"
   },
+  "ba5be854c2e3600d": {
+   "source": "My antivirus or VirusTotal flags MDM",
+   "text": "アンチウイルスまたは VirusTotal が MDM を検出する場合"
+  },
   "ba699d4f38020fb7": {
    "source": "<g1>Tasks → Import → From text file</g1> reads a text file and picks out every web address in it. You can also drop a <x2/> or <x3/> list straight onto the download list. Untick what you don't want, and add the rest to the queue.",
    "text": "<g1>タスク → インポート → テキスト ファイルから</g1> を選択すると、テキスト ファイルを読み込み、そこに含まれるすべての Web アドレスを抽出します。また、<x2/> または <x3/> リストをダウンロード リストに直接ドラッグ アンド ドロップすることもできます。不要なもののチェックを外し、残りをキューに追加します。"
@@ -11893,10 +11965,6 @@
   "ba6ae97de31c9f2e": {
    "source": "<g1></g1>Ahead on that line. Timings are medians of alternating runs on one computer and server; the bars are to scale.",
    "text": "<g1></g1>この点では IDM が優れています。時間は、1台のコンピューターとサーバーで交互に実行した場合の中央値です。バーは縮尺どおりです。"
-  },
-  "ba71746213a31b99": {
-   "source": "The extension works in <g1>Google Chrome</g1>, <g2>Microsoft Edge</g2>, <g3>Brave</g3>, <g4>Opera</g4> and <g5>Vivaldi</g5>, and in <g6>Firefox</g6> 140 or later.",
-   "text": "<g1>Google Chrome</g1>、<g2>Microsoft Edge</g2>、<g3>Brave</g3>、<g4>Opera</g4>、<g5>Vivaldi</g5>、および<g6>Firefox</g6> 140以降で拡張機能が動作します。"
   },
   "ba7398fafefc4533": {
    "source": "Peak memory",
@@ -12069,6 +12137,10 @@
   "bd171409c60c0172": {
    "source": "Options → Connection",
    "text": "オプション → 接続"
+  },
+  "bd3527667ef96098": {
+   "source": "The Mac app carries the Safari extension: there is nothing to download. Safari 17 or later and macOS 14 or later are needed.",
+   "text": "Mac アプリには Safari 拡張機能が含まれており、ダウンロードは不要です。Safari 17 以降と macOS 14 以降が必要です。"
   },
   "bd38ebc1b5f00936": {
    "source": "Scenario",
@@ -12414,6 +12486,10 @@
    "source": "A greyed button's face",
    "text": "グレー表示されたボタンの面"
   },
+  "c30f4658e7e28160": {
+   "source": "Start the video first: the list fills as the page loads things, and it's emptied when the tab goes to another page. With <g1>Prefix media file names with the page title</g1> on, a file from the list is named after the page, then its own name (<x2/>). Click <g3>Download</g3> beside one: a stream opens MDM's <g4>Download video from a page</g4> window, which reads its qualities (yt-dlp does the work); a file goes to MDM's list like any other download. Your cookies for its server, the page as the referrer and your browser's User-Agent go with it, as they do for a link you click.",
+   "text": "まず動画を再生してください。リストはページがコンテンツを読み込むにつれて埋められ、タブが別のページに移動すると空になります。<g1>メディアファイル名の前にページのタイトルを付ける</g1>がオンの場合、リストからのファイルはページ名、次にそのファイル自身の名前 (<x2/>) で命名されます。いずれかの横にある<g3>ダウンロード</g3>をクリックします。ストリームは MDM の<g4>ページからビデオをダウンロード</g4>ウィンドウを開き、その品質を読み取ります (yt-dlp が処理します)。ファイルは他のダウンロードと同様に MDM のリストに追加されます。そのサーバーのクッキー、リファラーとしてのページ、およびブラウザーのユーザーエージェントは、クリックしたリンクの場合と同様に、それに付随します。"
+  },
   "c31622b1a542c888": {
    "source": "<g1>.dmg</g1> for Intel Macs",
    "text": "Intel Mac向け<g1>.dmg</g1>"
@@ -12465,6 +12541,10 @@
   "c41cf3697bdcc8d7": {
    "source": "The extension asks the host which file types to take, checks each download against them, and cancels the browser's download only after the app has accepted it; otherwise the browser keeps it, and the extension says why.",
    "text": "拡張機能は、ホストにどのファイル タイプを受け入れるかを尋ね、それらに対して各ダウンロードをチェックし、アプリがそれを受け入れた後にのみブラウザーのダウンロードをキャンセルします。そうでない場合、ブラウザーはそれを保持し、拡張機能はその理由を伝えます。"
+  },
+  "c488af9290492a52": {
+   "source": "Closing the main window doesn't quit MDM. It hides in the notification area, and downloads, queues and schedules carry on. To make closing quit (a portable copy's folder can then be deleted), untick <g1>Options → General → Keep running when closing the window</g1>. If there is no icon for MDM at all — not in the notification area, nor behind the ^ hidden icons — the window minimizes to the taskbar instead, so downloads continue and there is a way back. An icon behind ^ can be clicked to bring the window back, and starting MDM again always does.",
+   "text": "メイン ウィンドウを閉じても MDM は終了しません。通知領域に隠れて、ダウンロード、キュー、スケジュールは継続されます。閉じたときに終了させるには（ポータブル コピーのフォルダーを削除できるようになります）、<g1>オプション → 一般 → ウィンドウを閉じても実行を継続する</g1> のチェックを外してください。通知領域にも、隠れたアイコンの ^ の中にも MDM のアイコンがまったくない場合、ウィンドウは代わりにタスクバーに最小化されるため、ダウンロードは継続され、元に戻す方法があります。^ の後ろのアイコンをクリックするとウィンドウが元に戻り、MDM を再度起動しても常に元に戻ります。"
   },
   "c48962c07ea187bc": {
    "source": "The video helpers window: yt-dlp and ffmpeg, each with its version and Use another program...",
@@ -13262,6 +13342,10 @@
    "source": "A download's details were too large",
    "text": "ダウンロードの詳細が大きすぎた"
   },
+  "d0d09410613074ec": {
+   "source": "Drag MDM to Applications and start it once. MDM's <g1>Add Mister Download Manager to your browser</g1> window lists Safari: <g2>How to Add</g2> shows the steps below.",
+   "text": "MDM を「アプリケーション」にドラッグして一度起動します。MDM の<g1>Mister Download Manager をブラウザーに追加する</g1>ウィンドウに Safari が表示されます。<g2>追加方法</g2>に以下の手順が示されています。"
+  },
   "d100800d4f0e156a": {
    "source": "MDM downloads BitTorrent files from magnet links and .torrent files. Torrents appear in the same list as other downloads, marked Torrent in the Source…",
    "text": "MDM はマグネットリンクと .torrent ファイルから BitTorrent ファイルをダウンロードします。トレントは他のダウンロードと同じリストに表示され、「ソース」欄に「トレント」と表示されます…"
@@ -13482,6 +13566,10 @@
    "source": "Honest about the translations",
    "text": "翻訳について"
   },
+  "d4a032f906bd077e": {
+   "source": "No Download video button on YouTube in Chrome, Edge or Brave",
+   "text": "Chrome、Edge、Brave で YouTube に「動画をダウンロード」ボタンが表示されない"
+  },
   "d4a589b33d49fa7c": {
    "source": "\"Remove the finished downloads from the list but keep the files.\"",
    "text": "「完了したダウンロードをリストから削除しますが、ファイルは残してください。」"
@@ -13489,10 +13577,6 @@
   "d4a71e10d53850e6": {
    "source": "<g1><g2>Catch downloads from your browser</g2></g1> — set up the extension so clicked downloads go to MDM.",
    "text": "<g1><g2>ブラウザーからダウンロードをキャッチする</g2></g1> — クリックしたダウンロードが MDM に送られるように拡張機能を設定する方法。"
-  },
-  "d4c66a15e09e8ca8": {
-   "source": "<g1>Offer to download links copied to the clipboard</g1> — when you copy a link whose file type is on the <g2>File types</g2> page, <g3>Download File Info</g3> opens with it, ready to start (or the download starts at once, with <g4>Show start download dialog</g4> off). On by default.",
-   "text": "<g1>クリップボードにコピーされたリンクをダウンロードするよう提案する</g1> — <g2>ファイルの種類</g2>ページに設定された種類のファイルへのリンクをコピーすると、そのリンクが入力された<g3>ダウンロード ファイル情報</g3>が開き、ダウンロードを開始できます（<g4>ダウンロード開始ダイアログを表示</g4>がオフの場合は、ダウンロードがすぐに開始されます）。既定ではオンです。"
   },
   "d4c9212e6107e470": {
    "source": "Playlists and channels",
@@ -13714,6 +13798,10 @@
    "source": "Yes. When a video has subtitles, the <g1>Subtitles</g1> list in the video window offers them: the uploader's languages and the site's automatic captions. They're saved beside the video as an <x2/> file, or put inside it with <g3>Put them into the video</g3>. See <g4>Subtitles</g4>.",
    "text": "はい。動画に字幕がある場合、動画ウィンドウの<g1>字幕</g1>リストに、アップロード者が設定した言語の字幕と、サイトが自動生成した字幕が表示されます。字幕は動画と同じ場所に<x2/>ファイルとして保存するか、<g3>ビデオに埋め込む</g3>ことができます。<g4>字幕</g4>をご覧ください。"
   },
+  "d79ad01ff4322b0a": {
+   "source": "<g1>Automatically start downloading the following file types</g1> — the file types the browser hands over (and the clipboard picks up). Separate them by spaces; <x2/> matches any characters, as in <x3/>. <g4>Default</g4> puts the original list back. The list starts with the usual archives, programs and installers (Windows, macOS and Linux ones: DMG, PKG, DEB, RPM, APPIMAGE, MSIX), music and videos, PDF and Office files, AI models and datasets (GGUF, SAFETENSORS, CKPT, PT, ONNX, PARQUET), 3D and CAD files (GLB, FBX, OBJ, STL, BLEND, STEP), design and camera RAW files, ebooks, disk images and split archives. Pages, scripts, plain text and web images are left out on purpose, so saving a picture or a page stays with the browser; add any type you need, or put a single <x5/> in the box to take every file that has an extension. A list you never changed gains the types a new version adds; one you edited stays as it is.",
+   "text": "<g1>次のファイルの種類を自動的にダウンロードする</g1>: ブラウザーが引き渡す（およびクリップボードが取得する）ファイルの種類です。スペースで区切ります。<x2/>は<x3/>のように任意の文字に一致します。<g4>既定</g4>をクリックすると、元のリストに戻ります。リストは、一般的なアーカイブ、プログラム、インストーラー（Windows、macOS、Linuxのもの：DMG、PKG、DEB、RPM、APPIMAGE、MSIX）、音楽、ビデオ、PDF、Officeファイル、AIモデルとデータセット（GGUF、SAFETENSORS、CKPT、PT、ONNX、PARQUET）、3DおよびCADファイル（GLB、FBX、OBJ、STL、BLEND、STEP）、デザインおよびカメラRAWファイル、電子書籍、ディスク イメージ、分割アーカイブから始まります。ページ、スクリプト、プレーン テキスト、Web画像は意図的に除外されているため、写真やページの保存はブラウザーで行われます。必要な種類を追加するか、ボックスに単一の<x5/>を入力して、拡張子を持つすべてのファイルを取得します。変更されていないリストには新しいバージョンが追加する種類が追加されます。編集したリストはそのまま残ります。"
+  },
   "d7a59305d1341d4e": {
    "source": "The app and the extension hold no personal data about you, so there is nothing for us to show, correct or delete there. The website's visit statistics are held by Statcounter; to have records of your visits removed, open an issue with the date and time of your visit, or ask Statcounter directly. Data that you send to GitHub (an issue, for example) is handled by GitHub and can be edited or deleted there.",
    "text": "アプリと拡張機能はお客様の個人データを保持しないため、表示、訂正、削除できるデータはありません。ウェブサイトの訪問統計は Statcounter が保持しています。訪問記録の削除を希望する場合は、訪問日時を添えて issue を作成するか、Statcounter に直接お問い合わせください。GitHub に送信したデータ（issue など）は GitHub が管理し、GitHub 上で編集または削除できます。"
@@ -13769,10 +13857,6 @@
   "d840a217a694ce9e": {
    "source": "5. No warranty",
    "text": "5. 無保証"
-  },
-  "d8456502c3302d77": {
-   "source": "Start the video first: the list fills as the page loads things, and it's emptied when the tab goes to another page. Click <g1>Download</g1> beside one: a stream opens MDM's <g2>Download video from a page</g2> window, which reads its qualities (yt-dlp does the work); a file goes to MDM's list like any other download. Your cookies for its server, the page as the referrer and your browser's User-Agent go with it, as they do for a link you click.",
-   "text": "まず動画を再生してください。ページが読み込んだ項目は一覧に追加され、タブが別のページに移動すると一覧は空になります。項目の横にある<g1>ダウンロード</g1>をクリックすると、ストリームの場合はMDMの<g2>ページからビデオをダウンロード</g2>ウィンドウが開き、ストリームの品質を読み取ります（処理にはyt-dlpを使います）。ファイルの場合は、ほかのダウンロードと同様にMDMの一覧に追加されます。リンクをクリックした場合と同じように、サーバー用の Cookie、リファラーとしてのページ、ブラウザーのUser-Agentも送信されます。"
   },
   "d878d923ca93995a": {
    "source": "Open <x1/> (the codes are in <g2><x3/></g2>).",
@@ -14006,6 +14090,10 @@
    "source": "<g1>The extension's toolbar button</g1> says whether the browser reaches MDM. When it doesn't, a red <g2>!</g2> and <g3>How to fix it</g3> lead to the new help page, <g4>The browser and MDM aren't connected</g4>, at the section for the reason. Its popup also pauses taking downloads, leaves the current site to the browser for good, and opens MDM or its Options.",
    "text": "<g1>拡張機能のツールバー ボタン</g1>は、ブラウザーが MDM に到達しているかどうかを示します。到達していない場合、赤い<g2>!</g2>と<g3>修正方法</g3>が新しいヘルプページ<g4>ブラウザーと MDM が接続されていません</g4>の該当セクションに誘導します。そのポップアップでは、ダウンロードの取得を一時停止したり、現在のサイトをブラウザーに永続的に任せたり、MDM またはそのオプションを開いたりすることもできます。"
   },
+  "dc93b881572cb1c5": {
+   "source": "Peers",
+   "text": "ピア"
+  },
   "dcabc8a97e80dd97": {
    "source": "Downloads → Speed Limiter → Settings...: one speed for all of MDM.",
    "text": "ダウンロード → 速度制限 → 設定...: MDM全体の速度を1つに。"
@@ -14054,10 +14142,6 @@
    "source": "Runs nearly everywhere, with HTTP, BitTorrent, magnet and ed2k, and a REST API",
    "text": "HTTP、BitTorrent、マグネット、ed2kに対応し、REST APIも備え、ほぼどこでも動作"
   },
-  "dda60fa3176775af": {
-   "source": "<g1>Move/Rename</g1> (<g2>Ctrl+M</g2>) moves or renames the file of a finished download, or of one that hasn't started yet.",
-   "text": "<g1>移動/名前の変更</g1> (<g2>Ctrl+M</g2>) は、完了したダウンロード、またはまだ開始されていないダウンロードのファイルを移動または名前変更します。"
-  },
   "ddb6d067aabbbb96": {
    "source": "Command line and automation — Mister Download Manager help",
    "text": "コマンドラインと自動化 — Mister Download Manager ヘルプ"
@@ -14069,10 +14153,6 @@
   "dddc4b4555b211bf": {
    "source": "the pause-and-resume and event-log tests no longer depend on how fast the machine is: the lab server can hold a byte back until a test lets it go (<x1/>), and a test can wait until every request it made is in the server's log (#123);",
    "text": "一時停止と再開、およびイベント ログのテストは、マシンの速度に依存しなくなりました。ラボ サーバーは、テストが許可するまでバイトを保持でき (<x1/>)、テストは、作成したすべてのリクエストがサーバーのログに記録されるまで待機できます (#123)。"
-  },
-  "ddf53195ff2cd6d1": {
-   "source": "Closing the main window doesn't quit MDM. It hides in the notification area, and downloads, queues and schedules carry on.",
-   "text": "メイン ウィンドウを閉じても MDM は終了しません。ウィンドウは通知領域に隠れ、ダウンロード、キュー、スケジュールはそのまま続行されます。"
   },
   "de05be78a1ac8ebe": {
    "source": "Can it resume broken downloads? — Mister Download Manager",
@@ -14097,6 +14177,10 @@
   "deb3f2db3855218f": {
    "source": "<g1>Never take downloads from</g1> the current site: adds it to MDM's excluded sites.",
    "text": "現在のサイトからのダウンロードを<g1>取得しない</g1>: MDMの除外サイトに追加します。"
+  },
+  "debac78242ebe5d9": {
+   "source": "Minimize hides the main window there too, while <g1>Minimize to the notification area</g1> is on in <g2>Options → General</g2>. It is on by default; where the tray has no icon, Minimize sends the window to the taskbar instead.",
+   "text": "<g2>オプション → 一般</g2> で <g1>通知領域に最小化する</g1> がオンになっている場合、［最小化］もメイン ウィンドウをそこに隠します。これは既定でオンになっています。通知領域にアイコンがない場合、［最小化］はウィンドウを代わりにタスクバーに送ります。"
   },
   "dee4ab42b514acda": {
    "source": "The language list on first start: every language with its flag, its own name and its English name",
@@ -14998,6 +15082,10 @@
    "source": "Download a video from a page",
    "text": "ページからビデオをダウンロードする"
   },
+  "ece3601cb88a5ef9": {
+   "source": "Safari lets an extension neither see nor stop the browser's downloads, so what works differs from the other browsers:",
+   "text": "Safari では拡張機能がブラウザーのダウンロードを表示したり停止したりできないため、他のブラウザーとは動作が異なります。"
+  },
   "ece9fd24c79f10c2": {
    "source": "The windows are the ones described in this help, with the desktop's fonts, file icons and title bars:",
    "text": "ウィンドウは、このヘルプで説明されているもので、デスクトップのフォント、ファイル アイコン、タイトル バーを使用します。"
@@ -15562,6 +15650,10 @@
    "source": "<g1>Metro</g1>, after Windows 8's flat look: square corners, flat buttons, boxes that take an accent border when focused, check boxes with a tick, a bordered progress bar, scroll bars with their arrows always shown, one-colour icons (Microsoft's Fluent UI System Icons, MIT) and a title bar in the theme's colour with the title centred.",
    "text": "Windows 8 のフラットな外観に続く<g1>メトロ</g1>: 角が四角く、フラットなボタン、フォーカス時にアクセントの境界線が付くボックス、チェックマーク付きのチェック ボックス、境界線付きのプログレス バー、常に矢印が表示されるスクロール バー、単色アイコン (Microsoft の Fluent UI System Icons、MIT)、タイトルが中央に配置されたテーマの色で描画されたタイトル バー。"
   },
+  "f554a7b471d1c8c4": {
+   "source": "To check that your copy is the real one:",
+   "text": "お使いのコピーが正規のものであることを確認するには:"
+  },
   "f55e431df0898bf7": {
    "source": "Corner radius of a popup in a window (a calendar, a filter box)",
    "text": "ウィンドウ内のポップアップ (カレンダー、フィルター ボックス) の角の半径"
@@ -15589,6 +15681,10 @@
   "f5d0db4c9a23ece3": {
    "source": "<g1><g2>Adding downloads</g2></g1> — Add URL, the clipboard, the drop target, batch downloads and lists of links, and Start Download versus Download Later.",
    "text": "<g1><g2>ダウンロードの追加</g2></g1> — ［URL を追加］、クリップボード、ドロップ先、複数ファイルのダウンロードとリンク一覧、［ダウンロード開始］と［後でダウンロード］の違い。"
+  },
+  "f5d1e8a8bc6e8e59": {
+   "source": "Compare it with the same file's line in that release's <x1/>.",
+   "text": "そのリリースの<x1/>にある同じファイルの行と比較します。"
   },
   "f5e911e1675285c5": {
    "source": "Add the extension to each browser you use, as below: Firefox from its add-ons store, the others from the Chrome Web Store. Until a browser's extension has reached MDM, MDM's <g1>Add Mister Download Manager to your browser</g1> window opens at each start: it lists the browsers it found, and <g2>Add the extension</g2> opens the store's page in that browser. <g3>Install it by hand</g3> opens the steps for loading it without the store; <g4>Don't ask again</g4> stops the window.",
@@ -15998,6 +16094,10 @@
    "source": "Click <g1>Load unpacked</g1> and choose the <x2/> folder.",
    "text": "<g1>パッケージ化されていない拡張機能を読み込む</g1>をクリックし、<x2/>フォルダーを選択します。"
   },
+  "fbb8c948c7d5543c": {
+   "source": "<g1>Dates and times</g1> in the list (<g2>Last Try Date</g2>, <g3>Added</g3>) and the Scheduler follow the system's region by default (on Windows <g4>Settings → Time &amp; language → Language &amp; region → Regional format</g4>; on macOS and Linux, your language's usual way), or your own date order, clock and first day of the week in <g5>Options → Regional</g5>. In English the list keeps IDM's own date text (<x6/>), on the system's 12- or 24-hour clock (<x7/>).",
+   "text": "一覧（<g2>最終試行日時</g2>、<g3>追加されました。</g3>）やスケジューラでの<g1>日付と時刻</g1>の表示は、既定ではシステムの地域設定（Windows では<g4>設定 → 時刻と言語 → 言語と地域 → 地域の形式</g4>、macOS および Linux では言語の一般的な形式）に従います。または、<g5>オプション → 地域</g5>で独自の日付順序、時計、週の開始曜日を設定できます。英語の場合、一覧では IDM の日付テキスト（<x6/>）がシステムの 12 時間または 24 時間表示（<x7/>）で保持されます。"
+  },
   "fbba8f18d2fae06e": {
    "source": "A text box's bottom line while it can be typed in",
    "text": "入力可能なテキスト ボックスの下線"
@@ -16081,6 +16181,10 @@
   "fd2f8ecc1dec89a7": {
    "source": "Does it keep uploading after a torrent finishes? — Mister Download Manager",
    "text": "トレント完了後もアップロードは続きますか？ — Mister Download Manager"
+  },
+  "fd36b355f1d75039": {
+   "source": "In Safari open <g1>Settings → Extensions</g1> and tick <g2>Mister Download Manager</g2>. Click <g3>Always Allow on Every Website</g3>: the extension needs to read the site to pass your sign-in on.",
+   "text": "Safari で<g1>設定 → 機能拡張</g1>を開き、<g2>Mister Download Manager</g2>にチェックを入れます。<g3>すべての Web サイトで常に許可</g3>をクリックします。拡張機能がサイトを読み取り、サインイン情報を渡すために必要です。"
   },
   "fd40efe02c1179f3": {
    "source": "The examples use Windows' paths; on macOS and Linux the programs have the same names without <x1/>.",

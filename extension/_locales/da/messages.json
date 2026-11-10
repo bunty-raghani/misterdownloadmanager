@@ -238,5 +238,8 @@
   },
   "remote_device_name": {
     "message": "Browserudvidelse"
+  },
+  "popup_media_title_name": {
+    "message": "Tilføj sidens titel foran mediefilernes navne"
   }
 }

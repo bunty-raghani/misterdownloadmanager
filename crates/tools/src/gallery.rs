@@ -662,6 +662,6 @@ mod tests {
         )
         .unwrap();
         assert_eq!(installed(dir.path()), Some(now));
-        assert!(crate::installed(dir.path()).is_none(), "not yt-dlp's");
+        assert!(crate::own_ytdlp(dir.path()).is_none(), "not yt-dlp's");
     }
 }

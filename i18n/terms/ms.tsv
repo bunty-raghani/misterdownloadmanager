@@ -1,0 +1,17 @@
+# Malay termbase: English term, then its translation, then when to use it.
+# Read by tools/i18n/translate.py and tools/website/translate_site.py (lingo.py). Rows a
+# person wrote or checked; tools/i18n/learn.py proposes more from reviewed catalog rows.
+queue	baris gilir	standalone or header: 'Baris Gilir'; mid-sentence lowercase; never 'giliran' alone
+clipboard	papan klip	never 'papan keratan'
+checksum	jumlah semak	DBP term; never the literal 'jumlah hasil tambah'; 'Verify checksum...' = 'Sahkan jumlah semak...'
+description	Perihalan	never 'penerangan'; 'Description' column and 'By Description' both use it
+link grabber	Pengambil Pautan	feature/window name; shortcut letter on 'Pautan'
+drop target	sasaran lepas	'Show/Hide drop target' = 'Tunjukkan/Sembunyikan sasaran lepas'; never 'jatuhkan'
+download	muat turun	verb and noun; never Indonesian 'unduh'
+file	fail	never Indonesian 'berkas'
+remove	alih keluar	removing a download from the list; deleting the file itself: 'padam'
+pause	jeda	pausing a download; stopping it: 'henti'/'hentikan'
+resume	sambung semula	continuing a stopped download
+settings	Tetapan	the Settings window; the Options toolbar button and menu: 'Pilihan'
+scheduler	Penjadual	MDM's Scheduler window/tool
+piece	cebisan	torrent pieces; 'First and last pieces first' = 'Cebisan pertama dan terakhir dahulu'

@@ -103,7 +103,8 @@ struct Message {
     /// The user asked for this download (right-click → Download with Mister Download Manager):
     /// Options' automatic-capture rules don't apply, as IDM's "Download with IDM" takes any link.
     explicit: bool,
-    /// May the download button show over videos on page `url`?
+    /// May the download button show over videos on page `url`? With `referrer`: the tab's
+    /// address, when `url` is a frame embedded from another page (its site counts too, #532).
     panel: bool,
     /// The download button was clicked: `url` is the video's page, `src` the video's own
     /// address when the page plays a plain file (not a stream assembled in the page), or the
@@ -287,7 +288,7 @@ fn answer(m: Message, rules: &mdm_ipc::capture::CaptureRules) -> Reply {
     // if need be), which opens its window or keeps the setting.
     if m.panel {
         return Reply {
-            ok: rules.panel_on(&m.url, browser),
+            ok: rules.panel_on(&m.url, m.referrer.as_deref(), browser),
             ..Default::default()
         };
     }
@@ -475,7 +476,7 @@ fn video_command(
     }
     // The toolbar button's list of the tab's media (#38) asks for one explicitly: whether the
     // button over videos shows on this site doesn't matter then.
-    if !m.explicit && !rules.panel_on(&m.url, browser) {
+    if !m.explicit && !rules.panel_on(&m.url, m.referrer.as_deref(), browser) {
         return Err(("options", "the video button is off here"));
     }
     // The video clicked, not the page's first one (a feed plays many): its own file when there
@@ -1279,6 +1280,12 @@ mod tests {
         };
         assert!(answer(ask("https://videos.test/watch"), &rules).ok);
         assert!(!answer(ask("https://www.quiet.test/watch"), &rules).ok);
+        // #532: a player embedded from another site, in a tab on a listed site.
+        let embedded = Message {
+            referrer: Some("https://www.quiet.test/post".into()),
+            ..ask("https://videos.test/embed/1")
+        };
+        assert!(!answer(embedded, &rules).ok);
         rules.video_panel = false;
         assert!(!answer(ask("https://videos.test/watch"), &rules).ok);
         // Clicked where it's off (the page was open before the change): refused, nothing sent.

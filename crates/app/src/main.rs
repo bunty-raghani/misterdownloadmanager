@@ -5,6 +5,7 @@ mod batch;
 mod categories;
 mod checksum;
 mod chrome;
+mod clock;
 mod countries;
 mod crash;
 mod crashui;
@@ -56,6 +57,7 @@ mod theme;
 mod themefile;
 mod themeicons;
 mod torrentdlg;
+mod torrentfiles;
 mod torrents;
 mod transfer;
 mod tray;
@@ -80,12 +82,22 @@ pub const MAIN_TITLE: &str = concat!("Mister Download Manager ", env!("CARGO_PKG
 /// icon (AppIcon.icns, every size, tools/installer/build-macos.sh), which an icon set at run
 /// time would replace.
 pub fn app_icon() -> std::sync::Arc<egui::IconData> {
+    if cfg!(target_os = "macos") {
+        // eframe takes an empty icon as "none" (AppTitleIconSetter).
+        static NONE: std::sync::OnceLock<std::sync::Arc<egui::IconData>> =
+            std::sync::OnceLock::new();
+        return NONE.get_or_init(Default::default).clone();
+    }
+    app_picture()
+}
+
+/// The app icon's picture, the 256 px size, on every system: what MDM draws or hands over as a
+/// picture (the tray's icon, macOS's menu bar item; the crash report window's heading). Not
+/// [`app_icon`], empty on macOS: an empty picture can't be made into the menu bar item, so macOS
+/// had none and closing the window quit (#529).
+pub fn app_picture() -> std::sync::Arc<egui::IconData> {
     static ICON: std::sync::OnceLock<std::sync::Arc<egui::IconData>> = std::sync::OnceLock::new();
     ICON.get_or_init(|| {
-        if cfg!(target_os = "macos") {
-            // eframe takes an empty icon as "none" (AppTitleIconSetter).
-            return std::sync::Arc::new(egui::IconData::default());
-        }
         let png = include_bytes!("../assets/icons/app/mdm-256.png");
         std::sync::Arc::new(eframe::icon_data::from_png_bytes(png).unwrap_or_default())
     })
@@ -223,20 +235,29 @@ fn main() -> std::process::ExitCode {
     if std::env::args().nth(1).as_deref() == Some("--forget-sign-ins") {
         return secrets::forget_all();
     }
+    // The local time's offset, asked on a thread of its own from now on (#536).
+    clock::start();
     // A server (#157): the app without a window.
     let all: Vec<String> = std::env::args().skip(1).collect();
-    if headless::asked(&all) {
-        return headless::main(all);
-    }
-    match app() {
-        Ok(()) => std::process::ExitCode::SUCCESS,
-        // As `main` returning the error would.
-        Err(e) => {
-            eprintln!("Error: {e:?}");
-            std::process::ExitCode::FAILURE
+    let code = if headless::asked(&all) {
+        headless::main(all)
+    } else {
+        match app() {
+            Ok(()) => std::process::ExitCode::SUCCESS,
+            // As `main` returning the error would.
+            Err(e) => {
+                eprintln!("Error: {e:?}");
+                std::process::ExitCode::FAILURE
+            }
         }
-    }
+    };
+    // The log's last lines, still on their way to the file (its own thread, #513).
+    mdm_crash::logs::flush(LOG_AT_THE_END);
+    code
 }
+
+/// How long MDM's end waits for its log's last lines (a disk that holds them longer loses them).
+const LOG_AT_THE_END: std::time::Duration = std::time::Duration::from_secs(2);
 
 fn app() -> eframe::Result {
     // MDM's crash monitor (crash.rs started it): the report window when the app crashes or

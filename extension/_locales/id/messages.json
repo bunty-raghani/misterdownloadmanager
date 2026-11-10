@@ -238,5 +238,8 @@
   },
   "remote_device_name": {
     "message": "Ekstensi browser"
+  },
+  "popup_media_title_name": {
+    "message": "Tambahkan judul halaman di depan nama file media"
   }
 }

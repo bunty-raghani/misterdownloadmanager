@@ -2,7 +2,7 @@
 //! modes, as IDM's. Queues on the left; on the right the selected queue's Schedule and Files in
 //! the queue, or the Download limits page. Edits stay in a draft until Apply, Start now or Close.
 
-use chrono::{Datelike, Duration as Days, Local, NaiveDate};
+use chrono::{Datelike, Duration as Days, NaiveDate};
 use egui::{Color32, Pos2, Rect, Sense, Ui, pos2, vec2};
 
 use crate::chrome::{IconKey, ShellIcons};
@@ -85,7 +85,7 @@ struct Form {
 impl Form {
     fn of(q: &Queue) -> Self {
         let s = &q.schedule;
-        let today = Local::now().date_naive();
+        let today = crate::clock::now().date_naive();
         Form {
             start_on_startup: s.start_on_startup,
             start_at_on: s.start_at.is_some(),
@@ -707,7 +707,7 @@ impl Scheduler {
         }
         // A start that can never come says so where it is set (the queue just never ran).
         if f.start_at_on {
-            let today = Local::now().date_naive();
+            let today = crate::clock::now().date_naive();
             let (bad, rc, why) = if f.once {
                 (
                     f.date < today,
@@ -908,7 +908,7 @@ impl Scheduler {
                 Some(e) => (e.to_owned(), None, true),
                 None => {
                     f.apply_to(&mut q);
-                    let now = Local::now().naive_local();
+                    let now = crate::clock::now().naive_local();
                     match crate::wake::next_start(&q.schedule, now) {
                         Some(start) => (wake_note(crate::wake::wake_for(start, now)), None, false),
                         None => (String::new(), None, false),
@@ -1958,7 +1958,7 @@ fn calendar(ui: &mut Ui, key: egui::Id, under: Rect, date: NaiveDate) -> (Option
     let (cw, ch) = (28.0, 19.0);
     let size = vec2(cw * 7.0 + 12.0, 26.0 + 18.0 + ch * 6.0 + 8.0 + 18.0);
     let mut picked = None;
-    let today = Local::now().date_naive();
+    let today = crate::clock::now().date_naive();
     // The keys (the week runs from the right in RTL: Left and Right swap there).
     let back = if winui::rtl() { 1 } else { -1 };
     let moves = [

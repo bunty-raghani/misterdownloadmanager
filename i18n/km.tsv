@@ -70,7 +70,7 @@
 #. {n} = a number (keep the braces as they are)
 #, machine
 @plural	{n} entry was left out (a link, or a name leading outside the folder)|{n} entries were left out (links, or names leading outside the folder)	ធាតុ {n} ត្រូវបានទុកចោល (តំណភ្ជាប់ ឬឈ្មោះដែលនាំទៅក្រៅថត)
-#. count in the Batch download window; count in the Link grabber window; count in the Add torrent window
+#. count in the Batch download window; count in the Link grabber window; count in the Add torrent window; count in torrentfiles.rs
 #. how many files the pattern gives in all
 #. Link grabber: a package's row: {n} is its number of links
 #. {n} = a number (keep the braces as they are)
@@ -820,6 +820,10 @@
 #. text in helpers.rs
 #, machine
 	Check your connection, then try again, or get them later from the video window.	ពិនិត្យមើលការតភ្ជាប់របស់អ្នក រួចព្យាយាមម្ដងទៀត ឬយកវាពេលក្រោយពីបង្អួចវីដេអូ។
+#. text in the Options window
+#. tooltip of the close-setting: checked keeps MDM running when the window closes, in the notification area when available or else the taskbar; downloads continue; unchecked closing quits
+#, machine
+	Checked, closing the window keeps MDM running: it hides in the notification area when available, or minimizes to the taskbar otherwise, and downloads continue; unchecked, closing quits MDM	នៅពេលធីក ការបិទបង្អួចនឹងរក្សា MDM ឱ្យដំណើរការ៖ វានឹងលាក់នៅក្នុងតំបន់ជូនដំណឹង ប្រសិនបើមាន ឬបង្រួមទៅរបារភារកិច្ច បើមិនដូច្នោះទេ ហើយការទាញយកនឹងបន្ត។ នៅពេលមិនធីក ការបិទបង្អួចនឹងចេញពី MDM។
 #. message or event log entry in the main window
 #. event log entry after Recheck: {have} and {total} are sizes ("1.2 GB of 4 GB there")
 #, machine
@@ -853,6 +857,10 @@
 #. the trailing ... means it is still going on: keep it
 #, machine
 	Checking {name} ({n} of {total})...	កំពុងពិនិត្យ {name} ({n} ក្នុងចំណោម {total})...
+#. text in the download list (sizes, speeds, status)
+#. a torrent's status while its files are read and checked; {percent} is how much is checked, e.g. "42%"
+#, machine
+	Checking {percent}	កំពុងពិនិត្យ {percent}
 #. text in the Checksum window; text in the Link grabber window
 #. the trailing ... means it is still going on: keep it
 #, machine
@@ -898,11 +906,12 @@
 #. text in the Options window
 #, machine
 	Clock:	នាឡិកា៖
-#. text in the Checksum window; text in the main window (menus, toolbar, Categories pane); button in crashui.rs; button in a dialog box; button in extension.rs; button in the Help menu's windows (About, updates, shortcuts, Tell a friend); button in helpers.rs; button in the download list; button in the Options window; button in rssdlg.rs; text in standard windows
+#. text in the Checksum window; text in the main window (menus, toolbar, Categories pane); button in crashui.rs; button in a dialog box; button in extension.rs; button in the Help menu's windows (About, updates, shortcuts, Tell a friend); button in helpers.rs; button in the download list; button in the Options window; button in rssdlg.rs; button in torrentfiles.rs; text in standard windows
 #. both verbs: Verify = check the file now; Close = close the window
 #. tooltip of the × that closes the Categories pane
 #. verb: closes this window
 #. verb: closes the filter box
+#. button that closes the torrent file list window
 #. a window's title-bar button: closes the window
 #, machine
 	Close	បិទ
@@ -1619,6 +1628,11 @@
 #. text in the Scheduler window; tab in the Scheduler window
 #, machine
 	Files in the queue	ឯកសារនៅក្នុងជួរ
+#. button in a download's Properties window
+#. File Properties button that opens the selected torrent's file list
+#. the trailing ... means it opens a window: keep it
+#, machine
+	Files...	ឯកសារ...
 #. button in the Find window
 #. verb: button that starts the search
 #, machine
@@ -2155,6 +2169,10 @@
 #. text in a dialog box; text in a download's progress window; text in the Add torrent window
 #, machine
 	KBytes/sec	គីឡូបៃ/វិនាទី
+#. text in the Options window
+#. checkbox: closing keeps MDM running, in the notification area when available or else the taskbar, instead of quitting
+#, machine
+	Keep running when closing the window	រក្សា MDM ឱ្យដំណើរការនៅពេលបិទបង្អួច
 #. checkbox in the Add torrent window
 #, machine
 	Keep sharing torrents after they finish	បន្តចែករំលែក torrents បន្ទាប់ពីពួកវាបញ្ចប់
@@ -3058,14 +3076,15 @@
 #. checkbox in a dialog box
 #, machine
 	Only while I'm using the computer	តែនៅពេលខ្ញុំកំពុងប្រើកុំព្យូទ័រ
-#. button in a dialog box; text in a dialog box; button in a download's Properties window
+#. button in a dialog box; text in a dialog box; button in a download's Properties window; button in torrentfiles.rs
 #. verb: opens the downloaded file
 #. title of the message when a downloaded file can't be opened
 #. verb: opens the file
 #, machine
 	Open	បើក
-#. button in crashui.rs; button in a dialog box
+#. button in crashui.rs; button in a dialog box; button in torrentfiles.rs
 #. crash report window button: show the report's file in its folder
+#. button that opens the torrent's containing folder in the file manager
 #, machine
 	Open folder	បើកថត
 #. checkbox in the Add torrent window
@@ -3608,7 +3627,7 @@
 #. title of the folder picker
 #, machine
 	Select a folder	ជ្រើសរើសថតឯកសារ
-#. button in playlistdlg.rs; button in the Add torrent window
+#. button in playlistdlg.rs; button in the Add torrent window; text in torrentfiles.rs
 #. button in Download video for a playlist: tick every video
 #, machine
 	Select all	ជ្រើសរើសទាំងអស់
@@ -3861,8 +3880,9 @@
 #. text in a download's Properties window
 #, machine
 	Size:	ទំហំ៖
-#. text in a download's progress window
+#. text in a download's progress window; text in torrentfiles.rs
 #. a torrent file the user chose not to download
+#. status of a torrent file the user chose not to download
 #, machine
 	Skipped	បានរំលង
 #. text in the queues
@@ -4593,6 +4613,10 @@
 #. {name} = a file name (keep the braces as they are)
 #, machine
 	this program isn't {name}	កម្មវិធីនេះមិនមែនជា {name} ទេ
+#. text in errors.rs
+#. why a download failed: the site's bot check (Cloudflare) lets browsers through, not programs. Alt+click: the link clicked with the Alt key held, which leaves the download to the browser
+#, machine
+	this site lets only browsers through; Alt+click the link	គេហទំព័រនេះអនុញ្ញាតតែកម្មវិធីរុករកប៉ុណ្ណោះ។ Alt+ចុចតំណ។
 #. text in a download's progress window
 #, machine
 	This system has no dial-up connections to hang up	ប្រព័ន្ធនេះគ្មានការតភ្ជាប់តាមទូរសព្ទដើម្បីព្យួរទេ
@@ -4678,8 +4702,9 @@
 #. text in the download list (sizes, speeds, status)
 #, machine
 	Torrent downloads (magnet links and .torrent files)	ការទាញយក Torrent (តំណ magnet និងឯកសារ .torrent)
-#. message or event log entry in the main window; text in the Add torrent window
+#. message or event log entry in the main window; text in the Add torrent window; window title in torrentfiles.rs
 #. the kind of file the Open dialog lists
+#. title of the separate window listing a torrent's files
 #, machine
 	Torrent files	ឯកសារ Torrent
 #. window title in the Add torrent window
@@ -5531,6 +5556,10 @@ column	File Name	ឈ្មោះឯកសារ
 #, machine
 column	Last Try Date	កាលបរិច្ឆេទសាកល្បងចុងក្រោយ
 #. column title in the download list in the download list
+#. column title: how many peers a torrent is connected to now (seeders and leechers)
+#, machine
+column	Peers	មិត្តរួម
+#. column title in the download list in the download list
 #. column title: one letter for Queue (the column is narrow)
 #, machine
 column	Q	Q
@@ -5538,6 +5567,10 @@ column	Q	Q
 #. tooltip of the narrow "Q" column's title
 #, machine
 column	Queue	ជួរ
+#. column title in the download list in the download list
+#. column title: what a torrent has sent to peers against what it took
+#, machine
+column	Share ratio	សមាមាត្រចែករំលែក
 #. column title in the download list in the download list
 #. noun: the file's size
 #, machine
@@ -5556,6 +5589,10 @@ column	Time left	ពេលវេលាដែលនៅសល់
 #. column title in the download list in the download list
 #, machine
 column	Transfer rate	អត្រាផ្ទេរ
+#. column title in the download list in the download list
+#. column title: what a torrent sends to peers, bytes per second
+#, machine
+column	Upload speed	ល្បឿនបង្ហោះ
 #. text in the browser extension
 #. choice under Send downloads to: an MDM running on another computer of the network, such as a home server; keep the name Mister Download Manager as it is
 #, machine
@@ -5755,6 +5792,10 @@ extension	Pairing code	កូដ​ផ្គូផ្គង
 #. status when the user switched off taking downloads in the toolbar button's popup
 #, machine
 extension	Paused: downloads stay with the browser	ផ្អាក៖ ការទាញយកនៅតែមានជាមួយកម្មវិធីរុករក
+#. text in the browser extension
+#. Option in the browser extension media list: put the page title before the original file name when downloading a detected media file
+#, machine
+extension	Prefix media file names with the page title	ដាក់ចំណងជើងទំព័រនៅពីមុខឈ្មោះឯកសារមេឌៀ
 #. text in the browser extension
 #. shown instead of the Download button beside a copy-protected (DRM) stream in the toolbar button's popup: it can't be downloaded; short
 #, machine
@@ -6029,6 +6070,11 @@ menu	&RSS feeds...	មតិព័ត៌មាន RSS(&R)...
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
 menu	&Scheduler and queues	កម្មវិធីកំណត់ពេល និងជួរ(&S)
+#. menu command in a download's progress window
+#. right-click menu of a download window's tab row: bring back the tabs taken off with "Hide tab"
+#. & marks the keyboard shortcut letter: keep one & before a letter of the translation
+#, machine
+menu	&Show hidden tabs	បង្ហាញផ្ទាំងដែលបាន &លាក់
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
@@ -6224,6 +6270,11 @@ menu	Edit queue	កែសម្រួលជួរ
 #. verb: unpack the downloaded archive (zip, 7z, rar) into its folder
 #, machine
 menu	Extract	ពន្លា
+#. menu command in the main window
+#. right-click → Torrent submenu: open the selected torrent's file list
+#. the trailing ... means it opens a window: keep it
+#, machine
+menu	Files...	ឯកសារ...
 #. menu command in the main window
 #, machine
 menu	Find (Ctrl-F)	ស្វែងរក (Ctrl+F)
