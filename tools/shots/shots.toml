@@ -73,7 +73,7 @@ page = "getting-started.md"
 under = "Themes"
 take = "@menu:menu:3:theme"
 crop = [145, 28, 366, 424]
-alt = "View → Theme open: Classic, Native, High contrast, Metro, Adwaita, Breeze, Luna, Aero and Aqua, and Open themes folder"
+alt = "View → Theme open: Classic, Native, High contrast, Metro, Adwaita, Breeze, Luna, Aero, Aqua and Emerald, and Open themes folder"
 caption = "View → Theme switches at once, keeping the layout."
 
 [[shot]]
@@ -707,6 +707,15 @@ take = "theme:aqua+@main"
 crop = [0, 0, 930, 300]
 alt = "The main window in the Aqua theme"
 caption = "Aqua"
+
+[[shot]]
+id = "site-theme-emerald"
+page = "website/content/themes.toml"
+take = "theme:emerald+@main"
+# The title bar, the menus, the toolbar, the categories and the list's rows: the theme's look.
+crop = [0, 0, 930, 300]
+alt = "The main window in the Emerald theme"
+caption = "Emerald"
 
 [[shot]]
 id = "site-gallery"

@@ -1908,7 +1908,7 @@ checksum = "d0881ea181b1df73ff77ffaaf9c7544ecc11e82fba9b5f27b262a3c73a332555"
 [[package]]
 name = "ecolor"
 version = "0.37.0"
-source = "git+https://github.com/anefzaoui/egui.git?rev=d110a3ccf2f1710f3e67db3f910b18003732c1df#d110a3ccf2f1710f3e67db3f910b18003732c1df"
+source = "git+https://github.com/anefzaoui/egui.git?rev=4ad60e5365470a6d12166a8075478f8aea44c9f8#4ad60e5365470a6d12166a8075478f8aea44c9f8"
 dependencies = [
  "bytemuck",
  "emath",
@@ -1917,7 +1917,7 @@ dependencies = [
 [[package]]
 name = "eframe"
 version = "0.37.0"
-source = "git+https://github.com/anefzaoui/egui.git?rev=d110a3ccf2f1710f3e67db3f910b18003732c1df#d110a3ccf2f1710f3e67db3f910b18003732c1df"
+source = "git+https://github.com/anefzaoui/egui.git?rev=4ad60e5365470a6d12166a8075478f8aea44c9f8#4ad60e5365470a6d12166a8075478f8aea44c9f8"
 dependencies = [
  "ahash",
  "bytemuck",
@@ -1953,7 +1953,7 @@ dependencies = [
 [[package]]
 name = "egui"
 version = "0.37.0"
-source = "git+https://github.com/anefzaoui/egui.git?rev=d110a3ccf2f1710f3e67db3f910b18003732c1df#d110a3ccf2f1710f3e67db3f910b18003732c1df"
+source = "git+https://github.com/anefzaoui/egui.git?rev=4ad60e5365470a6d12166a8075478f8aea44c9f8#4ad60e5365470a6d12166a8075478f8aea44c9f8"
 dependencies = [
  "accesskit",
  "ahash",
@@ -1972,7 +1972,7 @@ dependencies = [
 [[package]]
 name = "egui-wgpu"
 version = "0.37.0"
-source = "git+https://github.com/anefzaoui/egui.git?rev=d110a3ccf2f1710f3e67db3f910b18003732c1df#d110a3ccf2f1710f3e67db3f910b18003732c1df"
+source = "git+https://github.com/anefzaoui/egui.git?rev=4ad60e5365470a6d12166a8075478f8aea44c9f8#4ad60e5365470a6d12166a8075478f8aea44c9f8"
 dependencies = [
  "ahash",
  "bytemuck",
@@ -1991,7 +1991,7 @@ dependencies = [
 [[package]]
 name = "egui-winit"
 version = "0.37.0"
-source = "git+https://github.com/anefzaoui/egui.git?rev=d110a3ccf2f1710f3e67db3f910b18003732c1df#d110a3ccf2f1710f3e67db3f910b18003732c1df"
+source = "git+https://github.com/anefzaoui/egui.git?rev=4ad60e5365470a6d12166a8075478f8aea44c9f8#4ad60e5365470a6d12166a8075478f8aea44c9f8"
 dependencies = [
  "accesskit_winit",
  "arboard",
@@ -2016,7 +2016,7 @@ dependencies = [
 [[package]]
 name = "egui_extras"
 version = "0.37.0"
-source = "git+https://github.com/anefzaoui/egui.git?rev=d110a3ccf2f1710f3e67db3f910b18003732c1df#d110a3ccf2f1710f3e67db3f910b18003732c1df"
+source = "git+https://github.com/anefzaoui/egui.git?rev=4ad60e5365470a6d12166a8075478f8aea44c9f8#4ad60e5365470a6d12166a8075478f8aea44c9f8"
 dependencies = [
  "ahash",
  "egui",
@@ -2032,7 +2032,7 @@ dependencies = [
 [[package]]
 name = "egui_glow"
 version = "0.37.0"
-source = "git+https://github.com/anefzaoui/egui.git?rev=d110a3ccf2f1710f3e67db3f910b18003732c1df#d110a3ccf2f1710f3e67db3f910b18003732c1df"
+source = "git+https://github.com/anefzaoui/egui.git?rev=4ad60e5365470a6d12166a8075478f8aea44c9f8#4ad60e5365470a6d12166a8075478f8aea44c9f8"
 dependencies = [
  "bytemuck",
  "egui",
@@ -2060,7 +2060,7 @@ dependencies = [
 [[package]]
 name = "emath"
 version = "0.37.0"
-source = "git+https://github.com/anefzaoui/egui.git?rev=d110a3ccf2f1710f3e67db3f910b18003732c1df#d110a3ccf2f1710f3e67db3f910b18003732c1df"
+source = "git+https://github.com/anefzaoui/egui.git?rev=4ad60e5365470a6d12166a8075478f8aea44c9f8#4ad60e5365470a6d12166a8075478f8aea44c9f8"
 dependencies = [
  "bytemuck",
 ]
@@ -2129,7 +2129,7 @@ dependencies = [
 [[package]]
 name = "epaint"
 version = "0.37.0"
-source = "git+https://github.com/anefzaoui/egui.git?rev=d110a3ccf2f1710f3e67db3f910b18003732c1df#d110a3ccf2f1710f3e67db3f910b18003732c1df"
+source = "git+https://github.com/anefzaoui/egui.git?rev=4ad60e5365470a6d12166a8075478f8aea44c9f8#4ad60e5365470a6d12166a8075478f8aea44c9f8"
 dependencies = [
  "ahash",
  "bytemuck",
@@ -2155,7 +2155,7 @@ dependencies = [
 [[package]]
 name = "epaint_default_fonts"
 version = "0.37.0"
-source = "git+https://github.com/anefzaoui/egui.git?rev=d110a3ccf2f1710f3e67db3f910b18003732c1df#d110a3ccf2f1710f3e67db3f910b18003732c1df"
+source = "git+https://github.com/anefzaoui/egui.git?rev=4ad60e5365470a6d12166a8075478f8aea44c9f8#4ad60e5365470a6d12166a8075478f8aea44c9f8"
 
 [[package]]
 name = "equivalent"
@@ -3975,7 +3975,7 @@ dependencies = [
 [[package]]
 name = "librqbit"
 version = "9.1.0"
-source = "git+https://github.com/anefzaoui/rqbit.git?rev=ef50d87f4a9d5be9e3951b74f722433f9b46bd76#ef50d87f4a9d5be9e3951b74f722433f9b46bd76"
+source = "git+https://github.com/anefzaoui/rqbit.git?rev=ac7fa6e06b1a95956c63e1f5fd1cd795985967e1#ac7fa6e06b1a95956c63e1f5fd1cd795985967e1"
 dependencies = [
  "anyhow",
  "arc-swap",
@@ -4038,7 +4038,7 @@ dependencies = [
 [[package]]
 name = "librqbit-bencode"
 version = "9.1.0"
-source = "git+https://github.com/anefzaoui/rqbit.git?rev=ef50d87f4a9d5be9e3951b74f722433f9b46bd76#ef50d87f4a9d5be9e3951b74f722433f9b46bd76"
+source = "git+https://github.com/anefzaoui/rqbit.git?rev=ac7fa6e06b1a95956c63e1f5fd1cd795985967e1#ac7fa6e06b1a95956c63e1f5fd1cd795985967e1"
 dependencies = [
  "anyhow",
  "arrayvec",
@@ -4054,7 +4054,7 @@ dependencies = [
 [[package]]
 name = "librqbit-buffers"
 version = "9.1.0"
-source = "git+https://github.com/anefzaoui/rqbit.git?rev=ef50d87f4a9d5be9e3951b74f722433f9b46bd76#ef50d87f4a9d5be9e3951b74f722433f9b46bd76"
+source = "git+https://github.com/anefzaoui/rqbit.git?rev=ac7fa6e06b1a95956c63e1f5fd1cd795985967e1#ac7fa6e06b1a95956c63e1f5fd1cd795985967e1"
 dependencies = [
  "bytes",
  "librqbit-clone-to-owned",
@@ -4065,7 +4065,7 @@ dependencies = [
 [[package]]
 name = "librqbit-clone-to-owned"
 version = "9.1.0"
-source = "git+https://github.com/anefzaoui/rqbit.git?rev=ef50d87f4a9d5be9e3951b74f722433f9b46bd76#ef50d87f4a9d5be9e3951b74f722433f9b46bd76"
+source = "git+https://github.com/anefzaoui/rqbit.git?rev=ac7fa6e06b1a95956c63e1f5fd1cd795985967e1#ac7fa6e06b1a95956c63e1f5fd1cd795985967e1"
 dependencies = [
  "bytes",
 ]
@@ -4073,7 +4073,7 @@ dependencies = [
 [[package]]
 name = "librqbit-core"
 version = "9.1.0"
-source = "git+https://github.com/anefzaoui/rqbit.git?rev=ef50d87f4a9d5be9e3951b74f722433f9b46bd76#ef50d87f4a9d5be9e3951b74f722433f9b46bd76"
+source = "git+https://github.com/anefzaoui/rqbit.git?rev=ac7fa6e06b1a95956c63e1f5fd1cd795985967e1#ac7fa6e06b1a95956c63e1f5fd1cd795985967e1"
 dependencies = [
  "anyhow",
  "bytes",
@@ -4102,7 +4102,7 @@ dependencies = [
 [[package]]
 name = "librqbit-dht"
 version = "9.1.0"
-source = "git+https://github.com/anefzaoui/rqbit.git?rev=ef50d87f4a9d5be9e3951b74f722433f9b46bd76#ef50d87f4a9d5be9e3951b74f722433f9b46bd76"
+source = "git+https://github.com/anefzaoui/rqbit.git?rev=ac7fa6e06b1a95956c63e1f5fd1cd795985967e1#ac7fa6e06b1a95956c63e1f5fd1cd795985967e1"
 dependencies = [
  "anyhow",
  "backon",
@@ -4149,7 +4149,7 @@ dependencies = [
 [[package]]
 name = "librqbit-lsd"
 version = "9.1.0"
-source = "git+https://github.com/anefzaoui/rqbit.git?rev=ef50d87f4a9d5be9e3951b74f722433f9b46bd76#ef50d87f4a9d5be9e3951b74f722433f9b46bd76"
+source = "git+https://github.com/anefzaoui/rqbit.git?rev=ac7fa6e06b1a95956c63e1f5fd1cd795985967e1#ac7fa6e06b1a95956c63e1f5fd1cd795985967e1"
 dependencies = [
  "anyhow",
  "atoi",
@@ -4168,7 +4168,7 @@ dependencies = [
 [[package]]
 name = "librqbit-peer-protocol"
 version = "9.1.0"
-source = "git+https://github.com/anefzaoui/rqbit.git?rev=ef50d87f4a9d5be9e3951b74f722433f9b46bd76#ef50d87f4a9d5be9e3951b74f722433f9b46bd76"
+source = "git+https://github.com/anefzaoui/rqbit.git?rev=ac7fa6e06b1a95956c63e1f5fd1cd795985967e1#ac7fa6e06b1a95956c63e1f5fd1cd795985967e1"
 dependencies = [
  "anyhow",
  "bitvec",
@@ -4188,7 +4188,7 @@ dependencies = [
 [[package]]
 name = "librqbit-sha1-wrapper"
 version = "9.1.0"
-source = "git+https://github.com/anefzaoui/rqbit.git?rev=ef50d87f4a9d5be9e3951b74f722433f9b46bd76#ef50d87f4a9d5be9e3951b74f722433f9b46bd76"
+source = "git+https://github.com/anefzaoui/rqbit.git?rev=ac7fa6e06b1a95956c63e1f5fd1cd795985967e1#ac7fa6e06b1a95956c63e1f5fd1cd795985967e1"
 dependencies = [
  "assert_cfg",
  "aws-lc-rs",
@@ -4197,7 +4197,7 @@ dependencies = [
 [[package]]
 name = "librqbit-tracker-comms"
 version = "9.1.0"
-source = "git+https://github.com/anefzaoui/rqbit.git?rev=ef50d87f4a9d5be9e3951b74f722433f9b46bd76#ef50d87f4a9d5be9e3951b74f722433f9b46bd76"
+source = "git+https://github.com/anefzaoui/rqbit.git?rev=ac7fa6e06b1a95956c63e1f5fd1cd795985967e1#ac7fa6e06b1a95956c63e1f5fd1cd795985967e1"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -4225,7 +4225,7 @@ dependencies = [
 [[package]]
 name = "librqbit-upnp"
 version = "9.1.0"
-source = "git+https://github.com/anefzaoui/rqbit.git?rev=ef50d87f4a9d5be9e3951b74f722433f9b46bd76#ef50d87f4a9d5be9e3951b74f722433f9b46bd76"
+source = "git+https://github.com/anefzaoui/rqbit.git?rev=ac7fa6e06b1a95956c63e1f5fd1cd795985967e1#ac7fa6e06b1a95956c63e1f5fd1cd795985967e1"
 dependencies = [
  "anyhow",
  "bstr",
@@ -4444,6 +4444,7 @@ dependencies = [
  "eframe",
  "egui",
  "egui-wgpu",
+ "egui-winit",
  "egui_extras",
  "image",
  "libc",
@@ -4736,6 +4737,7 @@ dependencies = [
  "tempfile",
  "thiserror 2.0.21",
  "tokio",
+ "tracing",
  "tracing-subscriber",
  "url",
 ]

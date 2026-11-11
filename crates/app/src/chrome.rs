@@ -1057,6 +1057,42 @@ fn menu_viewport(kind: MenuKind, id: &str, depth: usize, bar_shared: bool) -> eg
     egui::ViewportId::from_hash_of(("menu", key, depth))
 }
 
+/// The entry under `p` in a menu drawn at `o`, `w` wide: its index, none on a separator or the
+/// padding (the slots as `popup_level` lays them out).
+fn item_at<C>(entries: &[MenuEntry<C>], o: Pos2, w: f32, p: Pos2) -> Option<usize> {
+    let mut y = o.y + 3.0;
+    for (i, e) in entries.iter().enumerate() {
+        if matches!(e, MenuEntry::Sep) {
+            y += SEP;
+            continue;
+        }
+        let slot = Rect::from_min_max(pos2(o.x + 6.0, y), pos2(o.x + w - 6.0, y + SLOT));
+        if slot.contains(p) {
+            return Some(i);
+        }
+        y += SLOT;
+    }
+    None
+}
+
+/// Whether the pointer at `p`, having left an open submenu's entry at `from`, is on its way into
+/// the submenu at `sub` (#579): inside the triangle from `from` to the submenu's near edge, with
+/// a pixel's slack. A pointer going up or down the menu instead is not.
+fn heading_into(from: Pos2, p: Pos2, sub: Rect) -> bool {
+    let near = if sub.center().x >= from.x {
+        sub.left()
+    } else {
+        sub.right()
+    };
+    let (a, b, c) = (from, pos2(near, sub.top()), pos2(near, sub.bottom()));
+    let side = |p1: Pos2, p2: Pos2| (p2.x - p1.x) * (p.y - p1.y) - (p2.y - p1.y) * (p.x - p1.x);
+    let (d1, d2, d3) = (side(a, b), side(b, c), side(c, a));
+    let slack = 1.0 * (b - a).length().max(1.0);
+    let neg = d1 < -slack || d2 < -slack || d3 < -slack;
+    let pos = d1 > slack || d2 > slack || d3 > slack;
+    !(neg && pos)
+}
+
 #[allow(clippy::too_many_arguments)]
 fn popup_level<C: Clone>(
     ctx: &egui::Context,
@@ -1076,6 +1112,10 @@ fn popup_level<C: Clone>(
         .data(|d| d.get_temp::<(Option<usize>, Option<usize>)>(kb_key))
         .and_then(|(a, b)| if depth == 0 { a } else { b });
     let screen = Rect::from_min_size(place_menu(ctx, at, size, parent), size);
+    if depth == 1 {
+        // Where the submenu is, for its menu's next pass (`heading_into`, #579).
+        ctx.data_mut(|d| d.insert_temp(sub_key.with("sub-rect"), screen));
+    }
     let title = format!("misterdownloadmanager menu {depth}"); // not translated: an id
     let builder = popup_viewport(&title)
         .with_active(false)
@@ -1120,6 +1160,10 @@ fn popup_level<C: Clone>(
         let w = size.x;
         let painter = ui.painter().clone();
         let o = ui.max_rect().min;
+        // Where the items are, for the tests that point at them.
+        #[cfg(test)]
+        ui.ctx()
+            .data_mut(|d| d.insert_temp(sub_key.with(("origin", depth)), o));
         // Right to left: text right-aligned, check marks and bullets on the right, the submenu
         // arrow on the left pointing left.
         let _surface = winui::Surface::enter(o.x, o.x + w);
@@ -1134,6 +1178,21 @@ fn popup_level<C: Clone>(
             POPUP_BG(),
         );
         let pointer = ui.ctx().pointer_hover_pos();
+        // The item under the pointer (none on a separator or the padding): one item is lit at a
+        // time, so an open submenu's entry gives up its light to it (#579).
+        let under = pointer.and_then(|p| item_at(entries, o, w, p));
+        // An open submenu stays open while the pointer is on another item only as long as it
+        // heads into the submenu (#579): from where it left the submenu's entry, inside the
+        // triangle to the submenu's near edge. Its screen rect, from the pass that drew it, in
+        // this window's points.
+        let anchor_key = sub_key.with("anchor");
+        let sub_rect = (depth == 0)
+            .then(|| {
+                ui.ctx()
+                    .data(|d| d.get_temp::<Rect>(sub_key.with("sub-rect")))
+            })
+            .flatten()
+            .map(|r| r.translate(o.to_vec2() - screen.min.to_vec2()));
         let clicked = ui.input(|i| i.pointer.primary_released());
         // The pointer moving over an item takes the highlight from the keyboard.
         let moving = ui.input(|i| i.pointer.is_moving());
@@ -1187,7 +1246,10 @@ fn popup_level<C: Clone>(
                 Some(k) => k == i,
                 None => hovered,
             };
-            if lit || open_sub == Some(i) {
+            // An open submenu's entry stays lit while the pointer is on it, in the submenu or
+            // off this menu; not while it is on another item, which is the lit one then (#579).
+            let opened = open_sub == Some(i) && under.is_none_or(|u| u == i);
+            if lit || opened {
                 painter.rect_filled(
                     slot,
                     crate::theme::metrics().menu_item_radius,
@@ -1327,24 +1389,37 @@ fn popup_level<C: Clone>(
                     if depth == 0 && enabled && hovered && (kb.is_none() || moving) {
                         ui.ctx().data_mut(|d| d.insert_temp(sub_key, i));
                     }
+                    if depth == 0
+                        && hovered
+                        && let Some(p) = pointer
+                    {
+                        ui.ctx().data_mut(|d| d.insert_temp(anchor_key, p));
+                    }
                     if depth == 0 && (open_sub == Some(i) || (enabled && hovered && kb.is_none())) {
                         sub_at = Some((i, y - o.y));
                     }
                 }
                 MenuEntry::Item(_, c, ..) | MenuEntry::Radio(_, c, ..) => {
-                    // Resting on another item of the root closes an open submenu, after
-                    // Windows' menu delay: a pointer crossing it on the way into the submenu
-                    // (diagonally) doesn't close it.
+                    // The pointer on another item of the root closes an open submenu at once
+                    // (#579), unless it is crossing the item on its way into the submenu
+                    // (diagonally): then after Windows' menu delay, if it rests there.
                     let since_key = sub_key.with(("leave-since", i));
                     if depth == 0 && hovered && open_sub.is_some() {
                         let now = ui.input(|inp| inp.time);
                         let since = ui
                             .ctx()
                             .data_mut(|d| *d.get_temp_mut_or_insert_with(since_key, || now));
-                        if now - since >= 0.35 {
+                        let anchor = ui.ctx().data(|d| d.get_temp::<Pos2>(anchor_key));
+                        let heading = match (anchor, pointer, sub_rect) {
+                            (Some(a), Some(p), Some(r)) => heading_into(a, p, r),
+                            _ => false,
+                        };
+                        if !heading || now - since >= 0.35 {
                             ui.ctx().data_mut(|d| {
                                 d.remove::<usize>(sub_key);
                                 d.remove::<f64>(since_key);
+                                d.remove::<Pos2>(anchor_key);
+                                d.remove::<Rect>(sub_key.with("sub-rect"));
                             });
                             sub_at = None;
                         } else {
@@ -2196,8 +2271,10 @@ fn chevron(p: &egui::Painter, ox: f32, top: f32, open: bool, bright: bool) {
 #[cfg(test)]
 mod tests {
     use super::{
-        FOCUS_GRACE, FocusVerdict, MenuBarEvent, MenuFocus, MenuKind, menu_viewport, menubar_next,
+        FOCUS_GRACE, FocusVerdict, MenuBarEvent, MenuEntry, MenuFocus, MenuKind, heading_into,
+        item_at, menu_viewport, menubar_next,
     };
+    use egui::{Rect, pos2};
 
     /// #277: on X11 the menu bar's menus share one window per level, so going from title to
     /// title moves it (a compositor has no new window to fade in); elsewhere, and for every
@@ -2420,6 +2497,133 @@ mod tests {
                 [Some(4), None, None, None]
             );
         }
+    }
+
+    /// #579: Tasks with Export's submenu open to the right (menu 200 wide, Export's slot at
+    /// y 190..212). The pointer going on down or up the menu is not heading into the submenu, so
+    /// the next item closes it at once; crossing the item below diagonally towards the submenu
+    /// keeps it, as does going there on the left side of a right-to-left menu.
+    #[test]
+    fn a_submenu_stays_open_only_while_the_pointer_heads_into_it() {
+        let sub = Rect::from_min_max(pos2(194.0, 187.0), pos2(330.0, 236.0));
+        let left_export = pos2(120.0, 205.0);
+        // Down to Import, up to Show drop target: straight, not towards the submenu.
+        assert!(!heading_into(left_export, pos2(118.0, 216.0), sub));
+        assert!(!heading_into(left_export, pos2(121.0, 170.0), sub));
+        assert!(!heading_into(left_export, pos2(60.0, 225.0), sub));
+        // Diagonally across Import, towards the submenu.
+        assert!(heading_into(left_export, pos2(150.0, 214.0), sub));
+        assert!(heading_into(left_export, pos2(185.0, 230.0), sub));
+        // Right to left: the submenu on the left.
+        let rtl = Rect::from_min_max(pos2(-130.0, 187.0), pos2(6.0, 236.0));
+        assert!(heading_into(pos2(80.0, 205.0), pos2(50.0, 214.0), rtl));
+        assert!(!heading_into(pos2(80.0, 205.0), pos2(82.0, 216.0), rtl));
+    }
+
+    /// #579, the menu itself (egui without a window system: each level drawn in the main
+    /// window): Tasks-like, Import's submenu open, the pointer going on up the menu closes it at
+    /// once and lights only the item it is on, where before the submenu stayed open (and its
+    /// entry lit) until the pointer had rested 0.35 s on one item, so never while it moved on.
+    /// Crossing an item on the way into the submenu keeps it.
+    #[test]
+    fn the_pointer_on_another_item_closes_the_submenu_at_once() {
+        // Labels through names, so tools/i18n/extract.py doesn't take them for texts to translate.
+        let [rss, show_drop, import, file, exit] = [
+            "RSS feeds...",
+            "Show drop target",
+            "Import",
+            "From a file",
+            "Exit",
+        ];
+        let entries: Vec<MenuEntry<u8>> = vec![
+            MenuEntry::Item(rss, 0, true, false),
+            MenuEntry::Item(show_drop, 1, true, false),
+            MenuEntry::Sep,
+            MenuEntry::Sub(import, true, vec![MenuEntry::Item(file, 2, true, false)]),
+            MenuEntry::Item(exit, 3, true, false),
+        ];
+        let ctx = egui::Context::default();
+        let sub_key = egui::Id::unique(("popup-sub", "t579"));
+        let mut t = 0.0;
+        let mut frame = |pointer: Option<egui::Pos2>| {
+            t += 0.016;
+            let mut raw = egui::RawInput {
+                time: Some(t),
+                screen_rect: Some(Rect::from_min_size(
+                    pos2(0.0, 0.0),
+                    egui::vec2(1200.0, 800.0),
+                )),
+                ..Default::default()
+            };
+            if let Some(p) = pointer {
+                raw.events.push(egui::Event::PointerMoved(p));
+            }
+            let mut out = ctx.run_ui(raw, |ui| {
+                let mut result = None;
+                super::popup_level(
+                    ui.ctx(),
+                    MenuKind::Bar,
+                    "t579",
+                    pos2(100.0, 100.0),
+                    None,
+                    &entries,
+                    sub_key,
+                    &mut result,
+                    0,
+                    &|_| None,
+                );
+            });
+            out.textures_delta.clear();
+        };
+        frame(None);
+        let o = ctx
+            .data(|d| d.get_temp::<egui::Pos2>(sub_key.with(("origin", 0usize))))
+            .expect("drawn");
+        // Slots: 3..25, 25..47, separator, Import 56..78, Exit 78..100.
+        let at = |x: f32, y: f32| Some(o + egui::vec2(x, y));
+        let open = |ctx: &egui::Context| ctx.data(|d| d.get_temp::<usize>(sub_key));
+        for _ in 0..3 {
+            frame(at(60.0, 67.0));
+        }
+        assert_eq!(open(&ctx), Some(3), "Import's submenu opens");
+        // Straight up to Show drop target: closed in that pass.
+        frame(at(60.0, 40.0));
+        frame(at(60.0, 38.0));
+        assert_eq!(open(&ctx), None, "closed at once");
+
+        // Again, then diagonally across Exit towards the submenu: kept.
+        for _ in 0..3 {
+            frame(at(60.0, 67.0));
+        }
+        assert_eq!(open(&ctx), Some(3));
+        let right = ctx
+            .data(|d| d.get_temp::<egui::Pos2>(sub_key.with(("origin", 1usize))))
+            .expect("submenu drawn")
+            .x;
+        // Most of the way to the submenu, a little lower: over Exit.
+        let x = o.x + (right - o.x) * 0.9 - o.x;
+        frame(at(x, 80.0));
+        assert_eq!(open(&ctx), Some(3), "kept on the way into it");
+    }
+
+    /// #579: the entry under the pointer, separators and padding none.
+    #[test]
+    fn the_item_under_the_pointer() {
+        let [a, b, c] = ["a", "b", "c"]; // not texts to translate (tools/i18n/extract.py)
+        let entries: Vec<MenuEntry<u8>> = vec![
+            MenuEntry::Item(a, 0, true, false),
+            MenuEntry::Sep,
+            MenuEntry::Sub(b, true, vec![]),
+            MenuEntry::Item(c, 1, true, false),
+        ];
+        let o = pos2(0.0, 0.0);
+        assert_eq!(item_at(&entries, o, 200.0, pos2(50.0, 10.0)), Some(0));
+        // The separator: 25..34.
+        assert_eq!(item_at(&entries, o, 200.0, pos2(50.0, 29.0)), None);
+        assert_eq!(item_at(&entries, o, 200.0, pos2(50.0, 40.0)), Some(2));
+        assert_eq!(item_at(&entries, o, 200.0, pos2(50.0, 60.0)), Some(3));
+        // The padding at the sides.
+        assert_eq!(item_at(&entries, o, 200.0, pos2(3.0, 40.0)), None);
     }
 
     /// With a menu open, the pointer moves it from title to title, as in Windows' menu bars

@@ -703,10 +703,24 @@ fn js_runtime(dirs: &[PathBuf], home: Option<&Path>) -> Option<(&'static str, Pa
 /// left out; one reached through a junction or link is given as the folder it leads to, so the
 /// helper crosses no mount point on its way, even when Windows holds the helper to stricter
 /// rules than MDM. Every other folder stays as it was written.
+///
+/// On Linux and macOS the package managers' folders follow, when the PATH lacks them (#659): a
+/// helper found there ([`crate::system`]) looks there for its own tools too (yt-dlp for Deno
+/// and ffmpeg), even when MDM was opened from Finder, whose PATH has no Homebrew.
 fn usable_dirs(path: &std::ffi::OsStr) -> Vec<PathBuf> {
-    std::env::split_paths(path)
+    #[allow(unused_mut)]
+    let mut dirs: Vec<PathBuf> = std::env::split_paths(path)
         .filter_map(|dir| usable_dir(&dir))
-        .collect()
+        .collect();
+    #[cfg(unix)]
+    for extra in crate::system::PACKAGE_DIRS.map(PathBuf::from) {
+        if !dirs.contains(&extra)
+            && let Some(dir) = usable_dir(&extra)
+        {
+            dirs.push(dir);
+        }
+    }
+    dirs
 }
 
 fn usable_dir(dir: &Path) -> Option<PathBuf> {
@@ -1395,19 +1409,60 @@ mod tests {
         std::fs::create_dir_all(&b).unwrap();
         std::fs::write(&file, b"").unwrap();
         let join = |dirs: &[&PathBuf]| std::env::join_paths(dirs).unwrap();
+        // What the helper gets: those, then (on Linux and macOS) the package folders (#659).
+        let given = |dirs: &[&PathBuf]| {
+            #[allow(unused_mut)]
+            let mut all: Vec<PathBuf> = dirs.iter().map(|d| d.to_path_buf()).collect();
+            #[cfg(unix)]
+            all.extend(
+                crate::system::PACKAGE_DIRS
+                    .map(PathBuf::from)
+                    .into_iter()
+                    .filter(|d| d.is_dir()),
+            );
+            std::env::join_paths(all).unwrap()
+        };
 
         let plain = join(&[&b, &a]);
-        assert_eq!(child_path(&plain).unwrap(), plain);
+        assert_eq!(child_path(&plain).unwrap(), given(&[&b, &a]));
         assert_eq!(
             child_path(&join(&[&gone, &b, &file, &a])).unwrap(),
-            join(&[&b, &a])
+            given(&[&b, &a])
         );
 
         let mut cmd = Command::new("x");
         cmd.env("PATH", join(&[&a, &gone]));
         with_usable_path(&mut cmd);
-        let given: Vec<_> = cmd.get_envs().filter(|(k, _)| *k == "PATH").collect();
-        assert_eq!(given, [(std::ffi::OsStr::new("PATH"), Some(a.as_os_str()))]);
+        let got: Vec<_> = cmd.get_envs().filter(|(k, _)| *k == "PATH").collect();
+        let want = given(&[&a]);
+        assert_eq!(
+            got,
+            [(std::ffi::OsStr::new("PATH"), Some(want.as_os_str()))]
+        );
+    }
+
+    /// #659: MDM opened from Finder has no Homebrew on its PATH, yet finds yt-dlp there; the
+    /// helper gets the package folders after its own, once each, so yt-dlp finds Deno and
+    /// ffmpeg where Homebrew put them.
+    #[cfg(unix)]
+    #[test]
+    fn a_helper_gets_the_package_folders_after_its_path() {
+        let root = tempfile::tempdir().unwrap();
+        let own = root.path().join("own");
+        std::fs::create_dir_all(&own).unwrap();
+        let usr_bin = PathBuf::from("/usr/bin");
+
+        let dirs = usable_dirs(&std::env::join_paths([&own]).unwrap());
+        assert_eq!(dirs[0], own, "the PATH's own folders first");
+        assert!(dirs.contains(&usr_bin), "{dirs:?}");
+        for d in crate::system::PACKAGE_DIRS.map(PathBuf::from) {
+            assert_eq!(dirs.contains(&d), d.is_dir(), "{d:?} in {dirs:?}");
+        }
+
+        // Already on the PATH: kept where it was, not added again.
+        let dirs = usable_dirs(&std::env::join_paths([&usr_bin, &own]).unwrap());
+        assert_eq!(dirs[..2], [usr_bin.clone(), own]);
+        assert_eq!(dirs.iter().filter(|d| **d == usr_bin).count(), 1);
     }
 
     /// #508 as it happened: Windows refuses a junction to a process held to Redirection Guard

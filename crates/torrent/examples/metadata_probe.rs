@@ -8,7 +8,12 @@
 //!
 //! SOURCE: a magnet link, or a .torrent file (looked up as its magnet link, with its trackers).
 //! Options: `--no-trackers` (the DHT alone), `--no-dht` (the trackers alone), `--runs N` (each
-//! source N times), `--wait S` (give up after S seconds, 180 by default, as the app).
+//! source N times), `--wait S` (give up after S seconds, 180 by default, as the app),
+//! `--state DIR` (the session's folder, kept: a later run starts with the DHT nodes and the port
+//! of the one before, as the app's next session does), `--bootstrap HOST:PORT,...` (the DHT's
+//! first nodes instead of MDM's public routers, #650), `--listen-ip ADDR` (listen there only:
+//! 127.0.0.1 or ::1 keeps Windows Firewall out of it; the DHT then stays on it too, and local
+//! peer discovery is off).
 //! Prints a Markdown table, a row a run; times in seconds from the session's start. RUST_LOG
 //! (`librqbit_dht=debug`, ...) adds librqbit's log on stderr.
 
@@ -50,12 +55,28 @@ async fn main() {
     };
     let runs = value("--runs", 1);
     let wait = Duration::from_secs(value("--wait", 180));
+    let mut text = |name: &str| {
+        let i = args.iter().position(|a| a == name)?;
+        args.remove(i);
+        Some(args.remove(i))
+    };
+    let state = text("--state").map(std::path::PathBuf::from);
+    let listen_ip = text("--listen-ip").map(|a| a.parse().expect("an IP address"));
+    let bootstrap = text("--bootstrap").map(|b| b.split(',').map(str::to_owned).collect());
     if args.is_empty() {
         eprintln!(
-            "usage: metadata_probe [--no-trackers] [--no-dht] [--runs N] [--wait S] SOURCE..."
+            "usage: metadata_probe [--no-trackers] [--no-dht] [--runs N] [--wait S] \
+             [--state DIR] [--bootstrap HOST:PORT,...] [--listen-ip ADDR] SOURCE..."
         );
         std::process::exit(2);
     }
+    let setup = Setup {
+        dht: !no_dht,
+        wait,
+        state,
+        bootstrap,
+        listen_ip,
+    };
 
     println!(
         "| source | trackers | DHT | session | DHT ≥ 8 nodes | 1st tracker peer | 1st DHT peer | 1st answer | file list | peers asked / answered |"
@@ -64,7 +85,7 @@ async fn main() {
     for source in &args {
         let (name, magnet) = magnet_of(source, no_trackers);
         for _ in 0..runs {
-            let row = run(&name, &magnet, !no_dht, wait).await;
+            let row = run(&name, &magnet, &setup).await;
             println!("{row}");
         }
     }
@@ -98,15 +119,30 @@ fn magnet_of(source: &str, no_trackers: bool) -> (String, String) {
     (name, magnet)
 }
 
-async fn run(name: &str, magnet: &str, dht: bool, wait: Duration) -> String {
-    let dir = tempfile::tempdir().expect("a temporary folder");
+struct Setup {
+    dht: bool,
+    wait: Duration,
+    state: Option<std::path::PathBuf>,
+    bootstrap: Option<Vec<String>>,
+    listen_ip: Option<std::net::IpAddr>,
+}
+
+async fn run(name: &str, magnet: &str, setup: &Setup) -> String {
+    let tmp = tempfile::tempdir().expect("a temporary folder");
+    let dir = setup.state.clone().unwrap_or_else(|| tmp.path().to_owned());
     let t0 = Instant::now();
     let t = Torrents::start(Config {
-        dht,
-        ..Config::new(dir.path().to_owned())
+        dht: setup.dht,
+        dht_bootstrap: setup.bootstrap.clone(),
+        listen_ip: setup.listen_ip,
+        // Local peer discovery listens on every address (UDP 6771): not with one address.
+        lsd: setup.listen_ip.is_none(),
+        ..Config::new(dir)
     })
     .await
     .expect("session started");
+    let wait = setup.wait;
+    eprintln!("probe: listening on {:?}", t.listen_addr());
     let started = t0.elapsed().as_secs_f64();
     let lookup = std::sync::Arc::new(Lookup::default());
     let marks = std::sync::Arc::new(std::sync::Mutex::new(Marks::default()));

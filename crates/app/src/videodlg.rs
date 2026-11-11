@@ -11,6 +11,7 @@ use mdm_tools::resolve::{Choice, Format, Looked, SubChoice, Video};
 use mdm_tools::video::{ALL_UPLOADERS, Subs};
 
 use crate::dialogs::{Outcome, window};
+use crate::model::Category;
 use crate::winui::{self, ButtonKind, r, text};
 
 type Slot<T> = Arc<Mutex<Option<Result<T, String>>>>;
@@ -26,6 +27,8 @@ pub struct VideoAdd {
     pub page: url::Url,
     pub selector: String,
     pub dest: PathBuf,
+    /// The category it is listed under: Music for a sound-only choice (#611), else Video.
+    pub category: Category,
     pub size: Option<u64>,
     pub start_now: bool,
     /// What the browser's request for the page carried (its button), for yt-dlp to ask the
@@ -53,7 +56,15 @@ pub struct VideoDialog {
     /// The browser's request context for `page` as it came (VideoAdd::context).
     context: mdm_ipc::Command,
     from_browser: String,
+    /// Save to.
     folder: String,
+    /// The Video and Music categories' folders MDM puts in Save to (#611): Music's while a
+    /// sound-only choice is chosen, as long as Save to holds one of them (a folder typed or
+    /// picked stays). No Music folder: the Music category was deleted, all goes as video.
+    video_dir: String,
+    music_dir: Option<String>,
+    /// Save to was last set for a sound-only choice.
+    sound: bool,
     name: String,
     lookup: Option<Slot<mdm_tools::resolve::Lookup>>,
     /// yt-dlp's document from this window's look-up, handed to the download once when it starts
@@ -99,6 +110,8 @@ pub struct VideoDialog {
     embed: bool,
     /// The last video's choice (settings.video_subs), applied to each video looked up.
     pref: Subs,
+    /// The clipboard's page address, read off the window's thread (#661).
+    clip: crate::clipboard::Prefill,
 }
 
 /// What is installed in the tools folder: (folder, yt-dlp, ffmpeg).
@@ -137,16 +150,37 @@ fn tools() -> Tools {
 }
 
 impl VideoDialog {
+    /// Opened from the menu: a video page's address on the clipboard is taken (read off the
+    /// window's thread, put in the box on the frame it comes).
     pub fn new(folder: PathBuf) -> Self {
-        let page = crate::clipboard_text()
-            .map(|t| t.trim().to_owned())
-            .filter(|t| url::Url::parse(t).is_ok_and(|u| matches!(u.scheme(), "http" | "https")))
-            .unwrap_or_default();
         VideoDialog {
-            page,
+            clip: crate::clipboard::Prefill::ask(),
+            ..Self::blank(folder)
+        }
+    }
+
+    /// The clipboard's text as the page, when it is a web address and the box is still empty
+    /// (nothing typed meanwhile).
+    fn fill_from_clipboard(&mut self, clip: &str) {
+        let clip = clip.trim();
+        if self.page.is_empty()
+            && url::Url::parse(clip).is_ok_and(|u| matches!(u.scheme(), "http" | "https"))
+        {
+            self.page = clip.to_owned();
+        }
+    }
+
+    /// No address yet, saving into `folder` (the Video category's).
+    fn blank(folder: PathBuf) -> Self {
+        let folder = folder.display().to_string();
+        VideoDialog {
+            page: String::new(),
             context: Default::default(),
             from_browser: String::new(),
-            folder: folder.display().to_string(),
+            video_dir: folder.clone(),
+            music_dir: None,
+            sound: false,
+            folder,
             name: String::new(),
             lookup: None,
             info: None,
@@ -171,6 +205,7 @@ impl VideoDialog {
             sub_pick: 0,
             embed: false,
             pref: Subs::default(),
+            clip: Default::default(),
         }
     }
 
@@ -178,6 +213,13 @@ impl VideoDialog {
     pub fn with_subs(mut self, pref: Subs) -> Self {
         self.embed = pref.embed;
         self.pref = pref;
+        self
+    }
+
+    /// Save to switches to `dir`, the Music category's folder, while a sound-only choice is
+    /// chosen (#611); None (the Music category was deleted): sound goes as video does.
+    pub fn with_music_folder(mut self, dir: Option<PathBuf>) -> Self {
+        self.music_dir = dir.map(|d| d.display().to_string());
         self
     }
 
@@ -196,7 +238,7 @@ impl VideoDialog {
             from_browser: page,
             context,
             auto_look: true,
-            ..Self::new(folder)
+            ..Self::blank(folder)
         }
     }
 
@@ -261,6 +303,7 @@ impl VideoDialog {
                 size: None,
                 tbr: None,
                 premium: false,
+                hls: false,
             })
             .collect();
         formats.push(Format {
@@ -273,6 +316,7 @@ impl VideoDialog {
             size: None,
             tbr: None,
             premium: false,
+            hls: false,
         });
         self.provisional = true;
         self.set_video(Video {
@@ -419,6 +463,9 @@ impl VideoDialog {
     }
 
     pub fn show(&mut self, ctx: &egui::Context, rt: &tokio::runtime::Handle) -> Outcome<VideoOut> {
+        if let Some(clip) = self.clip.take() {
+            self.fill_from_clipboard(&clip);
+        }
         // Results from the background work.
         let looked = self.lookup.as_ref().and_then(|s| s.lock().unwrap().take());
         if let Some(res) = looked {
@@ -499,6 +546,8 @@ impl VideoDialog {
             winui::BG(),
             |ui, o| self.body(ui, o, rt),
         );
+        // A playlist's quality chosen, a list or a video looked up: Save to follows (#611).
+        self.follow_sound();
         // Helpers... open: on Close, the helpers are read again (another program, or MDM's own).
         if let Some(h) = &mut self.helpers
             && !matches!(h.show(ctx, rt), Outcome::Open)
@@ -511,54 +560,101 @@ impl VideoDialog {
         }
         let folder = crate::dialogs::resolve_path(&self.folder);
         let out = crate::dialogs::ensure_folder(ctx, &mut self.asking, out, &folder);
-        // A playlist's videos, each its own download.
-        if let (Some(list), Outcome::Done(())) = (&self.list, &out) {
+        match out {
+            Outcome::Open => Outcome::Open,
+            Outcome::Closed => Outcome::Closed,
+            Outcome::Done(()) => self.added().map_or(Outcome::Closed, Outcome::Done),
+        }
+    }
+
+    /// What Download Now or Later adds: a playlist's videos, each its own download, or the
+    /// video looked up (none when there is nothing to add).
+    fn added(&self) -> Option<VideoOut> {
+        let folder = self.save_folder();
+        let start_now = self.start_now.unwrap_or(true);
+        if let Some(list) = &self.list {
             let merge = self.tools.as_ref().is_some_and(|t| t.2.is_some());
-            let start_now = self.start_now.unwrap_or(true);
-            return Outcome::Done(VideoOut::Many(list.add(
+            return Some(VideoOut::Many(list.add(
                 &folder,
                 merge,
                 start_now,
                 &self.context(),
+                self.category(),
             )));
         }
-        match out {
-            Outcome::Open => Outcome::Open,
-            Outcome::Closed => Outcome::Closed,
-            Outcome::Done(()) => {
-                let (Some((_, choices)), Ok(page)) =
-                    (&self.video, url::Url::parse(self.page.trim()))
-                else {
-                    return Outcome::Closed;
-                };
-                let c = &choices[self.chosen.min(choices.len() - 1)];
-                let name = mdm_engine::naming::sanitize(self.name.trim());
-                let chosen = self.chosen_subs();
-                let start_now = self.start_now.unwrap_or(true);
-                let info = (start_now && self.looked_up == self.page.trim())
-                    .then(|| self.info.clone())
-                    .flatten();
-                Outcome::Done(VideoOut::One(VideoAdd {
-                    page,
-                    selector: c.selector.clone(),
-                    dest: crate::dialogs::resolve_path(&self.folder).join(name),
-                    size: c.size,
-                    start_now,
-                    info,
-                    context: self.context(),
-                    // Into the video only where its file type holds them (and with ffmpeg,
-                    // which VideoJob checks).
-                    subs: if mdm_tools::resolve::is_audio(c) {
-                        Subs::default()
-                    } else {
-                        Subs {
-                            embed: chosen.embed && mdm_tools::resolve::holds_subtitles(c),
-                            ..chosen.clone()
-                        }
-                    },
-                    remember: (!self.subs.is_empty()).then_some(chosen),
-                }))
-            }
+        let (Some((_, choices)), Ok(page)) = (&self.video, url::Url::parse(self.page.trim()))
+        else {
+            return None;
+        };
+        let c = choices.get(self.chosen.min(choices.len().checked_sub(1)?))?;
+        let name = mdm_engine::naming::sanitize(self.name.trim());
+        let chosen = self.chosen_subs();
+        let info = (start_now && self.looked_up == self.page.trim())
+            .then(|| self.info.clone())
+            .flatten();
+        Some(VideoOut::One(VideoAdd {
+            page,
+            selector: c.selector.clone(),
+            dest: folder.join(name),
+            category: self.category(),
+            size: c.size,
+            start_now,
+            info,
+            context: self.context(),
+            // Into the video only where its file type holds them (and with ffmpeg, which
+            // VideoJob checks).
+            subs: if mdm_tools::resolve::is_audio(c) {
+                Subs::default()
+            } else {
+                Subs {
+                    embed: chosen.embed && mdm_tools::resolve::holds_subtitles(c),
+                    ..chosen.clone()
+                }
+            },
+            remember: (!self.subs.is_empty()).then_some(chosen),
+        }))
+    }
+
+    /// The choice (or the playlist's quality) saves only the sound; None while there is none.
+    fn sound_only(&self) -> Option<bool> {
+        if let Some(list) = &self.list {
+            return Some(list.sound_only());
+        }
+        let (_, choices) = self.video.as_ref()?;
+        choices.get(self.chosen).map(mdm_tools::resolve::is_audio)
+    }
+
+    /// The category the download is listed under (#611), and whose folder "Change folder for
+    /// this category on last selected" keeps: Music for a sound-only choice, else Video.
+    pub fn category(&self) -> Category {
+        if self.music_dir.is_some() && self.sound_only() == Some(true) {
+            Category::Music
+        } else {
+            Category::Video
+        }
+    }
+
+    /// Save to goes to the Music category's folder when the choice turns sound-only, back to
+    /// Video's when it turns video again, but only while it holds the folder MDM put there: a
+    /// folder the user typed or picked is theirs (#611).
+    fn follow_sound(&mut self) {
+        let Some(sound) = self.sound_only() else {
+            return;
+        };
+        if sound == self.sound {
+            return;
+        }
+        self.sound = sound;
+        let Some(music) = &self.music_dir else {
+            return;
+        };
+        let (from, to) = if sound {
+            (&self.video_dir, music)
+        } else {
+            (music, &self.video_dir)
+        };
+        if crate::dialogs::resolve_path(&self.folder) == crate::dialogs::resolve_path(from) {
+            self.folder = to.clone();
         }
     }
 
@@ -567,6 +663,7 @@ impl VideoDialog {
         crate::dialogs::resolve_path(&self.folder)
     }
 
+    /// The file name, and Save to (#611), follow the choice.
     fn name_from_choice(&mut self) {
         if let Some((v, choices)) = &self.video
             && let Some(c) = choices.get(self.chosen)
@@ -574,6 +671,7 @@ impl VideoDialog {
             let stem = mdm_engine::naming::sanitize(&v.title);
             self.name = format!("{stem}.{}", c.ext);
         }
+        self.follow_sound();
     }
 
     /// Install a helper in the background.
@@ -1249,7 +1347,7 @@ fn direct_size(
     }
     let mut opts = crate::settings::own_net();
     if let Some(agent) = &browser.user_agent {
-        opts.user_agent = agent.clone();
+        opts.speak_as(agent.clone());
     }
     rt.block_on(mdm_engine::probe(url, headers, &opts))
         .ok()?
@@ -1546,7 +1644,7 @@ mod tests {
     /// Each entry stands for what yt-dlp is asked.
     #[test]
     fn entries_ask_for_their_subtitles() {
-        let mut d = VideoDialog::new(PathBuf::from("."));
+        let mut d = VideoDialog::blank(PathBuf::from("."));
         d.subs = vec![sub("de", false), sub("fr", false), sub("en-orig", true)];
         d.embed = true;
         let mut at = |i: usize| {
@@ -1641,5 +1739,144 @@ mod tests {
         assert!(labels[0].starts_with("2160p"), "{labels:?}");
         assert!(labels[1].starts_with("1440p"), "{labels:?}");
         assert!(labels[2].starts_with("1080p"), "{labels:?}");
+    }
+
+    /// #661: a page's address from the clipboard comes a frame or more after the window opens:
+    /// it fills an empty box only, and only with a web address.
+    #[test]
+    fn the_clipboard_fills_only_an_empty_page_box() {
+        let (video, _) = dirs();
+        let mut d = VideoDialog::blank(video.clone());
+        d.fill_from_clipboard(
+            " https://video.example/talk 
+",
+        );
+        assert_eq!(d.page, "https://video.example/talk");
+        d.fill_from_clipboard("https://video.example/other");
+        assert_eq!(
+            d.page, "https://video.example/talk",
+            "not over what is there"
+        );
+        let mut d = VideoDialog::blank(video);
+        d.fill_from_clipboard("ftp://files.example/a.mp4");
+        assert_eq!(d.page, "");
+    }
+
+    /// The Video and Music categories' folders (not made: only their names are compared).
+    fn dirs() -> (PathBuf, PathBuf) {
+        let base = std::env::temp_dir().join("mdm-611");
+        (base.join("Video"), base.join("Music"))
+    }
+
+    /// Download video as the app opens it (Save to: Video's folder, Music's offered), a video
+    /// with a sound-only choice and video ones looked up, without yt-dlp or ffmpeg.
+    fn looked_up(music: bool) -> VideoDialog {
+        const SAMPLE: &str = r#"{"title": "A talk", "duration": 60, "formats": [
+            {"format_id": "140", "ext": "m4a", "vcodec": "none", "acodec": "mp4a", "filesize": 2900},
+            {"format_id": "18", "ext": "mp4", "height": 360, "vcodec": "avc1", "acodec": "mp4a", "filesize": 6100}]}"#;
+        let (video, music_dir) = dirs();
+        let mut d = VideoDialog::for_page(video, "https://video.example/talk", Default::default())
+            .with_music_folder(music.then_some(music_dir));
+        // No helpers looked for on this computer: no merged qualities.
+        d.tools = Some((None, None, None));
+        d.looked_up = d.page.clone();
+        d.set_video(mdm_tools::resolve::parse(SAMPLE.as_bytes()).unwrap());
+        d
+    }
+
+    /// The choices' rows: (a sound-only one, a video one).
+    fn rows(d: &VideoDialog) -> (usize, usize) {
+        let choices = &d.video.as_ref().unwrap().1;
+        let sound = choices.iter().position(mdm_tools::resolve::is_audio);
+        let video = choices
+            .iter()
+            .position(|c| !mdm_tools::resolve::is_audio(c));
+        (sound.unwrap(), video.unwrap())
+    }
+
+    /// A row clicked in the choices list, as the list does it.
+    fn choose(d: &mut VideoDialog, row: usize) {
+        d.chosen = row;
+        d.name_from_choice();
+    }
+
+    /// What Download Now adds for a single video: (its folder, its category).
+    fn one(d: &VideoDialog) -> (PathBuf, Category) {
+        match d.added() {
+            Some(VideoOut::One(add)) => (add.dest.parent().unwrap().to_owned(), add.category),
+            _ => panic!("a video is added"),
+        }
+    }
+
+    /// #611: a sound-only choice saves in the Music category's folder and is listed under Music;
+    /// a video choice again goes back to Video's.
+    #[test]
+    fn a_sound_only_choice_saves_in_music_and_back() {
+        let (video, music) = dirs();
+        let mut d = looked_up(true);
+        let (sound, film) = rows(&d);
+        choose(&mut d, film);
+        assert_eq!(d.save_folder(), video);
+        assert_eq!(one(&d), (video.clone(), Category::Video));
+        choose(&mut d, sound);
+        assert_eq!(
+            d.save_folder(),
+            music,
+            "Save to follows a sound-only choice"
+        );
+        assert_eq!(one(&d), (music.clone(), Category::Music));
+        assert_eq!(d.category(), Category::Music, "the folder kept is Music's");
+        choose(&mut d, film);
+        assert_eq!(d.save_folder(), video, "and goes back for a video");
+        assert_eq!(one(&d), (video, Category::Video));
+    }
+
+    /// #611: a folder the user typed or picked stays whatever is chosen; a sound-only download
+    /// into it is still listed under Music.
+    #[test]
+    fn a_folder_the_user_chose_stays() {
+        let mut d = looked_up(true);
+        let (sound, film) = rows(&d);
+        let own = std::env::temp_dir().join("mdm-611").join("Talks");
+        d.folder = own.display().to_string();
+        choose(&mut d, sound);
+        assert_eq!(d.save_folder(), own);
+        assert_eq!(one(&d), (own.clone(), Category::Music));
+        choose(&mut d, film);
+        assert_eq!(d.save_folder(), own);
+        assert_eq!(one(&d), (own, Category::Video));
+    }
+
+    /// The Music category deleted (#93): sound-only goes where video does, as before.
+    #[test]
+    fn without_a_music_category_sound_goes_as_video() {
+        let (video, _) = dirs();
+        let mut d = looked_up(false);
+        let (sound, _) = rows(&d);
+        choose(&mut d, sound);
+        assert_eq!(d.save_folder(), video);
+        assert_eq!(one(&d), (video, Category::Video));
+    }
+
+    /// #611: a playlist downloaded as sound only goes into the Music category's folder (then the
+    /// list's own folder) and each of its videos is listed under Music; a video quality, Video's.
+    #[test]
+    fn a_playlist_as_sound_saves_in_music() {
+        let (video, music) = dirs();
+        let many = |d: &VideoDialog| match d.added() {
+            Some(VideoOut::Many(add)) => (add.folder.parent().unwrap().to_owned(), add.category),
+            _ => panic!("a playlist is added"),
+        };
+        // "Audio only, original" (7), then "Up to 1080p" (3).
+        for (pick, folder, category) in
+            [("7", music, Category::Music), ("3", video, Category::Video)]
+        {
+            let mut d = looked_up(true);
+            d.show_sample_list(pick);
+            // As each frame of the window does.
+            d.follow_sound();
+            assert_eq!(d.save_folder(), folder, "quality {pick}");
+            assert_eq!(many(&d), (folder, category), "quality {pick}");
+        }
     }
 }

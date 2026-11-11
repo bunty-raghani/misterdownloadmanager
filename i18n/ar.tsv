@@ -440,6 +440,10 @@
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Austria	النمسا
+#. checkbox in the Options window; text in the Options window
+#. checkbox: the User-Agent is the default browser's, which MDM finds itself
+#, machine
+	Automatic	تلقائي
 #. text in remote.rs
 #. remote control page (on a phone): category choice: the category follows the file's type
 #, machine
@@ -1786,6 +1790,10 @@
 #. text in crashui.rs
 #. crash report window: looking on GitHub for an issue about the same problem
 	Looking for this problem on GitHub…	قيد البحث عن هذه المشكلة على GitHub…
+#. text in the Options window
+#. the trailing ... means it is still going on: keep it
+#, machine
+	Looking for your default browser...	قيد البحث عن مستعرضك الافتراضي...
 #. text in the Download video window
 #. the trailing ... means it is still going on: keep it
 	Looking the page up...	قيد البحث عن الصفحة...
@@ -3946,6 +3954,13 @@
 #. text in extension.rs
 #. a row of the browser extension's window when no browser was found by name
 	Your browser	المستعرض الخاص بك
+#. text in the Options window
+#, machine
+	Your default browser isn't one MDM knows: a current Chrome's User-Agent	مستعرضك الافتراضي ليس واحدا من المستعرضات التي يعرفها MDM: User-Agent لـ Chrome الحالي
+#. text in the Options window
+#. tooltip; {browser} is a browser and its version, e.g. "Brave 157"
+#, machine
+	Your default browser's User-Agent: {browser}	User-Agent لمستعرضك الافتراضي: {browser}
 #. text in the settings
 #. Options → DNS: the name of a DNS the user typed in, in messages: "your DNS (DNS over TLS)"
 	your DNS ({how})	DNS الخاص بك ({how})

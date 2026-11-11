@@ -19,10 +19,11 @@ pub struct Volume {
     /// The bytes a new file may take, as each system counts them for the user: on Windows the
     /// space this user may use, disk quotas included (GetDiskFreeSpaceExW); on Linux and other
     /// Unix systems the blocks left to programs that aren't root (statvfs's `f_bavail`); on
-    /// macOS the volume's capacity "for important usage", which includes the purgeable space
+    /// macOS a local volume's capacity "for important usage", which includes the purgeable space
     /// (caches, local snapshots) the system frees as soon as a program writes. Finder shows the
     /// same number; statvfs leaves the purgeable space out, and would refuse a download that
-    /// fits.
+    /// fits. A network volume on macOS has no purgeable space and answers that capacity with 0:
+    /// its statvfs count is used (#623, `free_on_apple`).
     pub free: u64,
     /// As the system names it (`NTFS`, `FAT32`, `exFAT`; `ext4`, `vfat`; `apfs`, `msdos`), or
     /// empty when it can't tell: the space is still checked.
@@ -168,7 +169,7 @@ mod imp {
         // The blocks a program may use (without the reserve kept for root).
         let free = st.f_bavail.saturating_mul(block);
         #[cfg(target_vendor = "apple")]
-        let free = apple::important_capacity(dir).unwrap_or(free);
+        let free = super::free_on_apple(free, apple::important_capacity(dir), apple::is_local(dir));
         Some(super::Volume {
             free,
             file_system: file_system(dir),
@@ -232,6 +233,14 @@ mod imp {
             let bytes = value.downcast::<CFNumber>()?.to_i64()?;
             u64::try_from(bytes).ok()
         }
+
+        /// Whether the folder's volume is on this computer (`MNT_LOCAL` in statfs's flags), not a
+        /// network share (SMB, AFP, NFS, WebDAV). False when the system can't tell.
+        pub fn is_local(dir: &Path) -> bool {
+            /// `<sys/mount.h>`: "filesystem is stored locally".
+            const MNT_LOCAL: u32 = 0x0000_1000;
+            rustix::fs::statfs(dir).is_ok_and(|st| st.f_flags & MNT_LOCAL != 0)
+        }
     }
 
     /// Linux tells a file system by a number; the FAT check needs `vfat`'s, the others are
@@ -281,6 +290,22 @@ mod imp {
     #[cfg(not(any(target_os = "linux", target_os = "android", target_vendor = "apple")))]
     fn file_system(_: &Path) -> String {
         String::new()
+    }
+}
+
+/// The free space a new file may take on Apple's systems, from statvfs's count (`statvfs`), the
+/// volume's capacity "for important usage" (`important`, None when it can't tell) and whether the
+/// volume is on this computer (`local`).
+///
+/// The important-usage capacity adds the purgeable space the system frees on demand, a local
+/// volume's notion (APFS caches and snapshots). A network volume (SMB, AFP, NFS) answers it with
+/// 0, and taking that 0 refused every download to it (#623): there, and whenever it answers 0,
+/// statvfs's count is the free space. Portable, so its tests run on every system.
+#[cfg(any(target_vendor = "apple", test))]
+fn free_on_apple(statvfs: u64, important: Option<u64>, local: bool) -> u64 {
+    match important {
+        Some(bytes) if local && bytes > 0 => bytes,
+        _ => statvfs,
     }
 }
 
@@ -376,6 +401,33 @@ mod tests {
         // Unknown: the space is still checked.
         assert!(check(&vol(64 << 30, ""), 8 << 30).is_ok());
         assert!(check(&vol(1 << 30, ""), 8 << 30).is_err());
+    }
+
+    #[test]
+    fn a_network_volume_on_apple_counts_statvfs() {
+        const TB: u64 = 1 << 40;
+        // #623: a share with terabytes free answers 0 for important usage. The probe took that
+        // 0, and a 3.28 KB download was refused with "0 bytes free".
+        let free = free_on_apple(4 * TB, Some(0), false);
+        assert_eq!(free, 4 * TB);
+        assert!(check(&vol(free, "smbfs"), 3360).is_ok());
+        assert!(matches!(
+            check(&vol(0, "smbfs"), 3360),
+            Err(Refusal::NoSpace { free: 0, .. })
+        ));
+        // A share's answer isn't taken even when it isn't 0 (it has no purgeable space).
+        for fs_answer in [Some(1), Some(TB), None] {
+            assert_eq!(
+                free_on_apple(4 * TB, fs_answer, false),
+                4 * TB,
+                "{fs_answer:?}"
+            );
+        }
+        // A local volume: the important-usage capacity, purgeable space included (#224), unless
+        // it says 0 or nothing.
+        assert_eq!(free_on_apple(10 << 30, Some(12 << 30), true), 12 << 30);
+        assert_eq!(free_on_apple(10 << 30, Some(0), true), 10 << 30);
+        assert_eq!(free_on_apple(10 << 30, None, true), 10 << 30);
     }
 
     #[test]

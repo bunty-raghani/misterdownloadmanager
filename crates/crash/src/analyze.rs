@@ -74,7 +74,9 @@ impl Analysis {
 /// Read `dump` with the `.sym` folders in `symbols` and, failing them, each module's own debug
 /// info.
 pub fn analyze(dump: &Path, symbols: &[PathBuf]) -> Result<Analysis, String> {
-    let dump = minidump::Minidump::read_path(dump).map_err(|e| e.to_string())?;
+    let bytes = std::fs::read(dump).map_err(|e| e.to_string())?;
+    // A Linux program listed as two modules is one again first (#661, modules.rs).
+    let dump = minidump::Minidump::read(crate::modules::mend(bytes)).map_err(|e| e.to_string())?;
     let rt = tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()

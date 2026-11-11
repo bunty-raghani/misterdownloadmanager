@@ -4,6 +4,7 @@
     "name": "__MSG_name__",
     "version": "0.1.0",
     "description": "__MSG_description__",
+    "homepage_url": "https://misterdownloadmanager.com/",
     "minimum_chrome_version": "116",
     "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA7cH/G9UJ3dVEuG290lFBuVoSaGysWGwchytUKOb3EQAgRyV8AOF7HkzfHZnEtppceD+7E8DrEhn8n5SsC5oEOzSJEo3fd3bL8NtKOaJhso5FfIA4jsp5xBQl1mghJQqQcZuJe5H2atrf64dIJHN1FUEFXrY/vOmOdG7AYntdUmOd6eUJwA+jCvPdQCwOd3IeJ0gJl6exg2xAZeCgB/Ps0mqrApspnuLwpEllaiApMbQOrYh3SeYpI2cfJnHaYWYrSNl7i8Wu8mtNA1nKyKnQxZlOktU4mDtvtSRWdfSCm7rApzKByGbBLqbX+DB3dqxaWFnSb43Aa+hscVvlRhSuLwIDAQAB",
     "permissions": [

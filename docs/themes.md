@@ -14,10 +14,10 @@ for the classic look ([Dark mode](getting-started.md#dark-mode)).
 
 The built-in themes are **Classic** (MDM's own look, the default), **Native** (your system's
 accent colour and contrast), **High contrast**, and the style themes **Metro**, **Adwaita**,
-**Breeze**, **Luna**, **Aero** and **Aqua**, each with its own control shapes and icons, and on
-Windows its own title bar. [Getting started](getting-started.md#themes) describes each one; the
-website's [Themes page](https://misterdownloadmanager.com/themes.html) shows them all, light and
-dark.
+**Breeze**, **Luna**, **Aero**, **Aqua** and **Emerald**, each with its own control shapes and
+icons, and on Windows its own title bar. [Getting started](getting-started.md#themes) describes
+each one; the website's [Themes page](https://misterdownloadmanager.com/themes.html) shows them
+all, light and dark.
 
 ## Where theme files go
 

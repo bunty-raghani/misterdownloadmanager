@@ -2152,6 +2152,18 @@ fn edit_text_with(
             ui.memory_mut(|m| m.request_focus(edit_id));
         }
     }
+    // A box that was empty and is then filled by its window, not typed in (a link from the
+    // clipboard, read off the window's thread, comes a frame or two after the window opens:
+    // #661), has its caret where it would be had it opened with the text (at its end), not left
+    // at its start.
+    let was_empty = edit_id.with("was-empty");
+    if !value.is_empty() && ui.data(|d| d.get_temp::<bool>(was_empty)).is_some() {
+        ui.data_mut(|d| d.remove::<bool>(was_empty));
+        if let Some(mut state) = egui::text_edit::TextEditState::load(ui.ctx(), edit_id) {
+            state.cursor.set_char_range(None);
+            state.store(ui.ctx(), edit_id);
+        }
+    }
     let te = egui::TextEdit::singleline(value)
         .id(edit_id)
         .align(egui::Align2([align, egui::Align::TOP]))
@@ -2241,6 +2253,9 @@ fn edit_text_with(
                 egui::text::CCursor::new(n),
             )));
         state.store(ui.ctx(), edit_id);
+    }
+    if value.is_empty() && ui.data(|d| d.get_temp::<bool>(was_empty)).is_none() {
+        ui.data_mut(|d| d.insert_temp(was_empty, true));
     }
     if enabled {
         edit_menu(&resp, value, password, false);
@@ -2378,15 +2393,26 @@ pub fn edit_menu(resp: &Response, value: &mut String, password: bool, multiline:
     let ctx = resp.ctx.clone();
     let id = resp.id;
     let key = id.with("edit-menu");
+    // Paste is offered when the clipboard has text: asked as the menu opens, read off the
+    // window's thread (clipboard.rs; read here at every frame, a clipboard owner that hung froze
+    // the window, #661).
+    let clip_key = key.with("clipboard");
+    let open_at = |p: Pos2| {
+        let ask = crate::clipboard::ask();
+        ctx.data_mut(|d| {
+            d.insert_temp(key, p);
+            d.insert_temp(clip_key, ask);
+        });
+    };
     if resp.secondary_clicked()
         && let Some(p) = resp.interact_pointer_pos()
     {
-        ctx.data_mut(|d| d.insert_temp(key, p));
+        open_at(p);
     }
     // Shift+F10 (the keyboard's way to a right-click menu) opens it under the box.
     if resp.has_focus() && ctx.input_mut(|i| i.consume_key(egui::Modifiers::SHIFT, egui::Key::F10))
     {
-        ctx.data_mut(|d| d.insert_temp(key, resp.rect.left_bottom()));
+        open_at(resp.rect.left_bottom());
     }
     let Some(at) = ctx.data(|d| d.get_temp::<Pos2>(key)) else {
         return;
@@ -2402,7 +2428,13 @@ pub fn edit_menu(resp: &Response, value: &mut String, password: bool, multiline:
         })
         .unwrap_or((n, n));
     let has = a < b;
-    let clip = crate::clipboard_text().filter(|t| !t.is_empty());
+    // Until the answer comes (a frame or two; never, from an owner that hung), what the
+    // clipboard last held.
+    let clip = ctx
+        .data(|d| d.get_temp::<crate::clipboard::Ask>(clip_key))
+        .and_then(crate::clipboard::answer)
+        .unwrap_or_else(crate::clipboard::latest)
+        .filter(|t| !t.is_empty());
     // egui's own undo history (Ctrl+Z uses it too).
     let mut undoer = state.undoer();
     let now = (state.cursor.char_range().unwrap_or_default(), value.clone());
@@ -2428,7 +2460,10 @@ pub fn edit_menu(resp: &Response, value: &mut String, password: bool, multiline:
         PopupResult::Dismissed => None,
         PopupResult::Chosen(c) => Some(c),
     };
-    ctx.data_mut(|d| d.remove::<Pos2>(key));
+    ctx.data_mut(|d| {
+        d.remove::<Pos2>(key);
+        d.remove::<crate::clipboard::Ask>(clip_key);
+    });
     let Some(cmd) = cmd else { return };
     let byte = |c: usize| value.char_indices().nth(c).map_or(value.len(), |(i, _)| i);
     let (ba, bb) = (byte(a), byte(b));

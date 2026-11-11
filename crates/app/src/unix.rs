@@ -420,6 +420,189 @@ pub fn os_version() -> String {
         .unwrap_or_else(|| "Linux".into())
 }
 
+/// What `cmd` prints, trimmed, when it succeeds within `secs` seconds (`launch::output_within`).
+fn printed_within(cmd: &mut Command, secs: u64) -> Option<String> {
+    crate::launch::output_within(cmd, std::time::Duration::from_secs(secs))
+        .filter(|o| o.status.success())
+        .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_owned())
+        .filter(|s| !s.is_empty())
+}
+
+/// The default browser (#668): the desktop's choice for web links (`xdg-settings`, else
+/// `mimeapps.list`), the program its `.desktop` file runs, and that program's version (Firefox's
+/// `application.ini` beside it, else its `--version`, on this thread, bounded in time). None when
+/// it isn't a browser MDM knows (MDM then speaks as Chrome).
+#[cfg(target_os = "linux")]
+pub fn default_browser() -> Option<mdm_engine::agent::Found> {
+    use crate::defaultbrowser::{exec_program, mimeapps_https, version_in};
+    use crate::xdgicons::{Dirs, ini_value};
+    use mdm_engine::agent::{Browser, Found};
+    let var = |n: &str| std::env::var(n).ok().filter(|v| !v.is_empty());
+    let home = var("HOME");
+    let desktop = printed_within(
+        Command::new("xdg-settings").args(["get", "default-web-browser"]),
+        5,
+    )
+    .filter(|d| d.ends_with(".desktop"))
+    .or_else(|| {
+        let config =
+            var("XDG_CONFIG_HOME").or_else(|| home.as_ref().map(|h| format!("{h}/.config")));
+        let lists = config
+            .iter()
+            .map(|c| format!("{c}/mimeapps.list"))
+            .chain(["/etc/xdg/mimeapps.list".to_owned()]);
+        lists
+            .filter_map(|l| std::fs::read_to_string(l).ok())
+            .find_map(|t| mimeapps_https(&t))
+    })?;
+    let dirs = Dirs::new(
+        home.as_deref(),
+        var("XDG_DATA_HOME").as_deref(),
+        var("XDG_DATA_DIRS").as_deref(),
+    );
+    // Snaps' and Flatpaks' launchers, also when the session's XDG_DATA_DIRS doesn't list them.
+    let entry = dirs
+        .data
+        .iter()
+        .map(|d| d.join("applications"))
+        .chain(
+            [
+                "/var/lib/snapd/desktop/applications",
+                "/var/lib/flatpak/exports/share/applications",
+            ]
+            .map(PathBuf::from),
+        )
+        .find_map(|d| std::fs::read_to_string(d.join(&desktop)).ok());
+    let program = entry
+        .as_deref()
+        .and_then(|e| ini_value(e, "Desktop Entry", "Exec"))
+        .and_then(|e| exec_program(&e));
+    let base = program
+        .as_deref()
+        .and_then(|p| Path::new(p).file_name())
+        .map(|b| b.to_string_lossy().into_owned());
+    let browser = Browser::named(&desktop).or_else(|| base.as_deref().and_then(Browser::named))?;
+    let firefox = matches!(browser, Browser::Firefox | Browser::FirefoxFork);
+    // A Flatpak's launcher would start its sandbox, and its files are inside it: its version
+    // stays unknown (MDM's estimate of today's).
+    let program = program.filter(|_| base.as_deref() != Some("flatpak"));
+    let install = program
+        .as_deref()
+        .filter(|_| firefox)
+        .and_then(|p| firefox_install(p, browser == Browser::Firefox));
+    let version = install
+        .as_ref()
+        .and_then(|d| std::fs::read_to_string(d.join("application.ini")).ok())
+        .and_then(|t| ini_value(&t, "App", "Version"))
+        .or_else(|| {
+            let program = program.as_deref()?;
+            version_in(&printed_within(Command::new(program).arg("--version"), 10)?)
+        });
+    // Ubuntu's own Firefox (its snap) says so in its User-Agent, and its distribution file
+    // names Ubuntu as its partner.
+    let ubuntu = install
+        .and_then(|d| std::fs::read_to_string(d.join("distribution/distribution.ini")).ok())
+        .is_some_and(|t| t.contains("partner.id=\"ubuntu\""));
+    Some(Found {
+        browser,
+        version,
+        ubuntu,
+    })
+}
+
+/// The folder a Firefox `program` runs from (the one holding its `application.ini`): a snap's
+/// (`/snap/bin/firefox` → `/snap/firefox/current/usr/lib/firefox`), the program's own folder
+/// with its links followed, else (`plain`: Firefox itself, not a fork) the distributions' usual
+/// places, for a `/usr/bin/firefox` that is a script.
+#[cfg(target_os = "linux")]
+fn firefox_install(program: &str, plain: bool) -> Option<PathBuf> {
+    let path = if program.contains('/') {
+        PathBuf::from(program)
+    } else {
+        std::env::split_paths(&std::env::var_os("PATH")?)
+            .map(|d| d.join(program))
+            .find(|p| p.is_file())?
+    };
+    let snap = path
+        .strip_prefix("/snap/bin")
+        .ok()
+        .and_then(|n| n.to_str())
+        .map(|n| PathBuf::from(format!("/snap/{n}/current/usr/lib/{n}")));
+    let own = std::fs::canonicalize(&path)
+        .ok()
+        .and_then(|p| p.parent().map(Path::to_path_buf));
+    let usual = ["/usr/lib/firefox", "/usr/lib64/firefox", "/opt/firefox"]
+        .map(PathBuf::from)
+        .into_iter()
+        .filter(|_| plain);
+    snap.into_iter()
+        .chain(own)
+        .chain(usual)
+        .find(|d| d.join("application.ini").is_file())
+}
+
+/// The default browser (#668): the app macOS opens https links with (LaunchServices' handlers;
+/// none set is Safari), and its version (its Info.plist's). None when it isn't a browser MDM
+/// knows (MDM then speaks as Chrome).
+#[cfg(target_os = "macos")]
+pub fn default_browser() -> Option<mdm_engine::agent::Found> {
+    use mdm_engine::agent::{Browser, Found};
+    let handlers = printed_within(
+        Command::new("defaults").args([
+            "read",
+            "com.apple.LaunchServices/com.apple.launchservices.secure",
+            "LSHandlers",
+        ]),
+        5,
+    );
+    let id = handlers
+        .as_deref()
+        .and_then(|h| crate::defaultbrowser::ls_handler(h, "https"))
+        .unwrap_or_else(|| "com.apple.safari".to_owned());
+    let browser = Browser::named(&id)?;
+    // Where the app is: Spotlight's answer, else where browsers install themselves.
+    let safe_id: String = id
+        .chars()
+        .filter(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '-' | '_'))
+        .collect();
+    let found = printed_within(
+        Command::new("mdfind").arg(format!("kMDItemCFBundleIdentifier == '{safe_id}'c")),
+        5,
+    )
+    .and_then(|o| o.lines().find(|l| l.ends_with(".app")).map(PathBuf::from));
+    let app = found.or_else(|| {
+        let name = match browser {
+            Browser::Chrome => "Google Chrome",
+            Browser::Edge => "Microsoft Edge",
+            Browser::Brave => "Brave Browser",
+            other => other.name(),
+        };
+        let home = std::env::var_os("HOME").map(PathBuf::from);
+        [
+            Some(PathBuf::from("/Applications")),
+            home.map(|h| h.join("Applications")),
+        ]
+        .into_iter()
+        .flatten()
+        .map(|d| d.join(format!("{name}.app")))
+        .find(|a| a.is_dir())
+    });
+    let version = app.and_then(|a| {
+        printed_within(
+            Command::new("defaults")
+                .arg("read")
+                .arg(a.join("Contents/Info"))
+                .arg("CFBundleShortVersionString"),
+            5,
+        )
+    });
+    Some(Found {
+        browser,
+        version,
+        ubuntu: false,
+    })
+}
+
 /// How long the file manager has to answer ShowItems before its folder is opened instead: one
 /// started for it (D-Bus activation) answers in a second or two.
 const SHOW_ITEMS_LIMIT: std::time::Duration = std::time::Duration::from_secs(5);
@@ -2351,11 +2534,18 @@ mod host_copy_tests {
         let t = tempfile::tempdir().unwrap();
         let dir = t.path().join("browser-host");
         std::fs::create_dir_all(&dir).unwrap();
-        // A real program (a script would run as the shell, its file only read).
+        // A real program (a script would run as the shell, its file only read). The shell, which
+        // runs under any name: Ubuntu 26.04's `sleep` is one program for every core tool, telling
+        // them apart by the name it's started under, so a copy of it named after the helper ended
+        // at once. `; :` keeps the shell from replacing itself with `sleep`.
         let old = dir.join(HOST);
-        std::fs::copy("/bin/sleep", &old).unwrap();
-        let mut running = std::process::Command::new(&old).arg("30").spawn().unwrap();
+        std::fs::copy("/bin/sh", &old).unwrap();
+        let mut running = std::process::Command::new(&old)
+            .args(["-c", "sleep 30; :"])
+            .spawn()
+            .unwrap();
         std::thread::sleep(std::time::Duration::from_millis(200));
+        assert!(running.try_wait().unwrap().is_none(), "the old copy runs");
         assert!(
             std::fs::write(&old, b"x").is_err() || cfg!(target_os = "macos"),
             "Linux refuses to write over a running program"

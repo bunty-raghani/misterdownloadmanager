@@ -572,6 +572,10 @@
 #. a country's name (where a download's server is)
 #, machine
 	Austria	Avstriya
+#. checkbox in the Options window; text in the Options window
+#. checkbox: the User-Agent is the default browser's, which MDM finds itself
+#, machine
+	Automatic	Avtomatik
 #. text in remote.rs
 #. remote control page (on a phone): category choice: the category follows the file's type
 #, machine
@@ -5217,6 +5221,13 @@
 #. a row of the browser extension's window when no browser was found by name
 #, machine
 	Your browser	Brauzeriniz
+#. text in the Options window
+#, machine
+	Your default browser isn't one MDM knows: a current Chrome's User-Agent	Standart brauzeriniz MDM-in tanıdığı brauzerlərdən biri deyil: cari Chrome-un User-Agent-i
+#. text in the Options window
+#. tooltip; {browser} is a browser and its version, e.g. "Brave 157"
+#, machine
+	Your default browser's User-Agent: {browser}	Standart brauzerinizin User-Agent-i: {browser}
 #. text in the settings
 #. Options → DNS: the name of a DNS the user typed in, in messages: "your DNS (DNS over TLS)"
 #, machine

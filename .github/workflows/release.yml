@@ -14,8 +14,9 @@ on:
     tags: ["v*"]
   workflow_dispatch:
 
+# Read-only for every job; a job that needs more says so in its own block (publish).
 permissions:
-  contents: write
+  contents: read
 
 env:
   CARGO_TERM_COLOR: always
@@ -26,12 +27,14 @@ jobs:
     # Lite, CC BY 4.0) for every build. A failed download keeps the committed one, with a warning.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - name: IP-to-country table
         run: python3 tools/geo/build.py --release
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: geo-data
           path: crates/geo/data/*
@@ -41,9 +44,11 @@ jobs:
     needs: geo
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: geo-data
           path: crates/geo/data
@@ -51,7 +56,7 @@ jobs:
       - name: Toolchain
         run: rustup show active-toolchain || rustup toolchain install
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: |
             ~/.cargo/registry
@@ -110,7 +115,7 @@ jobs:
           python tools/installer/symbols.py windows-x64 $v target/dist @exes
           if ($LASTEXITCODE) { throw "symbols failed" }
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: windows
           path: target/dist/*
@@ -119,15 +124,23 @@ jobs:
     # Every browser's extension as its own download: Chrome, Edge, Brave, Opera and Vivaldi
     # (unzip, then load the folder unpacked) and Firefox (.xpi).
     runs-on: ubuntu-latest
-    # The store steps below run only for a pushed tag, and only when their key is there (a step's
-    # `if` sees the job's env): a run by hand never sends anything to a store.
-    env:
-      AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
-      CWS_REFRESH_TOKEN: ${{ secrets.CWS_REFRESH_TOKEN }}
+    # The store steps below run only for a pushed tag, and only when their key is there: a run by
+    # hand never sends anything to a store. Each key is in the environment of its own step only.
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
-      - uses: actions/setup-node@v4
+      - name: Which store keys are set
+        id: keys
+        env:
+          AMO: ${{ secrets.AMO_JWT_ISSUER }}
+          CWS: ${{ secrets.CWS_REFRESH_TOKEN }}
+        run: |
+          echo "amo=$([ -n "$AMO" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          echo "cws=$([ -n "$CWS" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
 
@@ -148,16 +161,23 @@ jobs:
           New-Item -ItemType Directory -Force target/store | Out-Null
           Copy-Item target/extension/mdm-chrome-store.zip "target/store/MisterDownloadManager-$v-chrome-web-store.zip"
 
+      # The stores' tools, at the exact versions and hashes of tools/release/package-lock.json.
+      - name: Store tools
+        if: ${{ startsWith(github.ref, 'refs/tags/') && (steps.keys.outputs.amo == 'true' || steps.keys.outputs.cws == 'true') }}
+        working-directory: tools/release
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
       # The Firefox add-on is listed on addons.mozilla.org: each release's version is sent there
       # for review (not waited for); Firefox installs and updates it from its listing. The .xpi
       # in the release stays the unsigned one (for about:debugging).
       - name: Send the Firefox add-on to addons.mozilla.org
-        if: ${{ startsWith(github.ref, 'refs/tags/') && env.AMO_JWT_ISSUER != '' }}
+        if: ${{ startsWith(github.ref, 'refs/tags/') && steps.keys.outputs.amo == 'true' }}
         env:
+          AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
           AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
         shell: pwsh
         run: |
-          $log = npx --yes web-ext@8 sign --source-dir target/extension/firefox --artifacts-dir target/signed `
+          $log = & ./tools/release/node_modules/.bin/web-ext sign --source-dir target/extension/firefox --artifacts-dir target/signed `
             --channel listed --approval-timeout 0 --api-key $env:AMO_JWT_ISSUER --api-secret $env:AMO_JWT_SECRET 2>&1
           $log | Write-Output
           if ($LASTEXITCODE -ne 0) {
@@ -174,7 +194,7 @@ jobs:
       # Chrome, Edge, Brave, Opera and Vivaldi update from the listing. A store refusal (a version
       # it has already) never fails the release.
       - name: Send the extension to the Chrome Web Store
-        if: ${{ startsWith(github.ref, 'refs/tags/') && env.CWS_REFRESH_TOKEN != '' }}
+        if: ${{ startsWith(github.ref, 'refs/tags/') && steps.keys.outputs.cws == 'true' }}
         continue-on-error: true
         env:
           CLIENT_ID: ${{ secrets.CWS_CLIENT_ID }}
@@ -182,14 +202,14 @@ jobs:
           REFRESH_TOKEN: ${{ secrets.CWS_REFRESH_TOKEN }}
           PUBLISHER_ID: ${{ secrets.CWS_PUBLISHER_ID }}
           EXTENSION_ID: ejoleppdfgjdndddcjoehopknmlglojp
-        run: npx --yes chrome-webstore-upload-cli@4 --source target/extension/mdm-chrome-store.zip
+        run: ./tools/release/node_modules/.bin/chrome-webstore-upload --source target/extension/mdm-chrome-store.zip
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: chrome-web-store
           path: target/store/*
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: extension
           path: target/dist/*
@@ -199,9 +219,11 @@ jobs:
     needs: geo
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: geo-data
           path: crates/geo/data
@@ -209,7 +231,7 @@ jobs:
       - name: Toolchain
         run: rustup show active-toolchain || rustup toolchain install
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: |
             ~/.cargo/registry
@@ -229,7 +251,7 @@ jobs:
           GH_TOKEN: ${{ github.token }} # downloads the build's helpers signed in (fetch_release.py)
         run: bash tools/installer/build-linux.sh
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: linux
           path: target/dist/*
@@ -238,9 +260,11 @@ jobs:
     needs: geo
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: geo-data
           path: crates/geo/data
@@ -248,7 +272,7 @@ jobs:
       - name: Toolchain
         run: rustup show active-toolchain || rustup toolchain install
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: |
             ~/.cargo/registry
@@ -262,7 +286,7 @@ jobs:
           GH_TOKEN: ${{ github.token }} # downloads the build's helpers signed in (fetch_release.py)
         run: bash tools/installer/build-macos.sh
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: macos
           path: target/dist/*
@@ -279,9 +303,11 @@ jobs:
     needs: [windows, extension, linux, macos]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           path: dist
           merge-multiple: true

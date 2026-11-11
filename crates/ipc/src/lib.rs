@@ -245,23 +245,35 @@ pub fn set_data_dir(dir: PathBuf) {
 ///
 /// `MDM_DATA_DIR` overrides it (a separate instance with its own list and channel: tests,
 /// screenshots). Portable mode: a writable `data` folder next to the program holds it all.
+///
+/// Worked out once per run and kept (#565): the window asks for it on every tick (torrents'
+/// state, the list), and the portable check below reads and writes the disk, so a slow disk
+/// held the window up. A folder given on the command line is still taken first.
 pub fn data_dir() -> Option<PathBuf> {
     if let Some(dir) = DATA_DIR.get() {
         return Some(dir.clone());
     }
-    if let Some(dir) = std::env::var_os("MDM_DATA_DIR") {
-        return Some(PathBuf::from(dir));
-    }
-    if let Some(dir) = portable_dir() {
-        return Some(dir);
-    }
-    let base = dirs::data_dir()?;
-    let dir = base.join("misterdownloadmanager");
-    let legacy = base.join("idmnext");
-    if !dir.exists() && legacy.is_dir() {
-        let _ = std::fs::rename(&legacy, &dir);
-    }
-    Some(dir)
+    static RESOLVED: std::sync::OnceLock<Option<PathBuf>> = std::sync::OnceLock::new();
+    once(&RESOLVED, || {
+        if let Some(dir) = std::env::var_os("MDM_DATA_DIR") {
+            return Some(PathBuf::from(dir));
+        }
+        if let Some(dir) = portable_dir() {
+            return Some(dir);
+        }
+        let base = dirs::data_dir()?;
+        let dir = base.join("misterdownloadmanager");
+        let legacy = base.join("idmnext");
+        if !dir.exists() && legacy.is_dir() {
+            let _ = std::fs::rename(&legacy, &dir);
+        }
+        Some(dir)
+    })
+}
+
+/// `cell`'s value, worked out by `make` the first time only.
+fn once<T: Clone>(cell: &std::sync::OnceLock<T>, make: impl FnOnce() -> T) -> T {
+    cell.get_or_init(make).clone()
 }
 
 /// Create the data folder `dir`, readable by its owner only on Linux and macOS (it holds the
@@ -286,7 +298,13 @@ pub fn private_write(path: &std::path::Path, bytes: &[u8]) -> std::io::Result<()
 
 /// Portable mode: the `data` folder next to the program, when it exists and can be written
 /// (else the profile folder is used). Nothing is written to the registry in this mode.
+/// Asked once per run and kept, like [`data_dir`] (#565).
 pub fn portable_dir() -> Option<PathBuf> {
+    static PORTABLE: std::sync::OnceLock<Option<PathBuf>> = std::sync::OnceLock::new();
+    once(&PORTABLE, portable_dir_now)
+}
+
+fn portable_dir_now() -> Option<PathBuf> {
     let dir = std::env::current_exe().ok()?.parent()?.join("data");
     if !dir.is_dir() {
         return None;
@@ -648,6 +666,23 @@ pub fn parse_args(args: &[String]) -> Option<Command> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// #565: the data folder is worked out once; later calls (every tick of the window) don't
+    /// look at the disk again.
+    #[test]
+    fn a_kept_value_is_worked_out_once() {
+        let cell = std::sync::OnceLock::new();
+        let calls = std::cell::Cell::new(0);
+        let make = || {
+            calls.set(calls.get() + 1);
+            Some(PathBuf::from("data"))
+        };
+        assert_eq!(once(&cell, make), Some(PathBuf::from("data")));
+        assert_eq!(once(&cell, make), Some(PathBuf::from("data")));
+        assert_eq!(once(&cell, make), Some(PathBuf::from("data")));
+        assert_eq!(calls.get(), 1);
+        assert_eq!(data_dir(), data_dir());
+    }
 
     #[test]
     fn bare_magnets_and_torrent_files() {

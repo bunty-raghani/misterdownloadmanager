@@ -777,6 +777,7 @@ pub mod signin {
         match service {
             ServiceKind::RealDebrid => {
                 let c = realdebrid::device_code(http).await?;
+                own_page(service, &c.verification_url)?;
                 Ok(Code {
                     shown: c.user_code.clone(),
                     page: c.verification_url.clone(),
@@ -787,6 +788,7 @@ pub mod signin {
             }
             ServiceKind::AllDebrid => {
                 let p = alldebrid::pin(http).await?;
+                own_page(service, &p.user_url)?;
                 Ok(Code {
                     shown: p.pin.clone(),
                     page: p.user_url.clone(),
@@ -799,6 +801,30 @@ pub mod signin {
             ServiceKind::Premiumize => Err(Fault::Service(ServiceFault::Other(
                 "Premiumize signs in with its API key".into(),
             ))),
+        }
+    }
+
+    /// The page MDM opens in the browser for the user to type the code at comes from the
+    /// service's answer: it is opened only on the service's own site, over https. Anything else
+    /// is a service that isn't answering as it should.
+    fn own_page(service: ServiceKind, page: &str) -> Result<(), Fault> {
+        let site = match service {
+            ServiceKind::RealDebrid => "real-debrid.com",
+            ServiceKind::AllDebrid => "alldebrid.com",
+            ServiceKind::Premiumize => "premiumize.me",
+        };
+        let ok = url::Url::parse(page).is_ok_and(|u| {
+            u.scheme() == "https"
+                && u.username().is_empty()
+                && u.password().is_none()
+                && u.port().is_none()
+                && u.host_str()
+                    .is_some_and(|h| h == site || h.ends_with(&format!(".{site}")))
+        });
+        if ok {
+            Ok(())
+        } else {
+            Err(ServiceFault::ServiceDown.into())
         }
     }
 
@@ -820,6 +846,35 @@ pub mod signin {
             Inner::Ad(p) => Ok(alldebrid::pin_check(http, p)
                 .await?
                 .map(|token| Credential::Token { token })),
+        }
+    }
+
+    #[cfg(test)]
+    mod page_tests {
+        use super::{ServiceKind, own_page};
+
+        #[test]
+        fn only_the_services_own_site_over_https() {
+            let rd = ServiceKind::RealDebrid;
+            let ad = ServiceKind::AllDebrid;
+            assert!(own_page(rd, "https://real-debrid.com/device").is_ok());
+            assert!(own_page(rd, "https://www.real-debrid.com/device").is_ok());
+            assert!(own_page(ad, "https://alldebrid.com/pin/?pin=ABCD").is_ok());
+            for bad in [
+                "http://real-debrid.com/device",
+                "https://real-debrid.com.example.net/device",
+                "https://notreal-debrid.com/device",
+                "https://example.com/real-debrid.com",
+                "https://user@real-debrid.com/device",
+                "https://real-debrid.com:8443/device",
+                "file:///C:/Windows/system32/calc.exe",
+                "javascript:alert(1)",
+                "real-debrid.com/device",
+                "",
+            ] {
+                assert!(own_page(rd, bad).is_err(), "{bad}");
+            }
+            assert!(own_page(ad, "https://real-debrid.com/device").is_err());
         }
     }
 }

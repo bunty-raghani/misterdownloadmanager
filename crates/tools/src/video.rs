@@ -349,6 +349,8 @@ fn supervise(
             Attempt::Stopped => return,
             Attempt::Done(f, problems, quality) => {
                 end(child);
+                // Named for what it holds (#569): HLS pieces joined without ffmpeg.
+                let f = named_for_content(f);
                 if relaxed_to.is_some()
                     && let Some(q) = quality
                 {
@@ -658,6 +660,67 @@ fn saved_by_name(ours: &[String]) -> Option<PathBuf> {
         .max_by_key(|p| std::fs::metadata(p).and_then(|m| m.modified()).ok())
 }
 
+/// What a saved file holds when its name says otherwise: an HLS stream's pieces joined as they
+/// came, which only ffmpeg makes into the MP4 they're named for (#569). YouTube's HLS sound is
+/// raw AAC (ADTS frames, each piece led by an ID3 tag with its time): `aac`, which players open.
+/// A video's pieces are an MPEG transport stream: `ts`. A real MP4 (ffmpeg was there, or the
+/// format came as a file) is none of these.
+fn content_ext(head: &[u8]) -> Option<&'static str> {
+    // ID3v2 tags first: a 10-byte header, then the tag's size in 7-bit bytes.
+    let mut at = 0usize;
+    while head.len() >= at + 10 && &head[at..at + 3] == b"ID3" {
+        let size = head[at + 6..at + 10]
+            .iter()
+            .fold(0usize, |n, b| (n << 7) | usize::from(b & 0x7f));
+        let footer = if head[at + 5] & 0x10 != 0 { 10 } else { 0 };
+        at += 10 + size + footer;
+    }
+    let rest = head.get(at..)?;
+    // ADTS: a 12-bit sync word, then MPEG layer 0.
+    if rest.len() >= 7 && rest[0] == 0xff && rest[1] & 0xf6 == 0xf0 {
+        return Some("aac");
+    }
+    // A transport stream: a sync byte every 188 bytes.
+    if at == 0 && head.len() > 376 && [0, 188, 376].iter().all(|&i| head[i] == 0x47) {
+        return Some("ts");
+    }
+    None
+}
+
+/// `f`, renamed for what it holds when its MP4 name is wrong ([`content_ext`]); as it was
+/// otherwise, or when the rename fails (the file is kept).
+fn named_for_content(f: PathBuf) -> PathBuf {
+    let named = f
+        .extension()
+        .map(|e| e.to_string_lossy().to_ascii_lowercase());
+    if !matches!(named.as_deref(), Some("mp4" | "m4a")) {
+        return f;
+    }
+    let mut head = Vec::with_capacity(8192);
+    let read = std::fs::File::open(&f).and_then(|file| {
+        use std::io::Read;
+        file.take(8192).read_to_end(&mut head)
+    });
+    let Some(ext) = read.ok().and_then(|_| content_ext(&head)) else {
+        return f;
+    };
+    let stem = f
+        .file_stem()
+        .unwrap_or_default()
+        .to_string_lossy()
+        .into_owned();
+    let free = (1..100)
+        .map(|n| match n {
+            1 => f.with_file_name(format!("{stem}.{ext}")),
+            n => f.with_file_name(format!("{stem} ({n}).{ext}")),
+        })
+        .find(|p| !p.exists());
+    match free {
+        Some(to) if std::fs::rename(&f, &to).is_ok() => to,
+        _ => f,
+    }
+}
+
 /// Wait `d`, or less if the download is stopped meanwhile (false then).
 fn pause(d: std::time::Duration, progress: &Mutex<Progress>) -> bool {
     let end = std::time::Instant::now() + d;
@@ -934,7 +997,15 @@ impl VideoJob {
         let output = dir.join(format!("{}.%(ext)s", template_text(stem)));
         // An MP3, Opus or FLAC choice (#32, #70): the best sound, converted by ffmpeg.
         let convert = crate::resolve::audio_conversion(selector);
-        let format = if convert.is_some() { "ba/b" } else { selector };
+        let format = if convert.is_some() {
+            "ba/b".to_owned()
+        } else if ffmpeg.is_none() {
+            // A format that comes as a file first (#569): without ffmpeg an HLS stream stays
+            // its raw pieces.
+            crate::resolve::without_remuxing(selector)
+        } else {
+            selector.to_owned()
+        };
         // What comes down is the sound as the site has it, not the file the choice's size
         // estimated: the progress follows yt-dlp's own total.
         let expected = if convert.is_some() { None } else { expected };
@@ -942,7 +1013,7 @@ impl VideoJob {
         let with_subs = convert.is_none() && !subs.langs.is_empty();
         let mut ours: Vec<String> = vec![
             "-f".into(),
-            format.into(),
+            format,
             "-o".into(),
             output.to_string_lossy().into_owned(),
             "--no-playlist".into(),
@@ -1074,6 +1145,45 @@ impl VideoJob {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// #569: what a file joined from HLS pieces holds, from its first bytes. YouTube's sound:
+    /// pieces each led by an ID3 tag (Apple's timestamp), then ADTS frames.
+    #[test]
+    fn joined_hls_pieces_are_named_for_what_they_hold() {
+        let mut aac = b"ID3     ?".to_vec();
+        aac.extend(std::iter::repeat_n(0u8, 0x3f));
+        aac.extend([0xff, 0xf1, 0x50, 0x80, 0x2e, 0x7f, 0xfc]);
+        assert_eq!(content_ext(&aac), Some("aac"));
+        // ADTS with no tag, and MPEG-1 layer 3 (an MP3: not ours to rename).
+        assert_eq!(content_ext(&[0xff, 0xf9, 0x50, 0x80, 0, 0, 0]), Some("aac"));
+        assert_eq!(content_ext(&[0xff, 0xfb, 0x90, 0x64, 0, 0, 0]), None);
+        let mut ts = vec![0u8; 400];
+        for i in [0, 188, 376] {
+            ts[i] = 0x47;
+        }
+        assert_eq!(content_ext(&ts), Some("ts"));
+        // A real MP4 (ffmpeg was there): as it is.
+        let mut mp4 = vec![0, 0, 0, 0x20];
+        mp4.extend(b"ftypisom");
+        mp4.resize(400, 0);
+        assert_eq!(content_ext(&mp4), None);
+
+        let dir = tempfile::tempdir().unwrap();
+        let joined = dir.path().join("Talk.mp4");
+        std::fs::write(&joined, &aac).unwrap();
+        assert_eq!(named_for_content(joined), dir.path().join("Talk.aac"));
+        assert!(dir.path().join("Talk.aac").is_file());
+        // Another Talk.aac there already: not overwritten.
+        std::fs::write(dir.path().join("Talk.mp4"), &aac).unwrap();
+        let second = named_for_content(dir.path().join("Talk.mp4"));
+        assert_eq!(second, dir.path().join("Talk (2).aac"));
+        // A real MP4 keeps its name; so does a sound already named .aac.
+        let real = dir.path().join("Real.mp4");
+        std::fs::write(&real, &mp4).unwrap();
+        assert_eq!(named_for_content(real.clone()), real);
+        let named = dir.path().join("Talk.aac");
+        assert_eq!(named_for_content(named.clone()), named);
+    }
 
     /// #531: a stream in pieces comes down several at once, as many as a file's connections;
     /// with a speed limit one at a time, as yt-dlp's limit holds for each piece (measured

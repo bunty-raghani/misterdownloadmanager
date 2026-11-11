@@ -126,11 +126,11 @@ async fn every_link_form_downloads_the_file() {
     }
 }
 
-/// Drive's hosts are asked with a browser's agent (PR #67), every other site with MDM's own, and
-/// an agent handed over by the browser wins.
+/// Drive's hosts are asked with a browser's agent (PR #67), every other site with MDM's automatic
+/// one (the default browser's, #668), and an agent handed over by the browser wins.
 #[tokio::test]
 async fn drive_is_asked_with_a_browsers_agent() {
-    use mdm_engine::download::DEFAULT_USER_AGENT;
+    let automatic = mdm_engine::agent::automatic();
     use mdm_engine::sites::gdrive::USER_AGENT;
     let s = server("").await;
     let id = drive::id("big", "2M", &["uuid"]);
@@ -161,7 +161,7 @@ async fn drive_is_asked_with_a_browsers_agent() {
         !others.is_empty()
             && others
                 .iter()
-                .all(|a| a.as_deref() == Some(DEFAULT_USER_AGENT)),
+                .all(|a| a.as_deref() == Some(automatic.as_str())),
         "{others:?}"
     );
 
@@ -169,6 +169,7 @@ async fn drive_is_asked_with_a_browsers_agent() {
     let browser = "Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0";
     let opts = Options {
         user_agent: browser.into(),
+        automatic_agent: false,
         ..opts()
     };
     let (_dir, out) = download(url, HeaderMap::new(), opts).await;

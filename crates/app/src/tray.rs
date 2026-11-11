@@ -1,5 +1,6 @@
 //! The notification-area icon (IDM: "IDM menu pops up when you right click on IDM icon"
-//! [IDM-doc]). Left click brings the window back; right click shows the menu. The menu's
+//! [IDM-doc]). Left click shows the window again, or hides it there while it shows; right click
+//! shows the menu. The menu's
 //! contents are ours ([unknown] IDM's exact items, lab). Windows, macOS (menu bar) and Linux
 //! (StatusNotifierItem over D-Bus: KDE, GNOME with its AppIndicator extension).
 
@@ -15,6 +16,9 @@ use tray_icon::{MouseButton, MouseButtonState, TrayIcon, TrayIconBuilder, TrayIc
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum TrayCmd {
     Show,
+    /// Left click on the icon: the window back when hidden or behind other
+    /// windows, hidden there when frontmost.
+    Toggle,
     AddUrl,
     Batch,
     LimiterOn,
@@ -275,7 +279,7 @@ impl Tray {
                 ..
             } = e
             {
-                let _ = icon_tx.send(TrayCmd::Show);
+                let _ = icon_tx.send(TrayCmd::Toggle);
                 icon_ctx.request_repaint();
             }
         }));

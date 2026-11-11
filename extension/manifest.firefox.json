@@ -4,6 +4,7 @@
     "name": "__MSG_name__",
     "version": "0.1.0",
     "description": "__MSG_description__",
+    "homepage_url": "https://misterdownloadmanager.com/",
     "browser_specific_settings": {
         "gecko": {
             "id": "integration@misterdownloadmanager.com",

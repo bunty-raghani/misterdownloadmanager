@@ -62,6 +62,9 @@ pub struct Format {
     pub tbr: Option<f64>,
     /// YouTube's higher-bitrate "Premium" stream (1080p Premium), not DRM.
     pub premium: bool,
+    /// Comes as an HLS stream (yt-dlp's `protocol` `m3u8`, `m3u8_native`): its pieces make a
+    /// proper file only once ffmpeg has put them into one (#569).
+    pub hls: bool,
 }
 
 /// One line of the choice list: what to show and what to ask yt-dlp for.
@@ -132,6 +135,7 @@ struct RawFormat {
     filesize_approx: Option<u64>,
     tbr: Option<f64>,
     format_note: Option<String>,
+    protocol: Option<String>,
 }
 
 /// Whether `title` is only the last part of `page`'s address, which is what yt-dlp calls a video
@@ -173,6 +177,7 @@ pub fn parse(json: &[u8]) -> Option<Video> {
                     .format_note
                     .as_deref()
                     .is_some_and(|n| n.to_ascii_lowercase().contains("premium")),
+                hls: f.protocol.as_deref().is_some_and(|p| p.contains("m3u8")),
             })
             .collect(),
         subtitles: tracks(raw.subtitles),
@@ -398,7 +403,13 @@ fn audio_container(ext: &str) -> bool {
 
 /// A choice that saves only the sound (no picture to show subtitles on, #68).
 pub fn is_audio(c: &Choice) -> bool {
-    c.selector == "ba" || audio_conversion(&c.selector).is_some() || audio_container(&c.ext)
+    sound_only(&c.selector, &c.ext)
+}
+
+/// A selector and file type that save only the sound: a choice ([`is_audio`]) or a playlist's
+/// quality (saved in the Music category's folder, #611).
+pub fn sound_only(selector: &str, ext: &str) -> bool {
+    selector == "ba" || audio_conversion(selector).is_some() || audio_container(ext)
 }
 
 /// A choice whose file can hold subtitles put into it (yt-dlp's `--embed-subs` with SRT).
@@ -423,6 +434,39 @@ pub fn needs_merging(v: &Video) -> bool {
     best(true) > best(false)
 }
 
+/// A format selector for yt-dlp without ffmpeg (#569): each of its "best" picks (`ba`,
+/// `b[height=720]`) tried first among the formats that come as a file, then as it was. An HLS
+/// stream's pieces are joined as they come: without ffmpeg to put them into the container they
+/// were named for, YouTube's HLS sound is raw AAC under an `.mp4` name, which no player opens
+/// as one. A merge (`bv*+ba`, which needs ffmpeg anyway) and a format named by its ID (the one
+/// asked for) are left as they are.
+pub fn without_remuxing(selector: &str) -> String {
+    const BEST: [&str; 10] = [
+        "b",
+        "ba",
+        "bv",
+        "b*",
+        "ba*",
+        "bv*",
+        "best",
+        "bestaudio",
+        "bestvideo",
+        "best*",
+    ];
+    selector
+        .split('/')
+        .map(|alt| {
+            let base = alt.split('[').next().unwrap_or(alt).trim();
+            if BEST.contains(&base) && !alt.contains('+') && !alt.contains("protocol") {
+                format!("{alt}[protocol!*=m3u8]/{alt}")
+            } else {
+                alt.to_owned()
+            }
+        })
+        .collect::<Vec<_>>()
+        .join("/")
+}
+
 /// The choices, best first: each resolution (merged with the best audio when ffmpeg is there,
 /// else only formats that carry both), then audio only.
 pub fn choices(v: &Video, can_merge: bool) -> Vec<Choice> {
@@ -434,11 +478,12 @@ pub fn choices(v: &Video, can_merge: bool) -> Vec<Choice> {
         .collect();
     heights.sort_unstable_by(|a, b| b.cmp(a));
     heights.dedup();
+    // Without ffmpeg a sound that comes as a file (#569): an HLS one stays its raw pieces.
     let best_audio = v
         .formats
         .iter()
         .filter(|f| f.audio && !f.video)
-        .max_by_key(|f| f.size.unwrap_or(0));
+        .max_by_key(|f| (can_merge || !f.hls, f.size.unwrap_or(0)));
     let mut out: Vec<Choice> = Vec::new();
     for h in heights {
         let at: Vec<&Format> = v
@@ -462,7 +507,9 @@ pub fn choices(v: &Video, can_merge: bool) -> Vec<Choice> {
             if formats.is_empty() {
                 continue;
             }
-            let best = formats.into_iter().max_by_key(|f| f.size.unwrap_or(0));
+            let best = formats
+                .into_iter()
+                .max_by_key(|f| (can_merge || !f.hls, f.size.unwrap_or(0)));
             let fps = best
                 .and_then(|f| f.fps)
                 .filter(|fps| *fps > 31.0)
@@ -637,6 +684,7 @@ mod tests {
             size: None,
             tbr: Some(tbr),
             premium: false,
+            hls: false,
         };
         let v = Video {
             title: "t".into(),
@@ -792,6 +840,40 @@ mod tests {
         let sound = r#"{"title": "T", "formats": [
             {"format_id": "140", "ext": "m4a", "vcodec": "none", "acodec": "mp4a"}]}"#;
         assert!(!needs_merging(&parse(sound.as_bytes()).unwrap()));
+    }
+
+    /// #569: YouTube on a Mac with neither ffmpeg nor a JavaScript runtime: its sound as HLS
+    /// streams (the larger) and as a file. Without ffmpeg the file is the choice, and yt-dlp is
+    /// asked for a file first; with ffmpeg the best, HLS or not (ffmpeg makes it a proper file).
+    #[test]
+    fn without_ffmpeg_a_sound_that_comes_as_a_file() {
+        let json = r#"{"title": "T", "formats": [
+            {"format_id": "233", "ext": "mp4", "vcodec": "none", "acodec": "mp4a.40.2", "protocol": "m3u8_native", "filesize_approx": 2000},
+            {"format_id": "140", "ext": "m4a", "vcodec": "none", "acodec": "mp4a.40.2", "protocol": "https", "filesize": 900}]}"#;
+        let v = parse(json.as_bytes()).unwrap();
+        assert!(v.formats[0].hls && !v.formats[1].hls);
+        let without = choices(&v, false);
+        assert_eq!(without[0].label, "Audio only original M4A");
+        assert_eq!(without[0].size, Some(900));
+        assert_eq!(choices(&v, true)[0].size, Some(2000));
+        assert_eq!(without_remuxing("ba"), "ba[protocol!*=m3u8]/ba");
+        assert_eq!(
+            without_remuxing("b[height=360]"),
+            "b[height=360][protocol!*=m3u8]/b[height=360]"
+        );
+        assert_eq!(
+            without_remuxing("bv*[height=720]+ba/b[height=720]"),
+            "bv*[height=720]+ba/b[height=720][protocol!*=m3u8]/b[height=720]"
+        );
+        // A format by its ID, and one already choosing its way, as they are.
+        assert_eq!(without_remuxing("hls-1280"), "hls-1280");
+        assert_eq!(without_remuxing("18"), "18");
+        assert_eq!(without_remuxing("ba[protocol=https]"), "ba[protocol=https]");
+        // Only HLS sound: still offered (it is saved for what it is, video.rs).
+        let hls_only = r#"{"title": "T", "formats": [
+            {"format_id": "233", "ext": "mp4", "vcodec": "none", "acodec": "mp4a.40.2", "protocol": "m3u8_native"}]}"#;
+        let only = choices(&parse(hls_only.as_bytes()).unwrap(), false);
+        assert_eq!(only[0].selector, "ba");
     }
 
     /// #70: what each audio choice converts to; the original and videos convert nothing.

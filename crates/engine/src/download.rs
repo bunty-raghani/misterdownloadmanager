@@ -80,12 +80,25 @@ pub struct Options {
     pub max_retries: u32,
     /// The first retry is immediate (as IDM, lab S5); then this delay, doubling, capped at 30 s.
     pub retry_delay: Duration,
+    /// The download's User-Agent: by default the automatic one (`agent::automatic`, the default
+    /// browser's), else the user's or the one a browser handed over.
     pub user_agent: String,
+    /// `user_agent` is MDM's automatic one, not one the user set or a browser handed over: a
+    /// site that wants an agent of its own (Google Drive's hosts, `sites::user_agent`) gets it.
+    /// [`Options::speak_as`] sets another agent and clears this.
+    pub automatic_agent: bool,
     /// Asked with instead of `user_agent` when the server refuses the first request with 403
     /// (#372): a browser's User-Agent on a connection that isn't a browser's trips some sites'
     /// bot checks (Cloudflare, seen on a public PDF), while MDM's own passes. Set when
     /// `user_agent` is the browser's. A later 403 is left to the download.
     pub agent_fallback: Option<String>,
+    /// From the browser: the address its own download of this file ended at, its redirects
+    /// followed. When the address asked for is refused before any byte (`link_refused`: a
+    /// one-time link the browser already spent, a token bound to its session, a site that
+    /// turns away whatever isn't that browser), the download asks there once instead (#630),
+    /// the address's cookies and logins going only if it is the same site (`scoped_headers`).
+    /// Never for a form's POST (its body goes where it was given) or through a service account.
+    pub browser_final: Option<Url>,
     /// How often resume state is saved (IDM: "several times per minute").
     pub save_interval: Duration,
     /// Speed limit for this download, bytes/s (IDM's limiter is per file). None = unlimited.
@@ -204,10 +217,6 @@ pub fn supported(url: &Url) -> bool {
     matches!(url.scheme(), "http" | "https") || crate::ftp::is_ftp(url)
 }
 
-/// IDM 6.42 sends this browser-style User-Agent (lab S1, D-007).
-pub const DEFAULT_USER_AGENT: &str =
-    "Mozilla/5.0 (Windows NT 6.1; Trident/7.0; rv:11.0) like Gecko";
-
 impl Default for Options {
     fn default() -> Self {
         Options {
@@ -217,8 +226,10 @@ impl Default for Options {
             read_timeout: Duration::from_secs(30),
             max_retries: 5,
             retry_delay: Duration::from_secs(1),
-            user_agent: DEFAULT_USER_AGENT.to_owned(),
+            user_agent: crate::agent::automatic(),
+            automatic_agent: true,
             agent_fallback: None,
+            browser_final: None,
             save_interval: Duration::from_secs(2),
             speed_limit: None,
             verify_overlap: 64,
@@ -244,6 +255,18 @@ impl Default for Options {
 }
 
 impl Options {
+    /// Speak as `agent` (the user's, a browser's) instead of the automatic User-Agent.
+    pub fn speak_as(&mut self, agent: String) {
+        self.user_agent = agent;
+        self.automatic_agent = false;
+    }
+
+    /// A site's own User-Agent may replace this download's (`request_agent`): the agent is the
+    /// automatic one, or MDM's former one (#372's fallback, D-007), as before #668.
+    fn site_agent(&self) -> bool {
+        self.automatic_agent || self.user_agent == crate::agent::IE11_USER_AGENT
+    }
+
     /// The connections this download may open: `max_connections` in
     /// `1..=MAX_CONNECTIONS_UNLOCKED` (a hand-edited setting can hold anything).
     pub fn connections(&self) -> u32 {
@@ -622,18 +645,18 @@ fn post_for(opts: &Options, as_get: bool, headers: &mut HeaderMap) -> Option<Byt
     None
 }
 
-/// A request for `url` with `headers`: a POST with `post` as its body, else a GET. `agent` is the
-/// download's User-Agent (`Options::user_agent`, the client's default); a site that wants a
-/// browser's gets it instead when `agent` is MDM's default (`request_agent`).
+/// A request for `url` with `headers`: a POST with `post` as its body, else a GET. The client
+/// sends the download's User-Agent (`Options::user_agent`); a site that wants a browser's gets
+/// it instead when `site_agent` (`Options::site_agent`: the agent is MDM's automatic one).
 fn build(
     client: &Client,
     url: Url,
     post: Option<&Bytes>,
     headers: &HeaderMap,
-    agent: &str,
+    site_agent: bool,
 ) -> RequestBuilder {
     let mut headers = headers.clone();
-    if let Some(site) = request_agent(agent, &url)
+    if let Some(site) = request_agent(site_agent, &url)
         && !headers.contains_key(header::USER_AGENT)
     {
         headers.insert(header::USER_AGENT, HeaderValue::from_static(site));
@@ -645,13 +668,12 @@ fn build(
     req.headers(headers)
 }
 
-/// The User-Agent a request to `url` carries instead of the download's own `agent`: a site's
-/// browser agent (`sites::user_agent`: Google Drive's hosts), only when `agent` is MDM's default
-/// (D-007). A browser's agent handed over with the download, or one the user set, always wins.
-fn request_agent(agent: &str, url: &Url) -> Option<&'static str> {
-    (agent == DEFAULT_USER_AGENT)
-        .then(|| sites::user_agent(url))
-        .flatten()
+/// The User-Agent a request to `url` carries instead of the download's own: a site's browser
+/// agent (`sites::user_agent`: Google Drive's hosts), only when `site_agent` (the download's is
+/// MDM's automatic one, `Options::site_agent`). A browser's agent handed over with the download,
+/// or one the user set, always wins.
+fn request_agent(site_agent: bool, url: &Url) -> Option<&'static str> {
+    site_agent.then(|| sites::user_agent(url)).flatten()
 }
 
 /// A header's text: UTF-8, else ISO-8859-1 (servers send file names either way, while
@@ -831,7 +853,7 @@ pub async fn probe_kept(
         target.clone(),
         headers.clone(),
         opts.post.as_ref(),
-        &opts.user_agent,
+        opts.site_agent(),
         expects,
         &CancellationToken::new(),
     )
@@ -846,7 +868,7 @@ pub async fn probe_kept(
                 target,
                 headers,
                 opts.post.as_ref(),
-                &plain.user_agent,
+                plain.site_agent(),
                 expects,
                 &CancellationToken::new(),
             )
@@ -1289,7 +1311,7 @@ impl Ctx {
             origin,
             headers,
             self.opts.post.as_ref(),
-            &self.opts.user_agent,
+            self.opts.site_agent(),
             self.size,
             &self.cancel,
             self.opts.unlocker.as_ref(),
@@ -1564,26 +1586,44 @@ async fn run_fresh(
             };
             let as_get = AsGet::default();
             let seen = shared.seen.get_or_init(Default::default).clone();
-            let client0 = client(&opts, &target, &as_get, &seen)?;
-            let (client0, first) = match first_get(
-                &client0, &target, &asked, &opts, expects, shared, cancel,
-            )
-            .await
-            {
-                Err(e) if agent_refused(&e) && opts.agent_fallback.is_some() => {
-                    // #372: the rest of the download goes as MDM too.
-                    opts.user_agent = opts.agent_fallback.take().unwrap_or_default();
-                    asked_as_mdm = true;
-                    shared.event(
-                            "The server refused the browser's User-Agent; asking as Mister Download Manager",
-                        );
-                    let client1 = client(&opts, &target, &as_get, &seen)?;
-                    let first =
-                        first_get(&client1, &target, &asked, &opts, expects, shared, cancel).await;
-                    (client1, first)
-                }
-                first => (client0, first),
+            let as_given = opts.clone();
+            let ask = FirstAsk {
+                as_get: &as_get,
+                seen: &seen,
+                expects,
+                shared,
+                cancel,
             };
+            let (mut client0, mut first, as_mdm) = ask.at(&mut opts, &target, &asked).await?;
+            asked_as_mdm = as_mdm;
+            // #630: the link refused, where the browser's own download of it ended is asked
+            // once, as the link was (the browser's User-Agent first). The link's refusal is
+            // the one told if that fails too.
+            if let Err(e) = &first
+                && link_refused(e)
+                && unlocked.is_none()
+                && opts.post.is_none()
+                && let Some(other) = opts.browser_final.clone().filter(|o| *o != target)
+            {
+                shared.event(format!(
+                    "{}: {e}; asking where the browser's download ended ({})",
+                    target.host_str().unwrap_or("?"),
+                    other.host_str().unwrap_or("?"),
+                ));
+                let mut again = as_given;
+                let headers = scoped_headers(&asked, &target, &other);
+                match ask.at(&mut again, &other, &headers).await {
+                    Ok((client1, Ok(answer), as_mdm)) => {
+                        (opts, client0, first, asked_as_mdm) = (again, client1, Ok(answer), as_mdm);
+                    }
+                    Ok((_, Err(Error::Cancelled), _)) | Err(Error::Cancelled) => {
+                        return Err(Error::Cancelled);
+                    }
+                    Ok((_, Err(e), _)) | Err(e) => {
+                        shared.event(format!("{}: {e}", other.host_str().unwrap_or("?")));
+                    }
+                }
+            }
             let (answer, ttfb) = first?;
             seen.answered(&answer.0);
             (as_get, client0, answer, ttfb)
@@ -1718,7 +1758,7 @@ async fn run_fresh(
             Err(Error::NoRanges) => {
                 *shared.planner.lock().unwrap() = None;
                 shared.view.lock().unwrap().resumable = Some(false);
-                let agent = &opts.user_agent;
+                let agent = opts.site_agent();
                 let (resp, ..) = get(
                     &client0,
                     final_url,
@@ -1971,7 +2011,7 @@ async fn run_resume(
     // state holds none of its links (the download went directly until now).
     let refreshed = if saved.url != saved.final_url || opts.unlocker.is_some() {
         let post = opts.post.as_ref();
-        let agent = &opts.user_agent;
+        let agent = opts.site_agent();
         refresh_final_url(
             &client,
             &saved.url,
@@ -2102,7 +2142,7 @@ async fn refresh_final_url(
     origin: &Url,
     headers: &HeaderMap,
     post: Option<&Bytes>,
-    agent: &str,
+    site_agent: bool,
     size: u64,
     cancel: &CancellationToken,
     unlocker: Option<&Arc<dyn crate::unlock::Unlocker>>,
@@ -2118,7 +2158,7 @@ async fn refresh_final_url(
         None => (origin.clone(), headers.clone()),
     };
     asked.insert(header::RANGE, HeaderValue::from_static("bytes=0-0"));
-    let (resp, mut headers, _) = get(client, target, asked, post, agent, false, cancel)
+    let (resp, mut headers, _) = get(client, target, asked, post, site_agent, false, cancel)
         .await
         .ok()?;
     headers.remove(header::RANGE);
@@ -2385,6 +2425,57 @@ fn forced_gap(force: bool, took: Duration) -> Duration {
     if force { Duration::ZERO } else { took }
 }
 
+/// A refusal of the address asked for that the browser's own download got past (#630): 401
+/// and 403 (a token bound to the browser's session), 404 and 410 (a one-time link the browser
+/// already spent, which some servers then forget, others call gone), 412 (FileHippo's answer
+/// to whatever isn't a browser). A site's bot check stays the site's call (#376).
+fn link_refused(e: &Error) -> bool {
+    matches!(e, Error::Status(s) if matches!(s.as_u16(), 401 | 403 | 404 | 410 | 412))
+}
+
+/// What a download's first request needs besides its address, headers and options.
+struct FirstAsk<'a> {
+    as_get: &'a AsGet,
+    seen: &'a Arc<crate::server::ServerSeen>,
+    expects: bool,
+    shared: &'a Shared,
+    cancel: &'a CancellationToken,
+}
+
+/// A first request's client, its answer (or why not) and whether it went as MDM (#372).
+type FirstAnswer = (
+    Client,
+    Result<((Response, HeaderMap), Duration), Error>,
+    bool,
+);
+
+impl FirstAsk<'_> {
+    /// `first_get` at `url` with its client; asked once more as MDM when the browser's
+    /// User-Agent is refused (#372, `opts` then goes on as MDM: the third value says so).
+    async fn at(
+        &self,
+        opts: &mut Options,
+        url: &Url,
+        headers: &HeaderMap,
+    ) -> Result<FirstAnswer, Error> {
+        let (shared, cancel, expects) = (self.shared, self.cancel, self.expects);
+        let client0 = client(opts, url, self.as_get, self.seen)?;
+        match first_get(&client0, url, headers, opts, expects, shared, cancel).await {
+            Err(e) if agent_refused(&e) && opts.agent_fallback.is_some() => {
+                // #372: the rest of the download goes as MDM too.
+                opts.user_agent = opts.agent_fallback.take().unwrap_or_default();
+                shared.event(
+                    "The server refused the browser's User-Agent; asking as Mister Download Manager",
+                );
+                let client1 = client(opts, url, self.as_get, self.seen)?;
+                let first = first_get(&client1, url, headers, opts, expects, shared, cancel).await;
+                Ok((client1, first, true))
+            }
+            first => Ok((client0, first, false)),
+        }
+    }
+}
+
 /// A plain 403, which a browser's User-Agent may have brought on (#372). A site's bot check
 /// isn't asked again: that one stays the site's call (#376).
 fn agent_refused(e: &Error) -> bool {
@@ -2414,7 +2505,7 @@ async fn get(
     url: Url,
     headers: HeaderMap,
     post: Option<&Bytes>,
-    agent: &str,
+    site_agent: bool,
     expects: bool,
     cancel: &CancellationToken,
 ) -> Result<(Response, HeaderMap, Duration), Error> {
@@ -2439,7 +2530,7 @@ async fn get(
     // Redirects between a site's own hosts followed here (`get_policy`).
     let mut party_hops = 0;
     loop {
-        let req = build(client, url.clone(), post, &headers, agent);
+        let req = build(client, url.clone(), post, &headers, site_agent);
         let asked = std::time::Instant::now();
         let resp = cancellable(cancel, async { Ok(req.send().await?) }).await?;
         let took = asked.elapsed();
@@ -2699,7 +2790,7 @@ async fn first_get(
             url.clone(),
             headers.clone(),
             opts.post.as_ref(),
-            &opts.user_agent,
+            opts.site_agent(),
             expects,
             cancel,
         )
@@ -3019,7 +3110,7 @@ async fn request(ctx: &Ctx, target: &Target, from: u64, to: u64) -> Result<Body,
         target.url.clone(),
         target.post.as_ref(),
         &target.headers,
-        &ctx.opts.user_agent,
+        ctx.opts.site_agent(),
     )
     .header(header::RANGE, format!("bytes={from}-{}", to - 1));
     if let Some(v) = &if_range {
@@ -3840,13 +3931,16 @@ mod tests {
     fn drive_gets_a_browsers_agent_and_only_drive() {
         let u = |s: &str| Url::parse(s).unwrap();
         let browser = Some(sites::gdrive::USER_AGENT);
+        // MDM's automatic agent (the default browser's, #668), by default.
+        let auto = Options::default();
+        assert!(auto.automatic_agent && auto.site_agent());
         for drive in [
             "https://drive.google.com/file/d/x/view",
             "https://drive.usercontent.google.com/download?id=x",
             "http://docs.google.com:8080/document/d/x/export",
         ] {
             assert_eq!(
-                request_agent(DEFAULT_USER_AGENT, &u(drive)),
+                request_agent(auto.site_agent(), &u(drive)),
                 browser,
                 "{drive}"
             );
@@ -3857,20 +3951,26 @@ mod tests {
             "https://doc-0.docs.googleusercontent.com/export/x",
             "https://drive.google.com.evil.test/x",
         ] {
+            assert_eq!(request_agent(auto.site_agent(), &u(other)), None, "{other}");
+        }
+        // The browser's own agent (handed over with the download) or the user's wins, even
+        // when it is the same text as the automatic one.
+        for own in [
+            "Mozilla/5.0 Firefox/140.0".to_owned(),
+            crate::agent::automatic(),
+        ] {
+            let mut opts = Options::default();
+            opts.speak_as(own);
+            assert!(!opts.site_agent());
             assert_eq!(
-                request_agent(DEFAULT_USER_AGENT, &u(other)),
-                None,
-                "{other}"
+                request_agent(opts.site_agent(), &u("https://drive.google.com/x")),
+                None
             );
         }
-        // The browser's own agent (handed over with the download) or the user's wins.
-        assert_eq!(
-            request_agent(
-                "Mozilla/5.0 Firefox/140.0",
-                &u("https://drive.google.com/x")
-            ),
-            None
-        );
+        // MDM's former agent, asked with when a browser's is refused (#372), still gets it.
+        let mut fallback = Options::default();
+        fallback.speak_as(crate::agent::IE11_USER_AGENT.to_owned());
+        assert!(fallback.site_agent());
     }
 
     #[test]

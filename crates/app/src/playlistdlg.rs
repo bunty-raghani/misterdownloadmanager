@@ -29,6 +29,8 @@ pub struct PlaylistAdd {
     pub ext: &'static str,
     /// Where they go: Save to, then a folder named after the list.
     pub folder: PathBuf,
+    /// The category each is listed under: Music for a sound-only quality (#611), else Video.
+    pub category: crate::model::Category,
     pub start_now: bool,
     /// What the browser's request for the page carried, for each look-up.
     pub context: mdm_ipc::Command,
@@ -39,6 +41,12 @@ struct Pick {
     label: String,
     selector: String,
     ext: &'static str,
+}
+
+impl Pick {
+    fn sound_only(&self) -> bool {
+        mdm_tools::resolve::sound_only(&self.selector, self.ext)
+    }
 }
 
 /// The heights offered, as "Up to …p": each video at that height, or the best below it.
@@ -127,6 +135,8 @@ pub struct PlaylistView {
     pick: usize,
     /// The file type the chosen quality gives (each row shows its icon).
     ext: &'static str,
+    /// The chosen quality saves only the sound (#611: Save to is then the Music category's).
+    sound: bool,
     error: Option<String>,
     confirm: Option<(Confirm, bool)>,
 }
@@ -155,6 +165,7 @@ impl PlaylistView {
             rows: Default::default(),
             pick: DEFAULT_PICK,
             ext: "mp4",
+            sound: false,
             error: None,
             confirm: None,
         };
@@ -210,6 +221,7 @@ impl PlaylistView {
             rows: Default::default(),
             pick,
             ext: picks[pick].ext,
+            sound: picks[pick].sound_only(),
             error: None,
             confirm: None,
         }
@@ -285,6 +297,11 @@ impl PlaylistView {
 
     pub fn chosen(&self) -> usize {
         self.chosen
+    }
+
+    /// The quality chosen saves only the sound.
+    pub fn sound_only(&self) -> bool {
+        self.sound
     }
 
     /// Fewer listed than the site says the list has.
@@ -586,6 +603,7 @@ impl PlaylistView {
         }
         if let Some(p) = picks.get(self.pick.min(picks.len().saturating_sub(1))) {
             self.ext = p.ext;
+            self.sound = p.sound_only();
         }
     }
 
@@ -626,13 +644,15 @@ impl PlaylistView {
         }
     }
 
-    /// What Download adds: the ticked videos, the quality chosen, into Save to/<list title>.
+    /// What Download adds: the ticked videos, the quality chosen, into Save to/<list title>,
+    /// listed under `category`.
     pub fn add(
         &self,
         folder: &Path,
         merge: bool,
         start_now: bool,
         context: &mdm_ipc::Command,
+        category: crate::model::Category,
     ) -> PlaylistAdd {
         let picks = picks(merge);
         let pick = &picks[self.pick.min(picks.len() - 1)];
@@ -648,6 +668,7 @@ impl PlaylistView {
             selector: pick.selector.clone(),
             ext: pick.ext,
             folder: folder.join(mdm_engine::naming::sanitize(&self.title)),
+            category,
             start_now,
             context: context.clone(),
         }
@@ -684,5 +705,10 @@ mod tests {
         assert_eq!(plain[DEFAULT_PICK].selector, "b[height<=1080]");
         assert!(!plain.iter().any(|p| p.selector.starts_with("mp3:")));
         assert!(!plain.iter().any(|p| p.ext == "opus" || p.ext == "flac"));
+        // #611: the "Audio only" ones save only the sound, the heights don't.
+        for p in m.iter().chain(&plain) {
+            let audio = p.selector == "ba" || p.ext != "mp4";
+            assert_eq!(p.sound_only(), audio, "{}", p.selector);
+        }
     }
 }

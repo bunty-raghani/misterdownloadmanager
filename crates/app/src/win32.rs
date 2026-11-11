@@ -17,7 +17,7 @@ use windows_sys::Win32::UI::Shell::{
 };
 use windows_sys::Win32::UI::WindowsAndMessaging::{
     DestroyIcon, EnumWindows, GWL_EXSTYLE, GWL_STYLE, GetIconInfo, GetWindowLongPtrW,
-    GetWindowTextW, GetWindowThreadProcessId, ICONINFO, NCCALCSIZE_PARAMS, SWP_FRAMECHANGED,
+    GetWindowThreadProcessId, ICONINFO, InternalGetWindowText, NCCALCSIZE_PARAMS, SWP_FRAMECHANGED,
     SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOZORDER, SetWindowLongPtrW, SetWindowPos, WM_NCCALCSIZE,
     WM_NCHITTEST, WS_EX_DLGMODALFRAME, WS_THICKFRAME,
 };
@@ -40,8 +40,11 @@ unsafe extern "system" fn enum_cb(hwnd: HWND, lparam: LPARAM) -> windows_sys::co
     if pid != f.pid {
         return 1;
     }
-    // SAFETY: GetWindowTextW writes at most buf.len() units, the NUL included.
-    let n = unsafe { GetWindowTextW(hwnd, f.buf.as_mut_ptr(), f.buf.len() as i32) };
+    // The title as the window keeps it, read without a message: GetWindowTextW sends WM_GETTEXT
+    // to a window of this process, and one whose thread is busy (on a stalled disk: the file
+    // icons' COM window) held the window's thread until it answered (#583).
+    // SAFETY: InternalGetWindowText writes at most buf.len() units, the NUL included.
+    let n = unsafe { InternalGetWindowText(hwnd, f.buf.as_mut_ptr(), f.buf.len() as i32) };
     if n > 0 && f.buf[..n as usize] == f.title[..] {
         f.found = hwnd;
         return 0;
@@ -59,6 +62,77 @@ fn own_capture() -> Option<HWND> {
 
 /// The main window of this run, once it exists ([`set_main_window`]). 0: not known yet.
 static MAIN_WINDOW: std::sync::atomic::AtomicIsize = std::sync::atomic::AtomicIsize::new(0);
+
+/// Whether the main window is in front: no visible window of another program covers any part
+/// of it from above. A tray click asks (#520): the click itself takes the focus first, and with
+/// the icon under the taskbar's ^ the focus went to the flyout well before, so focus alone
+/// can't tell. The taskbar and its flyout, always on top, don't count, nor do hidden, minimized
+/// or cloaked windows (another virtual desktop, a suspended app) or this program's own (its
+/// dialogs over it). None: the main window isn't known yet.
+pub fn main_window_in_front() -> Option<bool> {
+    use windows_sys::Win32::Graphics::Dwm::{DWMWA_CLOAKED, DwmGetWindowAttribute};
+    use windows_sys::Win32::UI::WindowsAndMessaging::{
+        GW_HWNDPREV, GetWindow, GetWindowRect, IsIconic, IsWindowVisible, WS_EX_TOPMOST,
+    };
+    let main = MAIN_WINDOW.load(std::sync::atomic::Ordering::Relaxed) as HWND;
+    if main.is_null() {
+        return None;
+    }
+    let rect = |h: HWND| {
+        let mut r = RECT {
+            left: 0,
+            top: 0,
+            right: 0,
+            bottom: 0,
+        };
+        // SAFETY: a read into a local; a gone window fails harmlessly.
+        (unsafe { GetWindowRect(h, &mut r) } != 0 && r.right > r.left && r.bottom > r.top)
+            .then_some(r)
+    };
+    let m = rect(main)?;
+    // SAFETY: plain queries about windows, walking the z-order up from ours.
+    let me = unsafe { GetCurrentProcessId() };
+    let mut h = unsafe { GetWindow(main, GW_HWNDPREV) };
+    // A bound, in case windows come and go under the walk.
+    for _ in 0..4096 {
+        if h.is_null() {
+            break;
+        }
+        let mut pid = 0;
+        // SAFETY: as above.
+        let (visible, topmost) = unsafe {
+            GetWindowThreadProcessId(h, &mut pid);
+            (
+                IsWindowVisible(h) != 0 && IsIconic(h) == 0,
+                GetWindowLongPtrW(h, GWL_EXSTYLE) as u32 & WS_EX_TOPMOST != 0,
+            )
+        };
+        if visible && !topmost && pid != me {
+            let mut cloaked: u32 = 0;
+            // SAFETY: a u32 read into a local of that size.
+            let known = unsafe {
+                DwmGetWindowAttribute(
+                    h,
+                    DWMWA_CLOAKED as _,
+                    (&mut cloaked as *mut u32).cast(),
+                    std::mem::size_of::<u32>() as u32,
+                )
+            } >= 0;
+            if !(known && cloaked != 0)
+                && let Some(r) = rect(h)
+                && r.left < m.right
+                && m.left < r.right
+                && r.top < m.bottom
+                && m.top < r.bottom
+            {
+                return Some(false);
+            }
+        }
+        // SAFETY: as above.
+        h = unsafe { GetWindow(h, GW_HWNDPREV) };
+    }
+    Some(true)
+}
 
 /// Remember the window the app was made for: the one that stays. A way of drawing that fails
 /// (Direct3D with no usable adapter, renderer.rs) leaves its own window behind under the same
@@ -1472,6 +1546,90 @@ mod find_own_window_tests {
             }
         }
     }
+
+    /// A hidden test window of this thread titled `title`, destroyed by the caller.
+    fn test_window(title: &str) -> HWND {
+        let class: Vec<u16> = "mdm-find-own-window-test-2\0".encode_utf16().collect();
+        let t: Vec<u16> = title.encode_utf16().chain(Some(0)).collect();
+        // SAFETY: a class registered with the system's own procedure (again: a no-op), and a
+        // hidden window of it on this thread; the strings are NUL-terminated.
+        unsafe {
+            let mut wc: WNDCLASSW = zeroed();
+            wc.lpfnWndProc = Some(DefWindowProcW);
+            wc.lpszClassName = class.as_ptr();
+            RegisterClassW(&wc);
+            let h = CreateWindowExW(
+                0,
+                class.as_ptr(),
+                t.as_ptr(),
+                0,
+                -20000,
+                -20000,
+                100,
+                100,
+                std::ptr::null_mut(),
+                std::ptr::null_mut(),
+                std::ptr::null_mut(),
+                std::ptr::null(),
+            );
+            assert!(!h.is_null());
+            h
+        }
+    }
+
+    /// #583: looking for our window doesn't wait for another thread of this process whose window
+    /// isn't answering (busy, on a stalled disk): the titles are read without a message.
+    #[test]
+    fn a_busy_threads_window_does_not_hold_the_search() {
+        let pid = std::process::id();
+        let (made, window_made) = std::sync::mpsc::channel();
+        let (release, released) = std::sync::mpsc::channel::<()>();
+        let busy = std::thread::spawn(move || {
+            let h = test_window(&format!("mdm busy window {pid}"));
+            made.send(()).unwrap();
+            // Busy: no message is taken until the test is done.
+            let _ = released.recv();
+            // SAFETY: the window made above, on this thread.
+            unsafe { DestroyWindow(h) };
+        });
+        window_made.recv().unwrap();
+        let (answer, answered) = std::sync::mpsc::channel();
+        std::thread::spawn(move || {
+            let _ = answer.send(find_own_window(&format!("mdm no such window {pid}")).is_some());
+        });
+        let got = answered.recv_timeout(std::time::Duration::from_secs(3));
+        release.send(()).unwrap();
+        busy.join().unwrap();
+        assert_eq!(
+            got,
+            Ok(false),
+            "the search waited for the busy thread's window"
+        );
+    }
+
+    /// #633: DWM is asked for a window's caption once per change, not each time it's re-asserted.
+    #[test]
+    fn the_caption_goes_to_dwm_only_when_it_changes() {
+        use std::sync::atomic::Ordering::Relaxed;
+        let title = format!("mdm caption test {}", std::process::id());
+        let h = test_window(&title);
+        let calls = || CAPTION_DWM_CALLS.load(Relaxed);
+        let before = calls();
+        for _ in 0..50 {
+            assert!(caption_dark(&title, true));
+        }
+        assert_eq!(calls() - before, 1, "dark, asked once");
+        for _ in 0..50 {
+            assert!(caption_dark(&title, false));
+        }
+        assert_eq!(calls() - before, 2, "light, once more");
+        assert!(caption_dark(&title, true));
+        assert_eq!(calls() - before, 3, "dark again");
+        // SAFETY: the window made above, on this thread.
+        unsafe { DestroyWindow(h) };
+        assert!(!caption_dark(&title, true), "gone: not found");
+        assert_eq!(calls() - before, 3);
+    }
 }
 
 #[cfg(test)]
@@ -1776,7 +1934,6 @@ fn popup_ex_style(ex: u32, no_activate: bool) -> u32 {
 #[cfg(test)]
 mod popup_style_tests {
     use super::*;
-    use windows_sys::Win32::Foundation::RECT;
     use windows_sys::Win32::UI::WindowsAndMessaging::{
         AdjustWindowRectEx, WS_CLIPCHILDREN, WS_CLIPSIBLINGS, WS_EX_APPWINDOW, WS_EX_NOACTIVATE,
         WS_EX_TOOLWINDOW, WS_EX_TOPMOST, WS_POPUP, WS_VISIBLE,
@@ -2087,27 +2244,53 @@ pub fn menu_text_width(text: &str) -> i32 {
     w
 }
 
+thread_local! {
+    /// The caption each of our windows was last given by [`caption_dark`] (dark: true).
+    static CAPTION_DARK: std::cell::RefCell<std::collections::HashMap<isize, bool>> =
+        Default::default();
+}
+
+/// Whether DWM is to be told `dark` for window `hwnd`: not when that is what it was last told.
+/// Windows that are gone are forgotten.
+fn caption_news(hwnd: isize, dark: bool, alive: impl Fn(isize) -> bool) -> bool {
+    CAPTION_DARK.with(|m| {
+        let Ok(mut m) = m.try_borrow_mut() else {
+            return true;
+        };
+        if m.get(&hwnd) == Some(&dark) {
+            return false;
+        }
+        m.retain(|h, _| alive(*h));
+        m.insert(hwnd, dark);
+        true
+    })
+}
+
+/// How many times [`caption_dark`] has asked DWM, for the tests.
+#[cfg(test)]
+static CAPTION_DWM_CALLS: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+
 /// Give our window titled `title` a dark or light caption (DWM). Returns false if not found.
+/// DWM is asked only when the window's caption changes, never again for the same one: a call
+/// into DWM waits on a system that is stalled (its disk, its memory), and the window's thread
+/// waited with it, every 2 s (#633). Callers call it when the theme changes and for a new window.
 pub fn caption_dark(title: &str, dark: bool) -> bool {
     use windows_sys::Win32::Graphics::Dwm::{DWMWA_USE_IMMERSIVE_DARK_MODE, DwmSetWindowAttribute};
+    use windows_sys::Win32::Graphics::Gdi::{RDW_FRAME, RDW_INVALIDATE, RedrawWindow};
+    use windows_sys::Win32::UI::WindowsAndMessaging::IsWindow;
     let Some(hwnd) = find_own_window(title) else {
         return false;
     };
-    use windows_sys::Win32::Graphics::Dwm::DwmGetWindowAttribute;
-    use windows_sys::Win32::Graphics::Gdi::{RDW_FRAME, RDW_INVALIDATE, RedrawWindow};
+    // SAFETY: a plain query; any value is accepted as the handle.
+    let alive = |h: isize| unsafe { IsWindow(h as HWND) } != 0;
+    if !caption_news(hwnd as isize, dark, alive) {
+        return true;
+    }
+    #[cfg(test)]
+    CAPTION_DWM_CALLS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     let v: i32 = dark.into();
     // SAFETY: documented attribute with a 4-byte BOOL value.
     unsafe {
-        let mut cur: i32 = -1;
-        DwmGetWindowAttribute(
-            hwnd,
-            DWMWA_USE_IMMERSIVE_DARK_MODE as u32,
-            &mut cur as *mut i32 as *mut c_void,
-            size_of::<i32>() as u32,
-        );
-        if cur == v {
-            return true;
-        }
         DwmSetWindowAttribute(
             hwnd,
             DWMWA_USE_IMMERSIVE_DARK_MODE as u32,
@@ -2141,15 +2324,96 @@ impl raw_window_handle::HasWindowHandle for OwnWindow {
     }
 }
 
+/// A drag out of Download complete is under way ([`drag_file_out`]): one at a time, the mouse
+/// holds only one.
+static DRAGGING: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+/// When the last drag out ended.
+static DRAG_ENDED: std::sync::Mutex<Option<std::time::Instant>> = std::sync::Mutex::new(None);
+
+/// A drag out is under way, or ended a moment ago. Its keys are its own: Escape cancels the
+/// drag in OLE's loop, on the drag's thread, while the window (whose thread the keys go to)
+/// sees them too, often after the drag already ended, and must not take Escape as Close.
+pub fn dragging_out() -> bool {
+    use std::sync::atomic::Ordering;
+    DRAGGING.load(Ordering::Acquire)
+        || DRAG_ENDED
+            .lock()
+            .ok()
+            .and_then(|t| *t)
+            .is_some_and(|t| t.elapsed() < std::time::Duration::from_millis(500))
+}
+
 /// Start dragging `file` out of our window (to Explorer, a mail, a chat…), like IDM's Download
 /// complete grip. The drag preview is the file's shell icon. The window is the one holding the
 /// mouse (the button is down on its grip: winit captured the mouse for it), so it is the right
 /// one when several show the same title; else our window titled `title`, given in the interface
 /// language, as it shows.
+///
+/// The drag runs on a thread of its own (#561): OLE's drag loop lasts as long as the button is
+/// held, and each step calls the program under the pointer (its drop target, in its own process),
+/// so on the window thread a busy or hung target, or a target that copies the file before it
+/// answers the drop, froze every window until it answered. That thread shares the window
+/// thread's input ([`with_shared_input`]): OLE reads the held button and takes the mouse from
+/// there, as it did from the window thread.
 pub fn drag_file_out(title: &str, file: &std::path::Path) -> Result<(), String> {
+    use std::sync::atomic::Ordering;
     let hwnd = own_capture()
         .or_else(|| find_own_window(title))
-        .ok_or("window not found")?;
+        .ok_or("window not found")? as isize;
+    if DRAGGING.swap(true, Ordering::AcqRel) {
+        return Ok(());
+    }
+    let file = file.to_path_buf();
+    let started = with_shared_input("drag out", move |shared| {
+        if !shared {
+            tracing::warn!("drag out: the window's input isn't shared");
+        }
+        let result = drag_on_this_thread(hwnd as HWND, &file);
+        if let Ok(mut t) = DRAG_ENDED.lock() {
+            *t = Some(std::time::Instant::now());
+        }
+        DRAGGING.store(false, Ordering::Release);
+        // OLE's drag loop took the button's release, so the window never saw it: without it
+        // the next press on the grip only ended the drag the window still thought was on, and
+        // the grip worked every other time.
+        release_button(hwnd as HWND);
+        if let Err(e) = result {
+            tracing::warn!("drag out: {e}");
+        }
+    });
+    if started.is_err() {
+        DRAGGING.store(false, Ordering::Release);
+    }
+    started
+}
+
+/// Tell `hwnd` the left button is up, at the pointer, as Windows would have done had OLE's
+/// drag loop not taken the release. A move first: the pointer left the window during the drag,
+/// and a release with no pointer position is dropped before it reaches the interface.
+fn release_button(hwnd: HWND) {
+    use windows_sys::Win32::Foundation::POINT;
+    use windows_sys::Win32::Graphics::Gdi::ScreenToClient;
+    // The left button's flag in a mouse message's wParam (MK_LBUTTON, winuser.h).
+    const MK_LBUTTON: usize = 0x0001;
+    use windows_sys::Win32::UI::WindowsAndMessaging::{
+        GetCursorPos, PostMessageW, WM_LBUTTONUP, WM_MOUSEMOVE,
+    };
+    let mut pt = POINT { x: 0, y: 0 };
+    // SAFETY: reads into a local; `hwnd` is our own window (a closed one fails harmlessly).
+    unsafe {
+        GetCursorPos(&mut pt);
+        ScreenToClient(hwnd, &mut pt);
+    }
+    let lparam = (((pt.y as u16 as u32) << 16) | pt.x as u16 as u32) as isize;
+    // SAFETY: messages posted to our own window.
+    unsafe {
+        PostMessageW(hwnd, WM_MOUSEMOVE, MK_LBUTTON, lparam);
+        PostMessageW(hwnd, WM_LBUTTONUP, 0, lparam);
+    }
+}
+
+/// The drag itself, on the thread [`drag_file_out`] started (OLE initialised there).
+fn drag_on_this_thread(hwnd: HWND, file: &std::path::Path) -> Result<(), String> {
     let name = file.file_name().and_then(|n| n.to_str()).unwrap_or("");
     let what = crate::fileicons::What::of(crate::fileicons::Kind::File(name));
     let preview = file_icon(&what, 32)
@@ -2172,6 +2436,92 @@ pub fn drag_file_out(title: &str, file: &std::path::Path) -> Result<(), String> 
         drag::Options::default(),
     )
     .map_err(|e| e.to_string())
+}
+
+/// Run `work` on a new thread named `name`, with OLE (a single-threaded apartment) and the
+/// calling thread's input state: the keys and mouse buttons held, the mouse capture and the
+/// focus (AttachThreadInput), as a modal loop like OLE's drag needs when the button went down in
+/// the caller's window. `work` is told whether the input is shared. Returns at once; the input
+/// is detached and OLE closed when `work` ends. The caller has a message queue (a window thread).
+fn with_shared_input(name: &str, work: impl FnOnce(bool) + Send + 'static) -> Result<(), String> {
+    use windows_sys::Win32::System::Threading::{AttachThreadInput, GetCurrentThreadId};
+    use windows_sys::Win32::UI::WindowsAndMessaging::{MSG, PM_NOREMOVE, PeekMessageW};
+    #[link(name = "ole32")]
+    unsafe extern "system" {
+        fn OleInitialize(reserved: *mut c_void) -> i32;
+        fn OleUninitialize();
+    }
+    // SAFETY: a plain query.
+    let caller = unsafe { GetCurrentThreadId() };
+    std::thread::Builder::new()
+        .name(name.to_owned())
+        .spawn(move || {
+            // SAFETY: OLE for this new thread, closed below on the same thread when it took.
+            let ole = unsafe { OleInitialize(std::ptr::null_mut()) } >= 0;
+            // A thread is given its message queue by its first window call, and only threads
+            // with one can share input: a look at the (empty) queue makes it.
+            // SAFETY: a read into a local MSG; nothing is removed.
+            let mut msg: MSG = unsafe { zeroed() };
+            unsafe { PeekMessageW(&mut msg, std::ptr::null_mut(), 0, 0, PM_NOREMOVE) };
+            // SAFETY: plain calls with two live threads of this process; undone below.
+            let me = unsafe { GetCurrentThreadId() };
+            let attached = unsafe { AttachThreadInput(me, caller, 1) } != 0;
+            work(attached);
+            if attached {
+                // SAFETY: as above.
+                unsafe { AttachThreadInput(me, caller, 0) };
+            }
+            if ole {
+                // SAFETY: matches the OleInitialize above, on this thread.
+                unsafe { OleUninitialize() };
+            }
+        })
+        .map(drop)
+        .map_err(|e| e.to_string())
+}
+
+#[cfg(test)]
+mod drag_thread_tests {
+    use super::*;
+
+    /// The drag's thread (#561): another thread than the window's, which goes on at once, in a
+    /// single-threaded apartment (OLE's drag needs one), sharing the window thread's input.
+    #[test]
+    fn the_drag_runs_beside_the_window_thread_with_its_input() {
+        use windows_sys::Win32::System::Com::{APTTYPE, APTTYPEQUALIFIER, CoGetApartmentType};
+        use windows_sys::Win32::System::Threading::GetCurrentThreadId;
+        use windows_sys::Win32::UI::WindowsAndMessaging::{MSG, PM_NOREMOVE, PeekMessageW};
+        // This test's thread stands for the window thread: it has a message queue.
+        // SAFETY: a read into a local MSG; nothing is removed.
+        let mut msg: MSG = unsafe { zeroed() };
+        unsafe { PeekMessageW(&mut msg, std::ptr::null_mut(), 0, 0, PM_NOREMOVE) };
+        // SAFETY: a plain query.
+        let window_thread = unsafe { GetCurrentThreadId() };
+        let (tx, rx) = std::sync::mpsc::channel();
+        let (go_tx, go_rx) = std::sync::mpsc::channel::<()>();
+        with_shared_input("drag test", move |shared| {
+            // Held until the caller has gone on: the work doesn't hold the caller up.
+            go_rx.recv().unwrap();
+            let mut kind: APTTYPE = 0;
+            let mut qualifier: APTTYPEQUALIFIER = 0;
+            // SAFETY: reads into two locals.
+            let hr = unsafe { CoGetApartmentType(&mut kind, &mut qualifier) };
+            // SAFETY: a plain query.
+            let me = unsafe { GetCurrentThreadId() };
+            tx.send((me, shared, hr, kind)).unwrap();
+        })
+        .unwrap();
+        go_tx.send(()).unwrap();
+        let (me, shared, hr, kind) = rx.recv_timeout(std::time::Duration::from_secs(10)).unwrap();
+        assert_ne!(me, window_thread);
+        assert!(shared, "the input is shared with the window thread");
+        assert_eq!(hr, 0);
+        // APTTYPE_STA (0); the first apartment of the process would be APTTYPE_MAINSTA (3).
+        assert!(
+            kind == 0 || kind == 3,
+            "a single-threaded apartment, not {kind}"
+        );
+    }
 }
 
 /// Windows' "Choose your app mode": true when apps should be dark (`AppsUseLightTheme` = 0).
@@ -2561,6 +2911,78 @@ pub fn windows_version() -> String {
         .map(|v| format!(" {v}"))
         .unwrap_or_default();
     format!("{product}{release} (build {build})")
+}
+
+/// The default browser (#668): the program https links open with (the user's choice in Default
+/// apps, `UserChoice`'s ProgId, and that ProgId's `shell\open\command`), and its file's version.
+/// None when it isn't a browser MDM knows (MDM then speaks as Chrome).
+pub fn default_browser() -> Option<mdm_engine::agent::Found> {
+    use mdm_engine::agent::{Browser, Found};
+    use windows_sys::Win32::System::Registry::HKEY_CLASSES_ROOT;
+    const HTTPS: &str = r"Software\Microsoft\Windows\Shell\Associations\UrlAssociations\https";
+    // Windows 11 keeps the choice in UserChoiceLatest since 2025, its ProgId in a key of its
+    // own (UserChoiceLatest\ProgId's ProgId); UserChoice stays, and may be an older choice.
+    let prog_id = [r"UserChoiceLatest\ProgId", "UserChoiceLatest", "UserChoice"]
+        .iter()
+        .find_map(|k| {
+            reg_string(&format!(r"{HTTPS}\{k}"), "ProgId").filter(|p| !p.trim().is_empty())
+        })?;
+    let command = reg_string_in(
+        HKEY_CLASSES_ROOT,
+        &format!(r"{prog_id}\shell\open\command"),
+        "",
+    )?;
+    let exe = std::path::PathBuf::from(crate::defaultbrowser::windows_program(&command)?);
+    let stem = exe.file_stem()?.to_string_lossy().into_owned();
+    // Opera starts through its launcher.exe, in a folder named after it ("Opera", "Opera GX").
+    let name = if stem.eq_ignore_ascii_case("launcher") {
+        exe.parent()?.file_name()?.to_string_lossy().into_owned()
+    } else {
+        stem
+    };
+    let browser = Browser::named(&name).or_else(|| Browser::named(&prog_id))?;
+    Some(Found {
+        browser,
+        version: file_version(&exe),
+        ubuntu: false,
+    })
+}
+
+/// A program's file version ("157.1.99.55"): its version resource's fixed part.
+fn file_version(exe: &std::path::Path) -> Option<String> {
+    use std::os::windows::ffi::OsStrExt;
+    use windows_sys::Win32::Storage::FileSystem::{
+        GetFileVersionInfoSizeW, GetFileVersionInfoW, VS_FIXEDFILEINFO, VerQueryValueW,
+    };
+    let path: Vec<u16> = exe.as_os_str().encode_wide().chain(Some(0)).collect();
+    // SAFETY: a NUL-terminated path; the handle argument is optional and ignored.
+    let size = unsafe { GetFileVersionInfoSizeW(path.as_ptr(), std::ptr::null_mut()) };
+    if size == 0 {
+        return None;
+    }
+    let mut data = vec![0u8; size as usize];
+    // SAFETY: `data` holds `size` bytes, as GetFileVersionInfoSizeW asked.
+    if unsafe { GetFileVersionInfoW(path.as_ptr(), 0, size, data.as_mut_ptr().cast()) } == 0 {
+        return None;
+    }
+    let root: Vec<u16> = "\\".encode_utf16().chain(Some(0)).collect();
+    let (mut info, mut len) = (std::ptr::null_mut::<c_void>(), 0u32);
+    // SAFETY: `data` is the version block just read; the pointer returned points into it.
+    let ok = unsafe { VerQueryValueW(data.as_ptr().cast(), root.as_ptr(), &mut info, &mut len) };
+    if ok == 0 || info.is_null() || (len as usize) < size_of::<VS_FIXEDFILEINFO>() {
+        return None;
+    }
+    // SAFETY: VerQueryValueW returned a VS_FIXEDFILEINFO of `len` bytes inside `data`, which is
+    // still alive; read unaligned, as a byte buffer promises no alignment.
+    let fixed = unsafe { std::ptr::read_unaligned(info.cast::<VS_FIXEDFILEINFO>()) };
+    let (ms, ls) = (fixed.dwFileVersionMS, fixed.dwFileVersionLS);
+    Some(format!(
+        "{}.{}.{}.{}",
+        ms >> 16,
+        ms & 0xffff,
+        ls >> 16,
+        ls & 0xffff
+    ))
 }
 
 fn reg_string_in(
@@ -4519,6 +4941,12 @@ pub fn keep_awake(reason: Option<&str>) -> bool {
 /// to whole pixels while the letters themselves were fitted to pixels: the two disagreed by up to
 /// a pixel, so letters touched in one place ("download") and stood apart in another ("Resum e").
 ///
+/// `smooth` picks how a letter is drawn: `false`, the classic controls' look (hinted in both
+/// directions at a whole pixel size, letters on whole pixels: crisp, and coarse on a large,
+/// dense screen), or `true`, DirectWrite's natural look (the size as it is, hinted up and down
+/// only, each letter where it falls between two pixels, with all 256 levels of grey: the text of
+/// Windows' own modern apps, much easier to read at 1440p).
+///
 /// `None` from DirectWrite's factory or a font's file keeps egui's rasterizer. A cluster it isn't
 /// for ([`classic_char`]) is left to egui too, which shapes it. The rasterizer is told the
 /// interface's direction: a bracket in a right-to-left line is mirrored by the shaper, so those
@@ -4526,6 +4954,7 @@ pub fn keep_awake(reason: Option<&str>) -> bool {
 pub fn text_rasterizer(
     font_dir: std::path::PathBuf,
     rtl: bool,
+    smooth: bool,
 ) -> Option<egui::epaint::text::GlyphRasterizer> {
     let glyphs = classic_text::Glyphs::new(font_dir)
         .map_err(|e| tracing::warn!("text: DirectWrite unavailable, egui draws the text ({e})"))
@@ -4535,7 +4964,7 @@ pub fn text_rasterizer(
         egui::epaint::text::GlyphRasterizer::new(
             "mdm::win32::classic_text",
             move |req: &egui::epaint::text::GlyphRasterizerRequest<'_>| {
-                glyphs.lock().ok()?.glyph(req, rtl)
+                glyphs.lock().ok()?.glyph(req, rtl, smooth)
             },
         )
         .with_priority(egui::epaint::text::FontPriority::Highest),
@@ -4592,9 +5021,13 @@ mod classic_text {
         DWRITE_FACTORY_TYPE_SHARED, DWRITE_FONT_FACE_TYPE_TRUETYPE, DWRITE_FONT_METRICS,
         DWRITE_FONT_SIMULATIONS_NONE, DWRITE_GLYPH_METRICS, DWRITE_GLYPH_OFFSET, DWRITE_GLYPH_RUN,
         DWRITE_GRID_FIT_MODE_ENABLED, DWRITE_MEASURING_MODE_GDI_CLASSIC,
-        DWRITE_RENDERING_MODE_GDI_CLASSIC, DWRITE_TEXT_ANTIALIAS_MODE_GRAYSCALE,
+        DWRITE_MEASURING_MODE_NATURAL, DWRITE_RENDERING_MODE_GDI_CLASSIC,
+        DWRITE_RENDERING_MODE_NATURAL_SYMMETRIC, DWRITE_TEXT_ANTIALIAS_MODE_GRAYSCALE,
         DWRITE_TEXTURE_ALIASED_1x1, DWriteCreateFactory, IDWriteFactory2, IDWriteFontFace,
     };
+
+    /// How much the smooth look thins its edges: 1.0 keeps DirectWrite's coverage as it is.
+    const SMOOTH_COVERAGE_GAMMA: f32 = 1.8;
 
     pub struct Glyphs {
         factory: IDWriteFactory2,
@@ -4652,6 +5085,7 @@ mod classic_text {
             &mut self,
             req: &GlyphRasterizerRequest<'_>,
             rtl: bool,
+            smooth: bool,
         ) -> Option<RasterizedGlyph> {
             let mut chars = req.cluster.chars();
             let ch = chars.next()?;
@@ -4662,8 +5096,12 @@ mod classic_text {
                 return None;
             }
             let face = self.face(super::classic_font_file(req.family)?)?;
-            // GDI's sizes are whole pixels.
-            let em = req.font_size_px.round();
+            // GDI's sizes are whole pixels; the natural look keeps the size it is asked for.
+            let em = if smooth {
+                req.font_size_px
+            } else {
+                req.font_size_px.round()
+            };
             let mut id = 0u16;
             let mut metrics = DWRITE_GLYPH_METRICS::default();
             let mut font = DWRITE_FONT_METRICS::default();
@@ -4673,32 +5111,49 @@ mod classic_text {
                 if id == 0 {
                     return None;
                 }
-                face.GetGdiCompatibleGlyphMetrics(
-                    em,
-                    1.0,
-                    None,
-                    false,
-                    &id,
-                    1,
-                    &mut metrics,
-                    false,
-                )
-                .ok()?;
+                if smooth {
+                    face.GetDesignGlyphMetrics(&id, 1, &mut metrics, false)
+                        .ok()?;
+                } else {
+                    face.GetGdiCompatibleGlyphMetrics(
+                        em,
+                        1.0,
+                        None,
+                        false,
+                        &id,
+                        1,
+                        &mut metrics,
+                        false,
+                    )
+                    .ok()?;
+                }
                 face.GetMetrics(&mut font);
             }
-            let advance_px =
-                (metrics.advanceWidth as f32 * em / f32::from(font.designUnitsPerEm)).round();
-            let bitmap = self.draw(face, id, em).unwrap_or(GlyphBitmap {
-                // A space: egui still wants a bitmap to carry the advance.
-                image: ColorImage::new([1, 1], vec![Color32::TRANSPARENT]),
-                offset_px: egui::vec2(0.0, 0.0),
-                is_color: false,
-            });
+            let advance = metrics.advanceWidth as f32 * em / f32::from(font.designUnitsPerEm);
+            // Smooth: the font's own width, as egui lays a line out by it (and places each letter
+            // at a quarter pixel). Classic: the whole pixels GDI's hinting gives.
+            let advance_px = if smooth { advance } else { advance.round() };
+            let origin = if smooth { req.subpixel_offset_px } else { 0.0 };
+            let bitmap = self
+                .draw(face, id, em, smooth, origin)
+                .unwrap_or(GlyphBitmap {
+                    // A space: egui still wants a bitmap to carry the advance.
+                    image: ColorImage::new([1, 1], vec![Color32::TRANSPARENT]),
+                    offset_px: egui::vec2(0.0, 0.0),
+                    is_color: false,
+                });
             Some(RasterizedGlyph { bitmap, advance_px })
         }
 
         /// The glyph in grey, placed from its origin; `None` when it has no ink.
-        fn draw(&self, face: IDWriteFontFace, id: u16, em: f32) -> Option<GlyphBitmap> {
+        fn draw(
+            &self,
+            face: IDWriteFontFace,
+            id: u16,
+            em: f32,
+            smooth: bool,
+            origin_x: f32,
+        ) -> Option<GlyphBitmap> {
             let (ids, advances, offsets) = ([id], [0f32], [DWRITE_GLYPH_OFFSET::default()]);
             let run = DWRITE_GLYPH_RUN {
                 fontFace: std::mem::ManuallyDrop::new(Some(face)),
@@ -4717,11 +5172,19 @@ mod classic_text {
                     .CreateGlyphRunAnalysis(
                         &run,
                         None,
-                        DWRITE_RENDERING_MODE_GDI_CLASSIC,
-                        DWRITE_MEASURING_MODE_GDI_CLASSIC,
+                        if smooth {
+                            DWRITE_RENDERING_MODE_NATURAL_SYMMETRIC
+                        } else {
+                            DWRITE_RENDERING_MODE_GDI_CLASSIC
+                        },
+                        if smooth {
+                            DWRITE_MEASURING_MODE_NATURAL
+                        } else {
+                            DWRITE_MEASURING_MODE_GDI_CLASSIC
+                        },
                         DWRITE_GRID_FIT_MODE_ENABLED,
                         DWRITE_TEXT_ANTIALIAS_MODE_GRAYSCALE,
-                        0.0,
+                        origin_x,
                         0.0,
                     )
                     .and_then(|a| {
@@ -4741,9 +5204,16 @@ mod classic_text {
                 return None;
             }
             // White with alpha, premultiplied (`GlyphBitmap`).
+            // Smooth: less ink at the edges, so the weight matches what Windows' own
+            // DirectWrite text shows (WPF's grey-scale text, compared side by side): coverage
+            // blended as it is reads bolder, most of all light on dark.
+            let gamma = if smooth { SMOOTH_COVERAGE_GAMMA } else { 1.0 };
             let pixels = coverage
                 .into_iter()
-                .map(|a| Color32::from_rgba_premultiplied(a, a, a, a))
+                .map(|a| {
+                    let a = ((f32::from(a) / 255.0).powf(gamma) * 255.0).round() as u8;
+                    Color32::from_rgba_premultiplied(a, a, a, a)
+                })
                 .collect();
             Some(GlyphBitmap {
                 image: ColorImage::new([w, h], pixels),
@@ -4887,7 +5357,7 @@ mod classic_text_tests {
             for size in [11.0, 12.0, 13.2, 15.0, 16.5, 18.0, 24.0] {
                 for ch in "downloadefaultakeDRsum".chars() {
                     let text = ch.to_string();
-                    let glyph = g.glyph(&req(&text, &family, size), false).unwrap();
+                    let glyph = g.glyph(&req(&text, &family, size), false, false).unwrap();
                     assert_eq!(glyph.advance_px.fract(), 0.0, "{ch} at {size}");
                     assert!(glyph.advance_px >= 1.0, "{ch} at {size}");
                     let right = glyph.bitmap.offset_px.x + glyph.bitmap.image.size[0] as f32;
@@ -4901,11 +5371,36 @@ mod classic_text_tests {
         }
     }
 
+    /// The smooth look keeps the font's own width and draws more levels of grey than the
+    /// classic one, whose letters are fitted to whole pixels.
+    #[test]
+    fn smooth_letters_keep_their_width_and_their_greys() {
+        let mut g = glyphs();
+        let f = FontFamily::Proportional;
+        let levels = |glyph: &egui::epaint::text::RasterizedGlyph| {
+            let mut l: Vec<u8> = glyph.bitmap.image.pixels.iter().map(|p| p.a()).collect();
+            l.sort_unstable();
+            l.dedup();
+            l.len()
+        };
+        let classic = g.glyph(&req("o", &f, 13.2), false, false).unwrap();
+        let smooth = g.glyph(&req("o", &f, 13.2), false, true).unwrap();
+        assert_eq!(classic.advance_px.fract(), 0.0);
+        assert!(smooth.advance_px.fract() != 0.0, "{}", smooth.advance_px);
+        assert!(levels(&smooth) > levels(&classic));
+        // A quarter pixel to the right changes the picture, not the width.
+        let mut shifted = req("o", &f, 13.2);
+        shifted.subpixel_offset_px = 0.5;
+        let moved = g.glyph(&shifted, false, true).unwrap();
+        assert_eq!(moved.advance_px, smooth.advance_px);
+        assert_ne!(moved.bitmap.image.pixels, smooth.bitmap.image.pixels);
+    }
+
     #[test]
     fn a_space_keeps_its_advance() {
         let mut g = glyphs();
         let s = g
-            .glyph(&req(" ", &FontFamily::Proportional, 12.0), false)
+            .glyph(&req(" ", &FontFamily::Proportional, 12.0), false, false)
             .unwrap();
         assert!(s.advance_px > 0.0);
     }
@@ -4922,13 +5417,16 @@ mod classic_text_tests {
             "e\u{301}",
             "\u{1F600}",
         ] {
-            assert!(g.glyph(&req(not, &f, 12.0), false).is_none(), "{not:?}");
+            assert!(
+                g.glyph(&req(not, &f, 12.0), false, false).is_none(),
+                "{not:?}"
+            );
         }
         // A bracket is mirrored by the shaper in a right-to-left line, only.
-        assert!(g.glyph(&req("(", &f, 12.0), false).is_some());
-        assert!(g.glyph(&req("(", &f, 12.0), true).is_none());
+        assert!(g.glyph(&req("(", &f, 12.0), false, false).is_some());
+        assert!(g.glyph(&req("(", &f, 12.0), true, false).is_none());
         // A family it isn't told about stays with egui.
         let other = FontFamily::Name("other".into());
-        assert!(g.glyph(&req("a", &other, 12.0), false).is_none());
+        assert!(g.glyph(&req("a", &other, 12.0), false, false).is_none());
     }
 }

@@ -8,8 +8,9 @@
 
 use egui::{Pos2, Rect, Ui, Vec2, pos2, vec2};
 
-/// The sizes offered, in percent.
-pub const STEPS: [u16; 5] = [100, 125, 150, 175, 200];
+/// The sizes offered, in percent. 110 to 120 sit between 100 and 125, for a dense screen (1440p
+/// at 100 % is small, 125 % large): the text is drawn at its own fractional size.
+pub const STEPS: [u16; 8] = [100, 110, 115, 120, 125, 150, 175, 200];
 
 /// A size as one of [`STEPS`]: the nearest (a value edited into the settings file).
 pub fn step(percent: u16) -> u16 {
@@ -396,15 +397,20 @@ mod tests {
     fn sizes_step_like_a_browsers_zoom() {
         assert_eq!(step(100), 100);
         assert_eq!(step(130), 125);
+        assert_eq!(step(112), 110);
+        assert_eq!(step(118), 120);
         assert_eq!(step(0), 100);
         assert_eq!(step(500), 200);
         assert_eq!(factor(175), 1.75);
         assert_eq!(of_zoom(1.5), 150);
         assert_eq!(of_zoom(1.3), 125);
-        assert_eq!(next(100, true), 125);
+        assert_eq!(of_zoom(1.1), 110);
+        assert_eq!(next(100, true), 110);
+        assert_eq!(next(120, true), 125);
         assert_eq!(next(175, true), 200);
         assert_eq!(next(200, true), 200);
-        assert_eq!(next(125, false), 100);
+        assert_eq!(next(125, false), 120);
+        assert_eq!(next(110, false), 100);
         assert_eq!(next(100, false), 100);
     }
 
@@ -436,6 +442,9 @@ mod tests {
             of_zoom(ctx.zoom_factor())
         };
         let ctrl = egui::Modifiers::COMMAND;
+        assert_eq!(press(egui::Key::Plus, ctrl), 110);
+        assert_eq!(press(egui::Key::Plus, ctrl), 115);
+        assert_eq!(press(egui::Key::Plus, ctrl), 120);
         assert_eq!(press(egui::Key::Plus, ctrl), 125);
         assert_eq!(press(egui::Key::Equals, ctrl), 150);
         assert_eq!(press(egui::Key::Plus, ctrl | egui::Modifiers::SHIFT), 175);

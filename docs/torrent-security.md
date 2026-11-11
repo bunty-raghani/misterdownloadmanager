@@ -18,7 +18,7 @@ MDM starts its torrent engine the first time a torrent needs it. With **Stop the
 
 This is the only part of MDM that waits for connections from outside. Downloads, MDM's DNS choice (Options → Connection → DNS), its updates and its helpers only connect out, so they never need a firewall exception; the browser extension and the automation API reach MDM on this computer only (127.0.0.1).
 
-In Torrent settings you can turn off **Accept incoming connections** and **Map the port on the router (UPnP)**, or the DHT. Downloads still work, sometimes more slowly. A fixed **Port** keeps firewall and router rules working. These changes apply the next time the engine starts, so when no torrent is running.
+In Torrent settings you can turn off **Accept incoming connections** and **Map the port on the router (UPnP)**, or the DHT. Downloads still work, sometimes more slowly. With the **Port** box empty, MDM picks a port the first time and keeps it (another one if a program has taken it since), so firewall and router rules keep working; a port typed there is always the one used. These changes apply the next time the engine starts, so when no torrent is running.
 
 The torrent engine is written in Rust, which rules out many memory bugs, and MDM checks every piece against the torrent's fingerprint, so a peer can't slip in altered data. MDM keeps the engine up to date with the fixes its authors publish.
 

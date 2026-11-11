@@ -447,8 +447,18 @@ pub fn stuck(
         // thread hardly ran is almost always a wait (the system's waits live there).
         None if share > STARVED_SHARE => None,
         None if main.is_some() && top.module.as_deref() == main => Some(Stuck::Starved),
+        // The C runtime's copies and compares (memcmp of an icon's first bytes, #663): never a
+        // wait, so a thread that hardly ran there waited for its memory, loaded from disk.
+        None if top.module.as_deref().is_some_and(is_memory_routines) => Some(Stuck::Starved),
         None => top.module.is_some().then_some(Stuck::Waiting),
     }
+}
+
+/// A module of the C runtime's memory and string routines only (memcpy, memcmp, memset): no
+/// wait lives there. Windows' VCRUNTIME140.dll and VCRUNTIME140_1.dll; not ucrtbase.dll, nor
+/// Linux's libc, which hold the waits as well.
+fn is_memory_routines(module: &str) -> bool {
+    module.to_ascii_lowercase().starts_with("vcruntime")
 }
 
 /// A function a thread waits in: the system's waits and sleeps, locks, I/O.
@@ -839,6 +849,16 @@ mod tests {
         assert_eq!(
             stuck(&f, bare.threads[0].frames.first(), main),
             Some(Stuck::Waiting)
+        );
+        // #663: in the C runtime's memcmp, under MDM's own code: no wait there, so starved.
+        bare.threads[0].frames[0].module = Some("VCRUNTIME140.dll".into());
+        assert_eq!(
+            stuck(&f, bare.threads[0].frames.first(), main),
+            Some(Stuck::Starved)
+        );
+        assert_eq!(
+            signature(Kind::Freeze, &freeze_with(&bare, 100)),
+            "freeze while the computer was busy"
         );
     }
 

@@ -291,10 +291,10 @@ fn watchdog() {
         });
         if let Some(b) = busy {
             tracing::warn!(
-                "the window thread ran {} of {} ms meanwhile ({:?} page faults)",
+                "the window thread ran {} of {} ms meanwhile ({} page faults)",
                 b.cpu_ms,
                 b.wall_ms,
-                b.faults
+                b.faults.map_or("unknown".to_owned(), |n| n.to_string())
             );
         }
         mdm_crash::logs::flush(LOG_FOR_A_REPORT);

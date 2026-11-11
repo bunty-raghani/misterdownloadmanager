@@ -374,6 +374,52 @@ const ok = (what) => {
   ok("Chrome: declined, the browser's own");
 }
 
+// Chrome, #578: a download left to the browser keeps another extension's name. What Chromium
+// does with each listener's answer (downloads_custom_bindings.js, then downloads_api.cc
+// DetermineFilename and DeterminerCallback): no valid suggestion goes as an empty name with no
+// conflict action, which counts as a name; a name the browser refuses is emptied after the
+// answer is counted, and only an empty name with "uniquify" is no name at all. The newest
+// extension's name wins (here MDM's, updated after Save In was installed).
+{
+  const answer = (s) => {
+    const valid = s && typeof s === "object" && typeof s.filename === "string" && s.filename.length > 0;
+    const [name, action] = valid ? [s.filename, s.conflictAction || ""] : ["", ""];
+    const safe = name && !name.split(/[\/]/).some((p) => p === "" || p === "." || p === "..") && !/^[a-z]:|^[\/]/i.test(name);
+    const filename = safe ? name : "";
+    return filename || action !== "uniquify" ? { filename } : null; // null: no suggestion
+  };
+  // The determination of one download: `answers` in install order, oldest first.
+  const determined = (creator, answers) => {
+    let name = creator;
+    let by = -1;
+    answers.forEach((a, i) => {
+      const s = answer(a);
+      if (s && i >= by) [name, by] = [s.filename, i];
+    });
+    return name;
+  };
+  for (const [what, item, creator] of [
+    ["its own listener's folder (Save In)", { id: 70, url: "https://img.test/cat.jpg", filename: "cat.jpg", byExtensionId: "savein" }, ""],
+    ["a downloads.download filename", { id: 71, url: "https://img.test/dog.jpg", filename: "dog.jpg", byExtensionId: "savein" }, "Pic/OthersW/dog.jpg"],
+    ["a page's download", { id: 72, url: "https://x/page.html", filename: "page.html" }, ""],
+  ]) {
+    const { api, listeners } = fakeApi({ firefox: false });
+    load(api, false);
+    const other = item.byExtensionId && !creator ? { filename: `Pic/OthersW/${item.filename}` } : undefined;
+    let mdm = "none";
+    listeners.determining(item, (s) => (mdm = s));
+    await settle();
+    assert.notEqual(mdm, "none", `${what}: answered, the download doesn't wait`);
+    const want = other ? other.filename : creator;
+    assert.equal(determined(creator, other ? [other, mdm] : [mdm]), want, `${what}: MDM's answer gives no name of its own`);
+  }
+  // The model, checked: Chromium's own cases.
+  assert.equal(determined("Pic/a.jpg", [undefined]), "", "suggest() empties the creator's name");
+  assert.equal(determined("", [{ filename: "Pic/b.jpg" }, undefined]), "", "and the older extension's");
+  assert.equal(determined("", [undefined, { filename: "Pic/b.jpg" }]), "Pic/b.jpg", "an older suggest() loses");
+  ok("Chrome: a download left alone keeps another extension's name and folder (#578)");
+}
+
 // Firefox: a small file finished before it could be stopped: the browser's copy is removed.
 {
   const { api, calls, listeners } = fakeApi({ firefox: true, finished: true });

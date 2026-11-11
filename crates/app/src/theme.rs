@@ -185,9 +185,8 @@ pub fn apply_mode(ctx: &egui::Context) {
         egui::epaint::FontColorTransferFunction::LIGHT_MODE_DEFAULT
     };
     ctx.all_styles_mut(|s| s.visuals.text_options.color_transfer_function = tf);
-    // eframe applies egui's theme preference to every window's caption; keep it in step so it
-    // doesn't reset the captions to the system theme. egui's dark or light style is the mode's
-    // variant (`apply_theme` puts each variant into its egui theme).
+    // egui's dark or light style is the mode's variant (`apply_theme` puts each variant into its
+    // egui theme). It leaves the windows' captions alone (`apply`: `sync_window_theme`).
     ctx.set_theme(if dark() {
         egui::ThemePreference::Dark
     } else {
@@ -886,15 +885,34 @@ fn fonts(ctx: &egui::Context, code: &str, all: bool) {
 #[cfg(windows)]
 fn classic_text(ctx: &egui::Context) {
     use std::sync::atomic::{AtomicI8, Ordering};
-    static RTL: AtomicI8 = AtomicI8::new(-1);
+    static DRAWN: AtomicI8 = AtomicI8::new(-1);
     let rtl = crate::i18n::rtl();
-    if RTL.swap(i8::from(rtl), Ordering::Relaxed) != i8::from(rtl) {
+    let smooth = SMOOTH_TEXT.load(Ordering::Relaxed);
+    let now = i8::from(rtl) | (i8::from(smooth) << 1);
+    if DRAWN.swap(now, Ordering::Relaxed) != now {
         ctx.set_glyph_rasterizers(
-            crate::win32::text_rasterizer(font_dir(), rtl)
+            crate::win32::text_rasterizer(font_dir(), rtl, smooth)
                 .into_iter()
                 .collect(),
         );
     }
+}
+
+/// View → Text: smooth (DirectWrite's natural look) or classic (hinted whole-pixel text, as
+/// Windows' old controls, the default). Only Windows has the choice: elsewhere egui draws the text.
+static SMOOTH_TEXT: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// The setting's value, before the first frame (it is read at start).
+pub fn init_smooth_text(on: bool) {
+    SMOOTH_TEXT.store(on, std::sync::atomic::Ordering::Relaxed);
+}
+
+/// Draw the text smooth (`true`) or classic from now on, in every window. Windows only: View →
+/// Text exists only there, where DirectWrite draws the text; elsewhere egui draws it.
+#[cfg(windows)]
+pub fn set_smooth_text(ctx: &egui::Context, on: bool) {
+    init_smooth_text(on);
+    classic_text(ctx);
 }
 
 /// The text [`classic_text`] leaves to egui (Arabic, Hebrew, Indic, Thai, CJK; marks clustered
@@ -944,6 +962,11 @@ pub fn apply(ctx: &egui::Context) {
         // Ctrl + / Ctrl − / Ctrl 0 step through View → Interface size and are saved (scale.rs),
         // not egui's own 10 % steps.
         o.zoom_with_keyboard = false;
+        // Every window's theme (its caption) is MDM's to give: the main window's in
+        // `apply_mode`, each dialog's in `dialogs::keep_theme`, the caption the theme's surface.
+        // egui's own would set the mode's instead, behind them, and the caption would have to
+        // be checked with DWM again and again (#633).
+        o.sync_window_theme = false;
     });
     egui_extras::install_image_loaders(ctx);
     apply_theme(ctx);

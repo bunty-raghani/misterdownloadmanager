@@ -221,6 +221,9 @@ pub struct OptionsDialog {
     /// Sites Logins → Cookies for video sites (#229): the browser in the list (an index into
     /// `mdm_tools::proc::cookie_browsers`), kept while Off is chosen.
     cookie_browser: usize,
+    /// Downloads → User-Agent → Automatic (#668): the default browser's, the box then shows it;
+    /// unticked, the box's own text (empty is automatic again when the window opens next).
+    ua_auto: bool,
 }
 
 impl OptionsDialog {
@@ -297,6 +300,7 @@ impl OptionsDialog {
             port: settings.remote_port.to_string(),
             device_rows: Default::default(),
             cookie_browser: cookie_browser_at(settings),
+            ua_auto: settings.own_user_agent().is_none(),
         }
     }
 
@@ -976,10 +980,15 @@ impl OptionsDialog {
         let Some(&cat) = cats.get(self.category) else {
             return;
         };
-        let default = display_dir(&cat.default_folder(downloads));
+        let base = if cat == Category::General {
+            std::borrow::Cow::Borrowed(downloads)
+        } else {
+            crate::model::default_downloads(downloads, &self.s.category_dirs)
+        };
+        let default = display_dir(&cat.default_folder(&base));
         let typed = self.cat_dir.trim();
         let own = (!typed.is_empty()
-            && typed.trim_end_matches('\\') != default.trim_end_matches('\\'))
+            && typed.trim_end_matches(['\\', '/']) != default.trim_end_matches(['\\', '/']))
         .then(|| typed.to_owned());
         self.s.set_category_dir(cat, own);
     }
@@ -1093,20 +1102,7 @@ impl OptionsDialog {
             s.duplicate_action = i as u8;
         }
         winui::etched_h(&p, o.x + 21.0, o.y + 367.0, 381.0);
-        text(
-            &p,
-            o.x + 21.0,
-            o.y + 388.0,
-            crate::i18n::t("User-Agent for manually added downloads:"),
-            LIGHT_TEXT(),
-        );
-        winui::edit_light(
-            ui,
-            r(o, 21.0, 398.0, 381.0, 23.0),
-            &mut s.user_agent,
-            true,
-            false,
-        );
+        self.user_agent(ui, o);
         winui::etched_h(&p, o.x + 21.0, o.y + 426.0, 381.0);
         winui::text_right(
             &p,
@@ -1123,6 +1119,67 @@ impl OptionsDialog {
             ButtonKind::Disabled,
             false,
         );
+    }
+
+    /// "User-Agent for manually added downloads" (#668): Automatic, the default browser's (the
+    /// box shows it, read-only), or the one typed in the box.
+    fn user_agent(&mut self, ui: &mut Ui, o: Pos2) {
+        let p = ui.painter().clone();
+        let s = &mut self.s;
+        // The checkbox ends where the box does; the label before it gives way ("...") if need be.
+        let auto_x = 402.0 - (winui::checkbox_caption_end(&p, 0.0, "Automatic") + 2.0);
+        let label = crate::i18n::t("User-Agent for manually added downloads:");
+        let (rect, cut) = winui::label_into(
+            &p,
+            o.x + 21.0,
+            o.y + 388.0,
+            label,
+            LIGHT_TEXT(),
+            o.x + auto_x - 6.0,
+            o.x + 21.0,
+        );
+        if cut {
+            winui::full_on_hover(ui, rect, "opt-user-agent", label);
+        }
+        let agent = mdm_engine::agent::automatic();
+        let tip = match mdm_engine::agent::automatic_browser() {
+            Some(browser) => crate::i18n::fmt(
+                // i18n: tooltip; {browser} is a browser and its version, e.g. "Brave 157"
+                crate::i18n::t("Your default browser's User-Agent: {browser}"),
+                &[("browser", &browser)],
+            ),
+            None if mdm_engine::agent::looked_for() => crate::i18n::t(
+                "Your default browser isn't one MDM knows: a current Chrome's User-Agent",
+            )
+            .to_owned(),
+            None => crate::i18n::t("Looking for your default browser...").to_owned(),
+        };
+        let tip = format!("{tip}\n{agent}");
+        let was = self.ua_auto;
+        winui::checkbox_light(
+            ui,
+            o + vec2(auto_x, 378.0),
+            &mut self.ua_auto,
+            // i18n: checkbox: the User-Agent is the default browser's, which MDM finds itself
+            "Automatic",
+            true,
+        )
+        .on_hover_text(&tip);
+        if self.ua_auto != was {
+            // Ticked: the automatic one. Unticked: the box starts from it, to be changed.
+            s.user_agent = if self.ua_auto {
+                String::new()
+            } else {
+                agent.clone()
+            };
+        }
+        let rc = r(o, 21.0, 398.0, 381.0, 23.0);
+        if self.ua_auto {
+            let mut shown = agent;
+            winui::edit_light(ui, rc, &mut shown, false, false).on_hover_text(&tip);
+        } else {
+            winui::edit_light(ui, rc, &mut s.user_agent, true, false);
+        }
     }
 
     fn connection(&mut self, ui: &mut Ui, o: Pos2) {

@@ -18,6 +18,8 @@ flate2.workspace = true
 # Reading librqbit's saved session (session.json) before it starts (lib.rs).
 serde_json.workspace = true
 thiserror.workspace = true
+# MDM's log: where the session listens (lib.rs).
+tracing.workspace = true
 tokio.workspace = true
 # The blocklist file's URL, and trackers' hosts (lib.rs, trackers.rs).
 url.workspace = true

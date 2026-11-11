@@ -18,6 +18,8 @@ pub struct Batch {
     focused: bool,
     /// The pattern's addresses (or why none), and the inputs they were made from.
     cached: Option<(PatternKey, Result<Vec<url::Url>, &'static str>)>,
+    /// The clipboard's address, read off the window's thread (#661).
+    clip: crate::clipboard::Prefill,
 }
 
 /// What a pattern's addresses are made from: address, letters, from, to, size.
@@ -30,18 +32,11 @@ pub struct Added {
 }
 
 impl Batch {
-    /// Pre-filled from the clipboard when it holds an http(s) or ftp(s) address, as IDM's.
+    /// Pre-filled from the clipboard when it holds an http(s) or ftp(s) address, as IDM's: read
+    /// off the window's thread, the address put in the box on the frame it comes.
     pub fn new(from_clipboard: bool) -> Self {
-        let address = if from_clipboard {
-            crate::clipboard_text()
-                .map(|t| t.trim().to_owned())
-                .filter(|t| url::Url::parse(t).is_ok_and(|u| mdm_engine::supported(&u)))
-                .unwrap_or_default()
-        } else {
-            String::new()
-        };
         Batch {
-            address,
+            address: String::new(),
             letters: false,
             from: "0".into(),
             to: "10".into(),
@@ -51,6 +46,21 @@ impl Batch {
             password: String::new(),
             focused: false,
             cached: None,
+            clip: if from_clipboard {
+                crate::clipboard::Prefill::ask()
+            } else {
+                Default::default()
+            },
+        }
+    }
+
+    /// The clipboard's text as the address, when it is one MDM downloads and the box is still
+    /// empty (nothing typed meanwhile).
+    fn fill_from_clipboard(&mut self, clip: &str) {
+        let clip = clip.trim();
+        if self.address.is_empty() && url::Url::parse(clip).is_ok_and(|u| mdm_engine::supported(&u))
+        {
+            self.address = clip.to_owned();
         }
     }
 
@@ -124,6 +134,9 @@ impl Batch {
     }
 
     pub fn show(&mut self, ctx: &egui::Context) -> Outcome<Added> {
+        if let Some(clip) = self.clip.take() {
+            self.fill_from_clipboard(&clip);
+        }
         // Worked out again only when the pattern changes (up to 100,000 addresses).
         let key = (
             self.address.clone(),
@@ -440,6 +453,24 @@ mod tests {
             address: address.into(),
             ..Batch::new(false)
         }
+    }
+
+    /// #661: the clipboard's address comes a frame or more after the window opens: it fills
+    /// an empty box only, and only with an address MDM downloads.
+    #[test]
+    fn the_clipboard_fills_only_an_empty_box() {
+        let mut b = batch("");
+        b.fill_from_clipboard(
+            " http://x/img*.jpg
+",
+        );
+        assert_eq!(b.address, "http://x/img*.jpg");
+        let mut b = batch("http://typed/*.png");
+        b.fill_from_clipboard("http://x/img*.jpg");
+        assert_eq!(b.address, "http://typed/*.png");
+        let mut b = batch("");
+        b.fill_from_clipboard("not an address");
+        assert_eq!(b.address, "");
     }
 
     #[test]

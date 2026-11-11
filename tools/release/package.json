@@ -1,0 +1,9 @@
+{
+  "name": "mdm-release-tools",
+  "private": true,
+  "description": "The tools the Release workflow sends the browser extension to the stores with, at exact versions (npm ci --ignore-scripts in this folder).",
+  "dependencies": {
+    "chrome-webstore-upload-cli": "4.0.2",
+    "web-ext": "10.8.0"
+  }
+}

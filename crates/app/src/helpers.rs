@@ -434,8 +434,9 @@ pub struct Programs {
     found: [Option<mdm_tools::Installed>; 3],
     /// A chosen program being checked (`--version`), and what it answered.
     checking: Option<(Helper, Answer)>,
-    /// MDM's own yt-dlp being downloaded in place of the system's (#452), and how that went.
-    installing: Option<Answer>,
+    /// MDM's own yt-dlp or gallery-dl being downloaded in place of the system's (#452, #571),
+    /// and how that went.
+    installing: Option<(Helper, Answer)>,
     error: Option<String>,
 }
 
@@ -468,10 +469,12 @@ impl Programs {
         ];
     }
 
-    /// MDM's own yt-dlp in place of the system's (#452): downloaded and checked as usual, from
-    /// then on the one used (`mdm_tools::installed`). It goes on if the window is closed.
+    /// MDM's own yt-dlp or gallery-dl in place of the system's (#452, #571): downloaded and
+    /// checked as usual, from then on the one used (`mdm_tools::installed`,
+    /// `mdm_tools::gallery::installed`). It goes on if the window is closed.
     fn install_own(
         &mut self,
+        h: Helper,
         dir: std::path::PathBuf,
         rt: &tokio::runtime::Handle,
         ctx: &egui::Context,
@@ -480,14 +483,14 @@ impl Programs {
         let (out, wake) = (slot.clone(), ctx.clone());
         let net = crate::settings::own_net();
         rt.spawn(async move {
-            let res = mdm_tools::install_latest(&dir, &net, None)
-                .await
-                .map(|_| ())
-                .map_err(|e| crate::errors::tools(&e));
-            *out.lock().unwrap() = Some(res);
+            let res = match h {
+                Helper::GalleryDl => mdm_tools::gallery::install_latest(&dir, &net, None).await,
+                _ => mdm_tools::install_latest(&dir, &net, None).await,
+            };
+            *out.lock().unwrap() = Some(res.map(|_| ()).map_err(|e| crate::errors::tools(&e)));
             wake.request_repaint();
         });
-        self.installing = Some(slot);
+        self.installing = Some((h, slot));
         self.error = None;
     }
 
@@ -505,7 +508,7 @@ impl Programs {
         let installed = self
             .installing
             .as_ref()
-            .and_then(|slot| slot.lock().unwrap().take());
+            .and_then(|(_, slot)| slot.lock().unwrap().take());
         if let Some(res) = installed {
             self.error = res.err();
             self.installing = None;
@@ -563,9 +566,15 @@ impl Programs {
                 .as_ref()
                 .filter(|c| h == Helper::GalleryDl && mdm_tools::gallery::too_old(&c.version));
             let checking = self.checking.as_ref().is_some_and(|(c, _)| *c == h);
-            let downloading = h == Helper::YtDlp && self.installing.is_some();
-            // The system's yt-dlp may be old: MDM's own copy can replace it (#452).
-            let system = h == Helper::YtDlp && found.is_some_and(mdm_tools::Installed::is_system);
+            let downloading = self.installing.as_ref().is_some_and(|(i, _)| *i == h);
+            // The system's yt-dlp or gallery-dl may be old: MDM's own copy can replace it (#452,
+            // #571), where MDM has one for this system (gallery-dl: none on macOS).
+            let replaceable = match h {
+                Helper::YtDlp => true,
+                Helper::GalleryDl => mdm_tools::gallery::asset().is_some(),
+                Helper::Ffmpeg => false,
+            };
+            let system = replaceable && found.is_some_and(mdm_tools::Installed::is_system);
             let status = match (too_old, found) {
                 _ if downloading => {
                     // i18n: Video helpers: MDM's own yt-dlp is being downloaded
@@ -674,7 +683,7 @@ impl Programs {
                         .map(|e| crate::errors::tools(&e));
                     self.look();
                 } else {
-                    self.install_own(dir, rt, ui.ctx());
+                    self.install_own(h, dir, rt, ui.ctx());
                 }
             }
             if k + 1 < HELPERS.len() {

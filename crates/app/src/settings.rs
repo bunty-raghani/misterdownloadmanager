@@ -108,9 +108,13 @@ pub struct Settings {
     /// View → Draw with (#89): OpenGL or Direct3D (Windows only), used from the next start.
     /// None: MDM's default (`renderer::DEFAULT`), which may change.
     pub renderer: Option<crate::renderer::Api>,
-    /// View → Interface size (#262), percent: 100, 125, 150, 175 or 200 (crate::scale). Every
+    /// View → Interface size (#262), percent: one of `crate::scale::STEPS` (100 to 200). Every
     /// window drawn that much larger than the display's own scale makes it.
     pub interface_size: u16,
+    /// View → Text (Windows): smooth text as Windows' modern apps draw it, or the classic
+    /// controls' hinted, whole-pixel look, the default (`crate::theme::set_smooth_text`): text
+    /// doesn't change look on an update; a dense screen can choose Smooth.
+    pub smooth_text: bool,
     /// Scheduler → Download limits: "Download no more than `limits_mb` MBytes every
     /// `limits_hours` hours" (IDM defaults 200 / 5), with a warning before stopping.
     pub limits_on: bool,
@@ -182,6 +186,11 @@ pub struct Settings {
     /// "If a duplicate download link is added": 0 ask, 1 numbered name, 2 overwrite,
     /// 3 complete → show the complete dialog, else resume.
     pub duplicate_action: u8,
+    /// "User-Agent for manually added downloads": the user's, or empty for the automatic one
+    /// (the default browser's, #668: `mdm_engine::agent::automatic`). Saved before #668 as
+    /// Internet Explorer 11's, the default then: read as empty (`own_user_agent`), which an older
+    /// MDM reads as its default again.
+    #[serde(deserialize_with = "automatic_agent")]
     pub user_agent: String,
     /// Connection: per-server connection limits (server, number).
     pub conn_exceptions: Vec<(String, u32)>,
@@ -369,6 +378,7 @@ impl Default for Settings {
             theme: "classic".into(),
             renderer: None,
             interface_size: 100,
+            smooth_text: false,
             limits_on: false,
             limits_mb: 200,
             limits_hours: 5,
@@ -404,7 +414,7 @@ impl Default for Settings {
             queue_panel_batch: true,
             ignore_mtime: false,
             duplicate_action: 0,
-            user_agent: mdm_engine::download::DEFAULT_USER_AGENT.into(),
+            user_agent: String::new(),
             conn_exceptions: Vec::new(),
             proxy_from_browser: true,
             proxy_mode: 0,
@@ -560,7 +570,25 @@ pub fn remember(list: &mut Vec<String>, value: &str) {
     list.truncate(HISTORY);
 }
 
+/// A saved "User-Agent for manually added downloads": MDM's former default (Internet Explorer
+/// 11's, before #668) or nothing is the automatic one (empty).
+fn automatic_agent<'de, D: serde::Deserializer<'de>>(d: D) -> Result<String, D::Error> {
+    let saved = String::deserialize(d)?;
+    Ok(if saved.trim() == mdm_engine::agent::IE11_USER_AGENT {
+        String::new()
+    } else {
+        saved
+    })
+}
+
 impl Settings {
+    /// The User-Agent the user set for links added by hand; None: the automatic one (the
+    /// default browser's, #668).
+    pub fn own_user_agent(&self) -> Option<&str> {
+        let ua = self.user_agent.trim();
+        (!ua.is_empty() && ua != mdm_engine::agent::IE11_USER_AGENT).then_some(ua)
+    }
+
     /// `live` with the settings a dialog changed (`from` → `to`) put in, field by field: what
     /// changed elsewhere while it was open (the toolbar's Speed Limiter, Torrent settings, the
     /// Categories pane) is kept, not reverted to the copy the dialog started from.
@@ -1016,6 +1044,38 @@ pub fn own_net() -> mdm_engine::Options {
 #[cfg(test)]
 mod tests {
     use std::path::Path;
+
+    /// #668: the User-Agent for links added by hand is the default browser's unless one is set.
+    /// Saved before, MDM's former default (Internet Explorer 11's) or nothing reads as automatic;
+    /// automatic is saved empty, which an older MDM reads as its own default again.
+    #[test]
+    fn the_user_agent_is_automatic_unless_one_is_set() {
+        use super::Settings;
+        let ie11 = mdm_engine::agent::IE11_USER_AGENT;
+        assert_eq!(Settings::default().user_agent, "");
+        assert_eq!(Settings::default().own_user_agent(), None);
+        for saved in [
+            serde_json::json!({ "user_agent": ie11 }),
+            serde_json::json!({ "user_agent": format!(" {ie11} ") }),
+            serde_json::json!({ "user_agent": "" }),
+            serde_json::json!({ "user_agent": "   " }),
+            serde_json::json!({}),
+        ] {
+            let s: Settings = serde_json::from_value(saved.clone()).unwrap();
+            assert_eq!(s.own_user_agent(), None, "{saved}");
+            let again = serde_json::to_value(&s).unwrap();
+            assert_eq!(
+                again["user_agent"].as_str().map(str::trim),
+                Some(""),
+                "{saved}"
+            );
+        }
+        let own: Settings =
+            serde_json::from_value(serde_json::json!({ "user_agent": " MyAgent/1.0 " })).unwrap();
+        assert_eq!(own.own_user_agent(), Some("MyAgent/1.0"));
+        let again: Settings = serde_json::from_value(serde_json::to_value(&own).unwrap()).unwrap();
+        assert_eq!(again.own_user_agent(), Some("MyAgent/1.0"));
+    }
 
     /// #475: a folder chosen for a video is the Video category's next time; the category's own
     /// folder stays "the default", following Downloads, and other categories stay as they were.

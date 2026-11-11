@@ -23,7 +23,11 @@ fn main() {
     for name in ["broken", "not-executable", "bin", "package"] {
         std::fs::create_dir(root.join(name)).unwrap();
     }
-    for (name, answer) in [("yt-dlp", "2026.10.26"), ("ffmpeg", "ffmpeg version 8.0")] {
+    for (name, answer) in [
+        ("yt-dlp", "2026.10.26"),
+        ("ffmpeg", "ffmpeg version 8.0"),
+        ("gallery-dl", "1.26.9"),
+    ] {
         let program = root.join("package").join(name);
         std::fs::write(&program, format!("#!/bin/sh\nprintf '%s\\n' '{answer}'\n")).unwrap();
         std::fs::set_permissions(&program, std::fs::Permissions::from_mode(0o755)).unwrap();
@@ -117,4 +121,67 @@ fn check(root: &std::path::Path) {
     assert_eq!(mdm_tools::installed(&dir), Some(own.clone()));
     std::fs::remove_file(&own.exe).unwrap();
     assert_eq!(mdm_tools::installed(&dir), Some(system));
+
+    gallery_dl(root, &dir, &rt, &net);
+}
+
+/// gallery-dl as yt-dlp (#571): the system's found, run with the options every release MDM
+/// drives accepts (a distribution's may be old: Ubuntu 24.04's 1.26.9 refuses `--no-input`),
+/// passed over for MDM's own copy and for the person's.
+#[cfg(unix)]
+fn gallery_dl(
+    root: &std::path::Path,
+    dir: &std::path::Path,
+    rt: &tokio::runtime::Runtime,
+    net: &mdm_engine::Options,
+) {
+    use mdm_tools::{Installed, chosen::Helper, gallery};
+
+    let system = Installed {
+        version: "system".into(),
+        exe: root.join("bin/gallery-dl"),
+    };
+    assert_eq!(gallery::installed(dir), Some(system.clone()));
+    let args: Vec<String> = mdm_tools::proc::gallery_dl(&system, &[], "https://x.test/g")
+        .unwrap()
+        .get_args()
+        .map(|a| a.to_string_lossy().into_owned())
+        .collect();
+    assert_eq!(args, ["--ignore-config", "--", "https://x.test/g"]);
+    // Helpers' Use MDM's own copy: an explicit install, to the network (refused here).
+    if gallery::asset().is_some() {
+        assert!(
+            matches!(
+                rt.block_on(gallery::install_latest(dir, net, None)),
+                Err(mdm_tools::Error::Adapter(mdm_engine::NetError::Down { .. }))
+            ),
+            "the explicit way to MDM's own copy goes to the network"
+        );
+    }
+    assert!(
+        !dir.join("gallery-dl").exists(),
+        "nothing installed on the way"
+    );
+
+    // MDM's own copy wins, and the person's over both.
+    let own = Installed {
+        version: "1.31.0".into(),
+        exe: root.join("managed-gallery-dl"),
+    };
+    std::fs::write(&own.exe, b"managed").unwrap();
+    std::fs::create_dir_all(dir.join("gallery-dl")).unwrap();
+    std::fs::write(
+        dir.join("gallery-dl/current.json"),
+        serde_json::to_vec(&own).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(gallery::installed(dir), Some(own.clone()));
+    let picked =
+        mdm_tools::chosen::choose(dir, Helper::GalleryDl, &root.join("package/gallery-dl"))
+            .unwrap();
+    assert_eq!(picked.version, "1.26.9");
+    assert_eq!(gallery::installed(dir), Some(picked));
+    mdm_tools::chosen::forget(dir, Helper::GalleryDl).unwrap();
+    std::fs::remove_file(&own.exe).unwrap();
+    assert_eq!(gallery::installed(dir), Some(system));
 }

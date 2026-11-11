@@ -1,0 +1,110 @@
+{
+  "$schema": "https://fundingjson.org/schema/v1.1.0.json",
+  "version": "v1.1.0",
+  "entity": {
+    "type": "individual",
+    "role": "owner",
+    "name": "Ahmed Nefzaoui",
+    "email": "nefzaoui.a@gmail.com",
+    "description": "I'm Ahmed Nefzaoui, a software developer. I worked at Mozilla and Apple before, and I've cared about a free and open web ever since. Mister Download Manager is the project I put my days and nights into now. I build and maintain it myself, with a growing group of contributors who send fixes and translations.",
+    "webpageUrl": {
+      "url": "https://misterdownloadmanager.com",
+      "wellKnown": "https://misterdownloadmanager.com/.well-known/funding-manifest-urls"
+    }
+  },
+  "projects": [
+    {
+      "guid": "misterdownloadmanager",
+      "name": "Mister Download Manager",
+      "description": "Mister Download Manager (MDM) is a free, open source download manager for Windows, Linux and macOS. It works the way people who grew up on IDM expect, without the license, the ads or the trial.\n\nIt splits a file into several connections, picks up where it stopped when the internet or the power goes out instead of starting from zero, saves videos from YouTube and many other sites with a button in the browser, and handles torrents, queues and a scheduler. It speaks 86 languages, including Urdu, Hindi, Bengali, Arabic, Indonesian and Vietnamese.\n\nMost of the people who write to me are in Pakistan, India, Bangladesh, Indonesia and North Africa. They download on slow or unstable connections, and buying a license is rarely possible for them, so the usual answer was a cracked copy, often with malware inside. MDM gives them the same everyday tool for free, open and safe to install.\n\nPeople took to it fast. In its first 12 days it passed 5,000 GitHub stars and 72,000 downloads, 145 people sent bug reports and ideas, 14 people contributed code, and word got around fast: a post about it in r/foss got over 500 upvotes, and it's been shared in big computer groups on Facebook. The SignPath Foundation reviewed the project and approved it for free code signing, so Windows will trust it.\n\nI maintain it alone, on my own time and my own money. Funding would let me do it full time: fix bugs as fast as they come in, test every release on real Macs and ARM machines, and keep it free for everyone.",
+      "webpageUrl": {
+        "url": "https://misterdownloadmanager.com",
+        "wellKnown": "https://misterdownloadmanager.com/.well-known/funding-manifest-urls"
+      },
+      "repositoryUrl": {
+        "url": "https://github.com/anefzaoui/misterdownloadmanager",
+        "wellKnown": "https://github.com/anefzaoui/misterdownloadmanager/blob/main/.well-known/funding-manifest-urls"
+      },
+      "licenses": [
+        "spdx:GPL-3.0-or-later"
+      ],
+      "tags": [
+        "productivity",
+        "networking",
+        "browser-extensions",
+        "linux",
+        "computers",
+        "privacy"
+      ]
+    }
+  ],
+  "funding": {
+    "channels": [
+      {
+        "guid": "paypal",
+        "type": "payment-provider",
+        "address": "nefzaoui.a@gmail.com",
+        "description": "PayPal"
+      },
+      {
+        "guid": "bank",
+        "type": "bank",
+        "description": "Bank transfer. Details given privately on request."
+      }
+    ],
+    "plans": [
+      {
+        "guid": "full-time",
+        "status": "active",
+        "name": "Full-time maintenance and development",
+        "amount": 3000,
+        "currency": "USD",
+        "frequency": "monthly",
+        "channels": [
+          "bank",
+          "paypal"
+        ],
+        "description": "Lets me work on MDM full time: fixing bugs as they come in, reviewing contributions, keeping 86 languages up to date, and shipping releases for Windows, Linux and macOS."
+      },
+      {
+        "guid": "macos-signing",
+        "status": "active",
+        "name": "Apple Developer Program",
+        "amount": 99,
+        "currency": "USD",
+        "frequency": "yearly",
+        "channels": [
+          "paypal",
+          "bank"
+        ],
+        "description": "To sign and notarize the macOS app, so Mac users can install it without security warnings."
+      },
+      {
+        "guid": "test-devices",
+        "status": "active",
+        "name": "Test devices",
+        "amount": 2500,
+        "currency": "USD",
+        "frequency": "one-time",
+        "channels": [
+          "paypal",
+          "bank"
+        ],
+        "description": "A Mac and an ARM Windows laptop, to test every release on real hardware before it ships."
+      },
+      {
+        "guid": "any-amount",
+        "status": "active",
+        "name": "Support the project",
+        "amount": 0,
+        "currency": "USD",
+        "frequency": "one-time",
+        "channels": [
+          "paypal",
+          "bank"
+        ],
+        "description": "Any amount helps keep MDM free for everyone."
+      }
+    ]
+  }
+}

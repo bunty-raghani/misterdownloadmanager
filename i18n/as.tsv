@@ -572,6 +572,10 @@
 #. a country's name (where a download's server is)
 #, machine
 	Austria	অষ্ট্ৰিয়া
+#. checkbox in the Options window; text in the Options window
+#. checkbox: the User-Agent is the default browser's, which MDM finds itself
+#, machine
+	Automatic	স্বয়ংক্ৰিয়
 #. text in remote.rs
 #. remote control page (on a phone): category choice: the category follows the file's type
 #, machine
@@ -2369,6 +2373,10 @@
 #. crash report window: looking on GitHub for an issue about the same problem
 #, machine
 	Looking for this problem on GitHub…	GitHub ত এই সমস্যাটো বিচাৰি আছে…
+#. text in the Options window
+#. the trailing ... means it is still going on: keep it
+#, machine
+	Looking for your default browser...	আপোনাৰ ডিফল্ট ব্ৰাউজাৰ বিচাৰি আছে...
 #. text in the Download video window
 #. the trailing ... means it is still going on: keep it
 #, machine
@@ -5217,6 +5225,13 @@
 #. a row of the browser extension's window when no browser was found by name
 #, machine
 	Your browser	আপোনাৰ ব্ৰাউজাৰ
+#. text in the Options window
+#, machine
+	Your default browser isn't one MDM knows: a current Chrome's User-Agent	আপোনাৰ ডিফল্ট ব্ৰাউজাৰ MDM-এ জনা ব্ৰাউজাৰ নহয়: এটা বৰ্তমানৰ Chrome-ৰ User-Agent
+#. text in the Options window
+#. tooltip; {browser} is a browser and its version, e.g. "Brave 157"
+#, machine
+	Your default browser's User-Agent: {browser}	আপোনাৰ ডিফল্ট ব্ৰাউজাৰৰ User-Agent: {browser}
 #. text in the settings
 #. Options → DNS: the name of a DNS the user typed in, in messages: "your DNS (DNS over TLS)"
 #, machine

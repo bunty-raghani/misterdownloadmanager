@@ -425,6 +425,13 @@ pub fn main(args: Vec<OsString>) -> ExitCode {
 }
 
 /// [`main`], downloading through the app's debrid `accounts` (#44).
+/// Does the command line `args` (as [`main_with`] takes them) download a link with MDM's own
+/// User-Agent (`get`, `resume`)? The app waits for the default browser's (#668) only for these.
+pub fn downloads(args: &[OsString]) -> bool {
+    Cli::try_parse_from(std::iter::once(OsString::from(NAME)).chain(args.iter().cloned()))
+        .is_ok_and(|cli| matches!(cli.cmd, Cmd::Get { .. } | Cmd::Resume { .. }))
+}
+
 pub fn main_with(args: Vec<OsString>, accounts: Option<&dyn Accounts>) -> ExitCode {
     let cli = Cli::parse_from(std::iter::once(OsString::from(NAME)).chain(args));
     let rt = tokio::runtime::Runtime::new().expect("tokio runtime");
@@ -546,7 +553,11 @@ async fn run(cmd: Cmd, json: bool, accounts: Option<&dyn Accounts>) -> anyhow::R
                 None => anyhow::anyhow!("gallery-dl is not installed: run install-gallery-dl"),
             })?;
             if let Some(why) = &old {
-                eprintln!("{why}: using MDM's own copy, {}", tool.version);
+                if tool.is_system() {
+                    eprintln!("{why}: using the system's, {}", tool.exe.display());
+                } else {
+                    eprintln!("{why}: using MDM's own copy, {}", tool.version);
+                }
             }
             if !mdm_tools::gallery::handles(&tool, &url)? {
                 anyhow::bail!("gallery-dl can't read this address");
@@ -1078,9 +1089,12 @@ fn subs_arg(langs: &str, automatic: bool, embed: bool) -> mdm_tools::video::Subs
     }
 }
 
+/// A download's options: the app's defaults (the default browser's User-Agent, #668, and MDM's
+/// former one once if a site refuses it, #372).
 fn opts(connections: u32) -> Options {
     Options {
         max_connections: connections,
+        agent_fallback: Some(mdm_engine::agent::IE11_USER_AGENT.to_owned()),
         ..Options::default()
     }
 }
@@ -1265,6 +1279,28 @@ fn torrent_source(s: &str) -> anyhow::Result<mdm_torrent::Source> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// #668: only the commands that download a link wait for the default browser's User-Agent.
+    #[test]
+    fn only_downloads_wait_for_the_default_browser() {
+        let args = |a: &[&str]| a.iter().map(OsString::from).collect::<Vec<_>>();
+        assert!(downloads(&args(&[
+            "get",
+            "https://example.test/a.zip",
+            "-o",
+            "."
+        ])));
+        assert!(downloads(&args(&[
+            "--json",
+            "get",
+            "https://example.test/a.zip"
+        ])));
+        assert!(downloads(&args(&["resume", "a.zip.mdm.json"])));
+        assert!(!downloads(&args(&["api", "on"])));
+        assert!(!downloads(&args(&["status"])));
+        assert!(!downloads(&args(&["--help"])));
+        assert!(!downloads(&args(&[])));
+    }
 
     /// A service that takes `hoster.test` only, or (`broken`) can't say which hosts it takes.
     #[derive(Debug)]

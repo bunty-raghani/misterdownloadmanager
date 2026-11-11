@@ -56,6 +56,10 @@ pub struct Faults {
     /// 403 when the request's `User-Agent` contains this (a bot check that refuses a
     /// browser's User-Agent on a connection that isn't a browser's, #372).
     pub refuse_agent: Option<String>,
+    /// Every file request answered with this status (4xx or 5xx) before any byte: a site that
+    /// turns away whatever isn't a browser (FileHippo's 412, #630), or a link the browser
+    /// already spent.
+    pub refuse: Option<u16>,
     /// A one-time link: the first request for this path and query is served, every later one
     /// (HEAD and ranges included) gets 410 Gone.
     #[serde(deserialize_with = "flag_opt")]
@@ -93,6 +97,7 @@ impl Faults {
             range_rate: over.range_rate.or(self.range_rate),
             require_cookie: over.require_cookie.clone().or(self.require_cookie.clone()),
             refuse_agent: over.refuse_agent.clone().or(self.refuse_agent.clone()),
+            refuse: over.refuse.or(self.refuse),
             require_referer: over
                 .require_referer
                 .clone()

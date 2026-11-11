@@ -31,6 +31,7 @@ craft-atomic.workspace = true
 dirs.workspace = true
 eframe.workspace = true
 egui.workspace = true
+egui-winit.workspace = true
 egui_extras.workspace = true
 image.workspace = true
 craft-i18n.workspace = true

@@ -151,6 +151,8 @@
   let chosen = false; // the user put it where it is (dragged it, on this site): theirs, never moved for a page's control
   let auto = { v: null, at: null, t: 0 }; // the spot found for this video, kept for a moment
   const AUTO_MS = 400;
+  // Where it is on the screen, while the pointer is on it (#560): { v, left, top }.
+  let pinned = null;
   let video = null; // the video it is over
   // A video gone from under its button (#503): a hover-to-play preview (YouTube's thumbnails)
   // stops as soon as the pointer leaves it for the button, since the page sees the pointer go.
@@ -376,12 +378,20 @@ button:focus-visible { outline: 2px solid #2a78d6; outline-offset: -2px; }
 
   // Where it goes now: the place the user gave it, else the default corner, or the next corner
   // free of the page's own controls (a thumbnail's watch-later button at the top right, #421).
+  // Over the same video it only ever goes on to the next corner, never back to one it left: a
+  // hover-to-play preview (YouTube's thumbnails, #560) shows its sound and captions buttons while
+  // the pointer is over the video and hides them as the pointer reaches the button, so going back
+  // when they hide, then away again when they show, kept the button jumping from under the pointer.
+  const CORNERS = [{ x: 0, y: 0 }, { x: 0, y: 1 }, { x: 1, y: 1 }];
   function spot(r, w, h, roomX, roomY) {
     if (chosen) return place;
     const now = Date.now();
-    if (auto.v === video && now - auto.t < AUTO_MS) return auto.at;
-    let at = place;
-    for (const c of [place, { x: 0, y: 0 }, { x: 0, y: 1 }, { x: 1, y: 1 }]) {
+    const same = auto.v === video;
+    if (same && now - auto.t < AUTO_MS) return auto.at;
+    const order = [place, ...CORNERS];
+    const from = same ? Math.max(0, order.indexOf(auto.at)) : 0;
+    let at = same ? auto.at : place;
+    for (const c of order.slice(from)) {
       const left = r.left + INSET + c.x * roomX;
       const top = r.top + INSET + c.y * roomY;
       if (!onControl({ left, top, right: left + w, bottom: top + h }, video, r)) {
@@ -396,6 +406,13 @@ button:focus-visible { outline: 2px solid #2a78d6; outline-offset: -2px; }
   function position() {
     if (!video) return;
     const { r, w, roomX, roomY } = rects();
+    // The pointer on it (or its menu open): it stays where it is, whatever the video does
+    // meanwhile. A preview that grows while the pointer is over it and shrinks back when the
+    // pointer goes (#560) would otherwise take the button from under the pointer.
+    if (!dragging && pinned && pinned.v === video && (menuOpen || root.matches(":hover"))) {
+      if (menuOpen) placeMenu(pinned.top, pinned.left, w);
+      return;
+    }
     // A narrow video gets the icon only.
     pill.classList.toggle("compact", r.width < 360);
     // Held for a video gone (#503): where it was, not a corner found anew over what the page
@@ -408,6 +425,7 @@ button:focus-visible { outline: 2px solid #2a78d6; outline-offset: -2px; }
     const visBottom = Math.min(r.bottom, innerHeight) - INSET - h;
     const top = Math.min(Math.max(r.top + INSET + at.y * roomY, visTop), Math.max(visTop, visBottom));
     root.style.setProperty("transform", `translate(${Math.round(left)}px, ${Math.round(top)}px)`, "important");
+    pinned = { v: video, left, top };
     if (menuOpen) placeMenu(top, left, w);
   }
 
@@ -461,6 +479,7 @@ button:focus-visible { outline: 2px solid #2a78d6; outline-offset: -2px; }
   // `now`: at once and whatever has the focus (dismissed, the video gone).
   function hide(now) {
     if (!now && (menuOpen || dragging || keyboardOn())) return;
+    pinned = null;
     if (now) {
       held = null;
       closeMenu();
@@ -902,6 +921,9 @@ button:focus-visible { outline: 2px solid #2a78d6; outline-offset: -2px; }
     }
     place = snap(d.at);
     chosen = true;
+    // It snaps to its corner although the pointer is still on it (#560's pin is for a video
+    // that changes under a still pointer, not for the user's own move).
+    pinned = null;
     position();
     lastMove = Date.now();
     // Remembered per site, not in a private window (it would keep the site's name), and the

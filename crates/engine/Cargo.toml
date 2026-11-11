@@ -65,6 +65,8 @@ mdm-labserver.workspace = true
 proptest.workspace = true
 serde_json.workspace = true
 tempfile.workspace = true
+# The limiter's tests run on Tokio's paused clock (src/limiter.rs, #621).
+tokio = { workspace = true, features = ["test-util"] }
 
 [lints]
 workspace = true

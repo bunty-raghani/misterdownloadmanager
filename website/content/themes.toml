@@ -59,3 +59,10 @@ name = "Aqua"
 feel = "Mac OS X's feel: gel buttons round at the ends, a blue focus ring and a blue gel progress bar."
 shot = "images/help/site-theme-aqua.webp"
 tag = true
+
+[[theme]]
+id = "emerald"
+name = "Emerald"
+feel = "A white canvas, one near-black ink, emerald fills with near-black text, 6-point corners."
+shot = "images/help/site-theme-emerald.webp"
+tag = true

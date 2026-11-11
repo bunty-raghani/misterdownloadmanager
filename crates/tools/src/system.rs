@@ -5,14 +5,18 @@ use std::path::{Path, PathBuf};
 
 use crate::Installed;
 
-/// PATH first, then the usual package-manager folders: an app opened from the Dock may not
-/// inherit the shell's PATH. Discovery only reads metadata, never starts a helper on the UI thread.
+/// The usual package-manager folders (Homebrew on Apple silicon and on Intel, then the system's):
+/// an app opened from the Dock or Finder may not inherit the shell's PATH, so helpers are looked
+/// for there too, and a helper found there gets them on its PATH for its own tools (#659).
+pub(crate) const PACKAGE_DIRS: [&str; 3] = ["/opt/homebrew/bin", "/usr/local/bin", "/usr/bin"];
+
+/// PATH first, then [`PACKAGE_DIRS`]. Discovery only reads metadata, never starts a helper on
+/// the UI thread.
 pub(crate) fn installed(name: &str) -> Option<Installed> {
     let path = std::env::var_os("PATH").unwrap_or_default();
     find_in(
         name,
-        std::env::split_paths(&path)
-            .chain(["/opt/homebrew/bin", "/usr/local/bin", "/usr/bin"].map(PathBuf::from)),
+        std::env::split_paths(&path).chain(PACKAGE_DIRS.map(PathBuf::from)),
     )
     .map(|exe| Installed {
         version: crate::SYSTEM.into(),

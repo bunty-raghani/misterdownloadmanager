@@ -334,10 +334,15 @@ pub fn apply(settings: &mut Settings, e: CategoryEdit, downloads: &Path) -> Cate
         }
     };
     crate::model::set_custom(&settings.custom_categories);
-    let typed = e.folder.trim_end_matches('\\');
-    let default = cat.default_folder(downloads).display().to_string();
-    let own =
-        (!typed.is_empty() && typed != default.trim_end_matches('\\')).then(|| typed.to_owned());
+    let typed = e.folder.trim_end_matches(['\\', '/']);
+    let base = if cat == Category::General {
+        std::borrow::Cow::Borrowed(downloads)
+    } else {
+        crate::model::default_downloads(downloads, &settings.category_dirs)
+    };
+    let default = cat.default_folder(&base).display().to_string();
+    let own = (!typed.is_empty() && typed != default.trim_end_matches(['\\', '/']))
+        .then(|| typed.to_owned());
     settings.set_category_dir(cat, own);
     crate::model::set_custom(&settings.custom_categories);
     cat
@@ -498,7 +503,7 @@ mod tests {
         assert_eq!(Category::of("film.mp4"), Category::Video);
         assert_eq!(
             s.category_dir(Category::Video, downloads),
-            downloads.join("Video")
+            Path::new(ALL).join("Video")
         );
         assert_eq!(s.category_dir(Category::General, downloads), Path::new(ALL));
         assert!(Category::all().contains(&books));

@@ -72,6 +72,9 @@ pub fn main(args: Vec<String>) -> ExitCode {
         return ExitCode::FAILURE;
     };
     mdm_crash::logs::init(&data, mdm_crash::logs::APP);
+    // The default browser, looked for once on a thread of its own (logged): its User-Agent is
+    // the one links added by hand go with (#668).
+    crate::defaultbrowser::start();
     tracing::info!(
         "Mister Download Manager {} ({}) starting without a window",
         crate::help::VERSION,
