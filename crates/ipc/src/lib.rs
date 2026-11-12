@@ -103,9 +103,6 @@ pub struct Command {
     /// From the browser's download button over a video: open the Download video window for this
     /// page (its address; an embedded player's own).
     pub video_page: Option<String>,
-    /// From the same button, a second message: the qualities the page's own player response
-    /// already lists, shown while yt-dlp looks the page up. Not kept.
-    pub video_heights: Vec<u32>,
     /// The browser finished a Telegram media download at `path`: add it to the list as a
     /// completed download. Telegram's protected media can only be fetched by its own page (its
     /// service worker carries the session); a direct request answers 302.
@@ -114,8 +111,28 @@ pub struct Command {
     /// The title of the page the button was clicked on: a video yt-dlp knows only by its address
     /// is named by it.
     pub video_title: Option<String>,
+    /// From the browser's quality menu over a video (the button's click): look this video up
+    /// with yt-dlp, off the window, and answer at once with a token to ask about it
+    /// ([`api::VideoLookupAnswer`], `pending`). The browser's request context (`referer`,
+    /// `cookies`, `cookie_jar`, `user_agent`, `private`) goes with it and stays the look-up's.
+    pub video_lookup: Option<VideoLookup>,
+    /// The quality menu: how is the look-up of this token going (`pending`, `ready` with the
+    /// choices, `failed`, `list`, `gone`)?
+    pub video_poll: Option<String>,
+    /// The quality menu: download the choice made there, with the look-up's own selector and
+    /// context (`private` must be the look-up's); answered `started` or `queued`, or
+    /// `use-window` when it can't be (the Download video window then does it).
+    pub video_pick: Option<VideoPick>,
     /// From that button's menu: never show it on this site (a host name) again.
     pub panel_hide_site: Option<String>,
+    /// From that button's "Turn on" (after "Never on <site>"): show it on this site again.
+    pub panel_show_site: Option<String>,
+    /// With `video_page`, from that button over a video that plays a plain file (no stream, no
+    /// page to read): `video_page` is that file, downloaded as any file at once, with no window.
+    pub video_direct: bool,
+    /// That button's "Show", once a download was added: the main window comes up with the newest
+    /// download of this address (the video's page as it was looked up, or its file) selected.
+    pub show_download: Option<String>,
     /// From the browser's right-click menu: the links of a page or a selection, offered in the
     /// list window to pick from (the browser's `referer` and `cookies` go with them).
     pub links: Vec<String>,
@@ -160,10 +177,43 @@ pub struct CompletedFile {
     pub mime: Option<String>,
 }
 
+/// The video the browser's quality menu asks about ([`Command::video_lookup`]).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
+#[serde(default)]
+pub struct VideoLookup {
+    /// What yt-dlp looks up: the video's own file or its stream's manifest when the page plays
+    /// one, else the page.
+    pub address: String,
+    /// The title of the page the button was clicked on: a video yt-dlp knows only by its address
+    /// is named by it (as [`Command::video_title`]).
+    pub title: Option<String>,
+    /// The browser's cookie store the page is in (Firefox's containers): a choice is only taken
+    /// from the same one.
+    pub store_id: Option<String>,
+}
+
+/// A choice made in the browser's quality menu ([`Command::video_pick`]).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
+#[serde(default)]
+pub struct VideoPick {
+    /// The look-up's token.
+    pub token: String,
+    /// The choice's place in the look-up's `choices`.
+    pub choice: usize,
+    /// The cookie store the choice was made in: the look-up's, or it isn't taken.
+    pub store_id: Option<String>,
+}
+
 impl Command {
     /// Asks for an answer (a JSON line) rather than "ok".
     pub fn wants_reply(&self) -> bool {
-        self.query.is_some() || self.api.is_some() || self.action.is_some() || self.pair
+        self.query.is_some()
+            || self.api.is_some()
+            || self.action.is_some()
+            || self.pair
+            || self.video_lookup.is_some()
+            || self.video_poll.is_some()
+            || self.video_pick.is_some()
     }
 }
 
@@ -349,8 +399,23 @@ pub fn endpoint_path() -> Option<PathBuf> {
 
 /// Ask the running app something (automation API) and return its one-line answer.
 pub fn request(cmd: &Command) -> Result<String, String> {
-    exchange(cmd).map_err(|e| e.to_string())
+    exchange(cmd, ANSWER_WAIT).map_err(|e| e.to_string())
 }
+
+/// Ask the running app something and return its one-line answer, whatever it is (an older app
+/// answers `ok` to a question it doesn't know); or why it didn't reach an app: none listens
+/// (`NotRunning`), or it took the line but gave no answer (`Refused`). Never starts one.
+///
+/// It waits a second longer than the app's channel gives the app (2 s), so an app
+/// too busy to answer in time is heard saying `timeout` rather than taken for a closed line.
+pub fn request_checked(cmd: &Command) -> Result<String, SendError> {
+    exchange(cmd, REPLY_WAIT + Duration::from_secs(1))
+}
+
+/// How long a client reads for its answer (`send`, `request`).
+const ANSWER_WAIT: Duration = Duration::from_secs(2);
+/// How long the channel waits for the app's answer to a question before saying `timeout`.
+const REPLY_WAIT: Duration = Duration::from_secs(2);
 
 /// Why a command didn't reach the app.
 #[derive(Debug)]
@@ -373,7 +438,7 @@ impl std::fmt::Display for SendError {
 
 /// Send `cmd` to a running Mister Download Manager.
 pub fn send(cmd: &Command) -> Result<(), SendError> {
-    let ack = exchange(cmd)?;
+    let ack = exchange(cmd, ANSWER_WAIT)?;
     if ack.trim() == "ok" {
         Ok(())
     } else {
@@ -385,8 +450,8 @@ pub fn send(cmd: &Command) -> Result<(), SendError> {
     }
 }
 
-/// One request line out, one answer line back.
-fn exchange(cmd: &Command) -> Result<String, SendError> {
+/// One request line out, one answer line back (read for up to `wait`).
+fn exchange(cmd: &Command, wait: Duration) -> Result<String, SendError> {
     let not_running = |e: String| SendError::NotRunning(e);
     let refused = |e: std::io::Error| SendError::Refused(e.to_string());
     let path = endpoint_path().ok_or_else(|| not_running("no data dir".into()))?;
@@ -396,7 +461,7 @@ fn exchange(cmd: &Command) -> Result<String, SendError> {
     let addr = SocketAddr::from((Ipv4Addr::LOCALHOST, ep.port));
     let mut s = TcpStream::connect_timeout(&addr, Duration::from_millis(500))
         .map_err(|e| not_running(e.to_string()))?;
-    s.set_read_timeout(Some(Duration::from_secs(2))).ok();
+    s.set_read_timeout(Some(wait)).ok();
     let line = serde_json::to_string(&Envelope {
         token: ep.token,
         cmd: cmd.clone(),
@@ -487,14 +552,23 @@ fn handle(conn: &TcpStream, token: &str, tx: &Sender<Incoming>, wake: &dyn Fn())
         Ok(env) if same_secret(&env.token, token) => {
             if env.cmd.wants_reply() {
                 // The app answers on its next frame (woken now); a stuck app means no answer.
+                // `timeout` therefore always means the app has the command and will act on it
+                // (the browser's host counts on that: a quality menu's choice is then `sent`);
+                // an app that is quitting never gets it, and says `gone`, as for a command.
                 let (rtx, rrx) = std::sync::mpsc::sync_channel(1);
-                let _ = tx.send(Incoming {
-                    cmd: env.cmd,
-                    reply: Some(rtx),
-                });
+                if tx
+                    .send(Incoming {
+                        cmd: env.cmd,
+                        reply: Some(rtx),
+                    })
+                    .is_err()
+                {
+                    let _ = (&*conn).write_all(b"gone\n");
+                    return;
+                }
                 wake();
                 let answer = rrx
-                    .recv_timeout(Duration::from_secs(2))
+                    .recv_timeout(REPLY_WAIT)
                     .unwrap_or_else(|_| "timeout".into());
                 let _ = (&*conn).write_all(format!("{answer}\n").as_bytes());
                 return;
@@ -613,7 +687,9 @@ fn read_request(conn: &std::net::TcpStream) -> Result<String, Option<TooLarge>> 
 }
 
 /// 128 random bits from the OS, as hex (no extra crate: the std hasher's per-process keys).
-fn random_token() -> String {
+/// The channel's token, and each look-up's of the browser's quality menu
+/// (crates/app/src/videolookup.rs).
+pub fn random_token() -> String {
     use std::collections::hash_map::RandomState;
     use std::hash::{BuildHasher, Hasher};
     (0..4)
@@ -819,6 +895,98 @@ mod tests {
         });
         let line = b"{\"token\":\"secret\",\"query\":\"list\"}\n";
         assert_eq!(exchange(port, line), "{\"downloads\":[]}\n");
+    }
+
+    /// The browser's quality menu asks questions: each of its three wants the app's answer, and
+    /// each comes through a request line whole.
+    #[test]
+    fn the_quality_menus_requests_want_answers() {
+        let lookup = Command {
+            video_lookup: Some(VideoLookup {
+                address: "https://cdn.test/v/master.m3u8".into(),
+                title: Some("A talk".into()),
+                store_id: Some("firefox-container-1".into()),
+            }),
+            referer: Some("https://videos.test/watch".into()),
+            private: true,
+            startup: true,
+            ..Default::default()
+        };
+        let poll = Command {
+            video_poll: Some("abc".into()),
+            startup: true,
+            ..Default::default()
+        };
+        let pick = Command {
+            video_pick: Some(VideoPick {
+                token: "abc".into(),
+                choice: 2,
+                store_id: None,
+            }),
+            startup: true,
+            ..Default::default()
+        };
+        for cmd in [&lookup, &poll, &pick] {
+            assert!(cmd.wants_reply(), "{cmd:?}");
+        }
+        assert!(!Command::default().wants_reply());
+        assert!(
+            !Command {
+                video_page: Some("https://videos.test/watch".into()),
+                ..Default::default()
+            }
+            .wants_reply(),
+            "the window's click is a command, not a question"
+        );
+        // To the app and back, as the channel carries them.
+        let back = |cmd: &Command| {
+            let line = serde_json::to_string(&Envelope {
+                token: "t".into(),
+                cmd: cmd.clone(),
+            })
+            .unwrap();
+            serde_json::from_str::<Envelope>(&line).unwrap().cmd
+        };
+        let got = back(&lookup);
+        assert_eq!(got.video_lookup, lookup.video_lookup);
+        assert_eq!(got.referer, lookup.referer);
+        assert!(got.private && got.startup);
+        assert_eq!(back(&poll).video_poll.as_deref(), Some("abc"));
+        assert_eq!(back(&pick).video_pick, pick.video_pick);
+        // As the browser's host writes them (snake_case), missing parts defaulted.
+        let raw: Command = serde_json::from_str(
+            r#"{"video_pick":{"token":"abc","choice":3,"store_id":"firefox-private"},"private":true}"#,
+        )
+        .unwrap();
+        assert_eq!(
+            raw.video_pick,
+            Some(VideoPick {
+                token: "abc".into(),
+                choice: 3,
+                store_id: Some("firefox-private".into()),
+            })
+        );
+        let raw: Command =
+            serde_json::from_str(r#"{"video_lookup":{"address":"https://x.test/w"}}"#).unwrap();
+        let ask = raw.video_lookup.unwrap();
+        assert_eq!((ask.title, ask.store_id), (None, None));
+    }
+
+    /// An app that doesn't answer a question in time says so (`timeout`), and the one asking
+    /// hears it (it waits longer than the app is given).
+    #[test]
+    fn a_question_the_app_does_not_answer_is_timeout() {
+        let (port, rx) = test_server("secret");
+        let line = b"{\"token\":\"secret\",\"video_poll\":\"abc\"}\n";
+        let started = std::time::Instant::now();
+        assert_eq!(exchange(port, line), "timeout\n");
+        assert!(started.elapsed() >= REPLY_WAIT);
+        // It reached the app, which was too slow.
+        assert_eq!(rx.recv().unwrap().cmd.video_poll.as_deref(), Some("abc"));
+        // An app that is quitting never gets it: not `timeout` (which says it has it), `gone`.
+        drop(rx);
+        let pick = b"{\"token\":\"secret\",\"video_pick\":{\"token\":\"abc\",\"choice\":0}}\n";
+        assert_eq!(exchange(port, pick), "gone\n");
     }
 
     #[test]

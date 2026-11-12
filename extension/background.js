@@ -69,8 +69,11 @@ async function native(message, ms = HOST_WAIT) {
   const sent = { ...message, userAgent: navigator.userAgent, brands, v: VERSION };
   try {
     const reply = (await withTimeout(ext.runtime.sendNativeMessage(HOST, sent), ms)) || {};
-    if (reply.version) await noteStatus(older(reply.version, VERSION) ? "update-app" : null, reply.version);
-    else if (reply.ok || reply.why === "options") await noteStatus(null);
+    if (reply.version) {
+      await noteStatus(older(reply.version, VERSION) ? "update-app" : null, reply.version);
+      // The answer to `rules` also says whether the app looks videos up for the button.
+      await noteLookup(reply.videoLookup === true);
+    } else if (reply.ok || reply.why === "options") await noteStatus(null);
     else if (reply.why && reply.why !== "refused") await noteStatus(reply.why);
     return reply;
   } catch (e) {
@@ -176,7 +179,7 @@ function older(a, b) {
 
 // ---- status: the toolbar button's badge and title, the popup's first line ------------------
 
-let status = null; // {why, app, at}
+let status = null; // {why, app, at, videoLookup}
 async function readStatus() {
   if (!status) status = (await ext.storage.local.get({ status: { why: null } })).status;
   return status;
@@ -188,11 +191,21 @@ async function noteStatus(why, app) {
   const now = await readStatus();
   if (now.why === why && (!app || now.app === app)) return;
   const was = !now.why || now.why === "update-app";
-  status = { why, app: app || now.app || null, at: Date.now() };
+  status = { ...now, why, app: app || now.app || null, at: Date.now() };
   await ext.storage.local.set({ status });
   await showStatus();
   // Unreachable, PDFs and music open in the browser again (and back once connected).
   if (was !== (!why || why === "update-app")) await syncOpenedRule();
+}
+
+// Whether this computer's MDM looks videos up for the button over videos (its qualities listed in
+// the page, video.js), kept with the status beside the app's version: from every answer to
+// `rules`, and dropped when a lookup's answer says otherwise (an older host or app).
+async function noteLookup(on) {
+  const now = await readStatus();
+  if (Boolean(now.videoLookup) === on) return;
+  status = { ...now, videoLookup: on };
+  await ext.storage.local.set({ status });
 }
 
 async function showStatus() {
@@ -1277,6 +1290,26 @@ async function handOff(d) {
   return native(message);
 }
 
+// Colab's runtime proxy uses an ephemeral token tied to the browser's partitioned session.
+// Only the actual proxy transfer URL is left to the browser: a normal file linked from a Colab
+// notebook must still be capturable by MDM (#603).
+function colabRuntimeProxy(...urls) {
+  return urls.some((value) => {
+    if (!value) return false;
+    try {
+      const u = new URL(value);
+      const host = u.hostname.toLowerCase();
+      const proxyHost =
+        host === "prod.r.colab.dev"
+        || host.endsWith(".prod.r.colab.dev")
+        || /(?:^|[-.])colab\.googleusercontent\.com$/.test(host);
+      return proxyHost && u.searchParams.has("colab-runtime-proxy-token");
+    } catch {
+      return false;
+    }
+  });
+}
+
 // The file name to offer the app the download under (`{name}`), or why Options leave it to
 // the browser (`{left, name}`), or null: the browser keeps it and there is nothing to say (not a
 // web address, paused, Alt held, a form that can't be posted again, MDM not reached).
@@ -1309,6 +1342,7 @@ async function candidate(item, url) {
   if (bypass.has(item.url) || bypass.has(url)) return null;
   const first = firstUrl(item);
   if (bypass.has(first) || postOf(first) === null) return null; // Alt; a form not to post again
+  if (colabRuntimeProxy(first, url)) return null;
   const r = await currentRules();
   if (!r) return null;
   const name = (item.filename || "").split(/[\\/]/).pop() || url.split(/[?#]/)[0].split("/").pop() || "";
@@ -2011,11 +2045,14 @@ ext.contextMenus.onClicked.addListener(async (info, tab) => {
       return;
     }
     const url = info.linkUrl || info.srcUrl;
+    // The tab's title, as the button's click sends it: the app names a video yt-dlp knows only
+    // by its address (a stream's `master`, a long hash) after it (#345).
+    const title = String((tab && tab.title) || "").slice(0, 300);
     // A player's own stream (blob:, a MediaSource) or a stream's manifest: the Download video
     // window, which reads streams (a manifest downloaded as a file is only a short list).
     // The manifest's own cookies (its server may not be the page's), as the media list sends.
     if (url && MANIFEST.test(url)) {
-      const reply = await native({ video: true, explicit: true, url: info.pageUrl, src: url, ...(await videoCookies(url, { incognito, storeId })), private: incognito });
+      const reply = await native({ video: true, explicit: true, url: info.pageUrl, src: url, title, ...(await videoCookies(url, { incognito, storeId })), private: incognito });
       if (!reply.ok && reply.why !== "options") explain(reply.why);
       return;
     }
@@ -2033,6 +2070,7 @@ ext.contextMenus.onClicked.addListener(async (info, tab) => {
         explicit: true,
         url: page,
         ...(src ? { src } : {}),
+        ...(title ? { title } : {}),
         referrer: info.pageUrl && info.pageUrl !== page ? info.pageUrl : "",
         ...(await videoCookies(src || page, { incognito, storeId })),
         private: incognito,
@@ -2290,19 +2328,144 @@ async function playingVideo(sender, at) {
   }
 }
 
+// A site's name for comparing two addresses: without its www., mobile or other front host
+// (old.reddit.com is reddit.com), its short-link hosts as the site (fb.watch is Facebook's,
+// twitter.com is x.com).
+const SITE_ALIASES = { "fb.watch": "facebook.com", "twitter.com": "x.com" };
+function siteKey(url) {
+  const host = siteOf(url).replace(/^(www|m|mobile|web|touch|old|new|sh|music|geo|player)\./, "");
+  return SITE_ALIASES[host] || host;
+}
+
 // The address the app looks a video up by: the one video's, never a list's. On YouTube that is
-// what the player plays; else the address the content script named (video.js videoPage), if it is
-// this site's (www, m. and music. are the same site); else the page's. "" on a YouTube page where
-// nothing names the video: its own address is a list (the home page, a channel) to yt-dlp.
+// what the player plays; else the address the content script named (video.js videoPage: the post
+// the video sits in on a feed, #689), if it is this site's; else the page's. "" where nothing
+// names the video: on YouTube (its own address is a list, the home page, a channel, to yt-dlp),
+// and on a feed (`url` null: video.js found the page is many videos', LinkedIn's or Facebook's
+// home, and no post around the video naming it).
 async function videoAddress(m, page, sender) {
   const named = typeof m.url === "string" && /^https?:/i.test(m.url) ? m.url : "";
   if (isYouTube(page)) {
     const playing = await playingVideo(sender, m.at);
     return playing || (isYouTube(named) ? named : "");
   }
-  const site = (u) => siteOf(u).replace(/^(www|m|music)\./, "");
-  return named && site(named) === site(page) ? named : page;
+  if (m.url === null) return "";
+  return named && siteKey(named) === siteKey(page) ? named : page;
 }
+
+// What the button's click is about, as the browser knows it: the address yt-dlp is given (`own`,
+// the video's page), the video's own file or stream (`src`), the page's title, the tab as
+// referrer, and the cookies of what yt-dlp asks. Null when nothing names the video.
+async function videoTarget(m, page, sender) {
+  const tab = sender.tab || {};
+  await mediaBack;
+  const named = await videoAddress(m, page, sender);
+  const youtube = isYouTube(page);
+  // The post a video in a feed sits in (#689): the app looks that up. Nothing names it (`url`
+  // null): the feed is never sent as its page, only the video's own plain file, if it has one.
+  // Either way no stream the tab loaded goes with it (a feed's first stream may be another
+  // video's), nor the page's title (the feed's).
+  const post = !youtube && Boolean(named) && named !== page;
+  const feed = !youtube && m.url === null;
+  // The video's own file (video.js leaves it out beside a post a big site's reader knows), or a
+  // stream it plays, still goes as `src`, with the page for its Referer.
+  const file = typeof m.src === "string" && /^https?:/i.test(m.src) ? m.src : "";
+  const src = file || (post || feed ? "" : await streamFor(sender));
+  if (!named && !src) return null;
+  const own = named || page;
+  return {
+    own,
+    src,
+    // The post's own page (#689), for the button's "Open post".
+    post: post ? own : "",
+    // The video's own plain file, sent as itself (#703).
+    file,
+    title: typeof m.title === "string" && !post && !feed ? m.title.slice(0, 300) : "",
+    referrer: tab.url && tab.url !== own ? tab.url : "",
+    // The cookies of what yt-dlp is given (the app files them under its host): the stream's
+    // own server may not be the page's, and the page's cookies are not for it.
+    ...(await videoCookies(src || own, { incognito: tab.incognito, storeId: tab.cookieStoreId })),
+  };
+}
+
+// ---- the button's qualities: the app looks the video up, the page lists what it found --------
+// The click asks the app to look the video up (yt-dlp, in the background), video.js asks how it
+// is going until it is done, and the quality picked is downloaded without the app's window. Only
+// with an app that says it can (`videoLookup`, noteLookup) and never for another MDM: else
+// ({fallback: true}) the click opens the app's Download video window, as it always did. None of
+// these messages has `video` or a top-level `url`: an older host refuses them and does nothing.
+// What a lookup comes to travels in `lookup`, never in `why`: the toolbar button's status (and
+// the rule for PDFs and music that follows it) is the host's, not a video's.
+
+async function videoLookup(m, page, sender) {
+  if (await remoteTarget()) return { fallback: true };
+  if (!(await readStatus()).videoLookup) {
+    // An MDM updated since its rules were last asked may look up now: they are asked again,
+    // for the next click.
+    const r = await storedRules();
+    if (!r || Date.now() - r.at > 60000) refreshRules();
+    return { fallback: true };
+  }
+  const tab = sender.tab || {};
+  const v = await videoTarget(m, page, sender);
+  if (!v) return { ok: false, why: isYouTube(page) ? "unnamed" : "feed" };
+  const reply = await native({
+    videoLookup: {
+      page: v.own,
+      ...(v.src ? { src: v.src } : {}),
+      ...(v.title ? { title: v.title } : {}),
+      ...(v.referrer ? { referrer: v.referrer } : {}),
+      // The lookup is the window's and the container's it was asked from (the app gives its
+      // pick to no other).
+      ...(tab.cookieStoreId ? { storeId: tab.cookieStoreId } : {}),
+    },
+    cookies: v.cookies,
+    cookieJar: v.cookieJar,
+    private: Boolean(tab.incognito),
+  });
+  // `show`: the address MDM lists a download of it under (the button's "Show"); `post`: the
+  // post's own page, when the video sits in a feed (its "Open post").
+  if (reply.lookup && typeof reply.lookup === "object") return { lookup: reply.lookup, show: v.src || v.own, ...(v.post ? { post: v.post } : {}) };
+  // No `lookup`: a host or an app that can't look up after all (an older one refuses the message),
+  // or a host that failed. Not kept as able; its rules are asked again, and this click opens
+  // the window.
+  await noteLookup(false);
+  refreshRules();
+  return { fallback: true };
+}
+
+// The token is the app's, from the lookup's answer; it means nothing to anyone else.
+const lookupToken = (token) => typeof token === "string" && token.length > 0 && token.length <= 200;
+
+async function videoPoll(m) {
+  if (await remoteTarget()) return { fallback: true };
+  if (!lookupToken(m.token)) return { lookup: { state: "gone" } };
+  const reply = await native({ videoPoll: { token: m.token } });
+  return { lookup: reply.lookup && typeof reply.lookup === "object" ? reply.lookup : { state: "gone" } };
+}
+
+async function videoPick(m, sender) {
+  if (await remoteTarget()) return { fallback: true };
+  if (!lookupToken(m.token) || !Number.isInteger(m.choice) || m.choice < 0) return { fallback: true };
+  const tab = sender.tab || {};
+  // The token and the row's number from the page, nothing else: private or not and the
+  // container are the tab's, as the browser says; the app checks them against the lookup's.
+  const reply = await native({
+    videoPick: { token: m.token, choice: m.choice, ...(tab.cookieStoreId ? { storeId: tab.cookieStoreId } : {}) },
+    private: Boolean(tab.incognito),
+  });
+  return reply.lookup && typeof reply.lookup === "object" ? { lookup: reply.lookup } : { fallback: true };
+}
+
+const isWeb = (u) => typeof u === "string" && /^https?:\/\//i.test(u);
+// Where the button's "Get MDM" goes.
+const GET_MDM = "https://misterdownloadmanager.com/download";
+// A new tab next to `tab`, opened from it.
+const beside = (tab) => ({
+  ...(Number.isInteger(tab.id) ? { openerTabId: tab.id } : {}),
+  ...(Number.isInteger(tab.index) ? { index: tab.index + 1 } : {}),
+});
+
 async function pageMessage(m, sender) {
   // YouTube changes the video in the same page (a history entry, not a new document): the
   // content script's message carries the video's current address; `sender.url` can still be
@@ -2352,49 +2515,46 @@ async function pageMessage(m, sender) {
     return { ok: false, why: "options" };
   }
   if (m.type === "video" && page) {
-    // Telegram's page-only media cannot be fetched by the app (its endpoint answers 302); its
-    // own downloader and the finished-file import are the path.
-    if (isTelegramUrl(page)) return { ok: false, why: "options" };
-    await mediaBack;
-    const src = typeof m.src === "string" && /^https?:/i.test(m.src) ? m.src : await streamFor(sender);
-    // A playing stream or file of its own still goes as `src`, with the page for its Referer.
-    const named = await videoAddress(m, page, sender);
-    if (!named && !src) return { ok: false, why: "unnamed" };
-    const own = named || page;
-    // Each cookie with the domain and flags the browser keeps, so the app files a `.youtube.com`
-    // sign-in for every host of it (YouTube Music's page included); the header goes too, for an
-    // older app.
-    const cookieContext = await videoCookies(src || own, {
-      incognito: tab.incognito,
-      storeId: tab.cookieStoreId,
-    });
+    const v = await videoTarget(m, page, sender);
+    if (!v) return { ok: false, why: isYouTube(page) ? "unnamed" : "feed" };
+    // The video's own plain file (#703): downloaded as a file, no window.
+    const direct = Boolean(m.direct) && Boolean(v.file) && v.file === v.src;
     const reply = await native({
       video: true,
-      url: own,
-      ...(src ? { src } : {}),
-      title: typeof m.title === "string" ? m.title.slice(0, 300) : "",
-      referrer: tab.url && tab.url !== own ? tab.url : "",
-      // The cookies of what yt-dlp is given (the app files them under its host): the stream's
-      // own server may not be the page's, and the page's cookies are not for it.
-      ...cookieContext,
+      url: v.own,
+      ...(v.src ? { src: v.src } : {}),
+      ...(direct ? { direct: true } : {}),
+      title: v.title,
+      referrer: v.referrer,
+      cookies: v.cookies,
+      cookieJar: v.cookieJar,
       ...(tab.incognito ? { private: true } : {}),
     });
-    // Sent apart so the window opens at once; its qualities follow in a second, when the
-    // page's player response has been read.
-    pageHeights(page).then((heights) => {
-      if (heights.length) {
-        native({
-          video: true,
-          url: own,
-          ...(src ? { src } : {}),
-          referrer: tab.url && tab.url !== page ? tab.url : "",
-          ...cookieContext,
-          heights,
-        }).catch(() => {});
-      }
-    });
-    return { ok: Boolean(reply.ok), why: reply.why };
+    return { ok: Boolean(reply.ok), why: reply.why, ...(reply.ok && direct ? { show: v.src } : {}) };
   }
+  if (m.type === "video-lookup" && page) return videoLookup(m, page, sender);
+  // The button's "Show" (#703): MDM's window with that download selected.
+  if (m.type === "show-download" && isWeb(m.address)) {
+    return { ok: Boolean((await native({ showDownload: m.address })).ok) };
+  }
+  // The button's "Turn on" (after its "Never on this site", or off here in Options): on again.
+  if (m.type === "show-site" && page) {
+    const host = new URL(page).hostname;
+    for (const k of [...panelCache.keys()]) if (k.split(" ").includes(host)) panelCache.delete(k);
+    return { ok: Boolean((await native({ showSite: host })).ok) };
+  }
+  // The button's "Get MDM" (MDM didn't answer): its download page, beside this tab.
+  if (m.type === "get-mdm") {
+    await ext.tabs.create({ url: GET_MDM, ...beside(tab) });
+    return { ok: true };
+  }
+  // The button's "Open post": the post a video in a feed sits in (#689), on this page's site.
+  if (m.type === "open-post" && page && isWeb(m.url) && siteKey(m.url) === siteKey(page)) {
+    await ext.tabs.create({ url: m.url, ...beside(tab) });
+    return { ok: true };
+  }
+  if (m.type === "video-poll") return videoPoll(m);
+  if (m.type === "video-pick") return videoPick(m, sender);
   if (m.type === "hide-site" && page) {
     const host = new URL(page).hostname;
     // Off at once on this site, whatever the tab around it, while the app saves it.

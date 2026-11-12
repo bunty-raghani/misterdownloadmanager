@@ -1,0 +1,35 @@
+{
+ "title": "master",
+ "duration": 12,
+ "language": "en",
+ "subtitles": {},
+ "formats": [
+  {
+   "format_id": "aud-English",
+   "ext": "mp4",
+   "vcodec": "none",
+   "tbr": null,
+   "protocol": "m3u8_native"
+  },
+  {
+   "format_id": "640",
+   "ext": "mp4",
+   "height": 360,
+   "fps": null,
+   "vcodec": "avc1.4d401f",
+   "acodec": "none",
+   "tbr": 640.0,
+   "protocol": "m3u8_native"
+  },
+  {
+   "format_id": "1280",
+   "ext": "mp4",
+   "height": 720,
+   "fps": null,
+   "vcodec": "avc1.4d401f",
+   "acodec": "none",
+   "tbr": 1280.0,
+   "protocol": "m3u8_native"
+  }
+ ]
+}

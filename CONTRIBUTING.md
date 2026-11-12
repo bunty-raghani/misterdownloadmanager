@@ -5,7 +5,9 @@ requests are all welcome.
 
 ## Getting set up
 
-You need Windows 10 or 11 and Rust stable 1.95 or later (the MSVC toolchain).
+You need Windows 10 or 11 and Rust stable 1.98 or later (the MSVC toolchain), and CMake, LLVM
+and NASM for BoringSSL, which the engine's browser-like connection builds from source
+(`winget install Kitware.CMake LLVM.LLVM NASM.NASM`).
 
 ```
 cargo build

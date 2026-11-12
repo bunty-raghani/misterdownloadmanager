@@ -32,12 +32,6 @@
   "video_sent": {
     "message": "Inviato a Mister Download Manager"
   },
-  "video_failed": {
-    "message": "Mister Download Manager non è installato o non si è avviato"
-  },
-  "video_drag": {
-    "message": "Trascina per spostarlo lungo il bordo del video"
-  },
   "menu_selected": {
     "message": "Scarica i collegamenti selezionati con Mister Download Manager"
   },
@@ -165,10 +159,10 @@
     "message": "Nessun video o audio trovato ancora in questa pagina. Avvialo, poi riapri questo menu."
   },
   "popup_media_streamed": {
-    "message": "Il lettore di questa pagina trasmette il video a pezzi, quindi non c'è alcun file da elencare. Punta il video e usa il suo pulsante «Scarica video»."
+    "message": "Il lettore di questa pagina trasmette il video a pezzi, quindi non c'è nessun file da elencare. Passa il puntatore sul video e usa il suo pulsante Scarica video."
   },
   "popup_media_store": {
-    "message": "Le regole del Chrome Web Store tengono questa copia del componente lontana dai video di questo sito. La Guida spiega cosa puoi fare."
+    "message": "Le regole del Chrome Web Store non consentono a questa copia dell'estensione di scaricare i video di questo sito. La Guida spiega cosa puoi fare."
   },
   "popup_media_download": {
     "message": "Scarica"
@@ -180,13 +174,46 @@
     "message": "In diretta"
   },
   "video_off": {
-    "message": "Il pulsante di download è disattivato su questo sito"
+    "message": "Disattivato su questo sito"
   },
   "video_drm": {
-    "message": "Video protetto: non può essere salvato"
+    "message": "Video protetto"
   },
   "video_unnamed": {
     "message": "Impossibile capire di quale video si tratta: apri la sua pagina e riprova da lì"
+  },
+  "video_looking": {
+    "message": "Ricerca delle qualità…"
+  },
+  "video_no_choices": {
+    "message": "Nessun video da scaricare qui"
+  },
+  "video_playlist": {
+    "message": "Un elenco di video: sceglili in Mister Download Manager"
+  },
+  "video_no_ytdlp": {
+    "message": "Mister Download Manager richiede yt-dlp per questo video"
+  },
+  "video_too_long": {
+    "message": "La ricerca ha richiesto troppo tempo"
+  },
+  "video_busy": {
+    "message": "Mister Download Manager è occupato con altri video"
+  },
+  "video_queued": {
+    "message": "Aggiunto alla coda"
+  },
+  "video_failed_lookup": {
+    "message": "Impossibile eseguire la ricerca"
+  },
+  "video_tab_video": {
+    "message": "Video"
+  },
+  "video_tab_audio": {
+    "message": "Audio"
+  },
+  "video_open_post": {
+    "message": "Apri il post per scaricarlo"
   },
   "popup_send_to": {
     "message": "Invia i download a"
@@ -241,5 +268,62 @@
   },
   "popup_media_title_name": {
     "message": "Aggiungi il titolo della pagina davanti ai nomi dei file multimediali"
+  },
+  "video_cant_save": {
+    "message": "non può essere salvato"
+  },
+  "video_open_post_button": {
+    "message": "Apri post"
+  },
+  "video_drag_dots": {
+    "message": "Trascina i puntini per spostarlo lungo il bordo"
+  },
+  "video_tip": {
+    "message": "Scarica $what$",
+    "placeholders": {
+      "what": {
+        "content": "$1",
+        "example": "1080p MP4 · 412 MB"
+      }
+    }
+  },
+  "video_tip_best": {
+    "message": "Scarica la qualità migliore"
+  },
+  "video_sending": {
+    "message": "Invio a MDM..."
+  },
+  "video_added": {
+    "message": "Aggiunto a MDM"
+  },
+  "video_show": {
+    "message": "Mostra"
+  },
+  "video_no_answer": {
+    "message": "MDM non ha risposto"
+  },
+  "video_get_mdm": {
+    "message": "Ottieni MDM"
+  },
+  "video_retry": {
+    "message": "Riprova"
+  },
+  "video_turn_on": {
+    "message": "Attiva"
+  },
+  "video_best": {
+    "message": "migliore"
+  },
+  "video_all_qualities": {
+    "message": "Tutte le qualità e i sottotitoli..."
+  },
+  "video_failed": {
+    "message": "Mister Download Manager non è installato o non si è avviato"
+  },
+  "video_download_best": {
+    "message": "Scarica migliore"
+  },
+  "video_original": {
+    "message": "originale"
   }
 }

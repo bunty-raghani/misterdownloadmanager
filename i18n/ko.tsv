@@ -40,6 +40,16 @@
 #, machine
 @plural	Matches {n} article now (it adds new ones only):|Matches {n} articles now (it adds new ones only):	현재 {n}개 항목과 일치합니다(새 항목만 추가됨):
 #. count in a dialog box
+#. Cancel in Download File Info with downloads waiting behind it
+#. {n} = a number (keep the braces as they are)
+#, machine
+@plural	There is {n} more download waiting. Cancel it too?|There are {n} more downloads waiting. Cancel them too?	대기 중인 다운로드가 {n}개 더 있습니다. 이것도 취소하시겠습니까?
+#. count in a dialog box
+#. under the first failed downloads in the summary of a group of downloads: {n} more failed (Show in list shows them all)
+#. {n} = a number (keep the braces as they are)
+#, machine
+@plural	and {n} more|and {n} more	외 {n}개 더
+#. count in a dialog box
 #. "files already there" question, under the first path: {n} = how many more
 #. {n} = a number (keep the braces as they are)
 #, machine
@@ -61,6 +71,11 @@
 #. {n} = a number (keep the braces as they are)
 #, machine
 @plural	{n} download|{n} downloads	{n}개 다운로드
+#. count in a dialog box
+#. the summary of downloads added together (the Downloads complete window; the tip of the tray icon): {n} of them finished
+#. {n} = a number (keep the braces as they are)
+#, machine
+@plural	{n} download finished|{n} downloads finished	다운로드 {n}개 완료됨
 #. count in the main window
 #. {n} = a number (keep the braces as they are)
 #, machine
@@ -70,6 +85,11 @@
 #. {n} = a number (keep the braces as they are)
 #, machine
 @plural	{n} entry was left out (a link, or a name leading outside the folder)|{n} entries were left out (links, or names leading outside the folder)	{n}개 항목이 제외되었습니다(링크 또는 폴더 외부로 연결되는 이름).
+#. count in a dialog box
+#. the summary of downloads added together; after "12 downloads finished": {n} of them failed
+#. {n} = a number (keep the braces as they are)
+#, machine
+@plural	{n} failed|{n} failed	{n}개 실패
 #. count in the Batch download window; count in the Link grabber window; count in the Add torrent window; count in torrentfiles.rs
 #. how many files the pattern gives in all
 #. Link grabber: a package's row: {n} is its number of links
@@ -95,6 +115,14 @@
 #. {n} = a number (keep the braces as they are)
 #, machine
 @plural	{n} selected|{n} selected	{n}개 선택됨
+#. count in the Options window
+#. {n} = a number (keep the braces as they are)
+#, machine
+@plural	{n} site added from the file.|{n} sites added from the file.	파일에서 사이트 {n}개를 추가했습니다.
+#. count in the Options window
+#. {n} = a number (keep the braces as they are)
+#, machine
+@plural	{n} site saved to the file.|{n} sites saved to the file.	파일에 사이트 {n}개를 저장했습니다.
 #. count in the main window
 #. event log entry: trackers were added to the torrent
 #. {n} = a number (keep the braces as they are)
@@ -169,6 +197,9 @@
 #. window title: 7-Zip (a program's name) must be installed
 #, machine
 	7-Zip needed	7-Zip 필요
+#. tab in the main window
+#, machine
+	720p	720p
 #. text in the Options window
 #. Options → Archives: {path} is where 7-Zip's program is
 #, machine
@@ -187,6 +218,10 @@
 #. Options → Accounts: what these accounts are, and the services' rule against sharing
 #, machine
 	A debrid service downloads a file host's link with your own paid account and gives MDM a direct link. Use only your own account: sharing an account or its links breaks the services' terms and can get it suspended. Downloads the browser already started stay as they are.	디브리드 서비스는 사용자의 유료 계정으로 파일 호스트의 링크를 다운로드하고 MDM에 직접 링크를 제공합니다. 본인 계정만 사용하세요. 계정이나 링크를 공유하면 서비스 약관을 위반하게 되며 계정이 정지될 수 있습니다. 브라우저에서 이미 시작된 다운로드는 그대로 유지됩니다.
+#. text in a download's progress window
+#. reason shown on the Rename box when the entered name ends with a period
+#, machine
+	A file name cannot end with a dot	파일 이름은 마침표로 끝날 수 없습니다
 #. text in errors.rs
 #. a torrent through a debrid service: one of its files has a name that would be written outside its folder; nothing was written. {name} the file's name as the service gave it
 #. {name} = a file name (keep the braces as they are)
@@ -216,6 +251,10 @@
 #. an error: a server on this computer redirected the download to the internet, which would not go through the chosen network adapter; {adapter} its name
 #, machine
 	a server on this computer sent the download elsewhere, which would not go through {adapter}	이 컴퓨터의 서버가 다운로드를 다른 곳으로 보냈습니다. {adapter}를 통해 전송되지 않습니다.
+#. message or event log entry in the main window
+#. tooltip on the disabled Rename box for a single-file torrent
+#, machine
+	A single-file torrent keeps its name	단일 파일 토렌트는 원래 이름을 유지합니다
 #. text in the Add torrent window
 #. Add trackers: MDM never contacts a tracker on this computer or the local network
 #, machine
@@ -955,6 +994,10 @@
 #. Options → DNS settings: NextDNS's own configuration ID (optional)
 #, machine
 	Configuration ID:	구성 ID:
+#. text in a download's progress window
+#. verb: button that saves the deferred rename in the progress window
+#, machine
+	Confirm	확인
 #. text in the Options window
 #, machine
 	Confirm before deleting downloads	다운로드 삭제 전 확인
@@ -1237,6 +1280,15 @@
 #, machine
 	Download complete	다운로드 완료
 #. text in the Options window
+#. Options, Downloads, under "Show download complete dialog": snoozed with "Until MDM restarts"
+#, machine
+	Download complete is snoozed until MDM restarts	MDM을 다시 시작할 때까지 다운로드 완료 알림 일시 중지됨
+#. text in the Options window
+#. Options, Downloads, under "Show download complete dialog": {time} when the snooze ends, like "14:30"
+#. {time} = a time of day (keep the braces as they are)
+#, machine
+	Download complete is snoozed until {time}	{time}까지 다운로드 완료 알림 일시 중지됨
+#. text in the Options window
 #, machine
 	Download failed	다운로드 실패
 #. window title in a dialog box
@@ -1331,6 +1383,11 @@
 #. the trailing ... means it is still going on: keep it
 #, machine
 	Downloading and verifying yt-dlp...	yt-dlp 다운로드 및 확인 중...
+#. text in helpers.rs
+#. Video helpers: MDM's own yt-dlp is being downloaded
+#. the trailing ... means it is still going on: keep it
+#, machine
+	Downloading MDM's own copy...	MDM 자체 복사본 다운로드 중...
 #. text in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. Check for updates, while Update now downloads; {percent} like "42%"
 #, machine
@@ -1344,6 +1401,10 @@
 #. tab title: download settings
 #, machine
 	Downloads	다운로드
+#. window title in a dialog box
+#. title of the window that sums up downloads added together (a playlist, a batch) once all are done
+#, machine
+	Downloads complete	다운로드 완료
 #. text in the tray icon's menu
 #. tray menu: a submenu of the downloads now running; choosing one shows its progress window
 #, machine
@@ -1519,9 +1580,13 @@
 #. Options → Accounts: a note that the debrid services' support (Real-Debrid, AllDebrid, Premiumize) is new and not yet tried with real paid accounts
 #, machine
 	Experimental: built from the services' public API documentation, not yet confirmed with real accounts.	실험적 기능: 서비스의 공개 API 설명서를 기반으로 빌드되었으며, 실제 계정으로는 아직 확인되지 않았습니다.
-#. message or event log entry in the main window
+#. message or event log entry in the main window; text in the Options window
 #, machine
 	Export	내보내기
+#. button in the Options window
+#. the trailing ... means it opens a window: keep it
+#, machine
+	Export...	내보내기...
 #. text in the Options window
 #, machine
 	Extend the availability of Manifest 2 Chrome extensions	Manifest 2 Chrome 확장 프로그램의 사용 가능 기간 연장
@@ -1549,6 +1614,10 @@
 #. the trailing ... means it is still going on: keep it
 #, machine
 	Extracting...	압축 해제 중...
+#. text in a dialog box
+#. label over the list of the downloads of the group that failed
+#, machine
+	Failed:	실패:
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -1687,6 +1756,18 @@
 #. text in categories.rs
 #, machine
 	Folder:	폴더:
+#. text in finish.rs
+#. Snooze menu of the Download complete window: show no Download complete window for this long
+#, machine
+	For 1 hour	1시간 동안
+#. text in finish.rs
+#. Snooze menu of the Download complete window: show no Download complete window for this long
+#, machine
+	For 30 minutes	30분 동안
+#. text in finish.rs
+#. Snooze menu of the Download complete window: show no Download complete window for this long
+#, machine
+	For 8 hours	8시간 동안
 #. text in the Batch download window
 #. {address} = an example web address with a * in the file name
 #, machine
@@ -1996,9 +2077,13 @@
 #. checkbox in the Options window
 #, machine
 	Ignore file modification time changes when resuming a download	다운로드 다시 시작 시 파일 수정 시간 변경 무시
-#. message or event log entry in the main window
+#. message or event log entry in the main window; text in the Options window
 #, machine
 	Import	가져오기
+#. button in the Options window
+#. the trailing ... means it opens a window: keep it
+#, machine
+	Import...	가져오기...
 #. value in a column's filter list in the download list
 #, machine
 	In a queue	큐에 있음
@@ -3479,6 +3564,10 @@
 #. {name} = a file name (keep the braces as they are)
 #, machine
 	Remove {name} from the list?	목록에서 {name}을(를) 제거하시겠습니까?
+#. text in a download's progress window
+#. noun: label before the deferred new file or folder name in the progress window
+#, machine
+	Rename	이름 바꾸기
 #. text in the Batch download window
 #. group box title: what the * in the address is replaced with (numbers or letters)
 #, machine
@@ -3502,6 +3591,10 @@
 #. label: whether the server lets a stopped download continue (Yes / No)
 #, machine
 	Resume capability	다시 시작 기능
+#. text in the Options window
+#. link after "Download complete is snoozed until 14:30": ends the snooze now
+#, machine
+	Resume now	지금 다시 시작
 #. message or event log entry in the main window
 #. event log entry, past tense: the download resumed (just now)
 #, machine
@@ -3613,6 +3706,11 @@
 #, machine
 	Save to:	저장 위치:
 #. text in a download's progress window
+#. status shown in green beside the Rename box once the new name is saved
+#, machine
+	Saved	저장됨
+#. text in a dialog box; text in a download's progress window
+#. label over the folder the downloads were saved in
 #. label before the folder the torrent is saved in
 #, machine
 	Saved in	저장된 위치
@@ -3772,6 +3870,11 @@
 #. event log entry, past tense: a finished torrent stopped being shared to others because its share ratio (sent ÷ received) reached the limit set in Torrent settings; {ratio} = e.g. 2.00
 #, machine
 	Sharing stopped: the share ratio reached {ratio}	공유가 중지되었습니다. 공유 비율이 {ratio}에 도달했습니다.
+#. message or event log entry in the main window
+#. event log entry on a finished torrent when re-attaching it to keep sharing failed; {error} = why
+#. {error} = an error message (keep the braces as they are)
+#, machine
+	Sharing stopped: {error}	공유가 중지되었습니다: {error}
 #. text in the download list
 #, machine
 	Show	표시
@@ -3798,6 +3901,10 @@
 #. checkbox in the Options window; checkbox in a download's progress window
 #, machine
 	Show download complete dialog	다운로드 완료 대화 상자 표시
+#. button in a dialog box
+#. button: shows these downloads in MDM's list, selected
+#, machine
+	Show in list	목록에 표시
 #. text in extension.rs
 #. button in the browser extension's window: open the tutorial that adds the extension
 #, machine
@@ -3905,6 +4012,10 @@
 #. a country's name (where a download's server is)
 #, machine
 	Slovenia	슬로베니아
+#. text in a dialog box
+#. button in the Download complete window: opens a menu of how long no Download complete window shows (30 minutes, 1 hour...)
+#, machine
+	Snooze	다시 알림
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -3966,6 +4077,10 @@
 #. window title in a dialog box
 #, machine
 	Speed Limiter settings	속도 제한 설정
+#. message or event log entry in the main window
+#. tooltip on the disabled Rename box when the file is one part of a split archive (.part1.rar, .7z.001…)
+#, machine
+	Split archive volumes keep their names for extraction	분할 압축 볼륨은 압축 해제를 위해 원래 이름을 유지합니다
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -4081,6 +4196,10 @@
 #. event log entry: the download stopped to start again through the network adapter as it is now (a VPN reconnected, another adapter chosen)
 #, machine
 	Stopped: the network adapter changed; starting again	중지됨: 네트워크 어댑터가 변경되었습니다. 다시 시작하는 중
+#. message or event log entry in the main window
+#. event log entry: a video or gallery download stopped to start again at the new speed limit (its helper program takes a limit only as it starts)
+#, machine
+	Stopped: the speed limit changed; starting again with it	중지했습니다: 속도 제한이 변경되어 새 제한으로 다시 시작했습니다.
 #. message or event log entry in the main window
 #. event log entry: the download stopped because the chosen network adapter (a VPN's, usually) went away; {adapter} its name
 #, machine
@@ -4338,7 +4457,7 @@
 #. {error} = an error message (keep the braces as they are)
 #, machine
 	The file could not be moved: {error}	파일을 이동할 수 없습니다. {error}
-#. message or event log entry in the main window
+#. message or event log entry in the main window; text in the Options window
 #. {error} = an error message (keep the braces as they are)
 #, machine
 	The file could not be read: {error}	파일을 읽을 수 없습니다: {error}
@@ -4387,13 +4506,17 @@
 #. a check of Test browser integration: the browsers are set up, but the small helper program they start (misterdownloadmanager-nmhost) is gone
 #, machine
 	The helper program the browsers start is missing	브라우저가 시작하는 도우미 프로그램이 없습니다.
-#. message or event log entry in the main window
+#. message or event log entry in the main window; text in the Options window
 #. {error} = an error message (keep the braces as they are)
 #, machine
 	The list could not be saved: {error}	목록을 저장할 수 없습니다: {error}
 #. text in whereis.rs
 #, machine
 	the local network	로컬 네트워크
+#. text in a download's progress window
+#. reason shown on the Rename box when the entered name exceeds the length limit
+#, machine
+	The name is too long	이름이 너무 깁니다
 #. text in errors.rs; text in torrent downloads
 #. an error: the network adapter chosen in Options (a VPN's, usually) is off or gone; {adapter} its name
 #, machine
@@ -4464,6 +4587,18 @@
 #. the Download video window: the site asked for a sign-in although yt-dlp had the cookies of the browser chosen in Options; {browser} = its name
 #, machine
 	The site wants you signed in, even with {browser}'s cookies. Sign in to it in {browser}, then look the page up again.	사이트에서 {browser}의 쿠키가 있어도 로그인해야 한다고 합니다. {browser}에서 로그인한 다음 페이지를 다시 찾아보세요.
+#. text in the Download video window
+#. the Download video window: the site's bot check (Cloudflare) turned yt-dlp away though the browser's extension passed the page's cookies
+#, machine
+	The site's bot check (Cloudflare) refused yt-dlp, even with your browser's cookies for this page. Try again later, or from another browser.	사이트의 봇 확인(Cloudflare)에서 yt-dlp를 거부했습니다. 이 페이지에 대한 브라우저 쿠키가 있어도 마찬가지입니다. 나중에 다시 시도하거나 다른 브라우저에서 시도하세요.
+#. text in the Download video window
+#. the Download video window: the site's bot check (Cloudflare) turned yt-dlp away though it had the cookies of the browser chosen in Options; {browser} = its name
+#, machine
+	The site's bot check (Cloudflare) refused yt-dlp, even with {browser}'s cookies. Use the Download video button over the video in {browser}, or try the page again later.	사이트의 봇 확인(Cloudflare)에서 yt-dlp를 거부했습니다. {browser}의 쿠키가 있어도 마찬가지입니다. {browser}에서 동영상 위에 있는 동영상 다운로드 버튼을 사용하거나 나중에 페이지를 다시 시도하세요.
+#. text in the Download video window
+#. the Download video window: the site's bot check (Cloudflare) turned yt-dlp away and no browser cookies were used
+#, machine
+	The site's bot check (Cloudflare) refused yt-dlp. If the page opens in your browser, choose that browser in Options → Sites Logins → Cookies for video sites and look the page up again, or use the Download video button over the video.	사이트의 봇 확인(Cloudflare)에서 yt-dlp를 거부했습니다. 브라우저에서 페이지가 열리면 옵션 → 사이트 로그인 → 동영상 사이트용 쿠키에서 해당 브라우저를 선택하고 페이지를 다시 찾아보거나 동영상 위에 있는 동영상 다운로드 버튼을 사용하세요.
 #. text in crashui.rs
 #. crash report window: the symbols couldn't be downloaded; the report still works
 #, machine
@@ -4534,6 +4669,9 @@
 #. in the empty download list, under its title
 #, machine
 	This category or queue holds no downloads yet.	이 범주 또는 큐에는 아직 다운로드가 없습니다.
+#. text in a download's progress window
+#, machine
+	This character is not allowed in a file name	이 문자는 파일 이름에 사용할 수 없습니다
 #. text in the Options window
 #. Options → Remote → Pair a device: the code ran out (10 minutes, or 5 wrong tries)
 #, machine
@@ -4577,6 +4715,14 @@
 #. text in a dialog box
 #, machine
 	This folder does not exist:	이 폴더가 없습니다:
+#. message or event log entry in the main window
+#. tooltip on the disabled Rename box when the folder already holds files this download did not write
+#, machine
+	This folder holds files from outside this download	이 폴더에 이 다운로드 외부의 파일이 들어 있습니다
+#. message or event log entry in the main window
+#. tooltip on the disabled Rename box when the folder holds another download or is a save/category folder
+#, machine
+	This folder is shared with another download or save folder	이 폴더는 다른 다운로드 또는 저장 폴더와 공유됩니다
 #. text in errors.rs
 #. a download's error: a Google Drive file that isn't shared with everyone
 #, machine
@@ -4604,6 +4750,10 @@
 #. a magnet link's lookup, after 30 seconds: it can't find any peer at all
 #, machine
 	This magnet link names no trackers and the DHT is off, so no peer can be found.	이 마그넷 링크에는 트래커가 없고 DHT가 꺼져 있어 피어를 찾을 수 없습니다.
+#. text in a download's progress window
+#. reason shown on the Rename box when the entered name is a reserved device name on Windows (CON, NUL, COM1…)
+#, machine
+	This name is reserved by Windows	이 이름은 Windows에서 예약되어 있습니다
 #. tooltip (why a control is greyed) in the Download video window
 #. why "Put them into the video" is greyed: ffmpeg (a helper program) is not installed
 #, machine
@@ -4646,6 +4796,11 @@
 #. the Download video window: the video needs the user to be signed in
 #, machine
 	This video needs you to be signed in. Use the Download video button over it in your browser, which passes your sign-in on, or choose your browser in Options → Sites Logins → Cookies for video sites.	이 동영상을 보려면 로그인해야 합니다. 브라우저에서 동영상 위에 있는 동영상 다운로드 단추를 사용하면 로그인 정보가 전달됩니다. 또는 옵션 → 사이트 로그인 → 동영상 사이트용 쿠키에서 브라우저를 선택하세요.
+#. text in errors.rs
+#. a download's error: the address is a site's web page that needs a browser, not the file; {site} = the site's name (gofile)
+#. {site} = a web site's name such as "example.com" (keep the braces as they are)
+#, machine
+	this {site} link is a web page, not the file: open it in your browser and download from there	이 {site} 링크는 파일이 아닌 웹 페이지입니다. 브라우저에서 열고 거기에서 다운로드하세요.
 #. text in whereis.rs
 #. where a download's server is, when a proxy carries it (the proxy's place not known)
 #, machine
@@ -4908,6 +5063,10 @@
 #. where a download's server is: an address the location table doesn't place
 #, machine
 	unknown	알 수 없음
+#. text in finish.rs
+#. Snooze menu of the Download complete window: show no Download complete window until MDM is started again
+#, machine
+	Until MDM restarts	MDM을 다시 시작할 때까지
 #. button in the Options window
 #. button (short): move the account up the list (accounts are asked in the list's order)
 #, machine
@@ -5267,6 +5426,26 @@
 #. {error} = an error message (keep the braces as they are)
 #, machine
 	yt-dlp couldn't read {browser}'s cookies: {error}	yt-dlp가 {browser}의 쿠키를 읽을 수 없습니다: {error}
+#. text in a download's progress window
+#. progress window, a video's line: the helper program yt-dlp gave no address MDM's own downloader could use
+#, machine
+	yt-dlp downloads it itself	yt-dlp가 직접 다운로드합니다.
+#. text in a download's progress window
+#. progress window, a video's line: MDM's own downloader can't take a live broadcast, so the helper program yt-dlp records it
+#, machine
+	yt-dlp downloads it itself: a live stream	yt-dlp가 직접 다운로드합니다: 라이브 스트림
+#. text in a download's progress window
+#. progress window, a video's line: a stream sent in many small pieces of a rare kind (Adobe HDS, Smooth Streaming), which the helper program yt-dlp downloads itself
+#, machine
+	yt-dlp downloads it itself: a stream in pieces	yt-dlp가 직접 다운로드합니다: 조각으로 이루어진 스트림
+#. text in a download's progress window
+#. progress window, a video's line: the stream is copy-protected (DRM), left to the helper program yt-dlp, which refuses it
+#, machine
+	yt-dlp downloads it itself: protected (DRM)	yt-dlp가 직접 다운로드합니다: 보호됨(DRM)
+#. text in a download's progress window
+#. progress window, a video's line: {protocol} = a streaming protocol's short name (rtmp, rtsp, mms); MDM's own downloader doesn't speak it, so the helper program yt-dlp downloads it
+#, machine
+	yt-dlp downloads it itself: {protocol}	yt-dlp가 직접 다운로드합니다: {protocol}
 #. text in the Download video window
 #. the Download video window: the browser chosen in Options has no cookies on this computer (not installed, or another profile); {browser} = its name
 #, machine
@@ -5345,6 +5524,11 @@
 #. {size} = a file size such as "4.2 MB" (keep the braces as they are)
 #, machine
 	{done} of {size}	{size} 중 {done}
+#. text in deferred_rename.rs
+#. appended to an OS error when a case-only rename could not move the temporary file back to its original name; {error} = first OS error, {path} = temporary path left on disk, {rollback_error} = second OS error
+#. {error} = an error message (keep the braces as they are)
+#, machine
+	{error} (left as {path}: {rollback_error})	{error} ({path}(으)로 남겨짐: {rollback_error})
 #. text in a download's Properties window
 #. a kind of file, by its extension: {ext} = "ZIP", "PDF"…
 #, machine
@@ -5435,6 +5619,11 @@
 #. {name} = a file name; {version} = a version number (keep the braces as they are)
 #, machine
 	{name} {version} is too old: MDM needs {oldest} or newer	{name} {version}이(가) 너무 오래되었습니다. MDM에는 {oldest} 이상이 필요합니다.
+#. text in a dialog box
+#. one failed download in the summary of a group of downloads: {name} its file name, {error} why it failed
+#. {name} = a file name; {error} = an error message (keep the braces as they are)
+#, machine
+	{name}: {error}	{name}: {error}
 #. text in the Options window
 #. a number of connections the app learned by itself for a server
 #. {n} = a number (keep the braces as they are)
@@ -5522,6 +5711,11 @@
 #. {size} = a file size such as "4.2 MB" (keep the braces as they are)
 #, machine
 	{size} free	{size} 사용 가능
+#. text in a dialog box
+#. under "12 downloads finished": {size} the finished files' size together, like "1.25 GB"
+#. {size} = a file size such as "4.2 MB" (keep the braces as they are)
+#, machine
+	{size} in all	총 {size}
 #. text in errors.rs
 #. {size} = a file size such as "4.2 MB" (keep the braces as they are)
 #, machine
@@ -5609,9 +5803,34 @@ column	Transfer rate	전송 속도
 #, machine
 column	Upload speed	업로드 속도
 #. text in the browser extension
+#. in the menu under the download button over a video: the page is a list of videos (a playlist), whose videos are chosen in the app's window; keep the name Mister Download Manager as it is
+#, machine
+extension	A list of videos: choose them in Mister Download Manager	비디오 목록: Mister Download Manager에서 선택하세요
+#. text in the browser extension
+#. on the download button (green) over a video after the app added and started the download; a quality may follow ('· 1080p') and a 'Show' button; MDM is the app's short name, keep it; short
+#, machine
+extension	Added to MDM	MDM에 추가됨
+#. text in the browser extension
+#. shown briefly on the download button over a video after a quality was picked: the download was added to the app's download queue, to start later
+#, machine
+extension	Added to the queue	대기열에 추가되었습니다
+#. text in the browser extension
+#. command in the menu of the download button over a video: opens the app's Download video window, with every quality and the subtitles
+#. the trailing ... means it is still going on: keep it
+#, machine
+extension	All qualities and subtitles...	모든 화질 및 자막...
+#. text in the browser extension
 #. choice under Send downloads to: an MDM running on another computer of the network, such as a home server; keep the name Mister Download Manager as it is
 #, machine
 extension	Another Mister Download Manager (a server)	다른 Mister Download Manager (서버)
+#. text in the browser extension
+#. tab above the list of qualities in the menu under the download button over a video: the choices that are sound only (MP3, Opus and the like); short, one word
+#, machine
+extension	Audio	오디오
+#. text in the browser extension
+#. after the best quality in the menu of the download button over a video, after a star (★ best); lower case; one word
+#, machine
+extension	best	최고
 #. text in the browser extension
 #. the name this browser gets in the other MDM's list of paired devices
 #, machine
@@ -5621,6 +5840,10 @@ extension	Browser extension	브라우저 확장
 #. the trailing ... means it is still going on: keep it
 #, machine
 extension	Button settings...	단추 설정...
+#. text in the browser extension
+#. on the download button over a copy-protected video, after 'Protected video ·': it can't be downloaded; short, lower case
+#, machine
+extension	can't be saved	저장할 수 없음
 #. text in the browser extension
 #. shown briefly on the download button when nothing on the page says which video the player is playing, so nothing was sent
 #, machine
@@ -5635,6 +5858,10 @@ extension	Connected to Mister Download Manager	Mister Download Manager에 연결
 #, machine
 extension	Connected to Mister Download Manager {version}	Mister Download Manager {version}에 연결됨
 #. text in the browser extension
+#. in the menu under the download button over a video: finding the video's qualities failed; the app's own explanation follows on the next line
+#, machine
+extension	Could not look it up	찾지 못했습니다
+#. text in the browser extension
 #. button beside a video, sound or stream in the toolbar button's popup: download it with the app; verb; short
 #, machine
 extension	Download	다운로드
@@ -5643,9 +5870,17 @@ extension	Download	다운로드
 #, machine
 extension	Download all links with Mister Download Manager	Mister Download Manager으로 모든 링크 다운로드
 #. text in the browser extension
+#. first line of the list under the download button over a video: downloads the best quality at once; the quality, its file type and size follow on the same line; short
+#, machine
+extension	Download best	최고 품질 다운로드
+#. text in the browser extension
 #. command in the browser's right-click menu on selected text: download the links in the selection; keep the name Mister Download Manager as it is
 #, machine
 extension	Download selected links with Mister Download Manager	Mister Download Manager으로 선택한 링크 다운로드
+#. text in the browser extension
+#. first line of the tooltip of the download button over a video while the app is still finding its qualities
+#, machine
+extension	Download the best quality	최고 화질 다운로드
 #. text in the browser extension
 #. the button over a video on a web page that downloads it; verb; short (it sits on the video)
 #, machine
@@ -5654,6 +5889,10 @@ extension	Download video	비디오 다운로드
 #. command in the browser's right-click menu on a link, picture, video or sound; keep the name Mister Download Manager as it is
 #, machine
 extension	Download with Mister Download Manager	Mister Download Manager으로 다운로드
+#. text in the browser extension
+#. first line of the tooltip of the download button over a video: what one click downloads; $what$ is a quality, a file type and a size, e.g. '1080p MP4 · 412 MB'
+#, machine
+extension	Download {what}	{what} 다운로드
 #. text in the browser extension
 #. shown in the toolbar button's popup after the site was excluded
 #. {site} = a web site's name such as "example.com" (keep the braces as they are)
@@ -5664,13 +5903,17 @@ extension	Downloads from {site} stay with the browser	{site}에서 다운로드�
 #, machine
 extension	Downloads go to {address}	{address}으로 다운로드
 #. text in the browser extension
-#. tooltip of the download button over a video: it can be dragged to another place on the video's edge
+#. second line of the tooltip of the download button over a video: dragging its dotted grip moves it along the video's edge
 #, machine
-extension	Drag to move it along the video's edge	비디오 가장자리를 따라 이동하려면 드래그하세요.
+extension	Drag the dots to move it along the edge	점을 끌어 가장자리를 따라 이동
 #. text in the browser extension
 #. the address typed isn't an https:// address
 #, machine
 extension	Enter its https:// address.	https:// 주소를 입력하세요.
+#. text in the browser extension
+#. button on the download button over a video when the app didn't answer: opens the app's download page; MDM is the app's short name, keep it; very short
+#, machine
+extension	Get MDM	MDM 받기
 #. text in the browser extension
 #. the extension's description in the browser's list of extensions; keep the name Mister Download Manager as it is
 #, machine
@@ -5725,6 +5968,18 @@ extension	Left to the browser: {name}	브라우저에 남겨짐: {name}
 #, machine
 extension	Live	라이브
 #. text in the browser extension
+#. in the menu that opens from the download button over a video, while the app finds which qualities (resolutions, formats) the video can be downloaded in
+#, machine
+extension	Looking up the qualities…	화질을 찾는 중…
+#. text in the browser extension
+#. in the menu under the download button over a video: the app took more than a minute to find the video's qualities, so the menu stopped waiting
+#, machine
+extension	Looking up took too long	찾는 데 시간이 너무 오래 걸렸습니다
+#. text in the browser extension
+#. on the download button (red) over a video when the app isn't installed or didn't start; 'Get MDM' and 'Retry' buttons follow; MDM is the app's short name, keep it; short
+#, machine
+extension	MDM didn't answer	MDM이 응답하지 않음
+#. text in the browser extension
 #. heading in the toolbar button's popup over the list of the videos, sounds and streams the current web page has loaded
 #, machine
 extension	Media on this page	이 페이지의 미디어
@@ -5741,6 +5996,10 @@ extension	Mister Download Manager didn't start in time	Mister Download Manager�
 #, machine
 extension	Mister Download Manager doesn't accept this copy of the extension	Mister Download Manager이(가) 이 확장 프로그램 복사본을 허용하지 않습니다.
 #. text in the browser extension
+#. in the menu under the download button over a video: the app is already looking up other videos and can't look this one up now; keep the name Mister Download Manager as it is
+#, machine
+extension	Mister Download Manager is busy with other videos	Mister Download Manager가 다른 비디오를 처리하는 중입니다
+#. text in the browser extension
 #. shown briefly on the download button when the app could not be reached; keep the name Mister Download Manager as it is
 #, machine
 extension	Mister Download Manager isn't installed or didn't start	Mister Download Manager이(가) 설치되지 않았거나 시작되지 않았습니다.
@@ -5748,6 +6007,10 @@ extension	Mister Download Manager isn't installed or didn't start	Mister Downloa
 #. status when the browser can't find the app's connection; keep the name Mister Download Manager as it is
 #, machine
 extension	Mister Download Manager isn't installed, or its browser integration isn't set up	Mister Download Manager이(가) 설치되지 않았거나 브라우저 통합이 설정되지 않았습니다.
+#. text in the browser extension
+#. in the menu under the download button over a video: the app needs the yt-dlp tool (a program's name, keep it as it is) to find this video's qualities, and it isn't installed; keep the name Mister Download Manager as it is
+#, machine
+extension	Mister Download Manager needs yt-dlp for this video	이 비디오에는 Mister Download Manager에 yt-dlp가 필요합니다
 #. text in the browser extension
 #. tooltip of the switch Send downloads through this browser's proxy or VPN extension; keep the name Mister Download Manager as it is
 #, machine
@@ -5775,9 +6038,17 @@ extension	Never take downloads from {site}	{site}에서 다운로드하지 않�
 #, machine
 extension	No video or sound found on this page yet. Play it, then open this again.	이 페이지에서 아직 비디오나 오디오를 찾을 수 없습니다. 재생한 다음 다시 여세요.
 #. text in the browser extension
+#. in the menu under the download button over a video: the app found no quality of the video it could download
+#, machine
+extension	No video to download here	여기에는 다운로드할 비디오가 없습니다
+#. text in the browser extension
 #. pairing failed: the other MDM didn't answer
 #, machine
 extension	Not reached. Open its address once in this browser and accept its certificate, then try again.	연결할 수 없습니다. 이 브라우저에서 해당 주소를 한 번 열고 인증서를 수락한 다음 다시 시도하세요.
+#. text in the browser extension
+#. on the download button over a video (grey) when the button is turned off on this web site; a 'Turn on' button follows it; short
+#, machine
+extension	Off on this site	이 사이트에서 해제됨
 #. text in the browser extension
 #. button: open the other MDM's address in a tab (to accept its certificate once)
 #, machine
@@ -5791,10 +6062,22 @@ extension	Open its address once and accept its certificate, then enter a code fr
 #, machine
 extension	Open Mister Download Manager	Mister Download Manager 열기
 #. text in the browser extension
+#. button on the download button over a video in a feed: opens the post the video belongs to in a new tab; verb; very short
+#, machine
+extension	Open post	게시물 열기
+#. text in the browser extension
+#. on the download button (amber) over a video in a feed (a social site's home page, a timeline) that can't be downloaded from there: the user should open the post the video belongs to; short
+#, machine
+extension	Open the post to download it	게시물을 열어 다운로드
+#. text in the browser extension
 #. button in the toolbar button's popup: open the app's Options
 #. the trailing ... means it is still going on: keep it
 #, machine
 extension	Options...	옵션...
+#. text in the browser extension
+#. in the list under the download button over a video, after a sound-only line's bitrate: the sound as the site sends it, not converted (e.g. '128 kbps · original'); lower case; one word
+#, machine
+extension	original	원본
 #. text in the browser extension
 #. button: pair this browser with the other MDM using the code
 #, machine
@@ -5816,9 +6099,13 @@ extension	Prefix media file names with the page title	미디어 파일 이름 �
 #, machine
 extension	Protected	보호됨
 #. text in the browser extension
-#. shown briefly on the download button when the video is copy-protected (DRM) and no tool can download it
+#. on the download button over a copy-protected (DRM) video, which no tool can download; 'can't be saved' follows it after a dot; short
 #, machine
-extension	Protected video: it can't be saved	보호된 비디오: 저장할 수 없습니다.
+extension	Protected video	보호된 동영상
+#. text in the browser extension
+#. button on the download button over a video when the app didn't answer: try again; verb; very short
+#, machine
+extension	Retry	다시 시도
 #. text in the browser extension
 #. switch in the toolbar button's popup: on, the app downloads through the same proxy the browser uses (one a VPN or proxy extension sets); the browser then asks once to allow reading it
 #, machine
@@ -5828,9 +6115,18 @@ extension	Send downloads through this browser's proxy or VPN extension	이 브�
 #, machine
 extension	Send downloads to	다운로드 보낼 위치
 #. text in the browser extension
+#. on the download button over a video right after it was clicked, while the download goes to the app; MDM is Mister Download Manager's short name, keep it as it is; short
+#. the trailing ... means it is still going on: keep it
+#, machine
+extension	Sending to MDM...	MDM으로 보내는 중...
+#. text in the browser extension
 #. shown briefly on the download button after it was clicked; keep the name Mister Download Manager as it is
 #, machine
 extension	Sent to Mister Download Manager	Mister Download Manager으로 보냄
+#. text in the browser extension
+#. button on the download button over a video after a download was added: shows that download in the app's window; verb; very short
+#, machine
+extension	Show	표시
 #. text in the browser extension
 #. link at the foot of the toolbar button's popup to the creator's GitHub Sponsors page (MDM is free; this is an optional donation)
 #, machine
@@ -5847,10 +6143,6 @@ extension	The Chrome Web Store's rules keep this copy of the add-on away from th
 #. status when the connection to the app broke off (often security software blocking it); keep the name Mister Download Manager as it is
 #, machine
 extension	The connection to Mister Download Manager failed	Mister Download Manager에 대한 연결에 실패했습니다.
-#. text in the browser extension
-#. shown briefly on the download button over a video when the app's settings keep the button off on this web site
-#, machine
-extension	The download button is off on this site	이 사이트에서는 다운로드 단추가 꺼져 있습니다.
 #. text in the browser extension
 #. why a download stayed with the browser: the user limited the extension's access to web sites in the browser, so it can't pass the sign-in on
 #, machine
@@ -5876,6 +6168,10 @@ extension	This download's details were too large to hand over	이 다운로드�
 #, machine
 extension	This page's player streams its video in pieces, so there's no file to list. Point at the video and use its Download video button.	이 페이지의 플레이어는 비디오를 조각으로 스트리밍하므로 목록에 표시할 파일이 없습니다. 비디오를 가리킨 다음 '비디오 다운로드' 버튼을 사용하세요.
 #. text in the browser extension
+#. button on the download button over a video when it is off on this web site: turns it on again here; verb; very short
+#, machine
+extension	Turn on	켜기
+#. text in the browser extension
 #. status when the app is older than the extension; keep the name Mister Download Manager as it is
 #, machine
 extension	Update Mister Download Manager to use everything this extension offers	이 확장에서 제공하는 모든 기능을 사용하려면 Mister Download Manager을(를) 업데이트하세요.
@@ -5883,6 +6179,10 @@ extension	Update Mister Download Manager to use everything this extension offers
 #. why a download stayed with the browser: the app's setting 'Use advanced browser integration' is off; keep the setting's name as the app shows it
 #, machine
 extension	Use advanced browser integration is off in Options → General.	옵션 → 일반에서 고급 브라우저 통합 사용이 꺼져 있습니다.
+#. text in the browser extension
+#. tab above the list of qualities in the menu under the download button over a video: the choices that include picture (video with sound); short, one word
+#, machine
+extension	Video	비디오
 #. text in the browser extension
 #. pairing failed: codes tried too fast
 #, machine
@@ -6004,6 +6304,11 @@ menu	&Add new download	새 다운로드 추가(&A)
 #. the trailing ... means it opens a window: keep it
 #, machine
 menu	&Add new download...	새 다운로드 &추가...
+#. menu command in the main window
+#. View → Text: letters drawn the classic way, hinted to whole pixels (crisp, coarse on a dense screen)
+#. & marks the keyboard shortcut letter: keep one & before a letter of the translation
+#, machine
+menu	&Classic	클래식(&C)
 #. menu command in standard windows
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
@@ -6091,6 +6396,11 @@ menu	&Scheduler and queues	스케줄러 및 큐(&S)
 #, machine
 menu	&Show hidden tabs	숨겨진 탭 표시(&S)
 #. menu command in the main window
+#. View → Text: letters drawn smooth, as Windows' modern apps draw them, anti-aliased at any size
+#. & marks the keyboard shortcut letter: keep one & before a letter of the translation
+#, machine
+menu	&Smooth	부드럽게(&S)
+#. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
 menu	&Stop All	모두 중지(&S)
@@ -6098,6 +6408,11 @@ menu	&Stop All	모두 중지(&S)
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
 menu	&Stop Download	다운로드 중지(&S)
+#. menu command in the main window
+#. View menu: submenu choosing how the text is drawn (smooth or classic)
+#. & marks the keyboard shortcut letter: keep one & before a letter of the translation
+#, machine
+menu	&Text	텍스트(&T)
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
@@ -6281,6 +6596,10 @@ menu	E&xport	&내보내기
 #. menu command in the main window
 #, machine
 menu	Edit queue	큐 편집
+#. menu command in the main window
+#. View → Theme: a style theme's name (a white canvas, emerald fills, 6-point corners), a name: keep "Emerald" as written
+#, machine
+menu	Emerald	에메랄드
 #. menu command in the main window
 #. verb: unpack the downloaded archive (zip, 7z, rar) into its folder
 #, machine

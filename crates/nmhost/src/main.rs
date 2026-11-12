@@ -12,6 +12,13 @@
 //!   `explicit`, the toolbar button's list of the tab's media asked, wherever the button shows);
 //!   `{"hideSite": host}` keeps it off that site from now on;
 //!   `{"openOptions": true}` opens Options where it is set up.
+//! - The button's quality menu (announced by `"videoLookup": true` in the answer to `hello` and
+//!   `rules`): `{"videoLookup": {page, src, title, referrer, storeId}}` has the running app look
+//!   the video up, `{"videoPoll": {token}}` asks how it goes, `{"videoPick": {token, choice,
+//!   storeId}}` downloads the choice made. Each is answered `{"ok": true, "lookup": {state, …}}`
+//!   (`mdm_ipc::api::VideoLookupAnswer`), never with a `why`; none of them starts the app
+//!   (`use-window`: the button's click then opens the Download video window as before). A
+//!   question waits here while the look-up runs, up to 1.5 s ([`POLL_WAIT`]).
 //! - `misterdownloadmanager-nmhost --register` / `--unregister`: writes / removes the host
 //!   manifests (Chromium's names the extension's origin, Firefox's its add-on ID). Windows: beside
 //!   this exe, with the per-user (HKCU) registry entries the browsers look up; with `--all-users`
@@ -36,7 +43,7 @@ use serde::{Deserialize, Serialize};
 mod win32;
 
 const HOST_NAME: &str = "com.misterdownloadmanager.host";
-use mdm_ipc::extension::{FIREFOX_ID, STORE_ID, STORE_UPDATE_URL, chromium_ids, store_id};
+use mdm_ipc::extension::{FIREFOX_ID, STORE_ID, chromium_ids, store_id};
 /// Where each Chromium browser looks for native messaging hosts on Windows, under HKCU (one
 /// user) or HKLM (everyone). Chromium-branded builds (Chromium, Helium, Thorium, and Brave and
 /// Brave Origin with every channel) read Chromium's first, then Chrome's, as most other forks do
@@ -53,7 +60,9 @@ const REGISTRY_KEYS: [&str; 4] = [
 const FIREFOX_KEY: &str = r"Software\Mozilla\NativeMessagingHosts";
 /// Chrome's external extensions: an entry naming the store's extension makes Chrome offer it at
 /// its next start ("New extension added"), the user turning it on there. HKLM's is read from the
-/// 32-bit view on 64-bit Windows, hence /reg:32 (HKCU has one view).
+/// 32-bit view on 64-bit Windows, hence /reg:32 (HKCU has one view). Helium reads it too, but
+/// asks Google's address without the browser's version, and Google answers "no update": nothing
+/// is offered there (#685), the app's window opens the store's page in Helium instead.
 #[cfg(windows)]
 const CHROME_EXTERNAL_KEY: &str = r"Software\Google\Chrome\Extensions";
 
@@ -112,11 +121,14 @@ struct Message {
     /// the tab's media asked for it (#38).
     video: bool,
     src: Option<String>,
-    /// The qualities the page's own player response already lists (YouTube), sent in a second
-    /// message so the window can show them before yt-dlp's look-up finishes.
-    heights: Vec<u32>,
     /// The page's title (`video`).
     title: Option<String>,
+    /// The button over a plain file (`src`, #703): it is downloaded as any file, at once.
+    direct: bool,
+    /// The button's "Show": the main window with the newest download of this address selected.
+    show_download: Option<String>,
+    /// The button's "Turn on": show it on this site (a host name) again.
+    show_site: Option<String>,
     /// The button's menu: keep it off this site (a host name).
     hide_site: Option<String>,
     /// The button's menu: open its settings in Options (`page`: the toolbar button's popup asks
@@ -133,6 +145,42 @@ struct Message {
     /// `rules`) without asking about it: for MDM's log. Under its own key, with no `url`: an
     /// older host takes it for an address it can't download, and hands nothing over.
     declined: Option<Notice>,
+    /// The video button's quality menu: look this video up (with the message's `cookies`,
+    /// `cookieJar`, `userAgent` and `private`), ask how it goes, download the choice made. Under
+    /// their own keys, with no `url`: an older host refuses them without effect.
+    video_lookup: Option<LookupAsk>,
+    video_poll: Option<PollAsk>,
+    video_pick: Option<PickAsk>,
+}
+
+/// The quality menu's look-up: the video's page (as the button's click sends it), the video's
+/// own file or its stream's manifest when the page plays one (`src`), the page's title, the
+/// page's referrer, and the cookie store the tab is in (Firefox's containers).
+#[derive(Debug, Default, Deserialize, PartialEq)]
+#[serde(default, rename_all = "camelCase")]
+struct LookupAsk {
+    page: String,
+    src: Option<String>,
+    title: Option<String>,
+    referrer: Option<String>,
+    store_id: Option<String>,
+}
+
+/// The quality menu: how is the look-up of `token` going?
+#[derive(Debug, Default, Deserialize, PartialEq)]
+#[serde(default)]
+struct PollAsk {
+    token: String,
+}
+
+/// The quality menu: the choice at `choice` of look-up `token`, made in a tab of cookie store
+/// `store_id` (the message's `private` says whether in a private window).
+#[derive(Debug, Default, Deserialize, PartialEq)]
+#[serde(default, rename_all = "camelCase")]
+struct PickAsk {
+    token: String,
+    choice: usize,
+    store_id: Option<String>,
 }
 
 /// A download the extension left to the browser: why (a `Declined` code, or `site-access`:
@@ -188,12 +236,29 @@ struct Reply {
     media_port: Option<u16>,
     #[serde(skip_serializing_if = "Option::is_none")]
     media_token: Option<String>,
+    /// For `hello` and `rules`: this host and its app have the button's quality menu (they are
+    /// installed together); without it the extension never asks for one.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    video_lookup: Option<bool>,
+    /// The quality menu's answer: where the look-up is, or what became of the choice. Its
+    /// states are never a `why`: they say nothing of whether MDM is reachable.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    lookup: Option<mdm_ipc::api::VideoLookupAnswer>,
 }
 
 impl Reply {
     fn done() -> Reply {
         Reply {
             ok: true,
+            ..Default::default()
+        }
+    }
+
+    /// The quality menu's answer.
+    fn lookup(answer: mdm_ipc::api::VideoLookupAnswer) -> Reply {
+        Reply {
+            ok: true,
+            lookup: Some(answer),
             ..Default::default()
         }
     }
@@ -247,6 +312,7 @@ fn answer(m: Message, rules: &mdm_ipc::capture::CaptureRules) -> Reply {
             opened: Some(rules.capture_opened),
             min_kb: Some(rules.capture_min_kb),
             capture_off: rules.capture_off(browser).map(|d| d.code()),
+            video_lookup: Some(true),
             ..Default::default()
         };
     }
@@ -284,6 +350,10 @@ fn answer(m: Message, rules: &mdm_ipc::capture::CaptureRules) -> Reply {
             None => Reply::failed("refused", "the Telegram download has no file path"),
         };
     }
+    // The video button's quality menu: asked of a running app only, answered in `lookup`.
+    if let Some(ask) = menu_ask(&m) {
+        return quality_menu(ask, &m, rules, browser);
+    }
     // The video button: asked about, clicked, its menu. What it sends goes to the app (started
     // if need be), which opens its window or keeps the setting.
     if m.panel {
@@ -297,9 +367,29 @@ fn answer(m: Message, rules: &mdm_ipc::capture::CaptureRules) -> Reply {
         .as_deref()
         .map(str::trim)
         .filter(|h| !h.is_empty());
+    let show_site = m
+        .show_site
+        .as_deref()
+        .map(str::trim)
+        .filter(|h| !h.is_empty());
+    let show_download = m
+        .show_download
+        .as_deref()
+        .map(str::trim)
+        .filter(|a| a.starts_with("http://") || a.starts_with("https://"));
     let panel_cmd = if let Some(host) = hide {
         Some(mdm_ipc::Command {
             panel_hide_site: Some(host.to_owned()),
+            ..Default::default()
+        })
+    } else if let Some(host) = show_site {
+        Some(mdm_ipc::Command {
+            panel_show_site: Some(host.to_owned()),
+            ..Default::default()
+        })
+    } else if let Some(address) = show_download {
+        Some(mdm_ipc::Command {
+            show_download: Some(address.to_owned()),
             ..Default::default()
         })
     } else if m.open_options {
@@ -489,9 +579,11 @@ fn video_command(
         Some(_) => Some(m.url.clone()),
         None => m.referrer.clone().filter(|r| !r.is_empty()),
     };
+    // The button over a plain file (#703): that file, as a file.
+    let direct = m.direct && src.is_some();
     Ok(mdm_ipc::Command {
+        video_direct: direct,
         video_page: Some(src.unwrap_or_else(|| m.url.clone())),
-        video_heights: m.heights.clone(),
         video_title: m.title.clone().filter(|t| !t.trim().is_empty()),
         referer,
         cookies: m.cookies.clone().filter(|c| !c.is_empty()),
@@ -500,6 +592,235 @@ fn video_command(
         private: m.private,
         ..Default::default()
     })
+}
+
+/// Which of the quality menu's messages: what an answer that isn't the app's means depends on
+/// it ([`menu_answer`]).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum MenuAsk {
+    Lookup,
+    Poll,
+    Pick,
+}
+
+/// The quality menu's message `m` is, if it is one.
+fn menu_ask(m: &Message) -> Option<MenuAsk> {
+    if m.video_lookup.is_some() {
+        Some(MenuAsk::Lookup)
+    } else if m.video_poll.is_some() {
+        Some(MenuAsk::Poll)
+    } else if m.video_pick.is_some() {
+        Some(MenuAsk::Pick)
+    } else {
+        None
+    }
+}
+
+/// The longest page title passed on (the extension cuts it there too).
+const TITLE_MAX: usize = 300;
+/// The longest look-up token taken (the app's are 64 hex digits).
+const TOKEN_MAX: usize = 128;
+
+/// The app's command for one of the quality menu's messages, or, without asking the app, its
+/// answer's state: `use-window` for a page not on the web (or a choice without a token), `off`
+/// where the button is off (Options' rules, as `panel` asks), `gone` for a question without a
+/// token. Each command says `startup` too: an older app, which knows none of them, takes it for
+/// its startup entry's and opens nothing (a bare command would bring its window up).
+fn menu_command(
+    ask: MenuAsk,
+    m: &Message,
+    rules: &mdm_ipc::capture::CaptureRules,
+    browser: &str,
+) -> Result<mdm_ipc::Command, &'static str> {
+    use mdm_ipc::api::lookup;
+    let token =
+        |t: &str| Some(t.trim().to_owned()).filter(|t| !t.is_empty() && t.len() <= TOKEN_MAX);
+    let store = |s: &Option<String>| s.clone().filter(|s| !s.trim().is_empty());
+    let cmd = match ask {
+        MenuAsk::Lookup => {
+            let l = m.video_lookup.as_ref().ok_or(lookup::USE_WINDOW)?;
+            let web = |s: &str| s.starts_with("http://") || s.starts_with("https://");
+            if !web(&l.page) {
+                return Err(lookup::USE_WINDOW);
+            }
+            if !rules.panel_on(&l.page, l.referrer.as_deref(), browser) {
+                return Err(lookup::OFF);
+            }
+            // As the button's click (`video_command`): the video clicked, its own file when
+            // there is one, fetched as from its page, with the page's title (a video yt-dlp
+            // knows only by its address is named by it, #345).
+            let src = l.src.clone().filter(|s| web(s));
+            let referer = match &src {
+                Some(_) => Some(l.page.clone()),
+                None => l.referrer.clone().filter(|r| !r.is_empty()),
+            };
+            let title = l
+                .title
+                .as_deref()
+                .map(str::trim)
+                .filter(|t| !t.is_empty())
+                .map(|t| t.chars().take(TITLE_MAX).collect());
+            mdm_ipc::Command {
+                video_lookup: Some(mdm_ipc::VideoLookup {
+                    address: src.unwrap_or_else(|| l.page.clone()),
+                    title,
+                    store_id: store(&l.store_id),
+                }),
+                referer,
+                cookies: m.cookies.clone().filter(|c| !c.is_empty()),
+                cookie_jar: m.cookie_jar.clone(),
+                user_agent: m.user_agent.clone(),
+                private: m.private,
+                ..Default::default()
+            }
+        }
+        MenuAsk::Poll => {
+            let p = m.video_poll.as_ref().ok_or(lookup::GONE)?;
+            mdm_ipc::Command {
+                video_poll: Some(token(&p.token).ok_or(lookup::GONE)?),
+                ..Default::default()
+            }
+        }
+        MenuAsk::Pick => {
+            let p = m.video_pick.as_ref().ok_or(lookup::USE_WINDOW)?;
+            mdm_ipc::Command {
+                video_pick: Some(mdm_ipc::VideoPick {
+                    token: token(&p.token).ok_or(lookup::USE_WINDOW)?,
+                    choice: p.choice,
+                    store_id: store(&p.store_id),
+                }),
+                private: m.private,
+                ..Default::default()
+            }
+        }
+    };
+    Ok(mdm_ipc::Command {
+        startup: true,
+        ..cmd
+    })
+}
+
+/// One of the quality menu's messages, asked of the running app (never started for it: a menu
+/// over a video isn't worth starting MDM unseen; the button's click does that).
+fn quality_menu(
+    ask: MenuAsk,
+    m: &Message,
+    rules: &mdm_ipc::capture::CaptureRules,
+    browser: &str,
+) -> Reply {
+    let cmd = match menu_command(ask, m, rules, browser) {
+        Ok(cmd) => cmd,
+        Err(state) => return Reply::lookup(mdm_ipc::api::VideoLookupAnswer::of(state)),
+    };
+    // The choice brings its download's progress window up: the app may bring it to the front
+    // (Windows only, as in `deliver`: Linux and macOS have no foreground lock for a host to
+    // lift). A look-up and the questions about it open nothing.
+    #[cfg(windows)]
+    if ask == MenuAsk::Pick
+        && let Some(pid) = mdm_ipc::app_pid()
+    {
+        win32::allow_foreground(pid);
+    }
+    let token = cmd.video_poll.clone().unwrap_or_default();
+    let ask_app = || menu_answer(ask, mdm_ipc::request_checked(&cmd), &token);
+    let answer = match ask {
+        MenuAsk::Poll => until_settled(ask_app, POLL_WAIT, POLL_EVERY),
+        MenuAsk::Lookup | MenuAsk::Pick => ask_app(),
+    };
+    if let Some(l) = &cmd.video_lookup {
+        log_line(&lookup_line(browser, &l.address, m.private, &answer.state));
+    }
+    Reply::lookup(answer)
+}
+
+/// How long a question about a look-up waits here while it runs, asking the app again every
+/// [`POLL_EVERY`]: the browser then asks about once every 1.5 s while yt-dlp works (a host
+/// started for each question), and hears of the answer within a tenth of a second of it.
+const POLL_WAIT: Duration = Duration::from_millis(1500);
+const POLL_EVERY: Duration = Duration::from_millis(100);
+
+/// `ask`'s answer once it is no longer `pending`, asked again every `every`, for `wait` at most
+/// (then `pending` as it is).
+fn until_settled(
+    ask: impl FnMut() -> mdm_ipc::api::VideoLookupAnswer,
+    wait: Duration,
+    every: Duration,
+) -> mdm_ipc::api::VideoLookupAnswer {
+    let start = std::time::Instant::now();
+    until_settled_on(ask, wait, every, || start.elapsed(), std::thread::sleep)
+}
+
+/// [`until_settled`] on any clock: `elapsed` is the time since the first question, `sleep`
+/// waits. The tests run it on a clock of their own, so how often it asks doesn't depend on how
+/// busy the machine is (a loaded CI runner oversleeps and asks less often).
+fn until_settled_on(
+    mut ask: impl FnMut() -> mdm_ipc::api::VideoLookupAnswer,
+    wait: Duration,
+    every: Duration,
+    elapsed: impl Fn() -> Duration,
+    mut sleep: impl FnMut(Duration),
+) -> mdm_ipc::api::VideoLookupAnswer {
+    loop {
+        let answer = ask();
+        if answer.state != mdm_ipc::api::lookup::PENDING || elapsed() + every > wait {
+            return answer;
+        }
+        sleep(every);
+    }
+}
+
+/// The app's answer to the quality menu's `ask` (`token`: the look-up a question is about), or
+/// what its absence means. No app running, no answer, a refusal (`denied`, `gone`,
+/// `too-large`), or `ok` (an older app, which knows no quality menu): a look-up or a choice is
+/// left to the Download video window (`use-window`). `timeout` is different: the app's port
+/// says it only after handing the command over (`mdm_ipc`'s server queues it, then waits for
+/// the answer), so the app has it and will act on it. A choice is then `sent` (downloading
+/// soon; the Download video window would download it twice), a look-up `busy` (its yt-dlp is
+/// running; another window would start another), and a question `pending` again. Anything
+/// else a question gets is `gone`.
+fn menu_answer(
+    ask: MenuAsk,
+    got: Result<String, mdm_ipc::SendError>,
+    token: &str,
+) -> mdm_ipc::api::VideoLookupAnswer {
+    use mdm_ipc::api::{VideoLookupAnswer, lookup};
+    if let Ok(line) = &got
+        && let Ok(answer) = serde_json::from_str::<VideoLookupAnswer>(line)
+        && !answer.state.is_empty()
+    {
+        return answer;
+    }
+    let timeout = matches!(&got, Ok(l) if l.trim() == "timeout");
+    match ask {
+        MenuAsk::Poll if timeout => VideoLookupAnswer::pending(token),
+        MenuAsk::Poll => VideoLookupAnswer::of(lookup::GONE),
+        MenuAsk::Pick if timeout => VideoLookupAnswer::of(lookup::SENT),
+        MenuAsk::Lookup if timeout => VideoLookupAnswer::of(lookup::BUSY),
+        MenuAsk::Lookup | MenuAsk::Pick => VideoLookupAnswer::of(lookup::USE_WINDOW),
+    }
+}
+
+/// The log line for a look-up the quality menu asked for: the video's site (not its address,
+/// which may carry a signed link's keys) and how it went. A private window's site is left out,
+/// as in [`left_line`]: the log outlives the window.
+fn lookup_line(browser: &str, address: &str, private: bool, state: &str) -> String {
+    let browser = if browser.is_empty() {
+        "a browser"
+    } else {
+        browser
+    };
+    let site = clean(&mdm_ipc::capture::host_of(address), 200);
+    let what = if private {
+        "a video in a private window".to_owned()
+    } else if site.trim().is_empty() {
+        "a video".to_owned()
+    } else {
+        format!("a video on {site}")
+    };
+    format!(
+        "browser integration: {browser} looked up the qualities of {what}: {}",
+        clean(state, 32)
+    )
 }
 
 /// `cmd` handed to the app: the reply saying so, or why not.
@@ -889,7 +1210,7 @@ fn register(all_users: bool) -> Result<(), String> {
             "/t",
             "REG_SZ",
             "/d",
-            STORE_UPDATE_URL,
+            mdm_ipc::extension::STORE_UPDATE_URL,
             "/f",
             "/reg:32",
         ])?;
@@ -951,32 +1272,20 @@ fn host_dirs(all_users: bool, host: Option<&std::path::Path>) -> Vec<(PathBuf, b
         .collect()
 }
 
-/// Linux and macOS: the folder Chrome reads external extensions from (an `<id>.json` naming
-/// the store's update service makes Chrome offer that extension at its next start), when
-/// Chrome is there. macOS has one per user and one for everyone; Linux Chrome reads only the
-/// system's, so a per-user registration there leaves it to the app's own offer (extension.rs).
+/// Linux and macOS: the folders the browsers there read external extensions from (an
+/// `<id>.json` naming the store's update service makes the browser offer that extension at its
+/// next start), for those that are there, each with the service's address as that browser names
+/// it (`mdm_ipc::browsers::external_dirs`: Chrome's, and Helium's own, #685). Linux Chrome reads
+/// only the system's, so a per-user registration there leaves Chrome to the app's own offer
+/// (extension.rs).
 #[cfg(not(windows))]
-fn chrome_external_dir(all_users: bool) -> Option<PathBuf> {
+fn external_dirs(all_users: bool) -> Vec<(PathBuf, &'static str)> {
     let home = PathBuf::from(std::env::var_os("HOME").unwrap_or_default());
-    let (dir, chrome) = if cfg!(target_os = "macos") {
-        if all_users {
-            (
-                PathBuf::from("/Library/Application Support/Google/Chrome/External Extensions"),
-                PathBuf::from("/Applications/Google Chrome.app"),
-            )
-        } else {
-            let chrome = home.join("Library/Application Support/Google/Chrome");
-            (chrome.join("External Extensions"), chrome)
-        }
-    } else if all_users {
-        (
-            PathBuf::from("/usr/share/google-chrome/extensions"),
-            PathBuf::from("/opt/google/chrome"),
-        )
-    } else {
-        return None;
-    };
-    chrome.exists().then_some(dir)
+    let config = std::env::var_os("XDG_CONFIG_HOME")
+        .map(PathBuf::from)
+        .filter(|p| p.is_absolute())
+        .unwrap_or_else(|| home.join(".config"));
+    mdm_ipc::browsers::external_dirs(&home, &config, cfg!(target_os = "macos"), all_users)
 }
 
 /// Linux: this program runs from inside an AppImage's mount (`APPDIR`), which is gone once the
@@ -1047,13 +1356,21 @@ fn register(all_users: bool) -> Result<(), String> {
     if !failed.is_empty() {
         return Err(failed.join("; "));
     }
-    if let (Some(dir), Some(id)) = (chrome_external_dir(all_users), store_id()) {
-        std::fs::create_dir_all(&dir).map_err(|e| format!("{}: {e}", dir.display()))?;
-        write_json(
-            &dir.join(format!("{id}.json")),
-            &serde_json::json!({ "external_update_url": STORE_UPDATE_URL }),
-        )?;
-        println!("offered the extension to Chrome in {}", dir.display());
+    // Linux, the .deb's or .rpm's helper for one user: no offer in the home folder, which the
+    // package manager couldn't take away with the package (#266); the app's window offers it.
+    #[cfg(target_os = "linux")]
+    let offer = all_users || program != std::path::Path::new(PACKAGED_HOST);
+    #[cfg(not(target_os = "linux"))]
+    let offer = true;
+    if let Some(id) = store_id().filter(|_| offer) {
+        for (dir, update_url) in external_dirs(all_users) {
+            std::fs::create_dir_all(&dir).map_err(|e| format!("{}: {e}", dir.display()))?;
+            write_json(
+                &dir.join(format!("{id}.json")),
+                &serde_json::json!({ "external_update_url": update_url }),
+            )?;
+            println!("offered the extension in {}", dir.display());
+        }
     }
     Ok(())
 }
@@ -1063,7 +1380,7 @@ fn unregister(all_users: bool) -> Result<(), String> {
     for (dir, _) in host_dirs(all_users, None) {
         let _ = std::fs::remove_file(dir.join(format!("{HOST_NAME}.json")));
     }
-    if let Some(dir) = chrome_external_dir(all_users) {
+    for (dir, _) in external_dirs(all_users) {
         let _ = std::fs::remove_file(dir.join(format!("{STORE_ID}.json")));
     }
     println!("unregistered {HOST_NAME}");
@@ -1304,6 +1621,7 @@ mod tests {
             explicit: true,
             url: "https://www.quiet.test/watch".into(),
             src: Some("https://cdn.test/v/master.m3u8?t=1".into()),
+            title: Some("A talk about download managers".into()),
             cookies: Some("cdn=1".into()),
             cookie_jar: vec![mdm_ipc::BrowserCookie {
                 name: "cdn".into(),
@@ -1327,6 +1645,52 @@ mod tests {
             "each cookie with its domain"
         );
         assert_eq!(cmd.user_agent.as_deref(), Some(ua));
+        // The page's title goes with it (#345): the app names a video yt-dlp knows only by its
+        // address (here `master`) after it.
+        assert_eq!(
+            cmd.video_title.as_deref(),
+            Some("A talk about download managers")
+        );
+        // With a page too: the app keeps yt-dlp's title unless it is only the address's.
+        let page_only = Message {
+            video: true,
+            explicit: true,
+            url: "https://www.quiet.test/watch".into(),
+            title: Some("A talk about download managers".into()),
+            ..Default::default()
+        };
+        let cmd = video_command(&page_only, &rules, browser(&page_only)).unwrap();
+        assert_eq!(
+            cmd.video_page.as_deref(),
+            Some("https://www.quiet.test/watch")
+        );
+        assert_eq!(
+            cmd.video_title.as_deref(),
+            Some("A talk about download managers")
+        );
+        // A blank title is none.
+        let blank = Message {
+            video: true,
+            explicit: true,
+            url: "https://www.quiet.test/watch".into(),
+            src: Some("https://cdn.test/v/master.m3u8".into()),
+            title: Some("   ".into()),
+            ..Default::default()
+        };
+        let cmd = video_command(&blank, &rules, browser(&blank)).unwrap();
+        assert_eq!(cmd.video_title, None);
+        // From the wire: the extension's `title`.
+        let m: Message = serde_json::from_str(
+            r#"{"video":true,"explicit":true,"url":"https://a.test/w","src":"https://cdn.test/hls/index.m3u8","title":"Clip"}"#,
+        )
+        .unwrap();
+        assert_eq!(
+            video_command(&m, &rules, browser(&m))
+                .unwrap()
+                .video_title
+                .as_deref(),
+            Some("Clip")
+        );
         // Never a page that isn't on the web.
         let local = Message {
             url: "file:///C:/x.html".into(),
@@ -1337,6 +1701,396 @@ mod tests {
         let m: Message =
             serde_json::from_str(r#"{"hideSite":"tube.test","openOptions":false}"#).unwrap();
         assert_eq!(m.hide_site.as_deref(), Some("tube.test"));
+    }
+
+    #[test]
+    fn the_buttons_file_show_and_turn_on_reach_the_app() {
+        let ua = "Mozilla/5.0 (Windows NT 10.0) Chrome/141.0.0.0 Safari/537.36";
+        let rules = mdm_ipc::capture::CaptureRules::default();
+        // #703: a plain file is downloaded as one, its page the referrer.
+        let m: Message = serde_json::from_str(&format!(
+            r#"{{"video":true,"url":"https://videos.test/p","src":"https://cdn.test/a.mp4","direct":true,"userAgent":"{ua}"}}"#
+        ))
+        .unwrap();
+        let cmd = video_command(&m, &rules, browser(&m)).unwrap();
+        assert!(cmd.video_direct);
+        assert_eq!(cmd.video_page.as_deref(), Some("https://cdn.test/a.mp4"));
+        assert_eq!(cmd.referer.as_deref(), Some("https://videos.test/p"));
+        // `direct` without a file of its own is the page, as before.
+        let m: Message = serde_json::from_str(&format!(
+            r#"{{"video":true,"url":"https://videos.test/p","direct":true,"userAgent":"{ua}"}}"#
+        ))
+        .unwrap();
+        assert!(!video_command(&m, &rules, browser(&m)).unwrap().video_direct);
+        // "Show" and "Turn on": no `url`, so an older host refuses them and does nothing.
+        let m: Message = serde_json::from_str(
+            r#"{"showDownload":"https://videos.test/watch?v=1","showSite":"videos.test"}"#,
+        )
+        .unwrap();
+        assert!(m.url.is_empty() && !m.video);
+        assert_eq!(m.show_site.as_deref(), Some("videos.test"));
+        assert_eq!(
+            m.show_download.as_deref(),
+            Some("https://videos.test/watch?v=1")
+        );
+    }
+
+    /// `hello` and `rules` say the host and its app have the quality menu; nothing else does.
+    #[test]
+    fn the_quality_menu_is_announced() {
+        let rules = mdm_ipc::capture::CaptureRules::default();
+        let ua = Some("Mozilla/5.0 (Windows NT 10.0) Chrome/141.0.0.0 Safari/537.36".into());
+        for m in [
+            Message {
+                hello: true,
+                user_agent: ua.clone(),
+                ..Default::default()
+            },
+            Message {
+                rules: true,
+                user_agent: ua.clone(),
+                ..Default::default()
+            },
+        ] {
+            let json = serde_json::to_string(&answer(m, &rules)).unwrap();
+            assert!(json.contains(r#""videoLookup":true"#), "{json}");
+        }
+        let asked = answer(
+            Message {
+                panel: true,
+                url: "https://videos.test/watch".into(),
+                user_agent: ua,
+                ..Default::default()
+            },
+            &rules,
+        );
+        let json = serde_json::to_string(&asked).unwrap();
+        assert!(
+            !json.contains("videoLookup") && !json.contains("lookup"),
+            "{json}"
+        );
+    }
+
+    /// The quality menu's three messages, as the extension sends them (camelCase, no `url` of
+    /// their own), become the app's questions, each with `startup` (an older app opens nothing).
+    #[test]
+    fn the_quality_menus_messages_become_the_apps_questions() {
+        let rules = mdm_ipc::capture::CaptureRules::default();
+        let m: Message = serde_json::from_str(
+            r#"{"videoLookup":{"page":"https://videos.test/watch?v=1","src":"https://cdn.test/v/master.m3u8?sig=1",
+                "title":"  A talk about download managers  ","referrer":"https://search.test/","storeId":"firefox-container-2"},
+              "cookies":"a=1","cookieJar":[{"name":"a","value":"1","domain":".cdn.test","path":"/","hostOnly":false}],
+              "private":true,"userAgent":"Mozilla/5.0 Firefox/145.0","brands":[],"v":"0.4.0"}"#,
+        )
+        .unwrap();
+        assert_eq!(m.url, "", "no address of its own: an older host refuses it");
+        assert_eq!(menu_ask(&m), Some(MenuAsk::Lookup));
+        let cmd = menu_command(MenuAsk::Lookup, &m, &rules, browser(&m)).unwrap();
+        assert!(cmd.startup && cmd.wants_reply());
+        assert_eq!(
+            cmd.video_lookup,
+            Some(mdm_ipc::VideoLookup {
+                address: "https://cdn.test/v/master.m3u8?sig=1".into(),
+                title: Some("A talk about download managers".into()),
+                store_id: Some("firefox-container-2".into()),
+            }),
+            "the video's own stream, with its page's title"
+        );
+        assert_eq!(
+            cmd.referer.as_deref(),
+            Some("https://videos.test/watch?v=1"),
+            "fetched as from its page"
+        );
+        assert_eq!(cmd.cookies.as_deref(), Some("a=1"));
+        assert_eq!(cmd.cookie_jar.len(), 1);
+        assert_eq!(cmd.cookie_jar[0].domain, ".cdn.test");
+        assert_eq!(cmd.user_agent.as_deref(), Some("Mozilla/5.0 Firefox/145.0"));
+        assert!(cmd.private);
+        assert!(
+            cmd.video_page.is_none() && cmd.url.is_none() && cmd.video_title.is_none(),
+            "never the window's click nor a download"
+        );
+        // A page alone: yt-dlp's to look up, from the page's own referrer; its title goes too
+        // (the app keeps yt-dlp's unless it is only the address's).
+        let page: Message = serde_json::from_str(
+            r#"{"videoLookup":{"page":"https://videos.test/watch?v=1","src":"blob:https://videos.test/x",
+                "title":"A talk","referrer":"https://search.test/"}}"#,
+        )
+        .unwrap();
+        let cmd = menu_command(MenuAsk::Lookup, &page, &rules, browser(&page)).unwrap();
+        let ask = cmd.video_lookup.unwrap();
+        assert_eq!(ask.address, "https://videos.test/watch?v=1");
+        assert_eq!(ask.title.as_deref(), Some("A talk"));
+        assert_eq!(ask.store_id, None);
+        assert_eq!(cmd.referer.as_deref(), Some("https://search.test/"));
+        // A long title is cut.
+        let long = Message {
+            video_lookup: Some(LookupAsk {
+                page: "https://videos.test/w".into(),
+                src: Some("https://cdn.test/v.mp4".into()),
+                title: Some("x".repeat(1000)),
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+        let cmd = menu_command(MenuAsk::Lookup, &long, &rules, "").unwrap();
+        assert_eq!(cmd.video_lookup.unwrap().title.unwrap().len(), TITLE_MAX);
+        // How it goes.
+        let poll: Message = serde_json::from_str(r#"{"videoPoll":{"token":"abc"}}"#).unwrap();
+        assert_eq!(menu_ask(&poll), Some(MenuAsk::Poll));
+        let cmd = menu_command(MenuAsk::Poll, &poll, &rules, "").unwrap();
+        assert_eq!(cmd.video_poll.as_deref(), Some("abc"));
+        assert!(cmd.startup && cmd.wants_reply());
+        // The choice, with the tab's private window and cookie store.
+        let pick: Message = serde_json::from_str(
+            r#"{"videoPick":{"token":"abc","choice":2,"storeId":"firefox-private"},"private":true}"#,
+        )
+        .unwrap();
+        assert_eq!(menu_ask(&pick), Some(MenuAsk::Pick));
+        let cmd = menu_command(MenuAsk::Pick, &pick, &rules, "").unwrap();
+        assert_eq!(
+            cmd.video_pick,
+            Some(mdm_ipc::VideoPick {
+                token: "abc".into(),
+                choice: 2,
+                store_id: Some("firefox-private".into()),
+            })
+        );
+        assert!(cmd.private && cmd.startup && cmd.wants_reply());
+        // No token: answered without asking the app.
+        let blank: Message = serde_json::from_str(r#"{"videoPoll":{"token":" "}}"#).unwrap();
+        assert_eq!(
+            menu_command(MenuAsk::Poll, &blank, &rules, "").err(),
+            Some(mdm_ipc::api::lookup::GONE)
+        );
+        let blank: Message = serde_json::from_str(r#"{"videoPick":{"choice":1}}"#).unwrap();
+        assert_eq!(
+            menu_command(MenuAsk::Pick, &blank, &rules, "").err(),
+            Some(mdm_ipc::api::lookup::USE_WINDOW)
+        );
+        assert_eq!(menu_ask(&Message::default()), None);
+    }
+
+    /// Where the button is off, or for a page not on the web, the menu is answered at once
+    /// (`off`, `use-window`), in `lookup` and never as a `why`.
+    #[test]
+    fn the_quality_menu_follows_options() {
+        let ua = "Mozilla/5.0 (Windows NT 10.0) Chrome/141.0.0.0 Safari/537.36";
+        let mut rules = mdm_ipc::capture::CaptureRules {
+            video_panel_sites: "*.quiet.test".into(),
+            ..Default::default()
+        };
+        let look = |page: &str| Message {
+            video_lookup: Some(LookupAsk {
+                page: page.into(),
+                ..Default::default()
+            }),
+            user_agent: Some(ua.into()),
+            ..Default::default()
+        };
+        let state = |r: Reply| {
+            assert!(r.ok && r.why.is_none() && r.error.is_none());
+            r.lookup.unwrap().state
+        };
+        assert_eq!(
+            state(answer(look("https://www.quiet.test/w"), &rules)),
+            "off"
+        );
+        assert_eq!(
+            state(answer(look("file:///C:/x.html"), &rules)),
+            "use-window"
+        );
+        assert_eq!(state(answer(look(""), &rules)), "use-window");
+        rules.video_panel = false;
+        assert_eq!(state(answer(look("https://videos.test/w"), &rules)), "off");
+        let json = serde_json::to_string(&answer(look("https://videos.test/w"), &rules)).unwrap();
+        assert_eq!(json, r#"{"ok":true,"lookup":{"state":"off"}}"#);
+    }
+
+    /// The app's answer passes through; its absence, or a line that isn't one, says what the
+    /// contract says: the window for a look-up or a choice, `pending` or `gone` for a question.
+    #[test]
+    fn answers_that_are_not_the_apps() {
+        use mdm_ipc::SendError;
+        use mdm_ipc::api::lookup;
+        let line = |s: &str| Ok::<String, SendError>(s.to_owned());
+        let a = menu_answer(
+            MenuAsk::Lookup,
+            line(r#"{"state":"pending","token":"t1"}"#),
+            "",
+        );
+        assert_eq!(
+            (a.state.as_str(), a.token.as_deref()),
+            ("pending", Some("t1"))
+        );
+        let a = menu_answer(
+            MenuAsk::Poll,
+            line(
+                r#"{"state":"ready","token":"t1","title":"A talk","choices":[{"label":"720p mp4","ext":"mp4","size":null}]}"#,
+            ),
+            "t1",
+        );
+        assert_eq!(a.state, lookup::READY);
+        assert_eq!(a.choices[0].ext, "mp4");
+        assert_eq!(
+            menu_answer(MenuAsk::Pick, line(r#"{"state":"queued"}"#), "").state,
+            lookup::QUEUED
+        );
+        let not_answers = [
+            "ok",
+            "denied",
+            "gone",
+            "too-large",
+            "",
+            r#"{"error":"the automation API is off","code":"api-off"}"#,
+        ];
+        for got in not_answers {
+            for ask in [MenuAsk::Lookup, MenuAsk::Pick] {
+                assert_eq!(
+                    menu_answer(ask, line(got), "").state,
+                    lookup::USE_WINDOW,
+                    "{ask:?} {got}"
+                );
+            }
+        }
+        // `timeout`: the app has the command and will act on it. The choice downloads soon (the
+        // Download video window would download it again), the look-up runs (another window
+        // would run a second yt-dlp).
+        assert_eq!(
+            menu_answer(MenuAsk::Pick, line("timeout"), "").state,
+            lookup::SENT
+        );
+        assert_eq!(
+            menu_answer(MenuAsk::Pick, line("timeout\n"), "").state,
+            lookup::SENT
+        );
+        assert_eq!(
+            menu_answer(MenuAsk::Lookup, line("timeout"), "").state,
+            lookup::BUSY
+        );
+        for err in [
+            SendError::NotRunning("no data dir".into()),
+            SendError::Refused("connection reset".into()),
+        ] {
+            assert_eq!(
+                menu_answer(MenuAsk::Lookup, Err(err), "").state,
+                lookup::USE_WINDOW
+            );
+        }
+        assert_eq!(
+            menu_answer(MenuAsk::Pick, Err(SendError::NotRunning("x".into())), "").state,
+            lookup::USE_WINDOW
+        );
+        // A question: the app only too busy is asked again; anything else, the look-up is gone.
+        let busy = menu_answer(MenuAsk::Poll, line("timeout"), "t1");
+        assert_eq!(
+            (busy.state.as_str(), busy.token.as_deref()),
+            ("pending", Some("t1"))
+        );
+        for got in ["ok", "denied", "gone", "too-large", ""] {
+            assert_eq!(
+                menu_answer(MenuAsk::Poll, line(got), "t1").state,
+                lookup::GONE
+            );
+        }
+        assert_eq!(
+            menu_answer(MenuAsk::Poll, Err(SendError::NotRunning("x".into())), "t1").state,
+            lookup::GONE
+        );
+        // As the extension reads it.
+        let json =
+            serde_json::to_string(&Reply::lookup(menu_answer(MenuAsk::Lookup, line("ok"), "")))
+                .unwrap();
+        assert_eq!(json, r#"{"ok":true,"lookup":{"state":"use-window"}}"#);
+    }
+
+    /// A question waits while the look-up runs, asking the app every 100 ms, and answers as soon
+    /// as it is ready, or `pending` after 1.5 s; whether a choice is sound alone reaches the
+    /// browser as the app says it.
+    #[test]
+    fn a_question_waits_for_the_look_up() {
+        use mdm_ipc::SendError;
+        use mdm_ipc::api::lookup;
+        let ready = r#"{"state":"ready","token":"t1","title":"A talk","choices":[{"label":"720p MP4","ext":"mp4","size":null,"audio":false},{"label":"Audio only MP3 320 kbps","ext":"mp3","size":null,"audio":true}]}"#;
+        // A clock of the test's own: asking every 20 ms, the answer is ready at the third
+        // question, 40 ms in.
+        let now = std::cell::Cell::new(Duration::ZERO);
+        let elapsed = || now.get();
+        let sleep = |d: Duration| now.set(now.get() + d);
+        let mut asked = 0;
+        let answer = until_settled_on(
+            || {
+                asked += 1;
+                let got = if asked < 3 {
+                    r#"{"state":"pending","token":"t1"}"#
+                } else {
+                    ready
+                };
+                menu_answer(MenuAsk::Poll, Ok::<String, SendError>(got.into()), "t1")
+            },
+            POLL_WAIT,
+            Duration::from_millis(20),
+            elapsed,
+            sleep,
+        );
+        assert_eq!((answer.state.as_str(), asked), (lookup::READY, 3));
+        assert_eq!(now.get(), Duration::from_millis(40));
+        let json = serde_json::to_string(&Reply::lookup(answer)).unwrap();
+        assert!(
+            json.contains(r#""ext":"mp4","size":null,"audio":false"#)
+                && json.contains(r#""ext":"mp3","size":null,"audio":true"#),
+            "{json}"
+        );
+        // Still running after the wait: `pending`, having asked every tenth of a second (at 0,
+        // 100, 200 and 300 ms) and never waited past the 300 ms.
+        now.set(Duration::ZERO);
+        let mut asked = 0;
+        let answer = until_settled_on(
+            || {
+                asked += 1;
+                mdm_ipc::api::VideoLookupAnswer::pending("t1")
+            },
+            Duration::from_millis(300),
+            Duration::from_millis(100),
+            elapsed,
+            sleep,
+        );
+        assert_eq!(answer.state, lookup::PENDING);
+        assert_eq!(asked, 4);
+        assert_eq!(now.get(), Duration::from_millis(300));
+        // Anything else at once, without waiting.
+        now.set(Duration::ZERO);
+        let mut asked = 0;
+        let gone = until_settled_on(
+            || {
+                asked += 1;
+                mdm_ipc::api::VideoLookupAnswer::of(lookup::GONE)
+            },
+            POLL_WAIT,
+            POLL_EVERY,
+            elapsed,
+            sleep,
+        );
+        assert_eq!(now.get(), Duration::ZERO);
+        assert_eq!((gone.state.as_str(), asked), (lookup::GONE, 1));
+    }
+
+    #[test]
+    fn look_up_log_lines_keep_private_windows_out() {
+        let open = lookup_line(
+            "Mozilla Firefox",
+            "https://cdn.test/v/master.m3u8?sig=secret",
+            false,
+            "pending",
+        );
+        assert_eq!(
+            open,
+            "browser integration: Mozilla Firefox looked up the qualities of a video on cdn.test: pending"
+        );
+        let private = lookup_line("", "https://secret.test/v.mp4", true, "use-window");
+        assert!(!private.contains("secret") && private.contains("private window"));
+        assert!(private.starts_with("browser integration: a browser "));
+        assert!(!lookup_line("", "https://x.test/\n", false, "a\nb").contains('\n'));
     }
 
     #[test]

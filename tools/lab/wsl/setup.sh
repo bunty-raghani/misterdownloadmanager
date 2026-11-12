@@ -45,7 +45,7 @@ apt-get update -q
 apt-get install -y -q --no-install-recommends \
   build-essential pkg-config git curl ca-certificates python3 python3-pil \
   libgtk-3-dev libxkbcommon-dev libwayland-dev libgl1-mesa-dev \
-  libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev \
+  libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev cmake libclang-dev \
   libgl1-mesa-dri libglx-mesa0 mesa-utils mesa-vulkan-drivers vulkan-tools \
   xvfb xauth x11-utils x11-apps x11-xserver-utils xdotool wmctrl imagemagick metacity dbus-x11 \
   adwaita-icon-theme gnome-themes-extra yaru-theme-gtk yaru-theme-icon \

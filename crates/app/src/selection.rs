@@ -117,6 +117,13 @@ impl Selection {
         self.anchor = Some(id);
     }
 
+    /// Just these downloads, the first focused (a group's summary's Show in list, #766).
+    pub fn set_many(&mut self, ids: &[u64]) {
+        self.ids = ids.to_vec();
+        self.focus = ids.first().copied();
+        self.anchor = self.focus;
+    }
+
     /// The list as shown now (another view, a filter, a sort): what isn't shown stops being
     /// selected, as when Explorer changes folder, so no command acts on a download out of sight;
     /// the rest is kept in list order.

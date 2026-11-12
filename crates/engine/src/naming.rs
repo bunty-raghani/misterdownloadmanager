@@ -132,7 +132,7 @@ fn decode_plain(v: &str) -> String {
 pub fn sanitize(name: &str) -> String {
     let cleaned: String = name
         .chars()
-        .filter(|c| !is_format(*c))
+        .filter(|c| !is_format_char(*c))
         .map(|c| {
             if c.is_control() || r#"<>:"/\|?*"#.contains(c) {
                 '_'
@@ -145,13 +145,24 @@ pub fn sanitize(name: &str) -> String {
     if cleaned.is_empty() {
         return "download".to_owned();
     }
-    let stem = cleaned
+    if is_windows_reserved(&cleaned) {
+        format!("_{cleaned}")
+    } else {
+        cleaned
+    }
+}
+
+/// Whether `name` (with or without an extension) names one of Windows' reserved DOS devices
+/// (`CON`, `PRN`, `AUX`, `NUL`, `CONIN$`, `CONOUT$`, `COM0`–`COM9`, `LPT0`–`LPT9`, and the
+/// superscripted `COM¹`–`COM³` / `LPT¹`–`LPT³`).
+pub fn is_windows_reserved(name: &str) -> bool {
+    let stem = name
         .split('.')
         .next()
         .unwrap_or_default()
+        .trim()
         .to_ascii_uppercase();
-    // Windows' reserved device names, with or without an extension (COM¹ … use superscripts).
-    let reserved = matches!(
+    matches!(
         stem.as_str(),
         "CON" | "PRN" | "AUX" | "NUL" | "CONIN$" | "CONOUT$"
     ) || ((stem.starts_with("COM") || stem.starts_with("LPT"))
@@ -159,18 +170,13 @@ pub fn sanitize(name: &str) -> String {
         && stem
             .chars()
             .nth(3)
-            .is_some_and(|c| c.is_ascii_digit() || matches!(c, '¹' | '²' | '³')));
-    if reserved {
-        format!("_{cleaned}")
-    } else {
-        cleaned
-    }
+            .is_some_and(|c| c.is_ascii_digit() || matches!(c, '¹' | '²' | '³')))
 }
 
 /// Unicode's format characters (general category Cf): bidirectional marks, embeddings,
 /// overrides and isolates, zero-width spaces and joiners, the byte order mark, the soft
 /// hyphen, invisible operators, tags.
-fn is_format(c: char) -> bool {
+pub fn is_format_char(c: char) -> bool {
     matches!(c,
         '\u{AD}'
         | '\u{600}'..='\u{605}'
@@ -234,8 +240,20 @@ pub fn fit_name(dir: &Path, name: &str) -> Option<String> {
 /// deep for any name keeps it whole, and the download says the path is too long. A name from a
 /// long address (a token hundreds of characters long, #28) no longer fails the download.
 pub fn destination(dir: &Path, name: &str) -> PathBuf {
-    let name = fit_name(dir, name).unwrap_or_else(|| name.to_owned());
-    unique_path(dir, &name)
+    unique_path(dir, &fitted(dir, name))
+}
+
+/// `destination` before the folder is looked at: the name fitted to the path limit, not yet
+/// numbered. What a window shows while the disk is asked (a sleeping drive or a network folder
+/// can take seconds to answer, #743); a download started there is numbered on if the name is
+/// taken by then ([`crate::Destination::Free`]). Never touches the disk.
+pub fn guess(dir: &Path, name: &str) -> PathBuf {
+    dir.join(fitted(dir, name))
+}
+
+/// `name` fitted to `dir` (`fit_name`), kept whole when `dir` leaves too little room.
+fn fitted(dir: &Path, name: &str) -> String {
+    fit_name(dir, name).unwrap_or_else(|| name.to_owned())
 }
 
 /// `destination` for a download whose helper picks the extension and takes any `<stem>.*` it
@@ -244,7 +262,7 @@ pub fn destination(dir: &Path, name: &str) -> PathBuf {
 /// with it and a dot, letter case aside, and `in_use` (the other downloads' stems in `dir`)
 /// says no.
 pub fn stem_destination(dir: &Path, name: &str, in_use: impl Fn(&str) -> bool) -> PathBuf {
-    let name = fit_name(dir, name).unwrap_or_else(|| name.to_owned());
+    let name = fitted(dir, name);
     let (stem, ext) = match name.rfind('.') {
         Some(i) if i > 0 => (&name[..i], &name[i..]),
         _ => (name.as_str(), ""),
@@ -327,12 +345,20 @@ fn clamp(name: &str) -> String {
 }
 
 fn clamp_to(name: &str, max: usize) -> String {
+    let name = name.trim_end_matches(['.', ' ']);
     let len = |s: &str| s.encode_utf16().count();
     if len(name) <= max {
         return name.to_owned();
     }
     let (stem, ext) = match name.rfind('.') {
-        Some(i) if i > 0 && len(&name[i..]) <= 16 => (&name[..i], &name[i..]),
+        Some(i)
+            if i > 0
+                && len(&name[i..]) > 1
+                && len(&name[i..]) <= 16
+                && !name[i + 1..].contains(' ') =>
+        {
+            (&name[..i], &name[i..])
+        }
         _ => (name, ""),
     };
     let mut out = String::new();
@@ -342,7 +368,20 @@ fn clamp_to(name: &str, max: usize) -> String {
         }
         out.push(ch);
     }
-    out.trim_end_matches(['.', ' ']).to_owned() + ext
+    let trimmed = out.trim_end_matches(['.', ' ']);
+    if trimmed.is_empty() {
+        let mut plain = String::new();
+        for ch in name.chars() {
+            if len(&plain) + ch.len_utf16() > max {
+                break;
+            }
+            plain.push(ch);
+        }
+        return plain.trim_end_matches(['.', ' ']).to_owned();
+    }
+    format!("{trimmed}{ext}")
+        .trim_end_matches(['.', ' '])
+        .to_owned()
 }
 
 /// The part file a download is written to before it is complete.
@@ -504,6 +543,24 @@ mod tests {
         let s = sanitize(&long);
         assert!(s.encode_utf16().count() <= MAX_NAME);
         assert!(s.ends_with(".mp4"));
+    }
+
+    #[test]
+    fn fit_name_never_leaves_trailing_space_or_dot() {
+        let dir = Path::new("/tmp/downloads");
+        for raw in [
+            "Folder. ".to_owned(),
+            format!("{}   ...", "Folder ".repeat(40)),
+            format!("{}. Vol 2 ", "Episode ".repeat(35)),
+            format!("{}.", "Archive".repeat(40)),
+            format!("{} .mp4", "Video ".repeat(40)),
+        ] {
+            let fitted = fit_name(dir, &raw).unwrap();
+            assert!(
+                !fitted.ends_with(['.', ' ']),
+                "shortened name {fitted:?} ended with a dot or space"
+            );
+        }
     }
 
     #[test]
@@ -680,6 +737,25 @@ mod tests {
         assert_eq!(sanitize("compact.txt"), "compact.txt");
         assert_eq!(sanitize("name. . "), "name");
         assert_eq!(sanitize("..."), "download");
+    }
+
+    /// #743: the guess a window shows before the disk answers is `destination`'s name, fitted
+    /// the same way, never numbered (and never looked up).
+    #[test]
+    fn the_guess_is_the_destination_before_numbering() {
+        let d = tempfile::tempdir().unwrap();
+        assert_eq!(guess(d.path(), "a.zip"), destination(d.path(), "a.zip"));
+        std::fs::write(d.path().join("a.zip"), b"").unwrap();
+        assert_eq!(guess(d.path(), "a.zip"), d.path().join("a.zip"));
+        assert_eq!(destination(d.path(), "a.zip"), d.path().join("a (1).zip"));
+        let long = format!("{}.zip", "x".repeat(400));
+        assert_eq!(
+            guess(d.path(), &long),
+            d.path().join(fit_name(d.path(), &long).unwrap())
+        );
+        // A folder that isn't there: nothing to look up, the same name.
+        let gone = d.path().join("gone");
+        assert_eq!(guess(&gone, "a.zip"), gone.join("a.zip"));
     }
 
     #[test]

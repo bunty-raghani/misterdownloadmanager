@@ -20,6 +20,10 @@ pub const FIREFOX_ID: &str = "integration@misterdownloadmanager.com";
 /// extension at its next start (developer.chrome.com, "Alternative extension distribution
 /// options").
 pub const STORE_UPDATE_URL: &str = "https://clients2.google.com/service/update2/crx";
+/// Helium's name for the Chrome Web Store's update service (its proxy-extension-downloads.patch,
+/// `kChromeWebstoreUpdateURL`): an entry naming it goes through Helium's own services, while
+/// Google's address, asked directly without the browser's version, answers "no update" (#685).
+pub const HELIUM_STORE_UPDATE_URL: &str = "https://update-url-to-be-replaced.qjz9zk";
 
 /// A Chromium extension ID: 32 letters from a to p.
 pub fn valid_id(id: &str) -> bool {

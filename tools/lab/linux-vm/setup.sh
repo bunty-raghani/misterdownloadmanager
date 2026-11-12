@@ -75,7 +75,7 @@ sudo_ apt-get update -q
 sudo_ apt-get install -y -q \
   build-essential pkg-config git curl ca-certificates python3 python3-pip python3-pil \
   libgtk-3-dev libxkbcommon-dev libwayland-dev libgl1-mesa-dev \
-  libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev \
+  libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev cmake libclang-dev \
   rpm zsync libfuse2t64 \
   ffmpeg p7zip-full gallery-dl \
   at-spi2-core python3-pyatspi orca xdotool wmctrl x11-utils mesa-utils imagemagick \

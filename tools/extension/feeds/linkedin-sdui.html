@@ -1,0 +1,80 @@
+<!doctype html>
+<!-- LinkedIn's feed as its server-driven app draws it since 2026 (the structure of a signed-in
+     feed, our own sample: no real person, post or id). No URN sits near a video: a post is named
+     only in the keys of its parts (componentkey): its text's translation key (its ugcPost), its
+     comments' URNs (its activity), and its comment tools' key (base64 of a protobuf naming its
+     activity, field 1, or its ugcPost, field 2). data-expect: what the button must send. -->
+<html><head><meta charset="utf-8"><meta name="mdm-page" content="https://www.linkedin.com/feed/foryou/"><title>Feed | LinkedIn</title><link rel="stylesheet" href="feeds.css"></head>
+<body>
+<div id="root" data-strictmode="true"><div data-layout-grid=""><div><main id="workspace" tabindex="-1"><div><div><section aria-label="Primary content"><div>
+<div data-sdui-screen="com.linkedin.sdui.flagshipnav.feed.ForYouFeed">
+<div role="list" data-testid="mainFeed" data-component-type="LazyColumn" componentkey="container-update-list_mainFeed-lazy-container">
+  <div data-lazy-mount-id="sample1"><div data-display-contents="true"><div><div id="expandedSampleHashA" componentkey="expandedSampleHashA">
+    <div role="listitem" componentkey="update-card-focusSampleHashAFeedType_MAIN_FEED_RELEVANCE">
+      <div data-display-contents="true"><div componentkey="SampleHashA">
+        <a href="https://www.linkedin.com/company/sample-company-a/" componentkey="0b5d2f0e-0000-4000-8000-000000000001">Sample Company A</a>
+        <button componentkey="0b5d2f0e-0000-4000-8000-000000000002" aria-label="Open control menu for post by Sample Company A">…</button>
+        <div componentkey="translatable-commentary-FeTranslationUrn(contentUrnCommentUrn=null, contentUrnGroupPostUrn=null, contentUrnShareUrn=null, contentUrnUgcPostUrn=ContentUrnUgcPostUrn(userGeneratedContentPostUrn=UserGeneratedContentPostUrn(userGeneratedContentId=7391000000000000033)), detectedLocale=, targetLocale=en)"><p>A first sample post.</p></div>
+        <div componentkey="0b5d2f0e-0000-4000-8000-000000000003" data-color-scheme="dark"><div tabindex="0" componentkey="0b5d2f0e-0000-4000-8000-000000000004">
+          <div data-vjs-player="true" id="SampleVideoA" tabindex="-1" role="region" aria-label="Video Player">
+            <video id="SampleVideoA_html5_api" role="application" preload="metadata" playsinline muted data-expect="https://www.linkedin.com/feed/update/urn:li:ugcPost:7391000000000000033/"></video>
+          </div>
+        </div></div>
+        <a href="https://www.linkedin.com/feed/foryou/">Sample viewer</a>
+      </div></div>
+    </div>
+  </div></div></div></div>
+  <div data-lazy-mount-id="sample2"><div data-display-contents="true"><div><div id="expandedSampleHashB" componentkey="expandedSampleHashB">
+    <div role="listitem" componentkey="update-card-focusSampleHashBFeedType_MAIN_FEED_RELEVANCE">
+      <div data-display-contents="true"><div componentkey="SampleHashB">
+        <a href="https://www.linkedin.com/in/sample-person-b/" componentkey="0b5d2f0e-0000-4000-8000-000000000011">Sample Person B</a>
+        <div componentkey="0b5d2f0e-0000-4000-8000-000000000013" data-color-scheme="dark"><div tabindex="0" componentkey="0b5d2f0e-0000-4000-8000-000000000014">
+          <div data-vjs-player="true" id="SampleVideoB" tabindex="-1" role="region" aria-label="Video Player">
+            <video id="SampleVideoB_html5_api" role="application" preload="metadata" playsinline muted data-expect="https://www.linkedin.com/feed/update/urn:li:ugcPost:7391000000000000022/"></video>
+          </div>
+        </div></div>
+        <button componentkey="0b5d2f0e-0000-4000-8000-000000000015" aria-label="Comment">Comment</button>
+        <div id="EgsIrIDM7ufVjZLNAQ-replaceableCommentToolsSampleHashBFeedType_MAIN_FEED_RELEVANCE" componentkey="EgsIrIDM7ufVjZLNAQ-replaceableCommentToolsSampleHashBFeedType_MAIN_FEED_RELEVANCE"></div>
+      </div></div>
+    </div>
+  </div></div></div></div>
+  <div data-lazy-mount-id="sample3"><div data-display-contents="true"><div><div id="expandedSampleHashC" componentkey="expandedSampleHashC">
+    <div role="listitem" componentkey="update-card-focusSampleHashCFeedType_MAIN_FEED_RELEVANCE">
+      <div data-display-contents="true"><div componentkey="SampleHashC">
+        <a href="https://www.linkedin.com/in/sample-person-c/" componentkey="0b5d2f0e-0000-4000-8000-000000000021">Sample Person C</a>
+        <div componentkey="0b5d2f0e-0000-4000-8000-000000000023" data-color-scheme="dark"><div tabindex="0" componentkey="0b5d2f0e-0000-4000-8000-000000000024">
+          <div data-vjs-player="true" id="SampleVideoC" tabindex="-1" role="region" aria-label="Video Player">
+            <video id="SampleVideoC_html5_api" role="application" preload="metadata" playsinline muted data-expect="https://www.linkedin.com/feed/update/urn:li:activity:7391000000000000044/"></video>
+          </div>
+        </div></div>
+        <div id="CgsI2IDM7ufVjZLNAQ-replaceableCommentToolsSampleHashCFeedType_MAIN_FEED_RELEVANCE" componentkey="CgsI2IDM7ufVjZLNAQ-replaceableCommentToolsSampleHashCFeedType_MAIN_FEED_RELEVANCE"></div>
+        <div componentkey="CommentComponentReference_urn:li:comment:(activity:7391000000000000044,7391000000000000045)"><p>A sample comment.</p></div>
+        <div componentkey="replaceableComment_urn:li:comment:(activity:7391000000000000044,7391000000000000045)"></div>
+      </div></div>
+    </div>
+  </div></div></div></div>
+  <div data-lazy-mount-id="sample4"><div data-display-contents="true"><div><div id="expandedSampleHashD" componentkey="expandedSampleHashD">
+    <div role="listitem" componentkey="update-card-focusSampleHashDFeedType_MAIN_FEED_RELEVANCE">
+      <div data-display-contents="true"><div componentkey="SampleHashD">
+        <div componentkey="feed-header-urn:li:activity:7391000000000000055-0">Sample Person D likes this</div>
+        <p>A post with no video.</p>
+        <div id="CgsI7oDM7ufVjZLNAQ-replaceableCommentToolsSampleHashDFeedType_MAIN_FEED_RELEVANCE" componentkey="CgsI7oDM7ufVjZLNAQ-replaceableCommentToolsSampleHashDFeedType_MAIN_FEED_RELEVANCE"></div>
+      </div></div>
+    </div>
+  </div></div></div></div>
+  <div data-lazy-mount-id="sample5"><div data-display-contents="true"><div><div id="expandedSampleHashE" componentkey="expandedSampleHashE">
+    <div role="listitem" componentkey="update-card-focusSampleHashEFeedType_MAIN_FEED_RELEVANCE">
+      <div data-display-contents="true"><div componentkey="SampleHashE">
+        <a href="https://www.linkedin.com/company/sample-advertiser/" componentkey="0b5d2f0e-0000-4000-8000-000000000041">Sample Advertiser · Promoted</a>
+        <div componentkey="0b5d2f0e-0000-4000-8000-000000000043" data-color-scheme="dark"><div tabindex="0" componentkey="0b5d2f0e-0000-4000-8000-000000000044">
+          <div data-vjs-player="true" id="SampleVideoE" tabindex="-1" role="region" aria-label="Video Player">
+            <video id="SampleVideoE_html5_api" role="application" preload="metadata" playsinline muted data-expect="none"></video>
+          </div>
+        </div></div>
+      </div></div>
+    </div>
+  </div></div></div></div>
+</div>
+</div>
+</div></section></div></div></main></div></div></div>
+</body></html>

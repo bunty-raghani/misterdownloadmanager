@@ -383,7 +383,7 @@
 	
 
 <path
-   style="opacity:0.48044690;color:#000000;fill:url(#radialGradient6675);fill-opacity:1.0000000;fill-rule:nonzero;stroke:none;stroke-width:1.0000000;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.0000000;stroke-dashoffset:0.0000000;stroke-opacity:1.0000000;marker:none;marker-start:none;marker-mid:none;marker-end:none;visibility:visible;display:inline;overflow:visible"
+   style="opacity:0.48044690;color:#000000;fill:url(#radialGradient6675);fill-opacity:1.0000000;fill-rule:nonzero;stroke:none;stroke-width:1.0000000;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.0000000;stroke-dashoffset:0.0000000;stroke-opacity:1.0000000;visibility:visible;display:inline;overflow:visible"
    d="M 25.389110,19.305038 C 25.389110,19.305038 19.484245,27.481005 19.484245,31.228324 C 19.484245,34.975642 26.297551,32.931650 29.022873,35.656973 C 31.748195,38.382295 22.663787,45.422711 22.663787,45.422711 L 31.748195,42.924499 L 35.381959,46.785372 C 35.381959,42.129613 40.719048,38.382295 37.993726,35.543418 C 35.154848,32.704540 27.092436,33.045205 26.638216,29.297887 C 26.183995,25.550569 25.502665,19.418593 25.502665,19.418593 L 25.389110,19.305038 z "
    id="path6671" />
 <path
@@ -439,5 +439,5 @@
 <path
    id="path6612"
    d="M 23.663250,7.0524597 C 17.795434,7.0524597 13.016988,11.794692 13.016988,17.662510 C 13.016988,21.333503 15.000693,24.443138 17.833154,26.353336 C 25.073625,22.456374 23.786958,15.548148 33.440430,13.606789 C 31.841424,9.7576868 28.088842,7.0524597 23.663250,7.0524597 z "
-   style="color:#000000;fill:url(#linearGradient6623);fill-opacity:1.0000000;fill-rule:nonzero;stroke:none;stroke-width:1.0000000;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.0000000;stroke-dashoffset:0.0000000;stroke-opacity:1.0000000;marker:none;marker-start:none;marker-mid:none;marker-end:none;visibility:visible;display:inline;overflow:visible;opacity:1.0000000" />
+   style="color:#000000;fill:url(#linearGradient6623);fill-opacity:1.0000000;fill-rule:nonzero;stroke:none;stroke-width:1.0000000;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.0000000;stroke-dashoffset:0.0000000;stroke-opacity:1.0000000;visibility:visible;display:inline;overflow:visible;opacity:1.0000000" />
 </svg>

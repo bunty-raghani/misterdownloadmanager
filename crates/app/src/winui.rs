@@ -5430,6 +5430,102 @@ pub fn combo_light(
     chosen
 }
 
+/// A button that opens a menu (Download complete's Snooze, #741): its label and a chevron on a
+/// drop-down's face, in the current theme. A click, Space, Alt+Down or F4 opens `items` (English,
+/// translated here) under it, in the shared popup; Enter stays the window's default button's.
+/// Returns the item picked this frame.
+pub fn menu_button(ui: &mut Ui, rc: Rect, label: &str, items: &[&str], id: &str) -> Option<usize> {
+    let key = widget_id(ui, ("menu-button", id));
+    let resp = ui.interact(rc, key.with("button"), Sense::click());
+    pass_focus_on(ui, &resp, true);
+    let resp = opener_click(ui, resp);
+    focus_on_press(&resp);
+    let mut open = ui.data(|d| d.get_temp::<bool>(key).unwrap_or(false));
+    let popup_id = format!("menu-button-{}", key.short_debug_format());
+    let enter = ui.input(|i| i.key_pressed(egui::Key::Enter));
+    if resp.clicked() && !enter {
+        open = !open;
+    }
+    if resp.has_focus() && !open {
+        let opener = ui.input_mut(|i| {
+            i.consume_key(egui::Modifiers::ALT, egui::Key::ArrowDown)
+                || i.consume_key(egui::Modifiers::NONE, egui::Key::F4)
+        });
+        if opener {
+            open = true;
+            crate::chrome::start_at(ui.ctx(), &popup_id, 0);
+        }
+    }
+    let p = ui.painter().clone();
+    dropdown_frame_light(&p, rc, State::of(&resp, true).open_if(open));
+    let shown = crate::i18n::t(label);
+    expose(&resp, egui::Role::Button, shown, true, None);
+    let text = ellipsize(&p, &tahoma(), shown, rc.width() - 8.0 - 19.0);
+    text_start(
+        &p,
+        tahoma(),
+        lead(rc) + 8.0 * fwd(),
+        rc.top() + 14.0,
+        &text,
+        TEXT(),
+    );
+    let chevron_x = if rtl() {
+        rc.left() + 6.0
+    } else {
+        rc.right() - 14.0
+    };
+    chevron_light(&p, pos2(chevron_x, rc.top() + 8.0), true);
+    show_focus(ui, &resp, rc.shrink(3.0));
+    let mut chosen = None;
+    if open {
+        use crate::chrome::{MenuEntry, PopupResult, label as menu_label};
+        let entries: Vec<MenuEntry<usize>> = items
+            .iter()
+            .enumerate()
+            .map(|(i, s)| {
+                let shown = crate::i18n::t(s).replace('&', "&&");
+                MenuEntry::Item(menu_label(&shown), i, true, false)
+            })
+            .collect();
+        // Under the button from its leading edge (a menu's top-right in right to left).
+        let at = if rtl() {
+            rc.right_bottom()
+        } else {
+            rc.left_bottom()
+        };
+        match crate::chrome::popup(
+            ui.ctx(),
+            crate::chrome::MenuKind::Context,
+            &popup_id,
+            at,
+            &entries,
+            &|_| None,
+        ) {
+            PopupResult::Chosen(i) => {
+                open = false;
+                chosen = Some(i);
+            }
+            PopupResult::Dismissed => {
+                open = false;
+                resp.request_focus();
+            }
+            PopupResult::Open | PopupResult::Neighbor(_) => {}
+        }
+        // The keys went to the menu: the window's default button doesn't take Enter too.
+        take_key(ui, egui::Key::Enter);
+    }
+    ui.data_mut(|d| d.insert_temp(key, open));
+    chosen
+}
+
+/// A [`menu_button`]'s width for `label` in this language: its text, its chevron and their
+/// margins, between `min` and `max`.
+pub fn menu_button_width(p: &Painter, label: &str, min: f32, max: f32) -> f32 {
+    (text_width(p, crate::i18n::t(label)) + 8.0 + 22.0)
+        .round()
+        .clamp(min, max)
+}
+
 /// A spin box's arrows in `zone` ([`spin_zone`]): up and down halves inside the box, without
 /// borders of their own, tinted under the pointer and pressed as the box's other parts are.
 /// Returns +1 / −1 for a click (held: repeats), 0 otherwise.

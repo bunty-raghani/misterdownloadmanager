@@ -32,12 +32,6 @@
   "video_sent": {
     "message": "ወደ Mister Download Manager ተልኳል"
   },
-  "video_failed": {
-    "message": "Mister Download Manager አልተጫነም ወይም አልጀመረም"
-  },
-  "video_drag": {
-    "message": "በቪዲዮው ጠርዝ ላይ ለማንቀሳቀስ ይጎትቱ"
-  },
   "menu_selected": {
     "message": "የተመረጡ አገናኞችን በMister Download Manager ያውርዱ"
   },
@@ -180,13 +174,46 @@
     "message": "ቀጥታ"
   },
   "video_off": {
-    "message": "የማውረጃ ቁልፉ በዚህ ጣቢያ ላይ ጠፍቷል"
+    "message": "በዚህ ጣቢያ ላይ ጠፍቷል"
   },
   "video_drm": {
-    "message": "የተጠበቀ ቪዲዮ፦ ማስቀመጥ አይቻልም"
+    "message": "የተጠበቀ ቪዲዮ"
   },
   "video_unnamed": {
     "message": "ይህ የትኛው ቪዲዮ እንደሆነ ማወቅ አልተቻለም፦ የራሱን ገጽ ከፍተው እዚያ ይሞክሩ"
+  },
+  "video_looking": {
+    "message": "ጥራቶችን በመፈለግ ላይ…"
+  },
+  "video_no_choices": {
+    "message": "እዚህ የሚወርድ ቪዲዮ የለም"
+  },
+  "video_playlist": {
+    "message": "የቪዲዮዎች ዝርዝር፦ በMister Download Manager ውስጥ ይምረጧቸው"
+  },
+  "video_no_ytdlp": {
+    "message": "Mister Download Manager ለዚህ ቪዲዮ yt-dlp ይፈልጋል"
+  },
+  "video_too_long": {
+    "message": "መፈለጉ በጣም ረጅም ጊዜ ወሰደ"
+  },
+  "video_busy": {
+    "message": "Mister Download Manager በሌሎች ቪዲዮዎች ተጠምዷል"
+  },
+  "video_queued": {
+    "message": "ወደ ወረፋው ታክሏል"
+  },
+  "video_failed_lookup": {
+    "message": "መፈለግ አልተቻለም"
+  },
+  "video_tab_video": {
+    "message": "ቪዲዮ"
+  },
+  "video_tab_audio": {
+    "message": "ኦዲዮ"
+  },
+  "video_open_post": {
+    "message": "ለማውረድ ልጥፉን ይክፈቱ"
   },
   "popup_send_to": {
     "message": "ውርዶችን ወደ"
@@ -241,5 +268,62 @@
   },
   "popup_media_title_name": {
     "message": "የገጹን ርዕስ ከሚዲያ ፋይል ስሞች በፊት አክል"
+  },
+  "video_cant_save": {
+    "message": "ማስቀመጥ አይቻልም"
+  },
+  "video_open_post_button": {
+    "message": "ልጥፍ ክፈት"
+  },
+  "video_drag_dots": {
+    "message": "ነጥቦቹን በመጎተት በጠርዙ በኩል ያንቀሳቅሱት"
+  },
+  "video_tip": {
+    "message": "$what$ ያውርዱ",
+    "placeholders": {
+      "what": {
+        "content": "$1",
+        "example": "1080p MP4 · 412 MB"
+      }
+    }
+  },
+  "video_tip_best": {
+    "message": "ምርጡን ጥራት ያውርዱ"
+  },
+  "video_sending": {
+    "message": "ወደ MDM በመላክ ላይ..."
+  },
+  "video_added": {
+    "message": "ወደ MDM ታክሏል"
+  },
+  "video_show": {
+    "message": "አሳይ"
+  },
+  "video_no_answer": {
+    "message": "MDM ምላሽ አልሰጠም"
+  },
+  "video_get_mdm": {
+    "message": "MDM ያግኙ"
+  },
+  "video_retry": {
+    "message": "እንደገና ይሞክሩ"
+  },
+  "video_turn_on": {
+    "message": "አብራ"
+  },
+  "video_best": {
+    "message": "ምርጥ"
+  },
+  "video_all_qualities": {
+    "message": "ሁሉም ጥራቶች እና የትርጉም ጽሑፎች..."
+  },
+  "video_failed": {
+    "message": "Mister Download Manager አልተጫነም ወይም አልጀመረም"
+  },
+  "video_download_best": {
+    "message": "ምርጡን አውርድ"
+  },
+  "video_original": {
+    "message": "ኦሪጅናል"
   }
 }

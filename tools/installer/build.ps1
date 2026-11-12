@@ -22,9 +22,10 @@ if (-not $version) { throw "no version in Cargo.toml" }
 if (-not $NoBuild) {
   # The build machine's paths out of the programs (#25): panic locations and debug info say
   # "cargo\..." for cargo's folder and "mdm\..." for this checkout (shorter, and no user name).
-  # Encoded flags, as those paths may hold spaces.
+  # Encoded flags, as those paths may hold spaces. They replace .cargo/config.toml's, so its
+  # C runtime built into the programs (#785: no VCRUNTIME140.dll from Windows) is repeated here.
   $cargoHome = if ($env:CARGO_HOME) { $env:CARGO_HOME } else { Join-Path $env:USERPROFILE ".cargo" }
-  $env:CARGO_ENCODED_RUSTFLAGS = "--remap-path-prefix=$cargoHome=cargo" + [char]0x1f + "--remap-path-prefix=$root=mdm"
+  $env:CARGO_ENCODED_RUSTFLAGS = "--remap-path-prefix=$cargoHome=cargo" + [char]0x1f + "--remap-path-prefix=$root=mdm" + [char]0x1f + "-Ctarget-feature=+crt-static"
   try {
     & cargo build --release -p mdm-app -p mdm-nmhost -p mdm-cli -p mdm-mcp
     if ($LASTEXITCODE) { throw "cargo build failed" }

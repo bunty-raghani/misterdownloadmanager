@@ -40,6 +40,16 @@
 #, machine
 @plural	Matches {n} article now (it adds new ones only):|Matches {n} articles now (it adds new ones only):	Se potrivește acum cu {n} articol (adaugă doar articole noi):|Se potrivește acum cu {n} articole (adaugă doar articole noi):|Se potrivește acum cu {n} articole (adaugă doar articole noi):
 #. count in a dialog box
+#. Cancel in Download File Info with downloads waiting behind it
+#. {n} = a number (keep the braces as they are)
+#, machine
+@plural	There is {n} more download waiting. Cancel it too?|There are {n} more downloads waiting. Cancel them too?	Mai este {n} descărcare în așteptare. Doriți să o anulați și pe aceasta?|Mai sunt {n} descărcări în așteptare. Doriți să le anulați și pe acestea?|Mai sunt {n} descărcări în așteptare. Doriți să le anulați și pe acestea?
+#. count in a dialog box
+#. under the first failed downloads in the summary of a group of downloads: {n} more failed (Show in list shows them all)
+#. {n} = a number (keep the braces as they are)
+#, machine
+@plural	and {n} more|and {n} more	și încă {n}|și încă {n}|și încă {n}
+#. count in a dialog box
 #. "files already there" question, under the first path: {n} = how many more
 #. {n} = a number (keep the braces as they are)
 #, machine
@@ -61,6 +71,11 @@
 #. {n} = a number (keep the braces as they are)
 #, machine
 @plural	{n} download|{n} downloads	{n} descărcare|{n} descărcări|{n} descărcări
+#. count in a dialog box
+#. the summary of downloads added together (the Downloads complete window; the tip of the tray icon): {n} of them finished
+#. {n} = a number (keep the braces as they are)
+#, machine
+@plural	{n} download finished|{n} downloads finished	{n} descărcare finalizată|{n} descărcări finalizate|{n} descărcări finalizate
 #. count in the main window
 #. {n} = a number (keep the braces as they are)
 #, machine
@@ -70,6 +85,11 @@
 #. {n} = a number (keep the braces as they are)
 #, machine
 @plural	{n} entry was left out (a link, or a name leading outside the folder)|{n} entries were left out (links, or names leading outside the folder)	{n} intrare a fost omisă (o legătură sau un nume care duce în afara folderului)|{n} intrări au fost omise (legături sau nume care duc în afara folderului)|{n} intrări au fost omise (legături sau nume care duc în afara folderului)
+#. count in a dialog box
+#. the summary of downloads added together; after "12 downloads finished": {n} of them failed
+#. {n} = a number (keep the braces as they are)
+#, machine
+@plural	{n} failed|{n} failed	{n} eșuate|{n} eșuate|{n} eșuate
 #. count in the Batch download window; count in the Link grabber window; count in the Add torrent window; count in torrentfiles.rs
 #. how many files the pattern gives in all
 #. Link grabber: a package's row: {n} is its number of links
@@ -95,6 +115,14 @@
 #. {n} = a number (keep the braces as they are)
 #, machine
 @plural	{n} selected|{n} selected	{n} selectat|{n} selectate|{n} selectate
+#. count in the Options window
+#. {n} = a number (keep the braces as they are)
+#, machine
+@plural	{n} site added from the file.|{n} sites added from the file.	{n} site adăugat din fișier.|{n} site-uri adăugate din fișier.|{n} site-uri adăugate din fișier.
+#. count in the Options window
+#. {n} = a number (keep the braces as they are)
+#, machine
+@plural	{n} site saved to the file.|{n} sites saved to the file.	{n} site salvat în fișier.|{n} site-uri salvate în fișier.|{n} site-uri salvate în fișier.
 #. count in the main window
 #. event log entry: trackers were added to the torrent
 #. {n} = a number (keep the braces as they are)
@@ -169,6 +197,9 @@
 #. window title: 7-Zip (a program's name) must be installed
 #, machine
 	7-Zip needed	Este necesar 7-Zip
+#. tab in the main window
+#, machine
+	720p	720p
 #. text in the Options window
 #. Options → Archives: {path} is where 7-Zip's program is
 #, machine
@@ -187,6 +218,10 @@
 #. Options → Accounts: what these accounts are, and the services' rule against sharing
 #, machine
 	A debrid service downloads a file host's link with your own paid account and gives MDM a direct link. Use only your own account: sharing an account or its links breaks the services' terms and can get it suspended. Downloads the browser already started stay as they are.	Un serviciu de debridare descarcă un link de la un serviciu de găzduire de fișiere cu propriul cont plătit și oferă MDM un link direct. Utilizați numai propriul cont: partajarea unui cont sau a linkurilor acestuia încalcă termenii serviciilor și poate duce la suspendarea acestuia. Descărcările deja începute de browser rămân așa cum sunt.
+#. text in a download's progress window
+#. reason shown on the Rename box when the entered name ends with a period
+#, machine
+	A file name cannot end with a dot	Numele unui fișier nu se poate termina cu un punct
 #. text in errors.rs
 #. a torrent through a debrid service: one of its files has a name that would be written outside its folder; nothing was written. {name} the file's name as the service gave it
 #. {name} = a file name (keep the braces as they are)
@@ -216,6 +251,10 @@
 #. an error: a server on this computer redirected the download to the internet, which would not go through the chosen network adapter; {adapter} its name
 #, machine
 	a server on this computer sent the download elsewhere, which would not go through {adapter}	un server de pe acest computer a trimis descărcarea în altă parte, care nu ar trece prin {adapter}
+#. message or event log entry in the main window
+#. tooltip on the disabled Rename box for a single-file torrent
+#, machine
+	A single-file torrent keeps its name	Un torrent cu un singur fișier își păstrează numele
 #. text in the Add torrent window
 #. Add trackers: MDM never contacts a tracker on this computer or the local network
 #, machine
@@ -955,6 +994,10 @@
 #. Options → DNS settings: NextDNS's own configuration ID (optional)
 #, machine
 	Configuration ID:	ID de configurare:
+#. text in a download's progress window
+#. verb: button that saves the deferred rename in the progress window
+#, machine
+	Confirm	Confirmă
 #. text in the Options window
 #, machine
 	Confirm before deleting downloads	Confirmare înainte de ștergerea descărcărilor
@@ -1237,6 +1280,15 @@
 #, machine
 	Download complete	Descărcare finalizată
 #. text in the Options window
+#. Options, Downloads, under "Show download complete dialog": snoozed with "Until MDM restarts"
+#, machine
+	Download complete is snoozed until MDM restarts	Fereastra „Descărcare finalizată” este amânată până la repornirea MDM
+#. text in the Options window
+#. Options, Downloads, under "Show download complete dialog": {time} when the snooze ends, like "14:30"
+#. {time} = a time of day (keep the braces as they are)
+#, machine
+	Download complete is snoozed until {time}	Fereastra „Descărcare finalizată” este amânată până la {time}
+#. text in the Options window
 #, machine
 	Download failed	Descărcare eșuată
 #. window title in a dialog box
@@ -1331,6 +1383,11 @@
 #. the trailing ... means it is still going on: keep it
 #, machine
 	Downloading and verifying yt-dlp...	Se descarcă și se verifică yt-dlp...
+#. text in helpers.rs
+#. Video helpers: MDM's own yt-dlp is being downloaded
+#. the trailing ... means it is still going on: keep it
+#, machine
+	Downloading MDM's own copy...	Se descarcă propria copie a MDM...
 #. text in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. Check for updates, while Update now downloads; {percent} like "42%"
 #, machine
@@ -1344,6 +1401,10 @@
 #. tab title: download settings
 #, machine
 	Downloads	Descărcări
+#. window title in a dialog box
+#. title of the window that sums up downloads added together (a playlist, a batch) once all are done
+#, machine
+	Downloads complete	Descărcări finalizate
 #. text in the tray icon's menu
 #. tray menu: a submenu of the downloads now running; choosing one shows its progress window
 #, machine
@@ -1519,9 +1580,13 @@
 #. Options → Accounts: a note that the debrid services' support (Real-Debrid, AllDebrid, Premiumize) is new and not yet tried with real paid accounts
 #, machine
 	Experimental: built from the services' public API documentation, not yet confirmed with real accounts.	Experimental: construit pe baza documentației API publice a serviciilor, încă neconfirmat cu conturi reale.
-#. message or event log entry in the main window
+#. message or event log entry in the main window; text in the Options window
 #, machine
 	Export	Export
+#. button in the Options window
+#. the trailing ... means it opens a window: keep it
+#, machine
+	Export...	Export...
 #. text in the Options window
 #, machine
 	Extend the availability of Manifest 2 Chrome extensions	Extindeți disponibilitatea extensiilor Chrome Manifest 2
@@ -1549,6 +1614,10 @@
 #. the trailing ... means it is still going on: keep it
 #, machine
 	Extracting...	Se extrage...
+#. text in a dialog box
+#. label over the list of the downloads of the group that failed
+#, machine
+	Failed:	Eșuate:
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -1687,6 +1756,18 @@
 #. text in categories.rs
 #, machine
 	Folder:	Dosar:
+#. text in finish.rs
+#. Snooze menu of the Download complete window: show no Download complete window for this long
+#, machine
+	For 1 hour	Pentru 1 oră
+#. text in finish.rs
+#. Snooze menu of the Download complete window: show no Download complete window for this long
+#, machine
+	For 30 minutes	Pentru 30 de minute
+#. text in finish.rs
+#. Snooze menu of the Download complete window: show no Download complete window for this long
+#, machine
+	For 8 hours	Pentru 8 ore
 #. text in the Batch download window
 #. {address} = an example web address with a * in the file name
 #, machine
@@ -1996,9 +2077,13 @@
 #. checkbox in the Options window
 #, machine
 	Ignore file modification time changes when resuming a download	Ignorați modificările orei de modificare a fișierului la reluarea unei descărcări
-#. message or event log entry in the main window
+#. message or event log entry in the main window; text in the Options window
 #, machine
 	Import	Import
+#. button in the Options window
+#. the trailing ... means it opens a window: keep it
+#, machine
+	Import...	Import...
 #. value in a column's filter list in the download list
 #, machine
 	In a queue	Într-o coadă
@@ -3478,6 +3563,10 @@
 #. {name} = a file name (keep the braces as they are)
 #, machine
 	Remove {name} from the list?	Eliminați {name} din listă?
+#. text in a download's progress window
+#. noun: label before the deferred new file or folder name in the progress window
+#, machine
+	Rename	Redenumire
 #. text in the Batch download window
 #. group box title: what the * in the address is replaced with (numbers or letters)
 #, machine
@@ -3501,6 +3590,10 @@
 #. label: whether the server lets a stopped download continue (Yes / No)
 #, machine
 	Resume capability	Capacitate de reluare
+#. text in the Options window
+#. link after "Download complete is snoozed until 14:30": ends the snooze now
+#, machine
+	Resume now	Reluați afișarea acum
 #. message or event log entry in the main window
 #. event log entry, past tense: the download resumed (just now)
 #, machine
@@ -3612,6 +3705,11 @@
 #, machine
 	Save to:	Salvați în:
 #. text in a download's progress window
+#. status shown in green beside the Rename box once the new name is saved
+#, machine
+	Saved	Salvat
+#. text in a dialog box; text in a download's progress window
+#. label over the folder the downloads were saved in
 #. label before the folder the torrent is saved in
 #, machine
 	Saved in	Salvat în
@@ -3771,6 +3869,11 @@
 #. event log entry, past tense: a finished torrent stopped being shared to others because its share ratio (sent ÷ received) reached the limit set in Torrent settings; {ratio} = e.g. 2.00
 #, machine
 	Sharing stopped: the share ratio reached {ratio}	Partajarea s-a oprit: raportul de partajare a atins {ratio}
+#. message or event log entry in the main window
+#. event log entry on a finished torrent when re-attaching it to keep sharing failed; {error} = why
+#. {error} = an error message (keep the braces as they are)
+#, machine
+	Sharing stopped: {error}	Partajarea s-a oprit: {error}
 #. text in the download list
 #, machine
 	Show	Afișare
@@ -3797,6 +3900,10 @@
 #. checkbox in the Options window; checkbox in a download's progress window
 #, machine
 	Show download complete dialog	Afișarea dialogului la finalizarea descărcării
+#. button in a dialog box
+#. button: shows these downloads in MDM's list, selected
+#, machine
+	Show in list	Afișați în listă
 #. text in extension.rs
 #. button in the browser extension's window: open the tutorial that adds the extension
 #, machine
@@ -3904,6 +4011,10 @@
 #. a country's name (where a download's server is)
 #, machine
 	Slovenia	Slovenia
+#. text in a dialog box
+#. button in the Download complete window: opens a menu of how long no Download complete window shows (30 minutes, 1 hour...)
+#, machine
+	Snooze	Amânați
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -3965,6 +4076,10 @@
 #. window title in a dialog box
 #, machine
 	Speed Limiter settings	Setări limitator de viteză
+#. message or event log entry in the main window
+#. tooltip on the disabled Rename box when the file is one part of a split archive (.part1.rar, .7z.001…)
+#, machine
+	Split archive volumes keep their names for extraction	Volumele arhivelor împărțite își păstrează numele pentru extragere
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -4080,6 +4195,10 @@
 #. event log entry: the download stopped to start again through the network adapter as it is now (a VPN reconnected, another adapter chosen)
 #, machine
 	Stopped: the network adapter changed; starting again	Oprit: adaptorul de rețea s-a schimbat; se repornește
+#. message or event log entry in the main window
+#. event log entry: a video or gallery download stopped to start again at the new speed limit (its helper program takes a limit only as it starts)
+#, machine
+	Stopped: the speed limit changed; starting again with it	Oprit: limita de viteză s-a modificat; se repornește cu noua limită
 #. message or event log entry in the main window
 #. event log entry: the download stopped because the chosen network adapter (a VPN's, usually) went away; {adapter} its name
 #, machine
@@ -4337,7 +4456,7 @@
 #. {error} = an error message (keep the braces as they are)
 #, machine
 	The file could not be moved: {error}	Fișierul nu a putut fi mutat: {error}
-#. message or event log entry in the main window
+#. message or event log entry in the main window; text in the Options window
 #. {error} = an error message (keep the braces as they are)
 #, machine
 	The file could not be read: {error}	Fișierul nu a putut fi citit: {error}
@@ -4386,13 +4505,17 @@
 #. a check of Test browser integration: the browsers are set up, but the small helper program they start (misterdownloadmanager-nmhost) is gone
 #, machine
 	The helper program the browsers start is missing	Programul auxiliar pe care îl pornesc browserele lipsește
-#. message or event log entry in the main window
+#. message or event log entry in the main window; text in the Options window
 #. {error} = an error message (keep the braces as they are)
 #, machine
 	The list could not be saved: {error}	Lista nu a putut fi salvată: {error}
 #. text in whereis.rs
 #, machine
 	the local network	rețeaua locală
+#. text in a download's progress window
+#. reason shown on the Rename box when the entered name exceeds the length limit
+#, machine
+	The name is too long	Numele este prea lung
 #. text in errors.rs; text in torrent downloads
 #. an error: the network adapter chosen in Options (a VPN's, usually) is off or gone; {adapter} its name
 #, machine
@@ -4463,6 +4586,18 @@
 #. the Download video window: the site asked for a sign-in although yt-dlp had the cookies of the browser chosen in Options; {browser} = its name
 #, machine
 	The site wants you signed in, even with {browser}'s cookies. Sign in to it in {browser}, then look the page up again.	Site-ul dorește să fiți conectat, chiar și cu cookie-urile lui {browser}. Conectați-vă la acesta în {browser}, apoi căutați din nou pagina.
+#. text in the Download video window
+#. the Download video window: the site's bot check (Cloudflare) turned yt-dlp away though the browser's extension passed the page's cookies
+#, machine
+	The site's bot check (Cloudflare) refused yt-dlp, even with your browser's cookies for this page. Try again later, or from another browser.	Verificarea bot a site-ului (Cloudflare) a refuzat yt-dlp, chiar și cu cookie-urile browserului dvs. pentru această pagină. Încercați din nou mai târziu sau dintr-un alt browser.
+#. text in the Download video window
+#. the Download video window: the site's bot check (Cloudflare) turned yt-dlp away though it had the cookies of the browser chosen in Options; {browser} = its name
+#, machine
+	The site's bot check (Cloudflare) refused yt-dlp, even with {browser}'s cookies. Use the Download video button over the video in {browser}, or try the page again later.	Verificarea bot a site-ului (Cloudflare) a refuzat yt-dlp, chiar și cu cookie-urile din {browser}. Utilizați butonul Descărcați videoclipul deasupra videoclipului din {browser} sau încercați din nou pagina mai târziu.
+#. text in the Download video window
+#. the Download video window: the site's bot check (Cloudflare) turned yt-dlp away and no browser cookies were used
+#, machine
+	The site's bot check (Cloudflare) refused yt-dlp. If the page opens in your browser, choose that browser in Options → Sites Logins → Cookies for video sites and look the page up again, or use the Download video button over the video.	Verificarea bot a site-ului (Cloudflare) a refuzat yt-dlp. Dacă pagina se deschide în browserul dvs., alegeți acel browser în Opțiuni → Autentificări site-uri → Cookie-uri pentru site-uri video și căutați din nou pagina, sau utilizați butonul Descărcați videoclipul deasupra videoclipului.
 #. text in crashui.rs
 #. crash report window: the symbols couldn't be downloaded; the report still works
 #, machine
@@ -4533,6 +4668,9 @@
 #. in the empty download list, under its title
 #, machine
 	This category or queue holds no downloads yet.	Această categorie sau coadă nu conține încă descărcări.
+#. text in a download's progress window
+#, machine
+	This character is not allowed in a file name	Acest caracter nu este permis într-un nume de fișier
 #. text in the Options window
 #. Options → Remote → Pair a device: the code ran out (10 minutes, or 5 wrong tries)
 #, machine
@@ -4576,6 +4714,14 @@
 #. text in a dialog box
 #, machine
 	This folder does not exist:	Acest director nu există:
+#. message or event log entry in the main window
+#. tooltip on the disabled Rename box when the folder already holds files this download did not write
+#, machine
+	This folder holds files from outside this download	Acest dosar conține fișiere din afara acestei descărcări
+#. message or event log entry in the main window
+#. tooltip on the disabled Rename box when the folder holds another download or is a save/category folder
+#, machine
+	This folder is shared with another download or save folder	Acest dosar este partajat cu o altă descărcare sau cu un dosar de salvare
 #. text in errors.rs
 #. a download's error: a Google Drive file that isn't shared with everyone
 #, machine
@@ -4603,6 +4749,10 @@
 #. a magnet link's lookup, after 30 seconds: it can't find any peer at all
 #, machine
 	This magnet link names no trackers and the DHT is off, so no peer can be found.	Acest link magnet nu specifică niciun tracker, iar DHT este dezactivat, așa că nu poate fi găsit niciun peer.
+#. text in a download's progress window
+#. reason shown on the Rename box when the entered name is a reserved device name on Windows (CON, NUL, COM1…)
+#, machine
+	This name is reserved by Windows	Acest nume este rezervat de Windows
 #. tooltip (why a control is greyed) in the Download video window
 #. why "Put them into the video" is greyed: ffmpeg (a helper program) is not installed
 #, machine
@@ -4645,6 +4795,11 @@
 #. the Download video window: the video needs the user to be signed in
 #, machine
 	This video needs you to be signed in. Use the Download video button over it in your browser, which passes your sign-in on, or choose your browser in Options → Sites Logins → Cookies for video sites.	Acest videoclip necesită să fiți conectat. Utilizați butonul Descărcare video de deasupra acestuia în browser, care transmite datele dvs. de conectare, sau alegeți browserul dvs. în Opțiuni → Autentificări site-uri → Cookie-uri pentru site-uri video.
+#. text in errors.rs
+#. a download's error: the address is a site's web page that needs a browser, not the file; {site} = the site's name (gofile)
+#. {site} = a web site's name such as "example.com" (keep the braces as they are)
+#, machine
+	this {site} link is a web page, not the file: open it in your browser and download from there	acest link {site} este o pagină web, nu fișierul: deschideți-l în browserul dvs. și descărcați de acolo
 #. text in whereis.rs
 #. where a download's server is, when a proxy carries it (the proxy's place not known)
 #, machine
@@ -4907,6 +5062,10 @@
 #. where a download's server is: an address the location table doesn't place
 #, machine
 	unknown	necunoscut
+#. text in finish.rs
+#. Snooze menu of the Download complete window: show no Download complete window until MDM is started again
+#, machine
+	Until MDM restarts	Până la repornirea MDM
 #. button in the Options window
 #. button (short): move the account up the list (accounts are asked in the list's order)
 #, machine
@@ -5266,6 +5425,26 @@
 #. {error} = an error message (keep the braces as they are)
 #, machine
 	yt-dlp couldn't read {browser}'s cookies: {error}	yt-dlp nu a putut citi cookie-urile lui {browser}: {error}
+#. text in a download's progress window
+#. progress window, a video's line: the helper program yt-dlp gave no address MDM's own downloader could use
+#, machine
+	yt-dlp downloads it itself	yt-dlp îl descarcă singur
+#. text in a download's progress window
+#. progress window, a video's line: MDM's own downloader can't take a live broadcast, so the helper program yt-dlp records it
+#, machine
+	yt-dlp downloads it itself: a live stream	yt-dlp îl descarcă singur: un flux live
+#. text in a download's progress window
+#. progress window, a video's line: a stream sent in many small pieces of a rare kind (Adobe HDS, Smooth Streaming), which the helper program yt-dlp downloads itself
+#, machine
+	yt-dlp downloads it itself: a stream in pieces	yt-dlp îl descarcă singur: un flux în bucăți
+#. text in a download's progress window
+#. progress window, a video's line: the stream is copy-protected (DRM), left to the helper program yt-dlp, which refuses it
+#, machine
+	yt-dlp downloads it itself: protected (DRM)	yt-dlp îl descarcă singur: protejat (DRM)
+#. text in a download's progress window
+#. progress window, a video's line: {protocol} = a streaming protocol's short name (rtmp, rtsp, mms); MDM's own downloader doesn't speak it, so the helper program yt-dlp downloads it
+#, machine
+	yt-dlp downloads it itself: {protocol}	yt-dlp îl descarcă singur: {protocol}
 #. text in the Download video window
 #. the Download video window: the browser chosen in Options has no cookies on this computer (not installed, or another profile); {browser} = its name
 #, machine
@@ -5344,6 +5523,11 @@
 #. {size} = a file size such as "4.2 MB" (keep the braces as they are)
 #, machine
 	{done} of {size}	{done} din {size}
+#. text in deferred_rename.rs
+#. appended to an OS error when a case-only rename could not move the temporary file back to its original name; {error} = first OS error, {path} = temporary path left on disk, {rollback_error} = second OS error
+#. {error} = an error message (keep the braces as they are)
+#, machine
+	{error} (left as {path}: {rollback_error})	{error} (lăsat ca {path}: {rollback_error})
 #. text in a download's Properties window
 #. a kind of file, by its extension: {ext} = "ZIP", "PDF"…
 #, machine
@@ -5434,6 +5618,11 @@
 #. {name} = a file name; {version} = a version number (keep the braces as they are)
 #, machine
 	{name} {version} is too old: MDM needs {oldest} or newer	{name} {version} este prea vechi: MDM necesită {oldest} sau o versiune mai nouă
+#. text in a dialog box
+#. one failed download in the summary of a group of downloads: {name} its file name, {error} why it failed
+#. {name} = a file name; {error} = an error message (keep the braces as they are)
+#, machine
+	{name}: {error}	{name}: {error}
 #. text in the Options window
 #. a number of connections the app learned by itself for a server
 #. {n} = a number (keep the braces as they are)
@@ -5521,6 +5710,11 @@
 #. {size} = a file size such as "4.2 MB" (keep the braces as they are)
 #, machine
 	{size} free	{size} liber
+#. text in a dialog box
+#. under "12 downloads finished": {size} the finished files' size together, like "1.25 GB"
+#. {size} = a file size such as "4.2 MB" (keep the braces as they are)
+#, machine
+	{size} in all	{size} în total
 #. text in errors.rs
 #. {size} = a file size such as "4.2 MB" (keep the braces as they are)
 #, machine
@@ -5608,9 +5802,34 @@ column	Transfer rate	Rată de transfer
 #, machine
 column	Upload speed	Viteză de trimitere
 #. text in the browser extension
+#. in the menu under the download button over a video: the page is a list of videos (a playlist), whose videos are chosen in the app's window; keep the name Mister Download Manager as it is
+#, machine
+extension	A list of videos: choose them in Mister Download Manager	O listă de videoclipuri: alegeți-le în Mister Download Manager
+#. text in the browser extension
+#. on the download button (green) over a video after the app added and started the download; a quality may follow ('· 1080p') and a 'Show' button; MDM is the app's short name, keep it; short
+#, machine
+extension	Added to MDM	Adăugat la MDM
+#. text in the browser extension
+#. shown briefly on the download button over a video after a quality was picked: the download was added to the app's download queue, to start later
+#, machine
+extension	Added to the queue	Adăugat la coadă
+#. text in the browser extension
+#. command in the menu of the download button over a video: opens the app's Download video window, with every quality and the subtitles
+#. the trailing ... means it is still going on: keep it
+#, machine
+extension	All qualities and subtitles...	Toate calitățile și subtitrările...
+#. text in the browser extension
 #. choice under Send downloads to: an MDM running on another computer of the network, such as a home server; keep the name Mister Download Manager as it is
 #, machine
 extension	Another Mister Download Manager (a server)	Alt Mister Download Manager (un server)
+#. text in the browser extension
+#. tab above the list of qualities in the menu under the download button over a video: the choices that are sound only (MP3, Opus and the like); short, one word
+#, machine
+extension	Audio	Audio
+#. text in the browser extension
+#. after the best quality in the menu of the download button over a video, after a star (★ best); lower case; one word
+#, machine
+extension	best	cea mai bună
 #. text in the browser extension
 #. the name this browser gets in the other MDM's list of paired devices
 #, machine
@@ -5620,6 +5839,10 @@ extension	Browser extension	Extensie de browser
 #. the trailing ... means it is still going on: keep it
 #, machine
 extension	Button settings...	Setări buton...
+#. text in the browser extension
+#. on the download button over a copy-protected video, after 'Protected video ·': it can't be downloaded; short, lower case
+#, machine
+extension	can't be saved	nu poate fi salvat
 #. text in the browser extension
 #. shown briefly on the download button when nothing on the page says which video the player is playing, so nothing was sent
 #, machine
@@ -5634,6 +5857,10 @@ extension	Connected to Mister Download Manager	Conectat la Mister Download Manag
 #, machine
 extension	Connected to Mister Download Manager {version}	Conectat la Mister Download Manager {version}
 #. text in the browser extension
+#. in the menu under the download button over a video: finding the video's qualities failed; the app's own explanation follows on the next line
+#, machine
+extension	Could not look it up	Căutarea nu a reușit
+#. text in the browser extension
 #. button beside a video, sound or stream in the toolbar button's popup: download it with the app; verb; short
 #, machine
 extension	Download	Descărcați
@@ -5642,9 +5869,17 @@ extension	Download	Descărcați
 #, machine
 extension	Download all links with Mister Download Manager	Descărcați toate linkurile cu Mister Download Manager
 #. text in the browser extension
+#. first line of the list under the download button over a video: downloads the best quality at once; the quality, its file type and size follow on the same line; short
+#, machine
+extension	Download best	Descărcați cea mai bună calitate
+#. text in the browser extension
 #. command in the browser's right-click menu on selected text: download the links in the selection; keep the name Mister Download Manager as it is
 #, machine
 extension	Download selected links with Mister Download Manager	Descărcați linkurile selectate cu Mister Download Manager
+#. text in the browser extension
+#. first line of the tooltip of the download button over a video while the app is still finding its qualities
+#, machine
+extension	Download the best quality	Descărcați cea mai bună calitate
 #. text in the browser extension
 #. the button over a video on a web page that downloads it; verb; short (it sits on the video)
 #, machine
@@ -5653,6 +5888,10 @@ extension	Download video	Descărcați videoclipul
 #. command in the browser's right-click menu on a link, picture, video or sound; keep the name Mister Download Manager as it is
 #, machine
 extension	Download with Mister Download Manager	Descărcați cu Mister Download Manager
+#. text in the browser extension
+#. first line of the tooltip of the download button over a video: what one click downloads; $what$ is a quality, a file type and a size, e.g. '1080p MP4 · 412 MB'
+#, machine
+extension	Download {what}	Descărcați {what}
 #. text in the browser extension
 #. shown in the toolbar button's popup after the site was excluded
 #. {site} = a web site's name such as "example.com" (keep the braces as they are)
@@ -5663,13 +5902,17 @@ extension	Downloads from {site} stay with the browser	Descărcările de pe {site
 #, machine
 extension	Downloads go to {address}	Descărcările merg la {address}
 #. text in the browser extension
-#. tooltip of the download button over a video: it can be dragged to another place on the video's edge
+#. second line of the tooltip of the download button over a video: dragging its dotted grip moves it along the video's edge
 #, machine
-extension	Drag to move it along the video's edge	Trageți pentru a-l muta de-a lungul marginii videoclipului
+extension	Drag the dots to move it along the edge	Trageți punctele pentru a-l muta de-a lungul marginii
 #. text in the browser extension
 #. the address typed isn't an https:// address
 #, machine
 extension	Enter its https:// address.	Introduceți adresa https://.
+#. text in the browser extension
+#. button on the download button over a video when the app didn't answer: opens the app's download page; MDM is the app's short name, keep it; very short
+#, machine
+extension	Get MDM	Obțineți MDM
 #. text in the browser extension
 #. the extension's description in the browser's list of extensions; keep the name Mister Download Manager as it is
 #, machine
@@ -5724,6 +5967,18 @@ extension	Left to the browser: {name}	Lăsat browserului: {name}
 #, machine
 extension	Live	În direct
 #. text in the browser extension
+#. in the menu that opens from the download button over a video, while the app finds which qualities (resolutions, formats) the video can be downloaded in
+#, machine
+extension	Looking up the qualities…	Se caută calitățile…
+#. text in the browser extension
+#. in the menu under the download button over a video: the app took more than a minute to find the video's qualities, so the menu stopped waiting
+#, machine
+extension	Looking up took too long	Căutarea a durat prea mult
+#. text in the browser extension
+#. on the download button (red) over a video when the app isn't installed or didn't start; 'Get MDM' and 'Retry' buttons follow; MDM is the app's short name, keep it; short
+#, machine
+extension	MDM didn't answer	MDM nu a răspuns
+#. text in the browser extension
 #. heading in the toolbar button's popup over the list of the videos, sounds and streams the current web page has loaded
 #, machine
 extension	Media on this page	Media pe această pagină
@@ -5740,6 +5995,10 @@ extension	Mister Download Manager didn't start in time	Mister Download Manager n
 #, machine
 extension	Mister Download Manager doesn't accept this copy of the extension	Mister Download Manager nu acceptă această copie a extensiei
 #. text in the browser extension
+#. in the menu under the download button over a video: the app is already looking up other videos and can't look this one up now; keep the name Mister Download Manager as it is
+#, machine
+extension	Mister Download Manager is busy with other videos	Mister Download Manager este ocupat cu alte videoclipuri
+#. text in the browser extension
 #. shown briefly on the download button when the app could not be reached; keep the name Mister Download Manager as it is
 #, machine
 extension	Mister Download Manager isn't installed or didn't start	Mister Download Manager nu este instalat sau nu a pornit
@@ -5747,6 +6006,10 @@ extension	Mister Download Manager isn't installed or didn't start	Mister Downloa
 #. status when the browser can't find the app's connection; keep the name Mister Download Manager as it is
 #, machine
 extension	Mister Download Manager isn't installed, or its browser integration isn't set up	Mister Download Manager nu este instalat sau integrarea browserului nu este configurată
+#. text in the browser extension
+#. in the menu under the download button over a video: the app needs the yt-dlp tool (a program's name, keep it as it is) to find this video's qualities, and it isn't installed; keep the name Mister Download Manager as it is
+#, machine
+extension	Mister Download Manager needs yt-dlp for this video	Mister Download Manager are nevoie de yt-dlp pentru acest videoclip
 #. text in the browser extension
 #. tooltip of the switch Send downloads through this browser's proxy or VPN extension; keep the name Mister Download Manager as it is
 #, machine
@@ -5774,9 +6037,17 @@ extension	Never take downloads from {site}	Nu preluați niciodată descărcări 
 #, machine
 extension	No video or sound found on this page yet. Play it, then open this again.	Nu s-a găsit încă niciun videoclip sau sunet pe această pagină. Redați-l, apoi deschideți din nou.
 #. text in the browser extension
+#. in the menu under the download button over a video: the app found no quality of the video it could download
+#, machine
+extension	No video to download here	Nu există niciun videoclip de descărcat aici
+#. text in the browser extension
 #. pairing failed: the other MDM didn't answer
 #, machine
 extension	Not reached. Open its address once in this browser and accept its certificate, then try again.	Nu s-a ajuns la destinație. Deschideți adresa o dată în acest browser și acceptați certificatul, apoi încercați din nou.
+#. text in the browser extension
+#. on the download button over a video (grey) when the button is turned off on this web site; a 'Turn on' button follows it; short
+#, machine
+extension	Off on this site	Dezactivat pe acest site
 #. text in the browser extension
 #. button: open the other MDM's address in a tab (to accept its certificate once)
 #, machine
@@ -5790,10 +6061,22 @@ extension	Open its address once and accept its certificate, then enter a code fr
 #, machine
 extension	Open Mister Download Manager	Deschideți Mister Download Manager
 #. text in the browser extension
+#. button on the download button over a video in a feed: opens the post the video belongs to in a new tab; verb; very short
+#, machine
+extension	Open post	Deschideți postarea
+#. text in the browser extension
+#. on the download button (amber) over a video in a feed (a social site's home page, a timeline) that can't be downloaded from there: the user should open the post the video belongs to; short
+#, machine
+extension	Open the post to download it	Deschideți postarea pentru a o descărca
+#. text in the browser extension
 #. button in the toolbar button's popup: open the app's Options
 #. the trailing ... means it is still going on: keep it
 #, machine
 extension	Options...	Opțiuni...
+#. text in the browser extension
+#. in the list under the download button over a video, after a sound-only line's bitrate: the sound as the site sends it, not converted (e.g. '128 kbps · original'); lower case; one word
+#, machine
+extension	original	original
 #. text in the browser extension
 #. button: pair this browser with the other MDM using the code
 #, machine
@@ -5815,9 +6098,13 @@ extension	Prefix media file names with the page title	Adaugă titlul paginii în
 #, machine
 extension	Protected	Protejat
 #. text in the browser extension
-#. shown briefly on the download button when the video is copy-protected (DRM) and no tool can download it
+#. on the download button over a copy-protected (DRM) video, which no tool can download; 'can't be saved' follows it after a dot; short
 #, machine
-extension	Protected video: it can't be saved	Videoclip protejat: nu poate fi salvat
+extension	Protected video	Videoclip protejat
+#. text in the browser extension
+#. button on the download button over a video when the app didn't answer: try again; verb; very short
+#, machine
+extension	Retry	Reîncercați
 #. text in the browser extension
 #. switch in the toolbar button's popup: on, the app downloads through the same proxy the browser uses (one a VPN or proxy extension sets); the browser then asks once to allow reading it
 #, machine
@@ -5827,9 +6114,18 @@ extension	Send downloads through this browser's proxy or VPN extension	Trimiteț
 #, machine
 extension	Send downloads to	Trimite descărcările la
 #. text in the browser extension
+#. on the download button over a video right after it was clicked, while the download goes to the app; MDM is Mister Download Manager's short name, keep it as it is; short
+#. the trailing ... means it is still going on: keep it
+#, machine
+extension	Sending to MDM...	Se trimite către MDM...
+#. text in the browser extension
 #. shown briefly on the download button after it was clicked; keep the name Mister Download Manager as it is
 #, machine
 extension	Sent to Mister Download Manager	Trimis la Mister Download Manager
+#. text in the browser extension
+#. button on the download button over a video after a download was added: shows that download in the app's window; verb; very short
+#, machine
+extension	Show	Afișați
 #. text in the browser extension
 #. link at the foot of the toolbar button's popup to the creator's GitHub Sponsors page (MDM is free; this is an optional donation)
 #, machine
@@ -5846,10 +6142,6 @@ extension	The Chrome Web Store's rules keep this copy of the add-on away from th
 #. status when the connection to the app broke off (often security software blocking it); keep the name Mister Download Manager as it is
 #, machine
 extension	The connection to Mister Download Manager failed	Conexiunea la Mister Download Manager a eșuat
-#. text in the browser extension
-#. shown briefly on the download button over a video when the app's settings keep the button off on this web site
-#, machine
-extension	The download button is off on this site	Butonul de descărcare este dezactivat pe acest site
 #. text in the browser extension
 #. why a download stayed with the browser: the user limited the extension's access to web sites in the browser, so it can't pass the sign-in on
 #, machine
@@ -5875,6 +6167,10 @@ extension	This download's details were too large to hand over	Detaliile acestei 
 #, machine
 extension	This page's player streams its video in pieces, so there's no file to list. Point at the video and use its Download video button.	Playerul acestei pagini transmite videoclipul pe bucăți, așa că nu există niciun fișier de afișat. Indicați videoclipul și folosiți butonul său „Descărcați videoclipul”.
 #. text in the browser extension
+#. button on the download button over a video when it is off on this web site: turns it on again here; verb; very short
+#, machine
+extension	Turn on	Activați
+#. text in the browser extension
 #. status when the app is older than the extension; keep the name Mister Download Manager as it is
 #, machine
 extension	Update Mister Download Manager to use everything this extension offers	Actualizați Mister Download Manager pentru a utiliza tot ce oferă această extensie
@@ -5882,6 +6178,10 @@ extension	Update Mister Download Manager to use everything this extension offers
 #. why a download stayed with the browser: the app's setting 'Use advanced browser integration' is off; keep the setting's name as the app shows it
 #, machine
 extension	Use advanced browser integration is off in Options → General.	Opțiunea „Utilizare integrare avansată browser” este dezactivată în Opțiuni → General.
+#. text in the browser extension
+#. tab above the list of qualities in the menu under the download button over a video: the choices that include picture (video with sound); short, one word
+#, machine
+extension	Video	Video
 #. text in the browser extension
 #. pairing failed: codes tried too fast
 #, machine
@@ -6003,6 +6303,11 @@ menu	&Add new download	Adăugați descărcare &nouă
 #. the trailing ... means it opens a window: keep it
 #, machine
 menu	&Add new download...	Adăugați descărcare &nouă...
+#. menu command in the main window
+#. View → Text: letters drawn the classic way, hinted to whole pixels (crisp, coarse on a dense screen)
+#. & marks the keyboard shortcut letter: keep one & before a letter of the translation
+#, machine
+menu	&Classic	&Clasic
 #. menu command in standard windows
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
@@ -6090,6 +6395,11 @@ menu	&Scheduler and queues	&Programator și cozi
 #, machine
 menu	&Show hidden tabs	Afișați filele &ascunse
 #. menu command in the main window
+#. View → Text: letters drawn smooth, as Windows' modern apps draw them, anti-aliased at any size
+#. & marks the keyboard shortcut letter: keep one & before a letter of the translation
+#, machine
+menu	&Smooth	&Neted
+#. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
 menu	&Stop All	&Opriți tot
@@ -6097,6 +6407,11 @@ menu	&Stop All	&Opriți tot
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
 menu	&Stop Download	&Opriți descărcarea
+#. menu command in the main window
+#. View menu: submenu choosing how the text is drawn (smooth or classic)
+#. & marks the keyboard shortcut letter: keep one & before a letter of the translation
+#, machine
+menu	&Text	&Text
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
@@ -6280,6 +6595,10 @@ menu	E&xport	E&xport
 #. menu command in the main window
 #, machine
 menu	Edit queue	Editați coada
+#. menu command in the main window
+#. View → Theme: a style theme's name (a white canvas, emerald fills, 6-point corners), a name: keep "Emerald" as written
+#, machine
+menu	Emerald	Emerald
 #. menu command in the main window
 #. verb: unpack the downloaded archive (zip, 7z, rar) into its folder
 #, machine

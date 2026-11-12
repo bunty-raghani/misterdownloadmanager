@@ -1,0 +1,39 @@
+<!doctype html>
+<!-- X's home timeline, reduced to what names a post (our own sample: no real account, post or
+     text). data-expect: what the button must send for each video ("page", "none"). The addresses
+     built on the page's own host are written with it as {origin}. -->
+<html><head><meta charset="utf-8"><meta name="mdm-page" content="https://x.com/home"><title>Home / X</title><link rel="stylesheet" href="feeds.css"></head>
+<body>
+<main role="main">
+<div aria-label="Timeline: Your Home Timeline">
+  <div data-testid="cellInnerDiv">
+    <article data-testid="tweet" role="article" tabindex="0">
+      <div data-testid="User-Name"><a href="/sampleuser_a" role="link">Sample User A</a>
+        <a href="/sampleuser_a/status/1850000000000000001" role="link"><time datetime="2026-11-10T09:00:00.000Z">Nov 10</time></a></div>
+      <div data-testid="tweetText">A first sample post.</div>
+      <div data-testid="videoPlayer"><div data-testid="videoComponent"><video data-expect="{origin}/sampleuser_a/status/1850000000000000001"></video></div></div>
+      <a href="/sampleuser_a/status/1850000000000000001/analytics">Views</a>
+    </article>
+  </div>
+  <div data-testid="cellInnerDiv">
+    <article data-testid="tweet" role="article" tabindex="0">
+      <div data-testid="User-Name"><a href="/sampleuser_b" role="link">Sample User B</a>
+        <a href="/sampleuser_b/status/1850000000000000002" role="link"><time datetime="2026-11-10T08:00:00.000Z">Nov 10</time></a></div>
+      <div data-testid="tweetText">Quoting a video.</div>
+      <div role="link" tabindex="0">
+        <div data-testid="User-Name">Sample User Q <time datetime="2026-11-09T08:00:00.000Z">Nov 9</time></div>
+        <a href="/sampleuser_q/status/1850000000000000009/video/1" aria-label="Embedded video">
+          <div data-testid="videoPlayer"><video data-expect="{origin}/sampleuser_q/status/1850000000000000009"></video></div>
+        </a>
+      </div>
+    </article>
+  </div>
+  <div data-testid="cellInnerDiv">
+    <article data-testid="tweet" role="article" tabindex="0">
+      <div data-testid="User-Name"><a href="/sampleadvertiser" role="link">Sample Advertiser</a> Ad</div>
+      <div data-testid="videoPlayer"><video data-expect="none"></video></div>
+    </article>
+  </div>
+</div>
+</main>
+</body></html>

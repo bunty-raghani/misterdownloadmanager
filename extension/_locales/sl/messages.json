@@ -32,12 +32,6 @@
   "video_sent": {
     "message": "Poslano v Mister Download Manager"
   },
-  "video_failed": {
-    "message": "Mister Download Manager ni nameščen ali se ni zagnal"
-  },
-  "video_drag": {
-    "message": "Povlecite za premikanje ob robu videoposnetka"
-  },
   "menu_selected": {
     "message": "Prenesi izbrane povezave z Mister Download Manager"
   },
@@ -180,13 +174,46 @@
     "message": "V živo"
   },
   "video_off": {
-    "message": "Gumb za prenos je na tem spletnem mestu izklopljen"
+    "message": "Izklopljeno na tem spletnem mestu"
   },
   "video_drm": {
-    "message": "Zaščiten videoposnetek: ni ga mogoče shraniti"
+    "message": "Zaščiten video"
   },
   "video_unnamed": {
     "message": "Ni mogoče ugotoviti, kateri videoposnetek je to: odprite njegovo stran in poskusite tam"
+  },
+  "video_looking": {
+    "message": "Iskanje kakovosti…"
+  },
+  "video_no_choices": {
+    "message": "Tu ni videa za prenos"
+  },
+  "video_playlist": {
+    "message": "Seznam videoposnetkov: izberite jih v programu Mister Download Manager"
+  },
+  "video_no_ytdlp": {
+    "message": "Mister Download Manager potrebuje yt-dlp za ta videoposnetek"
+  },
+  "video_too_long": {
+    "message": "Iskanje je trajalo predolgo"
+  },
+  "video_busy": {
+    "message": "Mister Download Manager je zaseden z drugimi videoposnetki"
+  },
+  "video_queued": {
+    "message": "Dodano v čakalno vrsto"
+  },
+  "video_failed_lookup": {
+    "message": "Iskanje ni uspelo"
+  },
+  "video_tab_video": {
+    "message": "Video"
+  },
+  "video_tab_audio": {
+    "message": "Zvok"
+  },
+  "video_open_post": {
+    "message": "Za prenos odprite objavo"
   },
   "popup_send_to": {
     "message": "Pošlji prenose v"
@@ -241,5 +268,62 @@
   },
   "popup_media_title_name": {
     "message": "Dodaj naslov strani pred imena predstavnostnih datotek"
+  },
+  "video_cant_save": {
+    "message": "ni mogoče shraniti"
+  },
+  "video_open_post_button": {
+    "message": "Odpri objavo"
+  },
+  "video_drag_dots": {
+    "message": "Povlecite pike, da jo premaknete ob robu"
+  },
+  "video_tip": {
+    "message": "Prenesi $what$",
+    "placeholders": {
+      "what": {
+        "content": "$1",
+        "example": "1080p MP4 · 412 MB"
+      }
+    }
+  },
+  "video_tip_best": {
+    "message": "Prenesi najboljšo kakovost"
+  },
+  "video_sending": {
+    "message": "Pošiljanje v MDM..."
+  },
+  "video_added": {
+    "message": "Dodano v MDM"
+  },
+  "video_show": {
+    "message": "Pokaži"
+  },
+  "video_no_answer": {
+    "message": "MDM se ni odzval"
+  },
+  "video_get_mdm": {
+    "message": "Pridobi MDM"
+  },
+  "video_retry": {
+    "message": "Poskusi znova"
+  },
+  "video_turn_on": {
+    "message": "Vklopi"
+  },
+  "video_best": {
+    "message": "najboljše"
+  },
+  "video_all_qualities": {
+    "message": "Vse kakovosti in podnapisi..."
+  },
+  "video_failed": {
+    "message": "Mister Download Manager ni nameščen ali se ni zagnal"
+  },
+  "video_download_best": {
+    "message": "Prenesi najboljšo kakovost"
+  },
+  "video_original": {
+    "message": "izvirno"
   }
 }

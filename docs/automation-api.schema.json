@@ -438,6 +438,14 @@
             "null"
           ]
         },
+        "panel_show_site": {
+          "default": null,
+          "description": "From that button's \"Turn on\" (after \"Never on <site>\"): show it on this site again.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "post": {
           "default": null,
           "description": "From the browser: a form's download, re-sent as a POST with this body and its\nContent-Type (`post_type`).",
@@ -510,6 +518,14 @@
             "null"
           ]
         },
+        "show_download": {
+          "default": null,
+          "description": "That button's \"Show\", once a download was added: the main window comes up with the newest\ndownload of this address (the video's page as it was looked up, or its file) selected.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "silent": {
           "default": false,
           "description": "`/n`: silent — no Download File Info dialog.",
@@ -554,19 +570,46 @@
             "null"
           ]
         },
-        "video_heights": {
-          "default": [],
-          "description": "From the same button, a second message: the qualities the page's own player response\nalready lists, shown while yt-dlp looks the page up. Not kept.",
-          "items": {
-            "format": "uint32",
-            "minimum": 0,
-            "type": "integer"
-          },
-          "type": "array"
+        "video_direct": {
+          "default": false,
+          "description": "With `video_page`, from that button over a video that plays a plain file (no stream, no\npage to read): `video_page` is that file, downloaded as any file at once, with no window.",
+          "type": "boolean"
+        },
+        "video_lookup": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/VideoLookup"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "From the browser's quality menu over a video (the button's click): look this video up\nwith yt-dlp, off the window, and answer at once with a token to ask about it\n([`api::VideoLookupAnswer`], `pending`). The browser's request context (`referer`,\n`cookies`, `cookie_jar`, `user_agent`, `private`) goes with it and stays the look-up's."
         },
         "video_page": {
           "default": null,
           "description": "From the browser's download button over a video: open the Download video window for this\npage (its address; an embedded player's own).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "video_pick": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/VideoPick"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The quality menu: download the choice made there, with the look-up's own selector and\ncontext (`private` must be the look-up's); answered `started` or `queued`, or\n`use-window` when it can't be (the Download video window then does it)."
+        },
+        "video_poll": {
+          "default": null,
+          "description": "The quality menu: how is the look-up of this token going (`pending`, `ready` with the\nchoices, `failed`, `list`, `gone`)?",
           "type": [
             "string",
             "null"
@@ -603,11 +646,172 @@
         "why"
       ],
       "type": "object"
+    },
+    "VideoChoice": {
+      "description": "One quality the browser's quality menu offers.",
+      "properties": {
+        "audio": {
+          "default": false,
+          "description": "Only the sound (an audio file, a conversion to MP3, Opus or FLAC): the menu lists these\napart from the videos. False from an app older than the field.",
+          "type": "boolean"
+        },
+        "ext": {
+          "default": "",
+          "description": "The file's type (`mp4`, `mp3`).",
+          "type": "string"
+        },
+        "fps": {
+          "description": "Frames a second, when above 31 (60 fps is worth saying, 30 isn't).",
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "height": {
+          "description": "The picture's height in pixels (the button's chip: 1080p, 4K); none for the sound, or a\nfile known only by its type.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "kbps": {
+          "description": "The sound's bitrate in kbit/s, for the sound as the site has it.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "label": {
+          "default": "",
+          "description": "What the menu shows (\"720p mp4\"), in MDM's language.",
+          "type": "string"
+        },
+        "original": {
+          "description": "The sound as the site sends it (not converted): the button's list says \"original\".",
+          "type": "boolean"
+        },
+        "size": {
+          "default": null,
+          "description": "Bytes, exact or estimated; null when unknown.",
+          "format": "uint64",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "VideoLookup": {
+      "description": "The video the browser's quality menu asks about ([`Command::video_lookup`]).",
+      "properties": {
+        "address": {
+          "default": "",
+          "description": "What yt-dlp looks up: the video's own file or its stream's manifest when the page plays\none, else the page.",
+          "type": "string"
+        },
+        "store_id": {
+          "default": null,
+          "description": "The browser's cookie store the page is in (Firefox's containers): a choice is only taken\nfrom the same one.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "title": {
+          "default": null,
+          "description": "The title of the page the button was clicked on: a video yt-dlp knows only by its address\nis named by it (as [`Command::video_title`]).",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "VideoLookupAnswer": {
+      "description": "The browser's quality menu (`video_lookup`, `video_poll`, `video_pick`): where a look-up is,\nor what became of a choice. Answered whatever the automation API's switch (the browser's\nhost asks, not a program).",
+      "properties": {
+        "choices": {
+          "description": "`ready`: the qualities to choose from, labelled in MDM's language; `video_pick` takes a\nplace in this list.",
+          "items": {
+            "$ref": "#/$defs/VideoChoice"
+          },
+          "type": "array"
+        },
+        "message": {
+          "description": "`failed` with [`lookup::ERROR`]: why, in MDM's words and language.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reason": {
+          "description": "`failed`: [`lookup::NO_YTDLP`], [`lookup::NO_CHOICES`] or [`lookup::ERROR`].",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "state": {
+          "default": "",
+          "description": "One of [`lookup`]'s states.",
+          "type": "string"
+        },
+        "title": {
+          "description": "`ready`: the video's title, the file's name: the page's when yt-dlp knows the video only\nby its address, as the Download video window names it ([`crate::Command::video_title`]).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "token": {
+          "description": "`pending` and `ready`: the look-up's token, to ask about it and to pick from it.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "VideoPick": {
+      "description": "A choice made in the browser's quality menu ([`Command::video_pick`]).",
+      "properties": {
+        "choice": {
+          "default": 0,
+          "description": "The choice's place in the look-up's `choices`.",
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "store_id": {
+          "default": null,
+          "description": "The cookie store the choice was made in: the look-up's, or it isn't taken.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "token": {
+          "default": "",
+          "description": "The look-up's token.",
+          "type": "string"
+        }
+      },
+      "type": "object"
     }
   },
   "$id": "https://misterdownloadmanager.com/automation-api.schema.json",
   "$ref": "#/$defs/Request",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "description": "One JSON line to the port in ipc.json (on 127.0.0.1), one line back. A request is `Request`. A command (an address to add, start_queue) is answered `ok`; a question is answered with the JSON object for it (`ListAnswer`, `ActAnswer`, `ApiAnswer`) or an `ErrorAnswer`. A wrong token is answered `denied`, an app that doesn't answer within 2 seconds `timeout`. Guide: https://misterdownloadmanager.com/help/command-line.html#the-automation-api",
+  "description": "One JSON line to the port in ipc.json (on 127.0.0.1), one line back. A request is `Request`. A command (an address to add, start_queue) is answered `ok`; a question is answered with the JSON object for it (`ListAnswer`, `ActAnswer`, `ApiAnswer`) or an `ErrorAnswer`. A wrong token is answered `denied`, an app that doesn't answer within 2 seconds `timeout`. The browser's quality menu (`video_lookup`, `video_poll`, `video_pick`, sent by its native host) is answered with a `VideoLookupAnswer`. Guide: https://misterdownloadmanager.com/help/command-line.html#the-automation-api",
   "title": "Mister Download Manager automation API"
 }

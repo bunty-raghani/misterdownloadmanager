@@ -32,12 +32,6 @@
   "video_sent": {
     "message": "Enviado a Mister Download Manager"
   },
-  "video_failed": {
-    "message": "Mister Download Manager no está instalado o no se inició"
-  },
-  "video_drag": {
-    "message": "Arrastrar para moverlo por el borde del vídeo"
-  },
   "menu_selected": {
     "message": "Descargar enlaces seleccionados con Mister Download Manager"
   },
@@ -180,13 +174,46 @@
     "message": "En directo"
   },
   "video_off": {
-    "message": "El botón de descarga está desactivado en este sitio"
+    "message": "Desactivado en este sitio"
   },
   "video_drm": {
-    "message": "Vídeo protegido: no se puede guardar"
+    "message": "Vídeo protegido"
   },
   "video_unnamed": {
     "message": "No se puede saber qué vídeo es: abre su propia página e inténtalo allí"
+  },
+  "video_looking": {
+    "message": "Buscando las calidades…"
+  },
+  "video_no_choices": {
+    "message": "No hay vídeo que descargar aquí"
+  },
+  "video_playlist": {
+    "message": "Es una lista de vídeos: elíjalos en Mister Download Manager"
+  },
+  "video_no_ytdlp": {
+    "message": "Mister Download Manager necesita yt-dlp para este vídeo"
+  },
+  "video_too_long": {
+    "message": "La búsqueda tardó demasiado"
+  },
+  "video_busy": {
+    "message": "Mister Download Manager está ocupado con otros vídeos"
+  },
+  "video_queued": {
+    "message": "Añadido a la cola"
+  },
+  "video_failed_lookup": {
+    "message": "No se pudieron buscar las calidades"
+  },
+  "video_tab_video": {
+    "message": "Vídeo"
+  },
+  "video_tab_audio": {
+    "message": "Audio"
+  },
+  "video_open_post": {
+    "message": "Abre la publicación para descargarlo"
   },
   "popup_send_to": {
     "message": "Enviar descargas a"
@@ -241,5 +268,62 @@
   },
   "popup_media_title_name": {
     "message": "Añadir el título de la página delante de los nombres de los archivos multimedia"
+  },
+  "video_cant_save": {
+    "message": "no se puede guardar"
+  },
+  "video_open_post_button": {
+    "message": "Abrir publicación"
+  },
+  "video_drag_dots": {
+    "message": "Arrastra los puntos para moverlo por el borde"
+  },
+  "video_tip": {
+    "message": "Descargar $what$",
+    "placeholders": {
+      "what": {
+        "content": "$1",
+        "example": "1080p MP4 · 412 MB"
+      }
+    }
+  },
+  "video_tip_best": {
+    "message": "Descargar la mejor calidad"
+  },
+  "video_sending": {
+    "message": "Enviando a MDM..."
+  },
+  "video_added": {
+    "message": "Añadido a MDM"
+  },
+  "video_show": {
+    "message": "Mostrar"
+  },
+  "video_no_answer": {
+    "message": "MDM no respondió"
+  },
+  "video_get_mdm": {
+    "message": "Obtener MDM"
+  },
+  "video_retry": {
+    "message": "Reintentar"
+  },
+  "video_turn_on": {
+    "message": "Activar"
+  },
+  "video_best": {
+    "message": "mejor"
+  },
+  "video_all_qualities": {
+    "message": "Todas las calidades y subtítulos..."
+  },
+  "video_failed": {
+    "message": "Mister Download Manager no está instalado o no se inició"
+  },
+  "video_download_best": {
+    "message": "Descargar mejor"
+  },
+  "video_original": {
+    "message": "original"
   }
 }

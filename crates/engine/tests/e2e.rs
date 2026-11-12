@@ -825,6 +825,44 @@ async fn the_view_names_the_file_when_its_place_was_taken_meanwhile() {
     }
 }
 
+/// #743: a name given before its folder was looked at (Download File Info doesn't wait for a
+/// slow disk) is numbered as the download starts when it is taken by then, by a file or by
+/// another download's part file: neither is touched, and the view names the file made.
+#[tokio::test]
+async fn a_name_given_unlooked_is_numbered_as_it_starts() {
+    let s = server("").await;
+    let dir = tempfile::tempdir().unwrap();
+    let dest = dir.path().join("master.mp4");
+    std::fs::write(&dest, b"someone else's").unwrap();
+    let part = mdm_engine::naming::part_path(&dir.path().join("master (1).mp4"));
+    std::fs::write(&part, b"another download's").unwrap();
+    let dl = Download::start(
+        Request {
+            url: s.url("/gen/256K/master.mp4?seed=7").parse().unwrap(),
+            headers: Default::default(),
+            dest: Destination::Free(dest.clone()),
+        },
+        fast_opts(),
+    );
+    let (file, path) = view_and_outcome(dl).await;
+    assert_eq!(path, dir.path().join("master (2).mp4"));
+    assert_eq!(file.as_deref(), Some(path.as_path()));
+    assert_eq!(std::fs::read(&dest).unwrap(), b"someone else's");
+    assert_eq!(std::fs::read(&part).unwrap(), b"another download's");
+    assert_eq!(std::fs::metadata(&path).unwrap().len(), 256 * 1024);
+    // Free, it keeps its name.
+    let free = dir.path().join("free.mp4");
+    let dl = Download::start(
+        Request {
+            url: s.url("/gen/64K/free.mp4?seed=8").parse().unwrap(),
+            headers: Default::default(),
+            dest: Destination::Free(free.clone()),
+        },
+        fast_opts(),
+    );
+    assert_eq!(view_and_outcome(dl).await.1, free);
+}
+
 /// The same for a resumed download: the row follows, and the resume itself still works.
 #[tokio::test]
 async fn the_view_names_the_file_when_a_resume_finds_its_place_taken() {
@@ -1676,58 +1714,142 @@ async fn a_one_time_link_is_read_from_the_kept_answer() {
     assert!(Download::start(req, fast_opts()).wait().await.is_err());
 }
 
-/// #361: a flush that holds up every write (as on NTFS) must not hold up the download: the
-/// connections keep receiving meanwhile and none of them reconnects for it. Before: the
-/// connections stood still during each 1.5 s flush, one per save tick, and were then told apart
-/// as slow (reconnections, on top of the stalls).
+/// A download watched from outside while it runs (`a_slow_disk_does_not_stop_the_transfer`).
+struct Watched {
+    /// From the start until every byte had arrived (`Snapshot::downloaded` counts the bytes
+    /// waiting in memory for the disk too): the transfer, without what the disk takes after it.
+    received: std::time::Duration,
+    /// While the first slow flush held the writes (`gate` taken exclusively): the bytes that
+    /// arrived meanwhile, and the bytes still to come when it began.
+    during_flush: Option<(u64, u64)>,
+    /// The longest time no byte arrived, until all but the last sixteenth had.
+    quiet: std::time::Duration,
+    /// Connections shed as much slower than the others.
+    shed: usize,
+}
+
+async fn watch(
+    d: Download,
+    size: u64,
+    gate: Option<std::sync::Arc<std::sync::RwLock<()>>>,
+) -> (Result<mdm_engine::Outcome, mdm_engine::Error>, Watched) {
+    use mdm_engine::download::State;
+    let started = std::time::Instant::now();
+    let mut received = None;
+    // `downloaded` when the flush was first seen holding the gate.
+    let mut flush_began: Option<u64> = None;
+    let mut during_flush = None;
+    let (mut last, mut last_at, mut quiet) = (0, started, std::time::Duration::ZERO);
+    let (slow, mut shed, mut seen) = (mdm_engine::Error::SlowConnection.to_string(), 0, 0);
+    loop {
+        let v = d.snapshot();
+        // The last bytes may wait for the disk with the rest of their connection's memory.
+        if v.downloaded > last || v.downloaded >= size - size / 16 {
+            last = v.downloaded;
+            last_at = std::time::Instant::now();
+        }
+        quiet = quiet.max(last_at.elapsed());
+        let since = seen;
+        for e in v.events.iter().filter(|e| e.seq > since) {
+            shed += usize::from(e.text.contains(&slow));
+            seen = e.seq;
+        }
+        let flushing = gate.as_ref().is_some_and(|g| g.try_read().is_err());
+        if flushing && flush_began.is_none() && during_flush.is_none() {
+            flush_began = Some(v.downloaded);
+        } else if !flushing && let Some(at) = flush_began.take() {
+            during_flush = Some((v.downloaded - at, size - at));
+        }
+        if received.is_none() && v.downloaded >= size {
+            received = Some(started.elapsed());
+        }
+        if matches!(v.state, State::Done | State::Failed | State::Cancelled) {
+            break;
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(2)).await;
+    }
+    let received = received.unwrap_or_else(|| started.elapsed());
+    (
+        d.wait().await,
+        Watched {
+            received,
+            during_flush,
+            quiet,
+            shed,
+        },
+    )
+}
+
+/// #361, #782: a disk slower than the network must not hold up the download, and none of its
+/// connections reconnects for it.
+///
+/// First a flush that holds up every write (as on NTFS) for 1.5 s: the connections keep
+/// receiving meanwhile. Before (#361): the connections stood still during each flush, one per
+/// save tick, and were then told apart as slow (reconnections, on top of the stalls). It
+/// measures the transfer, not the disk: the bytes received while the flush runs, and the time
+/// until every byte arrived. The time until the download completes also counts the real disk
+/// taking in 160 MB: on GitHub's Windows runners that alone took 1 s to over 13 s (Windows held
+/// the writes into its cache to the disk's pace: 19 MB writes took up to 5.9 s with no flush
+/// running), and failed the old wall-clock bound now and then (#518): 7.9 s against 2.6 s, with
+/// every byte received in 1.4 s against 1.0 s.
+///
+/// Then a disk behind the network (#782): the link gives 160 MB/s, the disk takes 48 MiB/s
+/// behind a 256 MiB cache, and a flush holds the writes until the cache is written. Once the
+/// connections' memory is full the download goes at the disk's pace: evenly, with no connection
+/// shed. The download itself is too short for 0.5.2's flushes to grow past what memory covers
+/// (`examples/slow_disk` measures that: a 12.5 s freeze 2.9 GB in); the test keeps what the fix
+/// does, and its unit tests (`a_flush_starts_only_when_it_should_be_short`,
+/// `waiting_for_the_disk_never_makes_a_connection_slow`) what 0.5.2 did wrong.
 #[tokio::test]
-async fn a_slow_flush_does_not_stop_the_transfer() {
+async fn a_slow_disk_does_not_stop_the_transfer() {
+    const SIZE: u64 = 160 << 20;
     let s = server("rate=20M").await; // 8 connections, about 160 MB/s together
     let dir = tempfile::tempdir().unwrap();
     // The same download with a disk that never stalls, on this machine at this moment: the
     // yardstick the slow flush is measured against (#518: a fixed limit failed on busy runners).
-    let started = std::time::Instant::now();
-    Download::start(
-        Request {
-            url: s.url("/gen/160M/a.bin?seed=518").parse().unwrap(),
-            headers: Default::default(),
-            dest: Destination::Dir(dir.path().to_owned()),
-        },
-        Options {
-            save_interval: std::time::Duration::from_millis(100),
-            ..fast_opts()
-        },
+    let (done, yardstick) = watch(
+        Download::start(
+            Request {
+                url: s.url("/gen/160M/a.bin?seed=518").parse().unwrap(),
+                headers: Default::default(),
+                dest: Destination::Dir(dir.path().to_owned()),
+            },
+            Options {
+                save_interval: std::time::Duration::from_millis(100),
+                ..fast_opts()
+            },
+        ),
+        SIZE,
+        None,
     )
-    .wait()
-    .await
-    .expect("the yardstick download succeeds");
-    let yardstick = started.elapsed();
+    .await;
+    done.expect("the yardstick download succeeds");
     tokio::time::timeout(SETTLE, s.settled())
         .await
         .expect("every request ends");
     let before = s.log().len();
+    let slow = mdm_engine::slowdisk::SlowDisk::slow_flush(std::time::Duration::from_millis(1500));
+    let gate = slow.gate.clone();
     let opts = Options {
         save_interval: std::time::Duration::from_millis(100),
-        slow_flush: Some(mdm_engine::download::SlowFlush {
-            takes: std::time::Duration::from_millis(1500),
-            gate: Default::default(),
-        }),
+        slow_disk: Some(slow),
         ..fast_opts()
     };
-    let started = std::time::Instant::now();
-    let out = Download::start(
-        Request {
-            url: s.url("/gen/160M/a.bin?seed=361").parse().unwrap(),
-            headers: Default::default(),
-            dest: Destination::Dir(dir.path().to_owned()),
-        },
-        opts,
+    let (out, slowed) = watch(
+        Download::start(
+            Request {
+                url: s.url("/gen/160M/a.bin?seed=361").parse().unwrap(),
+                headers: Default::default(),
+                dest: Destination::Dir(dir.path().to_owned()),
+            },
+            opts,
+        ),
+        SIZE,
+        Some(gate),
     )
-    .wait()
-    .await
-    .expect("download succeeds");
-    let took = started.elapsed();
-    assert_eq!(out.size, 160 << 20);
+    .await;
+    let out = out.expect("download succeeds");
+    assert_eq!(out.size, SIZE);
     let data = std::fs::read(&out.path).unwrap();
     let mut want = vec![0; data.len()];
     content::fill(361, 0, &mut want);
@@ -1736,20 +1858,78 @@ async fn a_slow_flush_does_not_stop_the_transfer() {
         .await
         .expect("every request ends");
     let log = s.log().split_off(before);
-    // At most one 1.5 s flush more than the yardstick, with room for a busy machine: 4.5 s, or
-    // most of the yardstick again when it is long (a busy runner slows this run as much as the
-    // yardstick's; 10.3 s against 5.8 s failed the fixed 4.5 s once). Before the fix every
-    // tick's flush stalled all writes for 1.5 s, one per 0.1 s tick: 7.6 s measured against
-    // about 1 s, and many times the yardstick on a slower machine, far past either bound.
-    let allowed = (yardstick + std::time::Duration::from_millis(4500))
-        .max(yardstick.mul_f64(1.8) + std::time::Duration::from_millis(1500));
+    // The connections kept receiving while the flush held their writes: 16 MiB in its 1.5 s
+    // (or the rest of the file), where connections waiting for the disk take in a batch each at
+    // most (8 x 256 KiB). Measured: 143 MB; with the connections writing during the flush, 0.6
+    // to 2.8 MB (and every byte in 2.2 s against 1.0 s, which the bound below lets through).
+    let (grew, left) = slowed
+        .during_flush
+        .expect("a slow flush ran while the connections received");
     assert!(
-        took < allowed,
-        "took {took:?}, the same download without the slow flush {yardstick:?}"
+        grew >= (16 << 20).min(left),
+        "{grew} bytes received during the slow flush ({left} left when it began)"
+    );
+    // Every byte arrived about as soon as without the slow flush, with room for a busy machine:
+    // 4.5 s more, or most of the yardstick again when it is long (a busy runner slows this run as
+    // much as the yardstick's). Before the fix every tick's flush stalled all writes for 1.5 s,
+    // one per 0.1 s tick: 7.6 s measured against about 1 s.
+    let allowed = (yardstick.received + std::time::Duration::from_millis(4500))
+        .max(yardstick.received.mul_f64(1.8) + std::time::Duration::from_millis(1500));
+    assert!(
+        slowed.received < allowed,
+        "every byte in {:?}, the same download without the slow flush {:?}",
+        slowed.received,
+        yardstick.received
     );
     // No connection reconnected because of the disk's stall: the probe, seven more, and the
     // planner's closing splits only.
     assert!(log.len() < 48, "{} requests: {log:?}", log.len());
+    assert_eq!(slowed.shed, 0, "connections shed during the slow flush");
+
+    // A disk behind the network, the link a real one (`burst`: it doesn't bank what the client
+    // didn't take, so a connection that stood still restarts at the link's pace).
+    const BEHIND: u64 = 768 << 20;
+    let s = server("rate=20M&burst=1M").await;
+    let disk = mdm_engine::slowdisk::SlowDisk::new(48 << 20, 256 << 20, Default::default());
+    let (out, behind) = watch(
+        Download::start(
+            Request {
+                url: s.url("/gen/768M/b.bin?seed=782").parse().unwrap(),
+                headers: Default::default(),
+                dest: Destination::Dir(dir.path().to_owned()),
+            },
+            Options {
+                save_interval: std::time::Duration::from_millis(100),
+                slow_disk: Some(disk.clone()),
+                ..fast_opts()
+            },
+        ),
+        BEHIND,
+        None,
+    )
+    .await;
+    let out = out.expect("download succeeds");
+    assert_eq!(out.size, BEHIND);
+    let data = std::fs::read(&out.path).unwrap();
+    let mut want = vec![0; data.len()];
+    content::fill(782, 0, &mut want);
+    assert!(data == want, "content mismatch");
+    tokio::time::timeout(SETTLE, s.settled())
+        .await
+        .expect("every request ends");
+    let flushes = disk.stats().flushes;
+    eprintln!(
+        "disk behind: {} shed, every byte in {:?}, longest quiet {:?}, flushes {flushes:?}",
+        behind.shed, behind.received, behind.quiet
+    );
+    // Measured: none shed, at most 11 ms without a byte (until the last sixteenth, which may
+    // wait for the disk with the rest of its connection's memory).
+    assert_eq!(behind.shed, 0, "connections shed for the disk's pace");
+    assert!(
+        behind.quiet < std::time::Duration::from_millis(1200),
+        "nothing arrived for {:?} (flushes: {flushes:?})",
+        behind.quiet
+    );
 }
 
 /// #372: a server that refuses a browser's User-Agent with 403 (seen on a public
@@ -1870,11 +2050,24 @@ async fn a_refused_link_goes_on_where_the_browser_download_ended() {
         .await
         .expect("every request ends");
     let log = s.log();
+    let refused = |browser_like: bool| {
+        log.iter()
+            .filter(|e| e.outcome == "fault:refuse" && e.sec_fetch_mode.is_some() == browser_like)
+            .count()
+    };
     assert_eq!(
-        log.iter().filter(|e| e.outcome == "fault:refuse").count(),
+        refused(false),
         2,
         "the link was asked once per download: {log:?}"
     );
+    // Without the browser's address, it was asked once more the way a browser connects (#668),
+    // refused too; with it, the browser's address got the file first.
+    let once_more = if cfg!(feature = "browser-connection") {
+        1
+    } else {
+        0
+    };
+    assert_eq!(refused(true), once_more, "{log:?}");
     let served: Vec<_> = log
         .iter()
         .filter(|e| e.status == 200 || e.status == 206)
@@ -1920,5 +2113,101 @@ async fn a_spent_link_goes_on_where_the_browser_download_ended() {
     assert!(
         matches!(refused, Err(mdm_engine::Error::Status(s)) if s.as_u16() == 410),
         "{refused:?}"
+    );
+}
+
+/// The span a ranged request asked for (`bytes=a-b`), in bytes.
+fn asked_len(range: &str) -> Option<u64> {
+    let (a, b) = range.strip_prefix("bytes=")?.split_once('-')?;
+    Some(b.parse::<u64>().ok()? - a.parse::<u64>().ok()? + 1)
+}
+
+/// #769: a server that slows long answers down (YouTube's media servers, yt-dlp's
+/// `http_chunk_size`): under `request_cap` every request, the first one too, asks for at most
+/// that many bytes, one after another on each connection, and the file comes whole.
+#[tokio::test]
+async fn requests_stay_within_the_cap() {
+    let s = server("rate=8M").await;
+    const CAP: u64 = 256 * 1024;
+    let opts = Options {
+        request_cap: Some(CAP),
+        max_connections: 4,
+        ..fast_opts()
+    };
+    let (log, size) = fetch(&s, "/gen/3M/capped.bin?seed=769", 769, opts).await;
+    assert_eq!(size, 3 << 20);
+    let file: Vec<&LogEntry> = log.iter().filter(|e| e.path.starts_with("/gen/")).collect();
+    assert!(
+        file.iter().all(|e| e.status == 206),
+        "every answer is a range"
+    );
+    let spans: Vec<u64> = file
+        .iter()
+        .map(|e| e.range.as_deref().and_then(asked_len).expect("a range"))
+        .collect();
+    assert!(
+        spans.iter().all(|n| *n <= CAP),
+        "a request over the cap: {spans:?}"
+    );
+    // 3 MB in pieces of 256 KB at most: twelve requests or more, kept alive on few connections.
+    assert!(spans.len() >= 12, "{} requests", spans.len());
+    assert!(
+        file.iter().any(|e| e.conn_req > 1),
+        "the next piece goes on the same connection"
+    );
+    assert!(max_concurrent(&log) >= 2, "connections ran in parallel");
+}
+
+/// #769: a capped download stopped half-way resumes with capped requests and comes whole.
+#[tokio::test]
+async fn a_capped_download_resumes_within_the_cap() {
+    let s = server("rate=2M").await;
+    const CAP: u64 = 128 * 1024;
+    let dir = tempfile::tempdir().unwrap();
+    let dest = dir.path().join("capped-resume.bin");
+    let opts = Options {
+        request_cap: Some(CAP),
+        max_connections: 3,
+        save_interval: std::time::Duration::from_millis(100),
+        ..fast_opts()
+    };
+    let req = Request {
+        url: s.url("/gen/2M/r.bin?seed=770").parse().unwrap(),
+        headers: Default::default(),
+        dest: Destination::File(dest.clone()),
+    };
+    let dl = Download::start(req, opts.clone());
+    loop {
+        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+        if dl.snapshot().downloaded > 600 * 1024 {
+            break;
+        }
+    }
+    dl.cancel();
+    let _ = dl.wait().await;
+    let state = mdm_engine::state::state_path(&dest);
+    assert!(state.exists(), "the resume state is kept");
+    s.clear_log();
+    let out = Download::resume(state, Default::default(), opts)
+        .expect("resumes")
+        .wait()
+        .await
+        .expect("completes");
+    let data = std::fs::read(&out.path).unwrap();
+    let mut want = vec![0; data.len()];
+    content::fill(770, 0, &mut want);
+    assert!(data.len() == 2 << 20 && data == want, "content mismatch");
+    tokio::time::timeout(SETTLE, s.settled())
+        .await
+        .expect("every request ends");
+    let spans: Vec<u64> = s
+        .log()
+        .iter()
+        .filter(|e| e.path.starts_with("/gen/"))
+        .filter_map(|e| e.range.as_deref().and_then(asked_len))
+        .collect();
+    assert!(
+        !spans.is_empty() && spans.iter().all(|n| *n <= CAP),
+        "{spans:?}"
     );
 }

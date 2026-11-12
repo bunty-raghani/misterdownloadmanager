@@ -1,0 +1,51 @@
+<!doctype html>
+<!-- LinkedIn's home feed, reduced to what names a post (our own sample: no real person, post or
+     text). Each <video> says what the button must send for it (data-expect: an address, "page"
+     for the page's own, "none" for nothing). -->
+<html><head><meta charset="utf-8"><meta name="mdm-page" content="https://www.linkedin.com/feed/"><title>Feed | LinkedIn</title><link rel="stylesheet" href="feeds.css"></head>
+<body>
+<main class="scaffold-layout__main">
+<div class="scaffold-finite-scroll__content" data-finite-scroll-hotkey-context="FEED">
+  <div data-id="urn:li:activity:7390000000000000001" class="relative" data-finite-scroll-hotkey-item="0">
+    <div class="feed-shared-update-v2" data-urn="urn:li:activity:7390000000000000001" role="article">
+      <div class="update-components-actor">
+        <a class="update-components-actor__meta-link" href="https://www.linkedin.com/in/sample-person-a/">Sample Person A</a>
+        <a class="update-components-actor__sub-description-link" href="https://www.linkedin.com/feed/update/urn:li:activity:7390000000000000001/">2h</a>
+      </div>
+      <div class="update-components-text">A first sample post with a video.</div>
+      <div class="update-components-linkedin-video"><div class="video-js" data-vjs-player="">
+        <video class="vjs-tech" data-expect="https://www.linkedin.com/feed/update/urn:li:activity:7390000000000000001/"></video>
+      </div></div>
+      <div class="social-details-social-counts"><a href="https://www.linkedin.com/feed/update/urn:li:ugcPost:7390000000000000101/">12 comments</a></div>
+    </div>
+  </div>
+  <div data-id="urn:li:aggregate:(urn:li:ugcPost:7390000000000000002)" class="relative" data-finite-scroll-hotkey-item="1">
+    <div class="feed-shared-update-v2" data-urn="urn:li:ugcPost:7390000000000000002" role="article">
+      <div class="update-components-actor"><a href="https://www.linkedin.com/company/sample-company-b/">Sample Company B</a></div>
+      <div class="update-components-linkedin-video"><div class="video-js" data-vjs-player="">
+        <video class="vjs-tech" data-expect="https://www.linkedin.com/feed/update/urn:li:ugcPost:7390000000000000002/"></video>
+      </div></div>
+    </div>
+  </div>
+  <div data-id="urn:li:activity:7390000000000000003" class="relative" data-finite-scroll-hotkey-item="2">
+    <div class="feed-shared-update-v2" data-urn="urn:li:activity:7390000000000000003" role="article">
+      <div class="update-components-actor"><a href="https://www.linkedin.com/in/sample-person-c/">Sample Person C reposted this</a></div>
+      <div class="update-components-mini-update-v2">
+        <a class="update-components-mini-update-v2__link-to-details-page" href="https://www.linkedin.com/feed/update/urn:li:activity:7390000000000000004/">Sample Person D</a>
+        <div class="update-components-linkedin-video"><div class="video-js" data-vjs-player="">
+          <video class="vjs-tech" data-expect="https://www.linkedin.com/feed/update/urn:li:activity:7390000000000000004/"></video>
+        </div></div>
+      </div>
+    </div>
+  </div>
+  <div class="relative" data-finite-scroll-hotkey-item="3">
+    <div class="feed-shared-update-v2" role="article">
+      <div class="update-components-actor"><a href="https://www.linkedin.com/company/sample-advertiser/">Sample Advertiser · Promoted</a></div>
+      <div class="update-components-linkedin-video"><div class="video-js" data-vjs-player="">
+        <video class="vjs-tech" data-expect="none"></video>
+      </div></div>
+    </div>
+  </div>
+</div>
+</main>
+</body></html>

@@ -1,0 +1,62 @@
+{
+ "title": "group",
+ "duration": 115,
+ "language": "en",
+ "subtitles": {
+  "de": [
+   {}
+  ],
+  "fr": [
+   {}
+  ],
+  "und": [
+   {}
+  ]
+ },
+ "formats": [
+  {
+   "format_id": "aac-Deutsch",
+   "ext": "mp4",
+   "vcodec": "none",
+   "tbr": null,
+   "protocol": "m3u8_native"
+  },
+  {
+   "format_id": "aac-English",
+   "ext": "mp4",
+   "vcodec": "none",
+   "tbr": null,
+   "protocol": "m3u8_native"
+  },
+  {
+   "format_id": "800",
+   "ext": "mp4",
+   "height": 360,
+   "fps": null,
+   "vcodec": "avc1.42e01e",
+   "acodec": "none",
+   "tbr": 800.0,
+   "protocol": "m3u8_native"
+  },
+  {
+   "format_id": "2800",
+   "ext": "mp4",
+   "height": 720,
+   "fps": 30.0,
+   "vcodec": "avc1.4d401f",
+   "acodec": "none",
+   "tbr": 2800.0,
+   "protocol": "m3u8_native"
+  },
+  {
+   "format_id": "4500",
+   "ext": "mp4",
+   "height": 1080,
+   "fps": 60.0,
+   "vcodec": "avc1.640028",
+   "acodec": "none",
+   "tbr": 4500.0,
+   "protocol": "m3u8_native"
+  }
+ ]
+}

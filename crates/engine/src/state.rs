@@ -47,6 +47,10 @@ pub struct ResumeState {
     /// a GET (301, 302, 303): `final_url` is asked with GET.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub final_get: bool,
+    /// Only the browser-like connection got past the site's bot check (#668): a resume goes on
+    /// through it, on one connection.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub browser_like: bool,
 }
 
 impl ResumeState {
@@ -64,6 +68,7 @@ impl ResumeState {
             checksum: None,
             asked_as_mdm: false,
             final_get: false,
+            browser_like: false,
         }
     }
 

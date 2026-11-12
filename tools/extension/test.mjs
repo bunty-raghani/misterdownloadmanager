@@ -42,6 +42,9 @@ function fakeApi({
   proxyAnswer = true,
   proxyOn = false,
   noticeReply,
+  // The host's answer to the video button's lookups (`videoLookup`, `videoPoll`, `videoPick`): a
+  // function of the message; none: `reply`.
+  lookup,
 }) {
   const raw = [];
   // Objects made inside the sandbox have its prototypes: compare plain copies.
@@ -139,6 +142,7 @@ function fakeApi({
         // A notice of a download left alone (#208): an older host, which knows none, takes it
         // for an address it can't download (`noticeReply`).
         if (m.declined) return noticeReply || { ok: true };
+        if (lookup && (m.videoLookup || m.videoPoll || m.videoPick)) return lookup(m);
         return reply;
       },
       getManifest: () => ({
@@ -677,8 +681,9 @@ const ok = (what) => {
   listeners.responseStarted({ tabId: 5, frameId: 0, url: "https://cdn.test/v/720p.m3u8", responseHeaders: [] });
   listeners.responseStarted({ tabId: 5, frameId: 0, url: "https://cdn.test/v/seg1.ts", responseHeaders: [{ name: "Content-Type", value: "video/mp2t" }] });
   const send = (m) => new Promise((r) => listeners.message(m, sender, r));
-  await send({ type: "video", src: "" });
-  assert.equal(natives(calls).find((m) => m.video).src, "https://cdn.test/v/master.m3u8?t=1");
+  await send({ type: "video", src: "", title: "A story's film" });
+  const first = natives(calls).find((m) => m.video);
+  assert.deepEqual([first.src, first.title], ["https://cdn.test/v/master.m3u8?t=1", "A story's film"], "the page's title goes with its stream");
   listeners.tabUpdated(5, { url: "https://news.test/other" });
   await send({ type: "video", src: "" });
   assert.equal(natives(calls).filter((m) => m.video)[1].src, undefined, "forgotten on another page");
@@ -694,19 +699,20 @@ const ok = (what) => {
   listeners.responseStarted({ tabId: 7, frameId: 0, url: "https://other.test/x/main.mpd", responseHeaders: [] });
   await listeners.menu(
     { menuItemId: "mdm-link", srcUrl: "blob:https://player.test/1", frameId: 2, frameUrl: "https://player.test/embed", pageUrl: "https://blog.test/post" },
-    { id: 7, incognito: false },
+    { id: 7, incognito: false, title: "A post with a film" },
   );
   await settle();
   const m = natives(calls).find((x) => x.video);
   assert.deepEqual(
-    [m.url, m.src, m.referrer, m.explicit],
-    ["https://player.test/embed", "https://cdn.test/s/master.m3u8", "https://blog.test/post", true],
-    "the frame's stream, not the page alone",
+    [m.url, m.src, m.referrer, m.explicit, m.title],
+    ["https://player.test/embed", "https://cdn.test/s/master.m3u8", "https://blog.test/post", true, "A post with a film"],
+    "the frame's stream, not the page alone; the tab's title names its file",
   );
   assert.ok(calls.some((c) => c[0] === "cookies" && c[1].url === "https://cdn.test/s/master.m3u8"), "the stream's cookies");
-  await listeners.menu({ menuItemId: "mdm-link", linkUrl: "https://cdn.test/s/other.m3u8", pageUrl: "https://blog.test/post" }, { id: 7, incognito: false });
+  await listeners.menu({ menuItemId: "mdm-link", linkUrl: "https://cdn.test/s/other.m3u8", pageUrl: "https://blog.test/post" }, { id: 7, incognito: false, title: "A post with a film" });
   await settle();
-  assert.equal(natives(calls).filter((x) => x.video)[1].src, "https://cdn.test/s/other.m3u8");
+  const linked = natives(calls).filter((x) => x.video)[1];
+  assert.deepEqual([linked.src, linked.title], ["https://cdn.test/s/other.m3u8", "A post with a film"], "a manifest's link: named after its tab");
   assert.ok(calls.some((c) => c[0] === "cookies" && c[1].url === "https://cdn.test/s/other.m3u8"), "the manifest's cookies");
   // Firefox names no address for a player fed by a MediaSource: the same stream goes.
   await listeners.menu({ menuItemId: "mdm-link", mediaType: "video", frameId: 2, frameUrl: "https://player.test/embed", pageUrl: "https://blog.test/post" }, { id: 7, incognito: false });
@@ -770,6 +776,174 @@ const ok = (what) => {
   );
   assert.deepEqual(on, { on: false }, "where the app says no");
   ok("video button messages");
+}
+
+// The button's qualities: an app whose rules say it looks videos up (`videoLookup`, kept with the
+// status) gets the click as a lookup, never with `video` or a top-level `url` (an older host
+// refuses such a message and does nothing), with the cookies of what yt-dlp is given; its answer
+// goes back to the page as `lookup`. Without that (an older app, another MDM chosen, an answer
+// that isn't a lookup's) the page gets {fallback: true}: the click as it always was.
+{
+  const ask = (listeners, m, sender) => new Promise((r) => listeners.message(m, sender, (x) => r(JSON.parse(JSON.stringify(x)))));
+  const sender = { id: "ours", url: "https://news.test/story", frameId: 0, tab: { id: 5, url: "https://news.test/story", incognito: false, cookieStoreId: "firefox-container-2" } };
+  const lookups = (calls) => natives(calls).filter((m) => m.videoLookup || m.videoPoll || m.videoPick);
+  // The lookup: the page names the video, the background what the browser knows.
+  {
+    const { api, calls, listeners, store } = fakeApi({ firefox: true, rules: { videoLookup: true }, lookup: () => ({ ok: true, lookup: { state: "pending", token: "t1" } }) });
+    load(api, true);
+    await settle();
+    assert.equal(store.status.videoLookup, true, "kept from the answer to rules");
+    const r = await ask(listeners, { type: "video-lookup", src: "https://cdn.test/v/clip.mp4", title: "A story's film", url: "https://news.test/story", at: { x: 1, y: 1 } }, sender);
+    // `show`: the address MDM lists its download under, for the button's "Show" (#703).
+    assert.deepEqual(r, { lookup: { state: "pending", token: "t1" }, show: "https://cdn.test/v/clip.mp4" });
+    const m = natives(calls).find((x) => x.videoLookup);
+    assert.deepEqual([m.video, m.url], [undefined, undefined], "no `video`, no top-level `url`");
+    assert.deepEqual(m.videoLookup, { page: "https://news.test/story", src: "https://cdn.test/v/clip.mp4", title: "A story's film", storeId: "firefox-container-2" });
+    assert.deepEqual([m.cookies, m.private, m.userAgent, m.v], ["sid=1", false, "UA", "0.2.5"]);
+    assert.equal(m.cookieJar.length, 1, "each cookie with its domain");
+    assert.deepEqual(calls.filter((c) => c[0] === "cookies").at(-1)[1], { url: "https://cdn.test/v/clip.mp4", storeId: "firefox-container-2" }, "the file's cookies, from the tab's container");
+    // A player's page in a frame, in a private window: that page's cookies, from the private
+    // store, and the tab as its referrer.
+    const framed = { id: "ours", url: "https://player.test/embed/1", frameId: 3, tab: { id: 6, url: "https://blog.test/post", incognito: true } };
+    await ask(listeners, { type: "video-lookup", src: "blob:https://player.test/x", title: "" }, framed);
+    const p = natives(calls).filter((x) => x.videoLookup).at(-1);
+    assert.deepEqual([p.videoLookup, p.private], [{ page: "https://player.test/embed/1", referrer: "https://blog.test/post" }, true]);
+    assert.deepEqual(calls.filter((c) => c[0] === "cookies").at(-1)[1], { url: "https://player.test/embed/1", storeId: "1" }, "the page's cookies, from the private store");
+    assert.ok(!natives(calls).some((x) => x.video), "never the window's message");
+  }
+  // An app whose rules say nothing of it (an older one): the click as it was, no lookup sent.
+  {
+    const { api, calls, listeners, store } = fakeApi({ firefox: false });
+    load(api, false);
+    await settle();
+    assert.ok(!store.status.videoLookup, "an older app's rules");
+    assert.deepEqual(await ask(listeners, { type: "video-lookup", src: "https://cdn.test/v/clip.mp4" }, sender), { fallback: true });
+    assert.deepEqual(lookups(calls), []);
+  }
+  // Another MDM chosen: none of the three goes to the host, nor to the other MDM.
+  {
+    const { api, calls, listeners, store } = fakeApi({ firefox: false, rules: { videoLookup: true }, lookup: () => ({ ok: true, lookup: { state: "pending", token: "t1" } }) });
+    load(api, false);
+    await settle();
+    store.remote = { url: "https://server.test:8463/", token: "k" };
+    fetched.length = 0;
+    for (const m of [{ type: "video-lookup", src: "https://cdn.test/v/clip.mp4" }, { type: "video-poll", token: "t1" }, { type: "video-pick", token: "t1", choice: 0 }]) {
+      assert.deepEqual(await ask(listeners, m, sender), { fallback: true }, m.type);
+    }
+    assert.deepEqual(lookups(calls), []);
+    assert.deepEqual(fetched, [], "nothing to the other MDM");
+  }
+  // The ability kept from before, an older host or app now (MDM went back a version): its answer
+  // has no `lookup`. Not kept as able, its rules asked again, the click as it was; the next click
+  // sends no lookup at all. A refused message is no broken connection.
+  {
+    const { api, calls, listeners, store } = fakeApi({ firefox: false, reply: { ok: false, why: "refused", error: "not an http(s) or ftp(s) URL" } });
+    store.status = { why: null, app: "0.2.5", videoLookup: true };
+    store.rules = { types: DEFAULT_TYPES, capture: true, captureOff: "", excludedSites: "", excludedAddresses: [], opened: true, minKb: 0, at: Date.now() };
+    load(api, false);
+    await settle();
+    const asked = () => calls.filter((c) => c[0] === "rules").length;
+    const before = asked();
+    assert.deepEqual(await ask(listeners, { type: "video-lookup", src: "https://cdn.test/v/clip.mp4" }, sender), { fallback: true });
+    await settle();
+    assert.equal(store.status.videoLookup, false, "not kept as able");
+    assert.ok(asked() > before, "its rules asked again");
+    assert.deepEqual(await ask(listeners, { type: "video-lookup", src: "https://cdn.test/v/clip.mp4" }, sender), { fallback: true });
+    assert.equal(natives(calls).filter((x) => x.videoLookup).length, 1, "one lookup, then none");
+    assert.ok(!calls.some((c) => c[0] === "badge" && c[1] === "!"), "no \"!\"");
+  }
+  // How the lookup is going, and the quality picked: the token and the row's number from the
+  // page; private or not and the container from the tab, whatever the page says.
+  {
+    const ready = { state: "ready", token: "t1", title: "Film", choices: [{ label: "720p MP4", ext: "mp4", size: 187500000 }] };
+    const answers = { videoPoll: { ok: true, lookup: ready }, videoPick: { ok: true, lookup: { state: "started" } } };
+    const { api, calls, listeners } = fakeApi({ firefox: true, rules: { videoLookup: true }, lookup: (m) => answers[m.videoPoll ? "videoPoll" : "videoPick"] });
+    load(api, true);
+    await settle();
+    assert.deepEqual(await ask(listeners, { type: "video-poll", token: "t1" }, sender), { lookup: ready });
+    assert.deepEqual(natives(calls).find((x) => x.videoPoll).videoPoll, { token: "t1" });
+    const privateTab = { id: 8, url: "https://news.test/story", incognito: true, cookieStoreId: "firefox-private" };
+    const r = await ask(listeners, { type: "video-pick", token: "t1", choice: 0, private: false, storeId: "firefox-default" }, { id: "ours", url: "https://news.test/story", frameId: 0, tab: privateTab });
+    assert.deepEqual(r, { lookup: { state: "started" } });
+    const picked = natives(calls).find((x) => x.videoPick);
+    assert.deepEqual(
+      [picked.videoPick, picked.private, picked.url, picked.video],
+      [{ token: "t1", choice: 0, storeId: "firefox-private" }, true, undefined, undefined],
+      "the tab's window and container, not the page's say",
+    );
+    // An answer without `lookup`: the lookup is gone; a pick gets the window.
+    answers.videoPoll = { ok: true };
+    answers.videoPick = { ok: true };
+    assert.deepEqual(await ask(listeners, { type: "video-poll", token: "t1" }, sender), { lookup: { state: "gone" } });
+    assert.deepEqual(await ask(listeners, { type: "video-pick", token: "t1", choice: 0 }, sender), { fallback: true });
+    // Nothing but a token and a row's number is sent on.
+    const sent = natives(calls).length;
+    assert.deepEqual(await ask(listeners, { type: "video-poll", token: { x: 1 } }, sender), { lookup: { state: "gone" } });
+    assert.deepEqual(await ask(listeners, { type: "video-pick", token: "t1", choice: "0" }, sender), { fallback: true });
+    assert.deepEqual(await ask(listeners, { type: "video-pick", token: "t1", choice: -1 }, sender), { fallback: true });
+    assert.equal(natives(calls).length, sent);
+  }
+  // What a lookup comes to is never the connection's status: no "!" on the toolbar button, the
+  // rule for PDFs and music untouched, still able.
+  {
+    const states = [
+      { state: "failed", reason: "error", message: "ERROR: Unsupported URL" },
+      { state: "failed", reason: "no-ytdlp" },
+      { state: "busy" },
+      { state: "off" },
+      { state: "list" },
+      { state: "use-window" },
+      { state: "gone" },
+    ];
+    let next = 0;
+    const { api, calls, listeners, store } = fakeApi({ firefox: false, rules: { videoLookup: true }, lookup: () => ({ ok: true, lookup: states[next++] }) });
+    load(api, false);
+    await settle();
+    const rules = calls.filter((c) => c[0] === "dnr").length;
+    for (let i = 0; i < states.length; i++) {
+      const m = i % 2 ? { type: "video-poll", token: "t1" } : { type: "video-lookup", src: "https://cdn.test/v/clip.mp4" };
+      assert.deepEqual((await ask(listeners, m, sender)).lookup, states[i]);
+    }
+    await settle();
+    assert.equal(store.status.why, null);
+    assert.ok(!calls.some((c) => c[0] === "badge" && c[1] === "!"), "no \"!\"");
+    assert.equal(calls.filter((c) => c[0] === "dnr").length, rules, "the rule for PDFs and music untouched");
+    assert.equal(store.status.videoLookup, true, "still able");
+  }
+  // #703: the button's own actions. "Show" (MDM's window, the download selected), "Turn on" (the
+  // site off the list, at once here too), "Get MDM" and "Open post" (a tab next to this one; a post
+  // only on this page's site), a plain file sent as a file. None of them has a top-level `url`.
+  {
+    const { api, calls, listeners } = fakeApi({ firefox: false, rules: { videoLookup: true } });
+    const opened = [];
+    api.tabs.create = async (o) => opened.push(JSON.parse(JSON.stringify(o)));
+    load(api, false);
+    await settle();
+    const tab = { id: 5, index: 2, url: "https://news.test/story", incognito: false };
+    const from = { id: "ours", url: "https://news.test/story", frameId: 0, tab };
+    assert.deepEqual(await ask(listeners, { type: "show-download", address: "https://news.test/story" }, from), { ok: true });
+    assert.deepEqual(await ask(listeners, { type: "show-download", address: "javascript:alert(1)" }, from), { ok: false });
+    assert.deepEqual(await ask(listeners, { type: "show-site" }, from), { ok: true });
+    const sent = natives(calls);
+    assert.ok(sent.some((x) => x.showDownload === "https://news.test/story" && !x.url));
+    assert.ok(sent.some((x) => x.showSite === "news.test" && !x.url));
+    await ask(listeners, { type: "get-mdm" }, from);
+    await ask(listeners, { type: "open-post", url: "https://news.test/p/1" }, from);
+    assert.deepEqual(await ask(listeners, { type: "open-post", url: "https://elsewhere.test/p/1" }, from), { ok: false }, "a post on this page's site only");
+    assert.deepEqual(opened, [
+      { url: "https://misterdownloadmanager.com/download", openerTabId: 5, index: 3 },
+      { url: "https://news.test/p/1", openerTabId: 5, index: 3 },
+    ]);
+    // A plain file: `direct` with it, and `show` back for "Show".
+    const r = await ask(listeners, { type: "video", src: "https://cdn.test/v/clip.mp4", url: "https://news.test/story", direct: true, title: "" }, from);
+    assert.deepEqual(r, { ok: true, show: "https://cdn.test/v/clip.mp4" });
+    const v = natives(calls).filter((x) => x.video).at(-1);
+    assert.deepEqual([v.direct, v.src], [true, "https://cdn.test/v/clip.mp4"]);
+    // `direct` without a file of its own: the page, as before.
+    await ask(listeners, { type: "video", url: "https://news.test/story", direct: true, src: "blob:https://news.test/x" }, from);
+    assert.equal(natives(calls).filter((x) => x.video).at(-1).direct, undefined);
+  }
+  ok("video button: qualities looked up by the app, picked in the page; else the window, as before; Show, Turn on, Get MDM, Open post, a plain file");
 }
 
 // #38: the media a tab loaded, as the popup lists them. A response is media by its type or its
@@ -1175,27 +1349,22 @@ const MPD = (protect) => `<?xml version="1.0"?>
   ok("video button logo");
 }
 
+// video.js's videoPage, with what it calls (from it to its end mark), run against `location` and
+// `document`: the address the button hands the app for a <video>.
+const videoPageOn = (() => {
+  const source = readFileSync(new URL("../../extension/video.js", import.meta.url), "utf8");
+  const start = source.indexOf("function videoPage(v) {");
+  const end = source.indexOf("// ---- the video's own address: end.");
+  assert.ok(start > 0 && end > start, "video.js has videoPage and its end mark");
+  const body = `${source.slice(start, end)}; return videoPage;`;
+  return (location, document) => new Function("location", "document", body)(location, document);
+})();
+
 // The address the button hands the app (video.js's videoPage): the video's own page, not the page
 // that plays it. YouTube's home, a search, a channel or a playlist is a list to yt-dlp, and a watch
 // page opened from a mix carries the list in its address: the button sent either, and the app
 // offered the whole feed (~50 videos) instead of the one playing. #311.
 {
-  const source = readFileSync(new URL("../../extension/video.js", import.meta.url), "utf8");
-  const start = source.indexOf("function videoPage(v) {");
-  assert.ok(start > 0, "video.js has videoPage");
-  // The function's own braces, so a test never runs a half of it.
-  let depth = 0;
-  let end = start;
-  for (let i = source.indexOf("{", start); i < source.length; i += 1) {
-    if (source[i] === "{") depth += 1;
-    if (source[i] === "}") {
-      depth -= 1;
-      if (depth === 0) {
-        end = i + 1;
-        break;
-      }
-    }
-  }
   // A page: its address, an optional ytd-watch-flexy video-id, and the cards a player can sit in
   // (each level on the way up from the video element names the video links it contains).
   const at = (href, { flexy = null, cards = [] } = {}) => {
@@ -1206,8 +1375,7 @@ const MPD = (protect) => `<?xml version="1.0"?>
     const chain = cards.map(element);
     for (let i = 0; i < chain.length; i += 1) chain[i].parentElement = chain[i + 1] || null;
     const document = { querySelector: (sel) => (sel === "ytd-watch-flexy" && flexy ? { getAttribute: () => flexy } : null) };
-    const fn = new Function("location", "document", `${source.slice(start, end)}; return videoPage;`)({ href }, document);
-    return fn(chain[0] || element([]));
+    return videoPageOn({ href }, document)(chain[0] || element([]));
   };
   // A watch page from a mix or a playlist: the video's own address, without the list.
   assert.equal(at("https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=RDdQw4w9WgXcQ&start_radio=1"), "https://www.youtube.com/watch?v=dQw4w9WgXcQ");
@@ -1299,22 +1467,212 @@ const MPD = (protect) => `<?xml version="1.0"?>
   ok("in-place navigation and YouTube's player: the video playing now, or nothing");
 }
 
+// A small DOM for the sample pages (tools/extension/feeds): elements with their attributes, open
+// shadow roots (<template shadowrootmode>), `a.href`, and querySelector(All) with the simple
+// selectors video.js uses (a tag, #id, [attr], [attr="v"], [attr*="v"], [attr^="v"], lists).
+function samplePage(html) {
+  const VOID = new Set(["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"]);
+  const ENTITY = { amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" };
+  const decode = (s) => s.replace(/&(amp|lt|gt|quot|#39);/g, (_, e) => ENTITY[e]);
+  let base = "about:blank";
+  // Descendants in document order, not into shadow roots (as the DOM's own).
+  const descendants = function* (n) {
+    for (const c of n.children) {
+      yield c;
+      yield* descendants(c);
+    }
+  };
+  const compound = (sel) => {
+    const m = /^([a-z][\w-]*)?(?:#([\w-]+))?((?:\[[^\]]+\])*)$/i.exec(sel.trim());
+    assert.ok(m, `a selector the sample DOM reads: ${sel}`);
+    const attrs = [...m[3].matchAll(/\[([\w-]+)(?:([*^]?=)"([^"]*)")?\]/g)].map((a) => ({ name: a[1], op: a[2], value: a[3] }));
+    return (el) =>
+      (!m[1] || el.localName === m[1].toLowerCase()) &&
+      (!m[2] || el.getAttribute("id") === m[2]) &&
+      attrs.every(({ name, op, value }) => {
+        const v = el.getAttribute(name);
+        if (v === null) return false;
+        return !op || (op === "=" ? v === value : op === "*=" ? v.includes(value) : v.startsWith(value));
+      });
+  };
+  const finder = {
+    querySelectorAll(sel) {
+      const any = sel.split(",").map(compound);
+      return [...descendants(this)].filter((el) => any.some((f) => f(el)));
+    },
+    querySelector(sel) {
+      return this.querySelectorAll(sel)[0] || null;
+    },
+  };
+  class Element {
+    constructor(name, attributes, parent) {
+      this.localName = name;
+      this.attributes = attributes;
+      this.children = [];
+      this.parentNode = parent;
+      this.shadowRoot = null;
+    }
+    get parentElement() {
+      return this.parentNode instanceof Element ? this.parentNode : null;
+    }
+    getAttribute(name) {
+      const a = this.attributes.find((x) => x.name === name);
+      return a ? a.value : null;
+    }
+    get href() {
+      return new URL(this.getAttribute("href"), base).href;
+    }
+  }
+  Object.assign(Element.prototype, finder);
+  const doc = { children: [], localName: "#document", ...finder };
+  const stack = [doc];
+  const tags = /<!--[\s\S]*?-->|<!doctype[^>]*>|<\/([\w-]+)\s*>|<([\w-]+)((?:\s+[^\s=/>]+(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+))?)*)\s*\/?>/gi;
+  for (const t of html.matchAll(tags)) {
+    if (t[1]) {
+      const name = t[1].toLowerCase();
+      const at = stack.findLastIndex((n) => n.localName === name || (name === "template" && n.isShadow));
+      if (at > 0) stack.length = at;
+      continue;
+    }
+    if (!t[2]) continue;
+    const name = t[2].toLowerCase();
+    const attributes = [...(t[3] || "").matchAll(/([^\s=/>]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+)))?/g)].map((a) => ({
+      name: a[1].toLowerCase(),
+      value: decode(a[2] ?? a[3] ?? a[4] ?? ""),
+    }));
+    const parent = stack[stack.length - 1];
+    // A declarative shadow root: what follows, up to its </template>, is the host's shadow tree.
+    if (name === "template" && attributes.some((a) => a.name === "shadowrootmode" && a.value === "open")) {
+      const root = { children: [], localName: "#shadow-root", isShadow: true, host: parent, ...finder };
+      parent.shadowRoot = root;
+      stack.push(root);
+      continue;
+    }
+    const el = new Element(name, attributes, parent);
+    parent.children.push(el);
+    if (!VOID.has(name)) stack.push(el);
+  }
+  // Every element, into shadow roots too (the button finds the videos there).
+  const all = function* (n) {
+    for (const c of n.children) {
+      yield c;
+      if (c.shadowRoot) yield* all(c.shadowRoot);
+      yield* all(c);
+    }
+  };
+  const page = doc.querySelector('meta[name="mdm-page"]').getAttribute("content");
+  base = page;
+  return { document: doc, page, videos: [...all(doc)].filter((e) => e.localName === "video") };
+}
+
+// #689, #643: a video in a feed names the post it sits in, never the feed. Each sample page (our
+// own, reduced to what names a post on each site; tools/extension/feeds) says what each of its
+// videos must name: an address ({origin}: the page's own), "page" (the page is the video's) or
+// "none" (nothing names it: the feed is not sent; its own plain file is, when it has one).
+{
+  const dir = new URL("feeds/", import.meta.url);
+  const pages = readdirSync(dir).filter((f) => f.endsWith(".html"));
+  assert.ok(pages.length >= 12, "the sample pages");
+  // Each page at its own address, and at the big sites' other hosts too.
+  const OTHER = {
+    "x.html": ["https://twitter.com/home", "https://mobile.x.com/home"],
+    "reddit.html": ["https://sh.reddit.com/"],
+    "linkedin.html": ["https://linkedin.com/feed/foryou/"],
+    "facebook.html": ["https://web.facebook.com/", "https://m.facebook.com/"],
+  };
+  let checked = 0;
+  for (const file of pages) {
+    const { document, page, videos } = samplePage(readFileSync(new URL(file, dir), "utf8"));
+    assert.ok(videos.length, `${file}: its videos`);
+    for (const at of [page, ...(OTHER[file] || [])]) {
+      const location = new URL(at);
+      const videoPage = videoPageOn(location, document);
+      for (const [i, v] of videos.entries()) {
+        const expect = v.getAttribute("data-expect");
+        const want = expect === "page" ? location.href : expect === "none" ? null : expect.replaceAll("{origin}", location.origin);
+        const got = videoPage(v);
+        assert.equal(got, want, `${file} at ${at}: video ${i + 1}`);
+        // Never the page itself, unless it is the video's own.
+        if (expect !== "page") assert.notEqual(got, location.href, `${file}: video ${i + 1} named the page`);
+        checked += 1;
+      }
+    }
+  }
+  ok(`#689: a video in a feed names its post, never the feed (${pages.length} sample pages, ${checked} videos)`);
+}
+
+// What the resolvers build is a form yt-dlp's extractors read (their _VALID_URL, yt-dlp
+// 2026.08.19), so the app's lookup finds the one video.
+{
+  const YTDLP = [
+    /^https?:\/\/(?:www\.)?linkedin\.com\/feed\/update\/urn:li:activity:(\d+)/,
+    /^https?:\/\/(?:[\w-]+\.)?facebook\.com\/(?:(?:permalink\.php|video\.php|watch\/?)\?(?:.*?)(?:v|story_fbid)=|[^/]+\/videos\/(?:[^/]+\/)?|[^/]+\/posts\/|groups\/[^/]+\/(?:permalink|posts)\/|reel\/)(pfbid[A-Za-z0-9]+|\d+)/,
+    /^https?:\/\/(?:(?:www|m(?:obile)?)\.)?(?:twitter|x)\.com\/(?:(?:i\/web|[^/]+)\/status|statuses)\/(\d+)/,
+    /^https?:\/\/(?:www\.)?instagram\.com(?:\/[^/?#]+)?\/(?:p|tv|reels?)\/([^/?#&]+)/,
+    /^https?:\/\/(?:\w+\.)?reddit\.com\/(?:(?:r|user)\/[^/]+\/)?comments\/([^/?#&]+)/,
+    /^https?:\/\/www\.tiktok\.com\/@[\w.-]+\/video\/(\d+)/,
+    /^https?:\/\/vimeo\.com\/(\d+)(?:\/[\da-f]{10})?$/,
+    /^https?:\/\/www\.dailymotion\.com\/video\/([^/?_&#]+)/,
+  ];
+  const dir = new URL("feeds/", import.meta.url);
+  let checked = 0;
+  for (const file of readdirSync(dir).filter((f) => f.endsWith(".html") && !/^(social|article)\.html$/.test(f))) {
+    const { page, videos } = samplePage(readFileSync(new URL(file, dir), "utf8"));
+    for (const v of videos) {
+      const expect = v.getAttribute("data-expect").replaceAll("{origin}", new URL(page).origin);
+      // fb.watch's short links lead to the video's page; a LinkedIn post known by its ugcPost
+      // URN is its public page, which yt-dlp's generic reader reads.
+      if (expect === "none" || expect === "page" || expect.startsWith("https://fb.watch/") || /urn:li:ugcPost:/.test(expect)) continue;
+      assert.ok(YTDLP.some((r) => r.test(expect)), `${file}: ${expect} is a form yt-dlp reads`);
+      checked += 1;
+    }
+  }
+  ok(`#689: the ${checked} addresses built are forms yt-dlp's extractors read`);
+}
+
+// #689: what the background does with what video.js named on a feed. A post: it goes alone (no
+// stream the tab loaded, which may be another video's, nor the feed's title), the feed as its
+// Referer. Nothing named: never the feed; the video's own plain file when it has one (the feed
+// as its Referer), else nothing and the button says to open the post.
+{
+  const message = (listeners, m, sender) => new Promise((r) => listeners.message(m, sender, (x) => r(JSON.parse(JSON.stringify(x)))));
+  const at = (url) => ({ id: "ours", url, frameId: 0, tab: { id: 4, url, incognito: false } });
+  const videos = (calls) => natives(calls).filter((m) => m.video);
+  const { api, calls, listeners } = fakeApi({ firefox: false });
+  load(api, false);
+  const feed = "https://www.linkedin.com/feed/";
+  // A stream the feed loaded (another video's, as far as anyone knows).
+  listeners.responseStarted({ tabId: 4, frameId: 0, url: "https://cdn.test/feed/master.m3u8", responseHeaders: [] });
+  const post = "https://www.linkedin.com/feed/update/urn:li:activity:7390000000000000001/";
+  assert.equal((await message(listeners, { type: "video", url: post, src: "", title: "Feed | LinkedIn" }, at(feed))).ok, true);
+  assert.deepEqual(
+    (({ url, src, title, referrer }) => ({ url, src, title, referrer }))(videos(calls).at(-1)),
+    { url: post, src: undefined, title: "", referrer: feed },
+    "the post alone, the feed as its Referer",
+  );
+  // Nothing names it, no file of its own: nothing goes, and the button says why.
+  const r = await message(listeners, { type: "video", url: null, src: "", title: "Feed | LinkedIn" }, at(feed));
+  assert.deepEqual([r.ok, r.why], [false, "feed"]);
+  assert.equal(videos(calls).length, 1, "the feed is never sent");
+  // Nothing names it, its own plain file: that file, the feed as its Referer, no title.
+  await message(listeners, { type: "video", url: null, src: "https://media.test/clip.mp4", title: "Home" }, at("https://social.test/home"));
+  const file = videos(calls).at(-1);
+  assert.deepEqual([file.src, file.url, file.title], ["https://media.test/clip.mp4", "https://social.test/home", ""]);
+  // Another host of the same site is the site's (Facebook's short links, X's old name).
+  await message(listeners, { type: "video", url: "https://fb.watch/sAmPlE7x/", src: "" }, at("https://web.facebook.com/"));
+  assert.equal(videos(calls).at(-1).url, "https://fb.watch/sAmPlE7x/");
+  await message(listeners, { type: "video", url: "https://x.com/someone/status/1", src: "" }, at("https://twitter.com/home"));
+  assert.equal(videos(calls).at(-1).url, "https://x.com/someone/status/1");
+  // Another site's address named by a page is not taken: the page's own goes, as before.
+  await message(listeners, { type: "video", url: "https://elsewhere.test/v/1", src: "" }, at("https://news.test/story"));
+  assert.equal(videos(calls).at(-1).url, "https://news.test/story");
+  ok("#689: a post alone, the video's own file, or nothing; never the feed");
+}
+
 // Shorts and live streams name their video in the path (video.js videoPage); the page is the
 // video's, not a list. Their addresses as yt-dlp reads them (the same video as watch?v=).
 {
-  const source = readFileSync(new URL("../../extension/video.js", import.meta.url), "utf8");
-  const start = source.indexOf("function videoPage(v) {");
-  let depth = 0;
-  let end = start;
-  for (let i = source.indexOf("{", start); i < source.length; i += 1) {
-    if (source[i] === "{") depth += 1;
-    if (source[i] === "}" && --depth === 0) {
-      end = i + 1;
-      break;
-    }
-  }
-  const named = (href) =>
-    new Function("location", "document", `${source.slice(start, end)}; return videoPage;`)({ href }, { querySelector: () => null })({ parentElement: null, querySelectorAll: () => [] });
+  const named = (href) => videoPageOn({ href }, { querySelector: () => null })({ parentElement: null, querySelectorAll: () => [] });
   assert.equal(named("https://www.youtube.com/shorts/cxkLg22mWco"), "https://www.youtube.com/watch?v=cxkLg22mWco");
   assert.equal(named("https://www.youtube.com/shorts/cxkLg22mWco?feature=share"), "https://www.youtube.com/watch?v=cxkLg22mWco");
   assert.equal(named("https://m.youtube.com/shorts/cxkLg22mWco"), "https://www.youtube.com/watch?v=cxkLg22mWco");
@@ -1322,6 +1680,294 @@ const MPD = (protect) => `<?xml version="1.0"?>
   // The Shorts landing page, before it moves to the first one, names none.
   assert.equal(named("https://www.youtube.com/shorts/"), null);
   ok("video.js: Shorts and live pages name their video");
+}
+
+// The qualities' menu (video.js; its plain functions run here): the questions' pace and their
+// minute, a row's text, and what a page can never make it do.
+{
+  const source = readFileSync(new URL("../../extension/video.js", import.meta.url), "utf8");
+  // A function's own source (async with its keyword), by its braces.
+  const fn = (name) => {
+    let start = source.indexOf(`function ${name}(`);
+    assert.ok(start > 0, `video.js has ${name}`);
+    if (source.slice(start - 6, start) === "async ") start -= 6;
+    let depth = 0;
+    // The body's brace: after the parameters (which may destructure).
+    for (let i = source.indexOf(") {", start) + 2; i < source.length; i += 1) {
+      if (source[i] === "{") depth += 1;
+      if (source[i] === "}" && --depth === 0) return source.slice(start, i + 1);
+    }
+    throw new Error(`${name}: no end`);
+  };
+  const make = (names, value) => new Function(`${names.map(fn).join("\n")}\nreturn ${value};`)();
+  // 100 ms before the first question, then the old backoff's target (1 s x 1.25^n, 2 s at most)
+  // less what the last answer took (50 ms at least): an older app (60 ms) is asked as seldom as
+  // before, a newer one (holding the answer ~1.5 s) is asked again almost at once early on.
+  const pollDelay = make(["pollDelay"], "pollDelay");
+  assert.equal(pollDelay(0, 0), 100);
+  assert.equal(pollDelay(0, 5000), 100);
+  assert.equal(pollDelay(1, 60), 1190);
+  assert.equal(pollDelay(1, 1500), 50);
+  assert.equal(pollDelay(2, 1500), 50);
+  assert.equal(pollDelay(2, 999), 564);
+  assert.equal(pollDelay(9, 0), 2000);
+  assert.equal(pollDelay(9, 1500), 50);
+  assert.equal(pollDelay(9, 99999), 50);
+  assert.equal(pollDelay(3, undefined), 1953);
+  assert.equal(pollDelay(3, NaN), 1953);
+  assert.equal(pollDelay(3, -20), 1953);
+  // The qualities in tabs: sound-only ones apart when the video has both kinds; else one list. Every
+  // number is the place in the app's list.
+  const groupChoices = make(["groupChoices"], "groupChoices");
+  const grp = (list, max) => JSON.parse(JSON.stringify(groupChoices(list, max)));
+  const mixed = [{ audio: false }, { audio: false }, { audio: true }, { audio: false }, { audio: true }];
+  assert.deepEqual(grp(mixed), { tabbed: true, video: [0, 1, 3], audio: [2, 4], all: [0, 1, 2, 3, 4], start: "video" });
+  assert.deepEqual(grp([{ audio: true }, { audio: false }]), { tabbed: true, video: [1], audio: [0], all: [0, 1], start: "video" });
+  assert.deepEqual(grp([{ label: "720p" }, { label: "360p" }]), { tabbed: false, video: [0, 1], audio: [], all: [0, 1], start: "video" }, "an older app: no audio flag, one list");
+  assert.equal(grp([{ audio: "yes" }, { audio: 1 }, null, "x"]).tabbed, false, "only true counts as audio");
+  assert.deepEqual(grp([{ audio: true }, { audio: true }]), { tabbed: false, video: [], audio: [0, 1], all: [0, 1], start: "audio" }, "only audio: one list");
+  assert.deepEqual(grp([{ audio: false }, { audio: false }]), { tabbed: false, video: [0, 1], audio: [], all: [0, 1], start: "video" }, "only video: one list");
+  assert.deepEqual(grp([]), { tabbed: false, video: [], audio: [], all: [], start: "video" });
+  assert.deepEqual(grp(undefined), { tabbed: false, video: [], audio: [], all: [], start: "video" });
+  assert.deepEqual(grp(mixed, 3), { tabbed: true, video: [0, 1], audio: [2], all: [0, 1, 2], start: "video" }, "the cap keeps the app's order");
+  // A row: the app's name for the quality as it is (set as text), its size in the browser's language.
+  const { sizeText, rowText } = make(["sizeText", "rowText"], "{ sizeText, rowText }");
+  assert.equal(sizeText(187500000, "en"), "178.8 MB");
+  assert.equal(sizeText(3 * 2 ** 30, "en"), "3 GB");
+  assert.equal(sizeText(null, "en"), "");
+  assert.equal(sizeText(undefined, "en"), "");
+  assert.deepEqual({ ...rowText({ label: "<img src=x onerror=alert(1)> 720p", ext: "mp4", size: null }, "en") }, { name: "<img src=x onerror=alert(1)> 720p", size: "" });
+  assert.deepEqual({ ...rowText(null, "en") }, { name: "", size: "" });
+  // Following a lookup: the next question only after the last answer, on a clock of its own here.
+  const followLookup = make(["pollDelay", "followLookup"], "followLookup");
+  const follow = async (first, answers, { alive = () => true, took = 0 } = {}) => {
+    let clock = 0;
+    let open = 0;
+    const asked = [];
+    const result = await followLookup(first, {
+      ask: async (token, ms) => {
+        assert.equal(open++, 0, "one question at a time");
+        asked.push({ token, at: clock, ms });
+        await Promise.resolve();
+        clock += took;
+        open -= 1;
+        return answers.length ? answers.shift() : { lookup: { state: "pending" } };
+      },
+      alive: () => alive(asked),
+      sleep: async (ms) => {
+        clock += ms;
+      },
+      now: () => clock,
+      end: 60000,
+    });
+    return { result: result && { ...result }, asked, clock };
+  };
+  const pending = { state: "pending", token: "t1" };
+  const ready = { state: "ready", token: "t1", choices: [{ label: "720p MP4", ext: "mp4", size: 1 }] };
+  let f = await follow(pending, [{ lookup: pending }, { lookup: ready }]);
+  assert.deepEqual(f.result, ready);
+  assert.deepEqual(f.asked.map((a) => [a.token, a.at]), [["t1", 100], ["t1", 1350]], "100 ms, then the old backoff (an app that answers at once)");
+  // Still looking after a minute: given up then, never asked after it.
+  f = await follow(pending, []);
+  assert.deepEqual(f.result, { state: "late" });
+  assert.equal(f.clock, 60000);
+  assert.ok(f.asked.every((a) => a.at < 60000 && a.ms > 0 && a.token === "t1"), "the token from the first answer");
+  // An older app (answers in ~60 ms): no more questions than the old schedule (1 s x 1.25^n, 2 s at
+  // most: asks at 1 s, 2.25 s, ...) made in a minute.
+  let old = 0;
+  for (let at = 0, n = 0; (at += Math.min(2000, 1000 * 1.25 ** n)) < 60000; n += 1) old += 1;
+  f = await follow(pending, [], { took: 60 });
+  assert.deepEqual(f.result, { state: "late" });
+  assert.equal(f.asked[0].at, 100);
+  assert.ok(f.asked.length <= old, `old host: ${f.asked.length} questions in a minute, the old schedule's ${old}`);
+  // A newer app (holds the answer ~1.5 s while it looks): one at a time, asked again almost at once
+  // early on, and the answer reaches the page soon after it is ready. A host that is ready at `r`
+  // answers its question in flight 100 ms later (else after 1.5 s).
+  const latency = async (r) => {
+    let clock = 0;
+    let done = null;
+    let ready = { state: "ready", token: "t1", choices: [] };
+    const res = await followLookup(pending, {
+      ask: async () => {
+        const start = clock;
+        const end = Math.min(start + 1500, Math.max(start, r) + 100);
+        clock = end;
+        return { lookup: end >= r ? ((done = end), ready) : pending };
+      },
+      alive: () => true,
+      sleep: async (ms) => {
+        clock += ms;
+      },
+      now: () => clock,
+      end: 60000,
+    });
+    assert.equal(res.state, "ready");
+    return done - r;
+  };
+  for (const r of [0, 300, 1000, 1700, 2500, 3000]) assert.ok((await latency(r)) <= (r ? 150 : 250), `new host, ready at ${r} ms: answered ${await latency(r)} ms later`);
+  for (const r of [5000, 12000, 30000]) assert.ok((await latency(r)) <= 150, `new host, ready at ${r} ms: answered ${await latency(r)} ms later`);
+  f = await follow(pending, [], { took: 1500 });
+  assert.deepEqual(f.result, { state: "late" });
+  assert.ok(f.asked.length > 20 && f.asked.length <= 40, `new host: ${f.asked.length} questions in a minute`);
+  // In between (an answer after 600 ms): the rest of the second.
+  f = await follow(pending, [{ lookup: pending }, { lookup: pending }, { lookup: ready }], { took: 600 });
+  assert.deepEqual(f.asked.map((a) => a.at), [100, 1350, 2913]);
+  assert.deepEqual(f.result, ready);
+  // Dropped (the menu closed, the video or the page changed): nothing more, no answer shown.
+  f = await follow(pending, [{ lookup: pending }, { lookup: ready }], { alive: (asked) => asked.length < 1 });
+  assert.deepEqual([f.result, f.asked.length], [null, 1]);
+  // The background's other answers.
+  assert.deepEqual((await follow(pending, [{ late: true }])).result, { state: "late" });
+  assert.deepEqual((await follow(pending, [{ fallback: true }])).result, { state: "use-window", token: "t1" }, "another MDM chosen meanwhile");
+  assert.deepEqual((await follow(pending, [{ ok: false }])).result, { state: "gone" });
+  assert.equal((await follow(pending, [{ ok: false, gone: true }])).result, null, "the extension gone");
+  f = await follow({ state: "pending" }, []);
+  assert.deepEqual([f.result, f.asked.length], [{ state: "gone" }, 0], "no token, no questions");
+  assert.deepEqual((await follow({ state: "use-window" }, [])).result, { state: "use-window", token: "" });
+  // What each answer comes to (replyState, then lookupAction): the background's answer to the
+  // click, the lookup's end, and the answer to a choice.
+  const { replyState, lookupAction, firstWindow, pointerTarget } = make(
+    ["replyState", "lookupAction", "firstWindow", "pointerTarget"],
+    "{ replyState, lookupAction, firstWindow, pointerTarget }",
+  );
+  const key = (k) => k;
+  const act = (r, picked) => {
+    const s = replyState(r);
+    return s && { ...lookupAction(s, key, picked) };
+  };
+  const look = (lookup) => act({ lookup });
+  assert.deepEqual(look(pending), { act: "follow" });
+  assert.deepEqual(look(ready), { act: "offer" });
+  assert.deepEqual(look({ state: "ready", token: "t1", choices: [] }), { act: "say", text: "video_no_choices" });
+  assert.deepEqual(look({ state: "failed", reason: "no-choices" }), { act: "say", text: "video_no_choices" });
+  assert.deepEqual(look({ state: "failed", reason: "no-ytdlp" }), { act: "say", text: "video_no_ytdlp" });
+  assert.deepEqual(look({ state: "failed", reason: "error", message: "HTTP 403" }), { act: "say", text: "video_failed_lookup", detail: "HTTP 403" });
+  assert.deepEqual(look({ state: "failed", reason: "error", message: { html: "<b>" } }), { act: "say", text: "video_failed_lookup", detail: "" });
+  assert.deepEqual(look({ state: "list" }), { act: "say", text: "video_playlist" });
+  assert.deepEqual(look({ state: "busy" }), { act: "say", text: "video_busy" });
+  assert.deepEqual(look({ state: "late" }), { act: "say", text: "video_too_long" });
+  assert.deepEqual(act({ late: true }), { act: "say", text: "video_too_long" }, "no answer within the minute");
+  assert.deepEqual(look({ state: "off" }), { act: "flash", kind: "off", text: "video_off" });
+  assert.deepEqual(act({ ok: false, why: "unnamed" }), { act: "flash", kind: "warn", text: "video_unnamed" });
+  assert.deepEqual(act({ ok: false, why: "feed" }), { act: "flash", kind: "warn", text: "video_open_post" });
+  // The click as it always was (the Download video window): no lookups here, the app forgot the
+  // lookup, an older or a newer answer, a host that failed.
+  const windows = [{ fallback: true }, { ok: false }, { ok: false, why: "not_running" }, { lookup: null }, { lookup: "ready" }, {}, null];
+  for (const s of ["use-window", "gone", "a-newer-state", "", 7]) windows.push({ lookup: { state: s } });
+  for (const r of windows) assert.deepEqual(act(r), { act: "window" }, JSON.stringify(r));
+  assert.equal(act({ ok: false, gone: true }), null, "the extension gone: nothing");
+  // A choice: downloading, or handed to the app ("sent", which didn't say in time what became of
+  // it: it will download it, so no window), or queued; anything else, the window.
+  assert.deepEqual(act({ lookup: { state: "started" } }, true), { act: "flash", kind: "ok", text: "video_added" });
+  assert.deepEqual(act({ lookup: { state: "sent" } }, true), { act: "flash", kind: "ok", text: "video_added" });
+  assert.deepEqual(act({ lookup: { state: "queued" } }, true), { act: "flash", kind: "ok", text: "video_queued" });
+  for (const s of ["use-window", "gone", "pending", "ready", "busy", "off", "failed", "list", "late"]) {
+    assert.deepEqual(act({ lookup: { state: s, token: "t1", choices: ready.choices } }, true), { act: "window" }, `a choice answered ${s}`);
+  }
+  assert.deepEqual(act({ fallback: true }, true), { act: "window" });
+  assert.equal(act({ ok: false, gone: true }, true), null);
+  // One window per click, whichever way it comes to it: a lookup's end, then the choice's answer,
+  // then "Open in…" (and a second click gets its own).
+  const click = {};
+  assert.deepEqual([firstWindow(click), firstWindow(click), firstWindow(click)], [true, false, false]);
+  assert.equal(firstWindow({}), true, "the next click");
+  assert.equal(firstWindow(null), false);
+  // …and every way there goes through it: the window's message is sent from useWindow alone,
+  // after firstWindow, and each answer is read by lookupAction.
+  assert.equal(source.split('send({ type: "video",').length, 2, "one place sends the window's message");
+  assert.ok(/if \(!firstWindow\(j\)\) return;[^]*send\(\{ type: "video",/.test(fn("useWindow")), "useWindow: once per click");
+  for (const name of ["download", "pick", "fillMenu"]) assert.ok(fn(name).includes("lookupAction("), `${name} reads answers with lookupAction`);
+  assert.ok(fn("pick").includes("lookupAction(s, t, true)"), "pick: a choice's answer");
+  // While the qualities' menu is open, the pointer over another video (a feed's next one, under
+  // the menu) leaves the button on its own; over its own, or with no menu, it follows.
+  const mine = { id: "mine" };
+  const next = { id: "next" };
+  assert.equal(pointerTarget(next, mine, true), null);
+  assert.equal(pointerTarget(mine, mine, true), mine);
+  assert.equal(pointerTarget(next, mine, false), next);
+  assert.equal(pointerTarget(next, null, false), next);
+  assert.equal(pointerTarget(null, mine, false), null);
+  assert.ok(fn("look").includes("pointerTarget(videoAt(pointer.x, pointer.y), video, menuOpen)"), "look: kept on its video while its menu is open");
+  // What a page can never make it do: the menu's rows and keys take only the user's own clicks
+  // and keys; rows are text (markup only for the fixed parts); a pick sends the token and the
+  // row's number alone; nothing is asked on a timer of its own, nor before a click.
+  assert.ok(/shadow\.addEventListener\("keydown", \(e\) => \{\s*if \(!e\.isTrusted\) return;/.test(source), "keys: the user's own");
+  assert.ok(/menu\.addEventListener\("click", \(e\) => \{\s*if \(!e\.isTrusted\) return;/.test(source), "rows: the user's own clicks");
+  assert.ok(/acts\.addEventListener\("click", async \(e\) => \{\s*if \(!e\.isTrusted\) return;/.test(source), "a status's buttons: the user's own clicks");
+  // The page's own controls: a key the open menu used doesn't reach the page, and the button (and
+  // so its menu) stays where it is while the menu is open.
+  const keys = source.slice(source.indexOf('shadow.addEventListener("keydown"'), source.indexOf("// The main part: a click downloads"));
+  assert.equal(keys.match(/e\.stopPropagation\(\)/g).length, 5, "Escape (the menu, the button), Enter and Space, the arrows, ↓ on the button: not the page's too");
+  assert.ok(fn("spot").includes("if (menuOpen && auto.v === video && auto.at) return auto.at;"), "spot: still while its menu is open");
+  assert.equal(source.match(/innerHTML/g).length, 1, "markup only for the fixed parts");
+  assert.ok(!/insertAdjacentHTML|outerHTML|setInterval/.test(source));
+  assert.ok(/send\(\{ type: "video-pick", token: l\.token, choice: i \}\)/.test(fn("pick")), "a pick: the token and the row's number");
+  assert.equal(source.split('"video-lookup"').length, 2, "one lookup message");
+  // #703: asked as the button shows, once it stayed a moment over the same video (previews the
+  // pointer only crosses aren't), one per video for the page's life; a plain file never.
+  assert.ok(fn("startLook").includes('"video-lookup"'), "sent by startLook alone");
+  assert.ok(/if \(lookingFor === v\) return;[^]*setTimeout\(\(\) => \{[^]*if \(video === v && v\.isConnected && pill\.classList\.contains\("shown"\)\) startLook\(describeNow\(v\)\);\s*\}, LOOK_DELAY_MS\)/.test(fn("scheduleLook")), "scheduleLook: after LOOK_DELAY_MS, the same video still shown, not put off by each move");
+  assert.ok(fn("startLook").includes("if (usable(kept)) return kept;"), "one look-up per video, kept");
+  assert.ok(fn("startLook").includes("!STREAM.test(c.d.src)"), "none for a plain file");
+  // #741: only the pointer really moving shows it (a repeated move, as a browser sends when the
+  // page changes under a still pointer on pause or play, doesn't), nor the focus a click gives.
+  assert.ok(fn("onMove").startsWith("function onMove(e) {\n    if (e.clientX === pointer.x && e.clientY === pointer.y) return;"), "onMove: a move in place is no move");
+  assert.ok(source.includes('if (!t.matches(":focus-visible")) return;'), "focusin: the keyboard's focus only");
+  assert.ok(/const IDLE_MS = 1500;/.test(source), "fades 1.5 s after the pointer rests");
+  // Its texts: English's, kept as the fallback too.
+  const english = JSON.parse(readFileSync(new URL("../../extension/_locales/en/messages.json", import.meta.url), "utf8"));
+  for (const key of ["video_looking", "video_all_qualities", "video_no_choices", "video_playlist", "video_no_ytdlp", "video_too_long", "video_busy", "video_queued", "video_failed_lookup",
+    "video_off", "video_drm", "video_cant_save", "video_open_post", "video_open_post_button", "video_drag_dots", "video_tip_best", "video_sending", "video_added", "video_show",
+    "video_no_answer", "video_get_mdm", "video_retry", "video_turn_on", "video_download_best", "video_best", "video_original"]) {
+    assert.ok(english[key], key);
+    assert.ok(source.includes(`${key}: ${JSON.stringify(english[key].message)}`), `video.js FALLBACK: ${key}`);
+    assert.ok(source.includes(`t("${key}")`), `video.js uses ${key}`);
+  }
+  {
+    const w = make(["sizeText", "qualityName", "qualityMeta", "bestOf", "chipFor", "tipFor", "durationText", "headerLine", "moveIn", "fitsWords"],
+      "{ qualityName, qualityMeta, bestOf, chipFor, tipFor, durationText, headerLine, moveIn, fitsWords }");
+    const tt = (k, ...a) => (a.length ? `${k}(${a.join(",")})` : k);
+    const hd = { label: "1080p 60fps MP4", ext: "mp4", size: 412000000, audio: false, height: 1080, fps: 60 };
+    const k4 = { label: "2160p MP4", ext: "mp4", height: 2160 };
+    const sound = { label: "Audio only original M4A", ext: "m4a", size: 9000000, audio: true, kbps: 128 };
+    const mp3 = { label: "Audio only MP3 320 kbps", ext: "mp3", audio: true };
+    const older = { label: "720p MP4", ext: "mp4", size: 1 };
+    assert.deepEqual([hd, k4, { height: 4320 }, { height: 480 }, sound, older, null].map((c) => w.qualityName(c, tt)), ["1080p", "4K", "8K", "480p", "video_tab_audio", "720p MP4", ""]);
+    assert.equal(w.qualityName({ file: true, ext: "webm" }, tt), "WEBM");
+    assert.equal(w.qualityMeta(hd, tt), "MP4 · 60 fps");
+    assert.equal(w.qualityMeta(sound, tt), "128 kbps");
+    assert.equal(w.qualityMeta(mp3, tt), "", "a conversion says it in its label");
+    assert.equal(w.qualityMeta(older, tt), "", "an older app's label says it all");
+    // The list's sound lines: the type, then the bitrate, and "original" for the sound as the site
+    // sends it (with or without a bitrate); a conversion's VBR.
+    const lw = make(["qualityName", "qualityMeta", "lineWords"], "lineWords");
+    assert.deepEqual({ ...lw({ ext: "m4a", audio: true, kbps: 128, original: true }, tt) }, { q: "M4A", f: "128 kbps · video_original" });
+    assert.deepEqual({ ...lw({ ext: "mp4", audio: true, original: true }, tt) }, { q: "MP4", f: "video_original" });
+    assert.deepEqual({ ...lw({ ext: "mp3", audio: true, kbps: 320 }, tt) }, { q: "MP3", f: "320 kbps" });
+    assert.deepEqual({ ...lw({ ext: "mp3", audio: true, label: "Audio only MP3 VBR" }, tt) }, { q: "MP3", f: "VBR" });
+    // The best: the app's first video choice (its order is best first), else its first.
+    const ready = { state: "ready", choices: [sound, hd, older] };
+    assert.equal(w.bestOf(ready), hd);
+    assert.equal(w.bestOf({ state: "ready", choices: [sound] }), sound);
+    assert.equal(w.bestOf({ state: "pending" }), null);
+    assert.deepEqual(w.chipFor({ state: "pending" }, tt), { skeleton: true });
+    assert.deepEqual(w.chipFor(ready, tt), { text: "1080p", hd: true });
+    assert.deepEqual(w.chipFor({ state: "ready", choices: [{ height: 480, ext: "mp4" }] }, tt), { text: "480p", hd: false });
+    assert.equal(w.chipFor({ state: "ready", choices: [older] }, tt), null, "no height: no chip");
+    assert.deepEqual(w.chipFor({ file: true, height: 720, ext: "mp4" }, tt), { text: "720p", hd: true });
+    assert.equal(w.chipFor({ state: "failed" }, tt), null);
+    assert.equal(w.tipFor(ready, tt, "en"), "video_tip(1080p MP4 · 392.9 MB)");
+    assert.equal(w.tipFor({ state: "pending" }, tt, "en"), "video_tip_best");
+    assert.equal(w.tipFor(null, tt, "en"), "video_download");
+    assert.deepEqual([596, 3723, 0, null, "x"].map(w.durationText), ["9:56", "1:02:03", "", "", ""]);
+    assert.equal(w.headerLine("Big Buck Bunny", 596, "youtube.com"), "Big Buck Bunny · 9:56 · youtube.com");
+    assert.equal(w.headerLine("", NaN, "a.test"), "a.test");
+    assert.deepEqual([[-1, 4, "ArrowDown"], [3, 4, "ArrowDown"], [0, 4, "ArrowUp"], [-1, 4, "ArrowUp"], [2, 4, "Home"], [1, 4, "End"], [1, 0, "ArrowDown"]].map(([i, n, k]) => w.moveIn(i, n, k)), [0, 0, 3, 3, 0, 3, -1]);
+    assert.equal(w.fitsWords(640, 240, 14), true);
+    assert.equal(w.fitsWords(359, 100, 14), false, "under 360 px: the round button only");
+    assert.equal(w.fitsWords(400, 380, 14), false, "a long language that wouldn't fit");
+  }
+  ok("video.js: the qualities' menu follows a lookup one question at a time for a minute; rows as text, the user's own clicks and keys; its words, #703's early look-up, #741's moves");
 }
 
 // No other download manager's name in what ships (the clean-room rule, CLAUDE.md).
@@ -1901,6 +2547,122 @@ const ask = (listeners) => (m, sender) => new Promise((r) => listeners.message(m
   assert.equal(listeners.headersReceived, undefined);
   ok("#208 Chromium: answers aren't held");
 }
+// #603: only a tokenized Colab runtime-proxy transfer stays with the browser. A normal
+// download linked from a Colab notebook is still offered to MDM.
+{
+  const { api, calls, listeners } = fakeApi({ firefox: false });
+  load(api, false);
+  await settle();
+  let suggested;
+  listeners.determining(
+    {
+      id: 91,
+      url: "https://us-west1-colab.googleusercontent.com/files/out.zip?colab-runtime-proxy-token=secret",
+      finalUrl: "https://us-west1-colab.googleusercontent.com/files/out.zip?colab-runtime-proxy-token=secret",
+      referrer: "https://colab.research.google.com/drive/abc",
+      filename: "out.zip",
+      totalBytes: 1024,
+      mime: "application/zip",
+    },
+    (value) => (suggested = value),
+  );
+  await settle();
+  assert.ok(suggested, "the browser keeps the authenticated runtime-proxy download");
+  assert.equal(natives(calls).length, 0);
+  ok("#603 Chromium: tokenized Colab runtime-proxy download stays in the browser");
+}
+{
+  const { api, calls, listeners } = fakeApi({ firefox: false });
+  load(api, false);
+  await settle();
+  listeners.determining(
+    {
+      id: 92,
+      url: "https://github.com/example/data/archive/refs/heads/main.zip",
+      finalUrl: "https://github.com/example/data/archive/refs/heads/main.zip",
+      referrer: "https://colab.research.google.com/drive/abc",
+      filename: "data.zip",
+      totalBytes: 4096,
+      mime: "application/zip",
+    },
+    () => {},
+  );
+  await settle();
+  assert.equal(natives(calls).length, 1, "ordinary notebook links remain capturable");
+  ok("#603 Chromium: a GitHub file linked from Colab is still handed to MDM");
+}
+{
+  const { api, calls, listeners } = fakeApi({ firefox: true });
+  load(api, true);
+  await settle();
+  const url = "https://us-west1.prod.r.colab.dev/files/out.zip?colab-runtime-proxy-token=secret";
+  listeners.beforeSendHeaders({
+    requestId: "r-colab",
+    method: "GET",
+    type: "main_frame",
+    url,
+    originUrl: "https://colab.research.google.com/drive/abc",
+    requestHeaders: [],
+  });
+  const response = await held(
+    listeners,
+    answer(
+      url,
+      {
+        "Content-Type": "application/zip",
+        "Content-Disposition": "attachment; filename=out.zip",
+        "Content-Length": "1024",
+      },
+      { requestId: "r-colab" },
+    ),
+  );
+  assert.deepEqual(response, {});
+  assert.equal(natives(calls).length, 0, "Firefox leaves the authenticated transfer to the browser");
+  ok("#603 Firefox: tokenized Colab runtime-proxy download stays in the browser");
+}
+
+// A token alone is not enough: unrelated hosts must still be captured.
+{
+  const { api, calls, listeners } = fakeApi({ firefox: false });
+  load(api, false);
+  await settle();
+  listeners.determining(
+    {
+      id: 93,
+      url: "https://downloads.example/data.zip?colab-runtime-proxy-token=not-colab",
+      finalUrl: "https://downloads.example/data.zip?colab-runtime-proxy-token=not-colab",
+      referrer: "https://colab.research.google.com/drive/abc",
+      filename: "data.zip",
+      totalBytes: 4096,
+      mime: "application/zip",
+    },
+    () => {},
+  );
+  await settle();
+  assert.equal(natives(calls).length, 1, "a token on a non-proxy host must not bypass MDM");
+  ok("#603 Chromium: tokenized non-Colab URLs remain capturable");
+}
+{
+  const { api, calls, listeners } = fakeApi({ firefox: false });
+  load(api, false);
+  await settle();
+  listeners.determining(
+    {
+      id: 94,
+      url: "https://prod.r.colab.dev/files/out.zip",
+      finalUrl: "https://prod.r.colab.dev/files/out.zip",
+      referrer: "https://colab.research.google.com/drive/abc",
+      filename: "out.zip",
+      totalBytes: 4096,
+      mime: "application/zip",
+    },
+    () => {},
+  );
+  await settle();
+  assert.equal(natives(calls).length, 1, "a proxy host without its token must not bypass MDM");
+  ok("#603 Chromium: an un-tokenized Colab host remains capturable");
+}
+
 // The manifests (#42): "proxy" optional in Firefox's, required in Chrome's (it can't be optional
 // there); the popup's switch: the permission in Firefox, the extension's own setting in Chrome.
 {

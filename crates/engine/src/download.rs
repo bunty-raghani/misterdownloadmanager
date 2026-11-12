@@ -39,11 +39,23 @@ const BATCH: usize = 256 * 1024;
 /// Received bytes are written at least this often, so a slow connection shows progress and a
 /// pause keeps what arrived.
 const FLUSH_EVERY: Duration = Duration::from_secs(1);
-/// While the resume save flushes the part file to the disk (`Shared::flushing`), the connections
-/// keep what they receive in memory, at most this much for the whole download, instead of
-/// waiting on the disk (#361): on NTFS a file's writes wait for its flush, whatever their
-/// handle (measured: 8 connections' writes held for each whole flush, 3-10 s on a slow disk).
-const FLUSH_HOLD_MAX: usize = 256 << 20;
+/// While the disk takes a connection's write, what it receives meanwhile waits in memory, at
+/// most this much for the whole download (`Writer`), and only then does it stand still for the
+/// disk: a flush on NTFS holds every write to the file (measured: 3-10 s on a slow disk, #361),
+/// and a disk slower than the network holds writes to its pace once the system's cache is full
+/// (#782). About 2 s of a 1 Gbit/s link: room for the first flush, which can only be guessed
+/// (`Synced::fits` keeps the others shorter).
+const HOLD_MAX: u64 = 256 << 20;
+/// The most one write of a connection carries (`Writer::send`): what waited in memory goes to
+/// a disk that sets the pace in steps this small, so the waits stay short and even.
+const WRITE_MAX: usize = 4 << 20;
+/// A connection that stood still this long for the disk tells the others the disk sets the
+/// pace (`too_slow`).
+const DISK_HELD: Duration = Duration::from_millis(50);
+/// A response's speed says what one connection to this server can do once it has run this long
+/// (and brought 256 KiB, `yardstick`): long enough that what was already on its way when it
+/// began doesn't count for much.
+const BEST_AFTER: Duration = Duration::from_millis(100);
 
 /// Shedding a slow connection (`Options::shed_slow`): after `SHED_GRACE` on a response, a
 /// connection under 1/`SHED_RATIO` of the best speed one connection reached, with more than
@@ -139,7 +151,7 @@ pub struct Options {
     /// FTP data connections: passive (the client connects; IDM's "Use passive mode for FTP",
     /// on by default), else active (the server connects back).
     pub ftp_passive: bool,
-    /// Certificates (DER) trusted besides the system's for FTPS (tests' own CA).
+    /// Certificates (DER) trusted besides the system's for FTPS and HTTPS (tests' own CA).
     pub extra_roots: Vec<Vec<u8>>,
     /// Send every request as POST with this body, the Content-Type coming from the headers (a
     /// browser form's download). Redirects go as in browsers: 301, 302 and 303 turn it into a
@@ -159,19 +171,16 @@ pub struct Options {
     /// type is the server refusing MDM (a firewall's "The requested URL was rejected"), an error
     /// and never saved as the file (#533, `expects_other_file`).
     pub expected_type: Option<String>,
-    /// Tests: a disk whose flush takes this long and holds every write to the file meanwhile
-    /// (as NTFS does, #361). None: the real disk.
+    /// The most one request asks for (bytes): every request, the first one too, is a range of
+    /// at most this many, the next one following on the same connection. For servers that slow
+    /// a long answer down (YouTube's media servers serve 10 MB ranges at full speed and a whole
+    /// file at a fraction of it: yt-dlp's `http_chunk_size`, #769). None: each connection asks
+    /// for its whole part at once. HTTP only, never with a POST.
+    pub request_cap: Option<u64>,
+    /// Tests and measurements: a disk slower than the network, behind a write cache, whose
+    /// flush holds every write to the file (as NTFS's does, #361, #782). None: the real disk.
     #[doc(hidden)]
-    pub slow_flush: Option<SlowFlush>,
-}
-
-/// A disk whose flush takes `takes` and, as NTFS's does, makes every write to the file wait for
-/// it: the gate is held exclusively for the flush and shared for each write (`Options::slow_flush`).
-#[doc(hidden)]
-#[derive(Clone, Debug)]
-pub struct SlowFlush {
-    pub takes: Duration,
-    pub gate: Arc<std::sync::RwLock<()>>,
+    pub slow_disk: Option<crate::slowdisk::SlowDisk>,
 }
 
 /// A callback given the path of a file the engine created (`Options::on_file_created`).
@@ -249,7 +258,8 @@ impl Default for Options {
             post: None,
             on_file_created: None,
             expected_type: None,
-            slow_flush: None,
+            request_cap: None,
+            slow_disk: None,
         }
     }
 }
@@ -272,6 +282,11 @@ impl Options {
     pub fn connections(&self) -> u32 {
         self.max_connections.clamp(1, MAX_CONNECTIONS_UNLOCKED)
     }
+
+    /// `request_cap`, when it applies: some bytes, without a form's POST.
+    fn cap(&self) -> Option<u64> {
+        self.request_cap.filter(|c| *c > 0 && self.post.is_none())
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -280,6 +295,10 @@ pub enum Destination {
     Dir(PathBuf),
     /// Save exactly here.
     File(PathBuf),
+    /// Save here, or under the next free numbered name in its folder (`naming::unique_path`)
+    /// when this one is taken as the download starts: a name given before its folder was looked
+    /// at (#743: a window that waits for a sleeping drive freezes), decided here, beside it.
+    Free(PathBuf),
 }
 
 #[derive(Clone, Debug)]
@@ -561,7 +580,7 @@ impl From<disk::Refusal> for Error {
 /// (cookies, authorization) never follow a redirect to another host or from https down to
 /// http — as reqwest does while it follows the redirect itself — except between one site's own
 /// hosts (`sites::same_party`: a Drive link's cookies go to Drive's file host).
-fn scoped_headers(headers: &HeaderMap, from: &Url, to: &Url) -> HeaderMap {
+pub(crate) fn scoped_headers(headers: &HeaderMap, from: &Url, to: &Url) -> HeaderMap {
     let mut h = headers.clone();
     let same_host = (from.host_str() == to.host_str()
         && from.port_or_known_default() == to.port_or_known_default())
@@ -752,6 +771,9 @@ pub struct Snapshot {
     /// What happened, oldest first (the last `EVENTS`): the download's event log. Never
     /// cookies or credentials.
     pub events: Vec<Event>,
+    /// While a service account prepares the file's link (#44): the service, and how far it is
+    /// (0 to 1) when it says. The list shows it instead of "Connecting...".
+    pub at_service: Option<(String, Option<f32>)>,
     /// Where its server is, as its connections saw it (#140).
     pub server: Option<crate::Server>,
 }
@@ -793,7 +815,11 @@ pub struct KeptAnswer {
     url: Url,
     client: Client,
     as_get: AsGet,
-    resp: Response,
+    head: Head,
+    body: Body,
+    /// The browser-like connection it came through, when only that one got past the site's
+    /// bot check (#668): the download goes on with it.
+    browser: Option<Arc<crate::browserlike::Browser>>,
     headers: HeaderMap,
     took: Duration,
     at: std::time::Instant,
@@ -807,7 +833,8 @@ impl std::fmt::Debug for KeptAnswer {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("KeptAnswer")
             .field("url", &self.url.as_str())
-            .field("status", &self.resp.status())
+            .field("status", &self.head.status)
+            .field("browser_like", &self.browser.is_some())
             .finish_non_exhaustive()
     }
 }
@@ -847,6 +874,8 @@ pub async fn probe_kept(
     let seen = Arc::new(crate::server::ServerSeen::default());
     let client = client(opts, &target, &as_get, &seen)?;
     let expects = expects_other_file(opts.expected_type.as_deref(), None, &url);
+    // Where the look asked, and with what: asked again there if the site refuses (#668).
+    let (asked_at, asked_with) = (target.clone(), headers.clone());
     // A browser's User-Agent refused (#372): asked once more as MDM.
     let (client, asked) = match get(
         &client,
@@ -877,18 +906,37 @@ pub async fn probe_kept(
         }
         asked => (client, asked),
     };
-    let (resp, headers, took) = asked?;
-    seen.answered(&resp);
-    let final_url = resp.url().clone();
-    let (size, from_zero) = match resp.status() {
+    let (head, body, browser, headers, took) = match asked {
+        Ok((resp, headers, took)) => {
+            seen.answered(&resp);
+            (Head::of(&resp), Body::Http(resp), None, headers, took)
+        }
+        // #668: the site refused MDM's connection as a program's (`refused_as_a_program`):
+        // looked at once more the way a browser connects, its answer kept for the download
+        // (which then asks no more).
+        Err(e) if refused_as_a_program(&e) && unlocked.is_none() && opts.post.is_none() => {
+            let cancel = CancellationToken::new();
+            let (b, (head, body, headers, took)) =
+                browser_ask(opts, &asked_at, &asked_with, expects, &cancel)
+                    .await
+                    .map_err(|other| match other {
+                        Error::Cancelled | Error::Adapter(_) => other,
+                        _ => e,
+                    })?;
+            (head, body, Some(b), headers, took)
+        }
+        Err(e) => return Err(e),
+    };
+    let final_url = head.url.clone();
+    let (size, from_zero) = match head.status {
         StatusCode::PARTIAL_CONTENT => {
-            let (start, _, total) = parse_content_range(resp.headers())?;
+            let (start, _, total) = parse_content_range(&head.headers)?;
             (total, start == 0)
         }
-        StatusCode::OK => (resp.content_length(), true),
-        _ => (resp.content_length(), false),
+        StatusCode::OK => (head.len, true),
+        _ => (head.len, false),
     };
-    let cd = header_text(resp.headers(), header::CONTENT_DISPOSITION);
+    let cd = header_text(&head.headers, header::CONTENT_DISPOSITION);
     let file_name = name_for(cd.as_deref(), &final_url, unlocked.as_ref());
     let info = ProbeInfo {
         final_url,
@@ -901,7 +949,9 @@ pub async fn probe_kept(
         client,
         seen,
         as_get,
-        resp,
+        head,
+        body,
+        browser,
         headers,
         took,
         at: std::time::Instant::now(),
@@ -914,6 +964,15 @@ pub async fn probe_kept(
 /// the same proxy, DNS and network adapter as `opts`' downloads.
 pub fn http_client(opts: &Options, url: &Url) -> Result<Client, Error> {
     client(opts, url, &AsGet::default(), &Default::default())
+}
+
+/// A client for one request to `url`'s server, as [`http_client`]'s, that follows no redirect
+/// and adds no `Referer` of its own: its caller follows each hop itself, with a client for that
+/// hop's server (its proxy and adapter checks are that server's), and decides which of its
+/// headers go there (the browser's quality menu reading a stream's manifest, mdm-tools'
+/// `manifest`: the browser's cookie never reaches another server).
+pub fn hop_client(opts: &Options, url: &Url) -> Result<Client, Error> {
+    client_with(opts, url, &AsGet::default(), &Default::default(), false)
 }
 
 /// The file's name: the server's (Content-Disposition), else the service's (#44), else the
@@ -939,22 +998,36 @@ async fn unlock_origin(
     if opts.post.is_some() || !matches!(url.scheme(), "http" | "https") {
         return Ok(None);
     }
-    let note = |s: String| {
-        if let Some(sh) = shared {
-            sh.event(s);
-        }
-    };
-    match u.unlock(url, &note, cancel).await {
-        Ok(Some(x)) => {
-            note(crate::unlock::note_unlocked(u.name(), &x));
-            Ok(Some(x))
-        }
-        Ok(None) => Ok(None),
-        Err(fault) => Err(Error::Refused(Refusal::Service {
+    unlock_noted(u, url, shared, cancel).await.map_err(|fault| {
+        Error::Refused(Refusal::Service {
             service: u.name().to_owned(),
             fault,
-        })),
+        })
+    })
+}
+
+/// `u`'s link for `url`, its waits told in the event log and the list's status ("40% at
+/// TorBox") meanwhile, and the link it gave noted (never the link itself).
+async fn unlock_noted(
+    u: &Arc<dyn crate::unlock::Unlocker>,
+    url: &Url,
+    shared: Option<&Shared>,
+    cancel: &CancellationToken,
+) -> Result<Option<crate::unlock::Unlocked>, crate::unlock::ServiceFault> {
+    let note = |s: String, progress: Option<f32>| {
+        if let Some(sh) = shared {
+            sh.event(s);
+            sh.view.lock().unwrap().at_service = Some((u.name().to_owned(), progress));
+        }
+    };
+    let out = u.unlock(url, &note, cancel).await;
+    if let Some(sh) = shared {
+        sh.view.lock().unwrap().at_service = None;
+        if let Ok(Some(x)) = &out {
+            sh.event(u.noted(x));
+        }
     }
+    out
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -1035,12 +1108,13 @@ impl Download {
                 failure: None,
                 events: Vec::new(),
                 server: None,
+                at_service: None,
             }),
             seen: Default::default(),
             planner: Mutex::new(None),
             limiter: Limiter::new(None),
             best_speed: Default::default(),
-            flushing: Default::default(),
+            disk_held: Default::default(),
             held: Default::default(),
         });
         let task = tokio::spawn(f(shared.clone(), cancel.clone()));
@@ -1122,12 +1196,11 @@ struct Shared {
     seen: std::sync::OnceLock<Arc<crate::server::ServerSeen>>,
     planner: Mutex<Option<Planner>>,
     limiter: Limiter,
-    /// The best speed one connection of this download sustained (≥ 1 s), bytes/s: what a good
+    /// The best speed one connection of this download sustained (`yardstick`), bytes/s: what a good
     /// connection to this server does, the yardstick for shedding.
     best_speed: std::sync::atomic::AtomicU64,
-    /// The resume save is flushing the part file to the disk right now (`save_state`): the
-    /// connections hold what they receive (`hold_cap`).
-    flushing: std::sync::atomic::AtomicBool,
+    /// When a connection last stood still for the disk for `DISK_HELD` or longer (`Pace`).
+    disk_held: Mutex<Option<std::time::Instant>>,
     /// Bytes received and claimed but not yet written, in the connections' buffers: shown as
     /// downloaded (they are), but never saved as such.
     held: std::sync::atomic::AtomicU64,
@@ -1246,12 +1319,18 @@ struct Ctx {
     web_page_ok: bool,
     /// An FTP download's server and its idle sessions (else HTTP through `client`).
     ftp: Option<Arc<crate::ftp::Site>>,
+    /// The browser-like connection every request goes through instead of `client`, when only it
+    /// got past the site's bot check (#668).
+    browser: Option<Arc<crate::browserlike::Browser>>,
 }
 
 /// An answer's body coming in: an HTTP response, or an FTP transfer.
-enum Body {
+pub(crate) enum Body {
     Http(Response),
     Ftp(crate::ftp::Transfer),
+    /// An answer to the browser-like connection (#668, `crate::browserlike`).
+    #[cfg_attr(not(feature = "browser-connection"), allow(dead_code))]
+    Browser(crate::browserlike::Stream),
 }
 
 impl Body {
@@ -1260,6 +1339,7 @@ impl Body {
         match self {
             Body::Http(r) => Ok(r.chunk().await?),
             Body::Ftp(t) => t.chunk().await,
+            Body::Browser(b) => b.chunk().await,
         }
     }
 
@@ -1268,6 +1348,7 @@ impl Body {
         match self {
             Body::Http(r) => r.content_length(),
             Body::Ftp(t) => t.expected(),
+            Body::Browser(b) => b.len(),
         }
     }
 
@@ -1281,6 +1362,30 @@ impl Body {
                 }
             }
             Body::Ftp(t) => t.done(at_end).await,
+            // Its connection isn't pooled for another request: there is only the one.
+            Body::Browser(_) => {}
+        }
+    }
+}
+
+/// What the engine reads of an HTTP answer's head, from either client (reqwest's, or the
+/// browser-like one's, #668).
+#[derive(Clone, Debug)]
+pub(crate) struct Head {
+    pub(crate) status: StatusCode,
+    pub(crate) headers: HeaderMap,
+    /// Where the answer came from, its redirects followed.
+    pub(crate) url: Url,
+    pub(crate) len: Option<u64>,
+}
+
+impl Head {
+    fn of(resp: &Response) -> Head {
+        Head {
+            status: resp.status(),
+            headers: resp.headers().clone(),
+            url: resp.url().clone(),
+            len: resp.content_length(),
         }
     }
 }
@@ -1315,6 +1420,7 @@ impl Ctx {
             self.size,
             &self.cancel,
             self.opts.unlocker.as_ref(),
+            &self.shared,
         )
         .await
         .filter(|(u, _)| *u != self.target.lock().unwrap().url) else {
@@ -1358,12 +1464,30 @@ fn client(
     as_get: &AsGet,
     seen: &Arc<crate::server::ServerSeen>,
 ) -> Result<Client, Error> {
+    client_with(opts, url, as_get, seen, true)
+}
+
+/// [`client`], following redirects (`follow`) or none at all ([`hop_client`]).
+fn client_with(
+    opts: &Options,
+    url: &Url,
+    as_get: &AsGet,
+    seen: &Arc<crate::server::ServerSeen>,
+    follow: bool,
+) -> Result<Client, Error> {
     let port = url.port_or_known_default().unwrap_or(443);
     let route = &opts.route;
     // An IP address in the URL never reaches the resolver, which drops what the chosen adapter
     // can't reach (#35): check it here.
     net::check_url(route, url)?;
-    let builder = Client::builder();
+    let mut builder = Client::builder();
+    if !opts.extra_roots.is_empty() {
+        builder = builder.tls_certs_merge(
+            opts.extra_roots
+                .iter()
+                .filter_map(|der| reqwest::Certificate::from_der(der).ok()),
+        );
+    }
     // With an adapter chosen, the system's proxy is looked up now, so that it can be checked
     // (and a proxy on this computer recognised) like the others.
     let system = match (&opts.proxy, route.is_any()) {
@@ -1469,7 +1593,11 @@ fn client(
         Some(_) => as_get.policy(),
         None => get_policy(),
     };
-    let builder = if route.is_any() {
+    let builder = if !follow {
+        builder
+            .redirect(reqwest::redirect::Policy::none())
+            .referer(false)
+    } else if route.is_any() {
         builder.redirect(inner)
     } else {
         let route = route.clone();
@@ -1564,29 +1692,44 @@ async fn run_fresh(
     let kept = kept.filter(|k| {
         k.url == req.url
             && k.at.elapsed() < KEEP_ANSWER_FOR
-            && !(expects && is_web_page(k.resp.headers()) && !named(k.resp.headers()))
+            && !(expects && is_web_page(&k.head.headers) && !named(&k.head.headers))
     });
     let mut unlocked = kept.as_ref().and_then(|k| k.unlocked.clone());
-    let (as_get, client0, (resp, headers), ttfb) = match kept {
+    // Where the first request went: a service's (or a helper's, #769) direct link when one gave
+    // it, which isn't a redirect.
+    let mut first_at = req.url.clone();
+    // The browser-like connection the download goes on with, when only it got through (#668).
+    let mut browser: Option<Arc<crate::browserlike::Browser>> = None;
+    let (as_get, client0, (head, body), headers, ttfb) = match kept {
         Some(k) => {
             shared.event(
                 "Connection 1: continuing from the answer the file's information window got",
             );
             let _ = shared.seen.set(k.seen);
-            (k.as_get, k.client, (k.resp, k.headers), k.took)
+            browser = k.browser;
+            (k.as_get, k.client, (k.head, k.body), k.headers, k.took)
         }
         None => {
             // Through a service account (#44): its direct link, without the host's cookies
             // or logins. The host's link stays the download's origin, asked again (through the
             // service) when the direct link dies.
             unlocked = unlock_origin(&opts, &req.url, Some(shared), cancel).await?;
-            let (target, asked) = match &unlocked {
-                Some(u) => (u.url.clone(), HeaderMap::new()),
+            let (target, mut asked) = match &unlocked {
+                Some(u) => (u.url.clone(), u.headers.clone()),
                 None => (req.url.clone(), req.headers.clone()),
             };
+            // A server that slows long answers down (`request_cap`): the first request is a
+            // range of that size too, its total the file's size.
+            if let Some(cap) = opts.cap() {
+                asked.insert(header::RANGE, range_value(0, cap));
+            }
+            first_at = target.clone();
             let as_get = AsGet::default();
             let seen = shared.seen.get_or_init(Default::default).clone();
             let as_given = opts.clone();
+            // The download's own User-Agent, which the browser-like connection carries (#668),
+            // even when MDM's connection had to give it up (#372).
+            let given_agent = opts.user_agent.clone();
             let ask = FirstAsk {
                 as_get: &as_get,
                 seen: &seen,
@@ -1624,11 +1767,33 @@ async fn run_fresh(
                     }
                 }
             }
-            let (answer, ttfb) = first?;
-            seen.answered(&answer.0);
-            (as_get, client0, answer, ttfb)
+            // #668: the site refused MDM's connection as a program's (its bot check, or a 412):
+            // asked once more, the way a browser connects, at the same address with the same
+            // headers. Its refusal stays the one told if that fails too.
+            match first {
+                Ok(((resp, headers), ttfb)) => {
+                    seen.answered(&resp);
+                    let head = Head::of(&resp);
+                    (as_get, client0, (head, Body::Http(resp)), headers, ttfb)
+                }
+                Err(e) if refused_as_a_program(&e) && unlocked.is_none() && opts.post.is_none() => {
+                    if asked_as_mdm {
+                        opts.user_agent = given_agent;
+                        asked_as_mdm = false;
+                    }
+                    let (b, head, body, headers, ttfb) =
+                        browser_first(&opts, &target, &asked, e, expects, shared, cancel).await?;
+                    browser = Some(b);
+                    (as_get, client0, (head, body), headers, ttfb)
+                }
+                Err(e) => return Err(e),
+            }
         }
     };
+    // One connection, as a browser downloads: the site let this one through.
+    if browser.is_some() {
+        opts.max_connections = 1;
+    }
     // The service's own cap on connections to its link (Real-Debrid's "chunks").
     if let Some(cap) = unlocked
         .as_ref()
@@ -1638,48 +1803,49 @@ async fn run_fresh(
         opts.max_connections = opts.max_connections.min(cap);
     }
     let preempt_after = (ttfb * PREEMPT_TTFB).max(PREEMPT_MIN);
-    let size = match resp.status() {
-        StatusCode::OK => resp.content_length(),
+    let size = match head.status {
+        StatusCode::OK => head.len,
         // Some servers answer partially even without Range; accept it if it starts at 0.
-        StatusCode::PARTIAL_CONTENT => match parse_content_range(resp.headers())? {
+        StatusCode::PARTIAL_CONTENT => match parse_content_range(&head.headers)? {
             (0, _, total) => total,
             (start, ..) => return Err(Error::BadRange(format!("probe started at {start}"))),
         },
         s => return Err(Error::Status(s)),
     };
-    let ranges = if resp.status() == StatusCode::PARTIAL_CONTENT {
+    let ranges = if head.status == StatusCode::PARTIAL_CONTENT {
         RANGES_YES
     } else {
         RANGES_UNKNOWN
     };
     // The first answer says the server takes ranges (`Accept-Ranges: bytes`).
     let advertised = ranges == RANGES_YES
-        || header_str(resp.headers(), header::ACCEPT_RANGES)
+        || header_str(&head.headers, header::ACCEPT_RANGES)
             .is_some_and(|v| v.split(',').any(|t| t.trim().eq_ignore_ascii_case("bytes")));
-    let final_url = resp.url().clone();
+    let final_url = head.url.clone();
     shared.event(format!(
         "Connected to {}{}: {}, size {}",
         final_url.host_str().unwrap_or("?"),
-        if final_url != req.url {
+        if final_url != first_at {
             " (redirected)"
         } else {
             ""
         },
-        resp.status(),
+        head.status,
         size.map_or("unknown".to_owned(), disk::human),
     ));
     // Credentials stay with the host they were given for, with the cookies pages set on the way
-    // (`get`).
+    // (`get`); the first request's own range (`request_cap`) isn't theirs.
     let mut headers = headers;
+    headers.remove(header::RANGE);
     // A POST stays one if its redirects kept it (307, 308); it is sent again only once the
     // server has answered a range (206): `Accept-Ranges` alone isn't proof, and a form may do
     // something each time it is posted (an export, an order).
     let post = post_for(&opts, as_get.contains(&final_url), &mut headers);
     let wait_for_ranges = post.is_some() && ranges != RANGES_YES;
-    let h = resp.headers();
+    let h = &head.headers;
     // The expected hash: the user's, else what a full (200) answer announces for its content.
     let checksum = opts.checksum.clone().or_else(|| {
-        (resp.status() == StatusCode::OK)
+        (head.status == StatusCode::OK)
             .then(|| crate::verify::Hash::from_headers(h))
             .flatten()
     });
@@ -1697,13 +1863,13 @@ async fn run_fresh(
         .flatten()
         .and_then(|lm| httpdate::parse_http_date(lm).ok());
 
-    let content_type = resp
-        .headers()
+    let content_type = head
+        .headers
         .get(header::CONTENT_TYPE)
         .and_then(|v| v.to_str().ok())
         .map(str::to_owned);
     let (dest, _reservation, file) = open_destination(&req.dest, size, &opts, || {
-        let cd = header_text(resp.headers(), header::CONTENT_DISPOSITION);
+        let cd = header_text(&head.headers, header::CONTENT_DISPOSITION);
         name_for(cd.as_deref(), &final_url, unlocked.as_ref())
     })
     .await?;
@@ -1725,6 +1891,7 @@ async fn run_fresh(
         saved.checksum = checksum.clone();
         saved.final_get = opts.post.is_some() && post.is_none();
         saved.asked_as_mdm = asked_as_mdm;
+        saved.browser_like = browser.is_some();
         let ctx = Arc::new(Ctx {
             client: client0.clone(),
             validators: Mutex::new(validators),
@@ -1734,7 +1901,10 @@ async fn run_fresh(
                 post: post.clone(),
                 generation: 0,
             }),
-            origin: (req.url != final_url).then(|| (req.url.clone(), req.headers.clone())),
+            // Asked again through MDM's own connection, which the site's bot check refuses: a
+            // browser-like download keeps the address it has (#668).
+            origin: (req.url != final_url && browser.is_none())
+                .then(|| (req.url.clone(), req.headers.clone())),
             refreshed: Default::default(),
             size,
             file: file.clone(),
@@ -1750,32 +1920,41 @@ async fn run_fresh(
             as_get,
             web_page_ok: expects_web_page(&dest, content_type.as_deref()),
             ftp: None,
+            browser: browser.clone(),
         });
-        match segmented(ctx, saved, Some(Body::Http(resp))).await {
+        match segmented(ctx, saved, Some(body)).await {
             Ok(()) => size,
             // The server ignores ranges and the probe's data can't be kept: start over on
             // one connection.
             Err(Error::NoRanges) => {
                 *shared.planner.lock().unwrap() = None;
                 shared.view.lock().unwrap().resumable = Some(false);
-                let agent = opts.site_agent();
-                let (resp, ..) = get(
-                    &client0,
-                    final_url,
-                    headers,
-                    post.as_ref(),
-                    agent,
-                    expects,
-                    cancel,
-                )
-                .await?;
-                let body = Body::Http(resp);
+                let body = match &browser {
+                    Some(b) => {
+                        let (head, body, _) = b.get(final_url, headers, false, cancel).await?;
+                        crate::browserlike::check_first(&head, expects)?;
+                        body
+                    }
+                    None => {
+                        let agent = opts.site_agent();
+                        let (resp, ..) = get(
+                            &client0,
+                            final_url,
+                            headers,
+                            post.as_ref(),
+                            agent,
+                            expects,
+                            cancel,
+                        )
+                        .await?;
+                        Body::Http(resp)
+                    }
+                };
                 single_stream(body, &file, shared, opts.global.as_deref(), cancel).await?
             }
             Err(e) => return Err(e),
         }
     } else {
-        let body = Body::Http(resp);
         single_stream(body, &file, shared, opts.global.as_deref(), cancel).await?
     };
     verify_part(shared, &dest, checksum.as_ref()).await?;
@@ -1794,11 +1973,13 @@ async fn open_destination(
 ) -> Result<(PathBuf, naming::Reservation, File), Error> {
     // The folder must exist: we create it, but a removed drive or offline share can't be.
     let folder = match dest {
-        Destination::File(p) => p.parent().unwrap_or(Path::new("")).to_owned(),
+        Destination::File(p) | Destination::Free(p) => {
+            p.parent().unwrap_or(Path::new("")).to_owned()
+        }
         Destination::Dir(dir) => dir.clone(),
     };
     std::fs::create_dir_all(&folder).map_err(|_| Error::DestinationUnavailable(folder.clone()))?;
-    if let Destination::File(p) = dest
+    if let Destination::File(p) | Destination::Free(p) = dest
         && !naming::path_fits(p)
     {
         return Err(Error::PathTooLong(p.clone()));
@@ -1826,24 +2007,12 @@ async fn open_destination(
             // Shortened to fit Windows' path limit; a folder too deep for any name is an error.
             let name =
                 naming::fit_name(dir, &name).ok_or_else(|| Error::PathTooLong(dir.join(&name)))?;
-            let mut attempt = 0;
-            loop {
-                let dest = naming::unique_path(dir, &name);
-                if let Some(r) = naming::reserve(&dest) {
-                    // Read too: reconnecting connections re-read their last bytes (overlap check).
-                    match std::fs::OpenOptions::new()
-                        .read(true)
-                        .write(true)
-                        .create_new(true)
-                        .open(naming::part_path(&dest))
-                    {
-                        Ok(file) => break (dest, r, file),
-                        Err(e) if e.kind() == io::ErrorKind::AlreadyExists && attempt < 100 => {}
-                        Err(e) => return Err(e.into()),
-                    }
-                }
-                attempt += 1;
-            }
+            claim_free(dir, &name)?
+        }
+        Destination::Free(p) => {
+            let dir = p.parent().unwrap_or(Path::new(""));
+            let name = p.file_name().unwrap_or_default().to_string_lossy();
+            claim_free(dir, &name)?
         }
     };
     // Before any data: a mark the hook sets (Mark of the Web, quarantine) is on the file from
@@ -1859,6 +2028,29 @@ async fn open_destination(
         file.set_len(size)?;
     }
     Ok((dest, reservation, file))
+}
+
+/// `name` in `dir`, or the next free numbered name (`naming::unique_path`): reserved in this
+/// process, its part file created exclusively (another program may take the name meanwhile).
+fn claim_free(dir: &Path, name: &str) -> Result<(PathBuf, naming::Reservation, File), Error> {
+    let mut attempt = 0;
+    loop {
+        let dest = naming::unique_path(dir, name);
+        if let Some(r) = naming::reserve(&dest) {
+            // Read too: reconnecting connections re-read their last bytes (overlap check).
+            match std::fs::OpenOptions::new()
+                .read(true)
+                .write(true)
+                .create_new(true)
+                .open(naming::part_path(&dest))
+            {
+                Ok(file) => return Ok((dest, r, file)),
+                Err(e) if e.kind() == io::ErrorKind::AlreadyExists && attempt < 100 => {}
+                Err(e) => return Err(e.into()),
+            }
+        }
+        attempt += 1;
+    }
 }
 
 /// The download has its file and is receiving it.
@@ -1952,6 +2144,7 @@ async fn run_fresh_ftp(
             as_get: AsGet::default(),
             web_page_ok: true,
             ftp: Some(site.clone()),
+            browser: None,
         });
         match segmented(ctx, saved, Some(first)).await {
             Ok(()) => size,
@@ -2007,31 +2200,48 @@ async fn run_resume(
     let as_get = AsGet::default();
     let seen = shared.seen.get_or_init(Default::default).clone();
     let client = client(&opts, &saved.url, &as_get, &seen)?;
+    // Only the browser-like connection got past the site's bot check (#668): it goes on with
+    // it, on one connection, at the address it had (MDM's own connection would be refused).
+    let browser = match saved.browser_like && crate::browserlike::AVAILABLE {
+        true => Some(Arc::new(crate::browserlike::Browser::new(
+            &opts,
+            &saved.final_url,
+            &headers,
+        )?)),
+        false => None,
+    };
+    if browser.is_some() {
+        opts.max_connections = 1;
+        shared.event("Going on the way a browser connects, as the site's bot check asked");
+    }
     // Through a service account (#44), the service is asked for today's link even when the
     // state holds none of its links (the download went directly until now).
-    let refreshed = if saved.url != saved.final_url || opts.unlocker.is_some() {
-        let post = opts.post.as_ref();
-        let agent = opts.site_agent();
-        refresh_final_url(
-            &client,
-            &saved.url,
-            &headers,
-            post,
-            agent,
-            saved.size,
-            &cancel,
-            opts.unlocker.as_ref(),
-        )
-        .await
-    } else {
-        None
-    };
+    let refreshed =
+        if browser.is_none() && (saved.url != saved.final_url || opts.unlocker.is_some()) {
+            let post = opts.post.as_ref();
+            let agent = opts.site_agent();
+            refresh_final_url(
+                &client,
+                &saved.url,
+                &headers,
+                post,
+                agent,
+                saved.size,
+                &cancel,
+                opts.unlocker.as_ref(),
+                &shared,
+            )
+            .await
+        } else {
+            None
+        };
     // A POST download's target is asked with GET when its redirects turned it into one.
     let (url, final_get, refreshed_headers) = match refreshed {
         Some((url, h)) => (url.clone(), as_get.contains(&url), Some(h)),
         None => (saved.final_url.clone(), saved.final_get, None),
     };
-    let origin = (saved.url != url).then(|| (saved.url.clone(), headers.clone()));
+    let origin =
+        (saved.url != url && browser.is_none()).then(|| (saved.url.clone(), headers.clone()));
     // Credentials stay with the host they were given for (the refresh's own way there scoped
     // them as it went).
     headers = refreshed_headers.unwrap_or_else(|| scoped_headers(&headers, &saved.url, &url));
@@ -2119,6 +2329,7 @@ async fn run_resume(
         as_get,
         web_page_ok,
         ftp,
+        browser,
     });
     let stamp = ctx
         .opts
@@ -2146,15 +2357,19 @@ async fn refresh_final_url(
     size: u64,
     cancel: &CancellationToken,
     unlocker: Option<&Arc<dyn crate::unlock::Unlocker>>,
+    shared: &Shared,
 ) -> Option<(Url, HeaderMap)> {
     // Through a service account (#44): the service gives today's direct link (the host's link
     // itself leads to its web page); the host's cookies and logins stay with the host.
     let unlocked = match unlocker.filter(|_| post.is_none()) {
-        Some(u) => u.unlock(origin, &|_| {}, cancel).await.ok().flatten(),
+        Some(u) => unlock_noted(u, origin, Some(shared), cancel)
+            .await
+            .ok()
+            .flatten(),
         None => None,
     };
     let (target, mut asked) = match &unlocked {
-        Some(u) => (u.url.clone(), HeaderMap::new()),
+        Some(u) => (u.url.clone(), u.headers.clone()),
         None => (origin.clone(), headers.clone()),
     };
     asked.insert(header::RANGE, HeaderValue::from_static("bytes=0-0"));
@@ -2257,6 +2472,7 @@ async fn segmented(
         at: std::time::Instant::now(),
         bytes: 0,
         took: Duration::ZERO,
+        covered: Duration::ZERO,
     };
     save_state(&ctx, &mut saved, &path, &mut synced, true).await?;
     let interval = ctx.opts.save_interval;
@@ -2304,43 +2520,66 @@ async fn segmented(
 
 /// While downloading, the part file is flushed (and the state rewritten) only after 1/16 of
 /// the file (1-64 MiB) has arrived or this long, at most once per save tick, and always when
-/// the connections stop. Flushing every tick stalled HDDs and churned antivirus; IDM saves
-/// "several times per minute" [IDM-doc].
+/// the connections stop. IDM saves "several times per minute" [IDM-doc].
 ///
-/// A flush holds every write to the file for as long as it runs (NTFS, measured, #361), so on a
-/// disk where it takes seconds, flushing as often as the file grows left the download frozen
-/// most of the time. The next flush therefore waits nine times as long as the last flush during
-/// the transfer took (`forced_gap`), at most `SYNC_GAP_MAX`: at most a tenth of the time goes
-/// to flushing, and on a fast disk (a flush of a few milliseconds) nothing changes. What it
-/// gives up: after a power cut or a crash the bytes since the last flush are downloaded again,
-/// so on a slow disk up to `SYNC_GAP_MAX` of them (at 1 Gbit/s about 7 GB) instead of about 2 s
-/// of them. The saved positions still never claim bytes that weren't flushed.
+/// A flush holds every write to the file for as long as it runs (NTFS, measured, #361); the
+/// connections keep receiving into memory meanwhile (`HOLD_MAX`), so a flush the memory covers
+/// costs the download nothing. What a flush has to write is what still waits in the system's
+/// cache: Windows writes it out lazily, so that is about all that came since the last flush,
+/// and on a disk slower than the network, all that piled up. Spacing the flushes out by how
+/// long the last one took (0.5.1 to 0.5.2) therefore made each one longer than the last: past
+/// the first gigabytes a flush took over 10 s and the download froze (#782). So a flush is only
+/// started when it should end well before the memory runs out (`Synced::fits`): flushes come
+/// as often as the file grows while they stay short, and on a disk that can't keep up they
+/// stop, and the system holds the writes to the disk's pace instead, evenly. They start again
+/// if the download slows down enough for them to fit.
+///
+/// What it gives up: after a power cut or a crash the bytes since the last flush are downloaded
+/// again: about 2 s of them on a disk that keeps up, everything since it fell behind on one
+/// that doesn't. Pausing, stopping and finishing still flush everything, and the saved
+/// positions never claim bytes that weren't flushed.
 const SYNC_BYTES_MAX: u64 = 64 << 20;
 const SYNC_BYTES_MIN: u64 = 1 << 20;
 const SYNC_EVERY: Duration = Duration::from_secs(30);
-const SYNC_GAP_MAX: Duration = Duration::from_secs(60);
 
 fn sync_bytes(size: u64) -> u64 {
     (size / 16).clamp(SYNC_BYTES_MIN, SYNC_BYTES_MAX)
 }
 
-/// How long to wait after a flush that took `took` before the next.
-fn flush_gap(took: Duration) -> Duration {
-    took.saturating_mul(9).min(SYNC_GAP_MAX)
-}
-
-/// When the part file was last flushed, how many bytes were on disk then, and how long it took.
+/// When the part file was last flushed, how many bytes were on disk then, how long it took,
+/// and the time it caught up with (since the flush before it ended).
 struct Synced {
     at: std::time::Instant,
     bytes: u64,
     took: Duration,
+    covered: Duration,
 }
 
 impl Synced {
-    /// Is a flush due with `bytes` on disk now, `elapsed` since the last one ended?
-    fn due(&self, bytes: u64, size: u64, elapsed: Duration) -> bool {
-        elapsed >= flush_gap(self.took)
-            && (bytes >= self.bytes.saturating_add(sync_bytes(size)) || elapsed >= SYNC_EVERY)
+    /// Is a flush due with `bytes` on disk now, `elapsed` since the last one ended, `room`
+    /// left in memory for what arrives meanwhile?
+    fn due(&self, bytes: u64, size: u64, elapsed: Duration, room: u64) -> bool {
+        let new = bytes.saturating_sub(self.bytes);
+        (new >= sync_bytes(size) || elapsed >= SYNC_EVERY) && self.fits(new, elapsed, room)
+    }
+
+    /// Whether a flush now, `new` bytes and `elapsed` after the last one, should take at most
+    /// three quarters of the time `room` lasts at the pace those bytes came: the connections
+    /// then keep receiving through it. With the memory full (a disk that sets the pace), none
+    /// does: it would stop them for as long as it takes.
+    fn fits(&self, new: u64, elapsed: Duration, room: u64) -> bool {
+        let lasts = room as f64 * elapsed.as_secs_f64() / new.max(1) as f64;
+        self.expected(elapsed).as_secs_f64() <= lasts * 0.75
+    }
+
+    /// How long a flush `elapsed` after the last one should take: as long as that one took for
+    /// each second it caught up with (what waits in the cache grows with the time, above).
+    fn expected(&self, elapsed: Duration) -> Duration {
+        if self.covered.is_zero() {
+            return self.took;
+        }
+        self.took
+            .mul_f64(elapsed.as_secs_f64() / self.covered.as_secs_f64())
     }
 }
 
@@ -2361,7 +2600,9 @@ async fn save_state(
         || final_url != saved.final_url
         || final_get != saved.final_get;
     let bytes: u64 = segments.iter().map(|s| s.cursor - s.start).sum();
-    let due = force || synced.due(bytes, ctx.size, synced.at.elapsed());
+    // Room left in memory for what arrives while the flush holds the writes.
+    let room = HOLD_MAX.saturating_sub(ctx.shared.held.load(Ordering::Relaxed));
+    let due = force || synced.due(bytes, ctx.size, synced.at.elapsed(), room);
     let file = ctx.file.clone();
     let path = path.to_owned();
     if !due {
@@ -2383,6 +2624,7 @@ async fn save_state(
             at: std::time::Instant::now(),
             bytes,
             took: Duration::ZERO,
+            covered: Duration::ZERO,
         };
         return Ok(());
     }
@@ -2390,36 +2632,28 @@ async fn save_state(
     s.validators = validators;
     s.final_url = final_url;
     s.final_get = final_get;
-    // Tests' slow disk (not for the forced saves at the start and the end).
-    let slow = if force {
-        None
-    } else {
-        ctx.opts.slow_flush.clone()
-    };
-    ctx.shared.flushing.store(true, Ordering::Release);
+    // Tests' slow disk (its extra flush time not for the forced saves at the start and the end).
+    let slow = ctx.opts.slow_disk.clone();
     let began = std::time::Instant::now();
-    let done = tokio::task::spawn_blocking(move || {
-        if let Some(slow) = slow {
-            let _writes_wait = slow.gate.write().unwrap();
-            std::thread::sleep(slow.takes);
-        }
-        s.save(&path, segments, &file).map(|()| s)
+    let done = tokio::task::spawn_blocking(move || match slow {
+        Some(disk) => disk.flush(!force, || s.save(&path, segments, &file).map(|()| s)),
+        None => s.save(&path, segments, &file).map(|()| s),
     })
     .await
     .expect("state writer panicked");
-    ctx.shared.flushing.store(false, Ordering::Release);
     *saved = done?;
     *synced = Synced {
         at: std::time::Instant::now(),
         bytes,
         took: forced_gap(force, began.elapsed()),
+        covered: began.saturating_duration_since(synced.at),
     };
     Ok(())
 }
 
-/// The flush time that spaces out the next flush. A forced save runs while no connection
-/// writes (before they start, after they stop), so it holds no transfer up and doesn't push the
-/// next save back: the first one at the start, which also pays for creating the part file, once
+/// The flush time the next flush is judged by. A forced save runs while no connection writes
+/// (before they start, after they stop), so it holds no transfer up and says nothing of the
+/// next one: the first one at the start, which also pays for creating the part file, once
 /// delayed the first save of progress past the end of a short download (#518).
 fn forced_gap(force: bool, took: Duration) -> Duration {
     if force { Duration::ZERO } else { took }
@@ -2477,9 +2711,86 @@ impl FirstAsk<'_> {
 }
 
 /// A plain 403, which a browser's User-Agent may have brought on (#372). A site's bot check
-/// isn't asked again: that one stays the site's call (#376).
+/// isn't asked again as MDM: it gets one try the way a browser connects (`browser_first`).
 fn agent_refused(e: &Error) -> bool {
     matches!(e, Error::Status(s) if s.as_u16() == 403)
+}
+
+/// A first answer that refuses MDM's connection for not being a browser's (#668): the site's bot
+/// check (`Error::BotCheck`, Cloudflare's), or 412 Precondition Failed, which MDM's first
+/// request, sent without any precondition (no `If-…` header), can only get as such a refusal
+/// (FileHippo's, #630).
+fn refused_as_a_program(e: &Error) -> bool {
+    matches!(e, Error::BotCheck) || matches!(e, Error::Status(s) if s.as_u16() == 412)
+}
+
+/// #668: the first request once more, after the site refused MDM's own connection as a
+/// program's (`refused_as_a_program`, its error `refused`): through the browser-like connection
+/// (`crate::browserlike`), at the same address with the same headers, once, its answer checked
+/// as the first one is. When that fails too, `refused` is what is told (the error users know,
+/// with its way out: the browser), the reason in the event log. With the answer, the connection
+/// the download goes on with.
+async fn browser_first(
+    opts: &Options,
+    url: &Url,
+    headers: &HeaderMap,
+    refused: Error,
+    expects: bool,
+    shared: &Shared,
+    cancel: &CancellationToken,
+) -> Result<
+    (
+        Arc<crate::browserlike::Browser>,
+        Head,
+        Body,
+        HeaderMap,
+        Duration,
+    ),
+    Error,
+> {
+    if !crate::browserlike::AVAILABLE {
+        return Err(refused);
+    }
+    let host = url.host_str().unwrap_or("?");
+    shared.event(format!(
+        "{host}: {refused}; asking once more the way a browser connects"
+    ));
+    let (b, asked) = match browser_ask(opts, url, headers, expects, cancel).await {
+        Ok(got) => got,
+        Err(e @ (Error::Cancelled | Error::Adapter(_))) => return Err(e),
+        Err(e) => {
+            shared.event(format!("{host}, asked the way a browser connects: {e}"));
+            return Err(refused);
+        }
+    };
+    let (head, body, headers, took) = asked;
+    shared.event(format!(
+        "{host}: the browser-like connection got through; downloading on it, one connection"
+    ));
+    Ok((b, head, body, headers, took))
+}
+
+/// The browser-like connection for `url`, and its answer to the first request (`browser_first`,
+/// `probe_kept`): the file's, or why not.
+async fn browser_ask(
+    opts: &Options,
+    url: &Url,
+    headers: &HeaderMap,
+    expects: bool,
+    cancel: &CancellationToken,
+) -> Result<
+    (
+        Arc<crate::browserlike::Browser>,
+        (Head, Body, HeaderMap, Duration),
+    ),
+    Error,
+> {
+    let b = Arc::new(crate::browserlike::Browser::new(opts, url, headers)?);
+    let asked = std::time::Instant::now();
+    let (head, body, headers) = b.get(url.clone(), headers.clone(), false, cancel).await?;
+    let took = asked.elapsed();
+    crate::browserlike::check_first(&head, expects)?;
+    Ok((b, (head, body, headers, took)))
 }
 
 /// A plain `GET` (no Range), or a POST of `post`, that must answer 200 or 206. A GET follows
@@ -2740,7 +3051,7 @@ fn meta_refresh(page: &[u8], base: &Url) -> Option<(Duration, Url)> {
 }
 
 /// The `name=value` pairs a response's `Set-Cookie` headers set.
-fn set_cookies(h: &HeaderMap) -> Vec<String> {
+pub(crate) fn set_cookies(h: &HeaderMap) -> Vec<String> {
     h.get_all(header::SET_COOKIE)
         .iter()
         .filter_map(|v| v.to_str().ok())
@@ -2752,7 +3063,7 @@ fn set_cookies(h: &HeaderMap) -> Vec<String> {
 }
 
 /// `cookies` added to the request's `Cookie` header, each replacing one of the same name.
-fn add_cookies(headers: &mut HeaderMap, cookies: &[String]) {
+pub(crate) fn add_cookies(headers: &mut HeaderMap, cookies: &[String]) {
     if cookies.is_empty() {
         return;
     }
@@ -2962,15 +3273,17 @@ async fn worker(ctx: Arc<Ctx>, id: WorkerId, mut first: Option<Body>) -> Result<
             a.written.min(ctx.opts.verify_overlap)
         };
         let result = match first.take() {
-            Some(body) if a.from == 0 => Ok(body),
+            Some(body) if a.from == 0 => {
+                let to = request_end(&ctx, id, 0).unwrap_or(a.to);
+                receive_all(&ctx, id, &target, Some(body), 0, to, 0, whole).await
+            }
             Some(_) => Err(Error::BadRange(
                 "probe segment no longer starts at 0".into(),
             )),
-            None => request(&ctx, &target, a.from - overlap, a.to).await,
-        };
-        let result = match result {
-            Ok(body) => receive(&ctx, id, body, a.from, a.to, overlap, whole).await,
-            Err(e) => Err(e),
+            None => {
+                let to = request_end(&ctx, id, a.from).unwrap_or(a.to);
+                receive_all(&ctx, id, &target, None, a.from, to, overlap, false).await
+            }
         };
         match result {
             Ok(Some(end)) => {
@@ -3077,6 +3390,72 @@ async fn worker(ctx: Arc<Ctx>, id: WorkerId, mut first: Option<Body>) -> Result<
     }
 }
 
+/// `Range: bytes=<from>-<from + len - 1>`.
+fn range_value(from: u64, len: u64) -> HeaderValue {
+    HeaderValue::from_str(&format!("bytes={from}-{}", from + len - 1)).expect("ascii")
+}
+
+/// Where connection `id`'s next request starting at `from` ends: its segment's end, or sooner
+/// under `request_cap` (HTTP). None: the segment is no longer its own.
+fn request_end(ctx: &Ctx, id: WorkerId, from: u64) -> Option<u64> {
+    let end = from + ctx.shared.with_planner(|p| p.room(id, from))?;
+    Some(match ctx.opts.cap().filter(|_| ctx.ftp.is_none()) {
+        Some(cap) => end.min(from.saturating_add(cap)),
+        None => end,
+    })
+}
+
+/// Connection `id`'s part from `from`: `body` (the first answer) or a request for `[from, to)`;
+/// then, under `request_cap`, one request after another on the same connection until its
+/// segment is complete. As [`receive`]: the segment's end, or None when it was taken over.
+#[allow(clippy::too_many_arguments)]
+async fn receive_all(
+    ctx: &Ctx,
+    id: WorkerId,
+    target: &Target,
+    body: Option<Body>,
+    from: u64,
+    to: u64,
+    overlap: u64,
+    whole: bool,
+) -> Result<Option<u64>, Error> {
+    let (mut from, mut to, mut overlap, mut whole) = (from, to, overlap, whole);
+    let mut body = body;
+    loop {
+        let b = match body.take() {
+            Some(b) => b,
+            None => {
+                // The bytes re-read to check the resume (`overlap`) count in the cap too.
+                if let Some(cap) = ctx.opts.cap().filter(|c| overlap < *c && ctx.ftp.is_none()) {
+                    to = to.min(from - overlap + cap);
+                }
+                request(ctx, target, from - overlap, to).await?
+            }
+        };
+        match receive(ctx, id, b, from, to, overlap, whole).await? {
+            Received::Complete(end) => return Ok(Some(end)),
+            Received::Lost => return Ok(None),
+            // The capped request came whole, its segment goes on: the next piece of it.
+            Received::More(pos) => {
+                let Some(end) = request_end(ctx, id, pos) else {
+                    return Ok(None);
+                };
+                (from, to, overlap, whole) = (pos, end, 0, false);
+            }
+        }
+    }
+}
+
+/// How one answer's body ended in [`receive`].
+enum Received {
+    /// The segment is complete, at this end.
+    Complete(u64),
+    /// Another connection took the segment over.
+    Lost,
+    /// All of a capped request (`request_cap`) came, up to here; the segment goes on.
+    More(u64),
+}
+
 /// `GET` bytes `[from, to)`; checks the server returned exactly that range of the same file.
 /// FTP: `REST from` and `RETR`.
 async fn request(ctx: &Ctx, target: &Target, from: u64, to: u64) -> Result<Body, Error> {
@@ -3105,34 +3484,52 @@ async fn request(ctx: &Ctx, target: &Target, from: u64, to: u64) -> Result<Body,
         .unwrap()
         .if_range(target.url.host_str())
         .and_then(|v| HeaderValue::from_str(v).ok());
-    let mut req = build(
-        &ctx.client,
-        target.url.clone(),
-        target.post.as_ref(),
-        &target.headers,
-        ctx.opts.site_agent(),
-    )
-    .header(header::RANGE, format!("bytes={from}-{}", to - 1));
-    if let Some(v) = &if_range {
-        req = req.header(header::IF_RANGE, v);
-    }
-    let resp = cancellable(&ctx.cancel, async { Ok(req.send().await?) }).await?;
-    if resp.status().is_success() && !ctx.web_page_ok && is_web_page(resp.headers()) {
+    let range = format!("bytes={from}-{}", to - 1);
+    let (head, body) = match &ctx.browser {
+        // The browser-like connection's own (#668): its redirects followed as `get` does.
+        Some(b) => {
+            let mut headers = target.headers.clone();
+            headers.insert(header::RANGE, HeaderValue::from_str(&range).expect("ascii"));
+            if let Some(v) = &if_range {
+                headers.insert(header::IF_RANGE, v.clone());
+            }
+            let (head, body, _) = b
+                .get(target.url.clone(), headers, true, &ctx.cancel)
+                .await?;
+            (head, body)
+        }
+        None => {
+            let mut req = build(
+                &ctx.client,
+                target.url.clone(),
+                target.post.as_ref(),
+                &target.headers,
+                ctx.opts.site_agent(),
+            )
+            .header(header::RANGE, range);
+            if let Some(v) = &if_range {
+                req = req.header(header::IF_RANGE, v);
+            }
+            let resp = cancellable(&ctx.cancel, async { Ok(req.send().await?) }).await?;
+            (Head::of(&resp), Body::Http(resp))
+        }
+    };
+    if head.status.is_success() && !ctx.web_page_ok && is_web_page(&head.headers) {
         return Err(Error::GotWebPage);
     }
-    match resp.status() {
+    match head.status {
         StatusCode::PARTIAL_CONTENT => {
             ctx.learn_ranges(true);
             ctx.range_answered.notify_one();
         }
         // The same file under another ETag (each CDN node has its own): go on with the date.
-        StatusCode::OK if per_node_etag(ctx, if_range.as_ref(), &resp) => {
+        StatusCode::OK if per_node_etag(ctx, if_range.as_ref(), &head) => {
             return Err(Error::RangesUnavailable);
         }
         // A full body for a ranged request once ranges are known to work: If-Range failed (the
         // file changed), unless it is still the same file and this answer just lacks the range.
         StatusCode::OK if ctx.ranges.load(Ordering::SeqCst) == RANGES_YES => {
-            return Err(if same_file(ctx, &resp) {
+            return Err(if same_file(ctx, &head) {
                 Error::RangesUnavailable
             } else {
                 Error::FileChanged
@@ -3143,38 +3540,38 @@ async fn request(ctx: &Ctx, target: &Target, from: u64, to: u64) -> Result<Body,
             return Err(Error::NoRanges);
         }
         s if s == StatusCode::TOO_MANY_REQUESTS || s == StatusCode::SERVICE_UNAVAILABLE => {
-            return Err(Error::Throttled(s, retry_after(resp.headers())));
+            return Err(Error::Throttled(s, retry_after(&head.headers)));
         }
         s => return Err(Error::Status(s)),
     }
-    let (start, _, total) = parse_content_range(resp.headers())?;
+    let (start, _, total) = parse_content_range(&head.headers)?;
     if start != from || total.is_some_and(|t| t != ctx.size) {
         return Err(Error::BadRange(format!(
             "asked {from}-{}, got {start}..",
             to - 1
         )));
     }
-    Ok(Body::Http(resp))
+    Ok(body)
 }
 
 /// A full answer that still describes the file being downloaded: the same length and, when the
 /// download has validators, the same one it would send.
-fn same_file(ctx: &Ctx, resp: &Response) -> bool {
-    let host = resp.url().host_str();
+fn same_file(ctx: &Ctx, resp: &Head) -> bool {
+    let host = resp.url.host_str();
     let v = ctx.validators.lock().unwrap();
-    let h = resp.headers();
+    let h = &resp.headers;
     let theirs = match v.if_range(host) {
-        None => return resp.content_length() == Some(ctx.size),
+        None => return resp.len == Some(ctx.size),
         Some(ours) if Some(ours) == v.etag.as_deref() => header_str(h, header::ETAG),
         Some(_) => header_str(h, header::LAST_MODIFIED),
     };
-    resp.content_length() == Some(ctx.size) && theirs.is_some() && theirs == v.if_range(host)
+    resp.len == Some(ctx.size) && theirs.is_some() && theirs == v.if_range(host)
 }
 
 /// A full answer to an ETag `If-Range` that still matches by length and Last-Modified: the
 /// ETag differs per node (CDNs, mirrors), not the file. The ETag is dropped for the rest of the
 /// download, so the next request validates with the date (and the overlap check).
-fn per_node_etag(ctx: &Ctx, sent: Option<&HeaderValue>, resp: &Response) -> bool {
+fn per_node_etag(ctx: &Ctx, sent: Option<&HeaderValue>, resp: &Head) -> bool {
     let mut v = ctx.validators.lock().unwrap();
     // Sent with an ETag (dates never start with a quote) — possibly one another connection has
     // just dropped, so don't compare it with the current one.
@@ -3182,14 +3579,14 @@ fn per_node_etag(ctx: &Ctx, sent: Option<&HeaderValue>, resp: &Response) -> bool
     // Another node's ETag differs from the one sent. The same ETag is that too only from a
     // server that advertised ranges: one that didn't, answering in full, has no ranges (#136),
     // and is told so at once rather than after a round of retries.
-    let theirs = header_str(resp.headers(), header::ETAG);
+    let theirs = header_str(&resp.headers, header::ETAG);
     let other_node = ctx.advertised
         || (theirs.is_some() && theirs.map(str::as_bytes) != sent.map(HeaderValue::as_bytes));
     let same = sent_etag
         && other_node
-        && resp.content_length() == Some(ctx.size)
+        && resp.len == Some(ctx.size)
         && v.last_modified.is_some()
-        && header_str(resp.headers(), header::LAST_MODIFIED) == v.last_modified.as_deref();
+        && header_str(&resp.headers, header::LAST_MODIFIED) == v.last_modified.as_deref();
     if same {
         v.etag = None;
         v.etag_host = None;
@@ -3201,14 +3598,61 @@ fn header_str(h: &HeaderMap, name: header::HeaderName) -> Option<&str> {
     h.get(name).and_then(|v| v.to_str().ok())
 }
 
-/// A site's bot check turning the request away (#376), as Cloudflare marks it.
-fn is_bot_check(status: StatusCode, h: &HeaderMap) -> bool {
+/// A site's bot check turning the request away: Cloudflare's, which marks it
+/// (`cf-mitigated: challenge`, #376), or Akamai's, whose edge answers a connection it takes for a
+/// program's with its own 403 page ("Access Denied", served by `AkamaiGHost`, #771), where a
+/// browser gets the file. The site's own 403 behind Akamai comes from its servers, not the edge's
+/// page, and stays a plain refusal.
+pub(crate) fn is_bot_check(status: StatusCode, h: &HeaderMap) -> bool {
     status == StatusCode::FORBIDDEN
-        && h.get("cf-mitigated")
+        && (h
+            .get("cf-mitigated")
             .is_some_and(|v| v.as_bytes().eq_ignore_ascii_case(b"challenge"))
+            || (header_str(h, header::SERVER)
+                .is_some_and(|s| s.trim().eq_ignore_ascii_case("AkamaiGHost"))
+                && is_web_page(h)))
 }
 
-fn is_web_page(h: &HeaderMap) -> bool {
+#[cfg(test)]
+mod bot_check_tests {
+    use super::*;
+
+    fn headers(pairs: &[(&'static str, &'static str)]) -> HeaderMap {
+        let mut h = HeaderMap::new();
+        for (k, v) in pairs {
+            h.insert(*k, header::HeaderValue::from_static(v));
+        }
+        h
+    }
+
+    /// Cloudflare's challenge and Akamai's edge refusal (#771) are bot checks; a 403 from the site
+    /// itself, or Akamai's edge sending something other than its page, is not.
+    #[test]
+    fn bot_checks_are_cloudflares_challenge_and_akamais_edge_page() {
+        let forbidden = StatusCode::FORBIDDEN;
+        assert!(is_bot_check(
+            forbidden,
+            &headers(&[("cf-mitigated", "challenge")])
+        ));
+        let akamai = headers(&[("server", "AkamaiGHost"), ("content-type", "text/html")]);
+        assert!(is_bot_check(forbidden, &akamai));
+        assert!(!is_bot_check(StatusCode::NOT_FOUND, &akamai));
+        assert!(!is_bot_check(
+            forbidden,
+            &headers(&[
+                ("server", "AkamaiGHost"),
+                ("content-type", "application/pdf")
+            ])
+        ));
+        assert!(!is_bot_check(
+            forbidden,
+            &headers(&[("server", "nginx"), ("content-type", "text/html")])
+        ));
+        assert!(!is_bot_check(forbidden, &HeaderMap::new()));
+    }
+}
+
+pub(crate) fn is_web_page(h: &HeaderMap) -> bool {
     h.get(header::CONTENT_TYPE)
         .and_then(|v| v.to_str().ok())
         .is_some_and(is_web_page_type)
@@ -3220,14 +3664,14 @@ fn is_web_page_type(content_type: &str) -> bool {
 }
 
 /// The server names what it sends (`Content-Disposition`): its own file, page or not.
-fn named(h: &HeaderMap) -> bool {
+pub(crate) fn named(h: &HeaderMap) -> bool {
     h.contains_key(header::CONTENT_DISPOSITION)
 }
 
 /// Where a download is saved under a name of its own (the browser's, the user's), that name.
 fn dest_name(dest: &Destination) -> Option<&str> {
     match dest {
-        Destination::File(p) => p.file_name().and_then(|n| n.to_str()),
+        Destination::File(p) | Destination::Free(p) => p.file_name().and_then(|n| n.to_str()),
         Destination::Dir(_) => None,
     }
 }
@@ -3363,7 +3807,11 @@ fn expects_web_page(dest: &Path, content_type: Option<&str>) -> bool {
 /// `None` when the segment was taken over by another connection.
 ///
 /// Every chunk is claimed from the planner as soon as it arrives (not when the buffer is
-/// flushed), so a split can never fall inside data this connection has already received.
+/// written), so a split can never fall inside data this connection has already received.
+///
+/// Writing runs beside receiving (`Writer`): while the disk takes one write, what arrives waits
+/// in memory, up to the connection's share of `HOLD_MAX`, and only then does the connection
+/// stand still for the disk (#361, #782).
 async fn receive(
     ctx: &Ctx,
     id: WorkerId,
@@ -3372,28 +3820,22 @@ async fn receive(
     to: u64,
     mut verify: u64,
     whole: bool,
-) -> Result<Option<u64>, Error> {
+) -> Result<Received, Error> {
     ctx.shared.conn(id, |c| c.status = ConnStatus::Receiving);
-    // Written and committed up to `pos`; `buf` holds claimed bytes not yet written.
-    let mut pos = from;
-    let mut buf = Vec::with_capacity(BATCH);
-    let mut flushed_at = std::time::Instant::now();
-    let started = std::time::Instant::now();
-    // Time spent waiting for the disk (`flush`): a connection isn't slow for that (#361), it
-    // wasn't reading the network then.
-    let mut on_disk = Duration::ZERO;
-    let mut received = 0u64;
-    let mut checked = started;
+    let mut out = Writer::new(ctx, id, from);
+    let mut pace = Pace::new();
+    let mut checked = std::time::Instant::now();
     loop {
         let next = tokio::select! {
             _ = ctx.cancel.cancelled() => {
                 // Paused or stopped: keep what arrived (it is claimed, so it is ours to write).
-                flush(ctx, id, &mut pos, &mut buf).await?;
+                out.finish(&mut pace).await?;
                 return Err(Error::Cancelled);
             }
             n = body.chunk() => n,
         };
-        let (ended, err) = match next {
+        // `complete`: the segment ended where this connection had written (a split shortened it).
+        let (ended, err, complete) = match next {
             Ok(Some(mut chunk)) => {
                 // The response starts `verify` bytes before `from`: they must equal the disk.
                 if verify > 0 {
@@ -3403,6 +3845,7 @@ async fn receive(
                         .await
                         .expect("reader panicked")?;
                     if disk[..] != chunk[..k as usize] {
+                        out.finish(&mut pace).await?;
                         return Err(Error::FileChanged);
                     }
                     verify -= k;
@@ -3424,12 +3867,12 @@ async fn receive(
                 tokio::select! {
                     _ = ctx.cancel.cancelled() => {
                         // Not claimed yet: this chunk isn't ours to keep; what is, is written.
-                        flush(ctx, id, &mut pos, &mut buf).await?;
+                        out.finish(&mut pace).await?;
                         return Err(Error::Cancelled);
                     }
                     _ = paid => {}
                 }
-                let at = pos + buf.len() as u64;
+                let at = out.next();
                 // An answer that runs to the end of the file (`whole`: the probe's plain GET),
                 // while ranges aren't known to work: at its segment's end it takes over the
                 // split-off segments nothing has arrived for yet, rather than dropping bytes it
@@ -3450,7 +3893,8 @@ async fn receive(
                         p.room(id, at + n) == Some(0) && !(keep_reading && p.absorb_next(id));
                     Some((n, full))
                 });
-                // Claimed bytes can't be taken over, so a lost segment has an empty buffer.
+                // Claimed bytes can't be taken over, so a lost segment has nothing waiting for
+                // the disk (a write still running is waited for all the same, #201).
                 let refund = |n: u64| {
                     ctx.shared.limiter.refund(n);
                     if let Some(g) = &ctx.opts.global {
@@ -3459,12 +3903,13 @@ async fn receive(
                 };
                 let Some((n, full)) = claimed else {
                     refund(want);
-                    return Ok(None);
+                    out.finish(&mut pace).await?;
+                    return Ok(Received::Lost);
                 };
                 if n < want {
                     refund(want - n);
                 }
-                if received == 0
+                if pace.received == 0
                     && n > 0
                     && let Some(limits) = &ctx.opts.host_limits
                 {
@@ -3473,49 +3918,50 @@ async fn receive(
                     let now = ctx.shared.with_planner(|p| p.receiving_workers()) as u32;
                     limits.working(ctx.target().url.host_str().unwrap_or(""), now);
                 }
-                buf.extend_from_slice(&chunk[..n as usize]);
-                ctx.shared.held.fetch_add(n, Ordering::Relaxed);
-                received += n;
+                out.push(&chunk[..n as usize]);
+                pace.received += n;
                 if checked.elapsed() >= Duration::from_millis(500) {
                     checked = std::time::Instant::now();
-                    let on_net = started.elapsed().saturating_sub(on_disk);
-                    let speed = (received as f64 / on_net.as_secs_f64()) as u64;
-                    ctx.shared.conn(id, |c| c.speed = speed);
-                    note_best(ctx, received, on_net);
-                    if should_shed(ctx, id, speed, on_net, pos + buf.len() as u64) {
-                        flush(ctx, id, &mut pos, &mut buf).await?;
+                    ctx.shared.conn(id, |c| c.speed = pace.speed());
+                    note_best(ctx, &pace);
+                    if should_shed(ctx, id, &pace, out.next()) {
+                        out.finish(&mut pace).await?;
                         return Err(Error::SlowConnection);
                     }
                 }
-                if !full && buf.len() < hold_cap(ctx) && ctx.shared.flushing.load(Ordering::Acquire)
-                {
-                    continue; // the disk is busy flushing: this waits in memory (#361)
+                if full {
+                    (false, None, None)
+                } else {
+                    match out.step(&mut pace).await? {
+                        Some(end) => (false, None, Some(end)),
+                        None => continue,
+                    }
                 }
-                if buf.len() < BATCH && !full && flushed_at.elapsed() < FLUSH_EVERY {
-                    continue;
-                }
-                (false, None)
             }
-            Err(e) => (true, Some(e)),
-            Ok(None) => (true, None),
+            Err(e) => (true, Some(e), None),
+            Ok(None) => (true, None, None),
         };
-        let waiting = std::time::Instant::now();
-        let flushed = flush(ctx, id, &mut pos, &mut buf).await?;
-        flushed_at = std::time::Instant::now();
-        on_disk += flushed_at - waiting;
-        match flushed {
+        let complete = match complete {
+            Some(end) => Some(end),
+            None => out.finish(&mut pace).await?,
+        };
+        match complete {
             Some(end) => {
-                note_best(ctx, received, started.elapsed().saturating_sub(on_disk));
+                note_best(ctx, &pace);
                 // A segment another connection shortened leaves an HTTP body far from its end
                 // (dropped); an FTP session is kept either way.
-                if err.is_none() && (pos >= to || matches!(body, Body::Ftp(_))) {
+                if err.is_none() && (out.pos >= to || matches!(body, Body::Ftp(_))) {
                     // Not past a stop (`stop_connections` waits for this connection).
                     tokio::select! {
                         _ = ctx.cancel.cancelled() => {}
                         () = body.done(ended) => {}
                     }
                 }
-                return Ok(Some(end));
+                return Ok(Received::Complete(end));
+            }
+            // A capped request (`request_cap`) answered in full: the next one goes on.
+            None if ended && err.is_none() && out.pos >= to && ctx.opts.cap().is_some() => {
+                return Ok(Received::More(out.pos));
             }
             None if ended => return Err(err.unwrap_or(Error::ShortBody)),
             None => {}
@@ -3523,65 +3969,266 @@ async fn receive(
     }
 }
 
-/// How much a connection may hold in memory while the part file is flushed (`FLUSH_HOLD_MAX`,
-/// shared by the connections this download may open).
-fn hold_cap(ctx: &Ctx) -> usize {
-    FLUSH_HOLD_MAX / ctx.opts.connections().max(1) as usize
+/// A connection's received bytes on their way to the disk (`receive`): written and committed
+/// up to `pos`, then the write the disk is taking now (one at a time, in order), then the
+/// batches waiting in memory (`queue`), then `buf`, the batch still filling. Every byte claimed
+/// and not yet written counts in `Shared::held`.
+struct Writer<'a> {
+    ctx: &'a Ctx,
+    id: WorkerId,
+    pos: u64,
+    writing: Option<(tokio::task::JoinHandle<io::Result<()>>, u64)>,
+    queue: std::collections::VecDeque<Vec<u8>>,
+    queued: u64,
+    buf: Vec<u8>,
+    /// When `buf` was last closed: received bytes go to the disk at least `FLUSH_EVERY`.
+    closed_at: std::time::Instant,
 }
 
-/// Remember the speed of a response that carried enough (256 KiB) to say what this server can
-/// do over one connection (`on_net`: the time it took, waits for the disk not counted).
-fn note_best(ctx: &Ctx, received: u64, on_net: Duration) {
-    let secs = on_net.as_secs_f64();
-    if received >= 256 * 1024 && secs > 0.0 {
-        ctx.shared
-            .best_speed
-            .fetch_max((received as f64 / secs) as u64, Ordering::Relaxed);
+impl<'a> Writer<'a> {
+    fn new(ctx: &'a Ctx, id: WorkerId, from: u64) -> Self {
+        Writer {
+            ctx,
+            id,
+            pos: from,
+            writing: None,
+            queue: Default::default(),
+            queued: 0,
+            buf: Vec::with_capacity(BATCH),
+            closed_at: std::time::Instant::now(),
+        }
+    }
+
+    /// Bytes claimed and not written yet.
+    fn pending(&self) -> u64 {
+        self.writing.as_ref().map_or(0, |w| w.1) + self.queued + self.buf.len() as u64
+    }
+
+    /// The next byte to claim.
+    fn next(&self) -> u64 {
+        self.pos + self.pending()
+    }
+
+    fn push(&mut self, data: &[u8]) {
+        self.buf.extend_from_slice(data);
+        let n = data.len() as u64;
+        self.ctx.shared.held.fetch_add(n, Ordering::Relaxed);
+    }
+
+    /// After a chunk: once `buf` is a batch (or `FLUSH_EVERY` old) it goes to the disk, or
+    /// waits in memory while the disk still takes an earlier write. Past `hold_cap` waiting,
+    /// the connection waits for the disk. `Some(end)`: the segment is complete.
+    async fn step(&mut self, pace: &mut Pace) -> Result<Option<u64>, Error> {
+        if self.writing.as_ref().is_some_and(|w| w.0.is_finished())
+            && let Some(end) = self.wait().await?
+        {
+            return Ok(Some(end));
+        }
+        if self.buf.len() >= BATCH || self.closed_at.elapsed() >= FLUSH_EVERY {
+            self.close();
+        }
+        if self.writing.is_some() && self.pending() >= hold_cap(self.ctx) {
+            let began = std::time::Instant::now();
+            let done = self.wait().await;
+            pace.waited(self.ctx, began.elapsed());
+            if let Some(end) = done? {
+                return Ok(Some(end));
+            }
+        }
+        if self.writing.is_none() {
+            self.send();
+        }
+        Ok(None)
+    }
+
+    /// Everything to the disk, waiting for it (counted as a wait for the disk in `pace`).
+    /// `Some(end)`: the segment is complete.
+    async fn finish(&mut self, pace: &mut Pace) -> Result<Option<u64>, Error> {
+        let began = std::time::Instant::now();
+        self.close();
+        let mut end = None;
+        let done = loop {
+            match self.wait().await {
+                Ok(e) => end = e.or(end),
+                Err(e) => break Err(e),
+            }
+            if self.queue.is_empty() {
+                break Ok(end);
+            }
+            self.send();
+        };
+        pace.waited(self.ctx, began.elapsed());
+        done
+    }
+
+    /// `buf` joins the queue.
+    fn close(&mut self) {
+        self.closed_at = std::time::Instant::now();
+        if !self.buf.is_empty() {
+            let batch = std::mem::replace(&mut self.buf, Vec::with_capacity(BATCH));
+            self.queued += batch.len() as u64;
+            self.queue.push_back(batch);
+        }
+    }
+
+    /// Start writing the queue's first batches, up to `WRITE_MAX` (nothing else is being
+    /// written). Small writes keep the waits for a disk that sets the pace short and even.
+    fn send(&mut self) {
+        debug_assert!(self.writing.is_none());
+        let Some(mut data) = self.queue.pop_front() else {
+            return;
+        };
+        while let Some(next) = self.queue.front()
+            && data.len() + next.len() <= WRITE_MAX
+        {
+            data.extend_from_slice(next);
+            self.queue.pop_front();
+        }
+        let n = data.len() as u64;
+        self.queued -= n;
+        let (file, at) = (self.ctx.file.clone(), self.pos);
+        let slow = self.ctx.opts.slow_disk.clone();
+        let task = tokio::task::spawn_blocking(move || match slow {
+            Some(disk) => disk.write(n, || write_all_at(&file, at, &data)),
+            None => write_all_at(&file, at, &data),
+        });
+        self.writing = Some((task, n));
+    }
+
+    /// Wait for the write under way and commit it. `Some(end)`: the segment is complete.
+    async fn wait(&mut self) -> Result<Option<u64>, Error> {
+        let Some((task, n)) = self.writing.take() else {
+            return Ok(None);
+        };
+        let written = task.await.expect("writer panicked");
+        self.ctx.shared.held.fetch_sub(n, Ordering::Relaxed);
+        written?;
+        self.pos += n;
+        self.ctx.shared.conn(self.id, |c| c.downloaded += n);
+        Ok(self
+            .ctx
+            .shared
+            .with_planner(|p| p.commit(self.id, self.pos)))
     }
 }
 
-/// Whether connection `id` (at `speed` for `elapsed` on this response, next byte `at`) should
-/// reconnect: far slower than the best a connection of this download sustained (comparing
-/// with the others fails once they are all stuck on slow paths), with a lot left at its pace.
-/// Never while a speed limit makes connections slow on purpose.
-fn should_shed(ctx: &Ctx, id: WorkerId, speed: u64, elapsed: Duration, at: u64) -> bool {
+impl Drop for Writer<'_> {
+    /// Bytes that will never be written (an error ended the connection) are no longer held.
+    fn drop(&mut self) {
+        let left = self.pending();
+        self.ctx.shared.held.fetch_sub(left, Ordering::Relaxed);
+    }
+}
+
+/// How much a connection may keep in memory while the disk takes its writes (`HOLD_MAX`,
+/// shared by the connections this download may open).
+fn hold_cap(ctx: &Ctx) -> u64 {
+    HOLD_MAX / u64::from(ctx.opts.connections().max(1))
+}
+
+/// One response's pace (`receive`): where a connection's speed comes from, for the list and for
+/// the slow check alike.
+struct Pace {
+    started: std::time::Instant,
+    received: u64,
+    /// The time the connection stood still for the disk (`Writer`): it wasn't reading the
+    /// network then.
+    on_disk: Duration,
+}
+
+impl Pace {
+    fn new() -> Self {
+        Pace {
+            started: std::time::Instant::now(),
+            received: 0,
+            on_disk: Duration::ZERO,
+        }
+    }
+
+    /// Bytes/s since the response began, every second counted: what the connection brought.
+    /// The bytes the system kept for it while it stood still for the disk count over all the
+    /// time they took to come, so reading them in a burst afterwards is not speed (#782).
+    fn speed(&self) -> u64 {
+        rate(self.received, self.started.elapsed())
+    }
+
+    /// The time spent reading the network.
+    fn on_net(&self) -> Duration {
+        self.started.elapsed().saturating_sub(self.on_disk)
+    }
+
+    /// Bytes/s while reading the network: for the slow check, so a wait for the disk never
+    /// counts against a connection (#361). The burst after a wait makes it read high, which
+    /// can keep a connection, never shed one.
+    fn net_speed(&self) -> u64 {
+        rate(self.received, self.on_net())
+    }
+
+    /// The connection stood still `d` for the disk; a long wait tells the others (`disk_held`).
+    fn waited(&mut self, ctx: &Ctx, d: Duration) {
+        self.on_disk += d;
+        if d >= DISK_HELD {
+            *ctx.shared.disk_held.lock().unwrap() = Some(std::time::Instant::now());
+        }
+    }
+}
+
+/// `bytes` over `d`, bytes/s (`u64::MAX` for no time at all: nothing is slower than that).
+fn rate(bytes: u64, d: Duration) -> u64 {
+    let secs = d.as_secs_f64();
+    if secs > 0.0 {
+        (bytes as f64 / secs) as u64
+    } else {
+        u64::MAX
+    }
+}
+
+/// Remember the speed of a response that ran long enough (`BEST_AFTER`, 256 KiB) to say what
+/// this server can do over one connection.
+fn note_best(ctx: &Ctx, pace: &Pace) {
+    if let Some(speed) = yardstick(pace.received, pace.started.elapsed()) {
+        ctx.shared.best_speed.fetch_max(speed, Ordering::Relaxed);
+    }
+}
+
+/// The speed a response of `received` bytes in `elapsed` (all of its time, the disk's waits
+/// too) sets as what one connection can do, if it says so yet. Over all its time, never its
+/// time on the network only: a connection that stood still for the disk reads what the system
+/// kept for it meanwhile in a few milliseconds, and that burst once raised the bar so high
+/// that every connection fell under it and was shed, all at once (#782).
+fn yardstick(received: u64, elapsed: Duration) -> Option<u64> {
+    (received >= 256 * 1024 && elapsed >= BEST_AFTER).then(|| rate(received, elapsed))
+}
+
+/// Whether connection `id` should reconnect (`too_slow`), its next byte `at`. Never while a
+/// speed limit makes connections slow on purpose, nor under `request_cap`: each request ends
+/// soon by itself, and the server's pace varies from one to the next (YouTube's, #769:
+/// reconnecting cost more than it won).
+fn should_shed(ctx: &Ctx, id: WorkerId, pace: &Pace, at: u64) -> bool {
     let limited = ctx.shared.limiter.get().is_some()
         || ctx.opts.global.as_ref().is_some_and(|g| g.get().is_some());
-    if !ctx.opts.shed_slow || limited || elapsed < SHED_GRACE {
+    if !ctx.opts.shed_slow || limited || ctx.opts.cap().is_some() {
         return false;
     }
+    let held = ctx.shared.disk_held.lock().unwrap().map(|t| t.elapsed());
     let best = ctx.shared.best_speed.load(Ordering::Relaxed);
     let left = ctx.shared.with_planner(|p| p.room(id, at)).unwrap_or(0);
-    speed.saturating_mul(SHED_RATIO) < best
-        && left as f64 / speed.max(1) as f64 > SHED_LEFT.as_secs_f64()
+    too_slow(pace.net_speed(), pace.on_net(), best, left, held)
 }
 
-/// Write the claimed bytes in `buf` at `pos` and commit them. `Some(end)` when the segment is
-/// now complete.
-async fn flush(
-    ctx: &Ctx,
-    id: WorkerId,
-    pos: &mut u64,
-    buf: &mut Vec<u8>,
-) -> Result<Option<u64>, Error> {
-    let data = std::mem::replace(buf, Vec::with_capacity(BATCH));
-    let n = data.len() as u64;
-    if n > 0 {
-        let file = ctx.file.clone();
-        let at = *pos;
-        let slow = ctx.opts.slow_flush.clone();
-        let written = tokio::task::spawn_blocking(move || {
-            let _waits_for_flush = slow.as_ref().map(|s| s.gate.read().unwrap());
-            write_all_at(&file, at, &data)
-        })
-        .await
-        .expect("writer panicked");
-        ctx.shared.held.fetch_sub(n, Ordering::Relaxed);
-        written?;
+/// A connection at `speed` over `on_net` of reading the network, with `left` bytes of its
+/// segment ahead, is slow enough to reconnect: far slower than the best a connection of this
+/// download sustained (comparing with the others fails once they are all stuck on slow paths),
+/// with a lot left at its pace. Not while the disk sets the pace (`held`: a connection last
+/// stood still for it that long ago, #782): the connections' speeds then say what the disk
+/// lets through, a new connection would wait for the same disk, and the ones that waited
+/// restart slowly (their sender saw a closed window).
+fn too_slow(speed: u64, on_net: Duration, best: u64, left: u64, held: Option<Duration>) -> bool {
+    if on_net < SHED_GRACE || held.is_some_and(|ago| ago < SHED_GRACE) {
+        return false;
     }
-    *pos += n;
-    ctx.shared.conn(id, |c| c.downloaded += n);
-    Ok(ctx.shared.with_planner(|p| p.commit(id, *pos)))
+    speed.saturating_mul(SHED_RATIO) < best
+        && left as f64 / speed.max(1) as f64 > SHED_LEFT.as_secs_f64()
 }
 
 /// Servers without range support: one connection, written in order. Returns the size.
@@ -3682,7 +4329,7 @@ fn parse_content_range(h: &HeaderMap) -> Result<(u64, u64, Option<u64>), Error> 
 }
 
 /// `Retry-After`: delay in seconds, or an HTTP date.
-fn retry_after(h: &HeaderMap) -> Option<Duration> {
+pub(crate) fn retry_after(h: &HeaderMap) -> Option<Duration> {
     let v = h.get(header::RETRY_AFTER)?.to_str().ok()?.trim();
     if let Ok(secs) = v.parse::<u64>() {
         return Some(Duration::from_secs(secs));
@@ -3694,7 +4341,7 @@ fn retry_after(h: &HeaderMap) -> Option<Duration> {
     )
 }
 
-async fn cancellable<T>(
+pub(crate) async fn cancellable<T>(
     cancel: &CancellationToken,
     fut: impl Future<Output = Result<T, Error>>,
 ) -> Result<T, Error> {
@@ -3770,41 +4417,110 @@ mod tests {
         );
     }
 
-    /// #361: a flush that took a while pushes the next one back, on a fast disk nothing changes.
+    /// #782: a flush is started only when it should be over well before the connections run
+    /// out of memory: on a disk that keeps up, as often as the file grows; on one that falls
+    /// behind (each flush writes all that came since the last), not while it can't keep up.
     #[test]
-    fn a_slow_flush_makes_the_next_one_wait() {
+    fn a_flush_starts_only_when_it_should_be_short() {
         let s = Duration::from_secs;
-        let at = |took| Synced {
+        let at = |took, covered| Synced {
             at: std::time::Instant::now(),
             bytes: 0,
             took,
+            covered,
         };
-        let gb = 1u64 << 30;
-        // 3 s for the last flush: not again before 27 s, however many bytes came.
-        assert!(!at(s(3)).due(gb, 45 * gb, s(20)));
-        assert!(at(s(3)).due(gb, 45 * gb, s(27)));
-        // At most SYNC_GAP_MAX, whatever the flush took.
-        assert!(at(s(30)).due(gb, 45 * gb, s(61)));
-        // A flush of a few milliseconds: the old rules (each tick once 64 MiB have arrived).
-        assert!(at(Duration::from_millis(8)).due(128 << 20, 45 * gb, s(2)));
-        assert!(!at(Duration::from_millis(8)).due(1 << 20, 45 * gb, s(2)));
-        // Few bytes on a fast disk: still the long wait.
-        assert!(at(Duration::from_millis(8)).due(1 << 20, 45 * gb, s(30)));
+        let (gb, mb) = (1u64 << 30, 1u64 << 20);
+        // A disk that keeps up: 0.1 s to write 2 s of 115 MB/s. Every tick once 64 MiB came.
+        let fast = at(Duration::from_millis(100), s(2));
+        assert!(fast.due(230 * mb, 45 * gb, s(2), HOLD_MAX));
+        assert!(!fast.due(32 * mb, 45 * gb, s(2), HOLD_MAX));
+        // Few bytes: at the latest after SYNC_EVERY.
+        assert!(fast.due(32 * mb, 45 * gb, s(30), HOLD_MAX));
+        // A hard disk behind the network: 2 s to write what 2 s of 115 MB/s left in the cache.
+        // The next would take as long again, more than 256 MiB at that pace (2.3 s) covers with
+        // room to spare, and every second waited makes it worse.
+        let behind = at(s(2), s(2));
+        assert!(!behind.due(230 * mb, 45 * gb, s(2), HOLD_MAX));
+        assert!(!behind.due(gb, 45 * gb, s(9), HOLD_MAX));
+        assert!(!behind.due(7 * gb, 45 * gb, s(60), HOLD_MAX));
+        // The same disk once the download has slowed to 10 MB/s: a flush fits again.
+        assert!(behind.due(70 * mb, 45 * gb, s(7), HOLD_MAX));
+        // 0.5.2's spacing (nine times the last flush) let them grow: 2 s, then 18 s later 18 s.
+        assert_eq!(behind.expected(s(18)), s(18));
+        // The memory full of what waits for the disk (one that sets the pace): not even on
+        // the fast disk.
+        assert!(!fast.due(230 * mb, 45 * gb, s(2), 0));
+        // A flush that takes 1.5 s whatever it writes (#361's test disk): not again.
+        assert!(
+            !at(Duration::from_millis(1500), Duration::from_millis(100)).due(
+                gb,
+                gb,
+                s(5),
+                HOLD_MAX
+            )
+        );
     }
 
     /// #518: when the forced save at the start (no connection writing yet) takes 0.5 s on a busy
-    /// disk, the first save of progress still comes at the first tick, not 4.5 s later.
+    /// disk, the first save of progress still comes at the first tick.
     #[test]
     fn a_forced_save_does_not_push_the_next_back() {
         let at = |took| Synced {
             at: std::time::Instant::now(),
             bytes: 0,
             took,
+            covered: Duration::from_millis(1),
         };
         let (slow, tick) = (Duration::from_millis(500), Duration::from_secs(2));
-        assert!(at(forced_gap(true, slow)).due(15 << 20, 24 << 20, tick));
-        // A save during the transfer still does.
-        assert!(!at(forced_gap(false, slow)).due(15 << 20, 24 << 20, tick));
+        assert!(at(forced_gap(true, slow)).due(15 << 20, 24 << 20, tick, HOLD_MAX));
+        // A save during the transfer does count: 0.5 s for 1 ms of data is a disk far behind.
+        assert!(!at(forced_gap(false, slow)).due(15 << 20, 24 << 20, tick, HOLD_MAX));
+    }
+
+    /// #782: what the slow check makes of connections that wait for the disk. A connection
+    /// stood still 8 s for the disk, 2 MiB into its response, then read the 30 MiB the system
+    /// kept for it in 50 ms. Over its time on the network that is 128 MiB/s, which made every
+    /// connection of a 1 Gbit/s link (14 MiB/s each) four times slower than the best: all of
+    /// them were shed, at once. Over all its time it is what the link gave it.
+    #[test]
+    fn waiting_for_the_disk_never_makes_a_connection_slow() {
+        let mb = 1u64 << 20;
+        let (on_net, waited) = (Duration::from_millis(250), Duration::from_secs(8));
+        let burst = yardstick(32 * mb, on_net + waited).unwrap();
+        assert!(burst < 14 * mb, "{burst}");
+        let link = 14 * mb;
+        let left = 1 << 30;
+        let three = Duration::from_secs(3);
+        // Against the burst's speed over its network time alone, a connection doing what the
+        // link gives would be shed (0.5.2); against the honest yardstick it isn't.
+        assert!(too_slow(link, three, rate(32 * mb, on_net), left, None));
+        assert!(!too_slow(link, three, burst.max(link), left, None));
+        // A connection that itself waited for the disk: its speed leaves the waits out (8 s
+        // waited of 10 s, 28 MiB: 14 MiB/s over the 2 s it read).
+        assert_eq!(rate(28 * mb, Duration::from_secs(2)), link);
+        // A connection really slow on its path (1 MiB/s) is still shed, the disk keeping up...
+        assert!(too_slow(mb, three, link, left, None));
+        assert!(too_slow(
+            mb,
+            three,
+            link,
+            left,
+            Some(Duration::from_secs(5))
+        ));
+        // ...but not while the disk sets the pace: a connection stood still for it 1 s ago.
+        assert!(!too_slow(
+            mb,
+            three,
+            link,
+            left,
+            Some(Duration::from_secs(1))
+        ));
+        // Nor before it read the network for SHED_GRACE, nor with little left.
+        assert!(!too_slow(mb, Duration::from_secs(1), link, left, None));
+        assert!(!too_slow(mb, three, link, mb, None));
+        // A response says what a connection can do only once it ran BEST_AFTER (0.1 s).
+        assert_eq!(yardstick(32 * mb, Duration::from_millis(50)), None);
+        assert_eq!(yardstick(100 << 10, Duration::from_secs(2)), None);
     }
 
     #[test]

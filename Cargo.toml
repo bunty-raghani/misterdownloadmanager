@@ -5,7 +5,7 @@ members = ["crates/*"]
 [workspace.package]
 version = "0.5.2"
 edition = "2024"
-rust-version = "1.95"
+rust-version = "1.98"
 license = "GPL-3.0-or-later"
 authors = ["Ahmed Nefzaoui"]
 publish = false
@@ -14,7 +14,8 @@ publish = false
 mdm-cli = { path = "crates/cli" }
 mdm-crash = { path = "crates/crash", default-features = false }
 mdm-debrid = { path = "crates/debrid" }
-mdm-engine = { path = "crates/engine" }
+# Without its browser-like connection unless asked (the app asks: its `browser-connection`).
+mdm-engine = { path = "crates/engine", default-features = false }
 mdm-extract = { path = "crates/extract" }
 mdm-geo = { path = "crates/geo" }
 mdm-ipc = { path = "crates/ipc" }
@@ -57,6 +58,7 @@ windows-sys = { version = "0.61.2", features = [
     "Win32_System_Console",
     "Win32_System_IO",
     "Win32_System_Ioctl",
+    "Win32_System_LibraryLoader",
     "Win32_System_Power",
     "Win32_System_ProcessStatus",
     "Win32_System_Registry",
@@ -89,6 +91,16 @@ crc32fast = "1.5.3"
 sysinfo = { version = "0.40.0", default-features = false, features = ["disk"] }
 proptest = "1.12.0"
 # HTTP/1.1 only: each engine worker must be one real TCP connection (notes/ENGINE.md §4).
+# The browser-like connection (#668, crates/engine/src/browserlike.rs): a download whose site's
+# bot check refused MDM's own connection is asked once more the way a browser connects (its TLS
+# handshake, HTTP/2 settings and header order), on BoringSSL. Builds BoringSSL from source:
+# CMake, a C/C++ compiler, libclang and, on Windows, NASM.
+wreq = { version = "=0.16.3", default-features = false, features = ["webpki-roots", "tokio-rt", "socks", "stream", "gzip", "brotli", "zstd", "deflate"] }
+wreq-util = { version = "=0.2.1", default-features = false, features = ["emulation"] }
+# Its trusted certificates: Mozilla's (as wreq's own default) and the system's, which MDM's own
+# connection trusts too (an antivirus's or a company's HTTPS inspection adds its own there).
+rustls-native-certs = "0.8.5"
+webpki-root-certs = "1.0.11"
 reqwest = { version = "0.13.5", default-features = false, features = ["rustls", "stream", "system-proxy", "socks"] }
 # FTP and FTPS (crates/engine/src/ftp.rs), with TLS through the rustls and platform verifier
 # reqwest uses. "deprecated" is what enables implicit FTPS (ftps://, port 990).
@@ -196,19 +208,20 @@ debug = "line-tables-only"
 # magnet lookup's progress counted (#92), and every socket bound to one address (`bind_ip`,
 # #143), and every HTTP client of a session built through MDM's TLS setup (`configure_http_client`:
 # a system without CA certificates), and a DHT that stops asking a bootstrap node that never
-# answers once another one has, and loads its saved IPv6 nodes (#650), until upstream has them
+# answers once another one has, and loads its saved IPv6 nodes (#650), and a piece whose hash
+# check a pause cuts short queued again instead of lost (#706), until upstream has them
 # (ikatson/rqbit); every crate of that repository from the same commit.
-librqbit = { git = "https://github.com/anefzaoui/rqbit.git", rev = "ac7fa6e06b1a95956c63e1f5fd1cd795985967e1" }
-librqbit-bencode = { git = "https://github.com/anefzaoui/rqbit.git", rev = "ac7fa6e06b1a95956c63e1f5fd1cd795985967e1" }
-librqbit-buffers = { git = "https://github.com/anefzaoui/rqbit.git", rev = "ac7fa6e06b1a95956c63e1f5fd1cd795985967e1" }
-librqbit-clone-to-owned = { git = "https://github.com/anefzaoui/rqbit.git", rev = "ac7fa6e06b1a95956c63e1f5fd1cd795985967e1" }
-librqbit-core = { git = "https://github.com/anefzaoui/rqbit.git", rev = "ac7fa6e06b1a95956c63e1f5fd1cd795985967e1" }
-librqbit-dht = { git = "https://github.com/anefzaoui/rqbit.git", rev = "ac7fa6e06b1a95956c63e1f5fd1cd795985967e1" }
-librqbit-lsd = { git = "https://github.com/anefzaoui/rqbit.git", rev = "ac7fa6e06b1a95956c63e1f5fd1cd795985967e1" }
-librqbit-peer-protocol = { git = "https://github.com/anefzaoui/rqbit.git", rev = "ac7fa6e06b1a95956c63e1f5fd1cd795985967e1" }
-librqbit-sha1-wrapper = { git = "https://github.com/anefzaoui/rqbit.git", rev = "ac7fa6e06b1a95956c63e1f5fd1cd795985967e1" }
-librqbit-tracker-comms = { git = "https://github.com/anefzaoui/rqbit.git", rev = "ac7fa6e06b1a95956c63e1f5fd1cd795985967e1" }
-librqbit-upnp = { git = "https://github.com/anefzaoui/rqbit.git", rev = "ac7fa6e06b1a95956c63e1f5fd1cd795985967e1" }
+librqbit = { git = "https://github.com/anefzaoui/rqbit.git", rev = "694291b61fcfd6a77fef7762541b0ef25773ae31" }
+librqbit-bencode = { git = "https://github.com/anefzaoui/rqbit.git", rev = "694291b61fcfd6a77fef7762541b0ef25773ae31" }
+librqbit-buffers = { git = "https://github.com/anefzaoui/rqbit.git", rev = "694291b61fcfd6a77fef7762541b0ef25773ae31" }
+librqbit-clone-to-owned = { git = "https://github.com/anefzaoui/rqbit.git", rev = "694291b61fcfd6a77fef7762541b0ef25773ae31" }
+librqbit-core = { git = "https://github.com/anefzaoui/rqbit.git", rev = "694291b61fcfd6a77fef7762541b0ef25773ae31" }
+librqbit-dht = { git = "https://github.com/anefzaoui/rqbit.git", rev = "694291b61fcfd6a77fef7762541b0ef25773ae31" }
+librqbit-lsd = { git = "https://github.com/anefzaoui/rqbit.git", rev = "694291b61fcfd6a77fef7762541b0ef25773ae31" }
+librqbit-peer-protocol = { git = "https://github.com/anefzaoui/rqbit.git", rev = "694291b61fcfd6a77fef7762541b0ef25773ae31" }
+librqbit-sha1-wrapper = { git = "https://github.com/anefzaoui/rqbit.git", rev = "694291b61fcfd6a77fef7762541b0ef25773ae31" }
+librqbit-tracker-comms = { git = "https://github.com/anefzaoui/rqbit.git", rev = "694291b61fcfd6a77fef7762541b0ef25773ae31" }
+librqbit-upnp = { git = "https://github.com/anefzaoui/rqbit.git", rev = "694291b61fcfd6a77fef7762541b0ef25773ae31" }
 ecolor = { git = "https://github.com/anefzaoui/egui.git", rev = "4ad60e5365470a6d12166a8075478f8aea44c9f8" }
 emath = { git = "https://github.com/anefzaoui/egui.git", rev = "4ad60e5365470a6d12166a8075478f8aea44c9f8" }
 epaint = { git = "https://github.com/anefzaoui/egui.git", rev = "4ad60e5365470a6d12166a8075478f8aea44c9f8" }

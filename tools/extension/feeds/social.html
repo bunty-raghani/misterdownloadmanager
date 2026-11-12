@@ -1,0 +1,27 @@
+<!doctype html>
+<!-- A site the extension knows nothing of: a federated timeline (role="feed"), each post linking to
+     itself from its timestamp (our own sample). The third video names no post and plays a plain
+     file: that file goes, with the page as Referer. data-expect: what videoPage names ("none":
+     nothing; the e2e case then wants the video's own file when it has one, else the button's
+     "open the post" message). -->
+<html><head><meta charset="utf-8"><meta name="mdm-page" content="http://social.example.test/home"><title>Home - Sample Social</title><link rel="stylesheet" href="feeds.css"></head>
+<body>
+<main><div role="feed" aria-label="Home">
+  <article class="status">
+    <a href="/@sample_a">Sample A</a> <a class="status__relative-time" href="/@sample_a/113000000000000001"><time datetime="2026-11-10T09:00:00Z">1h</time></a>
+    <div class="media"><video data-expect="http://social.example.test/@sample_a/113000000000000001"></video></div>
+  </article>
+  <article class="status">
+    <a href="/@sample_b">Sample B</a> <a class="status__relative-time" href="/@sample_b/113000000000000002"><time datetime="2026-11-10T08:00:00Z">2h</time></a>
+    <div class="media"><video data-expect="http://social.example.test/@sample_b/113000000000000002"></video></div>
+  </article>
+  <article class="status">
+    <span>Sample C</span>
+    <div class="media"><video data-expect="none" src="http://media.example.test/clip.mp4" preload="metadata"></video></div>
+  </article>
+  <article class="status">
+    <span>Sample D</span>
+    <div class="media"><video data-expect="none"></video></div>
+  </article>
+</div></main>
+</body></html>

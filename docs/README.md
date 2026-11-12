@@ -15,7 +15,7 @@ These pages explain each part of the program. The tutorials walk through the thi
 
 - **[Adding downloads](adding-downloads.md)** — Add URL, the clipboard, the drop target, batch downloads and lists of links, and Start Download versus Download Later.
 - **[Link grabber and archives](link-grabber.md)** — many links at once, in packages; zip, 7z and rar archives extracted when they are downloaded.
-- **[Browser integration](browser-integration.md)** — the extension for Firefox (from addons.mozilla.org), Chrome, Edge, Brave, Opera and Vivaldi (from the Chrome Web Store), which downloads it takes, and what happens when MDM isn't running.
+- **[Browser integration](browser-integration.md)** — the extension for Firefox (from addons.mozilla.org), Chrome, Edge, Brave, Opera, Vivaldi and Helium (from the Chrome Web Store), which downloads it takes, and what happens when MDM isn't running.
 - **[Run MDM on a server](server.md)** — MDM without a window on a home server or NAS (Docker, Unraid), downloading into its folders; send it downloads from your phone or browser.
 - **[Control MDM from your phone](remote-control.md)** — add links, magnets and torrents from a phone or another computer at home, and watch and control the list.
 
@@ -34,7 +34,7 @@ These pages explain each part of the program. The tutorials walk through the thi
 - **[Image galleries](galleries.md)** — download a gallery's pictures (Wikimedia Commons, Flickr, DeviantArt and many more) with gallery-dl.
 - **[Torrents](torrents.md)** — magnet links and .torrent files, choosing files, and sharing.
 - **[Torrents and your security](torrent-security.md)** — what others can see, the network switches, blocklists, proxies.
-- **[Debrid service accounts](debrid.md)** — Real-Debrid, AllDebrid and Premiumize: file-host links through your own account.
+- **[Debrid service accounts](debrid.md)** — Real-Debrid, AllDebrid, Premiumize and TorBox: file-host links through your own account.
 
 ## Settings
 

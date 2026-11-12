@@ -92,7 +92,10 @@ impl FtpServer {
         let addr = listener.local_addr()?;
         let tls = match config.tls {
             FtpTls::None => None,
-            _ => Some(certificate().map_err(io::Error::other)?),
+            _ => {
+                let (config, ca) = certificate().map_err(io::Error::other)?;
+                Some((TlsAcceptor::from(Arc::new(config)), ca))
+            }
         };
         let shared = Arc::new(Shared {
             config,
@@ -172,8 +175,9 @@ impl Drop for FtpServer {
     }
 }
 
-/// A test CA and a `localhost` certificate it signed: the acceptor, and the CA's DER.
-fn certificate() -> Result<(TlsAcceptor, Vec<u8>), String> {
+/// A test CA and a `localhost` certificate it signed: the server's configuration, and the CA's
+/// DER (FTPS here, HTTPS for `Config::tls`).
+pub(crate) fn certificate() -> Result<(rustls::ServerConfig, Vec<u8>), String> {
     use rcgen::{
         BasicConstraints, CertificateParams, CertifiedIssuer, DnType, IsCa, KeyPair,
         KeyUsagePurpose,
@@ -204,7 +208,7 @@ fn certificate() -> Result<(TlsAcceptor, Vec<u8>), String> {
             rustls::pki_types::PrivateKeyDer::Pkcs8(key.serialize_der().into()),
         )
         .map_err(|e| e.to_string())?;
-    Ok((TlsAcceptor::from(Arc::new(config)), ca.der().to_vec()))
+    Ok((config, ca.der().to_vec()))
 }
 
 /// `/gen/{size}[/s{seed}][/{name}]` → (seed, size).

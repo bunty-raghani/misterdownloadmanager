@@ -32,12 +32,6 @@
   "video_sent": {
     "message": "Saadetud rakendusse Mister Download Manager"
   },
-  "video_failed": {
-    "message": "Mister Download Manager pole installitud või ei käivitunud"
-  },
-  "video_drag": {
-    "message": "Lohista video serva mööda, et seda liigutada"
-  },
   "menu_selected": {
     "message": "Laadi valitud lingid alla rakendusega Mister Download Manager"
   },
@@ -180,13 +174,46 @@
     "message": "Otseülekanne"
   },
   "video_off": {
-    "message": "Sellel saidil on allalaadimisnupp välja lülitatud"
+    "message": "Väljas sellel saidil"
   },
   "video_drm": {
-    "message": "Kaitstud videot ei saa salvestada"
+    "message": "Kaitstud video"
   },
   "video_unnamed": {
     "message": "Ei saa aru, mis video see on: ava video enda leht ja proovi seal"
+  },
+  "video_looking": {
+    "message": "Kvaliteetide otsimine…"
+  },
+  "video_no_choices": {
+    "message": "Siin pole allalaaditavat videot"
+  },
+  "video_playlist": {
+    "message": "Videode loend: valige need rakenduses Mister Download Manager"
+  },
+  "video_no_ytdlp": {
+    "message": "Mister Download Manager vajab selle video jaoks programmi yt-dlp"
+  },
+  "video_too_long": {
+    "message": "Otsimine võttis liiga kaua aega"
+  },
+  "video_busy": {
+    "message": "Mister Download Manager on teiste videotega hõivatud"
+  },
+  "video_queued": {
+    "message": "Lisatud järjekorda"
+  },
+  "video_failed_lookup": {
+    "message": "Otsimine ebaõnnestus"
+  },
+  "video_tab_video": {
+    "message": "Video"
+  },
+  "video_tab_audio": {
+    "message": "Heli"
+  },
+  "video_open_post": {
+    "message": "Ava postitus, et video alla laadida"
   },
   "popup_send_to": {
     "message": "Saada allalaadimised asukohta"
@@ -241,5 +268,62 @@
   },
   "popup_media_title_name": {
     "message": "Lisa meediafailide nimede ette lehe pealkiri"
+  },
+  "video_cant_save": {
+    "message": "ei saa salvestada"
+  },
+  "video_open_post_button": {
+    "message": "Ava postitus"
+  },
+  "video_drag_dots": {
+    "message": "Lohista punkte, et seda serva mööda liigutada"
+  },
+  "video_tip": {
+    "message": "Laadi alla $what$",
+    "placeholders": {
+      "what": {
+        "content": "$1",
+        "example": "1080p MP4 · 412 MB"
+      }
+    }
+  },
+  "video_tip_best": {
+    "message": "Laadi alla parim kvaliteet"
+  },
+  "video_sending": {
+    "message": "Saadan MDM-i..."
+  },
+  "video_added": {
+    "message": "MDM-i lisatud"
+  },
+  "video_show": {
+    "message": "Näita"
+  },
+  "video_no_answer": {
+    "message": "MDM ei vastanud"
+  },
+  "video_get_mdm": {
+    "message": "Hangi MDM"
+  },
+  "video_retry": {
+    "message": "Proovi uuesti"
+  },
+  "video_turn_on": {
+    "message": "Lülita sisse"
+  },
+  "video_best": {
+    "message": "parim"
+  },
+  "video_all_qualities": {
+    "message": "Kõik kvaliteedid ja subtiitrid..."
+  },
+  "video_failed": {
+    "message": "Mister Download Manager pole installitud või ei käivitunud"
+  },
+  "video_download_best": {
+    "message": "Laadi parim alla"
+  },
+  "video_original": {
+    "message": "algne"
   }
 }

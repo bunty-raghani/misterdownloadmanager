@@ -116,7 +116,7 @@ impl Binding {
     }
 
     /// The one address a Windows client binds: IPv4 when the adapter has one.
-    fn windows_local(&self) -> Option<IpAddr> {
+    pub(crate) fn windows_local(&self) -> Option<IpAddr> {
         self.v4.map(IpAddr::V4).or(self.v6.map(IpAddr::V6))
     }
 

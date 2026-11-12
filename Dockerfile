@@ -14,9 +14,10 @@ FROM rust:1-trixie AS build
 ARG PROFILE
 # The program links only the C library: the window's libraries (X11, Wayland, OpenGL, EGL,
 # xkbcommon) are loaded when a window opens, and the server opens none. So no GTK or GL here or
-# in the image; cmake for the TLS library (aws-lc).
+# in the image; cmake for the TLS libraries (aws-lc, and BoringSSL under the browser-like
+# connection, #668) and libclang for BoringSSL's bindings.
 RUN apt-get update \
- && apt-get install -y --no-install-recommends cmake \
+ && apt-get install -y --no-install-recommends cmake libclang-dev \
  && rm -rf /var/lib/apt/lists/*
 WORKDIR /src
 COPY . .

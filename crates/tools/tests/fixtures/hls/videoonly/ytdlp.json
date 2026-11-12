@@ -1,0 +1,44 @@
+{
+ "title": "videoonly",
+ "duration": 115,
+ "language": null,
+ "subtitles": {},
+ "formats": [
+  {
+   "format_id": "a1-main",
+   "ext": "mp4",
+   "vcodec": "none",
+   "tbr": null,
+   "protocol": "m3u8_native"
+  },
+  {
+   "format_id": "96",
+   "ext": "mp4",
+   "fps": null,
+   "vcodec": "none",
+   "acodec": "mp4a.40.2",
+   "tbr": 96.0,
+   "protocol": "m3u8_native"
+  },
+  {
+   "format_id": "1200",
+   "ext": "mp4",
+   "height": 480,
+   "fps": null,
+   "vcodec": "avc1.4d401e",
+   "acodec": "none",
+   "tbr": 1200.0,
+   "protocol": "m3u8_native"
+  },
+  {
+   "format_id": "3000",
+   "ext": "mp4",
+   "height": 720,
+   "fps": null,
+   "vcodec": "avc1.4d401f",
+   "acodec": "none",
+   "tbr": 3000.0,
+   "protocol": "m3u8_native"
+  }
+ ]
+}

@@ -8,6 +8,13 @@
 //! A download is a folder: gallery-dl prints each file it saves (one path a line, `# path` for
 //! one already there), and skips what is already there when started again, so a gallery started
 //! again fetches only its new images.
+//!
+//! MDM's engine downloads the files (#769): gallery-dl first lists each one, its address and the
+//! path it would save it to (`--print prepare-after:…`, nothing downloaded), the engine brings
+//! them in several at once into those paths, under the speed limits, and gallery-dl then runs as
+//! before: it finds them there and fetches only what the engine couldn't have (a site that wants
+//! headers of its own, a sign-in). A gallery-dl too old to list them (before 1.32) downloads them all
+//! itself, as before.
 
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
@@ -70,6 +77,11 @@ pub struct Accepts {
     pub no_input: bool,
     /// `--user-agent` (1.24.0); before it, the same setting as `-o user-agent=…`.
     pub user_agent: bool,
+    /// `--print` with its `prepare-after` event and the file's `{_url}` and `{_path}` (1.32.0):
+    /// the files listed without downloading, for MDM's engine (#769). Asked of each release
+    /// (2026-11-11): 1.27.0 has no `--print`; 1.27.7 to 1.29.0 print `None` for both and download
+    /// the files; 1.31.0 prints `None`; 1.32.0 lists them.
+    pub print: bool,
 }
 
 impl Accepts {
@@ -82,12 +94,14 @@ impl Accepts {
             return Accepts {
                 no_input: false,
                 user_agent: false,
+                print: false,
             };
         }
         let at_least = |v: &str| release(version).is_none_or(|have| Some(have) >= release(v));
         Accepts {
             no_input: at_least("1.27.1"),
             user_agent: at_least("1.24.0"),
+            print: at_least("1.32.0"),
         }
     }
 }
@@ -269,6 +283,165 @@ struct Shared {
     there: u64,
     /// The files saved this run (at most `KEEP_PATHS`).
     files: Vec<PathBuf>,
+    /// Every file gallery-dl reported for this gallery (`Saved` + `There`, at most `KEEP_PATHS`).
+    known: Vec<PathBuf>,
+    /// The files MDM's engine saved this run (#769), counted among gallery-dl's `There`.
+    by_engine: u64,
+}
+
+/// MDM's engine for a gallery's files (#769).
+struct ByEngine<'a> {
+    engine: crate::streams::Engine,
+    agent: String,
+    tool: &'a Installed,
+    url: &'a str,
+    folder: &'a Path,
+    list_args: &'a [String],
+}
+
+impl ByEngine<'_> {
+    /// List the gallery's files with gallery-dl, then download the ones not there yet with the
+    /// engine. What it couldn't have is left for gallery-dl's run after it.
+    fn run(
+        &self,
+        shared: &Mutex<Shared>,
+        child: &Mutex<Option<Spawned>>,
+        current: &crate::streams::Current,
+    ) {
+        let note = |s: String| {
+            shared
+                .lock()
+                .unwrap()
+                .progress
+                .events
+                .push((SystemTime::now(), s))
+        };
+        let stdout = {
+            let mut slot = child.lock().unwrap();
+            if shared.lock().unwrap().progress.state == State::Stopped {
+                return;
+            }
+            let spawned = proc::gallery_dl(self.tool, self.list_args, self.url)
+                .and_then(|cmd| proc::spawn(cmd, "gallery-dl"));
+            match spawned {
+                Ok(mut s) => {
+                    let out = s.child.stdout.take().expect("piped");
+                    *slot = Some(s);
+                    out
+                }
+                Err(e) => {
+                    note(format!("gallery-dl couldn't list the files: {e}"));
+                    return;
+                }
+            }
+        };
+        let mut files: Vec<(url::Url, PathBuf)> = Vec::new();
+        let mut reader = BufReader::new(stdout);
+        let mut buf = Vec::new();
+        loop {
+            buf.clear();
+            match std::io::Read::take(&mut reader, 64 * 1024).read_until(b'\n', &mut buf) {
+                Ok(0) | Err(_) => break,
+                Ok(_) => {}
+            }
+            if let Some(f) = listed(&String::from_utf8_lossy(&buf), self.folder) {
+                files.push(f);
+            }
+        }
+        // Its end, and its words if it listed nothing.
+        let failure = {
+            let mut slot = child.lock().unwrap();
+            let Some(mut s) = slot.take() else {
+                return; // stopped
+            };
+            let _ = s.child.wait();
+            s.failure().to_string()
+        };
+        let todo: Vec<(url::Url, PathBuf)> =
+            files.iter().filter(|(_, p)| !p.exists()).cloned().collect();
+        note(format!(
+            "gallery-dl listed {} files ({} already there)",
+            files.len(),
+            files.len() - todo.len()
+        ));
+        if files.is_empty() {
+            note(format!("gallery-dl listed no files: {failure}"));
+        }
+        if todo.is_empty() || shared.lock().unwrap().progress.state == State::Stopped {
+            return;
+        }
+        let mut headers = reqwest::header::HeaderMap::new();
+        for (k, v) in [
+            (reqwest::header::USER_AGENT, self.agent.as_str()),
+            (reqwest::header::REFERER, self.url),
+        ] {
+            if let Ok(v) = reqwest::header::HeaderValue::from_str(v) {
+                headers.insert(k, v);
+            }
+        }
+        let pieces: Vec<crate::pieces::Piece> = todo
+            .iter()
+            .map(|(u, _)| crate::pieces::Piece {
+                url: u.clone(),
+                range: None,
+                key: None,
+            })
+            .collect();
+        let paths: Vec<PathBuf> = todo.iter().map(|(_, p)| p.clone()).collect();
+        let token = tokio_util::sync::CancellationToken::new();
+        current.set_pieces(Some(token.clone()));
+        let pieces_shared = Arc::new(crate::pieces::Shared::default());
+        let relist: crate::pieces::Relist =
+            Arc::new(|| Err("a gallery's files are listed once".to_owned()));
+        let task = self.engine.handle.spawn(crate::pieces::download(
+            pieces,
+            crate::pieces::Target::Files(paths.clone()),
+            headers,
+            self.engine.opts.clone(),
+            current.limiter(),
+            token.clone(),
+            pieces_shared.clone(),
+            relist,
+        ));
+        let mut cancelled = false;
+        while !task.is_finished() {
+            {
+                let mut sh = shared.lock().unwrap();
+                for n in pieces_shared.take_notes() {
+                    sh.progress.events.push((SystemTime::now(), n));
+                }
+                let connections = pieces_shared.connections();
+                sh.progress.speed = connections.iter().map(|c| c.speed).sum::<u64>() as f64;
+                sh.progress.downloaded = pieces_shared.downloaded();
+                sh.progress.engine = Some(crate::streams::View {
+                    segments: Vec::new(),
+                    connections,
+                    server: None,
+                });
+                if sh.progress.state == State::Stopped && !cancelled {
+                    cancelled = true;
+                    token.cancel();
+                }
+            }
+            std::thread::sleep(Duration::from_millis(200));
+        }
+        let _ = self.engine.handle.block_on(task);
+        current.set_pieces(None);
+        let mut sh = shared.lock().unwrap();
+        for n in pieces_shared.take_notes() {
+            sh.progress.events.push((SystemTime::now(), n));
+        }
+        let saved: Vec<PathBuf> = paths.into_iter().filter(|p| p.exists()).collect();
+        sh.by_engine = saved.len() as u64;
+        sh.progress.downloaded = pieces_shared.downloaded();
+        sh.progress.speed = 0.0;
+        sh.progress.engine = None;
+        for p in saved {
+            if sh.files.len() < KEEP_PATHS {
+                sh.files.push(p);
+            }
+        }
+    }
 }
 
 impl Default for Progress {
@@ -281,6 +454,8 @@ impl Default for Progress {
             events: Vec::new(),
             side_files: Vec::new(),
             sub_problems: Vec::new(),
+            engine: None,
+            helper: None,
         }
     }
 }
@@ -289,16 +464,36 @@ impl Default for Progress {
 pub struct GalleryJob {
     shared: Arc<Mutex<Shared>>,
     child: Arc<Mutex<Option<Spawned>>>,
+    /// The engine's part (#769): its stop and its speed limit.
+    current: Arc<crate::streams::Current>,
+    /// gallery-dl downloads now (its run after the engine's, or all of it).
+    on_helper: Arc<std::sync::atomic::AtomicBool>,
+}
+
+/// The line gallery-dl prints for each file it lists (`--print`): its address and its path.
+const LISTED: &str = "prepare-after:MDMG {_url}\t{_path}";
+
+/// A listed file (`MDMG <address>\t<path>`) inside `folder`, the gallery's own: none other.
+fn listed(line: &str, folder: &Path) -> Option<(url::Url, PathBuf)> {
+    let (url, path) = line.strip_prefix("MDMG ")?.split_once('\t')?;
+    let url = url::Url::parse(url.trim()).ok()?;
+    let path = PathBuf::from(path.trim_end_matches(['\r', '\n']));
+    let inside = path.parent() == Some(folder) || path.starts_with(folder);
+    (matches!(url.scheme(), "http" | "https") && inside && path.file_name().is_some())
+        .then_some((url, path))
 }
 
 impl GalleryJob {
     /// Download `url`'s files into `folder`, the gallery's own.
+    /// `engine`: MDM's engine, which downloads the files gallery-dl lists (#769); without it, or
+    /// with a gallery-dl too old to list them, gallery-dl downloads them itself.
     pub fn start(
         tool: &Installed,
         url: &str,
         folder: &Path,
         ask: &Ask,
         browser: &FromBrowser,
+        engine: Option<crate::streams::Engine>,
     ) -> Result<GalleryJob, ProcError> {
         let mut ours: Vec<String> = vec![
             // The files right in `folder` (the gallery's own), not in subfolders of the site's.
@@ -317,24 +512,121 @@ impl GalleryJob {
         }
         // The browser's cookies and User-Agent (gallery-dl has no Referer option: left out).
         let (theirs, cookies) = browser.args(url)?;
-        ours.extend(browser_args(theirs, Accepts::of(&tool.version)));
+        let theirs = browser_args(theirs, Accepts::of(&tool.version));
+        // What the engine sends: the same User-Agent, and the page as the Referer, as a
+        // browser showing the gallery would.
+        let agent = theirs
+            .iter()
+            .position(|a| a == "--user-agent")
+            .and_then(|i| theirs.get(i + 1))
+            .cloned()
+            .or_else(|| {
+                theirs
+                    .iter()
+                    .find_map(|a| a.strip_prefix("user-agent=").map(str::to_owned))
+            })
+            .unwrap_or_else(|| USER_AGENT.to_owned());
+        ours.extend(theirs);
         std::fs::create_dir_all(folder).map_err(|e| ProcError::Start("gallery-dl".into(), e))?;
-        let cmd = proc::gallery_dl(tool, &ours, url)?;
-        let mut spawned = proc::spawn(cmd, "gallery-dl")?;
-        let stdout = spawned.child.stdout.take().expect("piped");
+        let engine = engine.filter(|_| Accepts::of(&tool.version).print);
+        // The listing: gallery-dl's own options, no wait between files (nothing is downloaded).
+        let list_args: Vec<String> = {
+            let mut a = Vec::new();
+            let mut it = ours.iter();
+            while let Some(x) = it.next() {
+                if x == "--sleep" || x == "--limit-rate" {
+                    it.next();
+                } else {
+                    a.push(x.clone());
+                }
+            }
+            a.extend(["--print".into(), LISTED.into()]);
+            a
+        };
+        for a in &list_args {
+            proc::safe(a)?;
+        }
         let shared = Arc::new(Mutex::new(Shared::default()));
-        let child = Arc::new(Mutex::new(Some(spawned)));
+        let child = Arc::new(Mutex::new(None));
+        let current = Arc::new(crate::streams::Current::new(
+            engine.as_ref().and_then(|e| e.opts.speed_limit),
+        ));
+        let on_helper = Arc::new(std::sync::atomic::AtomicBool::new(engine.is_none()));
         let (sh, ch, folder) = (shared.clone(), child.clone(), folder.to_owned());
+        let (cur, helper) = (current.clone(), on_helper.clone());
+        let (tool, url) = (tool.clone(), url.to_owned());
         std::thread::spawn(move || {
             let _cookies = cookies;
+            if let Some(engine) = engine {
+                let by_engine = ByEngine {
+                    engine,
+                    agent,
+                    tool: &tool,
+                    url: &url,
+                    folder: &folder,
+                    list_args: &list_args,
+                };
+                by_engine.run(&sh, &ch, &cur);
+                if sh.lock().unwrap().progress.state == State::Stopped {
+                    return;
+                }
+            }
+            helper.store(true, std::sync::atomic::Ordering::Release);
+            let spawned =
+                proc::gallery_dl(&tool, &ours, &url).and_then(|cmd| proc::spawn(cmd, "gallery-dl"));
+            let stdout = {
+                let mut slot = ch.lock().unwrap();
+                if sh.lock().unwrap().progress.state == State::Stopped {
+                    return;
+                }
+                match spawned {
+                    Ok(mut s) => {
+                        let out = s.child.stdout.take().expect("piped");
+                        *slot = Some(s);
+                        out
+                    }
+                    Err(e) => {
+                        let mut sh = sh.lock().unwrap();
+                        sh.progress.state = State::Failed(e.to_string());
+                        return;
+                    }
+                }
+            };
             read(stdout, &sh);
             finish(&sh, &ch, folder);
         });
-        Ok(GalleryJob { shared, child })
+        Ok(GalleryJob {
+            shared,
+            child,
+            current,
+            on_helper,
+        })
     }
 
+    /// A new speed limit (bytes/s): the engine's part takes it at once (#769); gallery-dl took
+    /// its limit as it started.
+    pub fn set_speed_limit(&self, rate: Option<u64>) {
+        self.current.set_limit(rate);
+    }
+
+    pub fn speed_limit(&self) -> Option<u64> {
+        self.current.limit()
+    }
+
+    /// gallery-dl downloads now (its run after the engine's, or all of it): a new speed limit
+    /// then takes starting it again (#708).
+    pub fn on_helper(&self) -> bool {
+        self.on_helper.load(std::sync::atomic::Ordering::Acquire)
+    }
+
+    /// Its progress. Stopped only once the engine's part has ended (its files closed).
     pub fn progress(&self) -> Progress {
-        self.shared.lock().unwrap().progress.clone()
+        let mut p = self.shared.lock().unwrap().progress.clone();
+        if p.state == State::Stopped && self.current.busy() {
+            p.state = State::Running;
+            p.speed = 0.0;
+        }
+        p
     }
 
     /// The files saved so far this run (asked once, at the end: not every frame).
@@ -342,14 +634,22 @@ impl GalleryJob {
         self.shared.lock().unwrap().files.clone()
     }
 
-    /// End gallery-dl and all it started; what was saved stays.
+    /// Every file gallery-dl reported for this gallery (`Saved` + `There` across resumed runs).
+    pub fn known_files(&self) -> Vec<PathBuf> {
+        self.shared.lock().unwrap().known.clone()
+    }
+
+    /// End gallery-dl and all it started, and the engine's part; what was saved stays.
     pub fn stop(&self) {
-        if let Some(mut s) = self.child.lock().unwrap().take() {
-            s.kill();
+        {
             let mut sh = self.shared.lock().unwrap();
             if sh.progress.state == State::Running {
                 sh.progress.state = State::Stopped;
             }
+        }
+        self.current.cancel();
+        if let Some(mut s) = self.child.lock().unwrap().take() {
+            s.kill();
         }
     }
 }
@@ -427,10 +727,18 @@ fn read(stdout: impl std::io::Read, shared: &Mutex<Shared>) {
                 sh.saved += 1;
                 sh.progress.downloaded += std::fs::metadata(&p).map_or(0, |m| m.len());
                 if sh.files.len() < KEEP_PATHS {
-                    sh.files.push(p);
+                    sh.files.push(p.clone());
+                }
+                if sh.known.len() < KEEP_PATHS {
+                    sh.known.push(p);
                 }
             }
-            Line::There(_) => sh.there += 1,
+            Line::There(p) => {
+                sh.there += 1;
+                if sh.known.len() < KEEP_PATHS && !sh.known.contains(&p) {
+                    sh.known.push(p);
+                }
+            }
         }
         let secs = started.elapsed().as_secs_f64().max(0.5);
         sh.progress.speed = sh.progress.downloaded as f64 / secs;
@@ -459,11 +767,18 @@ fn finish(shared: &Mutex<Shared>, child: &Mutex<Option<Spawned>>, folder: PathBu
     };
     child.lock().unwrap().take();
     let mut sh = shared.lock().unwrap();
-    let (saved, there) = (sh.saved, sh.there);
+    let (saved, there, engine) = (sh.saved, sh.there, sh.by_engine);
     sh.progress.speed = 0.0;
     sh.progress.events.push((
         SystemTime::now(),
-        format!("gallery-dl saved {saved} files ({there} already there)"),
+        if engine > 0 {
+            format!(
+                "MDM saved {engine} files, gallery-dl {saved} ({} already there)",
+                there.saturating_sub(engine)
+            )
+        } else {
+            format!("gallery-dl saved {saved} files ({there} already there)")
+        },
     ));
     sh.progress.state = match code {
         Some(0) => State::Done(folder),
@@ -522,6 +837,10 @@ mod tests {
         assert_eq!(accepts("unknown"), (true, true));
         // The system's, not asked (#571): what every release from 1.20.0 accepts.
         assert_eq!(accepts("system"), (false, false));
+        // #769: the files listed for MDM's engine, from 1.32.0 (earlier ones printed `None`).
+        let print = |v: &str| Accepts::of(v).print;
+        assert!(!print("1.27.7") && !print("1.31.0") && !print("system"));
+        assert!(print("1.32.0") && print("1.32.19") && print("unknown"));
         assert!(!too_old("system"));
         assert!(too_old("1.17.0") && too_old("1.19.3") && too_old("0.9"));
         assert!(!too_old("1.20.0") && !too_old("1.26.9") && !too_old("unknown"));

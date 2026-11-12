@@ -60,6 +60,7 @@ fn every_release_mdm_can_drive_saves_a_gallery() {
             &folder,
             &Ask::default(),
             &Default::default(),
+            None,
         )
         .unwrap_or_else(|e| panic!("{v}: {e}"));
         let deadline = Instant::now() + Duration::from_secs(90);
@@ -93,6 +94,64 @@ fn every_release_mdm_can_drive_saves_a_gallery() {
             "{v}: chosen, reads and refuses addresses, saved {} with MDM's User-Agent",
             saved[0].file_name().to_string_lossy()
         ));
+        // #769: with MDM's engine, gallery-dl lists the file (1.26 and later) and the engine
+        // saves it under gallery-dl's name; gallery-dl then finds it there. An older one
+        // downloads it itself, as before.
+        lab.clear_log();
+        let engine = mdm_tools::streams::Engine {
+            handle: rt.handle().clone(),
+            opts: Default::default(),
+        };
+        let folder2 = data.path().join("gallery2");
+        let job = GalleryJob::start(
+            &tool,
+            &picture,
+            &folder2,
+            &Ask::default(),
+            &Default::default(),
+            Some(engine),
+        )
+        .unwrap_or_else(|e| panic!("{v}: {e}"));
+        let deadline = Instant::now() + Duration::from_secs(90);
+        let p = loop {
+            let p = job.progress();
+            if p.state != State::Running {
+                break p;
+            }
+            assert!(Instant::now() < deadline, "{v}: still running");
+            std::thread::sleep(Duration::from_millis(200));
+        };
+        assert!(matches!(&p.state, State::Done(_)), "{v}: {:?}", p.events);
+        let names = |d: &std::path::Path| {
+            let mut n: Vec<String> = std::fs::read_dir(d)
+                .unwrap()
+                .filter_map(Result::ok)
+                .map(|e| e.file_name().to_string_lossy().into_owned())
+                .collect();
+            n.sort();
+            n
+        };
+        assert_eq!(
+            names(&folder2),
+            names(&folder),
+            "{v}: gallery-dl's own name"
+        );
+        let events: Vec<&str> = p.events.iter().map(|(_, e)| e.as_str()).collect();
+        let by_engine = mdm_tools::gallery::Accepts::of(&v).print;
+        assert_eq!(
+            events.iter().any(|e| e.starts_with("MDM saved 1 files")),
+            by_engine,
+            "{v}: {events:?}"
+        );
+        if by_engine {
+            let log = lab.log();
+            let get = log
+                .iter()
+                .find(|e| e.path.starts_with("/gen/64K/"))
+                .unwrap_or_else(|| panic!("{v}: no request"));
+            assert_eq!(get.user_agent.as_deref(), Some(USER_AGENT), "{v}");
+            rows.push(format!("{v}: listed, saved by MDM's engine"));
+        }
     }
     for r in rows {
         println!("{r}");

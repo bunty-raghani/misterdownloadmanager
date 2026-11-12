@@ -17,9 +17,9 @@
 //! (learn.microsoft.com/microsoft-edge/extensions/developer-guide/native-messaging, Linux);
 //! Brave's from `brave_main_delegate.cc` (Linux: Chrome's, `/etc/opt/chrome`); Vivaldi, built
 //! without Chrome's branding, reads Chromium's (as Vivaldi's forum confirms); Firefox's from
-//! MDN's "Native manifests" (Linux, global: `/usr/lib/mozilla` or `/usr/lib64/mozilla`). Opera,
-//! Helium, Thorium and Firefox's forks document none: they keep their manifest in the home
-//! folder.
+//! MDN's "Native manifests" (Linux, global: `/usr/lib/mozilla` or `/usr/lib64/mozilla`); Helium
+//! reads Chromium's, then Chrome's (its patch, above). Opera, Thorium and Firefox's forks
+//! document none: they keep their manifest in the home folder.
 
 use std::path::{Path, PathBuf};
 
@@ -54,6 +54,13 @@ pub struct Browser {
     /// macOS: the folder under ~/Library/Application Support whose `NativeMessagingHosts` a
     /// Chromium browser reads when it isn't its own data folder (Brave reads Chrome's).
     pub mac_hosts: Option<&'static str>,
+    /// It offers the extensions named in its data folders' `External Extensions` (Chromium's
+    /// DIR_USER_EXTERNAL_EXTENSIONS, read for one user) at its next start: on Linux (Chromium's
+    /// branding only, not Chrome's) and on macOS ([`external_dirs`]).
+    pub linux_user_external: bool,
+    pub mac_user_external: bool,
+    /// The store's update service as it names it there.
+    pub store_update_url: &'static str,
 }
 
 const fn chromium(
@@ -73,6 +80,9 @@ const fn chromium(
         linux_home: &[],
         linux_system: &[],
         mac_hosts: None,
+        linux_user_external: false,
+        mac_user_external: false,
+        store_update_url: crate::extension::STORE_UPDATE_URL,
     }
 }
 
@@ -86,6 +96,19 @@ impl Browser {
     /// On Linux it reads the manifests for everyone in `folders` too.
     const fn linux_system_in(mut self, folders: &'static [&'static str]) -> Browser {
         self.linux_system = folders;
+        self
+    }
+
+    /// It reads `External Extensions` in its data folders, for one user, on Linux and macOS.
+    const fn user_external(mut self, linux: bool, mac: bool) -> Browser {
+        self.linux_user_external = linux;
+        self.mac_user_external = mac;
+        self
+    }
+
+    /// It names the store's update service `url` (Helium).
+    const fn store_update_url(mut self, url: &'static str) -> Browser {
+        self.store_update_url = url;
         self
     }
 }
@@ -131,6 +154,9 @@ const fn gecko(
         linux_home,
         linux_system: &[],
         mac_hosts: None,
+        linux_user_external: false,
+        mac_user_external: false,
+        store_update_url: crate::extension::STORE_UPDATE_URL,
     }
 }
 
@@ -165,7 +191,8 @@ pub const BROWSERS: &[Browser] = &[
             "google-chrome-canary",
         ],
     )
-    .linux_system_in(&[ETC_CHROME]),
+    .linux_system_in(&[ETC_CHROME])
+    .user_external(false, true),
     chromium(
         "Chromium",
         &["Chromium.app"],
@@ -261,14 +288,23 @@ pub const BROWSERS: &[Browser] = &[
         &["opera"],
     ),
     // Helium reads its own folder, then Chrome's (on Linux and macOS); `.dev` is an unofficial
-    // build's.
+    // build's. On Linux, built with Chromium's branding, it then reads Chromium's folder for
+    // everyone, then Chrome's (its scan-chrome-native-messaging-hosts.patch; both paths are in
+    // its program, #685), so the .deb's and .rpm's manifest covers it. On Windows it reads
+    // Chromium's key, then Chrome's (launch_context_win.cc), as Chromium does. It offers the
+    // extensions named in its own folder's `External Extensions` on Linux and macOS, through its
+    // services when they name the store by its own address; Chrome's entries (the registry's on
+    // Windows) name Google's, which answers it "no update", so it offers nothing from them (#685).
     chromium(
         "Helium",
         &["Helium.app"],
         &["helium", "helium-browser"],
         &["net.imput.helium"],
         &["net.imput.helium", "net.imput.helium.dev"],
-    ),
+    )
+    .linux_system_in(&[ETC_CHROMIUM, ETC_CHROME])
+    .user_external(true, true)
+    .store_update_url(crate::extension::HELIUM_STORE_UPDATE_URL),
     // Thorium's and Arc's folders: unverified.
     chromium(
         "Thorium",
@@ -502,6 +538,76 @@ fn host_dirs_in(
                     home.join(".librewolf/native-messaging-hosts"),
                     Family::Gecko,
                 );
+            }
+        }
+    }
+    dirs
+}
+
+/// A browser's folder of external extensions in its data folder (Chromium's
+/// DIR_USER_EXTERNAL_EXTENSIONS).
+const USER_EXTERNAL: &str = "External Extensions";
+
+/// Linux and macOS: the folders whose `<id>.json`, naming the store's update service as the
+/// browser reading it names it (the second of each pair), makes it offer that extension at its
+/// next start ("New extension added", the user turning it on there), for this user (`home`,
+/// `config` = $XDG_CONFIG_HOME) or for everyone, each given only where its browser is.
+///
+/// For one user, each browser marked so reads `External Extensions` in its data folder: Chrome on
+/// macOS, Helium on both, by its own name for the store (#685); Chrome on Linux reads none in the
+/// home folder. For everyone, Chrome's: on macOS `/Library/Application Support/Google/Chrome/
+/// External Extensions` (chrome_paths.cc, DIR_EXTERNAL_EXTENSIONS), on Linux
+/// `/usr/share/google-chrome/extensions`. Helium reads macOS's too, and an entry there, read
+/// before its own, would win with Google's address: none is written there for it. Windows offers
+/// the extension through the registry (crates/nmhost).
+pub fn external_dirs(
+    home: &Path,
+    config: &Path,
+    mac: bool,
+    all_users: bool,
+) -> Vec<(PathBuf, &'static str)> {
+    external_dirs_in(Path::new("/"), home, config, mac, all_users)
+}
+
+/// `external_dirs`, with everyone's folders under `root` (`/`; a test's own folder).
+fn external_dirs_in(
+    root: &Path,
+    home: &Path,
+    config: &Path,
+    mac: bool,
+    all_users: bool,
+) -> Vec<(PathBuf, &'static str)> {
+    let system = |d: &str| root.join(d.trim_start_matches('/'));
+    if all_users {
+        // Chrome's folder for everyone, where Chrome is.
+        let (dir, chrome) = if mac {
+            (
+                "/Library/Application Support/Google/Chrome/External Extensions",
+                "/Applications/Google Chrome.app",
+            )
+        } else {
+            ("/usr/share/google-chrome/extensions", "/opt/google/chrome")
+        };
+        return if system(chrome).exists() {
+            vec![(system(dir), crate::extension::STORE_UPDATE_URL)]
+        } else {
+            Vec::new()
+        };
+    }
+    let support = home.join("Library/Application Support");
+    let mut dirs: Vec<(PathBuf, &'static str)> = Vec::new();
+    for b in BROWSERS {
+        let data: Vec<PathBuf> = match mac {
+            true if b.mac_user_external => b.mac_data.iter().map(|d| support.join(d)).collect(),
+            false if b.linux_user_external => {
+                b.linux_config.iter().map(|d| config.join(d)).collect()
+            }
+            _ => continue,
+        };
+        for d in data.into_iter().filter(|d| d.is_dir()) {
+            let d = d.join(USER_EXTERNAL);
+            if !dirs.iter().any(|(x, _)| *x == d) {
+                dirs.push((d, b.store_update_url));
             }
         }
     }
@@ -873,6 +979,111 @@ mod tests {
         // A manifest naming a helper that can't run covers nothing.
         std::fs::set_permissions(&helper, std::fs::Permissions::from_mode(0o644)).unwrap();
         assert_eq!(dirs(Some(&helper)), all(&[chrome, brave, opera, mozilla]));
+    }
+
+    /// #685: Helium alone, on Linux, reads the package's manifest for everyone in Chromium's
+    /// folder (or Chrome's): no file of MDM's left in its own folder in the home.
+    #[cfg(unix)]
+    #[test]
+    fn a_manifest_for_everyone_covers_helium() {
+        use std::os::unix::fs::PermissionsExt;
+        let t = tempfile::tempdir().unwrap();
+        let (root, home) = (t.path().join("root"), t.path().join("home"));
+        std::fs::create_dir_all(home.join(".config/net.imput.helium")).unwrap();
+        let helper = root.join("usr/bin/misterdownloadmanager-nmhost");
+        std::fs::create_dir_all(helper.parent().unwrap()).unwrap();
+        std::fs::write(&helper, "#!/bin/sh\n").unwrap();
+        std::fs::set_permissions(&helper, std::fs::Permissions::from_mode(0o755)).unwrap();
+        let dirs = || -> Vec<PathBuf> {
+            host_dirs_in(
+                &root,
+                &home,
+                &home.join(".config"),
+                false,
+                false,
+                Some(&helper),
+            )
+            .into_iter()
+            .map(|(d, _)| d.strip_prefix(&home).unwrap().to_owned())
+            .collect()
+        };
+        let own = PathBuf::from(".config/net.imput.helium/NativeMessagingHosts");
+        assert_eq!(dirs(), std::slice::from_ref(&own));
+        for etc in [ETC_CHROMIUM, ETC_CHROME] {
+            let dir = root.join(etc.trim_start_matches('/'));
+            std::fs::create_dir_all(&dir).unwrap();
+            let json = serde_json::json!({ "name": "x", "path": helper, "type": "stdio" });
+            std::fs::write(dir.join(HOST_MANIFEST), json.to_string()).unwrap();
+            assert!(dirs().is_empty(), "{etc}");
+            std::fs::remove_file(dir.join(HOST_MANIFEST)).unwrap();
+            assert_eq!(dirs(), std::slice::from_ref(&own));
+        }
+    }
+
+    /// #685: the external extension folders, each with the store's address as its browser names
+    /// it. One user: Chrome's only on macOS, Helium's own data folders (each channel's) on Linux
+    /// and macOS, only those there, by Helium's own name for the store. Everyone: Chrome's, for
+    /// Chrome only (Helium would read macOS's before its own).
+    #[test]
+    fn external_extension_folders() {
+        use crate::extension::{HELIUM_STORE_UPDATE_URL as HELIUM, STORE_UPDATE_URL as GOOGLE};
+        let t = tempfile::tempdir().unwrap();
+        let (root, home) = (t.path().join("root"), t.path().join("home"));
+        let config = home.join(".config");
+        let user = |mac| external_dirs_in(&root, &home, &config, mac, false);
+        let everyone = |mac| external_dirs_in(&root, &home, &config, mac, true);
+        assert!(user(false).is_empty() && user(true).is_empty());
+        assert!(everyone(false).is_empty() && everyone(true).is_empty());
+
+        // Linux: Chrome reads none in the home folder; Helium its own.
+        std::fs::create_dir_all(config.join("google-chrome")).unwrap();
+        assert!(user(false).is_empty());
+        std::fs::create_dir_all(config.join("net.imput.helium.dev")).unwrap();
+        std::fs::create_dir_all(config.join("net.imput.helium")).unwrap();
+        assert_eq!(
+            user(false),
+            [
+                (config.join("net.imput.helium/External Extensions"), HELIUM),
+                (
+                    config.join("net.imput.helium.dev/External Extensions"),
+                    HELIUM
+                ),
+            ]
+        );
+
+        // macOS: Chrome's and Helium's, each by its own name for the store.
+        let support = home.join("Library/Application Support");
+        std::fs::create_dir_all(support.join("net.imput.helium")).unwrap();
+        assert_eq!(
+            user(true),
+            [(support.join("net.imput.helium/External Extensions"), HELIUM)]
+        );
+        std::fs::create_dir_all(support.join("Google/Chrome")).unwrap();
+        assert_eq!(
+            user(true),
+            [
+                (support.join("Google/Chrome/External Extensions"), GOOGLE),
+                (support.join("net.imput.helium/External Extensions"), HELIUM),
+            ]
+        );
+
+        // Everyone's: Chrome's, only where Chrome is; never for Helium alone.
+        std::fs::create_dir_all(root.join("Applications/Helium.app")).unwrap();
+        std::fs::create_dir_all(root.join("opt/helium")).unwrap();
+        assert!(everyone(true).is_empty() && everyone(false).is_empty());
+        std::fs::create_dir_all(root.join("Applications/Google Chrome.app")).unwrap();
+        std::fs::create_dir_all(root.join("opt/google/chrome")).unwrap();
+        assert_eq!(
+            everyone(true),
+            [(
+                root.join("Library/Application Support/Google/Chrome/External Extensions"),
+                GOOGLE
+            )]
+        );
+        assert_eq!(
+            everyone(false),
+            [(root.join("usr/share/google-chrome/extensions"), GOOGLE)]
+        );
     }
 
     /// The folders for everyone each browser reads are in the list the packages ship.

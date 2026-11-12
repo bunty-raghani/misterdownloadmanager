@@ -68,13 +68,22 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.lock') }}
           restore-keys: ${{ runner.os }}-cargo-
 
+      # BoringSSL, under the browser-like connection (#668, crates/engine/src/browserlike.rs), is
+      # built with NASM on Windows; the runner has CMake and LLVM's libclang already.
+      - name: NASM
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          choco install nasm --version 2.16.3 --no-progress -y
+          "C:\Program Files\NASM" >> $env:GITHUB_PATH
+
       - name: Linux libraries
         if: runner.os == 'Linux'
         timeout-minutes: 10
         run: |
           sudo apt-get update
           sudo apt-get install -y libgtk-3-dev libxkbcommon-dev libwayland-dev libgl1-mesa-dev \
-            libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev
+            libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev cmake libclang-dev
 
       - name: Format
         if: runner.os == 'Windows'

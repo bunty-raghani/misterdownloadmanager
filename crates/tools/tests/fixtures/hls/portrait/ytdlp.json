@@ -1,0 +1,27 @@
+{
+ "title": "my clip",
+ "duration": 95,
+ "subtitles": {},
+ "formats": [
+  {
+   "format_id": "700",
+   "ext": "mp4",
+   "height": 640,
+   "fps": null,
+   "vcodec": "avc1.42e01e",
+   "acodec": "mp4a.40.2",
+   "tbr": 700.0,
+   "protocol": "m3u8_native"
+  },
+  {
+   "format_id": "1800",
+   "ext": "mp4",
+   "height": 1280,
+   "fps": null,
+   "vcodec": "avc1.4d401f",
+   "acodec": "mp4a.40.2",
+   "tbr": 1800.0,
+   "protocol": "m3u8_native"
+  }
+ ]
+}

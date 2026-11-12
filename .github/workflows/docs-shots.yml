@@ -46,6 +46,15 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.lock') }}
           restore-keys: ${{ runner.os }}-cargo-
 
+      # BoringSSL, under the browser-like connection (#668, crates/engine/src/browserlike.rs), is
+      # built with NASM on Windows; the runner has CMake and LLVM's libclang already.
+      - name: NASM
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          choco install nasm --version 2.16.3 --no-progress -y
+          "C:\Program Files\NASM" >> $env:GITHUB_PATH
+
       - name: Build
         run: |
           cargo build -p mdm-app -p mdm-labserver -p mdm-cli -p mdm-nmhost

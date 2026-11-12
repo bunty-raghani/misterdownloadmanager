@@ -291,10 +291,80 @@ pub(crate) async fn hls_file(Path((name, file)): Path<(String, String)>) -> Resp
         s += "#EXT-X-ENDLIST\n";
         return text(M3U8, s);
     }
+    // #769: the same pieces encrypted with AES-128 (`enc.m3u8`): the first with an IV of its
+    // own, the others with their sequence number's, all with `key.bin`.
+    if file == "enc.m3u8" {
+        let mut s = format!(
+            "#EXTM3U
+#EXT-X-VERSION:3
+#EXT-X-TARGETDURATION:{SEGMENT_SECS}
+             #EXT-X-MEDIA-SEQUENCE:{ENC_SEQUENCE}
+#EXT-X-PLAYLIST-TYPE:VOD
+"
+        );
+        for i in 0..SEGMENTS {
+            if i == 0 {
+                s += "#EXT-X-KEY:METHOD=AES-128,URI=\"key.bin\",IV=0x000000000000000000000000000007E9
+";
+            } else if i == 1 {
+                s += "#EXT-X-KEY:METHOD=AES-128,URI=\"key.bin\"
+";
+            }
+            s += &format!(
+                "#EXTINF:{SEGMENT_SECS}.000,
+enc{i}.ts
+"
+            );
+        }
+        s += "#EXT-X-ENDLIST
+";
+        return text(M3U8, s);
+    }
+    if file == "key.bin" {
+        return bytes("application/octet-stream", ENC_KEY.to_vec());
+    }
+    if let Some(i) = numbered(&file, "enc", ".ts").filter(|i| *i < SEGMENTS) {
+        let iv = if i == 0 {
+            enc_iv(0x7E9)
+        } else {
+            enc_iv(ENC_SEQUENCE + u64::from(i))
+        };
+        return bytes(
+            "video/mp2t",
+            encrypt(&ts_segment(ti, i, t.segment_len), &iv),
+        );
+    }
     match numbered(&file, "seg", ".ts") {
         Some(i) if i < SEGMENTS => bytes("video/mp2t", ts_segment(ti, i, t.segment_len)),
         _ => StatusCode::NOT_FOUND.into_response(),
     }
+}
+
+/// The encrypted pieces' key (`/hls/{track}/key.bin`), their playlist's first sequence number.
+const ENC_KEY: [u8; 16] = *b"mdm-lab-key-0769";
+const ENC_SEQUENCE: u64 = 100;
+
+/// An IV of `n`, right-aligned in 16 bytes (as a playlist's `IV=0x…`, and a piece's sequence
+/// number when it has none).
+fn enc_iv(n: u64) -> [u8; 16] {
+    let mut iv = [0u8; 16];
+    iv[8..].copy_from_slice(&n.to_be_bytes());
+    iv
+}
+
+/// `data` encrypted with AES-128-CBC and PKCS#7 padding, as an HLS server sends a piece.
+fn encrypt(data: &[u8], iv: &[u8; 16]) -> Vec<u8> {
+    use aws_lc_rs::cipher::{
+        AES_128, EncryptionContext, PaddedBlockEncryptingKey, UnboundCipherKey,
+    };
+    let key = PaddedBlockEncryptingKey::cbc_pkcs7(
+        UnboundCipherKey::new(&AES_128, &ENC_KEY).expect("a 16-byte key"),
+    )
+    .expect("CBC");
+    let mut out = data.to_vec();
+    key.less_safe_encrypt(&mut out, EncryptionContext::Iv128((*iv).into()))
+        .expect("encrypted");
+    out
 }
 
 /// `N` of `{prefix}N{suffix}`.

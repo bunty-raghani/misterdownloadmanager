@@ -133,6 +133,126 @@ pub struct ErrorAnswer {
 /// [`ErrorAnswer::code`] while the API is off.
 pub const API_OFF: &str = "api-off";
 
+/// The browser's quality menu (`video_lookup`, `video_poll`, `video_pick`): where a look-up is,
+/// or what became of a choice. Answered whatever the automation API's switch (the browser's
+/// host asks, not a program).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(default)]
+pub struct VideoLookupAnswer {
+    /// One of [`lookup`]'s states.
+    pub state: String,
+    /// `pending` and `ready`: the look-up's token, to ask about it and to pick from it.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub token: Option<String>,
+    /// `ready`: the video's title, the file's name: the page's when yt-dlp knows the video only
+    /// by its address, as the Download video window names it ([`crate::Command::video_title`]).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub title: Option<String>,
+    /// `ready`: the qualities to choose from, labelled in MDM's language; `video_pick` takes a
+    /// place in this list.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub choices: Vec<VideoChoice>,
+    /// `failed`: [`lookup::NO_YTDLP`], [`lookup::NO_CHOICES`] or [`lookup::ERROR`].
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reason: Option<String>,
+    /// `failed` with [`lookup::ERROR`]: why, in MDM's words and language.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub message: Option<String>,
+}
+
+/// One quality the browser's quality menu offers.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(default)]
+pub struct VideoChoice {
+    /// What the menu shows ("720p mp4"), in MDM's language.
+    pub label: String,
+    /// The file's type (`mp4`, `mp3`).
+    pub ext: String,
+    /// Bytes, exact or estimated; null when unknown.
+    pub size: Option<u64>,
+    /// Only the sound (an audio file, a conversion to MP3, Opus or FLAC): the menu lists these
+    /// apart from the videos. False from an app older than the field.
+    pub audio: bool,
+    /// The picture's height in pixels (the button's chip: 1080p, 4K); none for the sound, or a
+    /// file known only by its type.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub height: Option<u32>,
+    /// Frames a second, when above 31 (60 fps is worth saying, 30 isn't).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fps: Option<u32>,
+    /// The sound's bitrate in kbit/s, for the sound as the site has it.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub kbps: Option<u32>,
+    /// The sound as the site sends it (not converted): the button's list says "original".
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub original: bool,
+}
+
+/// [`VideoLookupAnswer::state`]'s values, and [`VideoLookupAnswer::reason`]'s.
+pub mod lookup {
+    /// Still looking (`token` to ask again).
+    pub const PENDING: &str = "pending";
+    /// Found: `title` and `choices`.
+    pub const READY: &str = "ready";
+    /// Not found: `reason`, with `message` for an error.
+    pub const FAILED: &str = "failed";
+    /// The page is a list of videos (a playlist, a channel): chosen in MDM's window.
+    pub const LIST: &str = "list";
+    /// Two look-ups are running already.
+    pub const BUSY: &str = "busy";
+    /// The video button is off on this site (Options' rules).
+    pub const OFF: &str = "off";
+    /// No such token (never given, or forgotten after 10 minutes).
+    pub const GONE: &str = "gone";
+    /// The Download video window does it instead (MDM not running, an older MDM, a Google Drive
+    /// file, MDM without a window, a choice that doesn't fit its look-up).
+    pub const USE_WINDOW: &str = "use-window";
+    /// The choice is downloading.
+    pub const STARTED: &str = "started";
+    /// The choice was added to the queue (Options: "only add to the queue").
+    pub const QUEUED: &str = "queued";
+    /// MDM took the choice, and it isn't a new download: it is in the list already in that
+    /// quality (Options' "If a duplicate download link is added": that one was opened or
+    /// resumed, or MDM asks what to do in its own window). From the browser's host: MDM didn't
+    /// say in time what became of it (`timeout`); the command is in its queue and will run.
+    /// Either way the Download video window mustn't do it a second time; the extension takes it
+    /// for `started`.
+    pub const SENT: &str = "sent";
+    /// `failed`: yt-dlp isn't installed.
+    pub const NO_YTDLP: &str = "no-ytdlp";
+    /// `failed`: the page has nothing this can download.
+    pub const NO_CHOICES: &str = "no-choices";
+    /// `failed`: yt-dlp couldn't look it up (`message` says why).
+    pub const ERROR: &str = "error";
+}
+
+impl VideoLookupAnswer {
+    /// An answer that is only a state.
+    pub fn of(state: &str) -> VideoLookupAnswer {
+        VideoLookupAnswer {
+            state: state.into(),
+            ..Default::default()
+        }
+    }
+
+    /// Still looking up `token`.
+    pub fn pending(token: &str) -> VideoLookupAnswer {
+        VideoLookupAnswer {
+            token: Some(token.into()),
+            ..VideoLookupAnswer::of(lookup::PENDING)
+        }
+    }
+
+    /// Not found, for `reason` (with `message` for an error).
+    pub fn failed(reason: &str, message: Option<String>) -> VideoLookupAnswer {
+        VideoLookupAnswer {
+            reason: Some(reason.into()),
+            message,
+            ..VideoLookupAnswer::of(lookup::FAILED)
+        }
+    }
+}
+
 /// An answer as its line.
 pub fn line<T: Serialize>(answer: &T) -> String {
     serde_json::to_string(answer).unwrap_or_default()
@@ -160,6 +280,7 @@ pub fn schema() -> serde_json::Value {
     let _ = generator.subschema_for::<AddAnswer>();
     let _ = generator.subschema_for::<PairAnswer>();
     let _ = generator.subschema_for::<ErrorAnswer>();
+    let _ = generator.subschema_for::<VideoLookupAnswer>();
     let defs = generator.take_definitions(true);
     serde_json::json!({
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -169,7 +290,9 @@ pub fn schema() -> serde_json::Value {
             A request is `Request`. A command (an address to add, start_queue) is answered \
             `ok`; a question is answered with the JSON object for it (`ListAnswer`, \
             `ActAnswer`, `ApiAnswer`) or an `ErrorAnswer`. A wrong token is answered `denied`, \
-            an app that doesn't answer within 2 seconds `timeout`. \
+            an app that doesn't answer within 2 seconds `timeout`. The browser's quality menu \
+            (`video_lookup`, `video_poll`, `video_pick`, sent by its native host) is answered \
+            with a `VideoLookupAnswer`. \
             Guide: https://misterdownloadmanager.com/help/command-line.html#the-automation-api",
         "$ref": request.get("$ref").cloned().unwrap_or(serde_json::Value::Null),
         "$defs": defs,
@@ -207,5 +330,69 @@ mod tests {
             .unwrap();
         assert_eq!(list.speed, 5);
         assert!(parse::<ListAnswer>("ok").is_err());
+    }
+
+    /// The quality menu's answers as the browser's host reads them: only what each state has,
+    /// a size unknown said as null, and back the same.
+    #[test]
+    fn video_lookup_answers_round_trip() {
+        assert_eq!(
+            line(&VideoLookupAnswer::pending("abc")),
+            r#"{"state":"pending","token":"abc"}"#
+        );
+        assert_eq!(
+            line(&VideoLookupAnswer::of(lookup::USE_WINDOW)),
+            r#"{"state":"use-window"}"#
+        );
+        assert_eq!(
+            line(&VideoLookupAnswer::failed(lookup::NO_YTDLP, None)),
+            r#"{"state":"failed","reason":"no-ytdlp"}"#
+        );
+        let ready = VideoLookupAnswer {
+            token: Some("abc".into()),
+            title: Some("A talk".into()),
+            choices: vec![
+                VideoChoice {
+                    label: "720p mp4".into(),
+                    ext: "mp4".into(),
+                    size: Some(187_500_000),
+                    audio: false,
+                    ..Default::default()
+                },
+                VideoChoice {
+                    label: "Audio only mp3".into(),
+                    ext: "mp3".into(),
+                    size: None,
+                    audio: true,
+                    ..Default::default()
+                },
+            ],
+            ..VideoLookupAnswer::of(lookup::READY)
+        };
+        let json = line(&ready);
+        assert_eq!(
+            json,
+            r#"{"state":"ready","token":"abc","title":"A talk","choices":[{"label":"720p mp4","ext":"mp4","size":187500000,"audio":false},{"label":"Audio only mp3","ext":"mp3","size":null,"audio":true}]}"#
+        );
+        assert_eq!(
+            serde_json::from_str::<VideoLookupAnswer>(&json).unwrap(),
+            ready
+        );
+        // An older app's choices, without `audio`: none is sound alone.
+        let old: VideoLookupAnswer = serde_json::from_str(
+            r#"{"state":"ready","choices":[{"label":"Audio only mp3","ext":"mp3","size":null}]}"#,
+        )
+        .unwrap();
+        assert!(!old.choices[0].audio);
+        let failed = VideoLookupAnswer::failed(lookup::ERROR, Some("Video unavailable".into()));
+        assert_eq!(
+            serde_json::from_str::<VideoLookupAnswer>(&line(&failed)).unwrap(),
+            failed
+        );
+        // Not one of these (an error answer, an older app's `ok`): no state to read.
+        let other: VideoLookupAnswer =
+            serde_json::from_str(r#"{"error":"the automation API is off"}"#).unwrap();
+        assert!(other.state.is_empty());
+        assert!(serde_json::from_str::<VideoLookupAnswer>("ok").is_err());
     }
 }

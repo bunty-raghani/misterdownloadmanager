@@ -261,8 +261,8 @@ fn strangers_are_refused() {
 }
 
 /// #41: a user with only Zen and Helium (no ~/.mozilla, no Chrome) gets the manifests where
-/// those two read them: Mozilla's folder, created, and Helium's own. `--unregister` takes them
-/// away. (Windows registers in the registry, which every one of them reads.)
+/// those two read them: Mozilla's folder, created, and Helium's own, with the store's extension
+/// offered to Helium (#685). `--unregister` takes them away. (Windows registers in the registry, which every one of them reads.)
 #[cfg(not(windows))]
 #[test]
 fn zen_and_helium_alone_are_registered() {
@@ -311,10 +311,20 @@ fn zen_and_helium_alone_are_registered() {
         let origin = serde_json::json!(format!("chrome-extension://{id}/"));
         assert!(origins.as_array().unwrap().contains(&origin), "{origins}");
     }
+    // #685: Helium offers the store's extension at its next start, from its own folder, through
+    // its own services (its name for the store; Google's answers it "no update").
+    let offer = helium.join("External Extensions/ejoleppdfgjdndddcjoehopknmlglojp.json");
+    let offered: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(&offer).unwrap()).unwrap();
+    assert_eq!(
+        offered["external_update_url"],
+        "https://update-url-to-be-replaced.qjz9zk"
+    );
     host("--unregister");
     for dir in [&mozilla_hosts, &helium_hosts] {
         assert!(!dir.join("com.misterdownloadmanager.host.json").exists());
     }
+    assert!(!offer.exists());
     let _ = std::fs::remove_dir_all(&home);
 }
 

@@ -1,0 +1,61 @@
+<!doctype html>
+<!-- Facebook's home feed (#643), reduced to what names a post (our own sample: no real person, post
+     or text). data-expect: what the button must send for each video ("page", "none"). -->
+<html><head><meta charset="utf-8"><meta name="mdm-page" content="https://www.facebook.com/"><title>Facebook</title><link rel="stylesheet" href="feeds.css"></head>
+<body>
+<div role="main">
+<div role="feed">
+  <div aria-posinset="1" aria-describedby=":r1:">
+    <div class="x1yztbdb">
+      <h4><a href="https://www.facebook.com/sample.page.a?__cft__=AZx">Sample Page A</a></h4>
+      <span><a href="#" role="link">3h</a></span>
+      <div class="x1lliihq"><video data-expect="https://www.facebook.com/reel/1234567890123456/"></video></div>
+      <a href="https://www.facebook.com/reel/1234567890123456/?s=fb_shorts_tab&amp;__cft__=AZx" aria-label="Open reel">Reel</a>
+    </div>
+  </div>
+  <div aria-posinset="2" aria-describedby=":r2:">
+    <div class="x1yztbdb">
+      <h4><a href="https://www.facebook.com/sample.page.b">Sample Page B</a></h4>
+      <span><a href="https://www.facebook.com/sample.page.b/videos/a-sample-title/2345678901234567/?__cft__=AZy">Yesterday</a></span>
+      <div class="x1lliihq"><video data-expect="https://www.facebook.com/watch/?v=2345678901234567"></video></div>
+      <a href="https://www.facebook.com/sample.page.b">Follow</a>
+    </div>
+  </div>
+  <div aria-posinset="3" aria-describedby=":r3:">
+    <div class="x1yztbdb">
+      <h4><a href="https://www.facebook.com/sample.person.c">Sample Person C</a></h4>
+      <span><a href="https://www.facebook.com/sample.person.c/posts/pfbid02SampleSampleSampleSampleSampleSample1l">2d</a></span>
+      <div class="x1lliihq"><video data-expect="https://www.facebook.com/sample.person.c/posts/pfbid02SampleSampleSampleSampleSampleSample1l"></video></div>
+    </div>
+  </div>
+  <div aria-posinset="4" aria-describedby=":r4:">
+    <div class="x1yztbdb">
+      <h4><a href="https://www.facebook.com/groups/123456789012/">Sample Group</a></h4>
+      <div data-video-id="3456789012345678"><video data-expect="https://www.facebook.com/watch/?v=3456789012345678"></video></div>
+      <a href="https://www.facebook.com/groups/123456789012/posts/4567890123456789/">Sample Person D posted</a>
+    </div>
+  </div>
+  <div aria-posinset="5" aria-describedby=":r5:">
+    <div class="x1yztbdb">
+      <h4><a href="https://www.facebook.com/sample.page.e">Sample Page E</a></h4>
+      <span><a href="#" role="link">Sponsored</a></span>
+      <div class="x1lliihq"><video data-expect="none"></video></div>
+    </div>
+  </div>
+  <div aria-posinset="6" aria-describedby=":r6:">
+    <div class="x1yztbdb">
+      <h4><a href="https://www.facebook.com/sample.page.f">Sample Page F</a></h4>
+      <span><a href="https://www.facebook.com/permalink.php?story_fbid=pfbid0SampleStory6&amp;id=100000000000006">5h</a></span>
+      <div class="x1lliihq"><video data-expect="https://www.facebook.com/permalink.php?story_fbid=pfbid0SampleStory6&amp;id=100000000000006"></video></div>
+    </div>
+  </div>
+  <div aria-posinset="7" aria-describedby=":r7:">
+    <div class="x1yztbdb">
+      <h4><a href="https://www.facebook.com/sample.page.g">Sample Page G</a></h4>
+      <div class="x1lliihq"><video data-expect="https://fb.watch/sAmPlE7x/"></video></div>
+      <a href="https://fb.watch/sAmPlE7x/?mibextid=sample">Share</a>
+    </div>
+  </div>
+</div>
+</div>
+</body></html>

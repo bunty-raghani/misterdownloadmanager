@@ -32,12 +32,6 @@
   "video_sent": {
     "message": "已发送到 Mister Download Manager"
   },
-  "video_failed": {
-    "message": "Mister Download Manager 未安装或未启动"
-  },
-  "video_drag": {
-    "message": "拖动以沿视频边缘移动"
-  },
   "menu_selected": {
     "message": "使用 Mister Download Manager 下载选定链接"
   },
@@ -180,13 +174,46 @@
     "message": "直播"
   },
   "video_off": {
-    "message": "此站点上的下载按钮已关闭"
+    "message": "此站点已关闭"
   },
   "video_drm": {
-    "message": "受保护视频: 无法保存"
+    "message": "受保护视频"
   },
   "video_unnamed": {
     "message": "无法判断这是哪个视频：请打开该视频自己的页面再试"
+  },
+  "video_looking": {
+    "message": "正在查找画质…"
+  },
+  "video_no_choices": {
+    "message": "此处没有可下载的视频"
+  },
+  "video_playlist": {
+    "message": "视频列表：请在 Mister Download Manager 中选择"
+  },
+  "video_no_ytdlp": {
+    "message": "Mister Download Manager 需要 yt-dlp 才能下载此视频"
+  },
+  "video_too_long": {
+    "message": "查找耗时过长"
+  },
+  "video_busy": {
+    "message": "Mister Download Manager 正忙于处理其他视频"
+  },
+  "video_queued": {
+    "message": "已添加到队列"
+  },
+  "video_failed_lookup": {
+    "message": "无法查找"
+  },
+  "video_tab_video": {
+    "message": "视频"
+  },
+  "video_tab_audio": {
+    "message": "音频"
+  },
+  "video_open_post": {
+    "message": "打开帖子以下载"
   },
   "popup_send_to": {
     "message": "将下载发送到"
@@ -241,5 +268,62 @@
   },
   "popup_media_title_name": {
     "message": "在媒体文件名前加上页面标题"
+  },
+  "video_cant_save": {
+    "message": "无法保存"
+  },
+  "video_open_post_button": {
+    "message": "打开帖子"
+  },
+  "video_drag_dots": {
+    "message": "拖动圆点可沿边缘移动"
+  },
+  "video_tip": {
+    "message": "下载 $what$",
+    "placeholders": {
+      "what": {
+        "content": "$1",
+        "example": "1080p MP4 · 412 MB"
+      }
+    }
+  },
+  "video_tip_best": {
+    "message": "下载最佳画质"
+  },
+  "video_sending": {
+    "message": "正在发送到 MDM..."
+  },
+  "video_added": {
+    "message": "已添加到 MDM"
+  },
+  "video_show": {
+    "message": "显示"
+  },
+  "video_no_answer": {
+    "message": "MDM 未响应"
+  },
+  "video_get_mdm": {
+    "message": "获取 MDM"
+  },
+  "video_retry": {
+    "message": "重试"
+  },
+  "video_turn_on": {
+    "message": "启用"
+  },
+  "video_best": {
+    "message": "最佳"
+  },
+  "video_all_qualities": {
+    "message": "所有画质和字幕..."
+  },
+  "video_failed": {
+    "message": "Mister Download Manager 未安装或未启动"
+  },
+  "video_download_best": {
+    "message": "下载最佳"
+  },
+  "video_original": {
+    "message": "原始"
   }
 }

@@ -119,6 +119,21 @@ async fn a_magnet_through_each_service_comes_down_as_files() {
 }
 
 #[tokio::test]
+async fn a_torrent_of_one_file_goes_into_the_folder_itself() {
+    // The service keeps it as `Lab Show/video.mkv`: it lands as `video.mkv`, no folder made.
+    for service in ServiceKind::ALL {
+        let (_lab, d) = setup(service).await;
+        let dir = tempfile::tempdir().unwrap();
+        let (_t, s) = run(&d, "one00001", dir.path()).await;
+        assert_eq!(s.state, State::Done, "{service:?}: {:?}", s.error);
+        let file = dir.path().join("video.mkv");
+        assert!(same(&file, "2M", "video.mkv"), "{service:?}");
+        assert_eq!(s.file.as_deref(), Some(file.as_path()), "{service:?}");
+        assert!(!dir.path().join("Lab Show").exists(), "{service:?}");
+    }
+}
+
+#[tokio::test]
 async fn a_torrent_the_service_cant_get_fails_with_its_reason() {
     for service in ServiceKind::ALL {
         let (_lab, d) = setup(service).await;

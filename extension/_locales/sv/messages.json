@@ -32,12 +32,6 @@
   "video_sent": {
     "message": "Skickades till Mister Download Manager"
   },
-  "video_failed": {
-    "message": "Mister Download Manager är inte installerad eller startade inte"
-  },
-  "video_drag": {
-    "message": "Dra för att flytta den längs videons kant"
-  },
   "menu_selected": {
     "message": "Ladda ner valda länkar med Mister Download Manager"
   },
@@ -180,13 +174,46 @@
     "message": "Live"
   },
   "video_off": {
-    "message": "Nedladdningsknappen är inaktiverad på den här webbplatsen"
+    "message": "Av på den här webbplatsen"
   },
   "video_drm": {
-    "message": "Skyddad video: den kan inte sparas"
+    "message": "Skyddad video"
   },
   "video_unnamed": {
     "message": "Det går inte att avgöra vilken video det här är: öppna videons egen sida och försök där"
+  },
+  "video_looking": {
+    "message": "Söker efter kvaliteter…"
+  },
+  "video_no_choices": {
+    "message": "Ingen video att hämta här"
+  },
+  "video_playlist": {
+    "message": "En lista med videor: välj dem i Mister Download Manager"
+  },
+  "video_no_ytdlp": {
+    "message": "Mister Download Manager behöver yt-dlp för den här videon"
+  },
+  "video_too_long": {
+    "message": "Sökningen tog för lång tid"
+  },
+  "video_busy": {
+    "message": "Mister Download Manager är upptaget med andra videor"
+  },
+  "video_queued": {
+    "message": "Tillagd i kön"
+  },
+  "video_failed_lookup": {
+    "message": "Det gick inte att söka"
+  },
+  "video_tab_video": {
+    "message": "Video"
+  },
+  "video_tab_audio": {
+    "message": "Ljud"
+  },
+  "video_open_post": {
+    "message": "Öppna inlägget för att ladda ned det"
   },
   "popup_send_to": {
     "message": "Skicka nedladdningar till"
@@ -241,5 +268,62 @@
   },
   "popup_media_title_name": {
     "message": "Lägg till sidtiteln framför mediefilernas namn"
+  },
+  "video_cant_save": {
+    "message": "kan inte sparas"
+  },
+  "video_open_post_button": {
+    "message": "Öppna inlägg"
+  },
+  "video_drag_dots": {
+    "message": "Dra punkterna för att flytta den längs kanten"
+  },
+  "video_tip": {
+    "message": "Ladda ned $what$",
+    "placeholders": {
+      "what": {
+        "content": "$1",
+        "example": "1080p MP4 · 412 MB"
+      }
+    }
+  },
+  "video_tip_best": {
+    "message": "Ladda ned bästa kvalitet"
+  },
+  "video_sending": {
+    "message": "Skickar till MDM..."
+  },
+  "video_added": {
+    "message": "Tillagd i MDM"
+  },
+  "video_show": {
+    "message": "Visa"
+  },
+  "video_no_answer": {
+    "message": "MDM svarade inte"
+  },
+  "video_get_mdm": {
+    "message": "Skaffa MDM"
+  },
+  "video_retry": {
+    "message": "Försök igen"
+  },
+  "video_turn_on": {
+    "message": "Aktivera"
+  },
+  "video_best": {
+    "message": "bäst"
+  },
+  "video_all_qualities": {
+    "message": "Alla kvaliteter och undertexter..."
+  },
+  "video_failed": {
+    "message": "Mister Download Manager är inte installerad eller startade inte"
+  },
+  "video_download_best": {
+    "message": "Ladda ned bästa kvalitet"
+  },
+  "video_original": {
+    "message": "original"
   }
 }

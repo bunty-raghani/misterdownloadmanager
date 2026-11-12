@@ -14,6 +14,7 @@ path = "src/main.rs"
 
 [dependencies]
 anyhow.workspace = true
+aws-lc-rs.workspace = true
 axum.workspace = true
 bytes.workspace = true
 clap.workspace = true
@@ -30,6 +31,8 @@ tokio.workspace = true
 rcgen.workspace = true
 rustls.workspace = true
 tokio-rustls.workspace = true
+# The HTTPS lab (`Config::tls`): its connections served by hand, axum's own features.
+hyper-util = { workspace = true, features = ["server", "http1", "tokio", "service"] }
 url.workspace = true
 
 [dev-dependencies]

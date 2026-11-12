@@ -1,0 +1,10 @@
+# Windows: the C runtime is built into MDM's own programs instead of being loaded from Windows
+# (VCRUNTIME140.dll). A PC without Microsoft's Visual C++ runtime, or with a 32-bit copy where
+# the 64-bit one should be, then can't stop MDM from starting (#785: setup's browser helper
+# failed with 0xc000007b). tools/installer/build.ps1 passes the same flag, as its own flags
+# replace these.
+[target.x86_64-pc-windows-msvc]
+rustflags = ["-C", "target-feature=+crt-static"]
+
+[target.aarch64-pc-windows-msvc]
+rustflags = ["-C", "target-feature=+crt-static"]

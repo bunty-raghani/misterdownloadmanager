@@ -121,7 +121,7 @@ The passwords (these, the proxy's and the debrid accounts') are kept in the syst
 ![Options on its Accounts page: debrid service accounts](images/help/options-accounts.webp)
 *Accounts: your debrid accounts.*
 
-Your debrid service accounts (Real-Debrid, AllDebrid, Premiumize; experimental): **Add...** signs in by code in the browser or with your API token or key; a link from a host the service supports is then downloaded through it. The list's order is the order accounts are asked. See [Debrid service accounts](debrid.md).
+Your debrid service accounts (Real-Debrid, AllDebrid, Premiumize, TorBox; experimental): **Add...** signs in by code in the browser or with your API token or key; a link from a host the service supports is then downloaded through it. The list's order is the order accounts are asked. See [Debrid service accounts](debrid.md).
 
 ## Sounds
 

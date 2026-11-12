@@ -81,6 +81,17 @@ pub struct LogEntry {
     /// The `Referer` header.
     #[serde(default)]
     pub referer: Option<String>,
+    /// The `Sec-Fetch-Mode` header, which browsers send and programs don't (`browser_only`).
+    #[serde(default)]
+    pub sec_fetch_mode: Option<String>,
+    /// The `Accept-Encoding` header.
+    #[serde(default)]
+    pub accept_encoding: Option<String>,
+    /// Over HTTPS (`Config::tls`): whether the connection's TLS ClientHello was a browser's as
+    /// `browser_only` tells it, with GREASE values among its cipher suites (as Chrome's and
+    /// every Chromium browser's are; programs' TLS libraries send none). None over plain HTTP.
+    #[serde(default)]
+    pub browser_tls: Option<bool>,
     /// The request's `Content-Type` (a form post's encoding).
     #[serde(default)]
     pub req_content_type: Option<String>,
@@ -172,6 +183,9 @@ pub struct Config {
     pub files: Option<std::path::PathBuf>,
     /// The folder whose .torrent files /rss/dir.xml lists (`feeds`).
     pub rss_dir: Option<std::path::PathBuf>,
+    /// Serve HTTPS instead of HTTP, as `localhost`, with a certificate from a test CA made at
+    /// start (`LabServer::ca_der`): `browser_only` then looks at the TLS handshake too (#668).
+    pub tls: bool,
 }
 
 impl Default for Config {
@@ -182,6 +196,7 @@ impl Default for Config {
             on_log: None,
             files: None,
             rss_dir: None,
+            tls: false,
         }
     }
 }
@@ -212,6 +227,9 @@ pub(crate) struct Shared {
     /// The fake Drive's virus-scan pages' `uuid`s handed out (`drive`).
     pub(crate) drive_uuids: Mutex<HashSet<String>>,
     files: Option<std::path::PathBuf>,
+    /// Over HTTPS: each connection's ClientHello, browser-like or not (`LogEntry::browser_tls`),
+    /// by the client's address.
+    browser_tls: Mutex<HashMap<SocketAddr, bool>>,
 }
 
 impl Shared {
@@ -271,6 +289,9 @@ impl Shared {
             authorization: header_str(headers, header::AUTHORIZATION)
                 .map(|a| a.chars().take(11).collect::<String>() + "…"),
             referer: header_str(headers, header::REFERER),
+            sec_fetch_mode: header_str(headers, header::HeaderName::from_static("sec-fetch-mode")),
+            accept_encoding: header_str(headers, header::ACCEPT_ENCODING),
+            browser_tls: self.browser_tls.lock().unwrap().get(&peer).copied(),
             req_content_type: header_str(headers, header::CONTENT_TYPE),
             req_body_len: has_body.then_some(body.len() as u64),
             req_body_sha256: has_body.then(|| hex::encode(Sha256::digest(body))),
@@ -307,6 +328,8 @@ pub struct LabServer {
     addr: SocketAddr,
     shared: Arc<Shared>,
     task: JoinHandle<()>,
+    /// Over HTTPS (`Config::tls`): the test CA's certificate (DER).
+    ca: Option<Vec<u8>>,
 }
 
 impl LabServer {
@@ -329,7 +352,12 @@ impl LabServer {
             on_log: cfg.on_log,
             drive_uuids: Mutex::default(),
             files: cfg.files,
+            browser_tls: Mutex::default(),
         });
+        let tls = match cfg.tls {
+            true => Some(crate::ftp::certificate().map_err(io::Error::other)?),
+            false => None,
+        };
         // Routes answered from memory, logged by `log_simple`.
         let simple = Router::new()
             .route("/page", get(pages::page))
@@ -431,6 +459,44 @@ impl LabServer {
                 "/pm/api/transfer/delete",
                 post(crate::debrid_torrents::pm_delete),
             )
+            // A fake TorBox: web downloads and torrents (`debrid_torrents`).
+            .route("/tb/v1/api/user/me", get(crate::debrid_torrents::tb_user))
+            .route(
+                "/tb/v1/api/user/auth/device/start",
+                get(crate::debrid_torrents::tb_device_start),
+            )
+            .route(
+                "/tb/v1/api/user/auth/device/token",
+                post(crate::debrid_torrents::tb_device_token),
+            )
+            .route(
+                "/tb/v1/api/webdl/hosters",
+                get(crate::debrid_torrents::tb_hosters),
+            )
+            .route(
+                "/tb/v1/api/webdl/createwebdownload",
+                post(crate::debrid_torrents::tb_web_create),
+            )
+            .route(
+                "/tb/v1/api/torrents/createtorrent",
+                post(crate::debrid_torrents::tb_torrent_create),
+            )
+            .route(
+                "/tb/v1/api/{kind}/mylist",
+                get(crate::debrid_torrents::tb_list),
+            )
+            .route(
+                "/tb/v1/api/{kind}/requestdl",
+                get(crate::debrid_torrents::tb_requestdl),
+            )
+            .route(
+                "/tb/v1/api/webdl/controlwebdownload",
+                post(crate::debrid_torrents::tb_control),
+            )
+            .route(
+                "/tb/v1/api/torrents/controltorrent",
+                post(crate::debrid_torrents::tb_control),
+            )
             .route("/_debrid/torrents", get(crate::debrid_torrents::held))
             // RSS feeds for the app's RSS tests (#39, `feeds`).
             .route("/rss/shows.xml", get(crate::feeds::shows))
@@ -440,13 +506,30 @@ impl LabServer {
             // Every other address: the fake Google Drive's, by the Host header (`drive`).
             .fallback(drive::handle)
             .with_state(shared.clone());
-        let task = tokio::spawn(async move {
-            let svc = app.into_make_service_with_connect_info::<SocketAddr>();
-            if let Err(e) = axum::serve(listener, svc).await {
-                eprintln!("labserver: {e}");
+        let ca = tls.as_ref().map(|(_, ca)| ca.clone());
+        let task = match tls {
+            None => tokio::spawn(async move {
+                let svc = app.into_make_service_with_connect_info::<SocketAddr>();
+                if let Err(e) = axum::serve(listener, svc).await {
+                    eprintln!("labserver: {e}");
+                }
+            }),
+            Some((config, _)) => {
+                tokio::spawn(serve_tls(listener, app, Arc::new(config), shared.clone()))
             }
-        });
-        Ok(LabServer { addr, shared, task })
+        };
+        Ok(LabServer {
+            addr,
+            shared,
+            task,
+            ca,
+        })
+    }
+
+    /// Over HTTPS (`Config::tls`): the test CA's certificate (DER); a client trusting it trusts
+    /// this server as `localhost`.
+    pub fn ca_der(&self) -> Option<Vec<u8>> {
+        self.ca.clone()
     }
 
     pub fn addr(&self) -> SocketAddr {
@@ -454,8 +537,13 @@ impl LabServer {
     }
 
     /// `http://<addr><path>`; `path` starts with `/`.
+    /// The address of `path` (starting with `/`): `http://127.0.0.1:port`, or over HTTPS
+    /// `https://localhost:port` (the certificate's name).
     pub fn url(&self, path: &str) -> String {
-        format!("http://{}{}", self.addr, path)
+        match self.ca {
+            None => format!("http://{}{}", self.addr, path),
+            Some(_) => format!("https://localhost:{}{}", self.addr.port(), path),
+        }
     }
 
     pub fn log(&self) -> Vec<LogEntry> {
@@ -536,6 +624,8 @@ GET|HEAD /gen/{size}[/{name}]?seed=N&<file params>&<faults>   size: 12345, 64K, 
     fail_every=N fail_first=N no_range=1 no_range_every=N html=1 etag_change_every=N
     etag=weak|per-request|none latency_ms=N range_latency_ms=N (only requests with a Range)
     range_rate=SIZE  the rate of answers to requests with a Range (instead of rate)
+    burst=SIZE     with a rate, a link: a response the client stopped reading catches up with
+                   at most SIZE at once (by default all it fell behind by)
     stall_at=SIZE  never send the file's byte at that offset: a response stops there and waits
                    (until the server's faults change, from a test; a URL's own value stays)
     require_cookie=NAME=VALUE|NAME   403 unless the Cookie header has it
@@ -543,6 +633,10 @@ GET|HEAD /gen/{size}[/{name}]?seed=N&<file params>&<faults>   size: 12345, 64K, 
     refuse_agent=TEXT                403 when the User-Agent contains TEXT
     refuse=STATUS  every request answered with that 4xx or 5xx status, before any byte (a site
                    that turns away whatever isn't a browser: FileHippo's 412, #630)
+    browser_only=1 a bot check: 403 with cf-mitigated: challenge and a challenge page unless the
+                   request carries a browser's Sec-Fetch-Mode header and, over HTTPS (--tls),
+                   came on a TLS handshake with GREASE, as Chrome's has (#668)
+    refuse_programs=STATUS  the same check answering STATUS, empty (FileHippo's 412, #630)
     once=1         a one-time link: the first request for this path and query is served, every
                    later one (HEAD and ranges too) gets 410 Gone; vary seed= for a fresh link
   "every Nth" counts file requests (/gen and /form) only.
@@ -556,6 +650,8 @@ GET /redirect?to=URL[&ttl_ms=N][&uses=N][&code=3xx]   302 (or code) to URL (not 
                                               a fake Real-Debrid (#44): tokens good (premium), free; links http://hoster.test/file/SIZE/NAME[?gone=1&down=1&chunks=N&ttl_ms=N&rate=SIZE]
 /ad/v4/{user,hosts/domains,link/unlock,link/delayed,pin/check}, /ad/v4.1/pin/get      a fake AllDebrid: the same tokens and links, plus delayed=N
 /pm/api/{account/info,services/list,transfer/directdl}      a fake Premiumize: the same tokens and links
+/tb/v1/api/{user/me,user/auth/device/{start,token},webdl/hosters,webdl/createwebdownload,torrents/createtorrent,*/mylist,*/requestdl,*/control*}
+                                              a fake TorBox: the same tokens and links (ready after 2 polls), and torrents
 GET /hop?to=URL&how=meta|header[&wait=S][&cookie=N=V]   a page that sends the browser on to URL (meta refresh or Refresh header)
 
 RSS    made-up feeds for the RSS feeds window (#39); never real ones
@@ -1021,6 +1117,53 @@ struct FileQuery {
     faults: Faults,
 }
 
+/// The lab server over HTTPS (`Config::tls`): each connection's ClientHello is read first, and
+/// whether it is a browser's noted for `browser_only` (`LogEntry::browser_tls`), then its
+/// requests are served as over HTTP (HTTP/1.1).
+async fn serve_tls(
+    listener: TcpListener,
+    app: Router,
+    config: Arc<tokio_rustls::rustls::ServerConfig>,
+    shared: Arc<Shared>,
+) {
+    use hyper_util::rt::{TokioExecutor, TokioIo};
+    loop {
+        let Ok((tcp, peer)) = listener.accept().await else {
+            continue;
+        };
+        let (app, config, shared) = (app.clone(), config.clone(), shared.clone());
+        tokio::spawn(async move {
+            let accepting = tokio_rustls::LazyConfigAcceptor::new(
+                tokio_rustls::rustls::server::Acceptor::default(),
+                tcp,
+            );
+            let Ok(start) = accepting.await else {
+                return;
+            };
+            let grease = start
+                .client_hello()
+                .cipher_suites()
+                .iter()
+                .any(|c| is_grease(u16::from(*c)));
+            shared.browser_tls.lock().unwrap().insert(peer, grease);
+            let Ok(tls) = start.into_stream(config).await else {
+                return;
+            };
+            let svc = app.layer(axum::Extension(ConnectInfo(peer)));
+            let svc = hyper_util::service::TowerToHyperService::new(svc);
+            let _ = hyper_util::server::conn::auto::Builder::new(TokioExecutor::new())
+                .serve_connection(TokioIo::new(tls), svc)
+                .await;
+        });
+    }
+}
+
+/// A GREASE value (RFC 8701: 0x0A0A, 0x1A1A … 0xFAFA), which Chrome's TLS puts among its
+/// cipher suites and extensions so that servers keep tolerating unknown ones.
+fn is_grease(v: u16) -> bool {
+    v & 0x0f0f == 0x0a0a && v >> 8 == v & 0xff
+}
+
 /// Serves the generated file `size`/`name` for a request whose log entry is `entry`.
 pub(crate) async fn serve(
     shared: Arc<Shared>,
@@ -1059,6 +1202,28 @@ pub(crate) async fn serve(
     }
     let f = shared.faults().overridden_by(&q.faults);
 
+    // The bot check stands in front of the site, as Cloudflare's does: before its own checks.
+    let a_program = entry.sec_fetch_mode.is_none() || entry.browser_tls == Some(false);
+    if let Some(status) = f
+        .refuse_programs
+        .and_then(|c| StatusCode::from_u16(c).ok())
+        .filter(|s| a_program && (s.is_client_error() || s.is_server_error()))
+    {
+        shared.record(entry, status.as_u16(), "fault:refuse_programs");
+        return (status, [(header::RETRY_AFTER, "0")]).into_response();
+    }
+    if f.browser_only == Some(true) && a_program {
+        shared.record(entry, 403, "fault:browser_only");
+        return (
+            StatusCode::FORBIDDEN,
+            [
+                ("cf-mitigated", "challenge"),
+                ("content-type", "text/html; charset=UTF-8"),
+            ],
+            "<!DOCTYPE html><title>Just a moment...</title>\n",
+        )
+            .into_response();
+    }
     if let Some(want) = &f.require_cookie
         && !has_cookie(entry.cookie.as_deref(), want)
     {
@@ -1232,6 +1397,7 @@ pub(crate) async fn serve(
         pos: start,
         end,
         rate,
+        burst: f.burst,
         drop_at,
         // A URL's own stall stays; the server's is lifted with `set_faults`.
         stall_at: f.stall_at.filter(|at| (start..end).contains(at)),
@@ -1368,6 +1534,7 @@ struct Transfer {
     pos: u64,
     end: u64,
     rate: Option<u64>,
+    burst: Option<u64>,
     drop_at: Option<u64>,
     /// The file offset this response stops at (`stall_at`), and whether `set_faults` can lift it.
     stall_at: Option<u64>,
@@ -1406,6 +1573,15 @@ impl Transfer {
             }
             if let Some(r) = t.rate.filter(|r| *r > 0) {
                 n = n.min((r / 20).max(1024));
+                if let Some(b) = t.burst {
+                    // A link doesn't bank what the client didn't take: catch up with `b` at most.
+                    let paced = t.started + Duration::from_secs_f64(t.sent as f64 / r as f64);
+                    let ahead = Duration::from_secs_f64(b as f64 / r as f64);
+                    let behind = Instant::now().saturating_duration_since(paced);
+                    if behind > ahead {
+                        t.started += behind - ahead;
+                    }
+                }
                 let due = Duration::from_secs_f64((t.sent + n) as f64 / r as f64);
                 tokio::time::sleep_until((t.started + due).into()).await;
             }

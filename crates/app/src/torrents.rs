@@ -545,6 +545,112 @@ impl Host {
         self.busy.lock().unwrap().contains(hash)
     }
 
+    /// Rename a finished torrent's file or folder on disk through the host's busy guard.
+    ///
+    /// Returns `Err(hold)` when another host action is currently busy with `spec.hash` so the
+    /// caller can retry on a later tick. When `keep_sharing` is on:
+    /// - a renamed multi-file folder torrent is re-attached at the new folder with its saved
+    ///   piece bitmap, rate limits and piece order;
+    /// - if the rename fails after detaching, the torrent is re-attached at `spec.folder` so
+    ///   sharing does not stop.
+    #[allow(clippy::too_many_arguments)]
+    pub fn rename_finished(
+        &self,
+        rt: &tokio::runtime::Handle,
+        known: HashSet<String>,
+        spec: &TorrentSpec,
+        from: PathBuf,
+        initial_to: PathBuf,
+        hold: Option<mdm_engine::naming::Reservation>,
+        is_dir: bool,
+        keep_sharing: bool,
+        tx: std::sync::mpsc::Sender<(Result<PathBuf, String>, Option<String>)>,
+    ) -> Result<(), Option<mdm_engine::naming::Reservation>> {
+        {
+            let mut busy = self.busy.lock().unwrap();
+            if busy.contains(&spec.hash) {
+                return Err(hold);
+            }
+            busy.insert(spec.hash.clone());
+        }
+        let (host, spec) = (self.clone(), spec.clone());
+        rt.spawn(async move {
+            let mut sharing_error: Option<String> = None;
+            let session = if keep_sharing && is_dir {
+                match host.session(known).await {
+                    Ok(t) => Some(t),
+                    Err(e) => {
+                        sharing_error = Some(e);
+                        None
+                    }
+                }
+            } else {
+                host.get()
+            };
+            let detached = match &session {
+                Some(t) => t.detach(&spec.hash).await.ok().flatten(),
+                None => None,
+            };
+            let mut res = crate::deferred_rename::rename_entry_io(&from, &initial_to);
+            for _ in 1..6 {
+                match &res {
+                    Ok(()) => break,
+                    Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => break,
+                    Err(_) => {
+                        tokio::time::sleep(std::time::Duration::from_millis(40)).await;
+                        res = crate::deferred_rename::rename_entry_io(&from, &initial_to);
+                    }
+                }
+            }
+            let final_res = match res {
+                Ok(()) => {
+                    drop(hold);
+                    Ok(initial_to)
+                }
+                Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {
+                    crate::deferred_rename::rename_reserved_or_number(
+                        &from, initial_to, hold, is_dir,
+                    )
+                    .map_err(|e| e.to_string())
+                }
+                Err(e) => {
+                    drop(hold);
+                    Err(e.to_string())
+                }
+            };
+            let reattach_at = match &final_res {
+                Ok(actual_to) if is_dir => Some(actual_to.as_path()),
+                Err(_) if detached.is_some() => Some(spec.folder.as_path()),
+                _ => None,
+            };
+            if keep_sharing
+                && let Some(t) = &session
+                && let Some(folder) = reattach_at
+            {
+                let bytes = match torrent_file(&spec.hash) {
+                    None => Err(crate::i18n::t("no data folder").to_owned()),
+                    Some(file) => std::fs::read(&file).map_err(|_| {
+                        crate::i18n::t("the .torrent file kept for it is gone").to_owned()
+                    }),
+                };
+                match bytes {
+                    Ok(bytes) => {
+                        if let Err(e) = t
+                            .attach(&spec.hash, &bytes, folder, spec.files.clone(), detached)
+                            .await
+                        {
+                            sharing_error = Some(crate::errors::torrent(&e));
+                        }
+                    }
+                    Err(why) => sharing_error = Some(why),
+                }
+            }
+            host.busy.lock().unwrap().remove(&spec.hash);
+            let _ = tx.send((final_res, sharing_error));
+        });
+        Ok(())
+    }
+
     /// The finished actions' outcomes since last asked, by info hash.
     pub fn take_outcomes(&self) -> Vec<Outcome> {
         std::mem::take(&mut *self.outcomes.lock().unwrap())
@@ -849,7 +955,7 @@ impl Run {
     }
 
     /// Mark its files once librqbit has created them (it leaves Checking) and again once it
-    /// finishes, off the window's thread.
+    /// finishes, off the window's thread (reading which files it has waits on librqbit too).
     fn mark_when(&self, t: &Arc<Torrents>, phase: Phase) {
         use std::sync::atomic::Ordering;
         // Paused: perhaps never started, its files not created yet.
@@ -861,11 +967,12 @@ impl Run {
         if self.marked.fetch_max(step, Ordering::SeqCst) >= step {
             return;
         }
-        let Some((files, _, _)) = t.files(&self.hash) else {
-            return;
-        };
-        let folder = self.folder.clone();
-        self.rt.spawn_blocking(move || mark_files(&folder, &files));
+        let (t, hash, folder) = (t.clone(), self.hash.clone(), self.folder.clone());
+        self.rt.spawn_blocking(move || {
+            if let Some((files, _, _)) = t.files(&hash) {
+                mark_files(&folder, &files);
+            }
+        });
     }
 
     fn session(&self) -> Option<Arc<Torrents>> {
@@ -875,6 +982,8 @@ impl Run {
         }
     }
 
+    /// What the list shows. On the window's thread: the session's numbers as last read
+    /// (`Torrents::seen`), never waiting on librqbit (#693).
     pub fn snapshot(&self) -> Snapshot {
         let mut s = Snapshot {
             state: State::Probing,
@@ -890,10 +999,11 @@ impl Run {
             events: Vec::new(),
             // A torrent has peers, not one server (#140).
             server: None,
+            at_service: None,
         };
         if *self.stopped.lock().unwrap() {
             s.state = State::Cancelled;
-            if let Some(st) = self.session().and_then(|t| t.stats(&self.hash).ok()) {
+            if let Some(st) = self.session().and_then(|t| t.seen(&self.hash)) {
                 s.downloaded = st.done;
                 s.size = Some(st.total);
             }
@@ -913,7 +1023,7 @@ impl Run {
             }
             RunState::Ready(t) => t.clone(),
         };
-        let Ok(st) = t.stats(&self.hash) else {
+        let Some(st) = t.seen(&self.hash) else {
             let (done, size) = *self.last.lock().unwrap();
             if size.is_some_and(|total| total > 0 && done >= total) {
                 s.state = State::Done;
@@ -964,8 +1074,8 @@ impl Run {
     pub fn cancel(&self) {
         *self.stopped.lock().unwrap() = true;
         if let Some(t) = self.session() {
-            if t.stats(&self.hash)
-                .is_ok_and(|s| s.phase == Phase::Finished)
+            if t.seen(&self.hash)
+                .is_some_and(|s| s.phase == Phase::Finished)
             {
                 self.remove_in_background(&t);
             } else {
@@ -1011,7 +1121,7 @@ impl Run {
     /// downloads share with torrents); None until it is in the session.
     pub fn fetched(&self) -> Option<u64> {
         let t = self.session()?;
-        t.stats(&self.hash).ok().map(|s| s.fetched)
+        t.seen(&self.hash).map(|s| s.fetched)
     }
 
     pub fn details(&self) -> Details {
@@ -1029,11 +1139,13 @@ impl Run {
 }
 
 /// What the progress window's torrent tabs show for `hash`, from the session: a `Run`'s
-/// torrent, or a finished one still shared without a `Run` (None: not in the session).
+/// torrent, or a finished one still shared without a `Run` (None: not in the session). As last
+/// read: the window's thread never waits on librqbit (#693).
 pub fn details_of(t: &Torrents, hash: &str) -> Option<Details> {
-    let stats = t.stats(hash).ok()?;
+    let stats = t.seen(hash)?;
     let done = stats.file_done.clone();
-    let (entries, chosen, piece_length) = t.files(hash).unwrap_or_default();
+    let (entries, chosen, piece_length) = t.seen_files(hash).unwrap_or_default();
+    let swarm = t.seen_swarm(hash);
     Some(Details {
         files: entries
             .into_iter()
@@ -1045,9 +1157,9 @@ pub fn details_of(t: &Torrents, hash: &str) -> Option<Details> {
             })
             .collect(),
         piece_length,
-        peers: t.peers(hash),
-        trackers: t.trackers(hash),
-        pieces: t.pieces(hash),
+        peers: swarm.peers,
+        trackers: swarm.trackers,
+        pieces: swarm.pieces,
         stats: Some(stats),
     })
 }

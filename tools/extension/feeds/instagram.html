@@ -1,0 +1,23 @@
+<!doctype html>
+<!-- Instagram's home feed, reduced to what names a post (our own sample: no real account, post or
+     text). data-expect: what the button must send for each video. -->
+<html><head><meta charset="utf-8"><meta name="mdm-page" content="https://www.instagram.com/"><title>Instagram</title><link rel="stylesheet" href="feeds.css"></head>
+<body>
+<main role="main"><div><div>
+  <article>
+    <header><a href="/sample.account.a/">sample.account.a</a> <a href="/p/DSampleCode1/"><time datetime="2026-11-10T09:00:00.000Z">1d</time></a></header>
+    <div><video data-expect="https://www.instagram.com/p/DSampleCode1/"></video></div>
+    <a href="/p/DSampleCode1/liked_by/">Liked by others</a>
+    <a href="/p/DSampleCode1/comments/">View all 4 comments</a>
+  </article>
+  <article>
+    <header><a href="/sample.account.b/">sample.account.b</a> <a href="/reel/DSampleCode2/"><time datetime="2026-11-09T09:00:00.000Z">2d</time></a></header>
+    <div><video data-expect="https://www.instagram.com/reel/DSampleCode2/"></video></div>
+    <a href="/reels/audio/1234567890123456/">Original audio</a>
+  </article>
+  <article>
+    <header><a href="/sample.advertiser/">sample.advertiser</a> Sponsored</header>
+    <div><video data-expect="none"></video></div>
+  </article>
+</div></div></main>
+</body></html>

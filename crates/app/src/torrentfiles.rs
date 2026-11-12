@@ -25,10 +25,11 @@ const TABLE_DY: f32 = 36.0 - 273.0;
 impl TorrentFiles {
     pub fn new(item: &Item, host: &crate::torrents::Host) -> Option<Self> {
         let spec = item.torrent.as_ref()?;
+        // As last read: the window's thread never waits on librqbit (#693).
         let session = host.get().and_then(|t| {
-            let (files, chosen, _) = t.files(&spec.hash)?;
+            let (files, chosen, _) = t.seen_files(&spec.hash)?;
             let file_done = t
-                .stats(&spec.hash)
+                .seen(&spec.hash)
                 .map(|stats| stats.file_done)
                 .unwrap_or_default();
             Some((files, chosen, file_done))

@@ -32,12 +32,6 @@
   "video_sent": {
     "message": "Отправлено в Mister Download Manager"
   },
-  "video_failed": {
-    "message": "Mister Download Manager не установлен или не запустился"
-  },
-  "video_drag": {
-    "message": "Перетащите, чтобы переместить по краю видео"
-  },
   "menu_selected": {
     "message": "Загрузить выбранные ссылки с Mister Download Manager"
   },
@@ -180,13 +174,46 @@
     "message": "Прямой эфир"
   },
   "video_off": {
-    "message": "Кнопка загрузки отключена на этом сайте"
+    "message": "Отключено на этом сайте"
   },
   "video_drm": {
-    "message": "Защищенное видео: его нельзя сохранить"
+    "message": "Защищенное видео"
   },
   "video_unnamed": {
     "message": "Не удалось определить, что это за видео: откройте его страницу и попробуйте там"
+  },
+  "video_looking": {
+    "message": "Поиск доступных качеств…"
+  },
+  "video_no_choices": {
+    "message": "Здесь нет видео для скачивания"
+  },
+  "video_playlist": {
+    "message": "Список видео: выберите их в Mister Download Manager"
+  },
+  "video_no_ytdlp": {
+    "message": "Для этого видео Mister Download Manager нужен yt-dlp"
+  },
+  "video_too_long": {
+    "message": "Поиск занял слишком много времени"
+  },
+  "video_busy": {
+    "message": "Mister Download Manager занят другими видео"
+  },
+  "video_queued": {
+    "message": "Добавлено в очередь"
+  },
+  "video_failed_lookup": {
+    "message": "Не удалось выполнить поиск"
+  },
+  "video_tab_video": {
+    "message": "Видео"
+  },
+  "video_tab_audio": {
+    "message": "Аудио"
+  },
+  "video_open_post": {
+    "message": "Откройте запись, чтобы скачать"
   },
   "popup_send_to": {
     "message": "Отправлять загрузки в"
@@ -241,5 +268,62 @@
   },
   "popup_media_title_name": {
     "message": "Добавлять заголовок страницы перед именами медиафайлов"
+  },
+  "video_cant_save": {
+    "message": "невозможно сохранить"
+  },
+  "video_open_post_button": {
+    "message": "Открыть запись"
+  },
+  "video_drag_dots": {
+    "message": "Перетащите точки, чтобы переместить кнопку вдоль края"
+  },
+  "video_tip": {
+    "message": "Скачать $what$",
+    "placeholders": {
+      "what": {
+        "content": "$1",
+        "example": "1080p MP4 · 412 MB"
+      }
+    }
+  },
+  "video_tip_best": {
+    "message": "Скачать в лучшем качестве"
+  },
+  "video_sending": {
+    "message": "Отправка в MDM..."
+  },
+  "video_added": {
+    "message": "Добавлено в MDM"
+  },
+  "video_show": {
+    "message": "Показать"
+  },
+  "video_no_answer": {
+    "message": "MDM не отвечает"
+  },
+  "video_get_mdm": {
+    "message": "Получить MDM"
+  },
+  "video_retry": {
+    "message": "Повторить"
+  },
+  "video_turn_on": {
+    "message": "Включить"
+  },
+  "video_best": {
+    "message": "лучшее"
+  },
+  "video_all_qualities": {
+    "message": "Все качества и субтитры..."
+  },
+  "video_failed": {
+    "message": "Mister Download Manager не установлен или не запустился"
+  },
+  "video_download_best": {
+    "message": "Скачать лучшее"
+  },
+  "video_original": {
+    "message": "оригинал"
   }
 }

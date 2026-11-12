@@ -32,12 +32,6 @@
   "video_sent": {
     "message": "Dihantar ke Mister Download Manager"
   },
-  "video_failed": {
-    "message": "Mister Download Manager tidak dipasang atau tidak bermula"
-  },
-  "video_drag": {
-    "message": "Seret untuk mengalihkannya di sepanjang tepi video"
-  },
   "menu_selected": {
     "message": "Muat turun pautan terpilih dengan Mister Download Manager"
   },
@@ -180,13 +174,46 @@
     "message": "Langsung"
   },
   "video_off": {
-    "message": "Butang muat turun dimatikan pada tapak ini"
+    "message": "Mati di tapak ini"
   },
   "video_drm": {
-    "message": "Video dilindungi: tidak boleh disimpan"
+    "message": "Video dilindungi"
   },
   "video_unnamed": {
     "message": "Tidak dapat dipastikan video yang mana ini: buka halamannya sendiri dan cuba di sana"
+  },
+  "video_looking": {
+    "message": "Mencari kualiti…"
+  },
+  "video_no_choices": {
+    "message": "Tiada video untuk dimuat turun di sini"
+  },
+  "video_playlist": {
+    "message": "Senarai video: pilih video dalam Mister Download Manager"
+  },
+  "video_no_ytdlp": {
+    "message": "Mister Download Manager memerlukan yt-dlp untuk video ini"
+  },
+  "video_too_long": {
+    "message": "Pencarian mengambil masa terlalu lama"
+  },
+  "video_busy": {
+    "message": "Mister Download Manager sedang sibuk dengan video lain"
+  },
+  "video_queued": {
+    "message": "Ditambah pada giliran"
+  },
+  "video_failed_lookup": {
+    "message": "Tidak dapat mencarinya"
+  },
+  "video_tab_video": {
+    "message": "Video"
+  },
+  "video_tab_audio": {
+    "message": "Audio"
+  },
+  "video_open_post": {
+    "message": "Buka siaran untuk memuat turunnya"
   },
   "popup_send_to": {
     "message": "Hantar muat turun ke"
@@ -241,5 +268,62 @@
   },
   "popup_media_title_name": {
     "message": "Tambahkan tajuk halaman di hadapan nama fail media"
+  },
+  "video_cant_save": {
+    "message": "tidak boleh disimpan"
+  },
+  "video_open_post_button": {
+    "message": "Buka siaran"
+  },
+  "video_drag_dots": {
+    "message": "Seret titik untuk mengalihkannya di sepanjang tepi"
+  },
+  "video_tip": {
+    "message": "Muat turun $what$",
+    "placeholders": {
+      "what": {
+        "content": "$1",
+        "example": "1080p MP4 · 412 MB"
+      }
+    }
+  },
+  "video_tip_best": {
+    "message": "Muat turun kualiti terbaik"
+  },
+  "video_sending": {
+    "message": "Menghantar ke MDM..."
+  },
+  "video_added": {
+    "message": "Ditambah ke MDM"
+  },
+  "video_show": {
+    "message": "Tunjuk"
+  },
+  "video_no_answer": {
+    "message": "MDM tidak menjawab"
+  },
+  "video_get_mdm": {
+    "message": "Dapatkan MDM"
+  },
+  "video_retry": {
+    "message": "Cuba lagi"
+  },
+  "video_turn_on": {
+    "message": "Hidupkan"
+  },
+  "video_best": {
+    "message": "terbaik"
+  },
+  "video_all_qualities": {
+    "message": "Semua kualiti dan sari kata..."
+  },
+  "video_failed": {
+    "message": "Mister Download Manager tidak dipasang atau tidak bermula"
+  },
+  "video_download_best": {
+    "message": "Muat turun terbaik"
+  },
+  "video_original": {
+    "message": "asal"
   }
 }

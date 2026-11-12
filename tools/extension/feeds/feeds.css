@@ -1,0 +1,4 @@
+/* The sample feeds' players: big enough for the download button (video.js MIN_W, MIN_H). */
+body { margin: 8px; font: 14px/1.4 system-ui, sans-serif; background: #f4f5f7; color: #1d2733; }
+video { display: block; width: 480px; height: 270px; background: #1f2b3a; margin: 6px 0 14px; }
+a { color: #24579b; }

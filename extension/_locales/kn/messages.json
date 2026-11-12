@@ -32,12 +32,6 @@
   "video_sent": {
     "message": "Mister Download Manager ಗೆ ಕಳುಹಿಸಲಾಗಿದೆ"
   },
-  "video_failed": {
-    "message": "Mister Download Manager ಅನ್ನು ಸ್ಥಾಪಿಸಲಾಗಿಲ್ಲ ಅಥವಾ ಪ್ರಾರಂಭವಾಗಲಿಲ್ಲ"
-  },
-  "video_drag": {
-    "message": "ವೀಡಿಯೊದ ಅಂಚಿನಲ್ಲಿ ಅದನ್ನು ಸರಿಸಲು ಎಳೆಯಿರಿ"
-  },
   "menu_selected": {
     "message": "Mister Download Manager ನೊಂದಿಗೆ ಆಯ್ದ ಲಿಂಕ್‌ಗಳನ್ನು ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ"
   },
@@ -180,13 +174,46 @@
     "message": "ಲೈವ್"
   },
   "video_off": {
-    "message": "ಈ ಸೈಟ್‌ನಲ್ಲಿ ಡೌನ್‌ಲೋಡ್ ಬಟನ್ ಆಫ್ ಆಗಿದೆ"
+    "message": "ಈ ಸೈಟ್‌ನಲ್ಲಿ ಆಫ್ ಆಗಿದೆ"
   },
   "video_drm": {
-    "message": "ರಕ್ಷಿತ ವೀಡಿಯೊ: ಇದನ್ನು ಉಳಿಸಲು ಸಾಧ್ಯವಿಲ್ಲ"
+    "message": "ರಕ್ಷಿತ ವೀಡಿಯೊ"
   },
   "video_unnamed": {
     "message": "ಇದು ಯಾವ ವೀಡಿಯೊ ಎಂದು ತಿಳಿಯುತ್ತಿಲ್ಲ: ಅದರ ಸ್ವಂತ ಪುಟವನ್ನು ತೆರೆದು ಅಲ್ಲಿ ಪ್ರಯತ್ನಿಸಿ"
+  },
+  "video_looking": {
+    "message": "ಗುಣಮಟ್ಟಗಳನ್ನು ಹುಡುಕಲಾಗುತ್ತಿದೆ…"
+  },
+  "video_no_choices": {
+    "message": "ಇಲ್ಲಿ ಡೌನ್‌ಲೋಡ್ ಮಾಡಲು ವೀಡಿಯೊ ಇಲ್ಲ"
+  },
+  "video_playlist": {
+    "message": "ವೀಡಿಯೊಗಳ ಪಟ್ಟಿ: ಅವುಗಳನ್ನು Mister Download Manager ನಲ್ಲಿ ಆಯ್ಕೆಮಾಡಿ"
+  },
+  "video_no_ytdlp": {
+    "message": "ಈ ವೀಡಿಯೊಗೆ Mister Download Manager ಗೆ yt-dlp ಬೇಕು"
+  },
+  "video_too_long": {
+    "message": "ಹುಡುಕಲು ತುಂಬಾ ಸಮಯ ತೆಗೆದುಕೊಂಡಿತು"
+  },
+  "video_busy": {
+    "message": "Mister Download Manager ಇತರ ವೀಡಿಯೊಗಳಲ್ಲಿ ನಿರತವಾಗಿದೆ"
+  },
+  "video_queued": {
+    "message": "ಕ್ಯೂಗೆ ಸೇರಿಸಲಾಗಿದೆ"
+  },
+  "video_failed_lookup": {
+    "message": "ಹುಡುಕಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ"
+  },
+  "video_tab_video": {
+    "message": "ವೀಡಿಯೊ"
+  },
+  "video_tab_audio": {
+    "message": "ಆಡಿಯೊ"
+  },
+  "video_open_post": {
+    "message": "ಡೌನ್‌ಲೋಡ್ ಮಾಡಲು ಪೋಸ್ಟ್ ತೆರೆಯಿರಿ"
   },
   "popup_send_to": {
     "message": "ಡೌನ್‌ಲೋಡ್‌ಗಳನ್ನು ಇಲ್ಲಿಗೆ ಕಳುಹಿಸಿ"
@@ -241,5 +268,62 @@
   },
   "popup_media_title_name": {
     "message": "ಮಾಧ್ಯಮ ಫೈಲ್ ಹೆಸರುಗಳ ಮುಂದೆ ಪುಟದ ಶೀರ್ಷಿಕೆಯನ್ನು ಸೇರಿಸಿ"
+  },
+  "video_cant_save": {
+    "message": "ಉಳಿಸಲು ಸಾಧ್ಯವಿಲ್ಲ"
+  },
+  "video_open_post_button": {
+    "message": "ಪೋಸ್ಟ್ ತೆರೆಯಿರಿ"
+  },
+  "video_drag_dots": {
+    "message": "ಅಂಚಿನಲ್ಲಿ ಸರಿಸಲು ಚುಕ್ಕೆಗಳನ್ನು ಎಳೆಯಿರಿ"
+  },
+  "video_tip": {
+    "message": "$what$ ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ",
+    "placeholders": {
+      "what": {
+        "content": "$1",
+        "example": "1080p MP4 · 412 MB"
+      }
+    }
+  },
+  "video_tip_best": {
+    "message": "ಉತ್ತಮ ಗುಣಮಟ್ಟವನ್ನು ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ"
+  },
+  "video_sending": {
+    "message": "MDM ಗೆ ಕಳುಹಿಸಲಾಗುತ್ತಿದೆ..."
+  },
+  "video_added": {
+    "message": "MDM ಗೆ ಸೇರಿಸಲಾಗಿದೆ"
+  },
+  "video_show": {
+    "message": "ತೋರಿಸಿ"
+  },
+  "video_no_answer": {
+    "message": "MDM ಪ್ರತಿಕ್ರಿಯಿಸಲಿಲ್ಲ"
+  },
+  "video_get_mdm": {
+    "message": "MDM ಪಡೆಯಿರಿ"
+  },
+  "video_retry": {
+    "message": "ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ"
+  },
+  "video_turn_on": {
+    "message": "ಆನ್ ಮಾಡಿ"
+  },
+  "video_best": {
+    "message": "ಉತ್ತಮ"
+  },
+  "video_all_qualities": {
+    "message": "ಎಲ್ಲಾ ಗುಣಮಟ್ಟಗಳು ಮತ್ತು ಉಪಶೀರ್ಷಿಕೆಗಳು..."
+  },
+  "video_failed": {
+    "message": "Mister Download Manager ಅನ್ನು ಸ್ಥಾಪಿಸಲಾಗಿಲ್ಲ ಅಥವಾ ಪ್ರಾರಂಭವಾಗಲಿಲ್ಲ"
+  },
+  "video_download_best": {
+    "message": "ಉತ್ತಮ ಗುಣಮಟ್ಟವನ್ನು ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ"
+  },
+  "video_original": {
+    "message": "ಮೂಲ"
   }
 }

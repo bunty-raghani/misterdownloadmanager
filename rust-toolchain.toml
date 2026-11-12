@@ -1,4 +1,5 @@
-# Stable toolchain; craft-ui requires Rust >= 1.95 (D-003).
+# Stable toolchain; craft-ui requires Rust >= 1.95 (D-003), wreq (the engine's browser-like
+# connection, #668) 1.98.
 [toolchain]
 channel = "stable"
 components = ["rustfmt", "clippy"]

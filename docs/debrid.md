@@ -1,12 +1,12 @@
 # Debrid service accounts
 
-A debrid service, such as Real-Debrid, AllDebrid or Premiumize, is a paid account that downloads files from file hosts
+A debrid service, such as Real-Debrid, AllDebrid, Premiumize or TorBox, is a paid account that downloads files from file hosts
 on its own servers. It hands back a plain direct link, without the host's waits, speed caps
 and captchas. With your account in MDM, a link from a host your service supports is unlocked
 through the service, then downloaded by MDM like any file: all its connections, pause and
 resume.
 
-MDM supports three services: **Real-Debrid**, **AllDebrid** and **Premiumize**.
+MDM supports four services: **Real-Debrid**, **AllDebrid**, **Premiumize** and **TorBox**.
 
 > **Experimental:** built from each service's public API documentation, not yet confirmed with a
 > real paid account. AllDebrid's answers were also checked against its real API with the public
@@ -19,9 +19,9 @@ MDM supports three services: **Real-Debrid**, **AllDebrid** and **Premiumize**.
 
 1. **Options → Accounts → Add...**
 2. Pick the service, then either:
-   - **Sign in in the browser** (Real-Debrid and AllDebrid): MDM shows a code and opens the
-     service's page. Type the code there (AllDebrid's page already has it) and allow MDM. The
-     dialog notices on its own.
+   - **Sign in in the browser** (Real-Debrid, AllDebrid and TorBox): MDM shows a code and opens
+     the service's page (TorBox's is also at `tor.box/link`). Type the code there (AllDebrid's
+     page already has it) and allow MDM. The dialog notices on its own.
    - or paste your **API token** (**Find my token** opens the service's page that shows it),
      then **Use the token**. Premiumize signs in this way only: paste the API key from its
      Account page.
@@ -71,9 +71,14 @@ the list:
   is down (MDM tries again later), the file is gone, and so on.
 - AllDebrid sometimes needs a while to prepare a link. MDM waits for it, up to 10 minutes,
   and the list says so.
+- TorBox first downloads the file to its own servers (at once when it has it already). MDM
+  waits for it, up to an hour, and the list says how far it is, such as **40% at TorBox**.
+  Once the download is done, or taken off MDM's list, it leaves your account's list of web
+  downloads on TorBox; a paused one keeps its place there, to go on with.
 - MDM asks each service well under its request limit: Real-Debrid at most 120 times a minute
-  (it allows 250), AllDebrid 300 (it allows 600), Premiumize 60 (it publishes no limit). When
-  a service says it's asked too often, MDM waits.
+  (it allows 250), AllDebrid 300 (it allows 600), Premiumize 60 (it publishes no limit), TorBox
+  120 (it allows 300 a minute, and 60 new web downloads an hour). When a service says it's
+  asked too often, MDM waits.
 
 ## Download one link directly instead
 

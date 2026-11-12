@@ -72,6 +72,15 @@ jobs:
           $v = [regex]::Match((Get-Content Cargo.toml -Raw), '(?m)^version\s*=\s*"([^"]+)"').Groups[1].Value
           if ("v$v" -ne "${{ github.ref_name }}") { throw "tag ${{ github.ref_name }} but Cargo.toml says $v" }
 
+      # BoringSSL, under the browser-like connection (#668, crates/engine/src/browserlike.rs), is
+      # built with NASM on Windows; the runner has CMake and LLVM's libclang already.
+      - name: NASM
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          choco install nasm --version 2.16.3 --no-progress -y
+          "C:\Program Files\NASM" >> $env:GITHUB_PATH
+
       - name: Tests
         run: cargo test --workspace
 
@@ -244,7 +253,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libgtk-3-dev libxkbcommon-dev libwayland-dev libgl1-mesa-dev \
-            libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev rpm python3-pil zsync
+            libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev rpm python3-pil zsync \
+            cmake libclang-dev
 
       - name: AppImage, tar.gz, .deb, .rpm
         env:

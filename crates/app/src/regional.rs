@@ -162,9 +162,37 @@ pub fn time_text(h: u32, m: u32, s: u32, clock24: bool) -> String {
     }
 }
 
+/// A time of day to the minute, in the current formats: `14:30`, or `2:30 PM` (a snooze's end,
+/// #741).
+pub fn clock_time(h: u32, m: u32) -> String {
+    clock_time_with(current().clock24, h, m)
+}
+
+fn clock_time_with(clock24: bool, h: u32, m: u32) -> String {
+    if clock24 {
+        format!("{h:02}:{m:02}")
+    } else {
+        let h12 = if h.is_multiple_of(12) { 12 } else { h % 12 };
+        let mark = if h < 12 {
+            crate::i18n::t("AM")
+        } else {
+            crate::i18n::t("PM")
+        };
+        format!("{h12}:{m:02} {mark}")
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_clock_time_to_the_minute() {
+        assert_eq!(clock_time_with(true, 14, 30), "14:30");
+        assert_eq!(clock_time_with(true, 7, 5), "07:05");
+        assert_eq!(clock_time_with(false, 14, 30), "2:30 PM");
+        assert_eq!(clock_time_with(false, 0, 0), "12:00 AM");
+    }
 
     #[test]
     fn custom_formats_win_over_the_system() {

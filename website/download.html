@@ -95,6 +95,9 @@
         <li>Pick your language and keep <b>Set up browser integration</b> ticked.</li>
         <li>Start Mister Download Manager from the Start menu, then <a href="/help/guide-first-download.html">download your first file</a>.</li>
       </ol>
+      <p id="winget"><b>With WinGet</b>, Windows' package manager: in a terminal, the first line installs MDM and the second updates it.</p>
+      <pre><code>winget install AhmedNefzaoui.MisterDownloadManager
+winget upgrade AhmedNefzaoui.MisterDownloadManager</code></pre>
 
       <h2 id="linux-mac">On Linux or a Mac</h2>
       <p><b>Linux</b>: install the <b>.deb</b> with <code>sudo apt install ./&lt;file&gt;.deb</code> (Debian, Ubuntu, Mint) or the <b>.rpm</b> with <code>sudo dnf install ./&lt;file&gt;.rpm</code> (Fedora), and the packages bring what MDM needs. Or make the <b>AppImage</b> executable (<code>chmod +x</code>) and run it. MDM connects itself to your browsers at each start; then add the extension from your browser's store, above. <a href="/help/getting-started.html#on-linux">More in the help</a>.</p>

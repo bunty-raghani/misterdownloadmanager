@@ -37,7 +37,10 @@ foreach ($t in $Targets) {
   Set-Item "Env:PKG_CONFIG_$var" "$wrap\pkg-config.cmd"
   & rustup target add $triple | Out-Null
   "== $t ($triple)"
-  & cargo clippy --workspace --all-targets --target $triple --target-dir (Join-Path $root "target\cross") -q -- -D warnings
+  # Without the engine's browser-like connection (#668): its BoringSSL doesn't cross-compile
+  # through Zig here (CMake looks for the target's threads and macOS tools); the runners build it.
+  # The other default features are named back.
+  & cargo clippy --workspace --all-targets --no-default-features --features mdm-crash/native-symbols --target $triple --target-dir (Join-Path $root "target\cross") -q -- -D warnings
   if ($LASTEXITCODE) { $failed += $t }
 }
 if ($failed) { throw "failed: $($failed -join ', ')" }

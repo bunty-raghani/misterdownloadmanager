@@ -62,8 +62,15 @@ fn hosts_and_cookies(
         .collect()
 }
 
+/// A download as the app runs it: yt-dlp finds the clip, MDM's engine downloads it (#769) with
+/// the cookies yt-dlp would send.
 fn download(exe: &std::path::Path, url: &str, browser: &FromBrowser) -> (State, Vec<String>) {
     let dir = tempfile::tempdir().unwrap();
+    let rt = tokio::runtime::Runtime::new().unwrap();
+    let engine = mdm_tools::streams::Engine {
+        handle: rt.handle().clone(),
+        opts: Default::default(),
+    };
     let job = VideoJob::start(
         exe,
         url,
@@ -71,11 +78,11 @@ fn download(exe: &std::path::Path, url: &str, browser: &FromBrowser) -> (State, 
         dir.path(),
         "clip",
         None,
-        1,
         None,
         None,
         browser,
         &Subs::default(),
+        Some(engine),
     )
     .unwrap();
     let end = Instant::now() + Duration::from_secs(120);

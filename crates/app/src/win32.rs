@@ -381,15 +381,10 @@ pub fn dialog_frame(title: &str, client: [f32; 2], light: bool, scale: f32) -> b
     true
 }
 
-/// How much of the standard 8 px sizing border IDM's progress window does not have: its frame
-/// is 2 px (1 px border + 1 px frame line) left, right and bottom (spec "Conventions").
-const THIN_TRIM: i32 = 6;
-
 /// Hit-test results (winuser.h).
 const HTCLIENT: LRESULT = 1;
 const HTCAPTION: LRESULT = 2;
 const HTSYSMENU: LRESULT = 3;
-const HTBORDER: LRESULT = 18;
 
 /// The system menu's "Hide to the notification area" (#63): a command id of ours (below
 /// 0xF000, its low 4 bits clear, as WM_SYSCOMMAND wants).
@@ -462,71 +457,6 @@ fn frame_hit(x: i32, y: i32, hits: &CaptionHits) -> LRESULT {
     } else {
         HTCLIENT
     }
-}
-
-/// IDM's progress-window frame (2 px borders, fixed size) with the title bar ours (#63, the
-/// approach Windows Terminal, Zed and WezTerm take): the window keeps its system frame and
-/// WS_CAPTION (Aero Snap, shake, the system menu and Alt+Space, the DWM shadow and rounded
-/// corners), its caption given to the client, which draws it; the hit test reads where the
-/// drawn parts are.
-unsafe extern "system" fn thin_frame_proc(
-    hwnd: HWND,
-    msg: u32,
-    wparam: WPARAM,
-    lparam: LPARAM,
-    _id: usize,
-    _data: usize,
-) -> LRESULT {
-    use windows_sys::Win32::UI::WindowsAndMessaging::{WM_NCACTIVATE, WM_SYSCOMMAND};
-    if msg == WM_NCCALCSIZE && wparam != 0 {
-        // SAFETY: with wParam TRUE, lParam points to NCCALCSIZE_PARAMS (Win32 contract).
-        let p = unsafe { &mut *(lparam as *mut NCCALCSIZE_PARAMS) };
-        let top = p.rgrc[0].top;
-        let res = unsafe { DefSubclassProc(hwnd, msg, wparam, lparam) };
-        p.rgrc[0].left -= THIN_TRIM;
-        p.rgrc[0].right += THIN_TRIM;
-        p.rgrc[0].bottom += THIN_TRIM;
-        // No system caption: the client starts at the window's top.
-        p.rgrc[0].top = top;
-        return res;
-    }
-    // Activation changes repaint the non-client area: with lParam -1 the system skips that,
-    // so its own caption never flashes over ours.
-    if msg == WM_NCACTIVATE {
-        return unsafe { DefSubclassProc(hwnd, msg, wparam, -1) };
-    }
-    if msg == WM_SYSCOMMAND && (wparam & 0xFFF0) == SC_HIDE_TO_TRAY {
-        HIDE_ASKED.with(|s| {
-            if let Ok(mut s) = s.try_borrow_mut() {
-                s.insert(hwnd as isize);
-            }
-        });
-        return 0;
-    }
-    let res = unsafe { DefSubclassProc(hwnd, msg, wparam, lparam) };
-    if msg == WM_NCHITTEST {
-        // Fixed size, like IDM's: the sizing edges (HTLEFT..HTBOTTOMRIGHT) act as plain border.
-        if (10..=17).contains(&res) {
-            return HTBORDER;
-        }
-        if res == HTCLIENT {
-            use windows_sys::Win32::Foundation::POINT;
-            use windows_sys::Win32::Graphics::Gdi::ScreenToClient;
-            let mut pt = POINT {
-                x: (lparam & 0xffff) as i16 as i32,
-                y: ((lparam >> 16) & 0xffff) as i16 as i32,
-            };
-            // SAFETY: our own window; the point is a local.
-            unsafe { ScreenToClient(hwnd, &mut pt) };
-            let hit = CAPTION_HITS.with(|m| {
-                m.try_borrow()
-                    .ok()
-                    .and_then(|m| m.get(&(hwnd as isize)).map(|h| frame_hit(pt.x, pt.y, h)))
-            });
-            return hit.unwrap_or(HTCLIENT);
-        }
-    }
-    res
 }
 
 /// The Maximize button of a resizable window whose title bar is ours: under the pointer, or
@@ -724,7 +654,7 @@ unsafe extern "system" fn drawn_frame_proc(
 pub fn drawn_frame(title: &str, on: bool) -> Option<isize> {
     use windows_sys::Win32::UI::Shell::RemoveWindowSubclass;
     let hwnd = find_own_window(title)?;
-    if caption_less_frames() {
+    if windows_11() {
         // SAFETY: our own window, on its thread.
         unsafe {
             if on {
@@ -763,8 +693,8 @@ pub fn drawn_frame(title: &str, on: bool) -> Option<isize> {
     Some(hwnd as isize)
 }
 
-/// Give our window titled `title` IDM's thin progress-window frame with its title bar drawn by
-/// us (winui::caption, #63): 2 px borders, no system caption, the client staying `client`
+/// Give our window titled `title`, whose title bar is drawn by us (winui::caption, #63), its fixed
+/// frame without a caption style ([`caption_less`], #208, #620), the client staying `client`
 /// points (the drawn title bar included) at `scale` pixels per point. With `hide_item` (the
 /// translated "Hide to the notification area"), the system menu gets it, Alt+Space reaching it
 /// from the keyboard; None takes it out. Call while the window is still hidden, and again when
@@ -775,18 +705,22 @@ pub fn thin_frame(
     scale: f32,
     hide_item: Option<&str>,
 ) -> Option<isize> {
-    use windows_sys::Win32::UI::HiDpi::GetDpiForWindow;
+    use windows_sys::Win32::UI::HiDpi::{AdjustWindowRectExForDpi, GetDpiForWindow};
     use windows_sys::Win32::UI::WindowsAndMessaging::{
         AppendMenuW, DeleteMenu, GetSystemMenu, MF_BYCOMMAND, MF_STRING,
     };
     let hwnd = find_own_window(title)?;
-    let plain = caption_less_frames();
+    // Windows 11 draws its 1 px border round a window without a caption style; Windows 10 draws
+    // none, so there it has the system's own (WS_BORDER).
+    let kind = if windows_11() {
+        Drawn::Fixed
+    } else {
+        Drawn::Edged
+    };
+    // SAFETY: our own window, on its thread; the menu text and the rectangle are locals read
+    // during the calls.
     unsafe {
-        if plain {
-            caption_less(hwnd, Drawn::Fixed);
-        } else {
-            SetWindowSubclass(hwnd, Some(thin_frame_proc), 0x1d6, 0);
-        }
+        caption_less(hwnd, kind);
         let menu = GetSystemMenu(hwnd, 0);
         if !menu.is_null() {
             DeleteMenu(menu, SC_HIDE_TO_TRAY as u32, MF_BYCOMMAND);
@@ -795,29 +729,40 @@ pub fn thin_frame(
                 AppendMenuW(menu, MF_STRING, SC_HIDE_TO_TRAY, w.as_ptr());
             }
         }
-        // The thin frame's 2 px each side but the top, or none: a plain window is all client
-        // (Windows 11 draws its 1 px border over the client's edge).
-        let dpi = GetDpiForWindow(hwnd).max(96) as f32 / 96.0;
-        let (fw, fh) = if plain { (0.0, 0.0) } else { (4.0, 2.0) };
+        // The window is the client and the frame its styles describe round it, for its own DPI:
+        // none on Windows 11, the 1 px border on Windows 10.
+        let style = GetWindowLongPtrW(hwnd, GWL_STYLE) as u32;
+        let ex = GetWindowLongPtrW(hwnd, GWL_EXSTYLE) as u32;
+        let mut rc = RECT {
+            left: 0,
+            top: 0,
+            right: (client[0] * scale).round() as i32,
+            bottom: (client[1] * scale).round() as i32,
+        };
+        AdjustWindowRectExForDpi(&mut rc, style, 0, ex, GetDpiForWindow(hwnd).max(96));
         SetWindowPos(
             hwnd,
             std::ptr::null_mut(),
             0,
             0,
-            (client[0] * scale + fw * dpi).round() as i32,
-            (client[1] * scale + fh * dpi).round() as i32,
+            rc.right - rc.left,
+            rc.bottom - rc.top,
             SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE,
         );
     }
     Some(hwnd as isize)
 }
 
-/// Whether the windows whose title bar is ours are framed without a caption style
-/// ([`caption_less`], #208): on Windows 11 (build 22000 on), which rounds such a window when asked
-/// and draws its border. Windows 10 does neither for a window without a caption style, so it
-/// keeps the frames above (the caption style, its caption given to the client): the band they
-/// showed was seen on a Windows 11 build only.
-fn caption_less_frames() -> bool {
+/// Windows 11 (build 22000 on). Every window whose title bar is ours and that keeps its size
+/// (the progress window, a style theme's dialogs) is framed without a caption style on every
+/// version ([`thin_frame`]): with the caption style hidden by our WM_NCCALCSIZE, a Windows 11
+/// Insider build (#208) and Windows 10 22H2 (#620) showed the window's picture where the style's
+/// client would have been, a black band a title bar tall above it, every click landing above what
+/// it showed. The resizable main window with a style theme is framed so on Windows 11 only
+/// ([`drawn_frame`]), which colours the sizing frame's strip above its title bar
+/// ([`caption_colour`]); Windows 10 can't (DWMWA_CAPTION_COLOR is Windows 11's), so there it keeps
+/// its caption style, given to the client.
+fn windows_11() -> bool {
     use windows_sys::Win32::System::Registry::HKEY_LOCAL_MACHINE;
     static ON: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
     *ON.get_or_init(|| {
@@ -835,8 +780,12 @@ fn caption_less_frames() -> bool {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum Drawn {
     /// A fixed size (the progress window, a dialog with a style theme's title bar): a plain
-    /// popup, all client, as the drop target and the menus are (#210, #231).
+    /// popup, all client, as the drop target and the menus are (#210, #231). Windows 11 draws
+    /// its border, over the client's edge.
     Fixed,
+    /// The same with the system's 1 px border round the client (WS_BORDER): Windows 10, which
+    /// draws no border round a window without a caption style (#620).
+    Edged,
     /// Resizable (the main window with a style theme): a popup with the system's sizing frame,
     /// for resizing on every edge, Aero Snap and Snap Layouts, the shadow, and maximizing.
     Sizable,
@@ -850,6 +799,15 @@ impl Drawn {
         match self {
             Drawn::Fixed => 0,
             Drawn::Sizable => 1,
+            Drawn::Edged => 2,
+        }
+    }
+
+    fn of(data: usize) -> Drawn {
+        match data {
+            1 => Drawn::Sizable,
+            2 => Drawn::Edged,
+            _ => Drawn::Fixed,
         }
     }
 }
@@ -863,10 +821,12 @@ impl Drawn {
 /// drop target (#231). Here what the styles describe is what the window is: the system's own
 /// WM_NCCALCSIZE frames it, no other reading can differ.
 pub(crate) fn drawn_style(style: u32, kind: Drawn) -> u32 {
-    use windows_sys::Win32::UI::WindowsAndMessaging::{WS_CAPTION, WS_POPUP};
+    use windows_sys::Win32::UI::WindowsAndMessaging::{WS_BORDER, WS_CAPTION, WS_POPUP};
+    // WS_CAPTION is WS_BORDER | WS_DLGFRAME: both go, and the border comes back where wanted.
     let plain = (style & !(WS_CAPTION | WS_THICKFRAME)) | WS_POPUP;
     match kind {
         Drawn::Fixed => plain,
+        Drawn::Edged => plain | WS_BORDER,
         Drawn::Sizable => plain | WS_THICKFRAME,
     }
 }
@@ -978,7 +938,7 @@ thread_local! {
 /// a caption style in its caption colour). Cheap: DWM is asked only when it changes.
 pub fn caption_colour(hwnd: isize, rgb: [u8; 3]) {
     use windows_sys::Win32::Graphics::Dwm::{DWMWA_CAPTION_COLOR, DwmSetWindowAttribute};
-    if !caption_less_frames() {
+    if !windows_11() {
         return;
     }
     let colour = u32::from_le_bytes([rgb[0], rgb[1], rgb[2], 0]);
@@ -1073,12 +1033,8 @@ unsafe extern "system" fn caption_less_proc(
         WM_STYLECHANGING, WM_SYSCOMMAND,
     };
     const HT_MAX: LRESULT = HTMAXBUTTON as LRESULT;
-    let sizable = data == Drawn::Sizable.data();
-    let kind = if sizable {
-        Drawn::Sizable
-    } else {
-        Drawn::Fixed
-    };
+    let kind = Drawn::of(data);
+    let sizable = kind == Drawn::Sizable;
     let at = |lp: LPARAM| {
         (
             (lp & 0xffff) as i16 as i32,
@@ -1312,7 +1268,8 @@ mod caption_less_tests {
     use super::*;
     use windows_sys::Win32::UI::WindowsAndMessaging::{
         AdjustWindowRectEx, CreateWindowExW, DestroyWindow, GetClientRect, GetWindowRect,
-        MINMAXINFO, SendMessageW, WM_GETMINMAXINFO, WS_CAPTION, WS_EX_APPWINDOW, WS_POPUP,
+        MINMAXINFO, SendMessageW, WM_GETMINMAXINFO, WS_BORDER, WS_CAPTION, WS_EX_APPWINDOW,
+        WS_POPUP,
     };
 
     /// The styles winit gives the progress window (a caption, a sizing frame trimmed by us, a
@@ -1342,6 +1299,13 @@ mod caption_less_tests {
         // The system menu and Minimize stay (Alt+Space, the taskbar's commands).
         assert_eq!(fixed & 0x000A_0000, 0x000A_0000);
         assert_eq!(styles_frame(fixed, drawn_ex_style(WINIT_EX)), [0, 0, 0, 0]);
+        // Windows 10's (#620): the same with the system's 1 px border, the same on every side.
+        let edged = drawn_style(WINIT_PROGRESS, Drawn::Edged);
+        assert_eq!(edged & WS_CAPTION, WS_BORDER);
+        assert_eq!(edged & WS_THICKFRAME, 0);
+        assert_ne!(edged & WS_POPUP, 0);
+        assert_eq!(edged & 0x000A_0000, 0x000A_0000);
+        assert_eq!(styles_frame(edged, drawn_ex_style(WINIT_EX)), [1, 1, 1, 1]);
         // Resizable: the sizing frame, the same on every side (none taller at the top).
         let sizable = drawn_style(WINIT_MAIN, Drawn::Sizable);
         assert_eq!(sizable & WS_CAPTION, 0);
@@ -1351,6 +1315,10 @@ mod caption_less_tests {
         assert!(l > 0 && l == t && t == r && r == b, "{l} {t} {r} {b}");
         // Applied again (winit setting its own styles once more), nothing changes.
         assert_eq!(drawn_style(fixed, Drawn::Fixed), fixed);
+        assert_eq!(drawn_style(edged, Drawn::Edged), edged);
+        for kind in [Drawn::Fixed, Drawn::Edged, Drawn::Sizable] {
+            assert_eq!(Drawn::of(kind.data()), kind);
+        }
         assert_eq!(drawn_style(sizable, Drawn::Sizable), sizable);
         // IDM's dialog frame goes; the taskbar button stays.
         let ex = drawn_ex_style(WINIT_EX | WS_EX_DLGMODALFRAME);
@@ -1365,9 +1333,13 @@ mod caption_less_tests {
     #[test]
     fn caption_less_frames_a_real_window_as_its_styles_say() {
         use windows_sys::Win32::UI::WindowsAndMessaging::{HTBOTTOMRIGHT, HTLEFT, HTTOP};
-        for (n, (style, kind)) in [(WINIT_PROGRESS, Drawn::Fixed), (WINIT_MAIN, Drawn::Sizable)]
-            .into_iter()
-            .enumerate()
+        for (n, (style, kind)) in [
+            (WINIT_PROGRESS, Drawn::Fixed),
+            (WINIT_PROGRESS, Drawn::Edged),
+            (WINIT_MAIN, Drawn::Sizable),
+        ]
+        .into_iter()
+        .enumerate()
         {
             let title = format!("mdm caption-less test {n} {}", std::process::id());
             let wide: Vec<u16> = title.encode_utf16().chain(Some(0)).collect();
@@ -1851,40 +1823,133 @@ pub fn main_minimize_to_tray(ctx: &egui::Context, enabled: bool) -> bool {
     })
 }
 
-/// The highest icon id [`tray_icon_held`] tries. tray-icon gives each icon an id of its own
+/// The highest icon id [`tray_icon_ask`] tries. tray-icon gives each icon an id of its own
 /// from a counter it shares with its icon names, and doesn't say which (a program's first icon
 /// has 2).
 const TRAY_ICON_IDS: u32 = 16;
 
-/// Whether the shell holds a notification-area icon of `hwnd` (the tray's own hidden window,
-/// which has one icon), and its id: `known` first, else each id up to [`TRAY_ICON_IDS`]. An
-/// empty `NIM_MODIFY` changes nothing and succeeds only for an icon the shell has, wherever it
-/// shows it: in the taskbar or in the hidden icons behind ^. Shell_NotifyIconGetRect isn't
-/// enough: it can fail for an icon behind ^ (#545, #534, #527: Windows 10 and 11, the icon
-/// there and MDM sure it had none; Windows 11 build 26200 gives such an icon the rect of ^
-/// itself). This fails, as that does, when Explorer isn't running or the icon was refused or
-/// lost.
-pub fn tray_icon_held(hwnd: HWND, known: Option<u32>) -> Option<u32> {
-    use windows_sys::Win32::UI::Shell::{NIM_MODIFY, NOTIFYICONDATAW, Shell_NotifyIconW};
-    let held = |id: u32| {
-        let nid = NOTIFYICONDATAW {
-            cbSize: size_of::<NOTIFYICONDATAW>() as u32,
-            hWnd: hwnd,
-            uID: id,
-            uFlags: 0,
-            // SAFETY: a plain C struct; all zero is its empty value.
-            ..unsafe { zeroed() }
-        };
-        // SAFETY: nid lives for the call; the shell only reads it.
-        unsafe { Shell_NotifyIconW(NIM_MODIFY, &nid) != 0 }
-    };
+/// Longer than the shell takes to answer about an icon: a "no" that took this long is
+/// Shell_NotifyIcon giving up on a busy Explorer, not the shell's answer.
+const TRAY_SLOW: std::time::Duration = std::time::Duration::from_millis(1500);
+
+/// What the shell said of MDM's notification-area icon ([`tray_icon_ask`]).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TrayAnswer {
+    /// No taskbar (no `Shell_TrayWnd` window): Explorer isn't running, or a shell without a
+    /// notification area is.
+    NoTaskbar,
+    /// The taskbar is there but didn't answer: Windows says it stopped responding, or the
+    /// question took as long as a timeout.
+    Silent,
+    /// The shell answered: the icon's id when it holds it (wherever it shows it), and whether it
+    /// gives the icon a place on screen.
+    Answered { held: Option<u32>, placed: bool },
+}
+
+/// Ask the shell about the notification-area icon of `hwnd` (the tray's own hidden window, which
+/// has one icon); `known` is its id once found. Both questions wait for Explorer, for seconds when
+/// it is busy (#747: 8 s), so this runs on the tray's watcher thread (tray.rs), never on the
+/// window's.
+///
+/// - Held: an empty `NIM_MODIFY` changes nothing and succeeds only for an icon the shell has, in
+///   the taskbar or among the hidden icons behind ^ (`known` first, else each id up to
+///   [`TRAY_ICON_IDS`]).
+/// - Placed: `Shell_NotifyIconGetRect`. Not enough on its own: Windows 10 and Windows 11 builds
+///   before 26200 give an icon behind ^ no place (#750, #718, #754: 0.5.2 asked only this, and
+///   left the window in the taskbar with the icon there); build 26200 gives it the place of ^.
+///
+/// `rect_withheld` answers "no place" without asking (MDM_TEST_TRAY_RECT=0: the reporters' case,
+/// on a Windows that gives one).
+pub fn tray_icon_ask(hwnd: isize, known: Option<u32>, rect_withheld: bool) -> TrayAnswer {
+    use windows_sys::Win32::UI::WindowsAndMessaging::{FindWindowW, IsHungAppWindow};
+    let hwnd = hwnd as HWND;
     if hwnd.is_null() {
-        return None;
+        return TrayAnswer::Answered {
+            held: None,
+            placed: false,
+        };
     }
-    known
-        .into_iter()
-        .chain(1..=TRAY_ICON_IDS)
-        .find(|id| held(*id))
+    let class: Vec<u16> = "Shell_TrayWnd\0".encode_utf16().collect();
+    // SAFETY: a NUL-ended class name and no title: no window is sent a message.
+    let taskbar = unsafe { FindWindowW(class.as_ptr(), std::ptr::null()) };
+    if taskbar.is_null() {
+        return TrayAnswer::NoTaskbar;
+    }
+    // SAFETY: reads the window's state; never waits for it.
+    if unsafe { IsHungAppWindow(taskbar) } != 0 {
+        return TrayAnswer::Silent;
+    }
+    let start = std::time::Instant::now();
+    let ids = || {
+        known
+            .into_iter()
+            .chain((1..=TRAY_ICON_IDS).filter(move |id| Some(*id) != known))
+    };
+    let held = ids().find(|id| tray_icon_held(hwnd, *id));
+    // An icon it doesn't hold is asked for its place too, under each id: should an empty
+    // NIM_MODIFY fail on some Windows for an icon it has, its place still says it is there.
+    let placed = !rect_withheld
+        && match held {
+            Some(id) => tray_icon_placed(hwnd, id),
+            None => ids().any(|id| tray_icon_placed(hwnd, id)),
+        };
+    if held.is_none() && !placed && start.elapsed() >= TRAY_SLOW {
+        return TrayAnswer::Silent;
+    }
+    TrayAnswer::Answered { held, placed }
+}
+
+/// Whether the shell holds icon `id` of `hwnd`: an empty `NIM_MODIFY`.
+fn tray_icon_held(hwnd: HWND, id: u32) -> bool {
+    use windows_sys::Win32::UI::Shell::{NIM_MODIFY, NOTIFYICONDATAW, Shell_NotifyIconW};
+    let nid = NOTIFYICONDATAW {
+        cbSize: size_of::<NOTIFYICONDATAW>() as u32,
+        hWnd: hwnd,
+        uID: id,
+        uFlags: 0,
+        // SAFETY: a plain C struct; all zero is its empty value.
+        ..unsafe { zeroed() }
+    };
+    // SAFETY: nid lives for the call; the shell only reads it.
+    unsafe { Shell_NotifyIconW(NIM_MODIFY, &nid) != 0 }
+}
+
+/// Whether the shell gives icon `id` of `hwnd` a place on screen.
+fn tray_icon_placed(hwnd: HWND, id: u32) -> bool {
+    use windows_sys::Win32::UI::Shell::{NOTIFYICONIDENTIFIER, Shell_NotifyIconGetRect};
+    let ident = NOTIFYICONIDENTIFIER {
+        cbSize: size_of::<NOTIFYICONIDENTIFIER>() as u32,
+        hWnd: hwnd,
+        uID: id,
+        // SAFETY: a plain C struct; with a zero GUID the icon is named by its window and id.
+        ..unsafe { zeroed() }
+    };
+    // SAFETY: a plain C struct, written by the call.
+    let mut rect: RECT = unsafe { zeroed() };
+    // SAFETY: both live for the call.
+    unsafe { Shell_NotifyIconGetRect(&ident, &mut rect) >= 0 }
+}
+
+/// Set the tip of icon `id` of `hwnd` (127 characters at most, the rest cut). Waits for Explorer
+/// as [`tray_icon_ask`] does, so it too runs on the tray's watcher thread. False when the shell
+/// didn't take it (no such icon, or no answer).
+pub fn tray_icon_tip(hwnd: isize, id: u32, tip: &str) -> bool {
+    use windows_sys::Win32::UI::Shell::{NIF_TIP, NIM_MODIFY, NOTIFYICONDATAW, Shell_NotifyIconW};
+    let mut nid = NOTIFYICONDATAW {
+        cbSize: size_of::<NOTIFYICONDATAW>() as u32,
+        hWnd: hwnd as HWND,
+        uID: id,
+        uFlags: NIF_TIP,
+        // SAFETY: a plain C struct; all zero is its empty value.
+        ..unsafe { zeroed() }
+    };
+    // The last unit stays the NUL that ends it.
+    let room = nid.szTip.len() - 1;
+    for (slot, unit) in nid.szTip.iter_mut().zip(tip.encode_utf16().take(room)) {
+        *slot = unit;
+    }
+    // SAFETY: nid lives for the call; the shell only reads it.
+    unsafe { Shell_NotifyIconW(NIM_MODIFY, &nid) != 0 }
 }
 
 /// What a borderless window of ours is, for [`popup_window`]: every one is a plain popup
@@ -2308,6 +2373,97 @@ pub fn caption_dark(title: &str, dark: bool) -> bool {
     true
 }
 
+/// The popup menus Windows draws for us — the notification-area icon's (tray-icon's), the
+/// window menu of a drawn title bar — in MDM's mode, not Windows' (#682): dark on a dark surface
+/// (dark mode, a dark theme), light otherwise, whatever Windows' own app mode says. Windows has
+/// no documented way: uxtheme's SetPreferredAppMode (ordinal 135, ForceDark 2 / ForceLight 3)
+/// sets the process's mode and FlushMenuThemes (ordinal 136) makes menus read it again, as the
+/// win32-darkmode project and the apps built on it do. They exist from Windows 10 1903 (build
+/// 18362) on; 1809 has another function at 135 and older builds no dark menus, so there menus
+/// stay as Windows draws them. Called when the mode changes; asks uxtheme only when it is news.
+pub fn menus_dark(dark: bool) {
+    use std::sync::atomic::{AtomicU8, Ordering};
+    static TOLD: AtomicU8 = AtomicU8::new(u8::MAX);
+    let mode: i32 = if dark { 2 } else { 3 };
+    if TOLD.swap(mode as u8, Ordering::Relaxed) == mode as u8 {
+        return;
+    }
+    let Some(f) = menu_mode_fns() else {
+        return;
+    };
+    // SAFETY: the functions behind these ordinals on build 18362 and later (menu_mode_fns),
+    // SetPreferredAppMode(int) -> int and FlushMenuThemes(void); process-wide, any thread.
+    unsafe {
+        (f.set_preferred_app_mode)(mode);
+        (f.flush_menu_themes)();
+    }
+}
+
+/// uxtheme's functions that set the mode of the menus Windows draws ([`menus_dark`]).
+#[derive(Clone, Copy)]
+struct MenuModeFns {
+    set_preferred_app_mode: unsafe extern "system" fn(i32) -> i32,
+    flush_menu_themes: unsafe extern "system" fn(),
+}
+
+/// [`MenuModeFns`], looked up once: None before Windows 10 1903 or if uxtheme lacks them.
+fn menu_mode_fns() -> Option<MenuModeFns> {
+    use windows_sys::Win32::System::LibraryLoader::{
+        GetProcAddress, LOAD_LIBRARY_SEARCH_SYSTEM32, LoadLibraryExW,
+    };
+    use windows_sys::Win32::System::Registry::HKEY_LOCAL_MACHINE;
+    static FNS: std::sync::OnceLock<Option<MenuModeFns>> = std::sync::OnceLock::new();
+    *FNS.get_or_init(|| {
+        let build = reg_string_in(
+            HKEY_LOCAL_MACHINE,
+            r"SOFTWARE\Microsoft\Windows NT\CurrentVersion",
+            "CurrentBuild",
+        )
+        .and_then(|b| b.parse::<u32>().ok())?;
+        if build < 18362 {
+            return None;
+        }
+        let name: Vec<u16> = "uxtheme.dll\0".encode_utf16().collect();
+        // SAFETY: a NUL-terminated name, loaded from System32 only; the module stays loaded for
+        // the process's life (never freed), so the pointers taken from it stay valid. An ordinal
+        // goes as the name pointer's low word (MAKEINTRESOURCEA).
+        unsafe {
+            let module = LoadLibraryExW(
+                name.as_ptr(),
+                std::ptr::null_mut(),
+                LOAD_LIBRARY_SEARCH_SYSTEM32,
+            );
+            if module.is_null() {
+                return None;
+            }
+            let set = GetProcAddress(module, 135usize as *const u8)?;
+            let flush = GetProcAddress(module, 136usize as *const u8)?;
+            Some(MenuModeFns {
+                set_preferred_app_mode: std::mem::transmute::<
+                    unsafe extern "system" fn() -> isize,
+                    unsafe extern "system" fn(i32) -> i32,
+                >(set),
+                flush_menu_themes: std::mem::transmute::<
+                    unsafe extern "system" fn() -> isize,
+                    unsafe extern "system" fn(),
+                >(flush),
+            })
+        }
+    })
+}
+
+#[cfg(test)]
+mod menus_dark_tests {
+    /// #682: uxtheme has the menu mode functions on every Windows MDM is tested on (10 1903 and
+    /// later, Server 2022's runner included), and setting the mode either way returns.
+    #[test]
+    fn the_menu_mode_functions_are_found_and_answer() {
+        assert!(super::menu_mode_fns().is_some());
+        super::menus_dark(true);
+        super::menus_dark(false);
+    }
+}
+
 /// One of our windows by handle, for crates that take a `raw-window-handle` window.
 struct OwnWindow(HWND);
 
@@ -2368,7 +2524,12 @@ pub fn drag_file_out(title: &str, file: &std::path::Path) -> Result<(), String> 
         if !shared {
             tracing::warn!("drag out: the window's input isn't shared");
         }
-        let result = drag_on_this_thread(hwnd as HWND, &file);
+        // Looked for here, beside the window (#743): a drive slow to answer doesn't hold it.
+        let result = if file.exists() {
+            drag_on_this_thread(hwnd as HWND, &file)
+        } else {
+            Ok(())
+        };
         if let Ok(mut t) = DRAG_ENDED.lock() {
             *t = Some(std::time::Instant::now());
         }
@@ -2524,13 +2685,22 @@ mod drag_thread_tests {
     }
 }
 
+/// The key of Windows' "Choose your app mode" (`AppsUseLightTheme`), under HKEY_CURRENT_USER.
+/// For tests, `MDM_PERSONALIZE_KEY` names another key to read it from (and to watch), so a check
+/// can switch the mode MDM sees without touching the system's.
+fn personalize_key() -> String {
+    std::env::var("MDM_PERSONALIZE_KEY")
+        .ok()
+        .filter(|k| !k.trim().is_empty())
+        .unwrap_or_else(|| r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize".into())
+}
+
 /// Windows' "Choose your app mode": true when apps should be dark (`AppsUseLightTheme` = 0).
-/// Missing value (older Windows): light.
+/// Missing value (older Windows): light. A registry read, which can wait for seconds (#719): for
+/// a thread other than the window's (`lookwatch`).
 pub fn apps_use_dark() -> bool {
     use windows_sys::Win32::System::Registry::{HKEY_CURRENT_USER, RRF_RT_REG_DWORD, RegGetValueW};
-    let key: Vec<u16> = "Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize\0"
-        .encode_utf16()
-        .collect();
+    let key: Vec<u16> = personalize_key().encode_utf16().chain([0]).collect();
     let name: Vec<u16> = "AppsUseLightTheme\0".encode_utf16().collect();
     let mut value: u32 = 1;
     let mut size = size_of::<u32>() as u32;
@@ -2575,6 +2745,110 @@ pub fn accent_palette() -> Option<[[u8; 3]; 7]> {
         )
     };
     (rc == 0 && size >= 28).then(|| crate::native::accent_palette_bytes(&bytes))
+}
+
+/// Waits for a change to what the theme follows in the registry (#719): the app mode
+/// ([`personalize_key`]), the accent colour, high contrast and the system colours, each key
+/// watched with `RegNotifyChangeKeyValue`. Opened, armed and waited on by `lookwatch`'s thread,
+/// never the window's: those calls can wait as long as a read.
+pub struct LookKeys {
+    /// The keys open for watching and the event each signals (HKEYs and HANDLEs, kept as numbers
+    /// so the watcher can be moved to its thread).
+    keys: Vec<(isize, isize)>,
+    /// Their notifications are registered (each fires once, and is registered again then).
+    armed: bool,
+}
+
+impl LookKeys {
+    /// The keys that exist (the accent's is missing on older Windows).
+    pub fn open() -> Self {
+        use windows_sys::Win32::System::Registry::{
+            HKEY, HKEY_CURRENT_USER, KEY_NOTIFY, RegCloseKey, RegOpenKeyExW,
+        };
+        use windows_sys::Win32::System::Threading::CreateEventW;
+        let paths = [
+            personalize_key(),
+            r"Software\Microsoft\Windows\CurrentVersion\Explorer\Accent".into(),
+            r"Control Panel\Accessibility\HighContrast".into(),
+            r"Control Panel\Colors".into(),
+        ];
+        let keys = paths
+            .iter()
+            .filter_map(|p| {
+                let wide: Vec<u16> = p.encode_utf16().chain([0]).collect();
+                let mut h: HKEY = std::ptr::null_mut();
+                // SAFETY: opens a key into `h`, closed in Drop (or below).
+                let rc = unsafe {
+                    RegOpenKeyExW(HKEY_CURRENT_USER, wide.as_ptr(), 0, KEY_NOTIFY, &mut h)
+                };
+                if rc != 0 {
+                    return None;
+                }
+                // SAFETY: an unnamed auto-reset event, not signalled; closed in Drop.
+                let event = unsafe { CreateEventW(std::ptr::null(), 0, 0, std::ptr::null()) };
+                if event.is_null() {
+                    // SAFETY: the key just opened, closed once.
+                    unsafe { RegCloseKey(h) };
+                    return None;
+                }
+                Some((h as isize, event as isize))
+            })
+            .collect();
+        LookKeys { keys, armed: false }
+    }
+
+    /// Wait until one of the keys changed, or `limit` passed (what the keys miss is read then).
+    pub fn wait(&mut self, limit: std::time::Duration) {
+        use windows_sys::Win32::Foundation::{HANDLE, WAIT_OBJECT_0};
+        use windows_sys::Win32::System::Registry::{
+            REG_NOTIFY_CHANGE_LAST_SET, REG_NOTIFY_THREAD_AGNOSTIC, RegNotifyChangeKeyValue,
+        };
+        use windows_sys::Win32::System::Threading::WaitForMultipleObjects;
+        if self.keys.is_empty() {
+            std::thread::sleep(limit);
+            return;
+        }
+        let arm = |(key, event): (isize, isize)| {
+            // SAFETY: an open key and its event; the notification is asynchronous, fires once and
+            // ends when the key is closed.
+            unsafe {
+                RegNotifyChangeKeyValue(
+                    key as _,
+                    0,
+                    REG_NOTIFY_CHANGE_LAST_SET | REG_NOTIFY_THREAD_AGNOSTIC,
+                    event as _,
+                    1,
+                )
+            };
+        };
+        if !self.armed {
+            self.keys.iter().copied().for_each(arm);
+            self.armed = true;
+        }
+        let events: Vec<HANDLE> = self.keys.iter().map(|&(_, e)| e as HANDLE).collect();
+        let ms = limit.as_millis().min(u128::from(u32::MAX - 1)) as u32;
+        // SAFETY: our own events, as many as the count says.
+        let rc = unsafe { WaitForMultipleObjects(events.len() as u32, events.as_ptr(), 0, ms) };
+        let fired = rc.wrapping_sub(WAIT_OBJECT_0) as usize;
+        if let Some(&k) = self.keys.get(fired) {
+            // Registered again before the read that follows, so a change during it is seen too.
+            arm(k);
+        }
+    }
+}
+
+impl Drop for LookKeys {
+    fn drop(&mut self) {
+        use windows_sys::Win32::Foundation::CloseHandle;
+        use windows_sys::Win32::System::Registry::RegCloseKey;
+        for &(key, event) in &self.keys {
+            // SAFETY: a key and an event made in `open`, each closed once.
+            unsafe {
+                RegCloseKey(key as _);
+                CloseHandle(event as _);
+            }
+        }
+    }
 }
 
 /// Windows' high-contrast colours while high contrast is on (Settings → Accessibility →
@@ -4449,6 +4723,34 @@ pub fn mark_downloaded(path: &std::path::Path, url: &str, referrer: Option<&str>
     let mut stream = path.as_os_str().to_owned();
     stream.push(":Zone.Identifier");
     let _ = std::fs::write(stream, text);
+}
+
+/// Rename `from` to `to` without ever replacing an existing entry (`MoveFileExW` without
+/// `MOVEFILE_REPLACE_EXISTING`, returning `ErrorKind::AlreadyExists` when `to` is already there).
+pub fn rename_no_replace(from: &std::path::Path, to: &std::path::Path) -> std::io::Result<()> {
+    use std::os::windows::ffi::OsStrExt;
+    use windows_sys::Win32::Storage::FileSystem::MoveFileExW;
+    let encode = |p: &std::path::Path| -> std::io::Result<Vec<u16>> {
+        let mut wide: Vec<u16> = p.as_os_str().encode_wide().collect();
+        if wide.contains(&0) {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                "interior NUL",
+            ));
+        }
+        wide.push(0);
+        Ok(wide)
+    };
+    let from_w = encode(from)?;
+    let to_w = encode(to)?;
+    // SAFETY: both UTF-16 buffers are NUL-terminated and live through the call; flags = 0 refuses
+    // cross-volume copies and refuses replacing an existing destination.
+    let ok = unsafe { MoveFileExW(from_w.as_ptr(), to_w.as_ptr(), 0) };
+    if ok != 0 {
+        Ok(())
+    } else {
+        Err(std::io::Error::last_os_error())
+    }
 }
 
 /// Where browser integration stands: a browser looking for the native host (Chrome's key,

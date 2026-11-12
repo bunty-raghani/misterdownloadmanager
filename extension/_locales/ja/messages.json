@@ -32,12 +32,6 @@
   "video_sent": {
     "message": "Mister Download Manager に送信済み"
   },
-  "video_failed": {
-    "message": "Mister Download Manager がインストールされていないか、起動していません"
-  },
-  "video_drag": {
-    "message": "ドラッグして動画の端に沿って移動"
-  },
   "menu_selected": {
     "message": "Mister Download Manager で選択したリンクをダウンロード"
   },
@@ -180,13 +174,46 @@
     "message": "ライブ"
   },
   "video_off": {
-    "message": "このサイトではダウンロード ボタンがオフになっています"
+    "message": "このサイトではオフ"
   },
   "video_drm": {
-    "message": "保護されたビデオ: 保存できません"
+    "message": "保護された動画"
   },
   "video_unnamed": {
     "message": "どの動画か判別できません。動画自体のページを開いて、そこでお試しください"
+  },
+  "video_looking": {
+    "message": "画質を検索しています…"
+  },
+  "video_no_choices": {
+    "message": "ここにはダウンロードできる動画がありません"
+  },
+  "video_playlist": {
+    "message": "動画の一覧: Mister Download Manager で選択してください"
+  },
+  "video_no_ytdlp": {
+    "message": "この動画には Mister Download Manager に yt-dlp が必要です"
+  },
+  "video_too_long": {
+    "message": "検索に時間がかかりすぎました"
+  },
+  "video_busy": {
+    "message": "Mister Download Manager は他の動画の処理中です"
+  },
+  "video_queued": {
+    "message": "キューに追加しました"
+  },
+  "video_failed_lookup": {
+    "message": "検索できませんでした"
+  },
+  "video_tab_video": {
+    "message": "ビデオ"
+  },
+  "video_tab_audio": {
+    "message": "オーディオ"
+  },
+  "video_open_post": {
+    "message": "ダウンロードするには投稿を開く"
   },
   "popup_send_to": {
     "message": "ダウンロードの送信先"
@@ -241,5 +268,62 @@
   },
   "popup_media_title_name": {
     "message": "メディアファイル名の前にページのタイトルを付ける"
+  },
+  "video_cant_save": {
+    "message": "保存できません"
+  },
+  "video_open_post_button": {
+    "message": "投稿を開く"
+  },
+  "video_drag_dots": {
+    "message": "ドットをドラッグして端に沿って移動"
+  },
+  "video_tip": {
+    "message": "$what$ をダウンロード",
+    "placeholders": {
+      "what": {
+        "content": "$1",
+        "example": "1080p MP4 · 412 MB"
+      }
+    }
+  },
+  "video_tip_best": {
+    "message": "最高品質をダウンロード"
+  },
+  "video_sending": {
+    "message": "MDM に送信しています..."
+  },
+  "video_added": {
+    "message": "MDM に追加済み"
+  },
+  "video_show": {
+    "message": "表示"
+  },
+  "video_no_answer": {
+    "message": "MDM が応答しません"
+  },
+  "video_get_mdm": {
+    "message": "MDM を入手"
+  },
+  "video_retry": {
+    "message": "再試行"
+  },
+  "video_turn_on": {
+    "message": "オンにする"
+  },
+  "video_best": {
+    "message": "最高"
+  },
+  "video_all_qualities": {
+    "message": "すべての画質と字幕..."
+  },
+  "video_failed": {
+    "message": "Mister Download Manager がインストールされていないか、起動していません"
+  },
+  "video_download_best": {
+    "message": "最高画質をダウンロード"
+  },
+  "video_original": {
+    "message": "オリジナル"
   }
 }

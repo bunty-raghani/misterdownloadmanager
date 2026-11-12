@@ -1,0 +1,27 @@
+<!doctype html>
+<!-- Reddit's front page (shreddit), reduced to what names a post (our own sample: no real account,
+     post or text). Its player keeps the <video> in its own shadow root. data-expect: what the
+     button must send for each video ("page", "none"). {origin}: the page's own host. -->
+<html><head><meta charset="utf-8"><meta name="mdm-page" content="https://www.reddit.com/"><title>Reddit - The heart of the internet</title><link rel="stylesheet" href="feeds.css"></head>
+<body>
+<shreddit-app><main>
+<shreddit-feed>
+  <article aria-label="A first sample post">
+    <shreddit-post permalink="/r/samplesub/comments/1abcde1/a_first_sample_post/" post-type="video" id="t3_1abcde1">
+      <a slot="full-post-link" href="/r/samplesub/comments/1abcde1/a_first_sample_post/">A first sample post</a>
+      <shreddit-player-2><template shadowrootmode="open"><div class="container"><video data-expect="{origin}/r/samplesub/comments/1abcde1/"></video></div></template></shreddit-player-2>
+    </shreddit-post>
+  </article>
+  <article aria-label="A second sample post">
+    <shreddit-post permalink="/r/othersample/comments/1abcde2/a_second_sample_post/" post-type="video" id="t3_1abcde2">
+      <a slot="full-post-link" href="/r/othersample/comments/1abcde2/a_second_sample_post/">A second sample post</a>
+      <shreddit-player-2><template shadowrootmode="open"><div class="container"><video data-expect="{origin}/r/othersample/comments/1abcde2/"></video></div></template></shreddit-player-2>
+    </shreddit-post>
+  </article>
+  <shreddit-ad-post>
+    <a href="https://ads.example.test/landing">Sample advertiser</a>
+    <shreddit-player-2><template shadowrootmode="open"><div class="container"><video data-expect="none"></video></div></template></shreddit-player-2>
+  </shreddit-ad-post>
+</shreddit-feed>
+</main></shreddit-app>
+</body></html>

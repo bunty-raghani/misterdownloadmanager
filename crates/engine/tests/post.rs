@@ -216,8 +216,9 @@ async fn fetch(s: &Server, path: &str, opts: Options, want: &[u8]) -> String {
     out.path.file_name().unwrap().to_string_lossy().into_owned()
 }
 
-/// #376: Cloudflare's challenge, as it marks it, is reported as the site's bot check, with no
-/// retries; another 403 stays a 403.
+/// #376: Cloudflare's challenge, as it marks it, is reported as the site's bot check; another
+/// 403 stays a 403. It is asked once more the way a browser connects (#668), never more: a
+/// challenge that one meets too stays the bot check's refusal.
 #[tokio::test]
 async fn a_bot_check_is_named() {
     let s = Server::start(|seen| {
@@ -245,7 +246,16 @@ async fn a_bot_check_is_named() {
         matches!(challenge, mdm_engine::Error::BotCheck),
         "{challenge:?}"
     );
-    assert_eq!(s.seen.lock().unwrap().len(), 1, "a bot check isn't retried");
+    let asked = if cfg!(feature = "browser-connection") {
+        2
+    } else {
+        1
+    };
+    assert_eq!(
+        s.seen.lock().unwrap().len(),
+        asked,
+        "a bot check is asked once more at most"
+    );
     let plain = attempt("/plain/f.dat").wait().await.unwrap_err();
     assert!(matches!(plain, mdm_engine::Error::Status(_)), "{plain:?}");
 }

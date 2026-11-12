@@ -17,6 +17,7 @@ Every download keeps a log of its recent events: retries, redirects, the server'
 3. If the link has expired (common for links from sites you sign in to, or links with a time limit in them), get a new one: right-click → **Refresh download address**. See [Resume a broken download](guide-resume-broken-download.md).
 4. If it says **the file changed on the server**, the file isn't the one MDM started with. Right-click → **Redownload** to start again from the beginning.
 5. If it says **Google Drive won't give this file now**, Drive's download limit for that file was reached. See [Google Drive links](adding-downloads.md#google-drive-links).
+6. If it says **this site lets only browsers through**, the site's bot check (Cloudflare's, for one) turned MDM away. MDM has already asked once more connecting the way your browser does, with your browser's cookies for that site, and the site still wants its check answered in a browser. Open the site in your browser (passing its check there can be enough: click the link again), or hold **Alt** as you click the link to leave that download to the browser. See [Browser integration](browser-integration.md).
 
 ## A download starts over instead of resuming
 

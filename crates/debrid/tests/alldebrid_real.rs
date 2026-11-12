@@ -52,7 +52,7 @@ async fn the_real_service_answers_the_demo_key() {
             let got = u
                 .unlock(
                     &link,
-                    &|n| eprintln!("note: {n}"),
+                    &|n, _| eprintln!("note: {n}"),
                     &CancellationToken::new(),
                 )
                 .await;

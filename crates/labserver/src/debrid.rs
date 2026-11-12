@@ -252,7 +252,10 @@ fn bearer(headers: &HeaderMap) -> Option<bool> {
 
 /// The fake host's direct link on this lab for `link` (its size, name, address), or why not:
 /// "unsupported", "gone", "down".
-fn direct_for(headers: &HeaderMap, link: &url::Url) -> Result<(u64, String, String), &'static str> {
+pub(crate) fn direct_for(
+    headers: &HeaderMap,
+    link: &url::Url,
+) -> Result<(u64, String, String), &'static str> {
     if link.host_str() != Some(HOSTER) {
         return Err("unsupported");
     }
