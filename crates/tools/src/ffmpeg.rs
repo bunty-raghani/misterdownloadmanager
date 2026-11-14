@@ -92,9 +92,7 @@ pub async fn install_latest(
             "ffmpeg build for this system (install ffmpeg)".into(),
         ));
     }
-    let client = mdm_engine::net::client_builder(&net.dns, &net.route, RELEASES)?
-        .user_agent(crate::USER_AGENT)
-        .build()?;
+    let client = crate::client(net, RELEASES)?;
     let body = client
         .get(RELEASES)
         .send()

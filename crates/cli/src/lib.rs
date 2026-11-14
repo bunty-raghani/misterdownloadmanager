@@ -370,6 +370,15 @@ fn act(action: &str, ids: Vec<u64>) -> anyhow::Result<()> {
 /// window. On Windows the launcher adds its process id (`--cli=1234`), see [`Launch`].
 pub const FLAG: &str = "--cli";
 
+/// #852: what a YouTube look-up yt-dlp made without a JavaScript runtime says (its list is short,
+/// on some days only the sound), as the Download video window says it, with the help page's
+/// section on installing one.
+fn js_runtime_note() -> String {
+    "YouTube needs a JavaScript runtime to list its video qualities: install Node.js or Deno, \
+     then look it up again (https://misterdownloadmanager.com/help/video.html#javascript-runtime)"
+        .into()
+}
+
 /// The launcher's name, which the commands' help and messages show.
 pub const NAME: &str = "misterdownloadmanager-cli";
 
@@ -624,20 +633,41 @@ async fn run(cmd: Cmd, json: bool, accounts: Option<&dyn Accounts>) -> anyhow::R
             if json {
                 let choices: Vec<_> = choices
                     .iter()
-                    .map(|c| json!({ "label": c.label, "format": c.selector, "size": c.size }))
+                    .map(|c| {
+                        json!({
+                            "label": c.label,
+                            "format": c.selector,
+                            "size": c.size,
+                            "approx": c.approx,
+                            "height": c.height,
+                            "fps": c.fps,
+                            "codec": c.codec,
+                            "range": c.range,
+                        })
+                    })
                     .collect();
                 let subs: Vec<_> = subs
                     .iter()
                     .map(|s| json!({ "code": s.code, "name": s.name, "automatic": s.automatic }))
                     .collect();
-                emit(json!({ "title": v.title, "choices": choices, "subtitles": subs }));
+                emit(json!({
+                    "title": v.title,
+                    "choices": choices,
+                    "subtitles": subs,
+                    "needs_js_runtime": v.needs_js_runtime,
+                }));
                 return Ok(());
+            }
+            if v.needs_js_runtime {
+                eprintln!("{}", js_runtime_note());
             }
             println!("{}", v.title);
             for c in choices {
+                // The streams' own bytes, or "~" before an estimate (#801).
+                let about = if c.approx { "~" } else { "" };
                 let size = c
                     .size
-                    .map_or(String::new(), |s| format!("  ~{} MB", s / 1_000_000));
+                    .map_or(String::new(), |s| format!("  {about}{} MB", s / 1_000_000));
                 println!("  {}{size}    -f \"{}\"", c.label, c.selector);
             }
             if !subs.is_empty() {
@@ -936,6 +966,9 @@ async fn run(cmd: Cmd, json: bool, accounts: Option<&dyn Accounts>) -> anyhow::R
             let tool = mdm_tools::installed(&dir)
                 .ok_or_else(|| anyhow::anyhow!("yt-dlp is not installed (install-ytdlp)"))?;
             let v = mdm_tools::resolve::resolve(&tool.exe, &url, &Default::default())?;
+            if v.needs_js_runtime {
+                eprintln!("{}", js_runtime_note());
+            }
             // A stem no file in the folder has, whatever the extension: yt-dlp takes any
             // `<stem>.*` there as its own (#32). The extension only sizes the name.
             let ext = mdm_tools::resolve::audio_conversion(&format).map_or("mp4", |a| a.format);

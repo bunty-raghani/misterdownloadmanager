@@ -70,6 +70,11 @@ button.row { width: 100%; text-align: start; margin-top: 6px; overflow: hidden; 
 .declined span { display: block; }
 #declined-what { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 #declined-why { color: var(--muted); }
+/* "Never take downloads from <site>" done (#404): it says so where the button was, with Undo. */
+.excluded { display: flex; align-items: center; gap: 10px; margin: 6px 0 0; padding: 6px 10px; background: var(--field); border: 1px solid var(--edge); border-radius: 4px; }
+#excluded-text { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+button.undo { flex: none; padding: 2px 4px; border: 0; background: none; color: var(--accent); }
+button.undo:hover { filter: none; text-decoration: underline; }
 footer { display: flex; justify-content: space-between; align-items: baseline; margin-top: 10px; border-top: 1px solid var(--edge); padding-top: 6px; color: var(--muted); font-size: 12px; }
 /* Help and Support MDM side by side on the footer's one line: the popup keeps its height. */
 .footer-links { display: flex; align-items: baseline; gap: 14px; min-width: 0; }

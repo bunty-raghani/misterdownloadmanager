@@ -222,7 +222,9 @@ impl GalleryDialog {
                 let net = crate::settings::own_net();
                 rt.spawn(async move {
                     let res = mdm_tools::gallery::install_latest(&dir, &net, None).await;
-                    *out.lock().unwrap() = Some(res.map_err(|e| crate::errors::tools(&e)));
+                    // What failed and what to do (#816), whole on hover where it's cut.
+                    *out.lock().unwrap() =
+                        Some(res.map_err(|e| crate::errors::tools_and_advice(&e, "gallery-dl")));
                     ctx.request_repaint();
                 });
                 self.install = Some(slot);

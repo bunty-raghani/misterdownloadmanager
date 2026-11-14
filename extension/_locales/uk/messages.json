@@ -92,6 +92,9 @@
       }
     }
   },
+  "popup_undo": {
+    "message": "Скасувати"
+  },
   "popup_excluded": {
     "message": "Завантаження з $site$ залишаються в браузері",
     "placeholders": {

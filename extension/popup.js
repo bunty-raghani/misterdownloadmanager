@@ -66,19 +66,43 @@ async function show() {
   } catch {
     // Not a web page (the browser's own): nothing to leave.
   }
+  await showExcluded(site, s.connected);
+  if (site) await showMedia(tab, s.connected);
+}
+
+// "Never take downloads from <site>", or, once the site's downloads stay with the browser, that
+// said where the button was, with Undo (#404): it takes the site off Options' excluded sites
+// again. A site excluded by a pattern of Options' own (`*.example.com`) has no Undo here: Options
+// holds it.
+async function showExcluded(site, connected) {
   const exclude = $("exclude");
-  exclude.hidden = !site || !s.connected;
+  const box = $("excluded");
+  const listed = site && connected ? await ask({ type: "site-excluded", host: site }) : {};
+  const said = (excluded, undo) => {
+    exclude.hidden = !site || !connected || excluded;
+    box.hidden = !site || !connected || !excluded;
+    $("undo").hidden = !undo;
+  };
   exclude.textContent = t("popup_exclude_site", site);
   exclude.title = exclude.textContent;
+  $("excluded-text").textContent = t("popup_excluded", site);
+  said(Boolean(listed.excluded), Boolean(listed.undo));
   exclude.onclick = async () => {
+    exclude.disabled = true;
     const r = await ask({ type: "exclude-site", host: site });
-    if (r.ok) {
-      exclude.hidden = true;
-      $("excluded").hidden = false;
-      $("excluded").textContent = t("popup_excluded", site);
-    }
+    exclude.disabled = false;
+    if (!r.ok) return;
+    said(true, true);
+    $("undo").focus();
   };
-  if (site) await showMedia(tab, s.connected);
+  $("undo").onclick = async () => {
+    $("undo").disabled = true;
+    const r = await ask({ type: "include-site", host: site });
+    $("undo").disabled = false;
+    if (!r.ok) return;
+    said(false, false);
+    exclude.focus();
+  };
 }
 
 // The last download left to the browser by MDM's Options, and which one (#208); a later one
@@ -111,16 +135,19 @@ const TYPES = {
   "audio/wav": "WAV",
 };
 
-// Its type as a short tag: HLS, DASH, else the file's extension or its type's.
+// Its type as a short tag: HLS, DASH, else its file's extension as it will be saved (a script's
+// answer: its type's, #800), else its type's.
 function tagOf(m) {
   if (m.kind === "hls") return "HLS";
   if (m.kind === "dash") return "DASH";
-  const ext = (/\.([a-z0-9]{2,4})$/i.exec(m.url.split(/[?#]/)[0]) || [])[1];
+  const ext = typeof m.name === "string" ? m.ext : (/\.([a-z0-9]{2,4})$/i.exec(m.url.split(/[?#]/)[0]) || [])[1];
   return (ext || TYPES[m.mime] || (m.kind === "audio" ? "AUDIO" : "VIDEO")).toUpperCase();
 }
 
-// The address's last part, readable.
-function nameOf(url) {
+// Its name: a file's as it will be saved (#800), else the address's last part, readable.
+function nameOf(m) {
+  if (typeof m.name === "string" && m.name) return m.name;
+  const url = m.url;
   const last = url.split(/[?#]/)[0].split("/").filter(Boolean).pop() || url;
   try {
     return decodeURIComponent(last);
@@ -187,7 +214,7 @@ async function showMedia(tab, connected) {
     what.className = "what";
     const name = document.createElement("span");
     name.className = "name";
-    name.textContent = nameOf(m.url);
+    name.textContent = nameOf(m);
     name.title = m.url;
     const meta = document.createElement("span");
     meta.className = "meta";
@@ -223,8 +250,9 @@ const mediaTitleName = $("media-title-name");
 ext.storage.local.get({ mediaTitleName: false })
   .then((v) => (mediaTitleName.checked = Boolean(v.mediaTitleName)))
   .catch(() => {});
+// The list's names follow it at once.
 mediaTitleName.addEventListener("change", () =>
-  ext.storage.local.set({ mediaTitleName: mediaTitleName.checked }).catch(() => {}));
+  ext.storage.local.set({ mediaTitleName: mediaTitleName.checked }).then(show, () => {}));
 
 // #42: reading the browser's proxy (a VPN or proxy extension's) is an opt-in, this switch, off as
 // installed. Firefox: the optional "proxy" permission, asked for on it. Chromium can't make that

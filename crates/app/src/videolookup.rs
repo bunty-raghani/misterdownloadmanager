@@ -22,7 +22,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 use std::time::{Duration, Instant};
 
-use mdm_ipc::api::{VideoChoice, VideoLookupAnswer, lookup};
+use mdm_ipc::api::{VideoChoice, VideoLookupAnswer, VideoNotice, lookup};
 use mdm_tools::resolve::{Choice, Looked, Video};
 use mdm_tools::video::{InfoSlot, LOOKUP_WAIT, Preloaded, Subs};
 
@@ -104,6 +104,7 @@ struct Key {
     cookies: Option<String>,
     jar: Vec<mdm_ipc::BrowserCookie>,
     referer: Option<String>,
+    origin: Option<String>,
     user_agent: Option<String>,
     merge: bool,
 }
@@ -117,6 +118,7 @@ impl Key {
             cookies: context.cookies.clone(),
             jar: context.cookie_jar.clone(),
             referer: context.referer.clone(),
+            origin: context.origin.clone(),
             user_agent: context.user_agent.clone(),
             merge,
         }
@@ -409,6 +411,7 @@ pub fn context_of(ask: &mdm_ipc::VideoLookup, cmd: &mdm_ipc::Command) -> mdm_ipc
             .filter(|t| !t.is_empty())
             .map(|t| cut(t, TITLE_MAX)),
         referer: cmd.referer.clone(),
+        origin: cmd.origin.clone(),
         cookies: cmd.cookies.clone(),
         cookie_jar: cmd.cookie_jar.clone(),
         user_agent: cmd.user_agent.clone(),
@@ -424,34 +427,49 @@ fn title_of<'a>(v: &'a Video, address: &str, context: &'a mdm_ipc::Command) -> &
     crate::videodlg::page_title(context, v, address).unwrap_or(&v.title)
 }
 
+/// Choice `c` as the browser's quality menu shows it: its label in MDM's language, and what the
+/// menu's line says beside it (#755: height, codec, frame rate, range; #801: an about size).
+fn menu_choice(c: &Choice) -> VideoChoice {
+    VideoChoice {
+        label: crate::videodlg::choice_label(&c.label),
+        ext: c.ext.clone(),
+        size: c.size,
+        audio: mdm_tools::resolve::is_audio(c),
+        height: c.height,
+        fps: c.fps,
+        kbps: c.kbps,
+        original: mdm_tools::resolve::original_sound(&c.selector),
+        codec: c.codec.clone(),
+        range: c.range.clone(),
+        approx: c.approx && c.size.is_some(),
+    }
+}
+
+/// What the menu says with video `v`'s choices, as the Download video window says it (#852:
+/// YouTube looked up without a JavaScript runtime), with its help page in MDM's language.
+fn notice(v: &Video) -> Option<VideoNotice> {
+    v.needs_js_runtime.then(|| VideoNotice {
+        text: crate::videodlg::js_runtime_note().to_owned(),
+        // i18n: link in the browser's video menu, after the note that YouTube needs a JavaScript runtime: opens the help page that says how to install Node.js or Deno
+        link: crate::i18n::t("How to install one").to_owned(),
+        url: crate::help::page_url(crate::videodlg::JS_RUNTIME_HELP, crate::i18n::code()),
+    })
+}
+
 /// The answer for look-up `token` as it stands: the choices labelled in MDM's language, an
 /// error in its words (as the Download video window says them).
 fn answer(token: &str, s: &Search) -> VideoLookupAnswer {
     match &*lock(&s.found) {
         Found::Looking => VideoLookupAnswer::pending(token),
-        Found::Video(_, choices) if choices.is_empty() => {
-            VideoLookupAnswer::failed(lookup::NO_CHOICES, None)
-        }
+        Found::Video(v, choices) if choices.is_empty() => VideoLookupAnswer {
+            notice: notice(v),
+            ..VideoLookupAnswer::failed(lookup::NO_CHOICES, None)
+        },
         Found::Video(v, choices) => VideoLookupAnswer {
             token: Some(token.to_owned()),
             title: Some(cut(title_of(v, &s.address, &s.context), TITLE_MAX)),
-            choices: choices
-                .iter()
-                .take(CHOICES)
-                .map(|c| {
-                    let (height, fps, kbps) = details(v, c);
-                    VideoChoice {
-                        label: crate::videodlg::choice_label(&c.label),
-                        ext: c.ext.clone(),
-                        size: c.size,
-                        audio: mdm_tools::resolve::is_audio(c),
-                        height,
-                        fps,
-                        kbps,
-                        original: c.selector == "ba",
-                    }
-                })
-                .collect(),
+            choices: choices.iter().take(CHOICES).map(menu_choice).collect(),
+            notice: notice(v),
             ..VideoLookupAnswer::of(lookup::READY)
         },
         Found::List => VideoLookupAnswer::of(lookup::LIST),
@@ -468,53 +486,6 @@ fn answer(token: &str, s: &Search) -> VideoLookupAnswer {
             VideoLookupAnswer::failed(lookup::ERROR, Some(cut(&message, MESSAGE_MAX)))
         }
     }
-}
-
-/// What the button over the video says of choice `c` of `v` besides its label: the picture's
-/// height (its chip: 1080p, 4K), its frame rate when above 31, and the sound's bitrate (the
-/// sound as the site has it, `ba`, or an MP3 at a constant one).
-fn details(v: &Video, c: &Choice) -> (Option<u32>, Option<u32>, Option<u32>) {
-    let height = c
-        .selector
-        .split("[height=")
-        .nth(1)
-        .and_then(|r| r.split(']').next())
-        .and_then(|h| h.parse::<u32>().ok());
-    let most = |it: &mut dyn Iterator<Item = f64>| {
-        it.fold(None, |m: Option<f64>, x| Some(m.map_or(x, |m| m.max(x))))
-    };
-    let fps = height
-        .and_then(|h| {
-            most(
-                &mut v
-                    .formats
-                    .iter()
-                    .filter(|f| f.video && f.height == Some(h))
-                    .filter_map(|f| f.fps),
-            )
-        })
-        .filter(|f| *f > 31.0)
-        .map(|f| f.round() as u32);
-    let kbps = (c.selector == "ba")
-        .then(|| {
-            most(
-                &mut v
-                    .formats
-                    .iter()
-                    .filter(|f| f.audio && !f.video && f.ext == c.ext)
-                    .filter_map(|f| f.tbr),
-            )
-        })
-        .flatten()
-        .map(|k| k.round() as u32)
-        // An MP3 at a constant bitrate says its own (`mp3:320`; VBR is `mp3:0`).
-        .or_else(|| {
-            c.selector
-                .strip_prefix(mdm_tools::resolve::MP3)
-                .and_then(|r| r.parse::<u32>().ok())
-                .filter(|r| *r > 0)
-        });
-    (height, fps, kbps)
 }
 
 /// The download choice `p` adds, into `folder` (the Video category's), or `music` (the Music
@@ -761,6 +732,7 @@ mod tests {
         assert_eq!(ready.choices[0].ext, "mp4");
         assert_eq!(ready.choices[0].size, Some(60 * 2500 * 125), "estimated");
         assert!(ready.choices.iter().all(|c| !c.audio), "videos");
+        assert_eq!(ready.notice, None, "nothing lacked");
         assert_eq!(l.poll(&b.token, now).state, lookup::PENDING, "its own");
         // The choice takes the look-up's context and MDM's selector for that place.
         let p = l
@@ -772,7 +744,7 @@ mod tests {
         assert_eq!(p.context.user_agent.as_deref(), Some("UA"));
         assert_eq!(p.context.video_title.as_deref(), Some("A talk: in Lisbon"));
         assert!(!p.context.private && !p.context.startup);
-        assert_eq!(p.choice.selector, "b[height=360]");
+        assert_eq!(p.choice.selector, "hls-800/b[height=360]");
         // Once.
         assert!(
             l.pick(&pick(&a.token, 1, Some("firefox-container-1")), false, now)
@@ -1070,6 +1042,7 @@ mod tests {
                 Some(mdm_tools::proc::LookedUp {
                     json: STREAM.as_bytes().to_vec(),
                     without_cookies: false,
+                    warnings: Vec::new(),
                 }),
             )
         };
@@ -1344,7 +1317,7 @@ mod tests {
         let add = video_add(p, &folder, None, true, &de).unwrap();
         assert_eq!(add.page.as_str(), SRC);
         assert_eq!(
-            add.selector, "b[height=720]",
+            add.selector, "hls-2500/b[height=720]",
             "MDM's own, never the browser's"
         );
         assert_eq!(add.dest, folder.join("A talk_ in Lisbon.mp4"));
@@ -1361,7 +1334,7 @@ mod tests {
         let pre = add.preloaded.as_ref().unwrap();
         assert_eq!(
             (pre.selector.as_str(), pre.label.as_str(), pre.merge),
-            ("b[height=720]", "720p MP4", false)
+            ("hls-2500/b[height=720]", "720p · H.264", false)
         );
         // No page title (a page yt-dlp names itself), Options' "only add to the queue", a
         // language this page doesn't have.
@@ -1377,7 +1350,7 @@ mod tests {
         };
         let add = video_add(p, &folder, None, false, &ja).unwrap();
         assert_eq!(add.dest, folder.join("master.mp4"));
-        assert_eq!(add.selector, "b[height=360]");
+        assert_eq!(add.selector, "hls-800/b[height=360]");
         assert!(!add.start_now);
         assert!(add.subs.langs.is_empty());
         // A video yt-dlp titled itself keeps its title, whatever the page's (#345).
@@ -1412,30 +1385,113 @@ mod tests {
         assert!(video_add(p, &folder, None, true, &Subs::default()).is_none());
     }
 
+    /// What the browser's menu is told of each choice (#755, #801): the height, frame rate,
+    /// codec and range of a video's, the sound's bitrate, whether its size is about.
     #[test]
     fn the_buttons_details_of_each_choice() {
         const V: &str = r#"{"title": "A talk", "duration": 60, "formats": [
-            {"format_id": "140", "ext": "m4a", "vcodec": "none", "acodec": "mp4a", "tbr": 129.5},
-            {"format_id": "299", "ext": "mp4", "height": 1080, "fps": 60, "vcodec": "avc1", "acodec": "none"},
-            {"format_id": "136", "ext": "mp4", "height": 720, "fps": 30, "vcodec": "avc1", "acodec": "none"}]}"#;
+            {"format_id": "140", "ext": "m4a", "vcodec": "none", "acodec": "mp4a", "tbr": 129.5, "filesize": 900},
+            {"format_id": "701", "ext": "mp4", "height": 1080, "fps": 60, "vcodec": "av01.0.09M.10", "acodec": "none", "dynamic_range": "HDR10", "filesize": 9000},
+            {"format_id": "299", "ext": "mp4", "height": 1080, "fps": 60, "vcodec": "avc1", "acodec": "none", "dynamic_range": "SDR", "filesize": 8000},
+            {"format_id": "136", "ext": "mp4", "height": 720, "fps": 30, "vcodec": "avc1", "acodec": "none", "filesize_approx": 7000}]}"#;
         let v = mdm_tools::resolve::parse(V.as_bytes()).unwrap();
-        let all = mdm_tools::resolve::choices(&v, true);
-        let of = |sel: &str| details(&v, all.iter().find(|c| c.selector == sel).unwrap());
+        let a: Vec<VideoChoice> = mdm_tools::resolve::choices(&v, true)
+            .iter()
+            .map(menu_choice)
+            .collect();
+        let of = |i: usize| {
+            let c = &a[i];
+            (
+                c.height,
+                c.fps,
+                c.codec.as_deref(),
+                c.range.as_deref(),
+                c.size,
+                c.approx,
+            )
+        };
         assert_eq!(
-            of("bv*[height=1080]+ba/b[height=1080]"),
-            (Some(1080), Some(60), None)
+            of(0),
+            (
+                Some(1080),
+                Some(60),
+                Some("AV1"),
+                Some("HDR"),
+                Some(9900),
+                false
+            )
         );
         assert_eq!(
-            of("bv*[height=720]+ba/b[height=720]"),
-            (Some(720), None, None),
-            "30 fps isn't news"
+            of(1),
+            (
+                Some(1080),
+                Some(60),
+                Some("H.264"),
+                Some("SDR"),
+                Some(8900),
+                false
+            )
         );
-        assert_eq!(of("ba"), (None, None, Some(130)), "the sound as it is");
         assert_eq!(
-            of("mp3:320"),
-            (None, None, Some(320)),
-            "an MP3 at a constant rate"
+            of(2),
+            (Some(720), Some(30), Some("H.264"), None, Some(7900), true),
+            "a size the site only guessed"
         );
-        assert_eq!(of("mp3:0"), (None, None, None), "VBR says no rate");
+        let sound = &a[3];
+        assert!(sound.original && sound.audio);
+        assert_eq!(
+            (sound.kbps, sound.size, sound.approx),
+            (Some(130), Some(900), false)
+        );
+        let mp3 = a.iter().find(|c| c.label.contains("320")).unwrap();
+        assert_eq!(
+            (mp3.kbps, mp3.approx, mp3.original),
+            (Some(320), true, false)
+        );
+        let vbr = a.iter().find(|c| c.label.contains("VBR")).unwrap();
+        assert_eq!(vbr.kbps, None, "VBR says no rate");
+    }
+
+    /// #852: YouTube looked up without a JavaScript runtime: the menu says so with its
+    /// qualities, as the Download video window does, with the help page's section; a look-up
+    /// that left nothing to offer says it too.
+    #[test]
+    fn a_look_up_without_a_javascript_runtime_says_so_in_the_menu() {
+        let mut l = Lookups::default();
+        let now = Instant::now();
+        let a = l
+            .begin(&look(PAGE, None, None), &sent(false, "a=1"), false, now)
+            .unwrap();
+        let mut v = match mdm_tools::resolve::parse_looked(STREAM.as_bytes()).unwrap() {
+            Looked::Video(v) => v,
+            Looked::List(_) => unreachable!(),
+        };
+        v.needs_js_runtime = true;
+        *lock(&a.found) = Found::of(Ok(Looked::Video(v.clone())), false);
+        let ready = l.poll(&a.token, now);
+        assert_eq!(ready.state, lookup::READY);
+        let notice = ready.notice.expect("the notice");
+        assert_eq!(notice.text, crate::videodlg::js_runtime_note());
+        assert!(
+            notice.text.contains("JavaScript runtime"),
+            "{}",
+            notice.text
+        );
+        assert!(!notice.link.is_empty());
+        assert!(
+            notice.url.starts_with("https://misterdownloadmanager.com/")
+                && notice.url.ends_with("/help/video.html#javascript-runtime"),
+            "{}",
+            notice.url
+        );
+        // Nothing to offer at all: said with the reason.
+        v.formats.clear();
+        *lock(&a.found) = Found::of(Ok(Looked::Video(v)), false);
+        let none = l.poll(&a.token, now);
+        assert_eq!(
+            (none.state.as_str(), none.reason.as_deref()),
+            (lookup::FAILED, Some(lookup::NO_CHOICES))
+        );
+        assert!(none.notice.is_some());
     }
 }

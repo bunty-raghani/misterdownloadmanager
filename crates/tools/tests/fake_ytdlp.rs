@@ -30,6 +30,7 @@ fn main() -> ExitCode {
     if std::env::var_os("MDM_SUBS_RETRY_SECS").is_some() {
         checks(&me);
         job_checks(&me);
+        merge_checks(&me);
         list_checks(&me);
         preloaded_checks(&me);
         engine_checks(&me);
@@ -126,6 +127,16 @@ fn fake_ytdlp() -> ExitCode {
             .and_then(|t| t.trim().parse::<u32>().ok())
             .unwrap_or(0);
         let _ = std::fs::write(&file, (n + 1).to_string());
+        // #852: YouTube looked up without a JavaScript runtime, as yt-dlp says it.
+        if args
+            .last()
+            .is_some_and(|u| u == "https://nojs.example/watch")
+        {
+            eprint!(
+                "{}",
+                include_str!("fixtures/ytdlp-js-runtime/no-runtime.stderr")
+            );
+        }
         // #769: a page of the test's, its links signed for a little while from now.
         match std::fs::read_to_string(home.join("page.json")) {
             Ok(page) => {
@@ -175,6 +186,57 @@ fn fake_ytdlp() -> ExitCode {
         eprintln!(
             "ERROR: [download] Got error: HTTPSConnection(host='rr1---sn-dead.googlevideo.com', port=443): Failed to resolve 'rr1---sn-dead.googlevideo.com' ([Errno 11004] getaddrinfo failed). Giving up after 10 retries"
         );
+        return ExitCode::FAILURE;
+    }
+    // #736: a video and its sound, merged as yt-dlp's ffmpeg does: into `<stem>.temp.mp4`,
+    // growing for a while, then renamed. Said first when asked (`post_process:` print). Halfway,
+    // the file is empty for a while (written again from the start): what is said of the merge
+    // must not go back with it. Whole, it stays a while before the rename, long enough to be
+    // read on a slow machine.
+    if mode == "merge" {
+        use std::io::Write;
+        println!("MDMQ 137+140 1920x1080");
+        println!("MDMP 3000 3000 NA 1000 137");
+        println!("MDMP 1000 1000 NA 1000 140");
+        let video = template.replace("%(ext)s", "mp4").replace("%%", "%");
+        if args.iter().any(|a| a.starts_with("post_process:MDMM")) {
+            println!("MDMM {video}");
+        }
+        let temp = video.replace(".mp4", ".temp.mp4");
+        let mut file = std::fs::File::create(&temp).unwrap();
+        for k in 1..=10u64 {
+            if k == 6 {
+                file.set_len(0).unwrap();
+                std::thread::sleep(Duration::from_millis(600));
+                file = std::fs::File::create(&temp).unwrap();
+                file.write_all(&[0u8; 2000]).unwrap();
+            }
+            file.write_all(&[0u8; 400]).unwrap();
+            file.flush().unwrap();
+            std::thread::sleep(Duration::from_millis(300));
+        }
+        drop(file);
+        std::thread::sleep(Duration::from_millis(1200));
+        std::fs::rename(&temp, &video).unwrap();
+        println!("MDMF {video}");
+        return ExitCode::SUCCESS;
+    }
+    // A merge that fails (a stream ffmpeg can't read): the streams stay, whole, as yt-dlp leaves
+    // them, and the merge's file half written.
+    if mode == "merge-fails" {
+        println!("MDMQ 137+aud-English 1920x1080");
+        println!("MDMP 3000 3000 NA 1000 137");
+        println!("MDMP 1000 1000 NA 1000 aud-English");
+        let video = template.replace("%(ext)s", "mp4").replace("%%", "%");
+        std::fs::write(video.replace(".mp4", ".f137.mp4"), [0u8; 3000]).unwrap();
+        // An HLS sound, named as yt-dlp names its rendition.
+        std::fs::write(video.replace(".mp4", ".faud-English.mp4"), [0u8; 1000]).unwrap();
+        if args.iter().any(|a| a.starts_with("post_process:MDMM")) {
+            println!("MDMM {video}");
+        }
+        std::fs::write(video.replace(".mp4", ".temp.mp4"), [0u8; 1200]).unwrap();
+        std::thread::sleep(Duration::from_millis(300));
+        eprintln!("ERROR: Postprocessing: Conversion failed!");
         return ExitCode::FAILURE;
     }
     println!("MDMP 1024 4096 NA 1000 18");
@@ -257,7 +319,21 @@ fn fake_ytdlp() -> ExitCode {
         for s in streams.iter().filter(|s| **s != output) {
             let _ = std::fs::remove_file(s);
         }
-        std::fs::write(&output, merged).unwrap();
+        // #736: several streams are merged as yt-dlp's ffmpeg does, said first when asked
+        // (`post_process:` print), into `<stem>.temp.mp4`, growing for a while, then renamed.
+        if streams.len() > 1 && args.iter().any(|a| a.starts_with("post_process:MDMM")) {
+            println!("MDMQ {} 1920x1080", chosen["format_id"].as_str().unwrap());
+            println!("MDMM {output}");
+            let temp = output.replace(".mp4", ".temp.mp4");
+            let step = merged.len().div_ceil(5);
+            for k in 1..=5 {
+                std::fs::write(&temp, &merged[..(k * step).min(merged.len())]).unwrap();
+                std::thread::sleep(Duration::from_millis(300));
+            }
+            std::fs::rename(&temp, &output).unwrap();
+        } else {
+            std::fs::write(&output, merged).unwrap();
+        }
         println!("MDMF {output}");
         return ExitCode::SUCCESS;
     }
@@ -434,6 +510,80 @@ fn log_of(p: &mdm_tools::video::Progress) -> Vec<String> {
     p.events.iter().map(|(_, t)| t.clone()).collect()
 }
 
+/// #736: while yt-dlp's ffmpeg joins a video and its sound, the job says so, and how far it is
+/// from the joined file's size; it says no more once the file is there.
+fn merge_checks(me: &Path) {
+    let tools = tempfile::tempdir().unwrap();
+    let out = tempfile::tempdir().unwrap();
+    std::fs::write(out.path().join("mode.txt"), "merge").unwrap();
+    let exe = fake_in(me, tools.path());
+    let job = VideoJob::start(
+        &exe,
+        "https://video.example/talk",
+        "bv*+ba",
+        out.path(),
+        "Talk",
+        None,
+        None,
+        None,
+        &Default::default(),
+        &Subs::default(),
+        None,
+    )
+    .expect("started");
+    let end = Instant::now() + Duration::from_secs(60);
+    let mut seen = Vec::new();
+    let p = loop {
+        let p = job.progress();
+        if p.state != State::Running {
+            break p;
+        }
+        if let Some(m) = p.merging {
+            seen.push(m);
+        }
+        assert!(Instant::now() < end, "still running: {p:?}");
+        std::thread::sleep(Duration::from_millis(50));
+    };
+    assert!(matches!(p.state, State::Done(_)), "merge: {:?}", p.state);
+    assert_eq!(p.merging, None, "done: no longer merging");
+    let known: Vec<f64> = seen.iter().filter_map(|m| *m).collect();
+    assert!(!seen.is_empty(), "merging was said");
+    assert!(
+        known.iter().any(|f| *f > 0.0 && *f < 1.0),
+        "a share done was said: {seen:?}"
+    );
+    // Never back, though the file was empty a while halfway; and on to its whole size, 4000 bytes
+    // of the streams' 4000, held short of the end until the rename (99 %).
+    assert!(
+        known.windows(2).all(|w| w[0] <= w[1]),
+        "it only goes forward: {known:?}"
+    );
+    assert_eq!(known.last(), Some(&0.99), "it reaches the end: {known:?}");
+
+    // Joining them fails: the video fails at once (no other look-up or server mends it), says
+    // why, keeps the streams for Resume and leaves nothing half joined.
+    let (p, files, out) = download_as(me, "merge-fails", &Subs::default(), "bv*+ba", "Talk");
+    match &p.state {
+        State::Failed(e) => assert!(e.contains("Conversion failed"), "{e}"),
+        other => panic!("merge fails: {other:?}"),
+    }
+    assert_eq!(p.merging, None);
+    let kept = ["Talk.f137.mp4", "Talk.faud-English.mp4"];
+    assert_eq!(files, kept, "the streams stay, the merge's file goes");
+    let named: Vec<String> = p
+        .merge_failed
+        .expect("said to be the merge")
+        .iter()
+        .map(|f| f.file_name().unwrap().to_string_lossy().into_owned())
+        .collect();
+    assert_eq!(named, kept);
+    assert_eq!(
+        std::fs::read_to_string(out.path().join("tries.txt")).unwrap(),
+        "1",
+        "one run"
+    );
+}
+
 /// #79 and #94: the job never gives up while yt-dlp works, never leaves it running when it does
 /// give up, and mends what a new look-up or a nearby quality can mend.
 fn job_checks(me: &Path) {
@@ -542,7 +692,7 @@ fn preloaded_checks(me: &Path) {
         let job = VideoJob::start_with(
             &exe,
             "https://video.example/talk",
-            "b[height=360]",
+            "18/b[height=360]",
             out.path(),
             "Talk",
             None,
@@ -578,7 +728,7 @@ fn preloaded_checks(me: &Path) {
         }
         Some(Preloaded {
             slot,
-            selector: "b[height=360]".into(),
+            selector: "18/b[height=360]".into(),
             label: label.into(),
             merge: false,
         })
@@ -587,7 +737,7 @@ fn preloaded_checks(me: &Path) {
     let note =
         "The site offered no format with the browser's cookies; looked the page up without them";
 
-    let (p, looked, _) = run("", menu("360p MP4", Some(true)));
+    let (p, looked, _) = run("", menu("360p · H.264", Some(true)));
     assert!(matches!(p.state, State::Done(_)), "{:?}", p.state);
     assert_eq!(looked, 0, "the menu's look-up, not another");
     assert!(log_of(&p).iter().any(|t| t == note), "{:?}", log_of(&p));
@@ -598,14 +748,17 @@ fn preloaded_checks(me: &Path) {
     assert_eq!(looked, 1);
 
     // The menu's look-up doesn't offer that choice under that label, or failed: afresh.
-    for menu in [menu("720p MP4", Some(false)), menu("360p MP4", None)] {
+    for menu in [
+        menu("720p · H.264", Some(false)),
+        menu("360p · H.264", None),
+    ] {
         let (p, looked, _) = run("", menu);
         assert!(matches!(p.state, State::Done(_)), "{:?}", p.state);
         assert_eq!(looked, 1);
     }
 
     // The first run fails (a server stopped resolving): the second reads the page afresh.
-    let (p, looked, _) = run("dns-once", menu("360p MP4", Some(false)));
+    let (p, looked, _) = run("dns-once", menu("360p · H.264", Some(false)));
     assert!(matches!(p.state, State::Done(_)), "{:?}", p.state);
     assert_eq!(looked, 1, "the retry's");
 
@@ -623,7 +776,7 @@ fn preloaded_checks(me: &Path) {
         &format!(r#""acodec": "mp4a", "protocol": "https", "url": "{dead}"}}"#),
     );
     assert!(page.contains(dead));
-    let (p, looked, loaded) = run("", menu_of(&page, "360p MP4", Some(false)));
+    let (p, looked, loaded) = run("", menu_of(&page, "360p · H.264", Some(false)));
     assert!(matches!(p.state, State::Done(_)), "{:?}", p.state);
     assert_eq!(looked, 0, "the menu's look-up, moved");
     assert!(
@@ -662,10 +815,14 @@ fn list_checks(me: &Path) {
         Looked::List(l) => assert_eq!((l.title.as_str(), l.total), ("A fake playlist", Some(6000))),
         Looked::Video(_) => panic!("a playlist taken for a video"),
     }
-    assert!(matches!(
-        look_up(&exe, "https://video.example/talk", &none).unwrap(),
-        Looked::Video(_)
-    ));
+    // #852: yt-dlp's warnings reach the look-up. A video looked up without a JavaScript runtime
+    // says so (yt-dlp's own words, `fixtures/ytdlp-js-runtime`); another doesn't.
+    let runtime_said = |url: &str| match look_up(&exe, url, &none).unwrap() {
+        Looked::Video(v) => v.needs_js_runtime,
+        Looked::List(_) => panic!("a video taken for a list"),
+    };
+    assert!(!runtime_said("https://video.example/talk"));
+    assert!(runtime_said("https://nojs.example/watch"));
 
     // #352: cookies that leave yt-dlp nothing to offer: the same page without them.
     let page = "https://cookies.example/none";
@@ -843,13 +1000,19 @@ fn engine_checks(me: &Path) {
         )
         .expect("started")
     };
+    // What each run said of its merge (#736), in order.
+    let merges = std::cell::RefCell::new(Vec::new());
     let wait = |job: &VideoJob| {
         let end = Instant::now() + Duration::from_secs(120);
         let mut most_connections = 0;
+        merges.borrow_mut().clear();
         loop {
             let p = job.progress();
             if let Some(e) = &p.engine {
                 most_connections = most_connections.max(e.connections.len());
+            }
+            if let Some(m) = p.merging {
+                merges.borrow_mut().push(m);
             }
             if p.state != State::Running {
                 return (p, most_connections);
@@ -881,6 +1044,15 @@ fn engine_checks(me: &Path) {
         "the streams merged"
     );
     assert!(most >= 2, "several connections: {most}");
+    // #736: the engine downloaded the streams, yt-dlp's ffmpeg merges them: said, with how far.
+    let known: Vec<f64> = merges.borrow().iter().filter_map(|m| *m).collect();
+    assert!(
+        known.iter().any(|f| *f > 0.0 && *f < 1.0),
+        "the merge and its share done were said: {:?}",
+        merges.borrow()
+    );
+    assert!(known.windows(2).all(|w| w[0] <= w[1]), "{known:?}");
+    assert_eq!(p.merging, None, "done: no longer merging");
     assert!(
         log.iter()
             .any(|t| t == "yt-dlp's address for format 137: from 127.0.0.1"),

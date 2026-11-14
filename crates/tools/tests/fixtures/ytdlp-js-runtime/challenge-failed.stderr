@@ -1,0 +1,4 @@
+WARNING: [youtube] aqz-KE-bpKQ: n challenge solving failed: Some formats may be missing. Ensure you have a supported JavaScript runtime and challenge solver script distribution installed. Review any warnings presented before this message. For more details, refer to  https://github.com/yt-dlp/yt-dlp/wiki/EJS
+WARNING: [youtube] aqz-KE-bpKQ: mweb client https formats require a GVS PO Token which was not provided. They will be skipped as they may yield HTTP Error 403. You can manually pass a GVS PO Token for this client with --extractor-args "youtube:po_token=mweb.gvs+XXX". For more information, refer to  https://github.com/yt-dlp/yt-dlp/wiki/PO-Token-Guide
+WARNING: Only images are available for download. use --list-formats to see them
+ERROR: [youtube] aqz-KE-bpKQ: Requested format is not available. Use --list-formats for a list of available formats

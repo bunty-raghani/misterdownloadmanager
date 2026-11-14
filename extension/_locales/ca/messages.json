@@ -92,6 +92,9 @@
       }
     }
   },
+  "popup_undo": {
+    "message": "Desfés"
+  },
   "popup_excluded": {
     "message": "Les baixades de $site$ es queden al navegador",
     "placeholders": {

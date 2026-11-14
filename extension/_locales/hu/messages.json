@@ -92,6 +92,9 @@
       }
     }
   },
+  "popup_undo": {
+    "message": "Visszavonás"
+  },
   "popup_excluded": {
     "message": "A(z) $site$ webhelyről származó letöltések a böngészőben maradnak",
     "placeholders": {

@@ -92,6 +92,9 @@
       }
     }
   },
+  "popup_undo": {
+    "message": "Desfazer"
+  },
   "popup_excluded": {
     "message": "Os downloads de $site$ continuam no navegador",
     "placeholders": {

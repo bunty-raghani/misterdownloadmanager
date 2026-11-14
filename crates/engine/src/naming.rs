@@ -7,21 +7,316 @@ use std::sync::{Mutex, OnceLock};
 use percent_encoding::percent_decode_str;
 use url::Url;
 
-/// File name from `Content-Disposition`, else the last URL path segment, else `download`.
-/// Always safe to use as a single path component on Windows and Unix.
+/// File name from `Content-Disposition`, else the address's ([`address_name`]), else
+/// `download`. Always safe to use as a single path component on Windows and Unix.
 pub fn file_name(content_disposition: Option<&str>, url: &Url) -> String {
-    let from_url = || {
-        url.path_segments()
-            .and_then(|mut s| s.next_back())
-            .map(|s| percent_decode_str(s).decode_utf8_lossy().into_owned())
+    answer_name(
+        url,
+        &Answer {
+            disposition: content_disposition,
+            ..Answer::default()
+        },
+    )
+}
+
+/// What is known of a file besides its address, for its name: the server's answer
+/// (`Content-Disposition`, `Content-Type`), the type its first bytes show (`sniffed`, an
+/// extension from [`sniff`]), and the title of the page it was played on, when the browser sent
+/// one with a page's media (#695, #800).
+#[derive(Clone, Copy, Debug, Default)]
+pub struct Answer<'a> {
+    pub disposition: Option<&'a str>,
+    pub content_type: Option<&'a str>,
+    pub sniffed: Option<&'a str>,
+    pub title: Option<&'a str>,
+}
+
+/// The file's name from all that is known of it (#695, #800), safe as one path component:
+///
+/// 1. the server's `Content-Disposition` name, as it gives it: it wins over everything;
+/// 2. else the address's name ([`address_name`]: a script's `file=` value, else its last part);
+/// 3. a name whose extension doesn't say its type (a script's, `stream.php`; a page's; none, a
+///    bare id) takes the type's: the server's `Content-Type`, else its bytes' (`sniffed`). Only
+///    the media, picture, document and archive types of [`TYPES`], never one that runs;
+/// 4. a name that means nothing ([`means_nothing`]: a script's, a bare id, `videoplayback`, a
+///    long hash) gives way to the page's `title` when there is one, with that extension.
+///
+/// A real file name (`clip.mp4`, `setup.zip`, a script's `file=` value) is never changed by the
+/// type or the title.
+pub fn answer_name(url: &Url, a: &Answer) -> String {
+    if let Some(name) = a.disposition.and_then(disposition_name) {
+        // A header may carry a path; keep only its last component.
+        return sanitize(last_component(&name));
+    }
+    let last = last_segment(url);
+    let given = query_file_name(url).filter(|_| names_nothing(&last));
+    let named = given.is_some();
+    let name = given.unwrap_or(last);
+    let typed = if untyped(&name) {
+        a.content_type
+            .and_then(type_extension)
+            .or_else(|| a.sniffed.filter(|e| is_typed_extension(e)))
+    } else {
+        None
     };
-    let name = content_disposition
-        .and_then(disposition_name)
-        .or_else(from_url)
-        .unwrap_or_default();
-    // A header may carry a path; keep only its last component.
-    let name = name.rsplit(['/', '\\']).next().unwrap_or_default();
-    sanitize(name)
+    let title = a
+        .title
+        .map(clean_title)
+        .filter(|t| !t.is_empty() && !named && means_nothing(&name));
+    let (stem, ext) = split_extension(&name);
+    let stem = match title.as_deref() {
+        Some(t) => t,
+        None if stem.trim().is_empty() => "download",
+        None => stem,
+    };
+    let name = match typed.or(ext) {
+        Some(e) => format!("{stem}.{e}"),
+        None => stem.to_owned(),
+    };
+    sanitize(&name)
+}
+
+/// The address's last path part, percent-decoded (empty for a folder's address).
+fn last_segment(url: &Url) -> String {
+    url.path_segments()
+        .and_then(|mut s| s.next_back())
+        .map(|s| percent_decode_str(s).decode_utf8_lossy().into_owned())
+        .unwrap_or_default()
+}
+
+/// A path's last component (`a/b\c.zip` → `c.zip`).
+fn last_component(name: &str) -> &str {
+    name.rsplit(['/', '\\']).next().unwrap_or_default()
+}
+
+/// The address's own name for its file, not sanitized: a script's `file=` or `filename=` value
+/// when it names a file of a known type (`stream.php?file=FL262-1E01-4.mp4` →
+/// `FL262-1E01-4.mp4`, #695), else its last path part.
+pub fn address_name(url: &Url) -> String {
+    let last = last_segment(url);
+    query_file_name(url)
+        .filter(|_| names_nothing(&last))
+        .unwrap_or(last)
+}
+
+/// The address's `file=` / `filename=` value (its last component) when its extension is a known
+/// type's ([`TYPES`]): a value naming a program, or anything else, is never taken.
+fn query_file_name(url: &Url) -> Option<String> {
+    url.query_pairs()
+        .filter(|(k, _)| k.eq_ignore_ascii_case("file") || k.eq_ignore_ascii_case("filename"))
+        .map(|(_, v)| last_component(v.trim()).trim().to_owned())
+        .find(|v| match split_extension(v) {
+            (stem, Some(ext)) => {
+                !stem.trim().is_empty() && is_typed_extension(&ext.to_ascii_lowercase())
+            }
+            _ => false,
+        })
+}
+
+/// `name`'s stem and extension (`clip.mp4` → `clip`, `mp4`). `.profile`, `clip` and `Mr. Smith`
+/// have none.
+fn split_extension(name: &str) -> (&str, Option<&str>) {
+    match name.rsplit_once('.') {
+        Some((stem, ext))
+            if !stem.is_empty() && !ext.is_empty() && !ext.contains(char::is_whitespace) =>
+        {
+            (stem, Some(ext))
+        }
+        _ => (name, None),
+    }
+}
+
+/// The extensions of programs that answer on a web server: an address ending in one names the
+/// program, not the file it sends (`stream.php`, `remote_control.php`, `download.aspx`).
+pub const SCRIPT_EXTENSIONS: &[&str] = &[
+    "php", "php3", "php4", "php5", "phtml", "asp", "aspx", "ashx", "axd", "jsp", "jspx", "do",
+    "action", "cgi", "pl", "cfm", "py", "rb",
+];
+
+/// A web page's extensions: a file of another type served at such an address takes its type's.
+pub const PAGE_EXTENSIONS: &[&str] = &["htm", "html", "xhtml", "shtml", "dhtml"];
+
+/// Whether `name`'s extension is a web server's program's ([`SCRIPT_EXTENSIONS`]).
+pub fn is_script_name(name: &str) -> bool {
+    split_extension(name)
+        .1
+        .is_some_and(|e| SCRIPT_EXTENSIONS.contains(&e.to_ascii_lowercase().as_str()))
+}
+
+/// A name whose extension doesn't say what the file is: a script's, a page's, or none.
+fn untyped(name: &str) -> bool {
+    match split_extension(name).1 {
+        None => true,
+        Some(e) => {
+            let e = e.to_ascii_lowercase();
+            SCRIPT_EXTENSIONS.contains(&e.as_str()) || PAGE_EXTENSIONS.contains(&e.as_str())
+        }
+    }
+}
+
+/// An address's last part that names no file, so its `file=` value does: a script's, or one
+/// without an extension.
+fn names_nothing(last: &str) -> bool {
+    split_extension(last).1.is_none() || is_script_name(last)
+}
+
+/// A name that says nothing of what the file is, for a page's title to replace (#345, #800): a
+/// script's (`remote_control.php`), none, one without an extension (a bare id, `videoplayback`),
+/// or a long hash (`a3f9…e1.mp4`). The browser extension's `meansNothing` is the same test.
+pub fn means_nothing(name: &str) -> bool {
+    let (stem, ext) = split_extension(name);
+    let hash = stem.chars().count() >= 24
+        && stem
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || matches!(c, '=' | '_' | '-'))
+        && stem.chars().filter(|c| matches!(c, '-' | '_')).count() <= 2;
+    ext.is_none() || is_script_name(name) || hash
+}
+
+/// A page's title as a file's stem: what a file name can't hold becomes a space, spaces are
+/// collapsed, at most 150 characters, no trailing dot (the browser extension's `cleanTitle`).
+pub fn clean_title(title: &str) -> String {
+    let spaced: String = title
+        .chars()
+        .filter(|c| !is_format_char(*c))
+        .map(|c| {
+            if c.is_control() || r#"<>:"/\|?*"#.contains(c) {
+                ' '
+            } else {
+                c
+            }
+        })
+        .collect();
+    let words = spaced.split_whitespace().collect::<Vec<_>>().join(" ");
+    let cut: String = words.chars().take(150).collect();
+    cut.trim_end_matches(['.', ' ']).to_owned()
+}
+
+/// The types a file's extension is taken from, with that extension (the browser extension's
+/// `TYPE_EXTENSIONS` holds the same, which `tools/extension/test.mjs` checks). Media, pictures,
+/// documents and archives only: a type that runs (a program, a script, a page) never names a
+/// file's extension.
+pub const TYPES: &[(&str, &str)] = &[
+    ("video/mp4", "mp4"),
+    ("video/x-m4v", "m4v"),
+    ("video/webm", "webm"),
+    ("video/x-matroska", "mkv"),
+    ("video/quicktime", "mov"),
+    ("video/x-msvideo", "avi"),
+    ("video/avi", "avi"),
+    ("video/x-ms-wmv", "wmv"),
+    ("video/x-flv", "flv"),
+    ("video/mpeg", "mpg"),
+    ("video/mp2t", "ts"),
+    ("video/3gpp", "3gp"),
+    ("video/3gpp2", "3g2"),
+    ("video/ogg", "ogv"),
+    ("audio/mpeg", "mp3"),
+    ("audio/mp3", "mp3"),
+    ("audio/mp4", "m4a"),
+    ("audio/x-m4a", "m4a"),
+    ("audio/aac", "aac"),
+    ("audio/aacp", "aac"),
+    ("audio/webm", "weba"),
+    ("audio/ogg", "ogg"),
+    ("audio/opus", "opus"),
+    ("audio/flac", "flac"),
+    ("audio/x-flac", "flac"),
+    ("audio/wav", "wav"),
+    ("audio/x-wav", "wav"),
+    ("audio/wave", "wav"),
+    ("audio/x-ms-wma", "wma"),
+    ("application/ogg", "ogg"),
+    ("image/jpeg", "jpg"),
+    ("image/png", "png"),
+    ("image/gif", "gif"),
+    ("image/webp", "webp"),
+    ("image/avif", "avif"),
+    ("application/pdf", "pdf"),
+    ("application/epub+zip", "epub"),
+    ("application/zip", "zip"),
+    ("application/x-zip-compressed", "zip"),
+    ("application/x-7z-compressed", "7z"),
+    ("application/vnd.rar", "rar"),
+    ("application/x-rar-compressed", "rar"),
+    ("application/gzip", "gz"),
+    ("application/x-gzip", "gz"),
+];
+
+/// The extension a `Content-Type` value names (`video/mp4; codecs=…` → `mp4`), if [`TYPES`] has
+/// it.
+pub fn type_extension(content_type: &str) -> Option<&'static str> {
+    let mime = content_type.split(';').next()?.trim();
+    TYPES
+        .iter()
+        .find(|(t, _)| t.eq_ignore_ascii_case(mime))
+        .map(|(_, e)| *e)
+}
+
+/// Whether `ext` is one of [`TYPES`]' extensions (every one [`sniff`] gives is), in any case.
+pub fn is_typed_extension(ext: &str) -> bool {
+    TYPES.iter().any(|(_, e)| e.eq_ignore_ascii_case(ext))
+}
+
+/// How many first bytes [`sniff`] reads.
+pub const SNIFF_BYTES: usize = 64;
+
+/// The media type a file's first bytes show, as its extension: the MP4 family's (`ftyp`),
+/// Matroska or WebM (EBML), Ogg, FLAC, MP3 (an ID3 tag or a Layer III frame), AAC (ADTS), WAVE,
+/// AVI, FLV. None for anything else: a file is never named a program by its bytes.
+pub fn sniff(head: &[u8]) -> Option<&'static str> {
+    let at = |i: usize, sig: &[u8]| head.get(i..i + sig.len()) == Some(sig);
+    if at(4, b"ftyp") {
+        return Some(match head.get(8..12).unwrap_or_default() {
+            b"M4A " | b"M4B " => "m4a",
+            b"qt  " => "mov",
+            b if b.starts_with(b"3g") => "3gp",
+            _ => "mp4",
+        });
+    }
+    if at(0, &[0x1A, 0x45, 0xDF, 0xA3]) {
+        let webm = head.windows(4).any(|w| w == b"webm");
+        return Some(if webm { "webm" } else { "mkv" });
+    }
+    if at(0, b"OggS") {
+        return Some("ogg");
+    }
+    if at(0, b"fLaC") {
+        return Some("flac");
+    }
+    if at(0, b"ID3") {
+        return Some("mp3");
+    }
+    if at(0, b"RIFF") && at(8, b"WAVE") {
+        return Some("wav");
+    }
+    if at(0, b"RIFF") && at(8, b"AVI ") {
+        return Some("avi");
+    }
+    if at(0, b"FLV\x01") {
+        return Some("flv");
+    }
+    if let [0xFF, b, c, ..] = *head {
+        // ADTS: a 12-bit sync and layer 00.
+        if b & 0xF6 == 0xF0 {
+            return Some("aac");
+        }
+        // An MPEG audio frame: an 11-bit sync, a version that isn't reserved, Layer III, and a
+        // bitrate and sample rate that aren't either (a UTF-16 text's FF FE isn't one).
+        let (version, layer) = ((b >> 3) & 3, (b >> 1) & 3);
+        if b & 0xE0 == 0xE0 && version != 1 && layer == 1 && c >> 4 != 0xF && (c >> 2) & 3 != 3 {
+            return Some("mp3");
+        }
+    }
+    None
+}
+
+/// Whether the file's bytes must be looked at for its name ([`sniff`]): it is named by its
+/// address, whose name doesn't say its type, and the server's `Content-Type` doesn't either.
+pub fn needs_sniff(url: &Url, disposition: Option<&str>, content_type: Option<&str>) -> bool {
+    disposition.and_then(disposition_name).is_none()
+        && untyped(&address_name(url))
+        && content_type.and_then(type_extension).is_none()
 }
 
 /// The file name a `Content-Disposition` value suggests (RFC 6266), read as browsers do:
@@ -489,16 +784,17 @@ mod tests {
         assert_eq!(stems.pick("Song.mp4"), d.join("Song (4).mp4"));
         assert_eq!(stems.pick("Songs.mp3"), d.join("Songs (1).mp3"));
         assert_eq!(stems.pick("Song extra.mp4"), d.join("Song extra.mp4"));
-        let t = std::time::Instant::now();
-        for i in 0..5000 {
-            stems.pick(&format!("Video {}.mp4", i % 2500));
+        // Many names, each twice: each looked up, not compared with every other one.
+        fn pick_all((mut stems, n): (Stems, usize)) -> Stems {
+            for i in 0..n {
+                stems.pick(&format!("Video {}.mp4", i % (n / 2)));
+            }
+            stems
         }
+        stems = pick_all((stems, 5000));
         assert_eq!(stems.pick("Video 7.mp4"), d.join("Video 7 (2).mp4"));
-        assert!(
-            t.elapsed() < std::time::Duration::from_secs(2),
-            "{:?}",
-            t.elapsed()
-        );
+        // 8 times the names cost about 8 times as long (not 64), on any machine.
+        mdm_labserver::growth::assert_linear(1000, |n| (Stems::new(d, []), n), pick_all);
     }
 
     #[test]
@@ -711,6 +1007,267 @@ mod tests {
         );
         // Visible text in any script is kept.
         assert_eq!(sanitize("تقرير-été-日本.zip"), "تقرير-été-日本.zip");
+    }
+
+    fn named(u: &str, a: Answer) -> String {
+        answer_name(&url(u), &a)
+    }
+
+    fn typed(content_type: &str) -> Answer<'_> {
+        Answer {
+            content_type: Some(content_type),
+            ..Answer::default()
+        }
+    }
+
+    /// #695, #800: a video a script sends is named by its type, not the script's extension.
+    #[test]
+    fn a_scripts_answer_takes_its_types_extension() {
+        let mp4 = typed("video/mp4");
+        assert_eq!(named("http://x/stream.php?id=7", mp4), "stream.mp4");
+        assert_eq!(
+            named(
+                "http://x/v/remote_control.php?a=1",
+                typed("video/mp4; codecs=avc1")
+            ),
+            "remote_control.mp4"
+        );
+        assert_eq!(named("http://x/get.aspx", typed("audio/mpeg")), "get.mp3");
+        assert_eq!(named("http://x/dl.cgi", typed("application/pdf")), "dl.pdf");
+        assert_eq!(named("http://x/watch.html", mp4), "watch.mp4");
+        // A bare id and Google's `videoplayback` have no extension: the type gives one.
+        assert_eq!(named("http://x/media/123456", mp4), "123456.mp4");
+        assert_eq!(
+            named("http://x/videoplayback?itag=18", mp4),
+            "videoplayback.mp4"
+        );
+        assert_eq!(named("http://x/", mp4), "download.mp4");
+        // A type that isn't a file's (a page, nothing said) leaves the name as it is.
+        assert_eq!(
+            named("http://x/stream.php", typed("text/html")),
+            "stream.php"
+        );
+        assert_eq!(
+            named("http://x/stream.php", typed("application/octet-stream")),
+            "stream.php"
+        );
+        assert_eq!(
+            named("http://x/stream.php", Answer::default()),
+            "stream.php"
+        );
+    }
+
+    /// #695: the script's `file=` (or `filename=`) value names it, before and after the answer.
+    #[test]
+    fn a_scripts_file_value_names_it() {
+        let u = "http://x/baigiang/stream.php?file=FL262-1E01-4.mp4&token=abc";
+        assert_eq!(file_name(None, &url(u)), "FL262-1E01-4.mp4");
+        assert_eq!(named(u, typed("video/mp4")), "FL262-1E01-4.mp4");
+        assert_eq!(
+            file_name(None, &url("http://x/get.php?filename=a%2Fb%2Fclip.webm")),
+            "clip.webm"
+        );
+        // No type known from the value: the script's name stays.
+        assert_eq!(
+            file_name(None, &url("http://x/get.php?file=notes")),
+            "get.php"
+        );
+        // A real name in the path is the file's: the query doesn't change it.
+        assert_eq!(
+            file_name(None, &url("http://x/files/movie.mkv?file=other.mp4")),
+            "movie.mkv"
+        );
+        // The page's title doesn't replace a real name.
+        let titled = Answer {
+            title: Some("Lecture one"),
+            ..typed("video/mp4")
+        };
+        assert_eq!(named(u, titled), "FL262-1E01-4.mp4");
+    }
+
+    /// Content-Disposition still wins over the type, the `file=` value and the title.
+    #[test]
+    fn the_servers_name_wins_over_type_and_title() {
+        let a = Answer {
+            disposition: Some("attachment; filename=\"Lecture 1.mp4\""),
+            content_type: Some("video/webm"),
+            sniffed: Some("mkv"),
+            title: Some("A page"),
+        };
+        assert_eq!(
+            named("http://x/stream.php?file=other.mp4", a),
+            "Lecture 1.mp4"
+        );
+    }
+
+    /// A real file name is never changed by the type, the bytes or a title.
+    #[test]
+    fn real_names_are_left_alone() {
+        let a = Answer {
+            content_type: Some("video/webm"),
+            sniffed: Some("mkv"),
+            title: Some("A page"),
+            ..Answer::default()
+        };
+        assert_eq!(named("http://x/clip.mp4", a), "clip.mp4");
+        assert_eq!(named("http://x/setup.zip", typed("video/mp4")), "setup.zip");
+        assert_eq!(named("http://x/my%20file.iso", a), "my file.iso");
+    }
+
+    /// The type's extension is only ever a media, picture, document or archive one: a script
+    /// serving a program, a script or a page keeps its own name, and a `file=` naming a program
+    /// is not taken.
+    #[test]
+    fn a_dangerous_extension_is_never_introduced() {
+        for t in [
+            "application/x-msdownload",
+            "application/x-msdos-program",
+            "application/x-sh",
+            "application/javascript",
+            "application/hta",
+            "application/x-ms-shortcut",
+            "text/html",
+        ] {
+            assert_eq!(named("http://x/get.php", typed(t)), "get.php", "{t}");
+            assert_eq!(named("http://x/123", typed(t)), "123", "{t}");
+        }
+        for v in [
+            "setup.exe",
+            "run.bat",
+            "x.scr",
+            "a.lnk",
+            "b.ps1",
+            "c.js",
+            "d.hta",
+            "e.msi",
+        ] {
+            assert_eq!(
+                file_name(None, &url(&format!("http://x/get.php?file={v}"))),
+                "get.php"
+            );
+        }
+        let runs = [
+            "exe", "bat", "cmd", "com", "scr", "msi", "lnk", "ps1", "js", "vbs", "hta",
+        ];
+        for (_, e) in TYPES {
+            assert!(!runs.contains(e), "{e}");
+        }
+        assert_eq!(
+            named(
+                "http://x/v.php",
+                Answer {
+                    sniffed: Some("exe"),
+                    ..Answer::default()
+                }
+            ),
+            "v.php"
+        );
+    }
+
+    /// #800: a page's media with a name that means nothing takes the page's title.
+    #[test]
+    fn a_meaningless_name_takes_the_pages_title() {
+        let t = |title| Answer {
+            title: Some(title),
+            ..typed("video/mp4")
+        };
+        assert_eq!(
+            named("http://x/remote_control.php?id=9", t("A clip: part 1/2")),
+            "A clip part 1 2.mp4"
+        );
+        assert_eq!(named("http://x/videoplayback", t("Talk")), "Talk.mp4");
+        assert_eq!(
+            named("http://x/v/aGVsbG8gd29ybGQgdGhpcyBpcyBh.mp4", t("Talk")),
+            "Talk.mp4"
+        );
+        // A real name keeps its own; a blank title is none.
+        assert_eq!(named("http://x/clip.mp4", t("Talk")), "clip.mp4");
+        assert_eq!(named("http://x/stream.php", t("  ")), "stream.mp4");
+        // Its type unknown: the title, and the script's extension (nothing says it is another).
+        let untyped = Answer {
+            title: Some("Talk"),
+            ..Answer::default()
+        };
+        assert_eq!(named("http://x/stream.php", untyped), "Talk.php");
+        assert_eq!(named("http://x/12345", untyped), "Talk");
+        // Its bytes said: that type.
+        let sniffed = Answer {
+            sniffed: Some("webm"),
+            ..untyped
+        };
+        assert_eq!(named("http://x/stream.php", sniffed), "Talk.webm");
+    }
+
+    /// The names the browser extension gives a page's media (background.js' `mediaName`) are
+    /// the engine's: both check the same cases (`tools/extension/test.mjs`).
+    #[test]
+    fn the_extension_names_media_as_the_engine_does() {
+        let cases: serde_json::Value =
+            serde_json::from_str(include_str!("../tests/data/media-names.json")).unwrap();
+        for c in cases["cases"].as_array().unwrap() {
+            let text = |i: usize| c[i].as_str().unwrap();
+            let (mime, title) = (text(1).to_owned(), text(2).to_owned());
+            let a = Answer {
+                content_type: Some(mime.as_str()).filter(|s| !s.is_empty()),
+                title: Some(title.as_str()).filter(|s| !s.is_empty()),
+                ..Answer::default()
+            };
+            assert_eq!(named(text(0), a), text(3), "{c}");
+        }
+    }
+
+    #[test]
+    fn titles_are_cleaned() {
+        assert_eq!(clean_title("  a  b\t c  "), "a b c");
+        assert_eq!(clean_title("Who? Me: <yes>|no*"), "Who Me yes no");
+        assert_eq!(clean_title("End..."), "End");
+        assert_eq!(clean_title("x\u{202E}y"), "xy");
+        assert_eq!(clean_title(&"é".repeat(200)).chars().count(), 150);
+    }
+
+    #[test]
+    fn bytes_say_their_type() {
+        let mut mp4 = vec![0, 0, 0, 0x20];
+        mp4.extend_from_slice(b"ftypisom\0\0\x02\0");
+        assert_eq!(sniff(&mp4), Some("mp4"));
+        assert_eq!(sniff(b"\0\0\0\x20ftypM4A \0\0"), Some("m4a"));
+        assert_eq!(sniff(b"\0\0\0\x14ftypqt  "), Some("mov"));
+        assert_eq!(
+            sniff(b"\x1A\x45\xDF\xA3\x9F\x42\x86\x81\x01\x42\x82\x84webm"),
+            Some("webm")
+        );
+        assert_eq!(sniff(b"\x1A\x45\xDF\xA3\x42\x82\x88matroska"), Some("mkv"));
+        assert_eq!(sniff(b"OggS\0\x02"), Some("ogg"));
+        assert_eq!(sniff(b"fLaC\0\0\0\x22"), Some("flac"));
+        assert_eq!(sniff(b"ID3\x04\0\0"), Some("mp3"));
+        assert_eq!(sniff(&[0xFF, 0xFB, 0x90, 0x64]), Some("mp3"));
+        assert_eq!(sniff(&[0xFF, 0xF1, 0x50, 0x80]), Some("aac"));
+        assert_eq!(sniff(b"RIFF\0\0\0\0WAVEfmt "), Some("wav"));
+        assert_eq!(sniff(b"RIFF\0\0\0\0AVI LIST"), Some("avi"));
+        assert_eq!(sniff(b"FLV\x01\x05"), Some("flv"));
+        // Not media: a page, a program, UTF-16 text, nothing.
+        assert_eq!(sniff(b"<!doctype html>"), None);
+        assert_eq!(sniff(b"MZ\x90\0\x03\0"), None);
+        assert_eq!(sniff(&[0xFF, 0xFE, 0x3C, 0x00]), None);
+        assert_eq!(sniff(b""), None);
+        // Every type the bytes give is one a name may take.
+        for e in [
+            "mp4", "m4a", "mov", "3gp", "webm", "mkv", "ogg", "flac", "mp3", "aac", "wav",
+        ] {
+            assert!(is_typed_extension(e), "{e}");
+        }
+        assert!(is_typed_extension("avi") && is_typed_extension("flv"));
+    }
+
+    #[test]
+    fn bytes_are_looked_at_only_when_nothing_else_says() {
+        let u = url("http://x/stream.php?id=1");
+        assert!(needs_sniff(&u, None, None));
+        assert!(needs_sniff(&u, None, Some("application/octet-stream")));
+        assert!(!needs_sniff(&u, None, Some("video/mp4")));
+        assert!(!needs_sniff(&u, Some("attachment; filename=a.bin"), None));
+        assert!(!needs_sniff(&url("http://x/a.zip"), None, None));
+        assert!(!needs_sniff(&url("http://x/s.php?file=c.mp4"), None, None));
     }
 
     #[test]

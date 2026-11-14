@@ -48,12 +48,12 @@ Browser integration is set up by MDM itself at each start (the browsers installe
 ![The window that offers the browser extension on Linux: Google Chrome and Mozilla Firefox, each with Add the extension](images/browser-offer-linux.webp)
 *MDM finds the browsers installed and offers each one its extension.*
 
-In a Wayland session the windows go through XWayland (below). Not there yet on Linux: screen
+In a Wayland session the windows go through XWayland or Wayland (below). Not there yet on Linux: screen
 readers (Orca) don't read MDM's windows; browsers installed as a Flatpak can't reach MDM (Firefox
 from Flathub may, through the desktop as the Snap does, but that isn't checked yet); and **View →
 Draw with → Vulkan** is a choice, OpenGL stays the default.
 
-In a Wayland session (GNOME, KDE Plasma and others), MDM's windows run through XWayland when it is there: Wayland doesn't let a program place its own windows, so MDM's menus and drop-down lists would open in the middle of the screen. To run on Wayland itself anyway, start it with `MDM_WAYLAND=1 misterdownloadmanager`. If the system lacks a library X11 windows need (such as libxkbcommon-x11, which the .deb and .rpm bring but the AppImage and the tar.gz can't), MDM opens on Wayland instead; with no window system it can use, it names what's missing and the command that installs it.
+In a Wayland session, MDM chooses its windows' system as it starts, the same way however it was started (its menu entry, the browser's helper, the session's autostart). Its windows run through XWayland where X11 programs look right: only X11 lets MDM open its menus and drop-down lists right under what you clicked (on Wayland they open where the compositor puts new windows, often the middle of the screen) and hide its window in the notification area. That is GNOME and KDE Plasma, which tell X11 programs the screen's scale, and any desktop whose screens aren't scaled. On a scaled screen where nothing tells X11 programs the scale (Hyprland, labwc, sway and other wlroots compositors), the compositor would scale MDM's windows up, blurry, so MDM uses Wayland's own windows there. **View → Window system** picks **X11 (XWayland)** or **Wayland** instead, from the next start, for every way MDM starts (**Automatic** goes back to MDM's choice); `MDM_WAYLAND=1` or `MDM_WAYLAND=0` decides for one start. If the system lacks a library X11 windows need (such as libxkbcommon-x11, which the .deb and .rpm bring but the AppImage and the tar.gz can't), MDM opens on Wayland instead; with no window system it can use, it names what's missing and the command that installs it.
 
 The windows are the ones described in this help, with the desktop's fonts, file icons and title
 bars:

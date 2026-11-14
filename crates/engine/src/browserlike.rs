@@ -227,6 +227,7 @@ mod imp {
                 &opts.dns,
                 &opts.extra_roots,
                 route,
+                Some(opts.connect_timeout),
             ))));
         b = match proxy {
             Some(p) => b.proxy(p),
@@ -513,6 +514,7 @@ mod imp {
                 headers: resp.headers().clone(),
                 url: url.clone(),
                 len: resp.content_length(),
+                from: resp.remote_addr(),
             };
             let body = Body::Browser(Stream {
                 len: head.len,

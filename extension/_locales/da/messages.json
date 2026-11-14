@@ -92,6 +92,9 @@
       }
     }
   },
+  "popup_undo": {
+    "message": "Fortryd"
+  },
   "popup_excluded": {
     "message": "Downloads fra $site$ forbliver i browseren",
     "placeholders": {

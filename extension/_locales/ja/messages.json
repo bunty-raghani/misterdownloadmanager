@@ -92,6 +92,9 @@
       }
     }
   },
+  "popup_undo": {
+    "message": "元に戻す"
+  },
   "popup_excluded": {
     "message": "$site$ からのダウンロードはブラウザーに残ります",
     "placeholders": {

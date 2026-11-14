@@ -5,7 +5,7 @@
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
-use egui::{Pos2, Ui, ViewportBuilder, ViewportId, vec2};
+use egui::{Pos2, Ui, ViewportId, vec2};
 use mdm_engine::ProbeInfo;
 use url::Url;
 
@@ -346,9 +346,9 @@ fn dialog_window<T>(
         forget_window(ctx, vid, key);
     }
     // Hidden until `keep_theme` has given it its theme (see there).
-    let mut builder = ViewportBuilder::default()
+    let mut builder = crate::window_builder()
         .with_visible(false)
-        .with_title(title)
+        .with_title(crate::i18n::os_text(title))
         .with_inner_size(shown)
         // The thin frame trims the sizing borders and keeps the size fixed.
         .with_resizable(drawn)
@@ -394,10 +394,7 @@ fn dialog_window<T>(
                     let hwnd = ui.ctx().data(|d| d.get_temp::<isize>(key.with("hwnd")));
                     match drawn_title(ui, origin, shown[0], title, &buttons, hwnd) {
                         Some(CaptionButton::Close) => caption_close = true,
-                        Some(CaptionButton::Minimize) => {
-                            ui.ctx()
-                                .send_viewport_cmd(egui::ViewportCommand::Minimized(true));
-                        }
+                        Some(CaptionButton::Minimize) => crate::dialogs::minimize(ui.ctx(), hwnd),
                         _ => {}
                     }
                 }
@@ -414,6 +411,8 @@ fn dialog_window<T>(
                 if caption_close { Outcome::Closed } else { out }
             })
             .inner;
+        // A drop-down list opened from the keyboard, said to screen readers (#328).
+        crate::chrome::tell_screen_readers(ui.ctx());
         if close { Outcome::Closed } else { out }
     });
     let rescaled = follow_scale(ctx, vid, key, shown);
@@ -727,8 +726,9 @@ impl AddUrl {
                     self.address = self.history[i].clone();
                     self.error = None;
                 }
-                // While its list is open, Escape closes the list and the box keeps the keys.
-                winui::keep_keys(ui, &addr, false, true, self.list_open);
+                // Left / Right move its caret (#812); while its list is open, Escape closes
+                // the list and the box keeps the keys.
+                winui::keep_edit_keys(ui, &addr, self.list_open);
                 let list_was_open = self.list_open;
                 if self.list_open
                     && let Some(i) = winui::drop_list(
@@ -1089,7 +1089,7 @@ impl FileInfo {
             .filter(|n| !n.is_empty());
         let name = from_browser
             .clone()
-            .unwrap_or_else(|| mdm_engine::naming::file_name(None, &new.url));
+            .unwrap_or_else(|| crate::model::browser_guess(&new.url, &context));
         let category = Category::of(&name);
         let folder = crate::model::category_folder(category, &downloads, &dirs);
         let mut place = SaveAsPlace::new(Some(ctx));
@@ -1107,6 +1107,7 @@ impl FileInfo {
                     file_name,
                     // The browser had the answer: nothing was asked of the server here.
                     server: None,
+                    web_page: false,
                 })),
             ),
             None => (start_probe(rt, ctx, &new.url, &request), None),
@@ -1445,7 +1446,8 @@ impl FileInfo {
                     self.set_folder(&folder);
                     self.edited = true;
                 }
-                winui::keep_keys(ui, &save, false, true, self.folders_open);
+                // Left / Right move its caret, not the focus to "..." beside it (#812).
+                winui::keep_edit_keys(ui, &save, self.folders_open);
                 let folders_were_open = self.folders_open;
                 if self.folders_open {
                     let shown: Vec<String> = self
@@ -1475,7 +1477,7 @@ impl FileInfo {
                     // i18n: title of the folder picker
                     let title = crate::i18n::t("Select a folder").to_owned();
                     winui::start_pick(ui.ctx(), "file-info-folder", move || {
-                        let mut pick = rfd::FileDialog::new().set_title(title);
+                        let mut pick = crate::winui::file_dialog(&title);
                         if now.is_dir() {
                             pick = pick.set_directory(&now);
                         }
@@ -1864,6 +1866,9 @@ pub struct Complete {
     pub opening: Option<crate::launch::Asked<PathBuf, bool>>,
     /// Snooze picked a time (#741): the window closes, and no other opens until then.
     pub snooze: Option<crate::finish::SnoozeFor>,
+    /// The file was dragged out of the box to a place MDM couldn't learn (#869): Open and Open
+    /// folder say so.
+    pub moved_away: bool,
 }
 
 impl Complete {
@@ -1871,7 +1876,8 @@ impl Complete {
     pub fn of(i: &model::Item) -> Self {
         Complete {
             id: i.id,
-            url: i.url.to_string(),
+            // A video's file address, not its page (#795).
+            url: i.file_address().to_string(),
             path: i.dest.clone(),
             size: i.size.unwrap_or(i.downloaded),
             dont_show: false,
@@ -1879,6 +1885,7 @@ impl Complete {
             seen: false,
             opening: None,
             snooze: None,
+            moved_away: i.moved_away,
         }
     }
 
@@ -1997,9 +2004,12 @@ impl Complete {
                 }
 
                 // Drag handle: white box with a 1 px #828790 border; drag it to drop the file into
-                // Explorer, a mail or a chat (IDM 5.05). Windows only: dragging a file out to
-                // another app goes through OLE there; Linux and macOS have no such drag built
-                // yet, so the handle isn't shown (Open folder is the way there).
+                // Explorer, a mail or a chat (IDM 5.05). The drop target decides, as for a file
+                // dragged in Explorer: moved on the same drive (or with Shift), copied to another
+                // (or with Ctrl), and MDM's download follows a move (#869). Windows only: dragging
+                // a file out to another app goes through OLE there; Linux and macOS have no such
+                // drag built yet (no drag source in their window library), so the handle isn't
+                // shown there and nothing is moved: Open folder is the way to the file.
                 #[cfg(windows)]
                 {
                     let handle = r(o, 414.0, 187.0, 27.0, 20.0);
@@ -2014,14 +2024,24 @@ impl Complete {
                     if grip.hovered() {
                         ui.ctx().set_cursor_icon(egui::CursorIcon::Grab);
                     }
-                    // The file is looked for beside the window, with the drag (#743).
-                    if grip.drag_started()
-                        && let Err(e) = crate::win32::drag_file_out(
+                    // The file is looked for beside the window, with the drag (#743); where a move
+                    // took it comes back to the app (`dragged_out`), however late.
+                    if grip.drag_started() {
+                        let (id, from, wake) = (self.id, self.path.clone(), ui.ctx().clone());
+                        let followed = move |out| {
+                            DRAGGED_OUT
+                                .lock()
+                                .unwrap_or_else(|e| e.into_inner())
+                                .push((id, from, out));
+                            wake.request_repaint();
+                        };
+                        if let Err(e) = crate::win32::drag_file_out(
                             crate::i18n::t("Download complete"),
                             &self.path,
-                        )
-                    {
-                        tracing::warn!("drag out: {e}");
+                            followed,
+                        ) {
+                            tracing::warn!("drag out: {e}");
+                        }
                     }
                     p.rect_filled(handle, 0.0, winui::FIELD());
                     p.rect_stroke(
@@ -2053,22 +2073,23 @@ impl Complete {
                     && self.opening.is_none()
                 {
                     let opening = crate::launch::Asked::default();
+                    let moved_away = self.moved_away;
                     let _ = opening.get(
                         &self.path,
                         std::time::Duration::MAX,
                         std::time::Duration::ZERO,
                         Some(ui.ctx()),
-                        |p| open_file_now(p),
+                        move |p| open_download_now(p, moved_away),
                     );
                     self.opening = Some(opening);
                 }
                 if opened == Some(true) || self.snooze.is_some() {
                     Outcome::Done(())
                 } else if with.clicked() {
-                    open_with(&self.path);
+                    open_download_with(&self.path, self.moved_away);
                     Outcome::Done(())
                 } else if folder.clicked() {
-                    show_in_folder(&self.path);
+                    show_download_in_folder(&self.path, self.moved_away);
                     Outcome::Done(())
                 } else if close.clicked() || (!dragging && winui::escape_pressed(ui)) {
                     Outcome::Done(())
@@ -2969,6 +2990,19 @@ it from Mister Download Manager list of downloads?",
     }
 }
 
+/// Minimize a window as its title bar's Minimize asks (`hwnd`: the window, once known). On
+/// Windows by the system's own command, as the system's title bar sends it, so a window whose
+/// title bar is ours animates down to the taskbar like any other (#874).
+pub fn minimize(ctx: &egui::Context, hwnd: Option<isize>) {
+    #[cfg(windows)]
+    if let Some(h) = hwnd {
+        crate::win32::minimize(h);
+        return;
+    }
+    let _ = hwnd;
+    ctx.send_viewport_cmd(egui::ViewportCommand::Minimized(true));
+}
+
 /// Select the file in Explorer (Finder, the Linux file manager). A file that is gone: its
 /// folder, if that is still there.
 /// Bring an open window to the front (and back from the taskbar): asked for again, it came
@@ -3014,6 +3048,27 @@ fn tell_turn_off_failed(why: String) {
     );
 }
 
+/// What became of a file dragged out of Download complete (#869), when the drop target moved
+/// it (a copy or a link leaves it where it was: nothing to say).
+#[derive(Clone, Debug, PartialEq, Eq)]
+// Made by Windows' drag only (the grip is Windows-only, see Complete::show).
+#[cfg_attr(not(windows), allow(dead_code))]
+pub enum DraggedOut {
+    /// Moved there (the shell said where).
+    Moved(PathBuf),
+    /// Gone from its place, to somewhere MDM couldn't learn (a program that took it, the
+    /// Recycle Bin).
+    MovedAway,
+}
+
+/// Files dragged out and moved: (download, the path it was dragged from, what became of it).
+static DRAGGED_OUT: Mutex<Vec<(u64, PathBuf, DraggedOut)>> = Mutex::new(Vec::new());
+
+/// What [`DRAGGED_OUT`] was given since the last call (the app updates its downloads).
+pub fn dragged_out() -> Vec<(u64, PathBuf, DraggedOut)> {
+    std::mem::take(&mut *DRAGGED_OUT.lock().unwrap_or_else(|e| e.into_inner()))
+}
+
 /// Something that failed, to tell the user (the app shows it in its notice): from any window,
 /// without a handle on the app.
 static TOLD: std::sync::Mutex<Vec<(&'static str, String)>> = std::sync::Mutex::new(Vec::new());
@@ -3032,28 +3087,75 @@ pub fn told() -> Vec<(&'static str, String)> {
 /// program for it): on a thread of its own, as the file may be on a drive slow to answer
 /// (#743). Returns at once.
 pub fn open_file(path: &Path) {
+    open_download(path, false);
+}
+
+/// [`open_file`] for a download: `moved_away`, its file was dragged out of Download complete to
+/// a place MDM couldn't learn (#869), which is said when it isn't there.
+pub fn open_download(path: &Path, moved_away: bool) {
     let path = path.to_owned();
     crate::launch::spawn("open file", move || {
-        open_file_now(&path);
+        open_download_now(&path, moved_away);
     });
 }
 
-/// [`open_file`], waited for: true when the file was handed to the system. For a thread other
-/// than the window's (Download complete asks it through `launch::Asked`: whether it failed
-/// decides whether the box stays open).
-pub fn open_file_now(path: &Path) -> bool {
+/// Open a file with the system default application. On Windows, uses Win32 ShellExecuteW
+/// to respect user associations (such as 7-Zip for .zip archives) without explorer.exe failures (#811).
+fn open_file_platform(path: &Path) -> Result<(), std::io::Error> {
+    #[cfg(windows)]
+    {
+        crate::win32::open_file_shell(path)
+    }
+    #[cfg(not(windows))]
+    {
+        open::that_detached(path)
+    }
+}
+
+/// [`open_download`], waited for: true when the file was handed to the system. For a thread
+/// other than the window's (Download complete asks it through `launch::Asked`: whether it
+/// failed decides whether the box stays open).
+pub fn open_download_now(path: &Path, moved_away: bool) -> bool {
+    hand_over(path, moved_away, |p| {
+        open_file_platform(p).map_err(|e| e.to_string())
+    })
+}
+
+/// Why a download's file isn't where MDM saved it, when it was dragged out of Download complete
+/// to a place MDM couldn't learn (#869).
+fn moved_away_text(path: &Path) -> String {
     let name = crate::i18n::isolate(&path.file_name().unwrap_or_default().to_string_lossy());
-    let failed = if !path.exists() {
+    crate::i18n::fmt(
+        crate::i18n::t(
+            "{file} was moved elsewhere by dragging it out of Download complete, and MDM couldn't learn where. Look for it where you dropped it.",
+        ),
+        &[("file", &name)],
+    )
+}
+
+/// Hand the downloaded file `path` to `hand` (which opens it, or shows a chooser for it), or say
+/// why not: moved or deleted since (`moved_away`: dragged out to a place MDM couldn't learn,
+/// #869), or `hand`'s error. True when it was handed over. Waits for `hand`, so it runs on a
+/// thread other than the window's.
+fn hand_over(
+    path: &Path,
+    moved_away: bool,
+    hand: impl FnOnce(&Path) -> Result<(), String>,
+) -> bool {
+    let name = crate::i18n::isolate(&path.file_name().unwrap_or_default().to_string_lossy());
+    let failed = if !path.exists() && moved_away {
+        moved_away_text(path)
+    } else if !path.exists() {
         crate::i18n::fmt(
             crate::i18n::t(
                 "{file} is no longer where it was saved (moved or deleted). Redownload, in its right-click menu, gets it again.",
             ),
             &[("file", &name)],
         )
-    } else if let Err(e) = open::that_detached(path) {
+    } else if let Err(e) = hand(path) {
         crate::i18n::fmt(
             crate::i18n::t("{file} could not be opened: {error}"),
-            &[("file", &name), ("error", &e.to_string())],
+            &[("file", &name), ("error", &e)],
         )
     } else {
         return true;
@@ -3068,8 +3170,22 @@ pub fn open_file_now(path: &Path) -> bool {
 /// sleeping hard disk, a USB drive or a network folder can take seconds to answer (#751: 8 s,
 /// on the window's thread, froze it).
 pub fn show_in_folder(path: &Path) {
+    show_download_in_folder(path, false);
+}
+
+/// [`show_in_folder`] for a download: `moved_away`, its file was dragged out of Download
+/// complete to a place MDM couldn't learn (#869): when it isn't there, that is said instead of
+/// opening the folder it left.
+pub fn show_download_in_folder(path: &Path, moved_away: bool) {
     let path = path.to_owned();
-    crate::launch::spawn("show in folder", move || show_in_folder_now(&path));
+    crate::launch::spawn("show in folder", move || {
+        if moved_away && !path.exists() {
+            // i18n: title of the message when the folder of a downloaded file can't be shown
+            tell(crate::i18n::mark("Open folder"), moved_away_text(&path));
+            return;
+        }
+        show_in_folder_now(&path)
+    });
 }
 
 /// [`show_in_folder`], on the thread it runs on.
@@ -3106,18 +3222,31 @@ fn show_in_folder_now(path: &Path) {
     crate::unix::show_in_folder(path);
 }
 
-pub fn open_with(path: &Path) {
-    #[cfg(windows)]
-    {
-        let _ = std::process::Command::new("rundll32")
-            .arg("shell32.dll,OpenAs_RunDLL")
-            .arg(path)
-            .spawn();
-    }
-    #[cfg(not(windows))]
-    {
-        crate::launch::open(path);
-    }
+/// "Open with": the system's chooser of programs for the downloaded file `path`, or a message
+/// saying why not (moved or deleted since). Returns at once: the chooser is shown, and waited
+/// for, on a thread of its own, as is the look at the file (#743, #751).
+/// `moved_away`: see [`open_download`].
+pub fn open_download_with(path: &Path, moved_away: bool) {
+    let path = path.to_owned();
+    crate::launch::spawn("open with", move || {
+        hand_over(&path, moved_away, |p| {
+            // Windows' own "How do you want to open this file?", as Explorer shows it (#720).
+            #[cfg(windows)]
+            {
+                crate::win32::open_with_dialog(p).map_err(|hr| {
+                    tracing::warn!("open with: SHOpenWithDialog failed, {hr:#010x}");
+                    std::io::Error::from_raw_os_error(hr).to_string()
+                })
+            }
+            // Linux and macOS have no chooser MDM can call for a file: the desktop's opener
+            // (xdg-open, which goes through the desktop portal in a sandbox, or macOS's `open`)
+            // opens it with the program set for its type, which the user changes there.
+            #[cfg(not(windows))]
+            {
+                open::that_detached(p).map_err(|e| e.to_string())
+            }
+        });
+    });
 }
 
 /// "Duplicate download link": the address is already in the list (Options → Downloads → "If a
@@ -3990,6 +4119,57 @@ mod tests {
         });
         rx.recv_timeout(std::time::Duration::from_secs(20))
             .expect("Add URL hung");
+    }
+
+    /// #812: Left / Right in Add URL's Address box move its caret, and the focus stays in the
+    /// box, not on OK beside it (Save As in Download File Info keeps them the same way,
+    /// `winui::keep_edit_keys`). With addresses entered before, as Up / Down step through them.
+    #[test]
+    fn add_url_left_and_right_stay_in_the_address_box() {
+        let ctx = egui::Context::default();
+        let mut dlg = AddUrl {
+            address: "https://example.com/file.zip".to_owned(),
+            history: vec!["https://a.example/x.zip".to_owned()],
+            ..AddUrl::default()
+        };
+        let mut frame = |key: Option<egui::Key>| {
+            let events = key
+                .map(|key| egui::Event::Key {
+                    key,
+                    physical_key: None,
+                    pressed: true,
+                    repeat: false,
+                    modifiers: egui::Modifiers::default(),
+                })
+                .into_iter()
+                .collect();
+            let input = egui::RawInput {
+                events,
+                ..Default::default()
+            };
+            let mut out = ctx.run_ui(input, |ui| {
+                let _ = dlg.show(ui.ctx(), |_| None);
+            });
+            out.textures_delta.clear();
+        };
+        for _ in 0..4 {
+            frame(None);
+        }
+        let in_box = ctx.memory(|m| m.focused());
+        assert!(in_box.is_some(), "the Address box has the focus");
+        for key in [
+            egui::Key::ArrowRight,
+            egui::Key::ArrowLeft,
+            egui::Key::ArrowRight,
+        ] {
+            frame(Some(key));
+            frame(None);
+            assert_eq!(
+                ctx.memory(|m| m.focused()),
+                in_box,
+                "{key:?} keeps the focus in the box"
+            );
+        }
     }
 
     /// #661: Add URL asks for the clipboard as it opens and draws its frames without waiting for

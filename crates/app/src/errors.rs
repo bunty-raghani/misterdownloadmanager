@@ -65,8 +65,9 @@ pub fn describe(e: &Error) -> String {
             t("the path is too long for Windows: {path}"),
             &[("path", &ltr(&path.display().to_string()))],
         ),
+        // i18n: why a download failed (#701): a file host answered with its own web page (a countdown before the link, a captcha, a sign-in) where the file was expected. The browser gets past it; MDM's browser extension then hands the real file back to MDM
         Error::GotWebPage => t(
-            "the server sent a web page instead of the file (sign-in needed or the link expired?)",
+            "the site sent a web page instead of the file (a waiting page, a captcha or a sign-in): open the link in your browser, finish there, and the download comes back to MDM",
         )
         .to_owned(),
         Error::RangesUnavailable => t("the server did not send the requested part").to_owned(),
@@ -254,6 +255,9 @@ pub fn adapter(e: &mdm_engine::NetError) -> String {
 /// errors in English, for the command line). File and build names stay as they are.
 pub fn tools(e: &mdm_tools::Error) -> String {
     use mdm_tools::Error as E;
+    if let Some((host, fault)) = e.network() {
+        return reach(&host, fault, cause_of(e).as_deref());
+    }
     match e {
         E::Http(e) => http(e),
         // i18n: error installing yt-dlp or ffmpeg; {error} = the system's reason
@@ -272,7 +276,7 @@ pub fn tools(e: &mdm_tools::Error) -> String {
             t("its release information is not as expected: {detail}"),
             &[("detail", detail)],
         ),
-        E::Download(text) => text.clone(),
+        E::Download { error, .. } => describe(error),
         E::Adapter(e) => adapter(e),
         // i18n: error: a program chosen as yt-dlp or ffmpeg didn't answer as one; {name} = yt-dlp or ffmpeg
         E::NotTheProgram(name) => fmt(t("this program isn't {name}"), &[("name", name)]),
@@ -285,6 +289,159 @@ pub fn tools(e: &mdm_tools::Error) -> String {
             t("{name} {version} is too old: MDM needs {oldest} or newer"),
             &[("name", name), ("version", version), ("oldest", oldest)],
         ),
+    }
+}
+
+/// Why a helper's server (`host`) couldn't be reached, by the kind of failure (#816): a failed
+/// connection through the proxy set in Options is that proxy's. `cause`: the system's words,
+/// kept for a failure of no known kind.
+fn reach(host: &str, fault: mdm_engine::fault::Fault, cause: Option<&str>) -> String {
+    use mdm_engine::fault::Fault as F;
+    if connecting(fault)
+        && let Some(proxy) = own_proxy()
+    {
+        return fmt(
+            // i18n: a helper (yt-dlp, ffmpeg) couldn't be downloaded: the proxy set in Options ({proxy}, its address) didn't let MDM connect
+            t("could not connect through the proxy {proxy}"),
+            &[("proxy", &ltr(&proxy))],
+        );
+    }
+    let text = match fault {
+        // i18n: a helper (yt-dlp, ffmpeg) couldn't be downloaded: its server's name ({host}, such as api.github.com) wasn't found
+        F::NoSuchHost => t("{host} could not be found: no connection, or a network that blocks it"),
+        // i18n: a helper (yt-dlp, ffmpeg) couldn't be downloaded: its server ({host}) or something on the way refused the connection
+        F::Refused => t("{host} refused the connection: a firewall, or a network that blocks it"),
+        // i18n: a helper (yt-dlp, ffmpeg) couldn't be downloaded: the connection to its server ({host}) was cut as it opened
+        F::Reset => t("the connection to {host} was cut: a firewall, or a network that blocks it"),
+        // i18n: a helper (yt-dlp, ffmpeg) couldn't be downloaded: there is no way to its server ({host}); the network may be down
+        F::Unreachable => t("{host} could not be reached: check the connection"),
+        // i18n: a helper (yt-dlp, ffmpeg) couldn't be downloaded: its server ({host}) didn't answer in time
+        F::TimedOut => t("{host} did not answer in time"),
+        // i18n: a helper (yt-dlp, ffmpeg) couldn't be downloaded: the secure connection to its server ({host}) failed, usually because an antivirus or a proxy reads secure (HTTPS) connections with a certificate of its own
+        F::Secure => t(
+            "the secure connection to {host} failed: an antivirus's web filter or a proxy may be reading HTTPS",
+        ),
+        // i18n: a helper (yt-dlp, ffmpeg) couldn't be downloaded: its server ({host}, such as api.github.com) turned the request away ({status}, such as "403 Forbidden"), usually for too many requests from the same network
+        F::Status(403 | 429) => {
+            t("{host} refused the request ({status}): too many requests from your network for now")
+        }
+        // i18n: a helper (yt-dlp, ffmpeg) couldn't be downloaded: its server ({host}) answered with an HTTP error ({status}, such as "404 Not Found")
+        F::Status(_) => t("{host} answered {status}"),
+        // i18n: a helper (yt-dlp, ffmpeg) couldn't be downloaded: the connection to its server ({host}) closed before all of it came
+        F::CutShort => t("the download from {host} was cut short"),
+        F::Other => match cause {
+            Some(cause) => {
+                return fmt(
+                    // i18n: a helper (yt-dlp, ffmpeg) couldn't be downloaded: its server ({host}) couldn't be reached, for the system's reason {cause}
+                    t("could not reach {host} ({cause})"),
+                    &[("host", &ltr(host)), ("cause", cause)],
+                );
+            }
+            // i18n: a helper (yt-dlp, ffmpeg) couldn't be downloaded: its server ({host}) couldn't be reached
+            None => t("could not reach {host}"),
+        },
+    };
+    let status = match fault {
+        F::Status(code) => {
+            reqwest::StatusCode::from_u16(code).map_or_else(|_| code.to_string(), |s| s.to_string())
+        }
+        _ => String::new(),
+    };
+    fmt(text, &[("host", &ltr(host)), ("status", &ltr(&status))])
+}
+
+/// Whether `fault` is a connection that didn't open (through a proxy, the proxy's).
+fn connecting(fault: mdm_engine::fault::Fault) -> bool {
+    use mdm_engine::fault::Fault as F;
+    matches!(
+        fault,
+        F::NoSuchHost | F::Refused | F::Reset | F::Unreachable | F::TimedOut
+    )
+}
+
+/// The address (`host:port`) of the proxy Options → Proxy / Socks sets by hand for secure
+/// connections, which the helpers' all are.
+fn own_proxy() -> Option<String> {
+    match crate::settings::own_net().proxy {
+        mdm_engine::Proxy::Manual {
+            url, https: true, ..
+        } => {
+            let u = url::Url::parse(&url).ok()?;
+            let host = u.host_str()?;
+            Some(match u.port_or_known_default() {
+                Some(port) => format!("{host}:{port}"),
+                None => host.to_owned(),
+            })
+        }
+        _ => None,
+    }
+}
+
+/// The system's words for a network failure of `e` (its deepest cause), without an address.
+fn cause_of(e: &mdm_tools::Error) -> Option<String> {
+    let mdm_tools::Error::Http(e) = e else {
+        return None;
+    };
+    let mut cause = None;
+    let mut source = std::error::Error::source(e);
+    while let Some(s) = source {
+        cause = Some(s.to_string());
+        source = s.source();
+    }
+    cause
+        .map(|c| os_text(&c))
+        .filter(|c| !c.is_empty() && !c.contains("://"))
+}
+
+/// What to do when helper `name` (yt-dlp, ffmpeg, gallery-dl) couldn't be downloaded (#816), for
+/// why; None when its message says it all (a disk's error, a release not as expected).
+pub fn tools_advice(e: &mdm_tools::Error, name: &str) -> Option<String> {
+    use mdm_engine::fault::Fault as F;
+    let fault = match e {
+        mdm_tools::Error::BadChecksum => F::CutShort,
+        _ => e.network()?.1,
+    };
+    let text = match fault {
+        // i18n: what to do when the proxy set in Options didn't let a helper's download connect; {proxy} = the Options tab Proxy / Socks; {name} = yt-dlp, ffmpeg or gallery-dl; {helpers} and {other} = the buttons Helpers and Use another program
+        f if connecting(f) && own_proxy().is_some() => t(
+            "Check the proxy in Options → {proxy}, or download {name} yourself and choose it in {helpers} → {other}.",
+        ),
+        // i18n: what to do when a helper couldn't be downloaded because its server limits requests; {name} = yt-dlp, ffmpeg or gallery-dl; {helpers} and {other} = the buttons Helpers and Use another program
+        F::Status(403 | 429) => t(
+            "Try again in an hour, or download {name} yourself and choose it in {helpers} → {other}.",
+        ),
+        // i18n: what to do when a helper's download failed on the way; {name} = yt-dlp, ffmpeg or gallery-dl; {helpers} and {other} = the buttons Helpers and Use another program
+        F::Status(_) | F::CutShort => {
+            t("Try again later, or download {name} yourself and choose it in {helpers} → {other}.")
+        }
+        // i18n: what to do when a helper's server couldn't be reached; {proxy} = the Options tab Proxy / Socks; {name} = yt-dlp, ffmpeg or gallery-dl; {helpers} and {other} = the buttons Helpers and Use another program
+        _ => t(
+            "If you use a proxy, set it in Options → {proxy}. Or download {name} yourself and choose it in {helpers} → {other}.",
+        ),
+    };
+    let label = |s: &str| t(s).trim_end_matches(['.', '…']).to_owned();
+    Some(fmt(
+        text,
+        &[
+            ("name", name),
+            ("proxy", &label("Proxy / Socks")),
+            ("helpers", &label("Helpers...")),
+            ("other", &label("Use another program...")),
+        ],
+    ))
+}
+
+/// [`tools`], then [`tools_advice`] when there is some: one text for a window that has room for
+/// it (or shows it whole on hover).
+pub fn tools_and_advice(e: &mdm_tools::Error, name: &str) -> String {
+    let problem = tools(e);
+    match tools_advice(e, name) {
+        Some(advice) => fmt(
+            // i18n: why a helper couldn't be downloaded ({problem}), then what to do about it ({advice}, whole sentences)
+            t("{problem}. {advice}"),
+            &[("problem", &problem), ("advice", &advice)],
+        ),
+        None => problem,
     }
 }
 
@@ -342,5 +499,31 @@ mod tests {
             os_text("Access is denied. (os error 5)"),
             "Access is denied"
         );
+    }
+
+    /// #816: a helper that couldn't be downloaded names the server and why, and says what to do.
+    #[test]
+    fn a_helper_failure_names_its_server() {
+        let e = mdm_tools::Error::Download {
+            host: "api.github.com".into(),
+            error: Error::Status(reqwest::StatusCode::FORBIDDEN),
+        };
+        let text = tools(&e);
+        assert!(
+            text.contains("api.github.com") && text.contains("403"),
+            "{text}"
+        );
+        let advice = tools_advice(&e, "yt-dlp").unwrap();
+        assert!(
+            advice.contains("yt-dlp") && advice.contains("Use another program"),
+            "{advice}"
+        );
+        let cut = mdm_tools::Error::Download {
+            host: "github.com".into(),
+            error: Error::ShortBody,
+        };
+        assert!(tools(&cut).contains("cut short"));
+        let disk = mdm_tools::Error::Io(std::io::Error::other("full"));
+        assert!(tools_advice(&disk, "yt-dlp").is_none());
     }
 }

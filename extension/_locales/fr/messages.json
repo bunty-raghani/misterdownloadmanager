@@ -92,6 +92,9 @@
       }
     }
   },
+  "popup_undo": {
+    "message": "Annuler"
+  },
   "popup_excluded": {
     "message": "Les téléchargements de $site$ restent avec le navigateur",
     "placeholders": {

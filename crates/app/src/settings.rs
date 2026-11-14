@@ -4,6 +4,16 @@
 use mdm_ipc::capture::host_matches;
 use serde::{Deserialize, Serialize};
 
+/// View → Window system's choice (Linux, #624), as saved in the settings.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum WindowSystemPick {
+    /// X11's windows: XWayland's in a Wayland session.
+    X11,
+    /// Wayland's own windows.
+    Wayland,
+}
+
 /// A debrid service account (#44), as Options → Accounts keeps it.
 #[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(default)]
@@ -112,6 +122,12 @@ pub struct Settings {
     /// View → Draw with (#89): OpenGL or Direct3D (Windows only), used from the next start.
     /// None: MDM's default (`renderer::DEFAULT`), which may change.
     pub renderer: Option<crate::renderer::Api>,
+    /// View → Window system (Linux, in a Wayland session that also runs XWayland, #624): X11
+    /// (XWayland) or Wayland, used from the next start, however MDM is started (its menu entry,
+    /// the browser's helper, the session's autostart). None: MDM decides at each start
+    /// (`unix::window_system`). `MDM_WAYLAND=1` or `0` overrides it for one start.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub window_system: Option<WindowSystemPick>,
     /// View → Interface size (#262), percent: one of `crate::scale::STEPS` (100 to 200). Every
     /// window drawn that much larger than the display's own scale makes it.
     pub interface_size: u16,
@@ -152,6 +168,10 @@ pub struct Settings {
     /// closing quits). On by default, for existing lists too, in every copy. Only where a tray
     /// shows MDM's icon.
     pub close_to_tray: bool,
+    /// General (#558): global keyboard shortcut to show or hide the main window (e.g. `Cmd+U`,
+    /// `Shift+Cmd+M`, `Ctrl+Alt+D`); empty when none is set.
+    #[serde(default)]
+    pub show_hide_hotkey: String,
     pub mv2_extensions: bool,
     pub advanced_integration: bool,
     /// General: "Capture downloads from the following browsers" (name, on).
@@ -180,8 +200,14 @@ pub struct Settings {
     pub url_history: Vec<String>,
     pub folder_history: Vec<String>,
     pub set_creation_date: bool,
+    /// Downloads → "Mark downloaded files as coming from the internet" (#813): Windows' Mark of
+    /// the Web, macOS' quarantine, Linux's origin attributes (`webmark`).
+    pub mark_downloads: bool,
     /// Downloads.
     pub show_start_dialog: bool,
+    /// Downloads → Customize "Download progress" dialog → Edit... (#1041): a download's
+    /// progress window opens when it starts. Off, it runs in the list (double-click opens it).
+    pub show_progress: bool,
     pub only_add_to_queue: bool,
     pub start_immediately: bool,
     pub queue_panel_later: bool,
@@ -304,6 +330,9 @@ pub struct Settings {
     /// Download video from a page: the subtitles last chosen (#68), offered again for the
     /// next video when it has that language (none at first).
     pub video_subs: mdm_tools::video::Subs,
+    /// Download video from a page → Embed chapters (#827): a video's chapters go into its file
+    /// (with ffmpeg). On; a settings file from before has none: on.
+    pub video_chapters: bool,
     /// Options → Sites Logins → Cookies for video sites (#229): the browser whose cookies
     /// yt-dlp reads on this computer when the extension passed none (yt-dlp's name: `firefox`,
     /// `chrome`...; empty: off, the default), and its profile (a name or a folder; empty: the
@@ -315,6 +344,9 @@ pub struct Settings {
     pub extract_auto: bool,
     /// Then move the archive (every volume of it) to the Recycle Bin (the Trash). Off.
     pub extract_delete: bool,
+    /// Extract in place with HatchZip when it is installed: the archive is removed while its
+    /// files come out, so only they need room (large downloads on a nearly full disk). Off.
+    pub extract_in_place: bool,
     /// Into a folder named after the archive: 0 when it holds several things at its top (smart),
     /// 1 always, 2 never.
     pub extract_subfolder: u8,
@@ -323,6 +355,11 @@ pub struct Settings {
     pub grabber_check: bool,
     /// Link grabber: web pages hidden (IDM's "Hide HTML files"). On.
     pub grabber_hide_pages: bool,
+    /// Click'n'Load (#37): a page's button posts its links to 127.0.0.1:9666, shown in Link
+    /// grabber. Off by default: any page may post there.
+    pub cnl_on: bool,
+    /// Click'n'Load: the sites asked about, each allowed (true) or blocked, by host.
+    pub cnl_sites: Vec<(String, bool)>,
 }
 
 /// Options → File types defaults (IDM 6.42), shared with the browser host (mdm_ipc::capture).
@@ -382,6 +419,7 @@ impl Default for Settings {
             always_dark: false,
             theme: "classic".into(),
             renderer: None,
+            window_system: None,
             interface_size: 100,
             smooth_text: false,
             limits_on: false,
@@ -396,6 +434,7 @@ impl Default for Settings {
             clipboard_autostart: true,
             minimize_to_tray: true,
             close_to_tray: true,
+            show_hide_hotkey: String::new(),
             mv2_extensions: true,
             advanced_integration: true,
             browsers: BROWSERS.iter().map(|b| (b.to_string(), true)).collect(),
@@ -412,7 +451,9 @@ impl Default for Settings {
             url_history: Vec::new(),
             folder_history: Vec::new(),
             set_creation_date: false,
+            mark_downloads: true,
             show_start_dialog: true,
+            show_progress: true,
             only_add_to_queue: false,
             start_immediately: true,
             queue_panel_later: true,
@@ -472,13 +513,17 @@ impl Default for Settings {
             drop_target: false,
             drop_target_pos: None,
             video_subs: Default::default(),
+            video_chapters: true,
             video_cookies: String::new(),
             video_cookies_profile: String::new(),
             extract_auto: false,
             extract_delete: false,
+            extract_in_place: false,
             extract_subfolder: 0,
             grabber_check: true,
             grabber_hide_pages: true,
+            cnl_on: false,
+            cnl_sites: Vec::new(),
         }
     }
 }
@@ -1021,9 +1066,11 @@ impl Settings {
     }
 }
 
-/// Keep every yt-dlp run on Options' cookies for video sites (cheap when they didn't change).
-pub fn share_video_cookies(s: &Settings) {
+/// Keep every yt-dlp run on Options' cookies for video sites (cheap when they didn't change),
+/// and every video started on Embed chapters (#827).
+pub fn share_video_settings(s: &Settings) {
     mdm_tools::proc::set_browser_cookies(s.video_cookies());
+    mdm_tools::video::set_chapters(s.video_chapters);
 }
 
 /// The network adapter MDM's connections go through now (#35).

@@ -92,6 +92,9 @@
       }
     }
   },
+  "popup_undo": {
+    "message": "Späť"
+  },
   "popup_excluded": {
     "message": "Stiahnutia z $site$ zostávajú v prehliadači",
     "placeholders": {

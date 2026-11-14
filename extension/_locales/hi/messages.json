@@ -92,6 +92,9 @@
       }
     }
   },
+  "popup_undo": {
+    "message": "पूर्ववत करें"
+  },
   "popup_excluded": {
     "message": "$site$ से डाउनलोड ब्राउज़र के साथ रहते हैं",
     "placeholders": {

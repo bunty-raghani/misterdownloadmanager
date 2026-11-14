@@ -92,6 +92,9 @@
       }
     }
   },
+  "popup_undo": {
+    "message": "Angre"
+  },
   "popup_excluded": {
     "message": "Nedlastinger fra $site$ blir igjen i nettleseren",
     "placeholders": {

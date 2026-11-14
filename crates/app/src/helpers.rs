@@ -20,8 +20,9 @@ struct State {
     current: Option<(&'static str, usize, usize)>,
     /// The helpers done: name and version.
     ready: Vec<(&'static str, String)>,
-    /// The helper that failed, and why (the ones after it are not tried).
-    error: Option<(&'static str, String)>,
+    /// The helper that failed, why, and what to do about it (#816; the ones after it are not
+    /// tried).
+    error: Option<(&'static str, String, Option<String>)>,
     done: bool,
 }
 
@@ -94,7 +95,11 @@ impl Helpers {
                     Ok(installed) => s.ready.push((name, installed.version)),
                     Err(e) => {
                         tracing::warn!("helper download failed: {name}: {e}");
-                        s.error = Some((name, crate::errors::tools(&e)));
+                        s.error = Some((
+                            name,
+                            crate::errors::tools(&e),
+                            crate::errors::tools_advice(&e, name),
+                        ));
                         break;
                     }
                 }
@@ -123,7 +128,9 @@ impl Helpers {
         }
         let mut answer = None;
         // A long translation's subline makes the banner taller (winui::banner).
-        let extra = crate::dialogs::grow_extra(ctx, "helpers-banner");
+        let extra = crate::dialogs::grow_extra(ctx, "helpers-banner")
+            + crate::dialogs::grow_extra(ctx, "helpers-error")
+            + crate::dialogs::grow_extra(ctx, "helpers-advice");
         window(
             ctx,
             "helpers",
@@ -248,7 +255,7 @@ impl Helpers {
         if let Some(job) = &self.job {
             let st = job.state.lock().unwrap();
             let f = job.progress.fraction().unwrap_or(0.0);
-            let (fraction, line, color) = if let Some((name, error)) = &st.error {
+            let (fraction, line, color) = if let Some((name, error, _)) = &st.error {
                 (
                     st.ready.len() as f32 / (st.ready.len() + 1) as f32,
                     crate::i18n::fmt(
@@ -311,32 +318,56 @@ impl Helpers {
             drop(st);
             let bar_w = 320.0;
             winui::meter(&p, r(o, (w - bar_w) / 2.0, 312.0, bar_w, 8.0), fraction);
-            // Centred on screen (the same place in both directions); cut to the window.
             let room = w - 40.0;
-            let shown = winui::ellipsize(&p, &winui::tahoma(), &line, room);
-            let tw = winui::text_width(&p, &shown);
-            let rc = winui::text_at(
-                &p,
-                winui::tahoma(),
-                (o.x + (w - tw) / 2.0).round(),
-                o.y + 340.0,
-                &shown,
-                color,
-            );
-            if shown != line {
-                winui::full_on_hover(ui, rc, "helpers-status", &line);
+            let mut more = 0.0;
+            if failed && winui::text_width(&p, &line) > room {
+                // A failure is read whole (#816): wrapped, the window growing by its lines past
+                // the first.
+                let n = winui::paragraph(
+                    &p,
+                    o.x + 20.0,
+                    o.y + 340.0,
+                    &line,
+                    color,
+                    o.x + w - 20.0,
+                    16.0,
+                );
+                more = 16.0 * n.saturating_sub(1) as f32;
+            } else {
+                // Centred on screen (the same place in both directions); cut to the window.
+                let shown = winui::ellipsize(&p, &winui::tahoma(), &line, room);
+                let tw = winui::text_width(&p, &shown);
+                let rc = winui::text_at(
+                    &p,
+                    winui::tahoma(),
+                    (o.x + (w - tw) / 2.0).round(),
+                    o.y + 340.0,
+                    &shown,
+                    color,
+                );
+                if shown != line {
+                    winui::full_on_hover(ui, rc, "helpers-status", &line);
+                }
             }
-            y += 36.0;
+            crate::dialogs::grow_px(ui.ctx(), "helpers-error", more);
+            y += 36.0 + more;
         }
 
         // The way back later, then the answer.
         winui::etched_h(&p, o.x + 16.0, o.y + y, w - 32.0);
+        // What to do about the failure (#816), when it says.
+        let advice = self.job.as_ref().and_then(|job| {
+            let st = job.state.lock().unwrap();
+            st.error.as_ref().and_then(|(_, _, a)| a.clone())
+        });
         let later = if self.job.is_some() && running {
             crate::i18n::t("They keep downloading if you close this window.")
         } else if self.job.is_some() && !failed {
             crate::i18n::t(
                 "All set: on a page with a video, use Tasks → Download video from a page.",
             )
+        } else if let Some(advice) = &advice {
+            advice.as_str()
         } else if self.job.is_some() {
             crate::i18n::t(
                 "Check your connection, then try again, or get them later from the video window.",
@@ -344,8 +375,22 @@ impl Helpers {
         } else {
             crate::i18n::t("Not now? Get them later from Tasks → Download video from a page.")
         };
-        winui::text(&p, o.x + 16.0, o.y + y + 20.0, later, muted);
-        let y = y + 28.0;
+        // Wrapped: the window grows by the lines past the first.
+        let lines = winui::paragraph(
+            &p,
+            o.x + 16.0,
+            o.y + y + 20.0,
+            later,
+            muted,
+            o.x + w - 16.0,
+            16.0,
+        );
+        crate::dialogs::grow_px(
+            ui.ctx(),
+            "helpers-advice",
+            16.0 * lines.saturating_sub(1) as f32,
+        );
+        let y = y + 28.0 + 16.0 * lines.saturating_sub(1) as f32;
         if self.job.is_none() {
             // As wide as their labels in this language (#192), the row ending where it ends in
             // English.
@@ -658,7 +703,7 @@ impl Programs {
                 let title =
                     crate::i18n::fmt(crate::i18n::t("Choose {name}"), &[("name", h.name())]);
                 winui::start_pick(ui.ctx(), &format!("helper-{}", h.name()), move || {
-                    rfd::FileDialog::new().set_title(title).pick_file()
+                    crate::winui::file_dialog(&title).pick_file()
                 });
             }
             if winui::button(

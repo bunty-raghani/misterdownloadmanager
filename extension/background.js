@@ -292,17 +292,7 @@ function extensionOf(name) {
   return dot > 0 ? base.slice(dot + 1) : "";
 }
 
-// As the app matches them (mdm_ipc::capture): `*.example.com` takes the domain and its
-// subdomains; an address pattern's `*` any run of characters.
-function hostMatches(host, pattern) {
-  let p = pattern.trim().toLowerCase().replace(/^[a-z]+:\/\//, "").split("/")[0];
-  if (p.startsWith("*.")) {
-    p = p.slice(2);
-    return host === p || host.endsWith("." + p);
-  }
-  return p !== "" && host === p;
-}
-
+// As the app matches them (mdm_ipc::capture): a pattern's `*` is any run of characters.
 function wildcard(pattern, text) {
   const re = new RegExp("^" + pattern.toLowerCase().split("*").map((s) => s.replace(/[.+?^${}()|[\]\\]/g, "\\$&")).join(".*") + "$");
   return re.test(text.toLowerCase());
@@ -315,6 +305,20 @@ function addressMatches(pattern, url) {
   return wildcard(p, p.includes("://") ? url : url.replace(/^[a-z][a-z0-9+.-]*:\/\//i, ""));
 }
 
+// A site pattern against `host`, as the app reads one (mdm_ipc::capture::panel_site_matches):
+// `*` matches anything (#759), and `*.example.com` the domain too.
+function siteMatches(host, pattern) {
+  const p = pattern.trim().toLowerCase().replace(/^[^/]*:\/\//, "").split("/")[0];
+  if (!p) return false;
+  return (p.startsWith("*.") && wildcard(p.slice(2), host)) || wildcard(p, host);
+}
+
+// Whether `host` is on a site of Options' list (mdm_ipc::capture::site_listed): a name without
+// `*` takes its subdomains too, as the Download panels' list does (#1049).
+function siteListed(r, host) {
+  return r.excludedSites.split(/\s+/).some((p) => p && (siteMatches(host, p) || (!p.startsWith("*") && siteMatches(host, `*.${p}`))));
+}
+
 // Which of Options' lists leaves `url` to the browser: "site", "address", or "" (neither).
 function excludedBy(r, url) {
   let host = "";
@@ -323,9 +327,21 @@ function excludedBy(r, url) {
   } catch {
     return "site";
   }
-  if (r.excludedSites.split(/\s+/).some((p) => p && hostMatches(host, p))) return "site";
+  if (siteListed(r, host)) return "site";
   if (r.excludedAddresses.some((p) => addressMatches(p, url))) return "address";
   return "";
+}
+
+// Whether the page a download came from (its referrer) is on a site of Options' list: a file the
+// site serves from another host (a CDN, a mirror) is left to the browser too (#1049). No page
+// known: its own address decides.
+function pageListed(r, page) {
+  if (!/^https?:\/\//i.test(page || "")) return false;
+  try {
+    return siteListed(r, new URL(page).hostname.toLowerCase());
+  } catch {
+    return false;
+  }
 }
 
 // ---- downloads left to the browser: why, for the popup and MDM's log (#208) ----------------
@@ -486,8 +502,50 @@ function firstUrl(item) {
   return r && Date.now() - r.at < 120000 ? r.from : item.url;
 }
 
-// Links clicked with Alt held (page.js): the browser keeps their download.
-const bypass = new Map();
+// Links clicked with Alt (Option on a Mac) held (page.js): the browser keeps their download. By
+// the link's address (the click's own download, the start of a redirect), and once per click the
+// download that follows it under another address in the next seconds (#332): one in the same
+// tab (Firefox says which tab a page load is in), or one whose referrer is the link or the page
+// it was on (a page's script that starts the download, a link to a page whose script does).
+const bypass = new Map(); // address -> {at, tab, page, used}
+const BYPASS_MS = 10000;
+
+// `clicked`: the download is a link the user just clicked without Alt (Safari's `link`), never
+// one that follows an Alt+click.
+function altClicked(item, url, first, clicked = false) {
+  forget(bypass, BYPASS_MS);
+  const exact = [item.url, url, first].map((u) => u && bypass.get(u)).find(Boolean);
+  if (exact) {
+    exact.used = true;
+    return true;
+  }
+  if (clicked) return false;
+  const ref = item.referrer || "";
+  for (const [link, b] of bypass) {
+    if (b.used) continue;
+    const tab = Number.isInteger(item.tabId) && item.tabId >= 0 && item.tabId === b.tab;
+    if (tab || fromPage(ref, link) || fromPage(ref, b.page)) {
+      b.used = true;
+      return true;
+    }
+  }
+  return false;
+}
+
+// Whether `ref` (a download's referrer) names `page`: the same address without its #part, or
+// only its site's, as browsers cut a referrer sent to another site by default.
+function fromPage(ref, page) {
+  if (!ref || !page) return false;
+  try {
+    const r = new URL(ref);
+    const p = new URL(page);
+    p.hash = "";
+    r.hash = "";
+    return r.href === p.href || (r.pathname === "/" && !r.search && r.origin === p.origin);
+  } catch {
+    return false;
+  }
+}
 
 // ---- the media a tab loaded (#38) ------------------------------------------------------------
 
@@ -575,17 +633,18 @@ function folderOf(url) {
   return /^https?:\/\/[^/]+\/.+/i.test(dir) ? dir : null;
 }
 
-function noteMedia(d, found) {
+function noteMedia(d, found, sent) {
   const tab = media.get(d.tabId) || { page: null, items: [] };
   const old = tab.items.find((it) => it.url === d.url);
   if (old) {
     if (found.size && !old.size) old.size = found.size;
+    if (sent) old.sent = sent;
     return;
   }
   // A file in a stream's own folder is one of its pieces (a DASH init segment, a fragment).
   const inStream = (it) => isStream(it) && folderOf(it.url) && d.url.startsWith(folderOf(it.url));
   if (!isStream(found) && tab.items.some(inStream)) return;
-  tab.items.push({ url: d.url, kind: found.kind, frameId: d.frameId || 0, mime: found.mime, size: found.size });
+  tab.items.push({ url: d.url, kind: found.kind, frameId: d.frameId || 0, mime: found.mime, size: found.size, ...(sent ? { sent } : {}) });
   // Over the cap: the oldest go, but each frame's first stream stays (the button sends it).
   while (tab.items.length > MEDIA_MAX) {
     const firsts = new Set();
@@ -607,11 +666,11 @@ function noteMedia(d, found) {
 }
 
 // A response that may be a manifest (#171), noted apart: the newest MAYBE_MAX of the tab.
-function noteMaybe(d, found) {
+function noteMaybe(d, found, sent) {
   const tab = media.get(d.tabId) || { page: null, items: [] };
   if (tab.items.some((it) => it.url === d.url)) return;
   tab.maybe = (tab.maybe || []).filter((m) => m.url !== d.url);
-  tab.maybe.push({ url: d.url, frameId: d.frameId || 0, mime: found.mime });
+  tab.maybe.push({ url: d.url, frameId: d.frameId || 0, mime: found.mime, ...(sent ? { sent } : {}) });
   if (tab.maybe.length > MAYBE_MAX) tab.maybe.splice(0, tab.maybe.length - MAYBE_MAX);
   if (!media.has(d.tabId)) {
     media.set(d.tabId, tab);
@@ -673,7 +732,7 @@ function sniffTab(tabId, frames) {
     // The tab went to another page meanwhile: its old page's answers don't count.
     if (media.get(tabId) !== tab) return;
     asked.forEach((m, i) => {
-      if (kinds[i]) noteMedia({ tabId, url: m.url, frameId: m.frameId }, { kind: kinds[i], mime: m.mime, size: 0 });
+      if (kinds[i]) noteMedia({ tabId, url: m.url, frameId: m.frameId }, { kind: kinds[i], mime: m.mime, size: 0 }, m.sent);
     });
     keepMedia();
   };
@@ -681,6 +740,50 @@ function sniffTab(tabId, frames) {
   sniffing.set(tabId, next);
   next.finally(() => sniffing.get(tabId) === next && sniffing.delete(tabId)).catch(() => {});
   return next;
+}
+
+// #900: what the browser sent with each of a tab's requests for media and data (its Referer, Origin
+// and Cookie headers), by request, until its answer starts: a stream's stay with it, and go to the
+// app with it, which asks for the stream, its playlists and each of its pieces as the page's
+// player did. A site's video server may serve its own pages' players only (their Origin and
+// Referer), and a player in another site's frame may have cookies no store lists (a browser that
+// keeps a frame's cookies apart, for that page only). In memory only, as long as `media`.
+const SENT_HEADERS = ["referer", "origin", "cookie"];
+const sentWith = new Map();
+const SENT_MAX = 512;
+const SENT_TYPES = { urls: ["<all_urls>"], types: ["xmlhttprequest", "media", "other"] };
+if (ext.webRequest && ext.webRequest.onSendHeaders) {
+  try {
+    ext.webRequest.onSendHeaders.addListener(
+      (d) => {
+        if (d.tabId < 0) return;
+        const sent = {};
+        for (const h of d.requestHeaders || []) {
+          const name = String(h.name).toLowerCase();
+          if (SENT_HEADERS.includes(name) && typeof h.value === "string" && h.value) sent[name] = h.value;
+        }
+        // A redirect's next request is the one answered.
+        sentWith.delete(d.requestId);
+        if (Object.keys(sent).length) sentWith.set(d.requestId, sent);
+        // Requests never answered (cancelled, failed before an answer) don't pile up.
+        while (sentWith.size > SENT_MAX) sentWith.delete(sentWith.keys().next().value);
+      },
+      SENT_TYPES,
+      // Chromium shows a request's Referer, Origin and Cookie to extensions that ask for its
+      // extra headers only; Firefox shows them all and knows no such option.
+      FIREFOX ? ["requestHeaders"] : ["requestHeaders", "extraHeaders"],
+    );
+  } catch {
+    // A browser without extraHeaders: streams go with their page as the Referer, as before.
+  }
+}
+const takeSent = (requestId) => {
+  const sent = sentWith.get(requestId);
+  sentWith.delete(requestId);
+  return sent;
+};
+if (ext.webRequest && ext.webRequest.onErrorOccurred) {
+  ext.webRequest.onErrorOccurred.addListener((d) => sentWith.delete(d.requestId), SENT_TYPES);
 }
 
 if (ext.webRequest && ext.webRequest.onResponseStarted) {
@@ -694,8 +797,9 @@ if (ext.webRequest && ext.webRequest.onResponseStarted) {
         }
         return;
       }
+      const sent = takeSent(d.requestId);
       const found = mediaKind(d);
-      if (found) mediaBack.then(() => (found.kind === "maybe" ? noteMaybe(d, found) : noteMedia(d, found)));
+      if (found) mediaBack.then(() => (found.kind === "maybe" ? noteMaybe(d, found, sent) : noteMedia(d, found, sent)));
     },
     { urls: ["<all_urls>"], types: ["main_frame", "sub_frame", "xmlhttprequest", "media", "other"] },
     ["responseHeaders"],
@@ -901,6 +1005,14 @@ async function mediaList(tabId) {
   await Promise.all(tab.items.filter((it) => isStream(it) && !it.info).map(async (it) => (it.info = await probe(it))));
   tab.frames = Object.fromEntries(Object.entries(frames).map(([id, f]) => [id, f.href]));
   keepMedia();
+  // A file's name as it will be saved (#800): the tab's title and the popup's switch name it too.
+  const { mediaTitleName } = await ext.storage.local.get({ mediaTitleName: false });
+  let title = "";
+  try {
+    title = (await ext.tabs.get(tabId)).title || "";
+  } catch {
+    // The tab is gone: names without its title.
+  }
   const out = [];
   const shown = [];
   for (const it of tab.items) {
@@ -914,10 +1026,13 @@ async function mediaList(tabId) {
     const frame = frames[it.frameId] || { players: [] };
     const player = frame.players.find((v) => v.src === it.url);
     const info = it.info && !it.info.failed ? it.info : null;
+    // A stream is named in the Download video window; a file here, with its type (#800).
+    const named = isStream(it) ? null : mediaName(it.url, it.mime, title, mediaTitleName).name;
     out.push({
       url: it.url,
       kind: it.kind,
       mime: it.mime,
+      ...(named ? { name: named, ext: splitExtension(named)[1].toLowerCase() } : {}),
       size: it.size || 0,
       heights: info ? [...new Set(info.heights)].sort((a, b) => b - a) : player && player.h ? [player.h] : [],
       width: (!info && player && player.w) || 0,
@@ -930,21 +1045,127 @@ async function mediaList(tabId) {
   return out;
 }
 
-// A file's name from the tab's title when its address ends in a long hash (#345) or is on a
-// server whose names are all random ids (#493: X's video.twimg.com, too short for the hash test);
-// else, with the popup's switch on (`includeOriginal`), the title before the address's own name;
-// else none: the app names it from the address, as for any download.
-function titledName(url, title, includeOriginal = false) {
-  const last = pathOf(url).split("/").pop() || "";
-  const dot = last.lastIndexOf(".");
-  const stem = dot > 0 ? last.slice(0, dot) : last;
-  const name = String(title || "").replace(/[\\/:*?"<>|]/g, " ").trim().slice(0, 150);
+// ---- a page's media file's name (#345, #493, #695, #800): as the app's engine names it
+// (crates/engine/src/naming.rs, answer_name; tools/extension/test.mjs checks they agree) ---------
+
+// The types a file's extension is taken from (naming.rs' TYPES): media, pictures, documents and
+// archives, never a type that runs.
+const TYPE_EXTENSIONS = {
+  "video/mp4": "mp4",
+  "video/x-m4v": "m4v",
+  "video/webm": "webm",
+  "video/x-matroska": "mkv",
+  "video/quicktime": "mov",
+  "video/x-msvideo": "avi",
+  "video/avi": "avi",
+  "video/x-ms-wmv": "wmv",
+  "video/x-flv": "flv",
+  "video/mpeg": "mpg",
+  "video/mp2t": "ts",
+  "video/3gpp": "3gp",
+  "video/3gpp2": "3g2",
+  "video/ogg": "ogv",
+  "audio/mpeg": "mp3",
+  "audio/mp3": "mp3",
+  "audio/mp4": "m4a",
+  "audio/x-m4a": "m4a",
+  "audio/aac": "aac",
+  "audio/aacp": "aac",
+  "audio/webm": "weba",
+  "audio/ogg": "ogg",
+  "audio/opus": "opus",
+  "audio/flac": "flac",
+  "audio/x-flac": "flac",
+  "audio/wav": "wav",
+  "audio/x-wav": "wav",
+  "audio/wave": "wav",
+  "audio/x-ms-wma": "wma",
+  "application/ogg": "ogg",
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/gif": "gif",
+  "image/webp": "webp",
+  "image/avif": "avif",
+  "application/pdf": "pdf",
+  "application/epub+zip": "epub",
+  "application/zip": "zip",
+  "application/x-zip-compressed": "zip",
+  "application/x-7z-compressed": "7z",
+  "application/vnd.rar": "rar",
+  "application/x-rar-compressed": "rar",
+  "application/gzip": "gz",
+  "application/x-gzip": "gz",
+};
+const TYPED = new Set(Object.values(TYPE_EXTENSIONS));
+// A web server's programs (naming.rs' SCRIPT_EXTENSIONS) and a page's: such an address names the
+// program that answers, not the file it sends.
+const SCRIPT_EXTENSIONS = ["php", "php3", "php4", "php5", "phtml", "asp", "aspx", "ashx", "axd", "jsp", "jspx", "do", "action", "cgi", "pl", "cfm", "py", "rb"];
+const PAGE_EXTENSIONS = ["htm", "html", "xhtml", "shtml", "dhtml"];
+
+// A name's stem and extension ("clip.mp4": "clip", "mp4"); ".profile", "clip", "Mr. Smith" have none.
+function splitExtension(name) {
+  const dot = name.lastIndexOf(".");
+  const ext = dot > 0 ? name.slice(dot + 1) : "";
+  return ext && !/\s/.test(ext) ? [name.slice(0, dot), ext] : [name, ""];
+}
+const typeExtension = (mime) => TYPE_EXTENSIONS[String(mime || "").split(";")[0].trim().toLowerCase()] || "";
+const isScriptName = (name) => SCRIPT_EXTENSIONS.includes(splitExtension(name)[1].toLowerCase());
+// Its extension doesn't say what the file is: a script's, a page's, or none.
+function untyped(name) {
+  const ext = splitExtension(name)[1].toLowerCase();
+  return !ext || SCRIPT_EXTENSIONS.includes(ext) || PAGE_EXTENSIONS.includes(ext);
+}
+// A name that says nothing of the file, for the tab's title to replace: a script's, none (a bare
+// id, `videoplayback`), or a long hash (#345).
+function meansNothing(name) {
+  const [stem, ext] = splitExtension(name);
   const hash = stem.length >= 24 && /^[A-Za-z0-9=_-]+$/.test(stem) && (stem.match(/[-_]/g) || []).length <= 2;
+  return !ext || isScriptName(name) || hash;
+}
+// The tab's title as a file's stem: what a file name can't hold becomes a space, at most 150 characters.
+function cleanTitle(title) {
+  const spaced = String(title || "")
+    .replace(/[\u00AD\u200B-\u200F\u202A-\u202E\u2060-\u2064\u2066-\u206F\uFEFF]/g, "")
+    .replace(/[\x00-\x1f\x7f-\x9f<>:"/\\|?*]/g, " ");
+  return [...spaced.split(/\s+/).filter(Boolean).join(" ")].slice(0, 150).join("").replace(/[. ]+$/, "");
+}
+// The address's own name (naming.rs' address_name): a script's `file=` or `filename=` value naming
+// a file of a known type (#695), else its last part.
+function addressFileName(url) {
+  const last = addressName(url);
+  if (splitExtension(last)[1] && !isScriptName(last)) return last;
+  try {
+    for (const [k, v] of new URL(url).searchParams) {
+      if (!/^(file|filename)$/i.test(k)) continue;
+      const name = v.trim().split(/[\\/]/).pop().trim();
+      const [stem, ext] = splitExtension(name);
+      if (stem.trim() && TYPED.has(ext.toLowerCase())) return name;
+    }
+  } catch {
+    // Not an address: its last part.
+  }
+  return last;
+}
+
+// A page's media file's name as the app saves it ({name, own}): its address's (a script's `file=`
+// value), typed by the type its server said (`mime`) when its own extension doesn't say it
+// (stream.php: stream.mp4), and the tab's title instead of a name that means nothing (a script's,
+// a bare id, a hash; any on a server whose names are all random ids, #493: X's video.twimg.com).
+// With the popup's switch on (`includeOriginal`), the title before a real name ("Title -
+// clip.mp4"). `own`: the address names the file as the app would name it with no name sent, so
+// none is (a server's Content-Disposition then still wins).
+function mediaName(url, mime, title, includeOriginal = false) {
+  const given = addressFileName(url);
+  const typed = untyped(given) ? typeExtension(mime) : "";
+  const [stem, ext] = splitExtension(given);
+  const name = cleanTitle(title);
   const randomServer = siteOf(url).toLowerCase() === "video.twimg.com";
-  if ((hash || randomServer) && name) return `${name}${dot > 0 ? last.slice(dot) : ""}`;
-  if (!includeOriginal || !name) return "";
-  const original = addressName(url).replace(/[\\/:*?"<>|\x00-\x1f]/g, " ").trim();
-  return original && original !== "." && original !== ".." ? `${name} - ${original}` : "";
+  const bare = given === addressName(url) && (meansNothing(given) || randomServer);
+  const dotted = typed || ext ? `.${typed || ext}` : "";
+  if (bare && name) return { name: `${name}${dotted}`, own: false };
+  const own = typed ? `${stem || "download"}.${typed}` : given;
+  if (includeOriginal && name && own) return { name: `${name} - ${own}`, own: false };
+  return { name: own, own: !typed };
 }
 
 // One of the tab's media, handed to the app as the popup asked: a stream to the Download video
@@ -975,12 +1196,17 @@ async function mediaDownload(tabId, url) {
       src: it.url,
       title: String(tab.title || "").slice(0, 300),
       referrer: tab.url && tab.url !== page ? tab.url : "",
-      ...(await videoCookies(it.url, ctx)),
+      ...(await streamContext(tabId, it.url, ctx)),
       ...(ctx.incognito ? { private: true } : {}),
     });
   }
   const { mediaTitleName } = await ext.storage.local.get({ mediaTitleName: false });
-  return handOff({ url: it.url, referrer: page, size: it.size, mime: it.mime, explicit: true, filename: titledName(it.url, tab.title, mediaTitleName), ...ctx });
+  const named = mediaName(it.url, it.mime, tab.title, mediaTitleName);
+  // The name the list shows; none when the address names the file as the app would (a server's
+  // Content-Disposition may still name it). The title goes too: a file whose address names nothing
+  // and whose type only the server or its bytes say is named by it in the app (#800).
+  const title = String(tab.title || "").slice(0, 300);
+  return handOff({ url: it.url, referrer: page, size: it.size, mime: it.mime, explicit: true, filename: named.own ? "" : named.name, ...(title ? { title } : {}), ...ctx });
 }
 
 // ---- the hand-off ------------------------------------------------------------------------
@@ -1020,6 +1246,45 @@ async function videoCookies(url, ctx) {
     ...(typeof c.expirationDate === "number" ? { expirationDate: c.expirationDate } : {}),
   }));
   return { cookies: header(list), cookieJar };
+}
+
+// The cookies of a tab's stream (`videoCookies`) and what the browser sent with it (#900): the
+// Referer and Origin its player asked for it with (`fetchedWith`: the app sends them again with
+// its playlists and pieces), and the cookies that went with it that no store lists (a frame's
+// own, kept for its page only), added for its host. Nothing more for an address the tab didn't
+// load (a page's).
+async function streamContext(tabId, url, ctx) {
+  const c = await videoCookies(url, ctx);
+  const tab = media.get(tabId);
+  const it = tab && [...tab.items, ...(tab.maybe || [])].find((x) => x.url === url);
+  const sent = (it && it.sent) || {};
+  const web = (v) => typeof v === "string" && /^https?:\/\/\S+$/i.test(v) && v.length <= URL_MAX;
+  const fetchedWith = {
+    ...(web(sent.referer) ? { referer: sent.referer } : {}),
+    ...(web(sent.origin) ? { origin: sent.origin } : {}),
+  };
+  if (typeof sent.cookie === "string" && sent.cookie) {
+    let host = "";
+    let secure = false;
+    try {
+      const u = new URL(url);
+      host = u.hostname;
+      secure = u.protocol === "https:";
+    } catch {
+      // Not an address: no cookie of its own.
+    }
+    const known = new Set(c.cookieJar.map((x) => x.name));
+    for (const pair of sent.cookie.split(/;\s*/)) {
+      const at = pair.indexOf("=");
+      const name = at > 0 ? pair.slice(0, at).trim() : "";
+      if (!host || !name || known.has(name)) continue;
+      known.add(name);
+      c.cookieJar.push({ name, value: pair.slice(at + 1), domain: host, hostOnly: true, path: "/", secure });
+    }
+    // The header the browser sent for this very address.
+    c.cookies = sent.cookie;
+  }
+  return Object.keys(fetchedWith).length ? { ...c, fetchedWith } : c;
 }
 
 // Has the user left this extension the site? With access limited ("On click", some sites), its
@@ -1284,6 +1549,8 @@ async function handOff(d) {
     ...(d.post ? { post: d.post.body, postType: d.post.type || "" } : {}),
     ...(d.incognito ? { private: true } : {}),
     ...(d.explicit ? { explicit: true } : {}),
+    // A page's media from the popup's list (#800): its page's title, for a name the address lacks.
+    ...(d.title ? { title: d.title } : {}),
     // Through the browser's proxy too (#42): the one its own request for the file took.
     ...(await browserProxy(d.finalUrl || d.url, d.incognito)),
   };
@@ -1331,24 +1598,24 @@ function isTelegramUrl(u) {
   }
 }
 
-async function candidate(item, url) {
+
+// `clicked`: a link just clicked without Alt (Safari's `link`, see `altClicked`).
+async function candidate(item, url, clicked = false) {
   if (!/^https?:/i.test(url)) return null; // blob:, data:, file: stay the browser's
   // Telegram: its page's own downloader has the session and the media (protected channels
   // included). Handing the page-only URL to the app made it answer 302.
   if (isTelegramUrl(url) || isTelegramUrl(item.referrer)) return null;
   const { paused } = await ext.storage.local.get({ paused: false });
   if (paused) return null;
-  forget(bypass, 10000);
-  if (bypass.has(item.url) || bypass.has(url)) return null;
   const first = firstUrl(item);
-  if (bypass.has(first) || postOf(first) === null) return null; // Alt; a form not to post again
+  if (altClicked(item, url, first, clicked) || postOf(first) === null) return null; // Alt; a form not to post again
   if (colabRuntimeProxy(first, url)) return null;
   const r = await currentRules();
   if (!r) return null;
   const name = (item.filename || "").split(/[\\/]/).pop() || url.split(/[?#]/)[0].split("/").pop() || "";
   const left = (why) => ({ left: why, name });
   if (!r.capture) return left(r.captureOff || "browser");
-  const by = excludedBy(r, first) || excludedBy(r, url);
+  const by = excludedBy(r, first) || excludedBy(r, url) || (pageListed(r, item.referrer) ? "site" : "");
   if (by) return left(by);
   const type = extensionOf(name);
   if (!type || !typePatterns(r.types).some((p) => p.test(type))) return left("file-type");
@@ -1413,7 +1680,7 @@ async function link(url, referrer, incognito, name) {
   if (r && r.opened === false && OPENED[type]) return { taken: false };
   const filename = name || addressName(url);
   const item = { url, referrer, incognito, ...(filename ? { filename } : {}) };
-  const c = await candidate(item, url).catch(() => null);
+  const c = await candidate(item, url, true).catch(() => null);
   if (!c || c.left) {
     leftAlone(c, item, url);
     return { taken: false };
@@ -1578,29 +1845,25 @@ const OPENED = {
   MKV: ["video/x-matroska"],
 };
 const OPENED_RULE = 1;
-// The allow rules for exact excluded hosts follow it (ids from 2).
-const OPENED_ALLOW = 2;
 let openedTypes = [];
 
-// Options' excluded sites as the rules need them, read as the app reads them: `*.example.com`
-// is the domain and its subdomains (a rule's domain condition), a plain name that host only
-// (an allow rule of its own). As the browser writes a host: no port, punycode.
+// Options' excluded sites as the rule needs them, read as the app reads them: `example.com` and
+// `*.example.com` alike are the domain and its subdomains (#1049), a rule's domain condition. As
+// the browser writes a host: no port, punycode. A pattern with another `*` (`*.youtube.*`) is no
+// domain a rule can name: such a site's PDF is made a download, which the browser then keeps.
 function excludedHosts() {
-  const wide = [];
-  const exact = [];
+  const hosts = [];
   for (const raw of ((rules && rules.excludedSites) || "").split(/\s+/)) {
-    const p = raw.trim().replace(/^[a-z]+:\/\//i, "").split("/")[0];
-    const sub = p.startsWith("*.");
+    const p = raw.trim().replace(/^[a-z]+:\/\//i, "").split("/")[0].replace(/^\*\./, "");
     let host = "";
     try {
-      host = new URL(`http://${sub ? p.slice(2) : p}`).hostname;
+      host = new URL(`http://${p}`).hostname;
     } catch {
       continue;
     }
-    if (!host || host.includes("*")) continue;
-    (sub ? wide : exact).push(host);
+    if (host && !host.includes("*") && !hosts.includes(host)) hosts.push(host);
   }
-  return { wide, exact };
+  return hosts;
 }
 
 function openedMimes(r) {
@@ -1626,22 +1889,16 @@ async function syncOpenedRule() {
     condition: {
       resourceTypes: ["main_frame"],
       responseHeaders: [{ header: "content-type", values: openedTypes.map((m) => `${m}*`) }],
-      // Options' excluded sites keep opening in the browser.
-      ...(hosts.wide.length ? { excludedRequestDomains: hosts.wide } : {}),
+      // Options' excluded sites keep opening in the browser: their files, and those their pages
+      // lead to on another host (the page that started the load, #1049).
+      ...(hosts.length ? { excludedRequestDomains: hosts, excludedInitiatorDomains: hosts } : {}),
     },
   };
-  const esc = (h) => h.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const allows = hosts.exact.slice(0, 500).map((h, i) => ({
-    id: OPENED_ALLOW + i,
-    priority: 2,
-    action: { type: "allow" },
-    condition: { resourceTypes: ["main_frame"], regexFilter: `^[a-z]+://${esc(h)}(:[0-9]+)?/` },
-  }));
   try {
     const old = (await dnr.getSessionRules()).map((r) => r.id);
     await dnr.updateSessionRules({
       removeRuleIds: old.filter((id) => id >= OPENED_RULE),
-      addRules: openedTypes.length ? [rule, ...allows] : [],
+      addRules: openedTypes.length ? [rule] : [],
     });
   } catch {
     // A browser without header conditions (Chrome before 128): it opens them as before.
@@ -1758,6 +2015,7 @@ async function headersReceived(d) {
   const ref = referrers.get(d.requestId);
   const item = {
     url: d.url,
+    tabId: d.tabId,
     filename: file.name,
     totalBytes: file.size,
     fileSize: file.size,
@@ -2052,7 +2310,8 @@ ext.contextMenus.onClicked.addListener(async (info, tab) => {
     // window, which reads streams (a manifest downloaded as a file is only a short list).
     // The manifest's own cookies (its server may not be the page's), as the media list sends.
     if (url && MANIFEST.test(url)) {
-      const reply = await native({ video: true, explicit: true, url: info.pageUrl, src: url, title, ...(await videoCookies(url, { incognito, storeId })), private: incognito });
+      await mediaBack;
+      const reply = await native({ video: true, explicit: true, url: info.pageUrl, src: url, title, ...(await streamContext(tab && tab.id, url, { incognito, storeId })), private: incognito });
       if (!reply.ok && reply.why !== "options") explain(reply.why);
       return;
     }
@@ -2072,7 +2331,7 @@ ext.contextMenus.onClicked.addListener(async (info, tab) => {
         ...(src ? { src } : {}),
         ...(title ? { title } : {}),
         referrer: info.pageUrl && info.pageUrl !== page ? info.pageUrl : "",
-        ...(await videoCookies(src || page, { incognito, storeId })),
+        ...(await streamContext(tab && tab.id, src || page, { incognito, storeId })),
         private: incognito,
       });
       if (!reply.ok && reply.why !== "options") explain(reply.why);
@@ -2383,8 +2642,9 @@ async function videoTarget(m, page, sender) {
     title: typeof m.title === "string" && !post && !feed ? m.title.slice(0, 300) : "",
     referrer: tab.url && tab.url !== own ? tab.url : "",
     // The cookies of what yt-dlp is given (the app files them under its host): the stream's
-    // own server may not be the page's, and the page's cookies are not for it.
-    ...(await videoCookies(src || own, { incognito: tab.incognito, storeId: tab.cookieStoreId })),
+    // own server may not be the page's, and the page's cookies are not for it. With a stream's,
+    // what the browser sent with it (#900).
+    ...(await streamContext(tab.id, src || own, { incognito: tab.incognito, storeId: tab.cookieStoreId })),
   };
 }
 
@@ -2421,6 +2681,7 @@ async function videoLookup(m, page, sender) {
     },
     cookies: v.cookies,
     cookieJar: v.cookieJar,
+    ...(v.fetchedWith ? { fetchedWith: v.fetchedWith } : {}),
     private: Boolean(tab.incognito),
   });
   // `show`: the address MDM lists a download of it under (the button's "Show"); `post`: the
@@ -2505,8 +2766,10 @@ async function pageMessage(m, sender) {
     }
     return { ok: true };
   }
+  // Alt held on a link: as the button went down, and at the click (page.js).
   if (m.type === "bypass" && typeof m.url === "string") {
-    bypass.set(m.url, { at: Date.now() });
+    const was = bypass.get(m.url);
+    bypass.set(m.url, { at: Date.now(), tab: tab.id, page: page || "", used: Boolean(was && was.used) });
     return { ok: true };
   }
   if (m.type === "telegram-download" && page && isTelegramUrl(page)) {
@@ -2517,17 +2780,21 @@ async function pageMessage(m, sender) {
   if (m.type === "video" && page) {
     const v = await videoTarget(m, page, sender);
     if (!v) return { ok: false, why: isYouTube(page) ? "unnamed" : "feed" };
-    // The video's own plain file (#703): downloaded as a file, no window.
+    // The video's own plain file (#703): downloaded as a file, no window; with the type its
+    // server said when the tab loaded it, which names a script's answer at once (#800).
     const direct = Boolean(m.direct) && Boolean(v.file) && v.file === v.src;
+    const loaded = direct && ((media.get(tab.id) || {}).items || []).find((it) => it.url === v.src);
     const reply = await native({
       video: true,
       url: v.own,
       ...(v.src ? { src: v.src } : {}),
       ...(direct ? { direct: true } : {}),
+      ...(loaded && loaded.mime ? { mime: loaded.mime } : {}),
       title: v.title,
       referrer: v.referrer,
       cookies: v.cookies,
       cookieJar: v.cookieJar,
+      ...(v.fetchedWith ? { fetchedWith: v.fetchedWith } : {}),
       ...(tab.incognito ? { private: true } : {}),
     });
     return { ok: Boolean(reply.ok), why: reply.why, ...(reply.ok && direct ? { show: v.src } : {}) };
@@ -2588,6 +2855,21 @@ async function popupMessage(m) {
     const reply = await native({ excludeSite: m.host });
     await refreshRules();
     return { ok: Boolean(reply.ok) };
+  }
+  // The popup's Undo (#404): the site taken off the excluded sites again, as it was added.
+  if (m.type === "include-site" && typeof m.host === "string" && m.host) {
+    const reply = await native({ includeSite: m.host });
+    await refreshRules();
+    return { ok: Boolean(reply.ok) };
+  }
+  // Are this site's downloads left to the browser by Options' excluded sites (#404), and is it
+  // listed by its own name (Undo takes that off; a pattern of the user's own stays)?
+  if (m.type === "site-excluded" && typeof m.host === "string" && m.host) {
+    const r = await currentRules();
+    const host = m.host.toLowerCase();
+    const sites = ((r && r.excludedSites) || "").split(/\s+/).filter(Boolean);
+    const undo = sites.some((p) => p.toLowerCase() === host);
+    return { excluded: undo || Boolean(r && siteListed(r, host)), undo };
   }
   if (m.type === "open-app") return { ok: Boolean((await native({ open: true })).ok) };
   if (m.type === "open-options") return { ok: Boolean((await native({ openOptions: true, page: "general" })).ok) };

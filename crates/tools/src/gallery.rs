@@ -176,9 +176,7 @@ pub async fn install_latest(
             "build for this system: install gallery-dl with the system's packages (Homebrew, pip) and choose it in Helpers".into(),
         ));
     };
-    let client = mdm_engine::net::client_builder(&net.dns, &net.route, RELEASES)?
-        .user_agent(crate::USER_AGENT)
-        .build()?;
+    let client = crate::client(net, RELEASES)?;
     let body = crate::get_bytes(&client, RELEASES).await?;
     let release: Release =
         serde_json::from_slice(&body).map_err(|e| Error::BadRelease(e.to_string()))?;
@@ -417,6 +415,8 @@ impl ByEngine<'_> {
                     segments: Vec::new(),
                     connections,
                     server: None,
+                    // A gallery's files each have their own: its page stands for them.
+                    address: None,
                 });
                 if sh.progress.state == State::Stopped && !cancelled {
                     cancelled = true;
@@ -456,6 +456,8 @@ impl Default for Progress {
             sub_problems: Vec::new(),
             engine: None,
             helper: None,
+            merging: None,
+            merge_failed: None,
         }
     }
 }
@@ -498,7 +500,10 @@ impl GalleryJob {
         let mut ours: Vec<String> = vec![
             // The files right in `folder` (the gallery's own), not in subfolders of the site's.
             "--directory".into(),
-            folder.to_string_lossy().into_owned(),
+            // A full path: gallery-dl runs in a folder of its own (#834).
+            crate::workdir::absolute(folder)
+                .to_string_lossy()
+                .into_owned(),
             // One file a second at most: gentle with the sites (Wikimedia answers 429 to
             // faster tools) and with the person's line.
             "--sleep".into(),
@@ -662,14 +667,14 @@ impl Drop for GalleryJob {
 
 /// The browser's context (`FromBrowser::args`, made for yt-dlp) as gallery-dl takes it: its
 /// cookies, and its User-Agent or MDM's (`--user-agent`, or `-o user-agent=…` before 1.24); no
-/// Referer, which gallery-dl has no option for.
+/// Referer or Origin (`--add-header`), which gallery-dl has no option for.
 fn browser_args(theirs: Vec<String>, accepts: Accepts) -> Vec<String> {
     let mut out = Vec::new();
     let mut agent = None;
     let mut theirs = theirs.into_iter();
     while let Some(a) = theirs.next() {
         match a.as_str() {
-            "--referer" => {
+            "--referer" | "--add-header" => {
                 theirs.next();
             }
             "--user-agent" => agent = theirs.next(),
@@ -873,7 +878,8 @@ mod tests {
         );
     }
 
-    /// The browser's User-Agent (else MDM's) and cookies, as each release takes them.
+    /// The browser's User-Agent (else MDM's) and cookies, as each release takes them; its
+    /// Referer and Origin (#900) never, which gallery-dl has no option for.
     #[test]
     fn the_browsers_context_as_each_release_takes_it() {
         let theirs = || -> Vec<String> {
@@ -882,6 +888,8 @@ mod tests {
                 "https://x.test/",
                 "--user-agent",
                 "Firefox/150",
+                "--add-header",
+                "Origin:https://x.test",
                 "--cookies",
                 "/c.txt",
             ]

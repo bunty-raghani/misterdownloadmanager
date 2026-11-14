@@ -398,6 +398,13 @@
           },
           "type": "array"
         },
+        "include_site": {
+          "description": "That button's Undo (#404): the host name `exclude_site` listed is taken off the excluded\nsites again (a pattern of the user's own that covers it stays).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "later": {
           "default": false,
           "description": "`/a`: add to the main queue, don't start.",
@@ -420,6 +427,13 @@
         },
         "name": {
           "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "origin": {
+          "description": "From the browser (#900): the `Origin` its page's player sent with a video's stream or\nfile (`video_page`, `video_lookup`), sent again with it, its playlists and each of its\npieces, as a site's video server may serve its own pages' players only.",
           "type": [
             "string",
             "null"
@@ -650,10 +664,21 @@
     "VideoChoice": {
       "description": "One quality the browser's quality menu offers.",
       "properties": {
+        "approx": {
+          "description": "`size` is an estimate (a stream's bitrate times its length, a conversion's), shown as\nabout (\"~532 MB\"); otherwise it is the bytes of exactly the streams this downloads (#801).",
+          "type": "boolean"
+        },
         "audio": {
           "default": false,
           "description": "Only the sound (an audio file, a conversion to MP3, Opus or FLAC): the menu lists these\napart from the videos. False from an app older than the field.",
           "type": "boolean"
+        },
+        "codec": {
+          "description": "The picture's codec as people name it: `AV1`, `VP9`, `H.264`, `H.265`… (#755). None\nfrom an app older than the field.",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "ext": {
           "default": "",
@@ -661,7 +686,7 @@
           "type": "string"
         },
         "fps": {
-          "description": "Frames a second, when above 31 (60 fps is worth saying, 30 isn't).",
+          "description": "Frames a second, rounded (an app older than #755 said it only above 31).",
           "format": "uint32",
           "minimum": 0,
           "type": [
@@ -696,9 +721,16 @@
           "description": "The sound as the site sends it (not converted): the button's list says \"original\".",
           "type": "boolean"
         },
+        "range": {
+          "description": "The picture's dynamic range when worth saying: `HDR`, `Dolby Vision`, or `SDR` beside an\nHDR choice of the same height (#755).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "size": {
           "default": null,
-          "description": "Bytes, exact or estimated; null when unknown.",
+          "description": "Bytes, exact or estimated (`approx`); null when unknown.",
           "format": "uint64",
           "minimum": 0,
           "type": [
@@ -753,6 +785,17 @@
             "null"
           ]
         },
+        "notice": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/VideoNotice"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "`ready` (and `failed` with [`lookup::NO_CHOICES`]): what the look-up lacked and how to\nmend it, shown with the choices (#852: YouTube's qualities need a JavaScript runtime).\nNone from an app older than the field."
+        },
         "reason": {
           "description": "`failed`: [`lookup::NO_YTDLP`], [`lookup::NO_CHOICES`] or [`lookup::ERROR`].",
           "type": [
@@ -778,6 +821,27 @@
             "string",
             "null"
           ]
+        }
+      },
+      "type": "object"
+    },
+    "VideoNotice": {
+      "description": "A word in the browser's quality menu on what the look-up lacked (#852), in MDM's language.",
+      "properties": {
+        "link": {
+          "default": "",
+          "description": "The link's words (\"How to install one\").",
+          "type": "string"
+        },
+        "text": {
+          "default": "",
+          "description": "What is wrong and what to do (\"YouTube needs a JavaScript runtime…\").",
+          "type": "string"
+        },
+        "url": {
+          "default": "",
+          "description": "The help page it opens, on MDM's website.",
+          "type": "string"
         }
       },
       "type": "object"

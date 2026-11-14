@@ -92,6 +92,9 @@
       }
     }
   },
+  "popup_undo": {
+    "message": "പഴയപടിയാക്കുക"
+  },
   "popup_excluded": {
     "message": "$site$ എന്നതിൽ നിന്നുള്ള ഡൗൺലോഡുകൾ ബ്രൗസറിൽ തുടരും",
     "placeholders": {

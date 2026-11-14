@@ -18,6 +18,7 @@ everywhere.
 | Keys | What they do |
 |---|---|
 | **Ctrl+N** | Add a download (**Add URL**) |
+| **Ctrl+B** | Download the links in the clipboard (**Tasks → Add batch download from clipboard**) |
 | **Ctrl+F** | Find a download |
 | **F3** | Find the next match |
 | Type a name | Jump to the download whose name starts with it |

@@ -92,6 +92,9 @@
       }
     }
   },
+  "popup_undo": {
+    "message": "Anular"
+  },
   "popup_excluded": {
     "message": "Os downloads de $site$ ficam com o navegador",
     "placeholders": {

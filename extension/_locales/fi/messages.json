@@ -92,6 +92,9 @@
       }
     }
   },
+  "popup_undo": {
+    "message": "Kumoa"
+  },
   "popup_excluded": {
     "message": "Lataukset sivustolta $site$ jäävät selaimelle",
     "placeholders": {

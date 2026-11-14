@@ -36,7 +36,7 @@ A `.torrent` file fetched from a web address goes through the same checks as one
 
 - MDM refuses a torrent with file names your system can't write safely, says which name, and writes nothing.
 - MDM never writes into a file that's already there without asking.
-- Files from torrents are marked as **downloaded from the internet**, like a browser's downloads. Windows SmartScreen checks a program before it first runs, and Office opens documents in Protected View. On a Mac, Gatekeeper checks apps.
+- Files from torrents are marked as **downloaded from the internet**, like a browser's downloads. Windows SmartScreen checks a program before it first runs, and Office opens documents in Protected View. On a Mac, Gatekeeper checks apps. **Options → Save to → Mark downloaded files as coming from the internet** turns it off, and so does Windows' policy **Do not preserve zone information in file attachments**.
 - A torrent can contain anything, and anyone can make one. Only open programs from people you trust, and scan them if in doubt.
 
 ## Proxies

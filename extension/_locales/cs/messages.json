@@ -92,6 +92,9 @@
       }
     }
   },
+  "popup_undo": {
+    "message": "Zpět"
+  },
   "popup_excluded": {
     "message": "Stahování z $site$ zůstává v prohlížeči",
     "placeholders": {

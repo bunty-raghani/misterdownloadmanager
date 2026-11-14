@@ -42,6 +42,10 @@ pub fn extract(
     w: &mut Writer,
     password: Option<&str>,
 ) -> Result<(), Error> {
+    // Full paths: 7-Zip runs in the staging folder, MDM's own and writable, never in the folder
+    // MDM was started in (its install folder from the Start menu, #834).
+    let full = |p: &Path| std::path::absolute(p).unwrap_or_else(|_| p.to_owned());
+    let (root, archive) = (full(w.root()), full(archive));
     let mut cmd = Command::new(tool);
     cmd.arg("x")
         .arg("-y")
@@ -50,9 +54,10 @@ pub fn extract(
         // An empty password when none is given: 7-Zip then fails at once on an encrypted
         // archive instead of asking on a console nobody sees.
         .arg(format!("-p{}", password.unwrap_or("")))
-        .arg(format!("-o{}", w.root().display()))
+        .arg(format!("-o{}", root.display()))
         .arg("--")
-        .arg(archive)
+        .arg(&archive)
+        .current_dir(&root)
         .stdin(Stdio::null())
         .stdout(Stdio::null())
         .stderr(Stdio::piped());

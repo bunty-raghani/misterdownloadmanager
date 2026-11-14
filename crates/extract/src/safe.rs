@@ -3,7 +3,8 @@
 //!   would let `a.txt:Zone.Identifier` overwrite the file's mark), and each part is made a safe
 //!   file name; it can't leave the staging folder;
 //! - links, devices and pipes are left out, and nothing is written through a link;
-//! - limits on what is written (a bomb), the number of entries and the depth;
+//! - limits on the bytes read (a bomb; the entries left out are counted too, since decompressing
+//!   them costs just as much), the number of entries and the depth;
 //! - written into an empty staging folder, then moved into place without overwriting anything.
 
 use std::fs;
@@ -98,12 +99,16 @@ fn through_link(root: &Path, path: &Path) -> bool {
     false
 }
 
-/// Writes entries into the staging folder, counting what is written against the limits.
+/// Writes entries into the staging folder, counting what it reads against the limits (an entry
+/// left out is decompressed all the same).
 pub struct Writer<'a> {
     root: PathBuf,
     limits: Limits,
     cancel: Option<&'a AtomicBool>,
+    /// Bytes put in the staging folder, and bytes read from the decoders (written or not): one
+    /// budget covers both, so an entry left out can't be a bomb.
     written: u64,
+    read: u64,
     entries: u64,
     skipped: Vec<(String, &'static str)>,
 }
@@ -115,6 +120,7 @@ impl<'a> Writer<'a> {
             limits,
             cancel,
             written: 0,
+            read: 0,
             entries: 0,
             skipped: Vec::new(),
         }
@@ -153,6 +159,42 @@ impl<'a> Writer<'a> {
         Ok(())
     }
 
+    /// Count `n` more bytes pulled from a decoder against the budget, written or not: a bomb
+    /// behind a name that isn't safe costs just as much to decompress as any other entry.
+    fn charge(&mut self, n: u64) -> Result<(), Error> {
+        self.read += n;
+        if self.read > self.limits.total {
+            return Err(Error::TooBig {
+                would: self.read,
+                limit: self.limits.total,
+            });
+        }
+        Ok(())
+    }
+
+    /// Read an entry that isn't written (its name isn't safe, or it would go through a link) past
+    /// its end, so a stream format's next entry follows: under the same limits as one that is
+    /// written — its size when the archive says it, the budget and a cancel at every read.
+    fn drain(&mut self, name: &str, size: Option<u64>, data: &mut dyn Read) -> Result<(), Error> {
+        let entry_cap = size.map(|s| s.saturating_add(1 << 20));
+        let mut buf = vec![0u8; 64 * 1024];
+        let mut this = 0u64;
+        loop {
+            let n = read_some(data, &mut buf)?;
+            if n == 0 {
+                return Ok(());
+            }
+            this += n as u64;
+            if entry_cap.is_some_and(|c| this > c) {
+                return Err(Error::Damaged(format!("{name} is bigger than it says")));
+            }
+            self.charge(n as u64)?;
+            if self.cancelled() {
+                return Err(Error::Cancelled);
+            }
+        }
+    }
+
     /// A folder entry.
     pub fn dir(&mut self, name: &str) -> Result<(), Error> {
         self.count()?;
@@ -187,16 +229,14 @@ impl<'a> Writer<'a> {
             Err(why) => {
                 self.skip(name, why);
                 // Read past it: a stream format's next entry follows.
-                io::copy(data, &mut io::sink())?;
-                return Ok(());
+                return self.drain(name, size, data);
             }
         };
         let mut path = self.root.join(&rel);
         if let Some(parent) = path.parent() {
             if through_link(&self.root, parent) {
                 self.skip(name, "through a link");
-                io::copy(data, &mut io::sink())?;
-                return Ok(());
+                return self.drain(name, size, data);
             }
             fs::create_dir_all(parent)?;
         }
@@ -212,23 +252,16 @@ impl<'a> Writer<'a> {
         let mut buf = vec![0u8; 256 * 1024];
         let mut this = 0u64;
         loop {
-            let n = match data.read(&mut buf) {
-                Ok(0) => break,
-                Ok(n) => n,
-                Err(e) if e.kind() == io::ErrorKind::Interrupted => continue,
-                Err(e) => return Err(read_error(e)),
-            };
+            let n = read_some(data, &mut buf)?;
+            if n == 0 {
+                break;
+            }
             this += n as u64;
             self.written += n as u64;
             if entry_cap.is_some_and(|c| this > c) {
                 return Err(Error::Damaged(format!("{name} is bigger than it says")));
             }
-            if self.written > self.limits.total {
-                return Err(Error::TooBig {
-                    would: self.written,
-                    limit: self.limits.total,
-                });
-            }
+            self.charge(n as u64)?;
             out.write_all(&buf[..n])?;
             if self.cancelled() {
                 return Err(Error::Cancelled);
@@ -238,6 +271,18 @@ impl<'a> Writer<'a> {
         drop(out);
         set_mode(&path, mode);
         Ok(())
+    }
+}
+
+/// One read from a decoder: `Ok(0)` at its end, an interrupted read tried again, anything else
+/// put as [`read_error`] has it.
+fn read_some(data: &mut dyn Read, buf: &mut [u8]) -> Result<usize, Error> {
+    loop {
+        match data.read(buf) {
+            Ok(n) => return Ok(n),
+            Err(e) if e.kind() == io::ErrorKind::Interrupted => continue,
+            Err(e) => return Err(read_error(e)),
+        }
     }
 }
 
@@ -401,6 +446,22 @@ fn mark_all(dir: &Path, on_file: &mut dyn FnMut(&Path)) -> io::Result<u64> {
 /// that is a link, or not a plain file or folder, is removed before anything is moved into
 /// place, and so is a name that isn't safe. Returns what was left out.
 pub fn check_tree(root: &Path, depth: usize) -> io::Result<Vec<(String, &'static str)>> {
+    let bad = scan(root, depth)?;
+    for (path, _, _) in &bad {
+        let t = fs::symlink_metadata(path)?.file_type();
+        if t.is_dir() {
+            let _ = fs::remove_dir_all(path);
+        } else {
+            let _ = fs::remove_file(path).or_else(|_| fs::remove_dir(path));
+        }
+    }
+    Ok(bad.into_iter().map(|(_, rel, why)| (rel, why)).collect())
+}
+
+/// What under `root` breaks the rules (a link, not a plain file or folder, a name that isn't
+/// safe), with its path, its name under `root` and why; nothing is changed. A folder that breaks
+/// them isn't looked into.
+fn scan(root: &Path, depth: usize) -> io::Result<Vec<(PathBuf, String, &'static str)>> {
     let mut out = Vec::new();
     let mut todo = vec![root.to_path_buf()];
     while let Some(d) = todo.pop() {
@@ -429,18 +490,182 @@ pub fn check_tree(root: &Path, depth: usize) -> io::Result<Vec<(String, &'static
                 }
             };
             match bad {
-                Some(why) => {
-                    out.push((rel, why));
-                    if t.is_dir() && !t.is_symlink() {
-                        let _ = fs::remove_dir_all(&path);
-                    } else {
-                        let _ = fs::remove_file(&path).or_else(|_| fs::remove_dir(&path));
-                    }
-                }
+                Some(why) => out.push((path, rel, why)),
                 None if t.is_dir() => todo.push(path),
                 None => {}
             }
         }
     }
     Ok(out)
+}
+
+/// What [`move_out`] did.
+pub struct Moved {
+    /// Where the files went, the number of them, and those numbered.
+    pub report: Report,
+    /// Entries that break the rules: never moved, never deleted (they stay in the folder).
+    pub skipped: Vec<(String, &'static str)>,
+    /// The folder, when something is still in it (the entries left out).
+    pub left: Option<PathBuf>,
+}
+
+/// Put what another program extracted into `from` (HatchZip in place, a folder of its own) where
+/// `subfolder` says, as our own extractions are, one entry at a time. Nothing in it is ever
+/// deleted: those files are no longer in the archive. Entries that break the rules stay where
+/// they are; when a move fails, what was moved stays where it went, the rest in `from`. Empty
+/// folders are removed from `from` at the end, and `from` itself when nothing is left in it.
+/// When `from` can't even be read, nothing was moved and everything is still in it: that is
+/// said the same way ([`Error::Unplaced`]), so the user is told where the files are.
+pub fn move_out(
+    from: &Path,
+    dest: &Path,
+    base: &str,
+    subfolder: Subfolder,
+    depth: usize,
+    on_file: &mut dyn FnMut(&Path),
+) -> Result<Moved, Error> {
+    let unread = |e: io::Error| {
+        tracing::warn!(
+            "extract: {} can't be read: {e}; nothing was moved out of it",
+            from.display()
+        );
+        Error::Unplaced {
+            to: dest.to_path_buf(),
+            left: from.to_path_buf(),
+            why: e.to_string(),
+        }
+    };
+    let bad = scan(from, depth).map_err(unread)?;
+    let bad_paths: Vec<PathBuf> = bad.iter().map(|(p, _, _)| p.clone()).collect();
+    // By name: the same order every time.
+    let mut tops: Vec<PathBuf> = fs::read_dir(from)
+        .map_err(unread)?
+        .filter_map(|e| e.ok().map(|e| e.path()))
+        .filter(|p| !bad_paths.contains(p))
+        .collect();
+    tops.sort();
+    let together = match subfolder {
+        Subfolder::Always => true,
+        Subfolder::Never => false,
+        Subfolder::Smart => tops.len() > 1,
+    };
+    let mut m = Mover {
+        bad: &bad_paths,
+        report: Report::default(),
+        on_file,
+    };
+    m.report.folder = dest.to_path_buf();
+    let moved = (|| {
+        let root = if together {
+            let name = mdm_engine::naming::sanitize(base);
+            let name = if name.is_empty() {
+                "extracted".to_owned()
+            } else {
+                name
+            };
+            let folder = m.free(dest.join(&name));
+            fs::create_dir(&folder)?;
+            m.report.folder = folder.clone();
+            folder
+        } else {
+            dest.to_path_buf()
+        };
+        for top in &tops {
+            if let Some(name) = top.file_name() {
+                m.entry(top, root.join(name))?;
+            }
+        }
+        io::Result::Ok(())
+    })();
+    if let Err(e) = moved {
+        tracing::warn!(
+            "extract: moving out of {} stopped: {e}; moved so far: {}",
+            from.display(),
+            m.report.folder.display()
+        );
+        return Err(Error::Unplaced {
+            to: m.report.folder,
+            left: from.to_path_buf(),
+            why: e.to_string(),
+        });
+    }
+    prune(from);
+    let left = fs::symlink_metadata(from)
+        .is_ok()
+        .then(|| from.to_path_buf());
+    Ok(Moved {
+        report: m.report,
+        skipped: bad.into_iter().map(|(_, rel, why)| (rel, why)).collect(),
+        left,
+    })
+}
+
+/// [`move_out`]'s state while it moves.
+struct Mover<'a> {
+    bad: &'a [PathBuf],
+    report: Report,
+    on_file: &'a mut dyn FnMut(&Path),
+}
+
+impl Mover<'_> {
+    /// `to`, or the first numbered name beside it when it is taken.
+    fn free(&mut self, to: PathBuf) -> PathBuf {
+        if fs::symlink_metadata(&to).is_ok() {
+            self.report.renamed += 1;
+            numbered(&to)
+        } else {
+            to
+        }
+    }
+
+    /// Move `from` to `to` (numbered when taken): whole, unless it is a folder holding an entry
+    /// that breaks the rules; then its folder is made and what is safe in it moved, one by one.
+    fn entry(&mut self, from: &Path, to: PathBuf) -> io::Result<()> {
+        let to = self.free(to);
+        let holds_bad = self.bad.iter().any(|b| b.starts_with(from));
+        if holds_bad {
+            fs::create_dir(&to)?;
+            let mut inside = fs::read_dir(from)?
+                .map(|e| e.map(|e| e.path()))
+                .collect::<io::Result<Vec<_>>>()?;
+            inside.sort();
+            for path in inside {
+                if self.bad.contains(&path) {
+                    continue;
+                }
+                if let Some(name) = path.file_name() {
+                    self.entry(&path, to.join(name))?;
+                }
+            }
+            return Ok(());
+        }
+        fs::rename(from, &to)?;
+        self.report.files += if fs::symlink_metadata(&to)?.is_dir() {
+            mark_all(&to, self.on_file)?
+        } else {
+            (self.on_file)(&to);
+            1
+        };
+        Ok(())
+    }
+}
+
+/// Remove the empty folders under `root`, deepest first, then `root` if it is empty: never a
+/// file, never a link.
+fn prune(root: &Path) {
+    let mut dirs = vec![root.to_path_buf()];
+    let mut i = 0;
+    while i < dirs.len() {
+        if let Ok(rd) = fs::read_dir(&dirs[i]) {
+            for e in rd.flatten() {
+                if e.file_type().is_ok_and(|t| t.is_dir()) {
+                    dirs.push(e.path());
+                }
+            }
+        }
+        i += 1;
+    }
+    for d in dirs.iter().rev() {
+        let _ = fs::remove_dir(d);
+    }
 }

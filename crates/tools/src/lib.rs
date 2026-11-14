@@ -23,6 +23,7 @@ pub mod streams;
 mod system;
 pub mod update;
 pub mod video;
+pub mod workdir;
 
 use std::path::{Path, PathBuf};
 
@@ -62,12 +63,43 @@ pub enum Error {
         version: String,
         oldest: &'static str,
     },
-    /// MDM's engine could not download it (its own words).
-    #[error("{0}")]
-    Download(String),
+    /// MDM's engine could not download it from `host` (#816: which server, and why).
+    #[error("{host}: {error}")]
+    Download {
+        host: String,
+        error: mdm_engine::Error,
+    },
     /// The chosen network adapter is down or can't reach the server (#35).
     #[error(transparent)]
     Adapter(#[from] mdm_engine::NetError),
+}
+
+impl Error {
+    /// The server a network failure was with, and its kind (#816); None for any other error.
+    pub fn network(&self) -> Option<(String, mdm_engine::fault::Fault)> {
+        match self {
+            Error::Http(e) => {
+                let host = e.url()?.host_str()?.to_owned();
+                Some((host, mdm_engine::fault::of_http(e)))
+            }
+            Error::Download { host, error } => {
+                Some((host.clone(), mdm_engine::fault::of_engine(error)?))
+            }
+            _ => None,
+        }
+    }
+}
+
+/// A client for MDM's own requests to `url`'s server (a release list, its checksums): through
+/// `net`'s proxy (Options → Proxy / Socks), DNS and network adapter, as the engine's downloads
+/// go (#816: the release list went past the proxy the download itself took).
+pub(crate) fn client(net: &mdm_engine::Options, url: &str) -> Result<reqwest::Client, Error> {
+    let parsed = url::Url::parse(url).map_err(|e| Error::BadRelease(e.to_string()))?;
+    let host = parsed.host_str().unwrap_or_default().to_owned();
+    mdm_engine::http_client(net, &parsed).map_err(|e| match e {
+        mdm_engine::Error::Adapter(a) => Error::Adapter(a),
+        error => Error::Download { host, error },
+    })
 }
 
 /// An installed tool.
@@ -188,6 +220,7 @@ pub(crate) async fn fetch_verified(
 ) -> Result<(), Error> {
     use mdm_engine::verify::{Algo, Hash};
     let url = url::Url::parse(url).map_err(|e| Error::BadRelease(e.to_string()))?;
+    let host = url.host_str().unwrap_or_default().to_owned();
     let opts = mdm_engine::Options {
         checksum: Some(Hash {
             algo: Algo::Sha256,
@@ -215,7 +248,7 @@ pub(crate) async fn fetch_verified(
             forget();
             Err(Error::BadChecksum)
         }
-        Err(e) => Err(Error::Download(e.to_string())),
+        Err(error) => Err(Error::Download { host, error }),
     }
 }
 
@@ -302,9 +335,7 @@ pub async fn install_latest(
     if let Some(mine) = chosen::chosen(dir, chosen::Helper::YtDlp) {
         return Ok(mine);
     }
-    let client = mdm_engine::net::client_builder(&net.dns, &net.route, RELEASES)?
-        .user_agent(USER_AGENT)
-        .build()?;
+    let client = client(net, RELEASES)?;
     let body = client
         .get(RELEASES)
         .send()

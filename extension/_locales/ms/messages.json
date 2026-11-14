@@ -92,6 +92,9 @@
       }
     }
   },
+  "popup_undo": {
+    "message": "Buat asal"
+  },
   "popup_excluded": {
     "message": "Muat turun daripada $site$ kekal dengan penyemak imbas",
     "placeholders": {

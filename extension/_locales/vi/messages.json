@@ -92,6 +92,9 @@
       }
     }
   },
+  "popup_undo": {
+    "message": "Hoàn tác"
+  },
   "popup_excluded": {
     "message": "Tải xuống từ $site$ vẫn ở lại trình duyệt",
     "placeholders": {

@@ -12,7 +12,7 @@ use std::sync::mpsc::{Receiver, channel};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use egui::{Pos2, Rect, Ui, ViewportBuilder};
+use egui::{Pos2, Rect, Ui};
 use mdm_crash::MonitorArgs;
 use mdm_crash::github::{self, Found};
 use mdm_crash::monitor::{self, Event};
@@ -93,8 +93,10 @@ pub fn monitor_main(m: MonitorArgs) -> eframe::Result {
     let zoom = crate::scale::startup(settings.interface_size);
     crate::theme::init_smooth_text(settings.smooth_text);
     let builder = crate::quiet(
-        ViewportBuilder::default()
-            .with_title(crate::i18n::t("Mister Download Manager crash report"))
+        crate::window_builder()
+            .with_title(crate::i18n::os_text(crate::i18n::t(
+                "Mister Download Manager crash report",
+            )))
             .with_inner_size([CLIENT[0] * zoom, CLIENT[1] * zoom])
             .with_resizable(false)
             .with_maximize_button(false)
@@ -111,15 +113,17 @@ pub fn monitor_main(m: MonitorArgs) -> eframe::Result {
         viewport: builder.clone(),
         ..Default::default()
     };
-    // What the app draws with (renderer.rs, MDM_RENDERER too), the other way when it can't
-    // start. OpenGL when the app's Direct3D failed or is still starting (this report may be about
-    // it); only the app's own start is watched.
+    // What the app draws with (renderer.rs, MDM_RENDERER too), the next way when one can't
+    // start. A way the app failed with, or is still starting with (this report may be about it),
+    // is passed over: WARP when its Direct3D on the card did, OpenGL when WARP did too; only the
+    // app's own starts are watched.
     let mut plan = crate::renderer::plan(
         settings.renderer,
         crate::renderer::overridden(&[]).as_deref(),
-        crate::renderer::suspect(),
+        crate::renderer::Known::suspect(),
     );
-    plan.watched = false;
+    plan.watch.clear();
+    plan.gl_checked = false;
     let data = m.data.clone();
     crate::renderer::run("misterdownloadmanager-crash", &plan, options, move |cc| {
         crate::scale::start(&cc.egui_ctx, zoom);
@@ -244,6 +248,7 @@ fn prepare(job: &Job, shared: Arc<Mutex<Shared>>, ctx: egui::Context) {
             .map(|v| mdm_crash::symbols::store(&data, v));
         let stores: Vec<PathBuf> = store.iter().cloned().collect();
         let made = report::make(dump.as_deref(), kind, notes.clone(), &data, &stores);
+        note_gl_freeze(&made);
         let missing = made
             .analysis
             .as_ref()
@@ -283,6 +288,7 @@ fn prepare(job: &Job, shared: Arc<Mutex<Shared>>, ctx: egui::Context) {
             match fetched {
                 Ok(()) => {
                     let made = report::make(dump.as_deref(), kind, notes, &data, &stores);
+                    note_gl_freeze(&made);
                     set(&shared, &ctx, |s| s.made = Some(made));
                 }
                 Err(e) => {
@@ -305,6 +311,28 @@ fn prepare(job: &Job, shared: Arc<Mutex<Shared>>, ctx: egui::Context) {
             });
         }
     });
+}
+
+/// A freeze while OpenGL drew, its window thread stuck inside OpenGL's driver (#847): remembered,
+/// so the app's next start draws another way (renderer.rs; Windows only). Read from the stack's
+/// modules, which need no symbols.
+fn note_gl_freeze(made: &Made) {
+    let drew_gl = made
+        .notes
+        .session
+        .as_ref()
+        .is_some_and(|s| s.renderer.starts_with("OpenGL"));
+    let Some(thread) = made.frozen_window_thread().filter(|_| drew_gl) else {
+        return;
+    };
+    let modules = thread.frames.iter().map(|f| f.module.as_deref());
+    // MDM_TEST_GL_STALL=1 (off-screen test copies): the app's stall stands for a driver's.
+    let testing =
+        crate::offscreen() && std::env::var_os("MDM_TEST_GL_STALL").is_some_and(|v| v == "1");
+    if let Some(module) = crate::renderer::gl_driver_frame(modules, testing) {
+        let seconds = made.notes.freeze.as_ref().map_or(0, |f| f.seconds);
+        crate::renderer::remember_gl_froze(&module, seconds);
+    }
 }
 
 fn set(shared: &Mutex<Shared>, ctx: &egui::Context, f: impl FnOnce(&mut Shared)) {

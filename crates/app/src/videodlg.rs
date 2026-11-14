@@ -99,11 +99,17 @@ pub struct VideoDialog {
     sub_pick: usize,
     /// Put the subtitles into the video rather than beside it.
     embed: bool,
+    /// Embed chapters (#827; settings.video_chapters).
+    chapters: bool,
     /// The last video's choice (settings.video_subs), applied to each video looked up.
     pref: Subs,
     /// The clipboard's page address, read off the window's thread (#661).
     clip: crate::clipboard::Prefill,
 }
+
+/// The top of the window's bottom row of buttons (Helpers..., Download Now, Later, Cancel),
+/// under Embed chapters.
+const BUTTONS_Y: f32 = 389.0;
 
 /// What is installed in the tools folder: (folder, yt-dlp, ffmpeg).
 type Tools = (
@@ -192,9 +198,16 @@ impl VideoDialog {
             subs: Vec::new(),
             sub_pick: 0,
             embed: false,
+            chapters: true,
             pref: Subs::default(),
             clip: Default::default(),
         }
+    }
+
+    /// Embed chapters ticked or not (settings.video_chapters, #827).
+    pub fn with_chapters(mut self, on: bool) -> Self {
+        self.chapters = on;
+        self
     }
 
     /// Offer `pref` (the last video's subtitles, settings.video_subs) for the videos looked up.
@@ -268,11 +281,18 @@ impl VideoDialog {
     /// A looked-up video with subtitles in four languages, without yt-dlp or the network
     /// (`/show video-subs`: the window's check in every language, its screenshots).
     pub fn show_sample(&mut self) {
+        // Its 4K in AV1 and VP9, HDR and SDR, each its own line (#755); 720p sized only
+        // about (#801).
         const SAMPLE: &str = r#"{"title": "A conference talk about download managers, recorded in Lisbon",
             "duration": 1830, "language": "en", "formats": [
-            {"format_id": "140", "ext": "m4a", "vcodec": "none", "acodec": "mp4a", "filesize": 29000000},
-            {"format_id": "18", "ext": "mp4", "height": 360, "vcodec": "avc1", "acodec": "mp4a", "filesize": 61000000},
-            {"format_id": "137", "ext": "mp4", "height": 1080, "vcodec": "avc1", "acodec": "none", "filesize": 412000000}],
+            {"format_id": "140", "ext": "m4a", "vcodec": "none", "acodec": "mp4a.40.2", "quality": 3, "tbr": 129.5, "filesize": 29600000},
+            {"format_id": "251", "ext": "webm", "vcodec": "none", "acodec": "opus", "quality": 3, "tbr": 121.8, "filesize": 27900000},
+            {"format_id": "18", "ext": "mp4", "height": 360, "fps": 30, "vcodec": "avc1.42001E", "acodec": "mp4a.40.2", "filesize": 61000000},
+            {"format_id": "701", "ext": "mp4", "height": 2160, "fps": 60, "vcodec": "av01.0.13M.10", "acodec": "none", "dynamic_range": "HDR10", "filesize": 1951000000},
+            {"format_id": "337", "ext": "webm", "height": 2160, "fps": 60, "vcodec": "vp09.02.51.10", "acodec": "none", "dynamic_range": "HDR10", "filesize": 2248000000},
+            {"format_id": "315", "ext": "webm", "height": 2160, "fps": 60, "vcodec": "vp9", "acodec": "none", "dynamic_range": "SDR", "filesize": 1870000000},
+            {"format_id": "299", "ext": "mp4", "height": 1080, "fps": 60, "vcodec": "avc1.64002A", "acodec": "none", "dynamic_range": "SDR", "filesize": 412000000},
+            {"format_id": "136", "ext": "mp4", "height": 720, "fps": 30, "vcodec": "avc1.4D401F", "acodec": "none", "dynamic_range": "SDR", "filesize_approx": 201000000}],
             "subtitles": {"de": [{"name": "German"}], "pt-PT": [{"name": "Portuguese (Portugal)"}],
                 "ar": [{"name": "Arabic"}]},
             "automatic_captions": {"en-orig": [{"name": "English (Original)"}], "en": [{"name": "English"}]}}"#;
@@ -285,14 +305,16 @@ impl VideoDialog {
     }
 
     /// A page like YouTube's when yt-dlp has no JavaScript runtime (#351): videos and sound
-    /// apart, nothing carrying both (`/show video-adaptive`).
-    pub fn show_sample_adaptive(&mut self) {
+    /// apart, nothing carrying both (`/show video-adaptive`); `runtime_said`: yt-dlp said why
+    /// (#852, `/show video-adaptive:runtime`).
+    pub fn show_sample_adaptive(&mut self, runtime_said: bool) {
         const SAMPLE: &str = r#"{"title": "A conference talk about download managers, recorded in Lisbon",
             "duration": 1830, "language": "en", "formats": [
             {"format_id": "140", "ext": "m4a", "vcodec": "none", "acodec": "mp4a", "filesize": 29000000},
             {"format_id": "137", "ext": "mp4", "height": 1080, "vcodec": "avc1", "acodec": "none", "filesize": 412000000},
             {"format_id": "136", "ext": "mp4", "height": 720, "vcodec": "avc1", "acodec": "none", "filesize": 201000000}]}"#;
-        if let Some(v) = mdm_tools::resolve::parse(SAMPLE.as_bytes()) {
+        if let Some(mut v) = mdm_tools::resolve::parse(SAMPLE.as_bytes()) {
+            v.needs_js_runtime = runtime_said;
             self.page = "https://video.example/talk".into();
             self.looked_up = self.page.clone();
             self.auto_look = false;
@@ -408,7 +430,7 @@ impl VideoDialog {
             ctx,
             "video-page",
             "Download video from a page",
-            [500.0, 391.0],
+            [500.0, 422.0],
             false,
             winui::BG(),
             |ui, o| self.body(ui, o, rt),
@@ -540,11 +562,15 @@ impl VideoDialog {
         let (out, ctx) = (slot.clone(), ctx.clone());
         let net = crate::settings::own_net();
         rt.spawn(async move {
-            let res = match tool {
-                Tool::YtDlp => mdm_tools::install_latest(&dir, &net, None).await,
-                Tool::Ffmpeg => mdm_tools::ffmpeg::install_latest(&dir, &net, None).await,
+            let (res, name) = match tool {
+                Tool::YtDlp => (mdm_tools::install_latest(&dir, &net, None).await, "yt-dlp"),
+                Tool::Ffmpeg => (
+                    mdm_tools::ffmpeg::install_latest(&dir, &net, None).await,
+                    "ffmpeg",
+                ),
             };
-            *out.lock().unwrap() = Some(res.map_err(|e| crate::errors::tools(&e)));
+            // What failed and what to do (#816): wrapped in the empty list below.
+            *out.lock().unwrap() = Some(res.map_err(|e| crate::errors::tools_and_advice(&e, name)));
             ctx.request_repaint();
         });
         self.install = Some((tool, slot));
@@ -675,6 +701,11 @@ impl VideoDialog {
             .filter(|(v, _)| ffmpeg.is_none() && mdm_tools::resolve::needs_merging(v))
             .and(offer.as_ref())
             .map(|(_, _, msg)| *msg);
+        // #852: YouTube looked up without a JavaScript runtime lists only some of its qualities
+        // (on some days only the sound): said on the title's line and the one under it, with
+        // the help page's section on installing one.
+        let runtime_note =
+            self.error.is_none() && self.video.as_ref().is_some_and(|(v, _)| v.needs_js_runtime);
         if let Some(t) = installing {
             crate::torrentdlg::spinner(ui, pos2(o.x + 18.0, line_y - 4.0), 6.0);
             let msg = if t == Tool::YtDlp {
@@ -694,6 +725,22 @@ impl VideoDialog {
             );
         } else if self.list.is_some() {
             // The list draws its own (PlaylistView::middle).
+        } else if runtime_note {
+            if winui::note_with_link(
+                ui,
+                &p,
+                o.x + 11.0,
+                line_y,
+                16.0,
+                js_runtime_note(),
+                winui::ERROR(),
+                o.x + status_right,
+                // i18n: link after the note that YouTube needs a JavaScript runtime: opens the help page that says how to install Node.js or Deno
+                "How to install one",
+                "video-runtime",
+            ) {
+                crate::help::open_page(JS_RUNTIME_HELP);
+            }
         } else if let Some(msg) = merge_note {
             winui::fit(
                 ui,
@@ -757,11 +804,12 @@ impl VideoDialog {
             if cut {
                 winui::full_on_hover(ui, rect, "video-error", e);
             }
-        } else if self
-            .video
-            .as_ref()
-            .and_then(|(_, c)| c.get(self.chosen))
-            .is_some_and(|c| c.selector == mdm_tools::resolve::FLAC)
+        } else if !runtime_note
+            && self
+                .video
+                .as_ref()
+                .and_then(|(_, c)| c.get(self.chosen))
+                .is_some_and(|c| c.selector == mdm_tools::resolve::FLAC)
         {
             // The honest word on FLAC (#70): the site's sound is compressed with losses already.
             winui::fit(
@@ -800,8 +848,9 @@ impl VideoDialog {
                 &mut self.rows,
                 |ui, clip, i, row, look| {
                     let c = &choices[i];
-                    // The icon of the file this choice gives, then the format ("1080p mp4, 60
-                    // fps", left to right); its size at the trailing edge.
+                    // The icon of the file this choice gives, then the format ("2160p · VP9 ·
+                    // 60 fps · HDR", left to right); its size at the trailing edge: exactly
+                    // that of the streams it downloads, or "~" before an estimate (#801).
                     let file = format!("video.{}", c.ext);
                     let kind = crate::fileicons::Kind::File(&file);
                     crate::fileicons::paint_at(
@@ -814,16 +863,10 @@ impl VideoDialog {
                     let label = choice_label(&c.label);
                     let x = row.left() + 4.0 + crate::fileicons::INDENT;
                     text(clip, x, row.top() + 12.0, &label, look.ink);
-                    let size = c
-                        .size
-                        // i18n: the video's file size is not known
-                        .map_or(
-                            crate::i18n::t("size unknown").into(),
-                            crate::dialogs::dialog_size,
-                        );
+                    let (size, said) = choice_size(c);
                     // Read as the format and its size (#95: the choices were blank to a screen reader
                     // and alike to UI Automation), in the user's language, as drawn.
-                    look.name = format!("{label}, {size}");
+                    look.name = format!("{label}, {said}");
                     winui::text_right(clip, row.right() - 6.0, row.top() + 12.0, &size, look.ink);
                 },
             );
@@ -932,6 +975,7 @@ impl VideoDialog {
             };
             label(ui, 328.0, labels[2], shade);
         }
+        self.chapters_row(ui, o, bx, ffmpeg.is_some());
 
         // The choices belong to the address looked up: an edited address is looked up first
         // (it downloaded the new page with the old one's format and name).
@@ -972,7 +1016,7 @@ impl VideoDialog {
         // Where yt-dlp and ffmpeg come from: MDM's own copies or the person's (#51).
         if winui::button(
             ui,
-            r(o, helpers_at.0, 358.0, helpers_at.1, 21.0),
+            r(o, helpers_at.0, BUTTONS_Y, helpers_at.1, 21.0),
             // i18n: button in Download video: where MDM takes yt-dlp and ffmpeg from
             "Helpers...",
             ButtonKind::Normal,
@@ -985,7 +1029,7 @@ impl VideoDialog {
         }
         let now = winui::button(
             ui,
-            r(o, now_at.0, 358.0, now_at.1, 21.0),
+            r(o, now_at.0, BUTTONS_Y, now_at.1, 21.0),
             "Download Now",
             kind(true),
             false,
@@ -998,7 +1042,7 @@ impl VideoDialog {
             || (ready && winui::enter_pressed(ui));
         let later = winui::button(
             ui,
-            r(o, later_at.0, 358.0, later_at.1, 21.0),
+            r(o, later_at.0, BUTTONS_Y, later_at.1, 21.0),
             // i18n: button: add it now, start downloading later
             "Later",
             kind(false),
@@ -1008,7 +1052,7 @@ impl VideoDialog {
         .clicked();
         let cancel = winui::button(
             ui,
-            r(o, cancel_at.0, 358.0, cancel_at.1, 21.0),
+            r(o, cancel_at.0, BUTTONS_Y, cancel_at.1, 21.0),
             "Cancel",
             ButtonKind::Normal,
             false,
@@ -1041,6 +1085,51 @@ impl VideoDialog {
 }
 
 impl VideoDialog {
+    /// Embed chapters (#827), under Subtitles, for a video and a playlist alike: the chapters a
+    /// video's page lists go into its file (ffmpeg writes them; on by default). Greyed without
+    /// ffmpeg, and for a choice converted to MP3, Opus or FLAC; its tick stays as it was.
+    fn chapters_row(&mut self, ui: &mut Ui, o: Pos2, bx: f32, ffmpeg: bool) {
+        let converts = match &self.list {
+            Some(list) => list.converts(),
+            None => self
+                .video
+                .as_ref()
+                .and_then(|(_, c)| c.get(self.chosen))
+                .is_some_and(|c| mdm_tools::resolve::audio_conversion(&c.selector).is_some()),
+        };
+        let can = ffmpeg && !converts;
+        let mut on = self.chapters && can;
+        let resp = winui::checkbox_until(
+            ui,
+            pos2(o.x + bx, o.y + 350.0),
+            &mut on,
+            // i18n: checkbox in Download video: the chapters a video's page lists (YouTube's, for one) go into the video file, where players show them and skip between them
+            "Embed chapters",
+            can,
+            Some(o.x + 489.0),
+        );
+        let resp = winui::why_disabled(
+            resp,
+            !ffmpeg,
+            // i18n: why "Embed chapters" is greyed: ffmpeg (a helper program) is not installed
+            "This needs ffmpeg",
+        );
+        winui::why_disabled(
+            resp,
+            ffmpeg && converts,
+            // i18n: why "Embed chapters" is greyed in Download video: the choice is a sound converted to MP3, Opus or FLAC, which MDM saves without chapters
+            "MP3, Opus and FLAC files are saved without chapters",
+        );
+        if can {
+            self.chapters = on;
+        }
+    }
+
+    /// Embed chapters' tick, for the settings (`video_chapters`).
+    pub fn chapters(&self) -> bool {
+        self.chapters
+    }
+
     /// Subtitles (#68): a language the video has, from the uploader or the site's automatic
     /// captions, saved beside the video (`<name>.<language>.srt`) or put into it (ffmpeg).
     /// The list starts at `bx`, after the labels' column; true when it can be chosen from (its
@@ -1208,11 +1297,27 @@ pub(crate) fn default_subs(v: &Video, c: &Choice, pref: &Subs) -> Subs {
     subs_for_choice(c, &subs_at(&subs, pick_for(&subs, pref), pref.embed))
 }
 
+/// #852: the help page's section on installing a JavaScript runtime for yt-dlp.
+pub(crate) const JS_RUNTIME_HELP: &str = "video.md#javascript-runtime";
+
+/// #852: what a YouTube look-up yt-dlp made without a JavaScript runtime says: in the Download
+/// video window, and in the browser's quality menu.
+pub(crate) fn js_runtime_note() -> &'static str {
+    // i18n: in Download video and the browser's video menu: yt-dlp had no JavaScript runtime, so YouTube listed only some qualities (often only the sound); Node.js and Deno are program names
+    crate::i18n::t(
+        "YouTube needs a JavaScript runtime to list its video qualities: install Node.js or Deno, then look it up again",
+    )
+}
+
 /// The title of the page the browser played video `v` on (`mdm_ipc::Command::video_title`,
 /// trimmed), when yt-dlp knows `v` only by the address it looked up, `page`: it has no page
 /// reader for the site, and on some servers that part is a long hash (#345). None otherwise:
 /// yt-dlp's title stays. The Download video window and the browser's quality menu both name a
 /// video by it.
+///
+/// A page that shows one file is often titled with the file's name (Dropbox's, a server's own
+/// listing: `Episode 31.mp4`): its video or sound extension is left out, as the choice's type
+/// follows the name (it was `Episode 31.mp4.mp4`, #622).
 pub(crate) fn page_title<'a>(
     context: &'a mdm_ipc::Command,
     v: &Video,
@@ -1221,8 +1326,23 @@ pub(crate) fn page_title<'a>(
     context
         .video_title
         .as_deref()
-        .map(str::trim)
+        .map(|t| without_media_extension(t.trim()))
         .filter(|t| !t.is_empty() && mdm_tools::resolve::named_after_address(&v.title, page))
+}
+
+/// `title` without a video or sound file's extension at its end (`Episode 31.mp4` → `Episode
+/// 31`); as it is otherwise, or when nothing would be left.
+fn without_media_extension(title: &str) -> &str {
+    let media = |ext: &str| {
+        mdm_engine::naming::TYPES.iter().any(|(t, e)| {
+            e.eq_ignore_ascii_case(ext)
+                && (t.starts_with("video/") || t.starts_with("audio/") || *t == "application/ogg")
+        })
+    };
+    match title.rsplit_once('.') {
+        Some((stem, ext)) if media(ext) && !stem.trim().is_empty() => stem.trim_end(),
+        _ => title,
+    }
 }
 
 /// The file name a choice of type `c` gets for a video titled `title`: made safe, with the
@@ -1269,6 +1389,7 @@ pub(crate) fn look_up_kept(
 pub fn from_browser(c: &mdm_ipc::Command) -> mdm_tools::proc::FromBrowser {
     mdm_tools::proc::FromBrowser {
         referer: c.referer.clone(),
+        origin: c.origin.clone(),
         user_agent: c.user_agent.clone(),
         cookies: c.cookies.clone(),
         jar: c.cookie_jar.clone(),
@@ -1276,17 +1397,21 @@ pub fn from_browser(c: &mdm_ipc::Command) -> mdm_tools::proc::FromBrowser {
 }
 
 /// The size the server says for a plain file at `page`, asked as the browser would (its Referer,
-/// its cookies, its user agent). None when it won't say: the window then says "size unknown", as
+/// its Origin, its cookies, its user agent). None when it won't say: the window then says "size unknown", as
 /// it always did. A cookie jar (a whole site's cookies, for yt-dlp) isn't used: the header is.
 fn direct_size(
     rt: &tokio::runtime::Handle,
     page: &str,
     browser: &mdm_tools::proc::FromBrowser,
 ) -> Option<u64> {
-    use reqwest::header::{COOKIE, HeaderMap, HeaderValue, REFERER};
+    use reqwest::header::{COOKIE, HeaderMap, HeaderValue, ORIGIN, REFERER};
     let url = url::Url::parse(page).ok()?;
     let mut headers = HeaderMap::new();
-    for (name, value) in [(REFERER, &browser.referer), (COOKIE, &browser.cookies)] {
+    for (name, value) in [
+        (REFERER, &browser.referer),
+        (ORIGIN, &browser.origin),
+        (COOKIE, &browser.cookies),
+    ] {
         if let Some(v) = value.as_deref().and_then(|v| HeaderValue::from_str(v).ok()) {
             headers.insert(name, v);
         }
@@ -1378,6 +1503,9 @@ pub(crate) fn lookup_error(
             // i18n: the Download video window: the site's bot check (Cloudflare) turned yt-dlp away and no browser cookies were used
             "The site's bot check (Cloudflare) refused yt-dlp. If the page opens in your browser, choose that browser in Options → Sites Logins → Cookies for video sites and look the page up again, or use the Download video button over the video."
         }
+    } else if mdm_tools::proc::untrusted_certificate(e) {
+        // i18n: the Download video window: the site's certificate is trusted neither by yt-dlp nor by the computer (asked again with the computer's certificates, #955); usually an antivirus or a proxy that reads secure (HTTPS) connections signs sites with a certificate of its own
+        "The site's certificate isn't trusted, by yt-dlp nor by this computer: an antivirus's web filter or a proxy that reads HTTPS may be in the way. Turn its HTTPS scanning off, or add its certificate to the computer's, then look the page up again."
     } else if lower.contains("drm") {
         // i18n: the Download video window: the page's video is copy-protected
         "This video is protected (DRM): no tool can save it."
@@ -1405,6 +1533,28 @@ pub(crate) fn lookup_error(
         return e.to_owned();
     };
     crate::i18n::t(plain).to_owned()
+}
+
+/// A choice's size as its line shows it, and as a screen reader says it: the bytes of the
+/// streams it downloads, or an estimate marked as one ("~532 MB", "about 532 MB"; #801).
+pub(crate) fn choice_size(c: &Choice) -> (String, String) {
+    let Some(bytes) = c.size else {
+        // i18n: the video's file size is not known
+        let unknown = crate::i18n::t("size unknown").to_owned();
+        return (unknown.clone(), unknown);
+    };
+    let size = crate::dialogs::dialog_size(bytes);
+    if !c.approx {
+        return (size.clone(), size);
+    }
+    (
+        crate::i18n::ltr(&format!("~{size}")),
+        crate::i18n::fmt(
+            // i18n: a file size that is only an estimate, as a screen reader says it in the Download video window's list of qualities; {size} is "532 MB"
+            crate::i18n::t("about {size}"),
+            &[("size", &size)],
+        ),
+    )
 }
 
 /// A choice's label in the user's language: the audio choice's words translated, the rest (a
@@ -1471,6 +1621,17 @@ mod tests {
             lookup_error("yt-dlp failed: Video unavailable", false, None),
             "yt-dlp failed: Video unavailable"
         );
+    }
+
+    /// #955: a certificate trusted neither by yt-dlp nor by the computer (asked again with its
+    /// certificates) says what reads HTTPS on the way; an expired one stays yt-dlp's own words.
+    #[test]
+    fn an_untrusted_certificate_says_what_may_be_in_the_way() {
+        let untrusted = "yt-dlp failed: [youtube] X6ek6j1gTQA: Unable to download API page: [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1085) (caused by CertificateVerifyError('[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1085)'))";
+        let said = lookup_error(untrusted, false, None);
+        assert!(said.contains("antivirus's web filter"), "{said}");
+        let expired = "yt-dlp failed: [generic] Unable to download webpage: [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: certificate has expired (_ssl.c:1006)";
+        assert_eq!(lookup_error(expired, false, None), expired);
     }
 
     /// #229: yt-dlp's refusals and its trouble with a browser's cookies, in MDM's words, saying
@@ -1734,6 +1895,46 @@ mod tests {
             page_title(&mdm_ipc::Command::default(), &hashed, page),
             None
         );
+    }
+
+    /// #622: a Dropbox page is titled with the file's name, extension and all; the video named
+    /// by it got the choice's extension once more (`Episode 31.mp4.mp4`).
+    #[test]
+    fn a_page_titled_with_the_file_name_names_it_once() {
+        let page = "https://www.dropbox.com/s/abc/Episode%2031.mp4?dl=0";
+        let v = Video {
+            title: "Episode 31".into(),
+            duration: None,
+            formats: Vec::new(),
+            subtitles: Vec::new(),
+            automatic: Vec::new(),
+            language: None,
+            direct: false,
+            needs_js_runtime: false,
+        };
+        let mp4 = Choice {
+            ext: "mp4".into(),
+            ..Default::default()
+        };
+        for (title, want) in [
+            ("Episode 31.mp4", "Episode 31"),
+            (" Episode 31.MKV ", "Episode 31"),
+            ("Episode 31.m4a", "Episode 31"),
+            // Not a media file's extension: a title as it is.
+            ("Episode 31. The end", "Episode 31. The end"),
+            ("Report v2.0", "Report v2.0"),
+            (".mp4", ".mp4"),
+        ] {
+            let context = mdm_ipc::Command {
+                video_title: Some(title.into()),
+                ..Default::default()
+            };
+            let got = page_title(&context, &v, page).unwrap();
+            assert_eq!(got, want, "{title}");
+            if want == "Episode 31" {
+                assert_eq!(file_name(got, &mp4), "Episode 31.mp4");
+            }
+        }
     }
 
     /// #661: a page's address from the clipboard comes a frame or more after the window opens:

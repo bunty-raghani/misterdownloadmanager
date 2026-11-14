@@ -92,6 +92,9 @@
       }
     }
   },
+  "popup_undo": {
+    "message": "Rückgängig"
+  },
   "popup_excluded": {
     "message": "Downloads von $site$ bleiben beim Browser",
     "placeholders": {

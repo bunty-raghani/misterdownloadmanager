@@ -23,8 +23,10 @@ with 3, the files are `photo001.jpg`, `photo002.jpg` and so on.
 
 Before you click **OK**, the window shows the **First file**, **Second file** and **Last file**,
 so a typo shows up before anything downloads. If the server needs a login, tick **Use
-authorization**. Copied the address already? **Tasks → Add batch download from clipboard** fills
-it in.
+authorization**. Copied one address with a number in it, such as `…/ep01.mp4`? **Tasks → Add
+batch download from clipboard** (Ctrl+B) puts the asterisk where the number was and waits for the
+last one in **To**. Copied a whole list of links, or a forum post with links in it? The same
+command lists every one of them in Link grabber, ticked and ready to start.
 
 ## Straight into a queue
 

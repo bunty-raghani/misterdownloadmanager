@@ -1,0 +1,125 @@
+# Issues labelled "needs info" wait for details from their reporter. Once a day, one whose last
+# comment is ours (the owner, a member or a collaborator) and 14 or more days old is closed with a
+# kind note; the note carries a hidden marker. When the issue's author comments, the label comes
+# off, and an issue this workflow closed (its last close, with the marker in its note) opens
+# again. An issue a maintainer closed for another reason stays closed.
+# Run by hand with "dry_run" to see what would be closed, without changing anything.
+name: Needs info
+
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Only log what would be closed"
+        type: boolean
+        default: true
+  issue_comment:
+    types: [created]
+
+permissions: {}
+
+jobs:
+  close-unanswered:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write # comment on and close the unanswered issues
+    steps:
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+        with:
+          script: |
+            const LABEL = 'needs info';
+            const DAYS = 14;
+            const MARKER = '<!-- mdm:needs-info-closed -->';
+            const NOTE = "closing for now since there's no answer yet; just reply here with the details and it opens again";
+            const OURS = ['OWNER', 'MEMBER', 'COLLABORATOR'];
+            const dryRun = process.env.DRY_RUN === 'true';
+            const { owner, repo } = context.repo;
+            const now = Date.now();
+            core.info(`${dryRun ? 'Dry run: nothing changes. ' : ''}Open issues labelled "${LABEL}":`);
+            const issues = await github.paginate(github.rest.issues.listForRepo, {
+              owner, repo, state: 'open', labels: LABEL, per_page: 100,
+            });
+            let closed = 0;
+            for (const issue of issues) {
+              if (issue.pull_request) continue;
+              const n = issue.number;
+              const comments = await github.paginate(github.rest.issues.listComments, {
+                owner, repo, issue_number: n, per_page: 100,
+              });
+              const last = comments[comments.length - 1];
+              if (!last) {
+                core.info(`#${n}: no comment yet, kept`);
+                continue;
+              }
+              const days = Math.floor((now - Date.parse(last.created_at)) / 86400000);
+              const who = `${last.user.login} (${last.author_association})`;
+              if (!OURS.includes(last.author_association)) {
+                core.info(`#${n}: last comment by ${who}, ${days} days ago: kept`);
+                continue;
+              }
+              if (days < DAYS) {
+                core.info(`#${n}: our last comment is ${days} days old (under ${DAYS}): kept`);
+                continue;
+              }
+              closed++;
+              if (dryRun) {
+                core.info(`#${n}: our last comment is ${days} days old: would close`);
+                continue;
+              }
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: n, body: `${NOTE}\n\n${MARKER}`,
+              });
+              await github.rest.issues.update({
+                owner, repo, issue_number: n, state: 'closed', state_reason: 'not_planned',
+              });
+              core.info(`#${n}: our last comment is ${days} days old: closed`);
+            }
+            core.info(`${issues.length} labelled, ${closed} ${dryRun ? 'would be ' : ''}closed.`);
+
+  reporter-answered:
+    # Comments made with this workflow's token start no run, so its own note never counts.
+    if: >-
+      github.event_name == 'issue_comment' &&
+      !github.event.issue.pull_request &&
+      github.event.comment.user.login == github.event.issue.user.login
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write # take the label off and reopen
+    concurrency:
+      group: needs-info-${{ github.event.issue.number }}
+    steps:
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const LABEL = 'needs info';
+            const MARKER = '<!-- mdm:needs-info-closed -->';
+            const BOT = 'github-actions[bot]';
+            const { owner, repo } = context.repo;
+            const issue = context.payload.issue;
+            const n = issue.number;
+            if (issue.labels.some((l) => l.name === LABEL)) {
+              await github.rest.issues.removeLabel({ owner, repo, issue_number: n, name: LABEL })
+                .catch((e) => { if (e.status !== 404) throw e; });
+              core.info(`#${n}: the reporter answered, "${LABEL}" removed`);
+            }
+            if (issue.state !== 'closed') return;
+            // Reopen only if the last close was this workflow's, with its marked note.
+            const events = await github.paginate(github.rest.issues.listEvents, {
+              owner, repo, issue_number: n, per_page: 100,
+            });
+            const lastClose = events.filter((e) => e.event === 'closed').pop();
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner, repo, issue_number: n, per_page: 100,
+            });
+            const marked = comments.some((c) => c.user.login === BOT && c.body.includes(MARKER));
+            if (lastClose && lastClose.actor && lastClose.actor.login === BOT && marked) {
+              await github.rest.issues.update({ owner, repo, issue_number: n, state: 'open' });
+              core.info(`#${n}: closed for want of an answer, opened again`);
+            } else {
+              core.info(`#${n}: closed by ${lastClose?.actor?.login ?? 'someone'}, stays closed`);
+            }

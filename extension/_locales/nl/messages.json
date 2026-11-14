@@ -92,6 +92,9 @@
       }
     }
   },
+  "popup_undo": {
+    "message": "Ongedaan maken"
+  },
   "popup_excluded": {
     "message": "Downloads van $site$ blijven bij de browser",
     "placeholders": {

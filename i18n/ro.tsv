@@ -227,6 +227,11 @@
 #. {name} = a file name (keep the braces as they are)
 #, machine
 	A file of this torrent can't be saved safely: {name}	Un fișier din acest torent nu poate fi salvat în siguranță: {name}
+#. message or event log entry in the main window
+#. Link grabber added a magnet link whose torrent could not be found; {error} says why
+#. {error} = an error message (keep the braces as they are)
+#, machine
+	A magnet link's files could not be looked up: {error}	Fișierele unui link magnet nu au putut fi căutate: {error}
 #. text in the settings
 #. Options → DNS: the NextDNS configuration ID typed isn't one
 #, machine
@@ -270,6 +275,11 @@
 #. a download's server's round trip: {ms} a number of milliseconds, {reach} near, medium or far
 #, machine
 	about {ms} ms ({reach})	aproximativ {ms} ms ({reach})
+#. text in the Download video window
+#. a file size that is only an estimate, as a screen reader says it in the Download video window's list of qualities; {size} is "532 MB"
+#. {size} = a file size such as "4.2 MB" (keep the braces as they are)
+#, machine
+	about {size}	aproximativ {size}
 #. checkbox in the Add torrent window
 #. Torrent settings: other peers may connect to this computer
 #, machine
@@ -301,6 +311,10 @@
 #. text in the tray icon's menu
 #, machine
 	Add batch download	Adăugare descărcare în serie
+#. message or event log entry in the main window; text in the tray icon's menu
+#. title of the note when Tasks → Add batch download from clipboard finds nothing to download
+#, machine
+	Add batch download from clipboard	Adăugați descărcare în serie din clipboard
 #. text in the Options window
 #. the trailing ... means it is still going on: keep it
 #, machine
@@ -860,6 +874,11 @@
 #. check box in the update window: look for a new version every time MDM starts
 #, machine
 	Check for updates at every start	Căutați actualizări la fiecare pornire
+#. text in errors.rs
+#. what to do when the proxy set in Options didn't let a helper's download connect; {proxy} = the Options tab Proxy / Socks; {name} = yt-dlp, ffmpeg or gallery-dl; {helpers} and {other} = the buttons Helpers and Use another program
+#. {name} = a file name (keep the braces as they are)
+#, machine
+	Check the proxy in Options → {proxy}, or download {name} yourself and choose it in {helpers} → {other}.	Verificați proxy-ul în Opțiuni → {proxy} sau descărcați {name} și alegeți-l în {helpers} → {other}.
 #. text in helpers.rs
 #, machine
 	Check your connection, then try again, or get them later from the video window.	Verificați-vă conexiunea, apoi încercați din nou sau obțineți-le mai târziu din fereastra video.
@@ -901,7 +920,7 @@
 #, machine
 	Checking {name} ({n} of {total})...	Se verifică {name} ({n} din {total})...
 #. text in the download list (sizes, speeds, status)
-#. a torrent's status while its files are read and checked; {percent} is how much is checked, e.g. "42%"
+#. the list's Status column while a torrent's files or a finished file are checked (against the torrent's hashes or a checksum); {percent} how much is checked, e.g. "42%". One short word: the column is narrow
 #, machine
 	Checking {percent}	Se verifică {percent}
 #. text in the Checksum window; text in the Link grabber window
@@ -946,6 +965,10 @@
 #. column title: the peer's torrent program
 #, machine
 	Client	Client
+#. message or event log entry in the main window
+#. Link grabber: where the links came from: the clipboard (Tasks → Add batch download from clipboard)
+#, machine
+	Clipboard	Clipboard
 #. text in the Options window
 #, machine
 	Clock:	Ceas:
@@ -1060,6 +1083,20 @@
 #. {error} = an error message (keep the braces as they are)
 #, machine
 	Could not be read: {error}	Nu a putut fi citit: {error}
+#. text in errors.rs
+#. a helper (yt-dlp, ffmpeg) couldn't be downloaded: the proxy set in Options ({proxy}, its address) didn't let MDM connect
+#, machine
+	could not connect through the proxy {proxy}	nu s-a putut conecta prin proxy-ul {proxy}
+#. text in errors.rs
+#. a helper (yt-dlp, ffmpeg) couldn't be downloaded: its server ({host}) couldn't be reached
+#. {host} = a server name such as "example.com" (keep the braces as they are)
+#, machine
+	could not reach {host}	nu s-a putut ajunge la {host}
+#. text in errors.rs
+#. a helper (yt-dlp, ffmpeg) couldn't be downloaded: its server ({host}) couldn't be reached, for the system's reason {cause}
+#. {host} = a server name such as "example.com" (keep the braces as they are)
+#, machine
+	could not reach {host} ({cause})	nu s-a putut ajunge la {host} ({cause})
 #. text in extracting archives (a download's log, the Archive password window)
 #. in a download's log: {name} is the archive's file name, {why} the reason
 #. {name} = a file name (keep the braces as they are)
@@ -1320,6 +1357,10 @@
 #. window title: the download button the extension shows over videos
 #, machine
 	Download panels	Panouri de descărcare
+#. window title in the Options window
+#. window title: Options → Downloads → Edit... (the progress window's settings)
+#, machine
+	Download progress dialog	Dialog progres descărcare
 #. text in rssdlg.rs
 #. RSS feeds window: the tab of the rules that add articles by themselves
 #, machine
@@ -1332,6 +1373,9 @@
 #. Options → Accounts: checkbox: links of the file hosts these services support are downloaded through the accounts
 #, machine
 	Download supported file-host links through these accounts	Descărcați legăturile de la serviciile de găzduire fișiere acceptate prin aceste conturi
+#. what a keyboard shortcut does in the Help menu's windows (About, updates, shortcuts, Tell a friend)
+#, machine
+	Download the links in the clipboard (Add batch download from clipboard)	Descărcați linkurile din clipboard (Adăugați descărcare în serie din clipboard)
 #. text in a dialog box
 #. Download File Info: a check box, ticked when the download goes through the user's debrid account; {service} the service and the account, "Real-Debrid (labuser)". Unticked: downloaded directly
 #, machine
@@ -1429,6 +1473,12 @@
 #, machine
 	Drag the file into a folder or an app	Glisați fișierul într-un folder sau într-o aplicație
 #. message or event log entry in the main window
+#, machine
+	Dragged out of Download complete and moved to a place MDM couldn't learn	Mutat din Descărcări finalizate într-o locație pe care MDM nu a putut-o afla
+#. message or event log entry in the main window
+#, machine
+	Dragged out of Download complete and moved to {folder}	Mutat din Descărcări finalizate în {folder}
+#. message or event log entry in the main window
 #. in Import, where the addresses came from: dragged onto the window
 #, machine
 	Dropped links	Linkuri plasate
@@ -1477,6 +1527,10 @@
 #. button in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #, machine
 	Email	E-mail
+#. text in the Download video window
+#. checkbox in Download video: the chapters a video's page lists (YouTube's, for one) go into the video file, where players show them and skip between them
+#, machine
+	Embed chapters	Încorporați capitolele
 #. text in gallerydlg.rs
 #. in Download a gallery, after the "Files at most" box
 #, machine
@@ -1517,7 +1571,7 @@
 #. a country's name (where a download's server is)
 #, machine
 	Eritrea	Eritreea
-#. text in a dialog box; item in the Categories tree in the download list; value in a column's filter list in the download list; text in the download list (sizes, speeds, status); text in remote.rs
+#. text in a dialog box; item in the Categories tree in the download list; value in a column's filter list in the download list; text in the download list (sizes, speeds, status); text in a download's progress window; text in remote.rs
 #. in Download File Info, where the size goes: the address didn't answer
 #. a download's status (state it is in, not a command)
 #. a download's status (state it is in, not a command): it failed
@@ -1661,6 +1715,10 @@
 #. noun: a file of no known type
 #, machine
 	File	Fișier
+#. text in the Options window
+#. tooltip of "Mark downloaded files as coming from the internet" on Linux
+#, machine
+	File managers show where the files marked this way came from. Unticked, no download is marked.	Managerii de fișiere arată de unde provin fișierele marcate astfel. Dacă nu este bifat, nicio descărcare nu este marcată.
 #. text in the Scheduler window
 #, machine
 	File Name	Nume fișier
@@ -1739,6 +1797,11 @@
 #. remote control page (on a phone): tab: downloads finished
 #, machine
 	Finished	Finalizate
+#. text in a download's progress window
+#. a download's status: every byte is in, the file is being written out and given its name
+#. the trailing ... means it is still going on: keep it
+#, machine
+	Finishing...	Se finalizează...
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -1997,7 +2060,7 @@
 #. window title: where MDM takes its helper programs (yt-dlp, ffmpeg, gallery-dl) from
 #, machine
 	Helpers	Ajutoare
-#. button in gallerydlg.rs; button in the Download video window
+#. text in errors.rs; button in gallerydlg.rs; button in the Download video window
 #. button in Download video: where MDM takes yt-dlp and ffmpeg from
 #. the trailing ... means it opens a window: keep it
 #, machine
@@ -2047,6 +2110,11 @@
 #. button in Test browser integration: open the help page's section for the problem
 #, machine
 	How to fix it	Cum se remediază
+#. text in the Download video window; text in videolookup.rs
+#. link after the note that YouTube needs a JavaScript runtime: opens the help page that says how to install Node.js or Deno
+#. link in the browser's video menu, after the note that YouTube needs a JavaScript runtime: opens the help page that says how to install Node.js or Deno
+#, machine
+	How to install one	Cum se instalează
 #. checkbox in the Options window
 #, machine
 	http	http
@@ -2074,6 +2142,11 @@
 #. Options → DNS settings: checkbox: when the chosen DNS can't be reached, use the system's instead
 #, machine
 	If it can't be reached, use the system's DNS	Dacă nu poate fi accesat, utilizați DNS-ul sistemului
+#. text in errors.rs
+#. what to do when a helper's server couldn't be reached; {proxy} = the Options tab Proxy / Socks; {name} = yt-dlp, ffmpeg or gallery-dl; {helpers} and {other} = the buttons Helpers and Use another program
+#. {name} = a file name (keep the braces as they are)
+#, machine
+	If you use a proxy, set it in Options → {proxy}. Or download {name} yourself and choose it in {helpers} → {other}.	Dacă utilizați un proxy, setați-l în Opțiuni → {proxy}. Sau descărcați {name} singur și alegeți-l în {helpers} → {other}.
 #. checkbox in the Options window
 #, machine
 	Ignore file modification time changes when resuming a download	Ignorați modificările orei de modificare a fișierului la reluarea unei descărcări
@@ -2220,6 +2293,16 @@
 #. {error} = an error message (keep the braces as they are)
 #, machine
 	its files could not be written: {error}	fișierele sale nu au putut fi scrise: {error}
+#. text in the download list (sizes, speeds, status)
+#. why a video download failed: ffmpeg couldn't join its picture and sound into one file; {error} = ffmpeg's reason, in English
+#. {error} = an error message (keep the braces as they are)
+#, machine
+	its picture and sound couldn't be joined into one file ({error})	imaginea și sunetul nu au putut fi combinate într-un singur fișier ({error})
+#. text in the download list (sizes, speeds, status)
+#. why a video download failed: ffmpeg couldn't join its picture and sound into one file; {error} = ffmpeg's reason, in English; {files} = the downloaded parts' file names, kept in the download folder; "Also delete the file from disk" is the Delete box's choice
+#. {error} = an error message (keep the braces as they are)
+#, machine
+	its picture and sound couldn't be joined into one file ({error}). What was downloaded stays in the folder for Resume to join again ({files}); deleting the download with "Also delete the file from disk" removes it	imaginea și sunetul nu au putut fi îmbinate într-un singur fișier ({error}). Fișierele descărcate rămân în folder pentru a putea fi îmbinate din nou prin Reluare ({files}); ștergerea descărcării cu opțiunea „Ștergeți și fișierul de pe disc” le elimină
 #. text in errors.rs
 #, machine
 	its release information is not as expected: {detail}	informațiile sale de lansare nu sunt cele așteptate: {detail}
@@ -2380,7 +2463,7 @@
 #. Torrent settings: an upload speed limit for all torrents together, followed by a box with the speed and "KBytes/sec"
 #, machine
 	Limit uploading for all torrents to	Limitare încărcare pentru toate torentele la
-#. window title in the Link grabber window; group box title in the Options window
+#. message or event log entry in the main window; window title in the Link grabber window; group box title in the Options window
 #. Options → Archives: group box title
 #, machine
 	Link grabber	Link grabber
@@ -2473,10 +2556,18 @@
 #. a country's name (where a download's server is)
 #, machine
 	Macau	Macao
+#. text in the Options window
+#. tooltip of "Mark downloaded files as coming from the internet" on macOS
+#, machine
+	macOS checks the files marked this way: Gatekeeper before a program first opens. Unticked, no download is marked.	macOS verifică fișierele marcate astfel: Gatekeeper înainte ca un program să se deschidă pentru prima dată. Dacă nu este bifat, nicio descărcare nu este marcată.
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
 	Madagascar	Madagascar
+#. text in the Link grabber window
+#. Link grabber, a link's status: a magnet link (a torrent, its files looked up once it is added)
+#, machine
+	Magnet link	Link magnet
 #. message or event log entry in the main window
 #, machine
 	Main download queue	Coada principală de descărcare
@@ -2520,6 +2611,9 @@
 #. text in the Scheduler window
 #, machine
 	March	Martie
+#. checkbox in the Options window
+#, machine
+	Mark downloaded files as coming from the internet	Marcați fișierele descărcate ca provenind de pe internet
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -2601,6 +2695,19 @@
 #. how far a download's server is, by its round trip (60 to 150 ms)
 #, machine
 	medium	mediu
+#. text in the download list (sizes, speeds, status)
+#. the list's Status column while a video's picture and sound are joined into one file (ffmpeg); {percent} how far, e.g. "45%". One short word: the column is narrow
+#, machine
+	Merging {percent}	Se îmbină {percent}
+#. text in the download list (sizes, speeds, status)
+#. a video's status while its picture and sound are joined into one file (ffmpeg)
+#. the trailing ... means it is still going on: keep it
+#, machine
+	Merging...	Se îmbină...
+#. text in the download list (sizes, speeds, status)
+#. a video's status while its picture and sound are joined into one file (ffmpeg); {percent} how far, e.g. "45%"
+#, machine
+	Merging... ({percent})	Se îmbină... ({percent})
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -2758,6 +2865,10 @@
 #. a country's name (where a download's server is)
 #, machine
 	Mozambique	Mozambic
+#. text in the Download video window
+#. why "Embed chapters" is greyed in Download video: the choice is a sound converted to MP3, Opus or FLAC, which MDM saves without chapters
+#, machine
+	MP3, Opus and FLAC files are saved without chapters	Fișierele MP3, Opus și FLAC sunt salvate fără capitole
 #. text in errors.rs
 #, machine
 	much slower than the other connections; reconnecting	mult mai lentă decât celelalte conexiuni; se reconectează
@@ -2899,6 +3010,9 @@
 #. tooltip on the Scheduler's weekdays when none is ticked
 #, machine
 	No day is ticked: the queue will not start	Nicio zi nu este bifată: coada nu va porni
+#. message or event log entry in the main window
+#, machine
+	No download links were found in the clipboard. Copy a text with http, https, ftp or magnet links in it, and try again.	Nu au fost găsite linkuri de descărcare în clipboard. Copiați un text cu linkuri http, https, ftp sau magnet și încercați din nou.
 #. message or event log entry in the main window
 #. title in the empty download list (this category or queue has no downloads)
 #, machine
@@ -3174,11 +3288,16 @@
 #. verb: opens the file
 #, machine
 	Open	Deschidere
-#. button in crashui.rs; button in a dialog box; button in torrentfiles.rs
+#. button in crashui.rs; button in a dialog box; text in a dialog box; button in torrentfiles.rs
 #. crash report window button: show the report's file in its folder
+#. title of the message when the folder of a downloaded file can't be shown
 #. button that opens the torrent's containing folder in the file manager
 #, machine
 	Open folder	Deschideți folderul
+#. text in a download's progress window
+#. button in a download's progress window when the site sent a web page (a waiting page, a captcha) instead of the file: opens the download's link in the web browser
+#, machine
+	Open in browser	Deschide în browser
 #. checkbox in the Add torrent window
 #, machine
 	Open magnet links and .torrent files with Mister Download Manager	Deschide linkurile magnet și fișierele .torrent cu Mister Download Manager
@@ -3416,7 +3535,7 @@
 #. text in a download's progress window
 #, machine
 	Property	Proprietate
-#. text in the Options window
+#. text in errors.rs; text in the Options window
 #. tab title
 #, machine
 	Proxy / Socks	Proxy / Socks
@@ -3486,6 +3605,11 @@
 #. the trailing ... means it is still going on: keep it
 #, machine
 	Reading the torrent...	Se citește torrentul...
+#. message or event log entry in the main window
+#. the status strip while Tasks → Import reads a file; {file} is its name
+#. the trailing ... means it is still going on: keep it
+#, machine
+	Reading {file}...	Se citește {file}...
 #. text in helpers.rs
 #, machine
 	Reads a page and lists every quality the site offers, up to 4K, from YouTube, Vimeo and over a thousand other sites.	Citește o pagină și listează fiecare calitate pe care o oferă site-ul, până la 4K, de pe YouTube, Vimeo și peste o mie de alte site-uri.
@@ -3900,6 +4024,9 @@
 #. checkbox in the Options window; checkbox in a download's progress window
 #, machine
 	Show download complete dialog	Afișarea dialogului la finalizarea descărcării
+#. checkbox in the Options window
+#, machine
+	Show download progress dialog when a download starts	Afișați dialogul de progres al descărcării când începe o descărcare
 #. button in a dialog box
 #. button: shows these downloads in MDM's list, selected
 #, machine
@@ -3989,6 +4116,7 @@
 #, machine
 	Size	Dimensiune
 #. text in the Download video window
+#. the video's file size is not known
 #, machine
 	size unknown	dimensiune necunoscută
 #. text in a download's Properties window
@@ -4362,6 +4490,9 @@
 #. Options → Remote → Status: the settings were changed; they apply on OK
 #, machine
 	The changes apply when you click OK.	Modificările se aplică atunci când faceți clic pe OK.
+#. message or event log entry in the main window
+#, machine
+	The clipboard holds no text. Copy some links, or a text with links in it, and try again.	Clipboardul nu conține text. Copiați câteva linkuri sau un text cu linkuri și încercați din nou.
 #. text in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. Tell a friend: Copy failed (another program holds the clipboard)
 #, machine
@@ -4403,6 +4534,11 @@
 #, machine
 	the connection closed before the part was complete	conexiunea s-a închis înainte ca partea să fie completă
 #. text in errors.rs
+#. a helper (yt-dlp, ffmpeg) couldn't be downloaded: the connection to its server ({host}) was cut as it opened
+#. {host} = a server name such as "example.com" (keep the braces as they are)
+#, machine
+	the connection to {host} was cut: a firewall, or a network that blocks it	conexiunea la {host} a fost întreruptă: un firewall sau o rețea care o blochează
+#. text in errors.rs
 #, machine
 	the connection was lost while receiving data	conexiunea a fost pierdută în timpul primirii datelor
 #. text in the Add torrent window
@@ -4412,6 +4548,11 @@
 #. text in errors.rs
 #, machine
 	the disk is full	discul este plin
+#. text in errors.rs
+#. a helper (yt-dlp, ffmpeg) couldn't be downloaded: the connection to its server ({host}) closed before all of it came
+#. {host} = a server name such as "example.com" (keep the braces as they are)
+#, machine
+	the download from {host} was cut short	descărcarea de la {host} a fost întreruptă
 #. tooltip (why a control is greyed) in a download's Properties window
 #. tooltip of the greyed Open button in File Properties
 #, machine
@@ -4553,6 +4694,11 @@
 #. an FTPS (or other TLS) connection could not be secured
 #, machine
 	the secure connection failed	conexiunea securizată a eșuat
+#. text in errors.rs
+#. a helper (yt-dlp, ffmpeg) couldn't be downloaded: the secure connection to its server ({host}) failed, usually because an antivirus or a proxy reads secure (HTTPS) connections with a certificate of its own
+#. {host} = a server name such as "example.com" (keep the braces as they are)
+#, machine
+	the secure connection to {host} failed: an antivirus's web filter or a proxy may be reading HTTPS	conexiunea securizată la {host} a eșuat: filtrul web al unui antivirus sau un proxy ar putea intercepta conexiunile HTTPS
 #. text in a dialog box
 #. \\n starts a new line: break lines where they fit the translation
 #, machine
@@ -4574,10 +4720,11 @@
 	the server is busy ({status}); try again later	serverul este ocupat ({status}); încercați din nou mai târziu
 #. text in errors.rs
 #, machine
-	the server sent a web page instead of the file (sign-in needed or the link expired?)	serverul a trimis o pagină web în loc de fișier (este necesară autentificarea sau linkul a expirat?)
-#. text in errors.rs
-#, machine
 	the server sent an unexpected part of the file ({detail})	serverul a trimis o parte neașteptată a fișierului ({detail})
+#. text in errors.rs
+#. why a download failed (#701): a file host answered with its own web page (a countdown before the link, a captcha, a sign-in) where the file was expected. The browser gets past it; MDM's browser extension then hands the real file back to MDM
+#, machine
+	the site sent a web page instead of the file (a waiting page, a captcha or a sign-in): open the link in your browser, finish there, and the download comes back to MDM	site-ul a trimis o pagină web în loc de fișier (o pagină de așteptare, o captcha sau o pagină de conectare): deschideți linkul în browser, finalizați acolo, iar descărcarea va reveni la MDM
 #. text in the Download video window
 #. the Download video window: the site asked for a sign-in although the browser's extension passed the page's cookies
 #, machine
@@ -4598,6 +4745,10 @@
 #. the Download video window: the site's bot check (Cloudflare) turned yt-dlp away and no browser cookies were used
 #, machine
 	The site's bot check (Cloudflare) refused yt-dlp. If the page opens in your browser, choose that browser in Options → Sites Logins → Cookies for video sites and look the page up again, or use the Download video button over the video.	Verificarea bot a site-ului (Cloudflare) a refuzat yt-dlp. Dacă pagina se deschide în browserul dvs., alegeți acel browser în Opțiuni → Autentificări site-uri → Cookie-uri pentru site-uri video și căutați din nou pagina, sau utilizați butonul Descărcați videoclipul deasupra videoclipului.
+#. text in the Download video window
+#. the Download video window: the site's certificate is trusted neither by yt-dlp nor by the computer (asked again with the computer's certificates, #955); usually an antivirus or a proxy that reads secure (HTTPS) connections signs sites with a certificate of its own
+#, machine
+	The site's certificate isn't trusted, by yt-dlp nor by this computer: an antivirus's web filter or a proxy that reads HTTPS may be in the way. Turn its HTTPS scanning off, or add its certificate to the computer's, then look the page up again.	Certificatul site-ului nu este de încredere, nici de yt-dlp, nici de acest computer: un filtru web antivirus sau un proxy care citește HTTPS poate fi în cale. Dezactivați scanarea HTTPS sau adăugați certificatul său la cel al computerului, apoi căutați din nou pagina.
 #. text in crashui.rs
 #. crash report window: the symbols couldn't be downloaded; the report still works
 #, machine
@@ -4754,6 +4905,7 @@
 #, machine
 	This name is reserved by Windows	Acest nume este rezervat de Windows
 #. tooltip (why a control is greyed) in the Download video window
+#. why "Embed chapters" is greyed: ffmpeg (a helper program) is not installed
 #. why "Put them into the video" is greyed: ffmpeg (a helper program) is not installed
 #, machine
 	This needs ffmpeg	Aceasta necesită ffmpeg
@@ -4908,6 +5060,15 @@
 #. button in helpers.rs
 #, machine
 	Try again	Încercați din nou
+#. text in errors.rs
+#. what to do when a helper couldn't be downloaded because its server limits requests; {name} = yt-dlp, ffmpeg or gallery-dl; {helpers} and {other} = the buttons Helpers and Use another program
+#. {name} = a file name (keep the braces as they are)
+#, machine
+	Try again in an hour, or download {name} yourself and choose it in {helpers} → {other}.	Încercați din nou într-o oră sau descărcați {name} singur și alegeți-l în {helpers} → {other}.
+#. text in errors.rs
+#. {name} = a file name (keep the braces as they are)
+#, machine
+	Try again later, or download {name} yourself and choose it in {helpers} → {other}.	Încercați din nou mai târziu sau descărcați {name} singur și alegeți-l în {helpers} → {other}.
 #. text in the Scheduler window
 #. Tuesday, as short as a calendar's column head (two letters in English)
 #, machine
@@ -5054,6 +5215,7 @@
 #, machine
 	United States Minor Outlying Islands	Insulele Minore Îndepărtate ale Statelor Unite
 #. text in a download's Properties window
+#. the web page is not known
 #, machine
 	Unknown	Necunoscut
 #. text in a dialog box; text in a download's progress window; text in whereis.rs
@@ -5092,7 +5254,7 @@
 #. text in the Options window
 #, machine
 	Use advanced browser integration	Utilizați integrarea avansată a browserului
-#. button in helpers.rs
+#. text in errors.rs; button in helpers.rs
 #. Video helpers: button: pick a program (yt-dlp or ffmpeg) already on the computer
 #. the trailing ... means it opens a window: keep it
 #, machine
@@ -5192,9 +5354,14 @@
 #, machine
 	Verify checksum	Verificare sumă de control
 #. text in the download list (sizes, speeds, status)
+#. a download's status while the finished file is checked against its checksum
 #. the trailing ... means it is still going on: keep it
 #, machine
 	Verifying...	Se verifică...
+#. text in the download list (sizes, speeds, status)
+#. a download's status while the finished file is checked against its checksum; {percent} how much is checked, e.g. "45%"
+#, machine
+	Verifying... ({percent})	Se verifică... ({percent})
 #. text in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. {version} = a version number (keep the braces as they are)
 #, machine
@@ -5295,6 +5462,9 @@
 #. remote control page (on a phone): label of the choice: start the new download now, or let it wait in a queue
 #, machine
 	When	Când
+#. text in the Options window
+#, machine
+	When it is off, downloads go on in the main window's list. Double-click one there to see its progress.	Când este dezactivat, descărcările continuă în lista ferestrei principale. Faceți dublu clic pe una de acolo pentru a vedea progresul.
 #. text in the Batch download window
 #, machine
 	Wildcard size	Dimensiune caracter jolly
@@ -5302,6 +5472,10 @@
 #. the Scheduler, under "Wake the computer to run this queue" (Windows): "Allow wake timers" is on when plugged in, off on battery
 #, machine
 	Windows allows wake timers only while plugged in	Windows permite temporizatoare de trezire numai în timp ce este conectat la priză
+#. text in the Options window
+#. tooltip of "Mark downloaded files as coming from the internet" on Windows
+#, machine
+	Windows checks the files marked this way: SmartScreen before a program first runs, Office's Protected View before a document opens. Unticked, or under Windows' policy "Do not preserve zone information in file attachments", no download is marked.	Windows verifică fișierele marcate astfel: SmartScreen înainte ca un program să ruleze pentru prima dată, Vizualizare protejată din Office înainte ca un document să se deschidă. Dacă nu este bifat, sau sub politica Windows „Nu păstrați informațiile despre zonă în atașamentele de fișiere”, nicio descărcare nu este marcată.
 #. text in the Options window
 #. Options → Accounts: Windows Credential Manager didn't answer, so the sign-ins stay in MDM's settings, encrypted so that only this Windows account can read them
 #, machine
@@ -5412,6 +5586,10 @@
 #. Video helpers (macOS, Linux): {path} = the system's ffmpeg
 #, machine
 	Your system's: {path}	Al sistemului dvs.: {path}
+#. text in the Download video window
+#. in Download video and the browser's video menu: yt-dlp had no JavaScript runtime, so YouTube listed only some qualities (often only the sound); Node.js and Deno are program names
+#, machine
+	YouTube needs a JavaScript runtime to list its video qualities: install Node.js or Deno, then look it up again	YouTube necesită un runtime JavaScript pentru a lista calitățile video: instalați Node.js sau Deno, apoi căutați din nou
 #. text in the Download video window
 #. the Download video window: yt-dlp couldn't read the cookies of the browser chosen in Options (Chrome, Edge...), which holds them while it runs; {browser} = its name
 #, machine
@@ -5546,6 +5724,14 @@
 #. text in a dialog box
 #, machine
 	{file} is no longer where it was saved (moved or deleted). Redownload, in its right-click menu, gets it again.	{file} nu mai este în locația în care a fost salvat (a fost mutat sau șters). Comanda Reîncărcare din meniul său contextual îl descarcă din nou.
+#. message or event log entry in the main window
+#. Import refused a file; {size} = its size and {limit} = the largest Import reads, like "4.50 GB" and "64.00 MB"
+#. {size} = a file size such as "4.2 MB" (keep the braces as they are)
+#, machine
+	{file} is too large to be a list of addresses ({size}). Import reads text files, web pages and .ef2 exports of up to {limit}.	{file} este prea mare pentru a fi o listă de adrese ({size}). Importul citește fișiere text, pagini web și exporturi .ef2 de până la {limit}.
+#. text in a dialog box
+#, machine
+	{file} was moved elsewhere by dragging it out of Download complete, and MDM couldn't learn where. Look for it where you dropped it.	Fișierul {file} a fost mutat în altă parte prin tragere din Descărcări finalizate, iar MDM nu a putut afla unde. Căutați-l acolo unde l-ați plasat.
 #. text in the Checksum window
 #. {algorithm} = a checksum algorithm such as "SHA-256" (keep the braces as they are)
 #, machine
@@ -5564,6 +5750,35 @@
 #. {size} = a file size such as "4.2 MB" (keep the braces as they are)
 #, machine
 	{have} of {total} pieces ({size} each)	{have} din {total} piese (câte {size})
+#. text in errors.rs
+#. a helper (yt-dlp, ffmpeg) couldn't be downloaded: its server ({host}) answered with an HTTP error ({status}, such as "404 Not Found")
+#. {host} = a server name such as "example.com" (keep the braces as they are)
+#, machine
+	{host} answered {status}	{host} a răspuns cu {status}
+#. text in errors.rs
+#. a helper (yt-dlp, ffmpeg) couldn't be downloaded: its server's name ({host}, such as api.github.com) wasn't found
+#. {host} = a server name such as "example.com" (keep the braces as they are)
+#, machine
+	{host} could not be found: no connection, or a network that blocks it	{host} nu a putut fi găsit: nicio conexiune sau o rețea care o blochează
+#. text in errors.rs
+#. a helper (yt-dlp, ffmpeg) couldn't be downloaded: there is no way to its server ({host}); the network may be down
+#. {host} = a server name such as "example.com" (keep the braces as they are)
+#, machine
+	{host} could not be reached: check the connection	{host} nu a putut fi accesat: verificați conexiunea
+#. text in errors.rs
+#. a helper (yt-dlp, ffmpeg) couldn't be downloaded: its server ({host}) didn't answer in time
+#. {host} = a server name such as "example.com" (keep the braces as they are)
+#, machine
+	{host} did not answer in time	{host} nu a răspuns la timp
+#. text in errors.rs
+#. a helper (yt-dlp, ffmpeg) couldn't be downloaded: its server ({host}) or something on the way refused the connection
+#. {host} = a server name such as "example.com" (keep the braces as they are)
+#, machine
+	{host} refused the connection: a firewall, or a network that blocks it	{host} a refuzat conexiunea: un firewall sau o rețea care o blochează
+#. text in errors.rs
+#. {host} = a server name such as "example.com" (keep the braces as they are)
+#, machine
+	{host} refused the request ({status}): too many requests from your network for now	{host} a refuzat solicitarea ({status}): prea multe solicitări din rețeaua dvs. pentru moment
 #. text in the download list (sizes, speeds, status)
 #. {h} = hours; {m} = minutes (keep the braces as they are)
 #, machine
@@ -5644,6 +5859,10 @@
 #. text in errors.rs
 #, machine
 	{problem} ({cause})	{problem} ({cause})
+#. text in errors.rs
+#. why a helper couldn't be downloaded ({problem}), then what to do about it ({advice}, whole sentences)
+#, machine
+	{problem}. {advice}	{problem}. {advice}
 #. text in errors.rs
 #. a debrid service's error: too many requests; MDM waits and retries
 #, machine
@@ -6171,6 +6390,10 @@ extension	This page's player streams its video in pieces, so there's no file to 
 #, machine
 extension	Turn on	Activați
 #. text in the browser extension
+#. link beside "Downloads from <site> stay with the browser" in the toolbar button's popup: take the site off the excluded sites again
+#, machine
+extension	Undo	Anulați
+#. text in the browser extension
 #. status when the app is older than the extension; keep the name Mister Download Manager as it is
 #, machine
 extension	Update Mister Download Manager to use everything this extension offers	Actualizați Mister Download Manager pentru a utiliza tot ce oferă această extensie
@@ -6206,6 +6429,10 @@ key	Ctrl+0	Ctrl+0
 #. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
 #, machine
 key	Ctrl+A	Ctrl+A
+#. key name or combination in the Help menu's windows (About, updates, shortcuts, Tell a friend)
+#. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
+#, machine
+key	Ctrl+B	Ctrl+B
 #. key name or combination in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
 #, machine
@@ -6299,10 +6526,10 @@ menu	&About Mister Download Manager	&Despre Mister Download Manager
 #, machine
 menu	&Add new download	Adăugați descărcare &nouă
 #. menu command in the main window
+#. View → Window system: MDM chooses the window system itself at each start
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#. the trailing ... means it opens a window: keep it
 #, machine
-menu	&Add new download...	Adăugați descărcare &nouă...
+menu	&Automatic	A&utomat
 #. menu command in the main window
 #. View → Text: letters drawn the classic way, hinted to whole pixels (crisp, coarse on a dense screen)
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
@@ -6408,11 +6635,6 @@ menu	&Stop All	&Opriți tot
 #, machine
 menu	&Stop Download	&Opriți descărcarea
 #. menu command in the main window
-#. View menu: submenu choosing how the text is drawn (smooth or classic)
-#. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
-menu	&Text	&Text
-#. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
 menu	&Tray icon	Icoană în &tavă
@@ -6429,6 +6651,21 @@ menu	&Undo	&Anulare
 #, machine
 menu	&Video downloads	Descărcări &video
 #. menu command in the main window
+#. View → Window system: Wayland's own windows (the name of a Linux display system, usually kept as is)
+#. & marks the keyboard shortcut letter: keep one & before a letter of the translation
+#, machine
+menu	&Wayland	&Wayland
+#. menu command in the main window
+#. View menu: submenu choosing the window system MDM's windows use on Linux (X11 through XWayland, or Wayland)
+#. & marks the keyboard shortcut letter: keep one & before a letter of the translation
+#, machine
+menu	&Window system	Sistem de &ferestre
+#. menu command in the main window
+#. View → Window system: X11's windows, through XWayland in a Wayland session (names of Linux display systems, usually kept as is)
+#. & marks the keyboard shortcut letter: keep one & before a letter of the translation
+#, machine
+menu	&X11 (XWayland)	&X11 (XWayland)
+#. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
 menu	Add &batch download	Adăugați descărcare în &bloc
@@ -6437,6 +6674,11 @@ menu	Add &batch download	Adăugați descărcare în &bloc
 #. the trailing ... means it opens a window: keep it
 #, machine
 menu	Add &magnet link...	Adăugați link &magnet...
+#. menu command in the main window
+#. & marks the keyboard shortcut letter: keep one & before a letter of the translation
+#. the trailing ... means it opens a window: keep it
+#, machine
+menu	Add &new download...	Adăugați descărcare &nouă...
 #. menu command in the main window
 #. View → Theme: picks a theme file or a Base16 or pywal colour scheme, copies it into the themes folder and uses it
 #, machine
@@ -6522,7 +6764,7 @@ menu	By Save &Path	După &calea de salvare
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
-menu	By St&atus	După St&are
+menu	By Stat&us	După St&are
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
@@ -6571,9 +6813,17 @@ menu	Delete from queue	Ștergeți din coadă
 #, machine
 menu	Direct3D	Direct3D
 #. menu command in the main window
+#. View → Draw with: a greyed note; what draws the windows and why: Direct3D 12 through Windows' own software renderer (WARP, keep the name), because this computer's graphics card has no Direct3D 12 driver
+#, machine
+menu	Direct3D 12 (WARP): this graphics card has no Direct3D 12 driver	Direct3D 12 (WARP): această placă grafică nu are driver Direct3D 12
+#. menu command in the main window
 #. View → Draw with: a greyed note; Direct3D failed on this computer, so OpenGL draws the windows
 #, machine
 menu	Direct3D didn't start here: OpenGL draws	Direct3D nu a pornit aici: OpenGL desenează
+#. menu command in the main window
+#. View → Draw with: a greyed note; Direct3D draws the windows through Windows' own software renderer (WARP) instead of a graphics card
+#, machine
+menu	Direct3D draws with Windows' software renderer (WARP)	Direct3D utilizează componenta de randare software din Windows (WARP)
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #. the trailing ... means it opens a window: keep it
@@ -6644,6 +6894,14 @@ menu	Hide drop target	Ascundeți ținta de glisare
 #, machine
 menu	High contrast	Contrast ridicat
 #. menu command in the main window
+#. View → Window system: a greyed note; MDM's windows are Wayland's now
+#, machine
+menu	In use: Wayland	În uz: Wayland
+#. menu command in the main window
+#. View → Window system: a greyed note; MDM's windows are X11's (through XWayland) now
+#, machine
+menu	In use: X11 (XWayland)	În uz: X11 (XWayland)
+#. menu command in the main window
 #. View → Draw with: a greyed note under "… didn't start here"; why: another error, written in MDM's log
 #, machine
 menu	It couldn't start: the log says why	Nu a putut porni: jurnalul spune de ce
@@ -6667,6 +6925,10 @@ menu	Metal	Metal
 #. View → Draw with: a greyed note; Metal failed on this computer, so OpenGL draws the windows
 #, machine
 menu	Metal didn't start here: OpenGL draws	Metal nu a pornit aici: OpenGL desenează
+#. menu command in the main window
+#. View → Draw with: a greyed note; Metal draws the windows through a software renderer instead of a graphics card
+#, machine
+menu	Metal draws with a software renderer	Metal desenează cu o redare software
 #. menu command in the main window
 #. View → Theme: a style theme's name (Windows 8's flat look); keep "Metro" unless your language writes it otherwise
 #, machine
@@ -6714,6 +6976,26 @@ menu	Open with...	Deschidere cu...
 #. View → Draw with: a graphics system's name, usually kept as is
 #, machine
 menu	OpenGL	OpenGL
+#. menu command in the main window
+#. View → Draw with: a greyed note; why MDM no longer draws with OpenGL: it couldn't start on this computer
+#, machine
+menu	OpenGL didn't start here	OpenGL nu a pornit aici
+#. menu command in the main window
+#. View → Draw with: a greyed note; why MDM no longer draws with OpenGL: its window froze inside the graphics card's driver while OpenGL drew
+#, machine
+menu	OpenGL froze inside the graphics driver here	OpenGL a înghețat în driverul grafic aici
+#. menu command in the main window
+#. View → Draw with: a greyed note; this computer's OpenGL (its graphics driver) is too old, so MDM doesn't draw with it
+#, machine
+menu	OpenGL here is too old to draw MDM	OpenGL este prea vechi pentru a desena MDM
+#. menu command in the main window
+#. View → Draw with: a greyed note; why MDM no longer draws with OpenGL: its window stayed empty for 10 seconds, so MDM started again another way
+#, machine
+menu	OpenGL's first frame didn't show within 10 seconds	Primul cadru OpenGL nu a apărut în 10 secunde
+#. menu command in the main window
+#. View → Draw with: a greyed note; why MDM no longer draws with OpenGL: MDM crashed or was closed while starting with it
+#, machine
+menu	OpenGL's last start ended before its first frame	Ultima pornire OpenGL s-a încheiat înainte de primul cadru
 #. menu command in the main window
 #. what double-clicking a download does — noun: show its properties
 #. noun: opens the download's Properties window
@@ -6811,6 +7093,11 @@ menu	Stop Download	Oprire descărcare
 #, machine
 menu	Support &MDM	Susține &MDM
 #. menu command in the main window
+#. View menu: submenu choosing how the text is drawn (smooth or classic)
+#. & marks the keyboard shortcut letter: keep one & before a letter of the translation
+#, machine
+menu	Te&xt	&Text
+#. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
 menu	Tell a &friend	Spune unui &prieten
@@ -6865,6 +7152,10 @@ menu	Vulkan	Vulkan
 #. View → Draw with: a greyed note; Vulkan failed on this computer, so OpenGL draws the windows
 #, machine
 menu	Vulkan didn't start here: OpenGL draws	Vulkan nu a pornit aici: OpenGL desenează
+#. menu command in the main window
+#. View → Draw with: a greyed note; Vulkan draws the windows through a software renderer instead of a graphics card
+#, machine
+menu	Vulkan draws with a software renderer	Vulkan desenează cu o redare software
 #. menu bar title in the main window (menus, toolbar, Categories pane)
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine

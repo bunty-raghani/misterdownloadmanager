@@ -7,6 +7,8 @@
 //!   for a form post that carries `FIELD=VALUE`
 //! - `GET /files/{name}` — a real file from `--files DIR` (Range too; 404 without it): archives
 //!   for the link grabber's tests
+//! - `GET /stream.php`, `/remote_control.php` — a generated file a server's program sends, typed
+//!   by `type` and named by nothing but a `file=` value (#695, #800)
 //! - `GET /redirect?to=URL[&ttl_ms=N][&uses=N][&code=3xx]` — a redirect (302 unless `code` says)
 //!   to `URL` (cross-host redirects, credential scoping); with `ttl_ms` the target gets
 //!   `expires=<unix ms>` and answers 403 after it (signed CDN links); with `uses` it is a link of
@@ -81,6 +83,9 @@ pub struct LogEntry {
     /// The `Referer` header.
     #[serde(default)]
     pub referer: Option<String>,
+    /// The `Origin` header (#900: a stream's server that checks it).
+    #[serde(default)]
+    pub origin: Option<String>,
     /// The `Sec-Fetch-Mode` header, which browsers send and programs don't (`browser_only`).
     #[serde(default)]
     pub sec_fetch_mode: Option<String>,
@@ -230,6 +235,8 @@ pub(crate) struct Shared {
     /// Over HTTPS: each connection's ClientHello, browser-like or not (`LogEntry::browser_tls`),
     /// by the client's address.
     browser_tls: Mutex<HashMap<SocketAddr, bool>>,
+    /// `link_rate`: when the shared link is free again (`Shared::link_turn`).
+    link_free: Mutex<Instant>,
 }
 
 impl Shared {
@@ -239,6 +246,16 @@ impl Shared {
 
     fn faults(&self) -> Faults {
         self.faults.read().unwrap().clone()
+    }
+
+    /// `link_rate`: when `n` bytes may go, after every chunk already given a turn on the link
+    /// (first come, first served: each connection waits for one chunk at a time, so they take
+    /// turns and share the link evenly).
+    fn link_turn(&self, n: u64, rate: u64) -> Instant {
+        let mut free = self.link_free.lock().unwrap();
+        let start = (*free).max(Instant::now());
+        *free = start + Duration::from_secs_f64(n as f64 / rate as f64);
+        *free
     }
 
     /// Resolves once the server's faults leave the byte at `at` to be sent.
@@ -289,6 +306,7 @@ impl Shared {
             authorization: header_str(headers, header::AUTHORIZATION)
                 .map(|a| a.chars().take(11).collect::<String>() + "…"),
             referer: header_str(headers, header::REFERER),
+            origin: header_str(headers, header::ORIGIN),
             sec_fetch_mode: header_str(headers, header::HeaderName::from_static("sec-fetch-mode")),
             accept_encoding: header_str(headers, header::ACCEPT_ENCODING),
             browser_tls: self.browser_tls.lock().unwrap().get(&peer).copied(),
@@ -353,6 +371,7 @@ impl LabServer {
             drive_uuids: Mutex::default(),
             files: cfg.files,
             browser_tls: Mutex::default(),
+            link_free: Mutex::new(Instant::now()),
         });
         let tls = match cfg.tls {
             true => Some(crate::ftp::certificate().map_err(io::Error::other)?),
@@ -366,7 +385,10 @@ impl LabServer {
             .route("/cookie", get(pages::cookie))
             .route("/assets/{file}", get(pages::asset))
             .route("/hls/master.m3u8", get(streams::hls_master))
+            .route("/hls/broken-audio.m3u8", get(streams::hls_broken_master))
             .route("/hls/{track}/{file}", get(streams::hls_file))
+            .route("/hlsg/{site}/master.m3u8", get(streams::hlsg_master))
+            .route("/hlsg/{site}/{track}/{file}", get(streams::hlsg_file))
             .route("/dash/manifest.mpd", get(streams::dash_manifest))
             .route("/dash/protected.mpd", get(streams::dash_protected))
             .route("/dash/{rep}/{file}", get(streams::dash_file))
@@ -386,6 +408,9 @@ impl LabServer {
             .route("/form/{size}", any(form))
             .route("/form/{size}/{*name}", any(form))
             .route("/files/{*name}", get(files))
+            // A file a server's program sends (#695, #800).
+            .route("/stream.php", get(script))
+            .route("/remote_control.php", get(script))
             .route("/redirect", get(redirect))
             .route("/hop", get(hop))
             .route("/_log", get(get_log).delete(clear_log))
@@ -410,6 +435,8 @@ impl LabServer {
             .route("/pm/api/account/info", get(debrid::pm_account))
             .route("/pm/api/services/list", get(debrid::pm_services))
             .route("/pm/api/transfer/directdl", post(debrid::pm_directdl))
+            // A fake Mega-Debrid.
+            .route("/md/api.php", post(debrid::md_api))
             // Torrents through the fake services (#44, `debrid_torrents`).
             .route(
                 "/rd/rest/1.0/torrents/addMagnet",
@@ -622,10 +649,18 @@ GET|HEAD /gen/{size}[/{name}]?seed=N&<file params>&<faults>   size: 12345, 64K, 
   faults (also server-wide with --faults; per-URL values override):
     rate=SIZE slow_every=N slow_rate=SIZE max_conns=N drop_after=SIZE drop_every=N
     fail_every=N fail_first=N no_range=1 no_range_every=N html=1 etag_change_every=N
+    html=1         a small web page (a sign-in wall, a file host's waiting page) instead of the
+                   file, text/html; with html_type=TYPE|none the page comes as TYPE (none: no
+                   Content-Type), with html_cd=1 under the file's name (Content-Disposition)
+    html_after=N   the first N requests for this path and query get the file, every later one
+                   the page (as html=1 with html_type and html_cd): a link that leads to a
+                   waiting page once the download is resumed; vary seed= for a fresh link
     etag=weak|per-request|none latency_ms=N range_latency_ms=N (only requests with a Range)
     range_rate=SIZE  the rate of answers to requests with a Range (instead of rate)
     burst=SIZE     with a rate, a link: a response the client stopped reading catches up with
                    at most SIZE at once (by default all it fell behind by)
+    link_rate=SIZE one link of SIZE bytes/s that every response of the server shares: a
+                   connection alone takes all of it, n connections a share each
     stall_at=SIZE  never send the file's byte at that offset: a response stops there and waits
                    (until the server's faults change, from a test; a URL's own value stays)
     require_cookie=NAME=VALUE|NAME   403 unless the Cookie header has it
@@ -645,6 +680,9 @@ POST /form/{size}[/{name}]?need=FIELD=VALUE&see_other=1&<as /gen>
     (default need=token=abc): 405 to other methods, 403 to a form without it;
     see_other=1: 303 to /gen/{size}/{name}?<the rest of the query> instead
 GET /files/{name}   a real file from --files DIR (Range too; 404 without --files)
+GET /stream.php, /remote_control.php?id=N|file=NAME&size=1M&type=MIME|none&magic=mp4|webm|mp3&<as /gen>
+    a generated file a server's program sends (#695, #800): no Content-Disposition, Content-Type
+    video/mp4 (type= another, none for none at all), magic= its first bytes a media type's
 GET /redirect?to=URL[&ttl_ms=N][&uses=N][&code=3xx]   302 (or code) to URL (not logged); ttl_ms: a signed link expiring after N ms; uses: a new link each time, expiring after N requests
 /rd/rest/1.0/{user,hosts/domains,unrestrict/link,disable_access_token}, /rd/oauth/v2/{device/code,device/credentials,token}
                                               a fake Real-Debrid (#44): tokens good (premium), free; links http://hoster.test/file/SIZE/NAME[?gone=1&down=1&chunks=N&ttl_ms=N&rate=SIZE]
@@ -652,6 +690,7 @@ GET /redirect?to=URL[&ttl_ms=N][&uses=N][&code=3xx]   302 (or code) to URL (not 
 /pm/api/{account/info,services/list,transfer/directdl}      a fake Premiumize: the same tokens and links
 /tb/v1/api/{user/me,user/auth/device/{start,token},webdl/hosters,webdl/createwebdownload,torrents/createtorrent,*/mylist,*/requestdl,*/control*}
                                               a fake TorBox: the same tokens and links (ready after 2 polls), and torrents
+POST /md/api.php?action={connectUser,getUserHistory,getHostersList,getLink}   a fake Mega-Debrid: the same keys and links, the form's token; users labuser (premium) and freeuser, password labpass
 GET /hop?to=URL&how=meta|header[&wait=S][&cookie=N=V]   a page that sends the browser on to URL (meta refresh or Refresh header)
 
 RSS    made-up feeds for the RSS feeds window (#39); never real ones
@@ -666,6 +705,7 @@ GET /page?<any of>
     video=PATH|1   <video id=video controls> 640x360 (1: /gen/1M/clip.mp4?inline=1, also shown
                    when nothing else is asked for, or with muted_loop, iframe or shadow)
     w=PX h=PX      the videos' size
+    title=TEXT     the page's title (default "labserver page")
     muted_loop=1   the video muted, looping and autoplaying, without controls
     iframe=1       the video inside <iframe id=frame> (a /page of its own)
     shadow=1       the video inside the open shadow root of <div id=host> (declarative)
@@ -675,6 +715,9 @@ GET /page?<any of>
                    #player3), which fetches /hls/master.m3u8, /dash/manifest.mpd or
                    /dash/protected.mpd, the first variant's and the audio's playlists and every
                    segment, then sets <body data-stream=done> once all are (or error)
+    hlsg=SITE      a player for http://SITE/hlsg/<this page's host>/master.m3u8 (another site's
+                   address for this page's stream: localhost:PORT for a page on 127.0.0.1, and
+                   back), which serves it only to this page's Origin and Referer (#900)
     hls2=1, dash2=1  the same for /hls2/playlist?id=lab and /dash2/manifest?id=lab (no .m3u8 or
                    .mpd, text/plain and octet-stream, #171); each player first fetches
                    /hls2/config?id=lab, a text/plain answer that is no manifest
@@ -689,15 +732,20 @@ GET /cookie?set=NAME=VALUE&httponly=NAME=VALUE&clear=NAME   (each repeatable) a 
     Set-Cookie: NAME=VALUE; Path=/ (; HttpOnly), or NAME=; Path=/; Max-Age=0
 GET /assets/page.css  /assets/stream.js
 
-STREAMS  3 segments of 4 s per track. HLS: real MPEG-TS, AAC silence on every track (ffmpeg
-    remuxes them); DASH: fake bytes
+STREAMS  3 segments of 4 s per track. HLS: real MPEG-TS, a grey H.264 picture (25 fps) on the
+    video tracks, AAC silence on the audio track (ffmpeg remuxes and merges them); DASH: fake bytes
 GET /hls/master.m3u8   two variants (720p: 1280x720, 1280000 b/s; 360p: 640x360, 640000 b/s)
     and an audio rendition (GROUP-ID="aud"): /hls/{720p,360p,audio}/index.m3u8 -> seg0..2.ts
     of 48128, 24064, 6016 bytes (application/vnd.apple.mpegurl, video/mp2t)
+GET /hls/broken-audio.m3u8  the same, its sound /hls/audio/broken.m3u8 -> broken0..2.ts: seeded
+    bytes, no MPEG-TS, so ffmpeg can't join it with a picture (a video's failed merge)
 GET /dash/manifest.mpd  (application/dash+xml) the same tracks as Representations with a
     SegmentTemplate: /dash/{720p,360p,audio}/init.mp4 and seg1..3.m4s (video/mp4, audio/mp4)
 GET /dash/protected.mpd  the same, each AdaptationSet marked encrypted (CENC, Widevine's
     ContentProtection), as a DRM-protected stream's manifest is
+GET /hlsg/{SITE}/master.m3u8  the HLS stream again (/hlsg/SITE/{720p,360p,audio}/...), only for
+    a page of SITE (host:port): 403 to any request, the playlists' and each segment's, without
+    Origin: http://SITE and a Referer under it, as a site's video server checks (#900)
 GET /hls2/playlist?id=ID  the HLS stream again with no .m3u8 anywhere, all text/plain (#171):
     variants playlist?id=ID&track={720p,360p,audio}, segments seg?id=ID&track=T&i=0..2
     (application/octet-stream)
@@ -725,8 +773,8 @@ GOOGLE DRIVE  a fake one for the engine's tests, on Google's host names (resolve
 
 LOG
 GET /_log   the request log as JSON: method, path, query, range, if_range, user_agent, cookie,
-            referer, req_content_type, req_body_len, req_body_sha256, req_body_head, status,
-            bytes_sent, outcome (complete, head, fault:*, ...)
+            referer, origin, req_content_type, req_body_len, req_body_sha256, req_body_head,
+            status, bytes_sent, outcome (complete, head, fault:*, ...)
 DELETE /_log   clears it
 "#;
 
@@ -928,6 +976,42 @@ async fn generated(
     serve(shared, entry, &method, &size, name.as_deref(), &query).await
 }
 
+/// `GET /stream.php` and `/remote_control.php` (#695, #800): a generated file a server's program
+/// sends, with no Content-Disposition (as such sites do): `size` (1M by default), `type` its
+/// Content-Type (video/mp4 by default; `none` for no Content-Type at all), `magic` its first bytes
+/// a media type's (`mp4`, `webm`, `mp3`). `id`, `file`, `filename` and `token` are the page's own
+/// (a `file=` value names the file). Every generated file's key works too.
+async fn script(
+    State(shared): State<Arc<Shared>>,
+    ConnectInfo(peer): ConnectInfo<SocketAddr>,
+    method: Method,
+    uri: axum::http::Uri,
+    RawQuery(query): RawQuery,
+    headers: HeaderMap,
+) -> Response {
+    let entry = shared.begin(
+        peer,
+        &method,
+        uri.path().to_owned(),
+        query.clone(),
+        &headers,
+        &[],
+    );
+    let mut pairs: Vec<(String, String)> =
+        serde_urlencoded::from_str(query.as_deref().unwrap_or_default()).unwrap_or_default();
+    let size = pairs
+        .iter()
+        .position(|(k, _)| k == "size")
+        .map_or_else(|| "1M".to_owned(), |i| pairs.remove(i).1);
+    for (k, v) in [("type", "video/mp4"), ("inline", "bare")] {
+        if !pairs.iter().any(|(key, _)| key == k) {
+            pairs.push((k.into(), v.into()));
+        }
+    }
+    let query = serde_urlencoded::to_string(pairs).unwrap_or_default();
+    serve(shared, entry, &method, &size, None, &query).await
+}
+
 /// `GET /files/{name}`: a real file from `Config::files` (404 without one, or for a name that
 /// leaves that folder), whole or one range of it.
 async fn files(
@@ -1114,6 +1198,10 @@ struct FileQuery {
     cd: Option<String>,
     cdstar: Option<String>,
     disposition: Disposition,
+    /// `type`: the Content-Type sent instead of the name's (`none`: none at all).
+    content_type: Option<String>,
+    /// `magic`: the file starts as a media type's ([`content::media_head`]).
+    magic: Option<&'static [u8]>,
     faults: Faults,
 }
 
@@ -1270,13 +1358,16 @@ pub(crate) async fn serve(
         shared.record(entry, 503, "fault:fail_first");
         return StatusCode::SERVICE_UNAVAILABLE.into_response();
     }
-    if f.html == Some(true) {
+    let page_now = f.html_after.is_some_and(|after| {
+        let key = format!("html_after:{}?{query}", entry.path);
+        let mut served = shared.link_uses.lock().unwrap();
+        let n = served.entry(key).or_insert(0);
+        *n += 1;
+        *n > after
+    });
+    if f.html == Some(true) || page_now {
         shared.record(entry, 200, "fault:html");
-        return (
-            [(header::CONTENT_TYPE, "text/html; charset=utf-8")],
-            "<!doctype html><title>Sign in</title><form>Please sign in</form>\n",
-        )
-            .into_response();
+        return web_page(&f, name, size);
     }
     let slot = {
         let mut active = shared.active.lock().unwrap();
@@ -1344,13 +1435,17 @@ pub(crate) async fn serve(
     entry.body_len = end - start;
 
     let file_name = q.cdstar.as_deref().or(q.cd.as_deref()).or(name);
-    let content_type = match q.disposition {
-        Disposition::Attachment => "application/octet-stream",
-        _ => mime_type(file_name.unwrap_or("")),
+    let content_type = match (q.content_type.as_deref(), q.disposition) {
+        (Some("none"), _) => None,
+        (Some(t), _) => Some(t),
+        (None, Disposition::Attachment) => Some("application/octet-stream"),
+        (None, _) => Some(mime_type(file_name.unwrap_or(""))),
     };
-    let mut builder = Response::builder()
-        .status(status)
-        .header(header::CONTENT_TYPE, content_type)
+    let mut builder = Response::builder().status(status);
+    if let Some(t) = content_type {
+        builder = builder.header(header::CONTENT_TYPE, t);
+    }
+    let mut builder = builder
         .header(header::CONTENT_LENGTH, end - start)
         .header(header::LAST_MODIFIED, &last_modified);
     if f.no_range != Some(true) {
@@ -1394,10 +1489,12 @@ pub(crate) async fn serve(
         shared: shared.clone(),
         entry: Some(entry),
         seed,
+        magic: q.magic,
         pos: start,
         end,
         rate,
         burst: f.burst,
+        link_rate: f.link_rate.filter(|l| *l > 0),
         drop_at,
         // A URL's own stall stays; the server's is lifted with `set_faults`.
         stall_at: f.stall_at.filter(|at| (start..end).contains(at)),
@@ -1410,6 +1507,45 @@ pub(crate) async fn serve(
     builder
         .body(Body::from_stream(transfer.into_stream()))
         .unwrap()
+}
+
+/// `html=1`'s page: a sign-in wall, or (with `html_type` or `html_cd`) a file host's waiting page
+/// as it comes, its blank lines first (#701).
+fn web_page(f: &Faults, name: Option<&str>, size: u64) -> Response {
+    if f.html_type.is_none() && f.html_cd != Some(true) {
+        return (
+            [(header::CONTENT_TYPE, "text/html; charset=utf-8")],
+            "<!doctype html><title>Sign in</title><form>Please sign in</form>\n",
+        )
+            .into_response();
+    }
+    let mut builder = Response::builder().status(StatusCode::OK);
+    match f.html_type.as_deref() {
+        Some("none") => {}
+        Some(t) => builder = builder.header(header::CONTENT_TYPE, t),
+        None => builder = builder.header(header::CONTENT_TYPE, "text/html; charset=utf-8"),
+    }
+    if f.html_cd == Some(true) {
+        let name = name.unwrap_or("file.zip").replace(['"', '\\'], "_");
+        builder = builder.header(
+            header::CONTENT_DISPOSITION,
+            format!("attachment; filename=\"{name}\""),
+        );
+    }
+    let mut page = String::from(
+        "\r\n\r\n<!DOCTYPE html>\n<html><head><title>Your file is almost ready</title></head>\
+         <body><p>Please wait 30 seconds, then prove you are not a robot.</p>\
+         <form method=post><input type=submit value=\"Create download link\"></form>\
+         </body></html>\n",
+    );
+    // As long as the path's size says, up to 64 KiB (the report's page: 37 KB).
+    let want = size.min(64 << 10) as usize;
+    if want > page.len() + 8 {
+        page.push_str("<!--");
+        page.push_str(&" ".repeat(want - page.len() - 8));
+        page.push_str("-->\n");
+    }
+    builder.body(Body::from(page)).unwrap()
 }
 
 /// RFC 8187 `attr-char`: what `filename*=` leaves unencoded.
@@ -1489,6 +1625,8 @@ fn split_query(q: &str) -> Result<FileQuery, String> {
         cd: None,
         cdstar: None,
         disposition: Disposition::Attachment,
+        content_type: None,
+        magic: None,
         faults: Faults::default(),
     };
     let name = |k: &str, v: String| {
@@ -1506,7 +1644,13 @@ fn split_query(q: &str) -> Result<FileQuery, String> {
                 out.expires = Some(v.parse().map_err(|_| format!("invalid expires `{v}`\n"))?)
             }
             "uses" => out.uses = Some(v.parse().map_err(|_| format!("invalid uses `{v}`\n"))?),
-            "link" => {}
+            // A page's own keys for a server's program (`script`): they change nothing here.
+            "link" | "id" | "file" | "filename" | "token" => {}
+            "type" => out.content_type = name(&k, v)?,
+            "magic" => {
+                out.magic =
+                    Some(content::media_head(&v).ok_or_else(|| format!("invalid magic `{v}`\n"))?)
+            }
             "cd" => out.cd = name(&k, v)?,
             "cdstar" => out.cdstar = name(&k, v)?,
             "inline" => {
@@ -1531,10 +1675,14 @@ struct Transfer {
     shared: Arc<Shared>,
     entry: Option<LogEntry>,
     seed: u64,
+    /// The file's first bytes, over the generated ones (`magic`).
+    magic: Option<&'static [u8]>,
     pos: u64,
     end: u64,
     rate: Option<u64>,
     burst: Option<u64>,
+    /// `link_rate`: the link this response shares with every other one.
+    link_rate: Option<u64>,
     drop_at: Option<u64>,
     /// The file offset this response stops at (`stall_at`), and whether `set_faults` can lift it.
     stall_at: Option<u64>,
@@ -1571,6 +1719,9 @@ impl Transfer {
             if let Some(at) = t.stall_at {
                 n = n.min(at - t.pos);
             }
+            if let Some(link) = t.link_rate {
+                n = n.min((link / 50).max(1024));
+            }
             if let Some(r) = t.rate.filter(|r| *r > 0) {
                 n = n.min((r / 20).max(1024));
                 if let Some(b) = t.burst {
@@ -1588,8 +1739,12 @@ impl Transfer {
             if let Some(d) = t.drop_at {
                 n = n.min(d - t.sent);
             }
+            if let Some(link) = t.link_rate {
+                let turn = t.shared.link_turn(n, link);
+                tokio::time::sleep_until(turn.into()).await;
+            }
             let mut buf = vec![0u8; n as usize];
-            content::fill(t.seed, t.pos, &mut buf);
+            content::fill_with_head(t.seed, t.pos, &mut buf, t.magic.unwrap_or_default());
             t.pos += n;
             t.sent += n;
             if let Some(slot) = &t.slot {

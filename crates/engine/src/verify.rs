@@ -4,6 +4,7 @@
 
 use std::io::Read;
 use std::path::Path;
+use std::sync::atomic::{AtomicU64, Ordering};
 
 use base64::Engine as _;
 use reqwest::header::HeaderMap;
@@ -168,6 +169,11 @@ fn strength(a: Algo) -> u8 {
 
 /// The file's hash with `algo` (reads the whole file; call off the async threads).
 pub fn digest(path: &Path, algo: Algo) -> std::io::Result<Vec<u8>> {
+    digest_counted(path, algo, &AtomicU64::new(0))
+}
+
+/// [`digest`], adding each part read to `read` as it goes (#736: how far a check has come).
+pub fn digest_counted(path: &Path, algo: Algo, read: &AtomicU64) -> std::io::Result<Vec<u8>> {
     let mut f = std::fs::File::open(path)?;
     let mut buf = vec![0u8; 1 << 20];
     macro_rules! run {
@@ -179,6 +185,7 @@ pub fn digest(path: &Path, algo: Algo) -> std::io::Result<Vec<u8>> {
                     break;
                 }
                 h.update(&buf[..n]);
+                read.fetch_add(n as u64, Ordering::Relaxed);
             }
             h.finalize().to_vec()
         }};
@@ -192,6 +199,7 @@ pub fn digest(path: &Path, algo: Algo) -> std::io::Result<Vec<u8>> {
                     break;
                 }
                 h.update(&buf[..n]);
+                read.fetch_add(n as u64, Ordering::Relaxed);
             }
             h.finalize().to_be_bytes().to_vec()
         }
@@ -204,7 +212,12 @@ pub fn digest(path: &Path, algo: Algo) -> std::io::Result<Vec<u8>> {
 
 /// Whether the file matches `hash`.
 pub fn matches(path: &Path, hash: &Hash) -> std::io::Result<bool> {
-    Ok(digest(path, hash.algo)? == hash.value)
+    matches_counted(path, hash, &AtomicU64::new(0))
+}
+
+/// [`matches`], counting the bytes checked into `read` as it goes.
+pub fn matches_counted(path: &Path, hash: &Hash, read: &AtomicU64) -> std::io::Result<bool> {
+    Ok(digest_counted(path, hash.algo, read)? == hash.value)
 }
 
 mod hex_bytes {
@@ -270,5 +283,9 @@ mod tests {
         assert!(matches(&p, &crc).unwrap());
         let wrong = Hash::parse("00000000000000000000000000000000").unwrap();
         assert!(!matches(&p, &wrong).unwrap());
+        // #736: every byte checked is counted.
+        let read = AtomicU64::new(0);
+        assert!(matches_counted(&p, &sha, &read).unwrap());
+        assert_eq!(read.load(Ordering::Relaxed), 43);
     }
 }

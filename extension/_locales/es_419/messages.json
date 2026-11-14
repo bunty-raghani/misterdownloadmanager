@@ -92,6 +92,9 @@
       }
     }
   },
+  "popup_undo": {
+    "message": "Deshacer"
+  },
   "popup_excluded": {
     "message": "Las descargas de $site$ se quedan en el navegador",
     "placeholders": {

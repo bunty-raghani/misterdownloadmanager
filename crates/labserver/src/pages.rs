@@ -6,7 +6,7 @@
 use std::collections::HashMap;
 
 use axum::extract::{Path, RawQuery};
-use axum::http::{StatusCode, header};
+use axum::http::{HeaderMap, StatusCode, header};
 use axum::response::{IntoResponse, Response};
 
 use crate::faults::parse_flag;
@@ -57,10 +57,10 @@ fn video_tag(id: &str, src: &str, (w, h): (u32, u32), muted_loop: bool) -> Strin
     )
 }
 
-/// `/page?link=PATH&video=PATH|1&w=&h=&muted_loop=1&iframe=1&shadow=1&several=N&audio=PATH|1&
-/// hls=1&dash=1&drm=1&hls2=1&dash2=1&csp=strict`: a web page with what the browser extension acts on (see
-/// `HELP`).
-pub(crate) async fn page(RawQuery(q): RawQuery) -> Response {
+/// `/page?title=TEXT&link=PATH&video=PATH|1&w=&h=&muted_loop=1&iframe=1&shadow=1&several=N&audio=PATH|1&
+/// hls=1&dash=1&drm=1&hls2=1&dash2=1&hlsg=SITE&csp=strict`: a web page with what the browser
+/// extension acts on (see `HELP`).
+pub(crate) async fn page(RawQuery(q): RawQuery, headers: HeaderMap) -> Response {
     let pairs = pairs(q);
     let m: HashMap<&str, &str> = pairs
         .iter()
@@ -72,8 +72,14 @@ pub(crate) async fn page(RawQuery(q): RawQuery) -> Response {
     let (muted_loop, iframe, shadow) = (flag("muted_loop"), flag("iframe"), flag("shadow"));
     let several = num("several", 0).min(16);
     let csp = m.get("csp") == Some(&"strict");
+    // #900: the stream on another site (`hlsg=SITE`), served only to this page's Origin and
+    // Referer: SITE's address for this host's guarded stream.
+    let guarded = m
+        .get("hlsg")
+        .zip(headers.get(header::HOST).and_then(|v| v.to_str().ok()))
+        .map(|(site, host)| format!("http://{site}/hlsg/{host}/master.m3u8"));
     // A player for each stream asked for, in this order.
-    let streams: Vec<(&str, &str)> = [
+    let mut streams: Vec<(&str, &str)> = [
         ("hls", "/hls/master.m3u8"),
         ("dash", "/dash/manifest.mpd"),
         ("drm", "/dash/protected.mpd"),
@@ -83,6 +89,9 @@ pub(crate) async fn page(RawQuery(q): RawQuery) -> Response {
     .into_iter()
     .filter(|(k, _)| flag(k))
     .collect();
+    if let Some(manifest) = &guarded {
+        streams.push(("hlsg", manifest));
+    }
     // `link` may come again: one link each, in order.
     let links: Vec<&str> = pairs
         .iter()
@@ -111,7 +120,7 @@ pub(crate) async fn page(RawQuery(q): RawQuery) -> Response {
         None => None,
     };
 
-    let mut body = head("labserver page");
+    let mut body = head(m.get("title").copied().unwrap_or("labserver page"));
     for (k, link) in links.iter().enumerate() {
         let id = if k == 0 {
             "link".to_owned()
@@ -171,6 +180,7 @@ pub(crate) async fn page(RawQuery(q): RawQuery) -> Response {
             "dash2" => " data-kind=dash data-decoy=\"/hls2/config?id=lab\"",
             _ => "",
         };
+        let manifest = esc(manifest);
         body += &format!(
             "<video id={id} width={} height={} controls></video>\
              <script src=/assets/stream.js data-manifest=\"{manifest}\" data-player={id}{more}>\

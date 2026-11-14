@@ -35,7 +35,7 @@ use std::time::Duration;
 use url::Url;
 
 use crate::proc::FromBrowser;
-use crate::resolve::{Format, Video};
+use crate::resolve::{Format, Video, picture_rank, sound_rank};
 
 /// The most a playlist may hold, counted on the bytes as they come (not the size the server
 /// announces).
@@ -277,9 +277,16 @@ impl Master {
                     .tbr
                     .filter(|t| t.is_finite() && *t > 0.0)
                     .map(|t| crate::resolve::estimate(duration, t)),
+                // Its bitrate (a peak, often) times the length: about.
+                approx: true,
                 tbr: f.tbr,
                 // A variant of an HLS playlist: its pieces need ffmpeg to make one file (#569).
                 hls: true,
+                vcodec: f.vcodec.clone(),
+                acodec: f.acodec.clone(),
+                // SDR, as yt-dlp says of a picture of no HDR codec (the ones it reads as HDR
+                // are refused: `codecs`).
+                ..Default::default()
             })
             .collect();
         if !ties_are_harmless(&formats) {
@@ -293,6 +300,7 @@ impl Master {
             automatic: Vec::new(),
             language: None,
             direct: false,
+            needs_js_runtime: false,
         })
     }
 }
@@ -589,45 +597,6 @@ fn origin(u: &Url) -> (String, Option<String>, Option<u16>) {
     )
 }
 
-/// yt-dlp's codec preferences (its format sorter's, best last here): where formats tie on
-/// everything before, the better codec sorts later.
-fn picture_rank(c: Option<&str>) -> u8 {
-    let Some(c) = c else { return 1 };
-    let any = |p: &[&str]| p.iter().any(|x| c.starts_with(x));
-    match c {
-        "none" => 0,
-        _ if any(&["av01", "av1"]) => 10,
-        _ if any(&["vp9.2", "vp09.02", "vp9.02", "vp09.2"]) => 9,
-        _ if any(&["vp9", "vp09"]) => 8,
-        _ if any(&["h265", "x265", "hv", "hev"]) => 7,
-        _ if any(&["h264", "x264", "avc"]) => 6,
-        _ if any(&["vp8", "vp08"]) => 5,
-        _ if any(&["mp4v", "h263"]) => 4,
-        _ if any(&["theora"]) => 3,
-        _ => 2,
-    }
-}
-
-fn sound_rank(c: Option<&str>) -> u8 {
-    let Some(c) = c else { return 1 };
-    let any = |p: &[&str]| p.iter().any(|x| c.starts_with(x));
-    match c {
-        "none" => 0,
-        _ if any(&["flac", "alac"]) => 13,
-        _ if any(&["wav", "aiff"]) => 12,
-        _ if any(&["opus"]) => 11,
-        _ if any(&["vorbis", "ogg"]) => 10,
-        _ if any(&["aac"]) => 9,
-        _ if any(&["m4", "mp4"]) => 8,
-        _ if any(&["mp3"]) => 7,
-        _ if any(&["ac4", "ac-4"]) => 6,
-        _ if any(&["ec3", "eac3", "ec-3", "eac-3", "e-ac-3", "e-ac3"]) => 5,
-        _ if any(&["ac3", "ac-3"]) => 4,
-        _ if any(&["dts"]) => 3,
-        _ => 2,
-    }
-}
-
 /// yt-dlp's order of a stream's formats, worst first (its format sorter's fields that tell them
 /// apart: picture or not, resolution, frame rate, codecs, bitrate, sound or not, ID). Ties left
 /// between formats that would make different choices are refused ([`ties_are_harmless`]).
@@ -777,8 +746,8 @@ async fn read(url: &str, from: &FromBrowser, opts: &mdm_engine::Options) -> Opti
 struct Hops<'a> {
     /// The stream's scheme, host and port.
     origin: (String, Option<String>, Option<u16>),
-    /// The browser's cookie and referrer still go: every hop so far was to the stream's origin.
-    /// Once one wasn't, never again, for this request or the next.
+    /// The browser's cookie, referrer and origin still go: every hop so far was to the stream's
+    /// origin. Once one wasn't, never again, for this request or the next.
     credentials: bool,
     from: &'a FromBrowser,
     opts: &'a mdm_engine::Options,
@@ -787,7 +756,7 @@ struct Hops<'a> {
 impl Hops<'_> {
     /// `url`'s text and the address it came from, after at most [`MAX_REDIRECTS`] redirects.
     async fn get(&mut self, mut url: Url) -> Option<(Url, String)> {
-        use reqwest::header::{CONTENT_TYPE, COOKIE, LOCATION, REFERER};
+        use reqwest::header::{CONTENT_TYPE, COOKIE, LOCATION, ORIGIN, REFERER};
         let given = |s: &Option<String>| {
             s.as_deref()
                 .map(str::trim)
@@ -812,6 +781,10 @@ impl Hops<'_> {
                 }
                 if let Some(r) = given(&self.from.referer) {
                     req = req.header(REFERER, r);
+                }
+                // The page's Origin, as its player sent it (#900).
+                if let Some(o) = given(&self.from.origin) {
+                    req = req.header(ORIGIN, o);
                 }
             }
             let mut resp = req.send().await.ok()?;
@@ -998,7 +971,7 @@ mod tests {
         assert_eq!(v.title, "master");
         assert_eq!(v.duration, Some(20.0));
         let labels: Vec<String> = choices(&v, false).into_iter().map(|c| c.label).collect();
-        assert_eq!(labels, ["720p MP4", "360p MP4"]);
+        assert_eq!(labels, ["720p · H.264", "360p · H.264"]);
     }
 
     /// DRM, a live stream, a picture without its resolution, a playlist on another server, a
@@ -1142,24 +1115,25 @@ mod tests {
     /// than any real line), and a line just under the cap is read in linear time.
     #[test]
     fn crafted_attribute_lines_cost_no_square() {
-        let t = std::time::Instant::now();
-        for line in [
-            format!("#EXT-X-KEY:{}", "A".repeat(MAX_BYTES)),
-            format!("#EXT-X-KEY:{}", "A=\"".repeat(MAX_BYTES / 3)),
-            format!("#EXT-X-KEY:{}", "A".repeat(MAX_ATTRIBUTE_LINE - 20)),
-            format!(
-                "#EXT-X-KEY:METHOD=AES-128,{}",
-                "B".repeat(MAX_ATTRIBUTE_LINE - 40)
-            ),
-        ] {
-            let _ = attributes(&line);
-        }
-        assert!(
-            t.elapsed() < std::time::Duration::from_secs(1),
-            "{:?}",
-            t.elapsed()
-        );
+        // Longer than any real line: refused from its length alone.
         assert!(attributes(&format!("#EXT-X-KEY:{}", "A".repeat(MAX_BYTES))).is_none());
+        assert!(attributes(&format!("#EXT-X-KEY:{}", "A=\"".repeat(MAX_BYTES / 3))).is_none());
+        // Under the cap: 8 times the line costs about 8 times as long (not 64), on any machine.
+        let crafted = |n: usize| {
+            [
+                format!("#EXT-X-KEY:{}", "A".repeat(n)),
+                format!("#EXT-X-KEY:{}", "A=\"".repeat(n / 3)),
+                format!("#EXT-X-KEY:METHOD=AES-128,{}", "B".repeat(n)),
+            ]
+        };
+        let small = (MAX_ATTRIBUTE_LINE - 40) / mdm_labserver::growth::SCALE;
+        mdm_labserver::growth::assert_linear(small, crafted, |lines| {
+            for _ in 0..20 {
+                for line in &lines {
+                    std::hint::black_box(attributes(line));
+                }
+            }
+        });
         // The run's skip changes nothing: a key after a failed run is still found.
         let a = attributes("#EXT-X-KEY:AAAA BBB-9 METHOD=NONE").unwrap();
         assert_eq!(a.get("METHOD").map(String::as_str), Some("NONE"));
@@ -1424,6 +1398,7 @@ mod tests {
     fn browser() -> FromBrowser {
         FromBrowser {
             referer: Some("https://videos.test/watch".into()),
+            origin: Some("https://videos.test".into()),
             user_agent: Some("UA/1".into()),
             cookies: Some("sid=secret".into()),
             jar: vec![mdm_ipc::BrowserCookie {
@@ -1442,7 +1417,8 @@ mod tests {
     }
 
     /// The stream as the browser asked for it: its cookie header (never the jar), its page as
-    /// the referrer, its User-Agent, on both requests to the stream's server.
+    /// the referrer, its player's Origin (#900), its User-Agent, on both requests to the
+    /// stream's server.
     #[test]
     fn the_stream_is_asked_for_as_the_browser_did() {
         let s = Server::start(Arc::new(|path: &str| match path {
@@ -1463,6 +1439,7 @@ mod tests {
         for r in &seen {
             assert_eq!(r.header("cookie"), Some("sid=secret"));
             assert_eq!(r.header("referer"), Some("https://videos.test/watch"));
+            assert_eq!(r.header("origin"), Some("https://videos.test"));
             assert_eq!(r.header("user-agent"), Some("UA/1"));
         }
         // Not a playlist's address: not even asked.
@@ -1511,6 +1488,7 @@ mod tests {
         for r in &elsewhere {
             assert_eq!(r.header("cookie"), None, "{}", r.path);
             assert_eq!(r.header("referer"), None, "{}", r.path);
+            assert_eq!(r.header("origin"), None, "{}", r.path);
             assert_eq!(r.header("user-agent"), Some("UA/1"));
         }
         // Back to the stream's server after another: still none.

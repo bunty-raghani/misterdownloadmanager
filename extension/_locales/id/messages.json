@@ -92,6 +92,9 @@
       }
     }
   },
+  "popup_undo": {
+    "message": "Urungkan"
+  },
   "popup_excluded": {
     "message": "Unduhan dari $site$ tetap di browser",
     "placeholders": {

@@ -14,10 +14,15 @@
 // browser captured, the button on, the site not excluded).
 (() => {
   // One button per page: a copy cut off from the extension (after an update) gives way to the
-  // new one.
+  // new one. Chromium runs the new copy where the old one ran, so it stops the old one here
+  // (`teardown`). Firefox gives the new copy a world of its own: it can't reach the old copy,
+  // whose listeners died with it while its button stayed on the page, frozen where it was, shown
+  // if it was then: two buttons over the video (#336, seen in full screen). Any button already
+  // on the page is such a copy's: it goes.
   const prev = globalThis.__mdmVideoButton;
   if (prev && typeof prev === "object" && prev.alive()) return;
   if (prev && typeof prev.teardown === "function") prev.teardown();
+  for (const old of document.querySelectorAll("mdm-video-button")) old.remove();
   const ext = globalThis.browser ?? globalThis.chrome;
 
   // A video worth a button: big enough to be content, not a short muted looping clip (an
@@ -201,11 +206,18 @@
     }
   }
 
+  // A quality's size: exactly the bytes of the streams it downloads, or "~" before one the app
+  // only estimates (`approx`, #801: "~532 MB"); "" when unknown.
+  function choiceSize(c, lang) {
+    const size = sizeText(c && c.size, lang);
+    return size && c.approx === true ? `~${size}` : size;
+  }
+
   // What a quality's row says: the app's name for it (in the app's language) and its size. Only
   // ever set as text, never as markup.
   function rowText(choice, lang) {
     const c = choice && typeof choice === "object" ? choice : {};
-    return { name: String(c.label ?? "").slice(0, 200), size: sizeText(c.size, lang) };
+    return { name: String(c.label ?? "").slice(0, 200), size: choiceSize(c, lang) };
   }
 
   // Which of the app's qualities go in which tab: `choice.audio === true` is sound only, anything
@@ -266,6 +278,17 @@
     if (r && (r.why === "unnamed" || r.why === "feed")) return { state: r.why };
     if (!r || r.fallback || !r.lookup || typeof r.lookup !== "object") return { state: "use-window" };
     return r.lookup;
+  }
+
+  // The app's word on what the look-up lacked, to show with its qualities (#852: YouTube without
+  // a JavaScript runtime lists only some): its text, its link's words and the help page it
+  // opens, on MDM's own site only. Null when there is none (an app older than it) or it isn't one.
+  function noticeOf(s) {
+    const n = s && typeof s === "object" ? s.notice : null;
+    if (!n || typeof n !== "object" || typeof n.text !== "string" || !n.text.trim()) return null;
+    const ok = typeof n.url === "string" && /^https:\/\/misterdownloadmanager\.com\//.test(n.url);
+    const link = ok && typeof n.link === "string" && n.link.trim() ? n.link.slice(0, 100) : "";
+    return { text: n.text.slice(0, 400), link, url: link ? n.url : "" };
   }
 
   // What a lookup's state (or replyState's) comes to, as the menu does it: "follow" it while the
@@ -656,8 +679,8 @@
 
   // ---- the button's words (its chip, its tip, the menu's rows): plain functions, run as they are
   // by tools/extension/test.mjs. A quality is one of the app's choices (`label`, `ext`, `size`,
-  // `audio`, and from a newer app `height`, `fps`, `kbps`); the video's own plain file is
-  // {file: true, height, ext}.
+  // `audio`, and from a newer app `height`, `fps`, `kbps`, then `codec`, `range`, `approx`); the
+  // video's own plain file is {file: true, height, ext}.
 
   // A quality's short name: 4K and 8K as people say them, else the picture's height, the sound,
   // or the app's own label (a file known only by its type).
@@ -672,16 +695,22 @@
     return String(c.label ?? "").slice(0, 200);
   }
 
-  // What else the menu says of a quality: its file type, its frame rate, its sound's bitrate.
-  // An older app's choice (no height) says it all in its label: nothing more.
+  // What else the menu says of a quality: its file type, its codec, its frame rate and its
+  // range (#755: "VP9 · 60 fps · HDR"), its sound's bitrate. The type goes without saying when
+  // it is MP4 and the codec is said (every merged video is an MP4). An older app's choice (no
+  // height) says it all in its label: nothing more.
   function qualityMeta(c, t) {
     if (!c || typeof c !== "object") return "";
     // The sound's rows say what they are in their label; their bitrate when the app says it.
-    // (fps and kbps are the same in every language.)
+    // (fps, kbps, codecs and HDR are the same in every language.)
     if (c.audio === true) return Number(c.kbps) > 0 ? `${Math.round(c.kbps)} kbps` : "";
     if (!c.height && !c.file) return "";
-    const parts = [String(c.ext || "").toUpperCase()];
+    const word = (x) => (typeof x === "string" ? x.trim().slice(0, 24) : "");
+    const codec = word(c.codec);
+    const ext = String(c.ext || "").toUpperCase();
+    const parts = [codec && ext === "MP4" ? "" : ext, codec];
     if (Number(c.fps) > 0) parts.push(`${Math.round(c.fps)} fps`);
+    parts.push(word(c.range));
     return parts.filter(Boolean).join(" · ");
   }
 
@@ -708,7 +737,7 @@
     if (!c) return look && look.state === "pending" ? t("video_tip_best") : t("video_download");
     const name = qualityName(c, t);
     const what = c.height || c.file ? [name, String(c.ext || "").toUpperCase()].filter(Boolean).join(" ") : name;
-    const size = sizeText(c.size, lang);
+    const size = choiceSize(c, lang);
     return t("video_tip", size ? `${what} · ${size}` : what);
   }
 
@@ -940,6 +969,8 @@ button:focus-visible { outline: none; }
 .note { padding: 6px 8px; color: var(--tx2); white-space: normal; }
 .note[hidden] { display: none; }
 .note .why { display: block; margin-top: 3px; font-size: 11px; overflow-wrap: anywhere; }
+.note.warn { color: var(--warn); }
+.note a { display: inline-block; margin-top: 3px; color: var(--accent); text-decoration: underline; }
 .rows { max-height: min(300px, 45vh); overflow: auto; overscroll-behavior: contain; }
 .menu button { position: relative; display: flex; width: 100%; height: 28px; gap: 8px; padding-inline: 8px; border-radius: 4px; cursor: default; }
 .menu button:hover { background: var(--hov); }
@@ -1063,6 +1094,26 @@ button:focus-visible { outline: none; }
   let lookTimer = 0;
   // A stream's manifest the page plays as its file (Safari's way, Chrome's own HLS): looked up.
   const STREAM = /\.(m3u8|mpd)(?:[?#]|$)/i;
+  // A web server's programs and a page (background.js' SCRIPT_EXTENSIONS and PAGE_EXTENSIONS):
+  // a file such an address sends is of another type, which only its server says (#695, #800).
+  const SCRIPT_EXTENSIONS = ["php", "php3", "php4", "php5", "phtml", "asp", "aspx", "ashx", "axd", "jsp", "jspx", "do", "action", "cgi", "pl", "cfm", "py", "rb", "htm", "html", "xhtml", "shtml", "dhtml"];
+  // A plain file's type as its address says it: its extension, or a script's `file=` value's
+  // (stream.php?file=x.mp4: MP4); none for a script's alone (not "PHP": the file isn't one).
+  function fileType(src) {
+    let u;
+    try {
+      u = new URL(src);
+    } catch {
+      return "";
+    }
+    const ext = ((/\.([a-z0-9]{2,5})$/i.exec(u.pathname) || [])[1] || "").toLowerCase();
+    if (!SCRIPT_EXTENSIONS.includes(ext) && ext) return ext;
+    for (const [k, v] of u.searchParams) {
+      const given = /^(file|filename)$/i.test(k) && /\.(mp4|m4v|webm|mkv|mov|avi|wmv|flv|3gp|ogv|mp3|m4a|aac|ogg|oga|opus|flac|wav|wma)$/i.exec(v.trim());
+      if (given) return given[1].toLowerCase();
+    }
+    return "";
+  }
   // What the button sends for a video, and its look-up's key (none when nothing names the video).
   const lookKey = (d) => (d.url === null ? null : `${d.url} ${d.src}`);
   // What download sends for the video now ({v, d, key}), kept a moment (the DOM walk is not free).
@@ -1078,15 +1129,7 @@ button:focus-visible { outline: none; }
   // one asked, or null.
   function lookOf(c) {
     if (!c || c.d.drm) return null;
-    if (c.d.src && !STREAM.test(c.d.src)) {
-      let ext = "";
-      try {
-        ext = (/\.([a-z0-9]{2,5})$/i.exec(new URL(c.d.src).pathname) || [])[1] || "";
-      } catch {
-        // No type to say.
-      }
-      return { file: true, height: c.v.videoHeight || 0, ext: ext.toLowerCase() };
-    }
+    if (c.d.src && !STREAM.test(c.d.src)) return { file: true, height: c.v.videoHeight || 0, ext: fileType(c.d.src) };
     return (c.key && looks.get(c.key)) || null;
   }
   // A look-up worth keeping: one under way, or one that found the video (and wasn't picked from:
@@ -1442,6 +1485,9 @@ button:focus-visible { outline: none; }
   }
 
   function show(v) {
+    // Cut off from the extension (updated or removed) and still running (Firefox may leave such
+    // a copy going in its own world beside the new one): it goes instead of showing (#336).
+    if (!ext.runtime?.id) return teardown();
     if (video !== v) {
       video = v;
       held = null;
@@ -1931,6 +1977,7 @@ button:focus-visible { outline: none; }
     $(".mh .s").textContent = headerLine("", video && video.duration, site);
     rows.replaceChildren();
     note.hidden = true;
+    note.classList.remove("warn");
     note.replaceChildren();
     const best = bestOf(look);
     if (look && look.file) {
@@ -1958,10 +2005,12 @@ button:focus-visible { outline: none; }
         rows.append(cap);
         for (const i of groups[kind]) rows.append(row(look.choices[i], i, (n += 1), look.choices[i] === best));
       }
+      tell(noticeOf(look));
     } else if (look) {
       // What the look-up came to, in its words; the window does the rest.
       const a = lookupAction(look, t);
       if (a.act === "say" || a.act === "flash") say(a.text, a.detail);
+      tell(noticeOf(look));
     }
     if (menuOpen) position();
   }
@@ -1976,6 +2025,30 @@ button:focus-visible { outline: none; }
       note.append(why);
     }
     note.hidden = !text;
+  }
+
+  // The app's word on what the look-up lacked (noticeOf), above the qualities, with its help
+  // page's link; under the menu's own message when it has one.
+  function tell(n) {
+    if (!n) return;
+    const words = document.createElement("span");
+    words.className = "why";
+    words.textContent = n.text;
+    if (note.hidden) {
+      note.replaceChildren();
+      words.className = "";
+    }
+    note.append(words);
+    if (n.link) {
+      const a = document.createElement("a");
+      a.href = n.url;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.textContent = n.link;
+      note.append(document.createElement("br"), a);
+    }
+    note.classList.add("warn");
+    note.hidden = false;
   }
 
   const span = (cls, text) => {
@@ -2008,7 +2081,7 @@ button:focus-visible { outline: none; }
     mi.append(arrowIcon.cloneNode(true));
     const name = c ? [qualityName(c, t), c.height || c.file ? String(c.ext || "").toUpperCase() : ""].filter(Boolean).join(" ") : "";
     const what = [name, c && c.fps ? `${Math.round(c.fps)} fps` : ""].filter(Boolean).join(" · ");
-    b.append(mi, span("lead", t("video_download_best")), span("f", what), span("z", c ? sizeText(c.size, lang) : ""));
+    b.append(mi, span("lead", t("video_download_best")), span("f", what), span("z", c ? choiceSize(c, lang) : ""));
     return b;
   }
   const arrowIcon = $(".tpl svg");

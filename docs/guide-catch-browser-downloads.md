@@ -52,7 +52,7 @@ You don't need to start MDM first: if it isn't running, it starts by itself.
 ## Choose what MDM takes
 
 - **Which file types:** **Options → File types → Automatically start downloading the following file types**. Add or remove types, separated by spaces.
-- **Sites to leave alone:** **Options → File types → Don't start downloading automatically from the following sites**. Add the site's name, for example `downloads.example.com` or `*.example.com`.
+- **Sites to leave alone:** **Options → File types → Don't start downloading automatically from the following sites**. Add the site's name, for example `example.com`: it covers `www.example.com` and the site's other subdomains, and the files its pages link to on another server.
 - **One browser only:** **Options → General → Capture downloads from the following browsers**. Untick the ones MDM should leave alone.
 
 ![Options, File types: the file types MDM takes from the browser, and the sites it leaves alone](images/help/catch-file-types.webp)

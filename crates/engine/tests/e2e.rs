@@ -473,6 +473,89 @@ async fn slow_connections_reconnect_instead_of_holding_the_end() {
     );
 }
 
+/// Download `path` from `s` as `fetch` does, counting the connections shed as much slower than
+/// the others (the download's events, read as they come: the log keeps only the last ones).
+async fn fetch_counting_sheds(
+    s: &LabServer,
+    path: &str,
+    seed: u64,
+    opts: Options,
+) -> (Vec<LogEntry>, u64, usize) {
+    let dir = tempfile::tempdir().unwrap();
+    let req = Request {
+        url: s.url(path).parse().unwrap(),
+        headers: Default::default(),
+        dest: Destination::Dir(dir.path().to_owned()),
+    };
+    let slow = mdm_engine::Error::SlowConnection.to_string();
+    let dl = Download::start(req, opts);
+    let (mut seen, mut shed) = (0, 0);
+    loop {
+        let v = dl.snapshot();
+        let since = seen;
+        for e in v.events.iter().filter(|e| e.seq > since) {
+            shed += usize::from(e.text.contains(&slow));
+            seen = e.seq;
+        }
+        if !matches!(
+            v.state,
+            mdm_engine::download::State::Probing
+                | mdm_engine::download::State::Downloading
+                | mdm_engine::download::State::Completing
+        ) {
+            break;
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(20)).await;
+    }
+    let out = dl.wait().await.expect("download succeeds");
+    let data = std::fs::read(&out.path).unwrap();
+    let mut want = vec![0; data.len()];
+    content::fill(seed, 0, &mut want);
+    assert!(data == want, "content mismatch");
+    tokio::time::timeout(SETTLE, s.settled())
+        .await
+        .expect("every request ends");
+    (s.log(), out.size, shed)
+}
+
+#[tokio::test]
+async fn connections_sharing_a_link_are_not_shed() {
+    // One 16 MB/s line the connections share (#896), and ranges answered half a second late (a
+    // far server's handshakes): the first connection has the line to itself meanwhile, then
+    // each of the 8 gets 2 MB/s. Measured against that first speed every one of them read as
+    // "much slower than the others", and they were reconnected together every few seconds (26
+    // times for 96 MB on an 8 MB/s line), each time a dip in the speed and half a second more.
+    let s = server("link_rate=16M&range_latency_ms=500").await;
+    let (_, size, shed) =
+        fetch_counting_sheds(&s, "/gen/80M/line.bin?seed=33", 33, fast_opts()).await;
+    assert_eq!(size, 80 << 20);
+    assert_eq!(shed, 0, "connections sharing the line were shed as slow");
+}
+
+#[tokio::test]
+async fn a_slow_connection_on_a_shared_link_is_still_replaced() {
+    // The same shared line, every third request crawling at 1 KB/s: a crawling connection is
+    // still far under its share of the line, and reconnects instead of holding the end.
+    let s = server("link_rate=16M&slow_every=3&slow_rate=1K").await;
+    let opts = Options {
+        min_split: 64 << 10,
+        ..fast_opts()
+    };
+    let (log, size, shed) = fetch_counting_sheds(&s, "/gen/16M/slow.bin?seed=34", 34, opts).await;
+    assert_eq!(size, 16 << 20);
+    let slow: Vec<_> = log
+        .iter()
+        .filter(|e| e.rate == Some(1024))
+        .map(|e| (e.t_end_ms - e.t_start_ms, e.bytes_sent, e.body_len))
+        .collect();
+    assert!(!slow.is_empty(), "the fault was there");
+    assert!(shed > 0, "no slow connection was shed");
+    assert!(
+        slow.iter().all(|(ms, ..)| *ms < 20_000),
+        "a slow request held its piece (ms, sent, asked): {slow:?}"
+    );
+}
+
 #[tokio::test]
 async fn a_weak_etag_means_no_if_range() {
     let s = server("rate=4M&etag=weak").await;
@@ -1923,7 +2006,10 @@ async fn a_slow_disk_does_not_stop_the_transfer() {
         behind.shed, behind.received, behind.quiet
     );
     // Measured: none shed, at most 11 ms without a byte (until the last sixteenth, which may
-    // wait for the disk with the rest of its connection's memory).
+    // wait for the disk with the rest of its connection's memory). One flush during the
+    // transfer, then none until the end: a second one right after the first, expected by the
+    // seconds since it rather than the bytes, held the writes for 3 s on GitHub's macOS runners
+    // and nothing arrived for 1.2 to 1.5 s of it (`Synced::expected`).
     assert_eq!(behind.shed, 0, "connections shed for the disk's pace");
     assert!(
         behind.quiet < std::time::Duration::from_millis(1200),
@@ -2210,4 +2296,127 @@ async fn a_capped_download_resumes_within_the_cap() {
         !spans.is_empty() && spans.iter().all(|n| *n <= CAP),
         "{spans:?}"
     );
+}
+
+/// Download `path` from `s` into a fresh folder the engine names it in; its name and its bytes
+/// (the generated file `seed`, with `head` over its first bytes).
+async fn named_download(
+    s: &LabServer,
+    path: &str,
+    seed: u64,
+    head: &[u8],
+    opts: Options,
+) -> String {
+    let dir = tempfile::tempdir().unwrap();
+    let req = Request {
+        url: s.url(path).parse().unwrap(),
+        headers: Default::default(),
+        dest: Destination::Dir(dir.path().to_owned()),
+    };
+    let out = Download::start(req, opts)
+        .wait()
+        .await
+        .expect("download succeeds");
+    let data = std::fs::read(&out.path).unwrap();
+    let mut want = vec![0; data.len()];
+    content::fill_with_head(seed, 0, &mut want, head);
+    assert!(data == want, "{path}: content mismatch");
+    assert_eq!(data.len() as u64, 1 << 20, "{path}");
+    out.path.file_name().unwrap().to_string_lossy().into_owned()
+}
+
+/// #695, #800: a video a server's program sends (`/stream.php?id=…` as video/mp4) is named by
+/// its type, its `file=` value, its bytes and the page's title, never the script's extension;
+/// the server's own name still wins; segmented as any download.
+#[tokio::test]
+async fn a_scripts_video_is_named_by_what_it_is() {
+    let s = server("").await;
+    let titled = || Options {
+        page_title: Some("Lecture: one".into()),
+        ..fast_opts()
+    };
+    let mp4 = content::media_head("mp4").unwrap();
+    // Its type: video/mp4.
+    assert_eq!(
+        named_download(&s, "/stream.php?id=7", 0, &[], fast_opts()).await,
+        "stream.mp4"
+    );
+    // Its `file=` value, before the page's title.
+    assert_eq!(
+        named_download(&s, "/stream.php?file=clip.mp4&token=x", 0, &[], titled()).await,
+        "clip.mp4"
+    );
+    // The page's title for a name that means nothing.
+    assert_eq!(
+        named_download(&s, "/remote_control.php?id=9&seed=4", 4, &[], titled()).await,
+        "Lecture one.mp4"
+    );
+    // No type said (none, or octet-stream): its first bytes say it, and are saved as sent.
+    assert_eq!(
+        named_download(
+            &s,
+            "/remote_control.php?id=9&type=none&magic=mp4&seed=5",
+            5,
+            mp4,
+            titled()
+        )
+        .await,
+        "Lecture one.mp4"
+    );
+    assert_eq!(
+        named_download(
+            &s,
+            "/stream.php?id=3&type=application/octet-stream&magic=webm&seed=6",
+            6,
+            content::media_head("webm").unwrap(),
+            fast_opts()
+        )
+        .await,
+        "stream.webm"
+    );
+    // Nothing says what it is: the script's name stays (nothing is guessed).
+    assert_eq!(
+        named_download(&s, "/stream.php?id=3&type=none&seed=8", 8, &[], fast_opts()).await,
+        "stream.php"
+    );
+    // The server's own name (Content-Disposition) wins over all of it.
+    assert_eq!(
+        named_download(
+            &s,
+            "/stream.php?file=clip.mp4&inline=0&cd=Lecture%201.webm",
+            0,
+            &[],
+            titled()
+        )
+        .await,
+        "Lecture 1.webm"
+    );
+    // Download File Info's look-up gives the same name, its bytes kept for the download.
+    let opts = titled();
+    let url: url::Url = s
+        .url("/remote_control.php?id=9&type=none&magic=mp4&seed=5")
+        .parse()
+        .unwrap();
+    let (info, kept) = mdm_engine::probe_kept(url.clone(), Default::default(), &opts)
+        .await
+        .unwrap();
+    assert_eq!(info.file_name, "Lecture one.mp4");
+    let dir = tempfile::tempdir().unwrap();
+    let out = Download::start_with(
+        Request {
+            url,
+            headers: Default::default(),
+            dest: Destination::Dir(dir.path().to_owned()),
+        },
+        opts,
+        kept,
+    )
+    .wait()
+    .await
+    .expect("download succeeds");
+    let data = std::fs::read(&out.path).unwrap();
+    let mut want = vec![0; data.len()];
+    content::fill_with_head(5, 0, &mut want, mp4);
+    assert!(data == want, "the kept answer's first bytes are the file's");
+    assert_eq!(out.path.file_name().unwrap(), "Lecture one.mp4");
 }

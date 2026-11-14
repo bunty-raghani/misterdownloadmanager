@@ -92,6 +92,9 @@
       }
     }
   },
+  "popup_undo": {
+    "message": "復原"
+  },
   "popup_excluded": {
     "message": "來自 $site$ 的下載保留在瀏覽器中",
     "placeholders": {

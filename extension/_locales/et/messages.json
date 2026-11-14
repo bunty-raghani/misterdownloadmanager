@@ -92,6 +92,9 @@
       }
     }
   },
+  "popup_undo": {
+    "message": "Võta tagasi"
+  },
   "popup_excluded": {
     "message": "Allalaadimised saidilt $site$ jäävad brauserisse",
     "placeholders": {

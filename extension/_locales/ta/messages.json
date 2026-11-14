@@ -92,6 +92,9 @@
       }
     }
   },
+  "popup_undo": {
+    "message": "செயல்தவிர்"
+  },
   "popup_excluded": {
     "message": "$site$ இலிருந்து பதிவிறக்கங்கள் உலாவியிலேயே இருக்கும்",
     "placeholders": {

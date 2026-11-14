@@ -489,7 +489,8 @@ async fn system(host: &str, port: u16) -> Result<Vec<IpAddr>, String> {
 /// The resolver for a reqwest client outside the engine (release lists, the update check), so it
 /// follows `choice` and `route` as downloads do (see `net::client_builder`).
 pub fn client_resolver(choice: &DnsChoice, route: &Route) -> Arc<dyn Resolve> {
-    Arc::new(Resolver::new(&[], 443, choice, &[], route))
+    // Their requests have an overall timeout, no connect timeout of their own.
+    Arc::new(Resolver::new(&[], 443, choice, &[], route, None))
 }
 
 /// `host`'s addresses as `choice` finds them, those `route` can reach (FTP, and anything outside
@@ -571,6 +572,14 @@ const RACE_BUDGET: Duration = Duration::from_secs(3);
 /// How long a winner is preferred without racing again.
 const REMEMBER: Duration = Duration::from_secs(300);
 
+/// How long a lookup may take of a client's connect timeout, which counts the lookup too: nine
+/// tenths, so that a DNS that never answers fails as a lookup (`fault::Fault::NoSuchHost`) before
+/// the timeout calls it a server that didn't answer in time, a server never asked. The system's
+/// resolver can take longer than the timeout to give up (macOS's did, on GitHub's runners).
+fn lookup_limit(connect_timeout: Duration) -> Duration {
+    connect_timeout.mul_f64(0.9)
+}
+
 pub(crate) struct Resolver {
     /// Fixed addresses for host names, like hosts-file entries (`Options::hosts`).
     hosts: HashMap<String, Vec<IpAddr>>,
@@ -579,6 +588,8 @@ pub(crate) struct Resolver {
     /// The chosen DNS, and its resolver once the first lookup made it (shared by the client's
     /// connections, so its cache serves all of them).
     dns: Arc<Chosen>,
+    /// How long a lookup may take (`lookup_limit`); None: as long as the resolver takes.
+    limit: Option<Duration>,
 }
 
 struct Chosen {
@@ -597,6 +608,7 @@ impl Resolver {
         dns: &DnsChoice,
         extra_roots: &[Vec<u8>],
         route: &Route,
+        connect_timeout: Option<Duration>,
     ) -> Self {
         Resolver {
             hosts: hosts
@@ -610,6 +622,7 @@ impl Resolver {
                 route: route.clone(),
                 resolver: tokio::sync::OnceCell::new(),
             }),
+            limit: connect_timeout.map(lookup_limit),
         }
     }
 }
@@ -620,6 +633,7 @@ impl Resolve for Resolver {
         let fixed = self.hosts.get(&host).cloned();
         let port = self.port;
         let dns = self.dns.clone();
+        let limit = self.limit;
         Box::pin(async move {
             // Its time is left out of the connection's (#140, `server::dns_spent`).
             let started = std::time::Instant::now();
@@ -630,25 +644,40 @@ impl Resolve for Resolver {
                     }))
                         as Box<dyn std::error::Error + Send + Sync>);
                 }
-                let ips: Vec<IpAddr> = match fixed {
-                    Some(ips) => ips,
-                    None if dns.choice.is_system() || local_name(&host) => {
-                        tokio::net::lookup_host((host.as_str(), port))
+                let by_system = dns.choice.is_system() || local_name(&host);
+                let lookup = async {
+                    Ok::<_, Box<dyn std::error::Error + Send + Sync>>(match fixed {
+                        Some(ips) => ips,
+                        None if by_system => tokio::net::lookup_host((host.as_str(), port))
                             .await?
                             .map(|a| a.ip())
-                            .collect()
-                    }
-                    None => {
-                        let resolver = dns
-                            .resolver
-                            .get_or_init(|| build(&dns.choice, &dns.extra_roots, &dns.route))
-                            .await
-                            .as_ref()
-                            .map_err(|e| {
-                                Box::new(e.clone()) as Box<dyn std::error::Error + Send + Sync>
-                            })?;
-                        ask(resolver, &dns.choice, &host, port).await?
-                    }
+                            .collect(),
+                        None => {
+                            let resolver = dns
+                                .resolver
+                                .get_or_init(|| build(&dns.choice, &dns.extra_roots, &dns.route))
+                                .await
+                                .as_ref()
+                                .map_err(|e| {
+                                    Box::new(e.clone()) as Box<dyn std::error::Error + Send + Sync>
+                                })?;
+                            ask(resolver, &dns.choice, &host, port).await?
+                        }
+                    })
+                };
+                let ips: Vec<IpAddr> = match limit {
+                    None => lookup.await?,
+                    Some(limit) => tokio::time::timeout(limit, lookup).await.map_err(|_| {
+                        DnsError::Unreachable {
+                            dns: if by_system {
+                                "the system's DNS".into()
+                            } else {
+                                dns.choice.label.clone()
+                            },
+                            host: host.clone(),
+                            why: format!("no answer in {:.1} s", limit.as_secs_f64()),
+                        }
+                    })??,
                 };
                 // An address of the family the adapter lacks would be connected unbound (#35).
                 let ips = reachable(ips, &dns.route)?;
@@ -913,10 +942,12 @@ mod tests {
         assert!(failed.is_empty(), "failed: {failed:?}");
     }
 
-    #[tokio::test]
+    /// On Tokio's paused clock: a race would wait for its connection's time limit, which the
+    /// clock skips to; asked nothing, no time passes, however busy the machine.
+    #[tokio::test(start_paused = true)]
     async fn one_address_is_not_raced() {
         let ip: IpAddr = "192.0.2.1".parse().unwrap();
-        let started = Instant::now();
+        let started = tokio::time::Instant::now();
         assert_eq!(
             reachable_first("single.test", vec![ip], 9, &Route::Any).await,
             vec![ip]

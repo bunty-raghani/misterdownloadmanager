@@ -7,6 +7,7 @@
 use std::sync::mpsc::{Receiver, Sender, channel};
 use std::sync::{Arc, Mutex};
 
+mod beside;
 mod watch;
 
 pub use watch::Icon;
@@ -25,6 +26,8 @@ pub enum TrayCmd {
     Toggle,
     AddUrl,
     Batch,
+    /// Add batch download from clipboard (#709).
+    BatchClipboard,
     LimiterOn,
     LimiterOff,
     Scheduler,
@@ -38,7 +41,7 @@ pub enum TrayCmd {
 
 /// Whether a tray shows MDM's icon at all, so hiding a window there can be undone. Windows and
 /// macOS (the menu bar) always have one; on Linux only when a StatusNotifierItem host runs (#59),
-/// asked each time: it may come and go.
+/// asked each time: it may come and go. (Linux's icon itself is made beside the window: `Setup`.)
 pub fn available() -> bool {
     #[cfg(target_os = "linux")]
     return crate::unix::tray_host();
@@ -83,23 +86,32 @@ pub fn on_close(keep_running: bool, tray: bool, icon: Icon, taskbar: bool) -> On
 /// The longest download name in the tray menu, in characters (the rest ends in "…").
 const MENU_NAME_MAX: usize = 48;
 
+/// The tray icon as the window holds it: the icon and its menu (Windows, macOS: made on the
+/// window's thread; Linux: on a thread of its own, see `Setup`), and the commands they send.
 pub struct Tray {
+    native: Held,
+    rx: Receiver<TrayCmd>,
+    /// The tip shown and when, so the shell is told at most once a second.
+    tip: std::cell::RefCell<(String, Option<std::time::Instant>)>,
+    /// What Start and Stop main download queue were last set to (told only when it changes).
+    queue_running: std::cell::Cell<Option<bool>>,
+    /// The downloads "Downloads in progress" was last given (rebuilt only when they change).
+    shown_downloads: std::cell::RefCell<Vec<(u64, String)>>,
+}
+
+/// The icon and its menu, as the system's tray library makes them.
+struct Native {
     limiter_on: CheckMenuItem,
     limiter_off: CheckMenuItem,
     /// Start and Stop main download queue: one of them enabled, as the queue runs.
     start_queue: MenuItem,
     stop_queue: MenuItem,
-    queue_running: std::cell::Cell<Option<bool>>,
     /// The icon itself, kept for as long as the tray (Windows asks and tells the shell about it
     /// from the watcher's thread, through its hidden window).
     #[cfg_attr(windows, allow(dead_code))]
     tray: TrayIcon,
-    /// The tip shown and when, so the shell is told at most once a second.
-    tip: std::cell::RefCell<(String, Option<std::time::Instant>)>,
-    rx: Receiver<TrayCmd>,
     /// "Downloads in progress": one entry per running download, rebuilt when they change.
     downloads: Submenu,
-    shown_downloads: std::cell::RefCell<Vec<(u64, String)>>,
     download_ids: Arc<Mutex<Vec<(MenuId, u64)>>>,
     /// Every entry with its English text, to translate again when the language changes.
     labels: Vec<(Entry, &'static str)>,
@@ -127,6 +139,212 @@ enum Entry {
 }
 
 impl Tray {
+    /// The icon and its menu; events wake `ctx`. None if the shell refuses the icon (logged).
+    /// Linux makes it beside the window instead: [`Setup`].
+    #[cfg(not(target_os = "linux"))]
+    pub fn new(ctx: &egui::Context, limiter: bool) -> Option<Tray> {
+        let (tx, rx) = channel();
+        Some(Tray::with(Native::new(ctx, limiter, tx)?, rx))
+    }
+
+    fn with(native: Held, rx: Receiver<TrayCmd>) -> Tray {
+        Tray {
+            native,
+            rx,
+            tip: Default::default(),
+            queue_running: std::cell::Cell::new(None),
+            shown_downloads: Default::default(),
+        }
+    }
+
+    /// Run `job` on the icon: here, or on its own thread on Linux (never waiting for it there).
+    fn at(&self, job: impl FnOnce(&Native) + Send + 'static) {
+        #[cfg(not(target_os = "linux"))]
+        job(&self.native);
+        #[cfg(target_os = "linux")]
+        self.native.run(job);
+    }
+
+    /// What the shell says of the icon: [`Native::icon`].
+    #[cfg(any(target_os = "windows", target_os = "macos"))]
+    pub fn icon(&self) -> Icon {
+        self.native.icon()
+    }
+
+    /// [`Native::icon_now`].
+    #[cfg(any(target_os = "windows", target_os = "macos"))]
+    pub fn icon_now(&self) -> Icon {
+        self.native.icon_now()
+    }
+
+    /// [`Native::rescue`].
+    #[cfg(windows)]
+    pub fn rescue(&self) -> bool {
+        self.native.rescue()
+    }
+
+    /// The commands since the last call.
+    pub fn poll(&self) -> Vec<TrayCmd> {
+        self.rx.try_iter().collect()
+    }
+
+    /// Translate the menu again (the interface language changed).
+    pub fn relabel(&self) {
+        self.at(Native::relabel);
+    }
+
+    /// Keep Start / Stop main download queue in step with the queue (the menu is only told
+    /// when it changes).
+    pub fn set_queue(&self, running: bool) {
+        if self.queue_running.replace(Some(running)) != Some(running) {
+            self.at(move |n| n.set_queue(running));
+        }
+    }
+
+    /// The icon's tip: the app's name, and while downloads run how many and how fast.
+    pub fn set_tooltip(&self, tip: &str) {
+        // The shell draws it: without isolates (#919).
+        let tip = crate::i18n::os_text(tip);
+        let tip = tip.as_str();
+        let mut last = self.tip.borrow_mut();
+        let due = last
+            .1
+            .is_none_or(|t| t.elapsed() >= std::time::Duration::from_secs(1));
+        if last.0 != tip && due {
+            // Windows: the watcher's thread sets it, as setting it waits for Explorer (#747).
+            #[cfg(windows)]
+            if !self.native.tip(tip) {
+                return;
+            }
+            #[cfg(not(windows))]
+            {
+                let tip = tip.to_owned();
+                self.at(move |n| {
+                    n.tip(&tip);
+                });
+            }
+            *last = (tip.to_owned(), Some(std::time::Instant::now()));
+        }
+    }
+
+    /// "Downloads in progress": the running downloads (id, name), the menu rebuilt only when they
+    /// change; greyed when none runs.
+    pub fn set_downloads(&self, running: &[(u64, String)]) {
+        if *self.shown_downloads.borrow() == running {
+            return;
+        }
+        let running = running.to_vec();
+        *self.shown_downloads.borrow_mut() = running.clone();
+        self.at(move |n| n.set_downloads(&running));
+    }
+
+    /// Keep the Speed Limiter checks in step with the app.
+    pub fn set_limiter(&self, on: bool) {
+        self.at(move |n| n.set_limiter(on));
+    }
+}
+
+/// The icon as [`Tray`] holds it: itself (Windows, macOS), or the thread that keeps it (Linux).
+#[cfg(not(target_os = "linux"))]
+type Held = Native;
+#[cfg(target_os = "linux")]
+type Held = beside::Beside<Native>;
+
+/// Linux's tray icon on its way (#828): made on a thread of its own, as its library waits for the
+/// session bus, for ever where none answers. Until it is made the window behaves as with no tray
+/// host; [`Setup::poll`] hands it over once it is, however late.
+#[cfg(target_os = "linux")]
+pub struct Setup {
+    native: Option<beside::Beside<Native>>,
+    rx: Option<Receiver<TrayCmd>>,
+    started: std::time::Instant,
+    /// The interface language the menu was made in, to translate it again if it changed since.
+    lang: &'static str,
+    /// The phase last seen, to log each change once.
+    told: beside::Phase,
+}
+
+/// What [`Setup::poll`] found.
+#[cfg(target_os = "linux")]
+pub enum Came {
+    /// Not yet: the window behaves as with no tray host.
+    Waiting,
+    /// The icon, made.
+    Up(Tray),
+    /// No icon this run (logged).
+    Failed,
+}
+
+#[cfg(target_os = "linux")]
+impl Setup {
+    /// Start making the icon and its menu beside the window; its events, and its coming, wake
+    /// `ctx`.
+    pub fn start(ctx: &egui::Context, limiter: bool) -> Setup {
+        let (tx, rx) = channel();
+        let made = ctx.clone();
+        let wake = ctx.clone();
+        let native = beside::Beside::start(
+            "tray icon",
+            move || Native::new(&made, limiter, tx),
+            move || wake.request_repaint(),
+        );
+        // To log a long wait once it is long, even with nothing else to draw.
+        ctx.request_repaint_after(beside::WAIT);
+        Setup {
+            native: Some(native),
+            rx: Some(rx),
+            started: std::time::Instant::now(),
+            lang: crate::i18n::code(),
+            told: beside::Phase::Waiting,
+        }
+    }
+
+    /// Whether the icon is made. Never waits for it.
+    pub fn poll(&mut self) -> Came {
+        let Some(native) = &self.native else {
+            return Came::Failed;
+        };
+        let waited = self.started.elapsed();
+        let phase = beside::phase(native.made(), waited);
+        let was = std::mem::replace(&mut self.told, phase);
+        match phase {
+            beside::Phase::Waiting => Came::Waiting,
+            beside::Phase::GaveUp => {
+                if was != phase {
+                    tracing::warn!(
+                        "tray icon: the session bus hasn't answered in {} s: carrying on without the icon (closing quits) until it does",
+                        beside::WAIT.as_secs()
+                    );
+                }
+                Came::Waiting
+            }
+            beside::Phase::Failed => {
+                self.native = None;
+                Came::Failed
+            }
+            beside::Phase::Up => {
+                let (Some(native), Some(rx)) = (self.native.take(), self.rx.take()) else {
+                    return Came::Failed;
+                };
+                if was == beside::Phase::GaveUp {
+                    tracing::info!(
+                        "tray icon: the session bus answered late, {} ms on",
+                        waited.as_millis()
+                    );
+                } else {
+                    tracing::info!("tray icon: made in {} ms", waited.as_millis());
+                }
+                let tray = Tray::with(native, rx);
+                if crate::i18n::code() != self.lang {
+                    tray.relabel();
+                }
+                Came::Up(tray)
+            }
+        }
+    }
+}
+
+impl Native {
     /// What the shell says of the icon, as the window may act on it: closing, Minimize to the
     /// notification area and the start with the session ask it every frame. Windows: the last
     /// answer of the watcher's thread, never waiting for the shell; macOS: the menu bar item's
@@ -192,8 +410,9 @@ impl Tray {
         self.seen.get()
     }
 
-    /// The icon and its menu; events wake `ctx`. None if the shell refuses the icon (logged).
-    pub fn new(ctx: &egui::Context, limiter: bool) -> Option<Tray> {
+    /// The icon and its menu; events go to `tx` and wake `ctx`. None if the shell refuses the icon
+    /// (logged).
+    fn new(ctx: &egui::Context, limiter: bool, tx: Sender<TrayCmd>) -> Option<Native> {
         let menu = Menu::new();
         let mut items = Vec::new();
         let mut labels = Vec::new();
@@ -214,6 +433,12 @@ impl Tray {
         let mark = crate::i18n::mark;
         add(&menu, mark("Add new download"), TrayCmd::AddUrl);
         add(&menu, mark("Add batch download"), TrayCmd::Batch);
+        // i18n: tray menu: the links copied to the clipboard, to tick in Link grabber (as Tasks → Add batch download from clipboard)
+        add(
+            &menu,
+            mark("Add batch download from clipboard"),
+            TrayCmd::BatchClipboard,
+        );
         // i18n: tray menu: a submenu of the downloads now running; choosing one shows its progress window
         let downloads_label = mark("Downloads in progress");
         let downloads = Submenu::new(crate::i18n::t(downloads_label), false);
@@ -284,7 +509,6 @@ impl Tray {
             )
         };
 
-        let (tx, rx) = channel();
         let wake = |tx: &Sender<TrayCmd>, ctx: &egui::Context| (tx.clone(), ctx.clone());
         let (icon_tx, icon_ctx) = wake(&tx, ctx);
         TrayIconEvent::set_event_handler(Some(move |e: TrayIconEvent| {
@@ -322,17 +546,13 @@ impl Tray {
         labels.push((Entry::Sub(downloads.clone()), downloads_label));
         labels.push((Entry::Check(limiter_on.clone()), on_label));
         labels.push((Entry::Check(limiter_off.clone()), off_label));
-        Some(Tray {
+        Some(Native {
             tray,
-            tip: Default::default(),
             limiter_on,
             limiter_off,
             start_queue,
             stop_queue,
-            queue_running: std::cell::Cell::new(None),
-            rx,
             downloads,
-            shown_downloads: Default::default(),
             download_ids,
             labels,
             #[cfg(target_os = "macos")]
@@ -346,13 +566,8 @@ impl Tray {
         })
     }
 
-    /// The commands since the last call.
-    pub fn poll(&self) -> Vec<TrayCmd> {
-        self.rx.try_iter().collect()
-    }
-
     /// Translate the menu again (the interface language changed).
-    pub fn relabel(&self) {
+    fn relabel(&self) {
         for (entry, source) in &self.labels {
             let text = crate::i18n::t(source);
             match entry {
@@ -363,39 +578,26 @@ impl Tray {
         }
     }
 
-    /// Keep Start / Stop main download queue in step with the queue (the menu is only told
-    /// when it changes).
-    pub fn set_queue(&self, running: bool) {
-        if self.queue_running.replace(Some(running)) != Some(running) {
-            self.start_queue.set_enabled(!running);
-            self.stop_queue.set_enabled(running);
-        }
+    /// Start / Stop main download queue, as the queue runs.
+    fn set_queue(&self, running: bool) {
+        self.start_queue.set_enabled(!running);
+        self.stop_queue.set_enabled(running);
     }
 
-    /// The icon's tip: the app's name, and while downloads run how many and how fast.
-    pub fn set_tooltip(&self, tip: &str) {
-        let mut last = self.tip.borrow_mut();
-        let due = last
-            .1
-            .is_none_or(|t| t.elapsed() >= std::time::Duration::from_secs(1));
-        if last.0 != tip && due {
-            // Windows: the watcher's thread sets it, as setting it waits for Explorer (#747).
-            #[cfg(windows)]
-            if !self.watch.tip(tip) {
-                return;
-            }
-            #[cfg(not(windows))]
+    /// Set the icon's tip; false if the shell didn't take it (Windows: the watcher was busy, asked
+    /// again at the next frame).
+    fn tip(&self, tip: &str) -> bool {
+        #[cfg(windows)]
+        return self.watch.tip(tip);
+        #[cfg(not(windows))]
+        {
             let _ = self.tray.set_tooltip(Some(tip));
-            *last = (tip.to_owned(), Some(std::time::Instant::now()));
+            true
         }
     }
 
-    /// "Downloads in progress": the running downloads (id, name), the menu rebuilt only when they
-    /// change; greyed when none runs.
-    pub fn set_downloads(&self, running: &[(u64, String)]) {
-        if *self.shown_downloads.borrow() == running {
-            return;
-        }
+    /// "Downloads in progress": the running downloads (id, name); greyed when none runs.
+    fn set_downloads(&self, running: &[(u64, String)]) {
         for _ in 0..self.downloads.items().len() {
             let _ = self.downloads.remove_at(0);
         }
@@ -409,11 +611,10 @@ impl Tray {
             *d = ids;
         }
         self.downloads.set_enabled(!running.is_empty());
-        *self.shown_downloads.borrow_mut() = running.to_vec();
     }
 
-    /// Keep the Speed Limiter checks in step with the app.
-    pub fn set_limiter(&self, on: bool) {
+    /// The Speed Limiter checks.
+    fn set_limiter(&self, on: bool) {
         self.limiter_on.set_checked(on);
         self.limiter_off.set_checked(!on);
     }

@@ -92,6 +92,9 @@
       }
     }
   },
+  "popup_undo": {
+    "message": "Αναίρεση"
+  },
   "popup_excluded": {
     "message": "Οι λήψεις από το $site$ παραμένουν στο πρόγραμμα περιήγησης",
     "placeholders": {

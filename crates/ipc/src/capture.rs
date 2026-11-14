@@ -130,7 +130,7 @@ impl Declined {
             }
             Declined::FileType => "its type isn't in Options > File types",
             Declined::Site => {
-                "its site is in Options > File types > Don't start downloading automatically from the following sites"
+                "its site, or the page it came from, is in Options > File types > Don't start downloading automatically from the following sites"
             }
             Declined::Address => {
                 "its address is in Options > File types > Edit list (addresses left to the browser)"
@@ -192,20 +192,24 @@ impl CaptureRules {
         }
     }
 
-    /// May `browser` hand `url` (saved as `file_name`) over?
-    pub fn accepts(&self, url: &str, file_name: &str, browser: &str) -> Result<(), Declined> {
+    /// May `browser` hand `url` (saved as `file_name`) over? `page`: the page the download came
+    /// from (its referrer), when known. A site of Options → File types' list leaves both its own
+    /// files and those its pages link to on another host (a CDN, a mirror it redirects to) to the
+    /// browser (#1049); with no page known, the file's own host decides.
+    pub fn accepts(
+        &self,
+        url: &str,
+        file_name: &str,
+        browser: &str,
+        page: Option<&str>,
+    ) -> Result<(), Declined> {
         if let Some(off) = self.capture_off(browser) {
             return Err(off);
         }
         if !self.auto_type(file_name) {
             return Err(Declined::FileType);
         }
-        let host = host_of(url);
-        if self
-            .excluded_sites
-            .split_whitespace()
-            .any(|p| host_matches(&host, p))
-        {
+        if self.site_excluded(url) || page.is_some_and(|p| is_web(p) && self.site_excluded(p)) {
             return Err(Declined::Site);
         }
         if self
@@ -217,6 +221,31 @@ impl CaptureRules {
         }
         Ok(())
     }
+
+    /// Is `address` on a site of Options → File types' list ("Don't start downloading
+    /// automatically from the following sites")? Read as the Download panels' list is
+    /// ([`site_listed`]; #1049: `example.com` listed, its files from www.example.com were still
+    /// taken).
+    pub fn site_excluded(&self, address: &str) -> bool {
+        let host = host_of(address);
+        !host.is_empty() && site_listed(&self.excluded_sites, &host)
+    }
+}
+
+/// Is `host` on a site of `sites` (space-separated: Options → File types' excluded sites, the
+/// Download panels' list)? A name without `*` takes its subdomains too (#532, #1049), and `*`
+/// matches anything ([`panel_site_matches`], #759).
+pub fn site_listed(sites: &str, host: &str) -> bool {
+    sites.split_whitespace().any(|p| {
+        panel_site_matches(host, p)
+            || (!p.starts_with('*') && panel_site_matches(host, &format!("*.{p}")))
+    })
+}
+
+/// An http(s) address (a referrer may be empty, or a page of the browser's own).
+fn is_web(address: &str) -> bool {
+    let lower = address.trim_start().to_ascii_lowercase();
+    lower.starts_with("http://") || lower.starts_with("https://")
 }
 
 impl CaptureRules {
@@ -233,11 +262,9 @@ impl CaptureRules {
 
     /// Is `page` (an address) on a site the button stays off? A name without `*.` takes its
     /// subdomains too (#532: `youtube.com` listed, the button still showed on www.youtube.com).
+    /// Supports wildcards (`*`) like `*.youtube.*` or `youtube.*` (#759).
     pub fn panel_hidden_on(&self, page: &str) -> bool {
-        let host = host_of(page);
-        self.video_panel_sites
-            .split_whitespace()
-            .any(|p| host_matches(&host, p) || host_matches(&host, &format!("*.{p}")))
+        site_listed(&self.video_panel_sites, &host_of(page))
     }
 }
 
@@ -268,6 +295,18 @@ pub fn remove_site(sites: &str, host: &str) -> String {
     sites
         .split_whitespace()
         .filter(|p| p.contains('*') || !host_matches(&host, p))
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
+/// `sites` without `host` listed by its own name (the browser popup's Undo of "Never take
+/// downloads from <site>", #404, which listed it so): any other pattern stays, one that covers
+/// it too, as the user wrote it.
+pub fn unlist_site(sites: &str, host: &str) -> String {
+    let host = host.trim();
+    sites
+        .split_whitespace()
+        .filter(|p| !p.eq_ignore_ascii_case(host))
         .collect::<Vec<_>>()
         .join(" ")
 }
@@ -381,6 +420,24 @@ pub fn host_matches(host: &str, pattern: &str) -> bool {
     match pattern.strip_prefix("*.") {
         Some(base) => host == base || host.ends_with(&format!(".{base}")),
         None => !pattern.is_empty() && host == pattern,
+    }
+}
+
+/// `host` matches download panel site `pattern` (case-insensitive), supporting wildcards (`*`)
+/// like `*.youtube.*`, `youtube.*` or `*dailymotion*` (#759) and, for `*.example.com`,
+/// matching both the domain and its subdomains.
+pub fn panel_site_matches(host: &str, pattern: &str) -> bool {
+    let pattern = pattern.trim().to_ascii_lowercase();
+    let pattern = pattern
+        .split_once("://")
+        .map_or(pattern.as_str(), |(_, r)| r);
+    let pattern = pattern.split('/').next().unwrap_or("");
+    if pattern.is_empty() {
+        return false;
+    }
+    match pattern.strip_prefix("*.") {
+        Some(base) => wildcard(base, host) || wildcard(pattern, host),
+        None => wildcard(pattern, host),
     }
 }
 
@@ -541,9 +598,114 @@ mod tests {
             CHROME
         ));
         assert!(r.panel_on("https://videos.site/embed/1", Some(""), CHROME));
+        // #759: wildcard support in download panel blacklist.
+        r.video_panel = true;
+        r.video_panel_sites = "*.youtube.* www.vimeo.co* *dailymotion*".into();
+        assert!(!r.panel_on("https://www.youtube.com/watch?v=1", None, CHROME));
+        assert!(!r.panel_on("https://youtube.com/watch?v=1", None, CHROME));
+        assert!(!r.panel_on("https://m.youtube.co.uk/watch?v=1", None, CHROME));
+        assert!(!r.panel_on("https://www.vimeo.com/123", None, CHROME));
+        assert!(!r.panel_on("https://www.vimeo.co/123", None, CHROME));
+        assert!(r.panel_on("https://www.vimeo.org/123", None, CHROME));
+        assert!(!r.panel_on("https://www.dailymotion.com/video/x", None, CHROME));
+        assert!(!r.panel_on("https://sub.dailymotion.fr/video/x", None, CHROME));
+        assert!(r.panel_on("https://other-site.com/video", None, CHROME));
         r.video_panel = true;
         r.advanced_integration = false;
         assert!(!r.panel_on("https://videos.site/", None, CHROME));
+    }
+
+    #[test]
+    fn a_listed_site_takes_its_subdomains_and_the_files_its_pages_link_to() {
+        let r = CaptureRules {
+            excluded_sites: "example.com *.wide.test".into(),
+            ..CaptureRules::default()
+        };
+        // #1049: a plain name takes its subdomains, as the Download panels' list does.
+        for url in [
+            "https://example.com/a.zip",
+            "https://www.example.com/a.zip",
+            "https://dl.files.example.com:8443/a.zip",
+            "https://WWW.Example.com/a.zip",
+            "https://wide.test/a.zip",
+            "https://cdn.wide.test/a.zip",
+        ] {
+            assert_eq!(
+                r.accepts(url, "a.zip", CHROME, None),
+                Err(Declined::Site),
+                "{url}"
+            );
+        }
+        for url in [
+            "https://badexample.com/a.zip",
+            "https://example.com.evil.test/a.zip",
+        ] {
+            assert_eq!(r.accepts(url, "a.zip", CHROME, None), Ok(()), "{url}");
+        }
+        // A file the site serves from another host (a CDN, a mirror): its page decides.
+        let cdn = "https://cdn.files.test/build/a.zip";
+        for page in [
+            "https://www.example.com/downloads/app",
+            "https://example.com/",
+            "https://mirror.wide.test/get?id=1",
+        ] {
+            assert_eq!(
+                r.accepts(cdn, "a.zip", CHROME, Some(page)),
+                Err(Declined::Site),
+                "{page}"
+            );
+        }
+        assert_eq!(
+            r.accepts(cdn, "a.zip", CHROME, Some("https://other.test/page")),
+            Ok(()),
+            "a page of a site not listed"
+        );
+        // A listed file host is left to the browser whatever page links to it.
+        assert_eq!(
+            r.accepts(
+                "https://www.example.com/a.zip",
+                "a.zip",
+                CHROME,
+                Some("https://other.test/")
+            ),
+            Err(Declined::Site)
+        );
+        // No page known (none sent, an empty referrer, a page of the browser's own): the file's
+        // own host decides, as before.
+        for page in [None, Some(""), Some("about:blank"), Some("example.com")] {
+            assert_eq!(r.accepts(cdn, "a.zip", CHROME, page), Ok(()), "{page:?}");
+            assert_eq!(
+                r.accepts("https://example.com/a.zip", "a.zip", CHROME, page),
+                Err(Declined::Site),
+                "{page:?}"
+            );
+        }
+        // Wildcards, as in the Download panels' list (#759).
+        let wild = CaptureRules {
+            excluded_sites: "*.mirror.* *myfiles*".into(),
+            ..CaptureRules::default()
+        };
+        for url in [
+            "https://dl.mirror.org/a.zip",
+            "https://mirror.net/a.zip",
+            "https://cdn.myfiles.test/a.zip",
+        ] {
+            assert_eq!(
+                wild.accepts(url, "a.zip", CHROME, None),
+                Err(Declined::Site),
+                "{url}"
+            );
+        }
+        assert_eq!(
+            wild.accepts(cdn, "a.zip", CHROME, Some("https://www.mirror.io/get")),
+            Err(Declined::Site)
+        );
+        assert_eq!(
+            wild.accepts("https://other.test/a.zip", "a.zip", CHROME, None),
+            Ok(())
+        );
+        // host_matches itself stays exact for its other users (debrid, servers' logins).
+        assert!(!host_matches("www.example.com", "example.com"));
     }
 
     #[test]
@@ -577,36 +739,60 @@ mod tests {
             "a pattern stays"
         );
         assert_eq!(remove_site("a.test", "c.test"), "a.test");
+        // The popup's Undo (#404): the host as "Never take downloads from" listed it, only.
+        let listed = add_site("*.update.microsoft.com a.test", "Files.Test");
+        assert_eq!(listed, "*.update.microsoft.com a.test files.test");
+        assert_eq!(
+            unlist_site(&listed, "files.test"),
+            "*.update.microsoft.com a.test"
+        );
+        assert_eq!(
+            unlist_site("*.b.test b.test", "www.b.test"),
+            "*.b.test b.test",
+            "patterns and other names that cover it stay"
+        );
+        assert_eq!(unlist_site("A.Test", "a.test"), "");
     }
 
     #[test]
     fn the_defaults_take_listed_types_from_any_browser() {
         let r = CaptureRules::default();
         assert_eq!(
-            r.accepts("https://example.com/a/setup.exe", "setup.exe", CHROME),
+            r.accepts("https://example.com/a/setup.exe", "setup.exe", CHROME, None),
             Ok(())
         );
         assert_eq!(
             r.accepts(
                 "https://example.com/movie.part.r01",
                 "movie.part.r01",
-                FIREFOX
+                FIREFOX,
+                None
             ),
             Ok(())
         );
         assert_eq!(
-            r.accepts("https://example.com/page.html", "page.html", CHROME),
+            r.accepts("https://example.com/page.html", "page.html", CHROME, None),
             Err(Declined::FileType)
         );
         // #39: a .torrent, by default (Add torrent shows what it holds); a list saved before keeps
         // what it had.
         assert_eq!(
-            r.accepts("https://example.com/dl/set.torrent", "set.torrent", CHROME),
+            r.accepts(
+                "https://example.com/dl/set.torrent",
+                "set.torrent",
+                CHROME,
+                None
+            ),
             Ok(())
         );
         let saved: CaptureRules = serde_json::from_str(r#"{"auto_types":"ZIP EXE"}"#).unwrap();
         assert_eq!(
-            saved.accepts("https://example.com/dl/set.torrent", "set.torrent", CHROME),
+            saved.accepts(
+                "https://example.com/dl/set.torrent",
+                "set.torrent",
+                CHROME,
+                None
+            ),
             Err(Declined::FileType)
         );
     }
@@ -615,16 +801,21 @@ mod tests {
     fn excluded_sites_addresses_and_browsers_are_left_to_the_browser() {
         let mut r = CaptureRules::default();
         assert_eq!(
-            r.accepts("https://dl.update.microsoft.com/x.exe", "x.exe", CHROME),
+            r.accepts(
+                "https://dl.update.microsoft.com/x.exe",
+                "x.exe",
+                CHROME,
+                None
+            ),
             Err(Declined::Site)
         );
         r.excluded_addresses = vec!["https://example.com/private/*".into()];
         assert_eq!(
-            r.accepts("https://example.com/private/a.zip", "a.zip", CHROME),
+            r.accepts("https://example.com/private/a.zip", "a.zip", CHROME, None),
             Err(Declined::Address)
         );
         assert_eq!(
-            r.accepts("https://example.com/public/a.zip", "a.zip", CHROME),
+            r.accepts("https://example.com/public/a.zip", "a.zip", CHROME, None),
             Ok(())
         );
         r.browsers = vec![
@@ -632,16 +823,16 @@ mod tests {
             ("Google Chrome".into(), true),
         ];
         assert_eq!(
-            r.accepts("https://example.com/a.zip", "a.zip", EDGE),
+            r.accepts("https://example.com/a.zip", "a.zip", EDGE, None),
             Err(Declined::Browser)
         );
         assert_eq!(
-            r.accepts("https://example.com/a.zip", "a.zip", CHROME),
+            r.accepts("https://example.com/a.zip", "a.zip", CHROME, None),
             Ok(())
         );
         r.advanced_integration = false;
         assert_eq!(
-            r.accepts("https://example.com/a.zip", "a.zip", CHROME),
+            r.accepts("https://example.com/a.zip", "a.zip", CHROME, None),
             Err(Declined::IntegrationOff)
         );
     }
@@ -656,6 +847,23 @@ mod tests {
         assert!(host_matches("a.b.example.com", "*.example.com"));
         assert!(host_matches("example.com", "*.example.com"));
         assert!(!host_matches("badexample.com", "*.example.com"));
+        assert!(
+            !host_matches("othermysite.com", "*mysite.com"),
+            "host_matches treats * literally"
+        );
+        // Wildcard patterns for download panel (#759)
+        assert!(panel_site_matches("www.youtube.com", "*.youtube.*"));
+        assert!(panel_site_matches("youtube.com", "*.youtube.*"));
+        assert!(panel_site_matches("youtube.co", "youtube.*"));
+        assert!(panel_site_matches("youtube.com", "youtube.*"));
+        assert!(!panel_site_matches("vimeo.com", "youtube.*"));
+        assert!(panel_site_matches("www.youtube.com", "www.youtube.co*"));
+        assert!(panel_site_matches("www.youtube.co", "www.youtube.co*"));
+        assert!(panel_site_matches("www.youtube.co.uk", "www.youtube.co*"));
+        assert!(!panel_site_matches("www.youtube.es", "www.youtube.co*"));
+        assert!(panel_site_matches("www.youtube.com", "*youtube*"));
+        assert!(panel_site_matches("youtube.com", "*youtube*"));
+        assert!(!panel_site_matches("vimeo.com", "*youtube*"));
         assert!(wildcard("*/files/*.zip", "https://x.org/files/a.zip"));
         assert!(address_matches(
             "example.com/private/*",
@@ -777,7 +985,10 @@ mod tests {
             ..CaptureRules::default()
         };
         for name in ["model.gguf", "photo.jpg", "anything.xyz123"] {
-            assert_eq!(r.accepts("https://x.test/f", name, "Google Chrome"), Ok(()));
+            assert_eq!(
+                r.accepts("https://x.test/f", name, "Google Chrome", None),
+                Ok(())
+            );
         }
         assert!(!r.auto_type("no_extension"));
     }

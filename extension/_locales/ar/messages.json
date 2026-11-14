@@ -92,6 +92,9 @@
       }
     }
   },
+  "popup_undo": {
+    "message": "تراجع"
+  },
   "popup_excluded": {
     "message": "تبقى التنزيلات من $site$ مع المستعرض",
     "placeholders": {

@@ -7,6 +7,11 @@
 #. {n} = a number (keep the braces as they are)
 #, machine
 @plural	Also delete the {n} file from disk|Also delete the {n} files from disk	同时从磁盘中删除 {n} 个文件
+#. count in cnl.rs
+#. Click'n'Load window: a page whose web site the browser doesn't name, so MDM can't tell which site it is
+#. {n} = a number (keep the braces as they are)
+#, machine
+@plural	An unknown site wants to send {n} link to Link grabber.|An unknown site wants to send {n} links to Link grabber.	未知网站要向链接抓取器发送 {n} 个链接。
 #. count in a dialog box
 #. never shown for a single download
 #. {n} = a number (keep the braces as they are)
@@ -133,6 +138,11 @@
 #. {n} = a number (keep the braces as they are)
 #, machine
 @plural	{n} tracker: {peers}|{n} trackers: {peers}	{n} 个跟踪器：{peers}
+#. count in cnl.rs
+#. Click'n'Load window: {site} is a web site's name such as "example.com"
+#. {site} = a web site's name such as "example.com"; {n} = a number (keep the braces as they are)
+#, machine
+@plural	{site} wants to send {n} link to Link grabber.|{site} wants to send {n} links to Link grabber.	{site} 要向链接抓取器发送 {n} 个链接。
 #. count in playlistdlg.rs
 #. in Download video: a playlist title then how many videos it has ({count})
 #. {count} = a number (keep the braces as they are)
@@ -227,6 +237,11 @@
 #. {name} = a file name (keep the braces as they are)
 #, machine
 	A file of this torrent can't be saved safely: {name}	此种子中的文件无法安全保存：{name}
+#. message or event log entry in the main window
+#. Link grabber added a magnet link whose torrent could not be found; {error} says why
+#. {error} = an error message (keep the braces as they are)
+#, machine
+	A magnet link's files could not be looked up: {error}	无法查找磁力链接文件：{error}
 #. text in the settings
 #. Options → DNS: the NextDNS configuration ID typed isn't one
 #, machine
@@ -270,6 +285,15 @@
 #. a download's server's round trip: {ms} a number of milliseconds, {reach} near, medium or far
 #, machine
 	about {ms} ms ({reach})	约 {ms} 毫秒 ({reach})
+#. text in the Download video window
+#. a file size that is only an estimate, as a screen reader says it in the Download video window's list of qualities; {size} is "532 MB"
+#. {size} = a file size such as "4.2 MB" (keep the braces as they are)
+#, machine
+	about {size}	约 {size}
+#. text in the Options window
+#. Options → Archives → Link grabber check box: Click'n'Load, a link site's button that sends its links to a program on this computer (port 9666, as JDownloader)
+#, machine
+	Accept Click'n'Load from web pages (port 9666)	接受来自网页的 Click'n'Load（端口 9666）
 #. checkbox in the Add torrent window
 #. Torrent settings: other peers may connect to this computer
 #, machine
@@ -301,6 +325,10 @@
 #. text in the tray icon's menu
 #, machine
 	Add batch download	添加批量下载
+#. message or event log entry in the main window; text in the tray icon's menu
+#. title of the note when Tasks → Add batch download from clipboard finds nothing to download
+#, machine
+	Add batch download from clipboard	从剪贴板批量添加下载
 #. text in the Options window
 #. the trailing ... means it is still going on: keep it
 #, machine
@@ -421,6 +449,10 @@
 #. a country's name (where a download's server is)
 #, machine
 	Afghanistan	阿富汗
+#. text in the Options window
+#. Options → Add an account: a note under the user name and password fields (Mega-Debrid bans the address for some minutes after a few wrong passwords)
+#, machine
+	After a few wrong passwords the service blocks this connection for some minutes.	输入几次错误密码后，此服务会在几分钟内阻止此连接。
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -450,11 +482,19 @@
 #. in the Subtitles list of Download video: every language the video's uploader gave
 #, machine
 	All the uploader's	上传者提供的所有字幕
+#. text in cnl.rs
+#. button in the Click'n'Load window: let this site send links (remembered)
+#, machine
+	Allow	允许
 #. text in the Options window
 #. checkbox under the number of connections per download; {n} is 32
 #. {n} = a number (keep the braces as they are)
 #, machine
 	Allow more than {n} connections	允许超过 {n} 个连接
+#. text in cnl.rs
+#. Click'n'Load window, under the question: nothing happens to the links before the user adds them in Link grabber
+#, machine
+	Allow only sites you use. Nothing is looked up or downloaded before you add it in Link grabber.	仅允许您使用的网站。在您将链接添加到链接抓取器之前，不会查询或下载任何内容。
 #. text in errors.rs
 #, machine
 	already being downloaded: {path}	正在下载: {path}
@@ -677,6 +717,10 @@
 #. a country's name (where a download's server is)
 #, machine
 	Bhutan	不丹
+#. text in cnl.rs
+#. button in the Click'n'Load window: refuse this site's links (remembered)
+#, machine
+	Block	阻止
 #. text in the Add torrent window
 #. Torrent settings: the address of an IP blocklist (empty: none)
 #, machine
@@ -860,6 +904,11 @@
 #. check box in the update window: look for a new version every time MDM starts
 #, machine
 	Check for updates at every start	每次启动时检查更新
+#. text in errors.rs
+#. what to do when the proxy set in Options didn't let a helper's download connect; {proxy} = the Options tab Proxy / Socks; {name} = yt-dlp, ffmpeg or gallery-dl; {helpers} and {other} = the buttons Helpers and Use another program
+#. {name} = a file name (keep the braces as they are)
+#, machine
+	Check the proxy in Options → {proxy}, or download {name} yourself and choose it in {helpers} → {other}.	请检查“选项”→“{proxy}”中的代理设置，或自行下载 {name} 并在“{helpers}”→“{other}”中选择它。
 #. text in helpers.rs
 #, machine
 	Check your connection, then try again, or get them later from the video window.	检查您的连接，然后重试，或者稍后从视频窗口获取。
@@ -901,7 +950,7 @@
 #, machine
 	Checking {name} ({n} of {total})...	正在检查 {name}（{n} / {total}）...
 #. text in the download list (sizes, speeds, status)
-#. a torrent's status while its files are read and checked; {percent} is how much is checked, e.g. "42%"
+#. the list's Status column while a torrent's files or a finished file are checked (against the torrent's hashes or a checksum); {percent} how much is checked, e.g. "42%". One short word: the column is narrow
 #, machine
 	Checking {percent}	正在检查 {percent}
 #. text in the Checksum window; text in the Link grabber window
@@ -938,14 +987,27 @@
 #. a country's name (where a download's server is)
 #, machine
 	Christmas Island	圣诞岛
-#. button in the download list
+#. button in the download list; button in the Options window
 #. verb: clears this filter
 #, machine
 	Clear	清除
+#. text in cnl.rs
+#. notice: Click'n'Load couldn't start; {port} is 9666; JDownloader is another download manager that uses the same port
+#, machine
+	Click'n'Load can't start: another program (JDownloader?) is using port {port}. Close it, then turn Click'n'Load off and on again in Options.	Click'n'Load 无法启动：另一个程序（JDownloader？）正在使用端口 {port}。请关闭该程序，然后在“选项”中关闭并重新打开 Click'n'Load。
+#. text in cnl.rs
+#. notice: Click'n'Load couldn't start; {error} the system's reason
+#. {error} = an error message (keep the braces as they are)
+#, machine
+	Click'n'Load can't start: {error}	Click'n'Load 无法启动：{error}
 #. text in a download's progress window
 #. column title: the peer's torrent program
 #, machine
 	Client	客户端
+#. message or event log entry in the main window
+#. Link grabber: where the links came from: the clipboard (Tasks → Add batch download from clipboard)
+#, machine
+	Clipboard	剪贴板
 #. text in the Options window
 #, machine
 	Clock:	时钟:
@@ -1060,6 +1122,20 @@
 #. {error} = an error message (keep the braces as they are)
 #, machine
 	Could not be read: {error}	无法读取: {error}
+#. text in errors.rs
+#. a helper (yt-dlp, ffmpeg) couldn't be downloaded: the proxy set in Options ({proxy}, its address) didn't let MDM connect
+#, machine
+	could not connect through the proxy {proxy}	无法通过代理 {proxy} 连接
+#. text in errors.rs
+#. a helper (yt-dlp, ffmpeg) couldn't be downloaded: its server ({host}) couldn't be reached
+#. {host} = a server name such as "example.com" (keep the braces as they are)
+#, machine
+	could not reach {host}	无法访问 {host}
+#. text in errors.rs
+#. a helper (yt-dlp, ffmpeg) couldn't be downloaded: its server ({host}) couldn't be reached, for the system's reason {cause}
+#. {host} = a server name such as "example.com" (keep the braces as they are)
+#, machine
+	could not reach {host} ({cause})	无法访问 {host} ({cause})
 #. text in extracting archives (a download's log, the Archive password window)
 #. in a download's log: {name} is the archive's file name, {why} the reason
 #. {name} = a file name (keep the braces as they are)
@@ -1320,6 +1396,10 @@
 #. window title: the download button the extension shows over videos
 #, machine
 	Download panels	下载面板
+#. window title in the Options window
+#. window title: Options → Downloads → Edit... (the progress window's settings)
+#, machine
+	Download progress dialog	下载进度对话框
 #. text in rssdlg.rs
 #. RSS feeds window: the tab of the rules that add articles by themselves
 #, machine
@@ -1332,6 +1412,9 @@
 #. Options → Accounts: checkbox: links of the file hosts these services support are downloaded through the accounts
 #, machine
 	Download supported file-host links through these accounts	通过这些帐户下载受支持的文件托管链接
+#. what a keyboard shortcut does in the Help menu's windows (About, updates, shortcuts, Tell a friend)
+#, machine
+	Download the links in the clipboard (Add batch download from clipboard)	下载剪贴板中的链接（从剪贴板批量添加下载）
 #. text in a dialog box
 #. Download File Info: a check box, ticked when the download goes through the user's debrid account; {service} the service and the account, "Real-Debrid (labuser)". Unticked: downloaded directly
 #, machine
@@ -1429,6 +1512,12 @@
 #, machine
 	Drag the file into a folder or an app	将文件拖到文件夹或应用中
 #. message or event log entry in the main window
+#, machine
+	Dragged out of Download complete and moved to a place MDM couldn't learn	已从“下载完成”拖出并移动到 MDM 无法识别的位置
+#. message or event log entry in the main window
+#, machine
+	Dragged out of Download complete and moved to {folder}	已从“下载完成”拖出并移动到 {folder}
+#. message or event log entry in the main window
 #. in Import, where the addresses came from: dragged onto the window
 #, machine
 	Dropped links	拖放的链接
@@ -1477,6 +1566,10 @@
 #. button in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #, machine
 	Email	电子邮件
+#. text in the Download video window
+#. checkbox in Download video: the chapters a video's page lists (YouTube's, for one) go into the video file, where players show them and skip between them
+#, machine
+	Embed chapters	嵌入章节
 #. text in gallerydlg.rs
 #. in Download a gallery, after the "Files at most" box
 #, machine
@@ -1517,7 +1610,7 @@
 #. a country's name (where a download's server is)
 #, machine
 	Eritrea	厄立特里亚
-#. text in a dialog box; item in the Categories tree in the download list; value in a column's filter list in the download list; text in the download list (sizes, speeds, status); text in remote.rs
+#. text in a dialog box; item in the Categories tree in the download list; value in a column's filter list in the download list; text in the download list (sizes, speeds, status); text in a download's progress window; text in remote.rs
 #. in Download File Info, where the size goes: the address didn't answer
 #. a download's status (state it is in, not a command)
 #. a download's status (state it is in, not a command): it failed
@@ -1661,6 +1754,10 @@
 #. noun: a file of no known type
 #, machine
 	File	文件
+#. text in the Options window
+#. tooltip of "Mark downloaded files as coming from the internet" on Linux
+#, machine
+	File managers show where the files marked this way came from. Unticked, no download is marked.	文件管理器会显示这样标记的文件来自哪里。如果未勾选，则不会标记任何下载。
 #. text in the Scheduler window
 #, machine
 	File Name	文件名
@@ -1739,6 +1836,11 @@
 #. remote control page (on a phone): tab: downloads finished
 #, machine
 	Finished	已完成
+#. text in a download's progress window
+#. a download's status: every byte is in, the file is being written out and given its name
+#. the trailing ... means it is still going on: keep it
+#, machine
+	Finishing...	正在完成...
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -1997,7 +2099,7 @@
 #. window title: where MDM takes its helper programs (yt-dlp, ffmpeg, gallery-dl) from
 #, machine
 	Helpers	帮助程序
-#. button in gallerydlg.rs; button in the Download video window
+#. text in errors.rs; button in gallerydlg.rs; button in the Download video window
 #. button in Download video: where MDM takes yt-dlp and ffmpeg from
 #. the trailing ... means it opens a window: keep it
 #, machine
@@ -2009,7 +2111,7 @@
 #. message or event log entry in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
-	Hide &categories	隐藏&类别
+	Hide &categories	隐藏类别(&C)
 #. button in a download's progress window
 #, machine
 	Hide tab	隐藏选项卡
@@ -2047,6 +2149,11 @@
 #. button in Test browser integration: open the help page's section for the problem
 #, machine
 	How to fix it	如何修复
+#. text in the Download video window; text in videolookup.rs
+#. link after the note that YouTube needs a JavaScript runtime: opens the help page that says how to install Node.js or Deno
+#. link in the browser's video menu, after the note that YouTube needs a JavaScript runtime: opens the help page that says how to install Node.js or Deno
+#, machine
+	How to install one	如何安装
 #. checkbox in the Options window
 #, machine
 	http	http
@@ -2074,6 +2181,11 @@
 #. Options → DNS settings: checkbox: when the chosen DNS can't be reached, use the system's instead
 #, machine
 	If it can't be reached, use the system's DNS	无法连接时使用系统 DNS
+#. text in errors.rs
+#. what to do when a helper's server couldn't be reached; {proxy} = the Options tab Proxy / Socks; {name} = yt-dlp, ffmpeg or gallery-dl; {helpers} and {other} = the buttons Helpers and Use another program
+#. {name} = a file name (keep the braces as they are)
+#, machine
+	If you use a proxy, set it in Options → {proxy}. Or download {name} yourself and choose it in {helpers} → {other}.	如果您使用代理，请在“选项”→“{proxy}”中设置。或者自行下载 {name}，然后在“{helpers}”→“{other}”中选择。
 #. checkbox in the Options window
 #, machine
 	Ignore file modification time changes when resuming a download	恢复下载时忽略文件修改时间更改
@@ -2220,6 +2332,16 @@
 #. {error} = an error message (keep the braces as they are)
 #, machine
 	its files could not be written: {error}	无法写入其文件: {error}
+#. text in the download list (sizes, speeds, status)
+#. why a video download failed: ffmpeg couldn't join its picture and sound into one file; {error} = ffmpeg's reason, in English
+#. {error} = an error message (keep the braces as they are)
+#, machine
+	its picture and sound couldn't be joined into one file ({error})	其画面和声音无法合并为一个文件 ({error})
+#. text in the download list (sizes, speeds, status)
+#. why a video download failed: ffmpeg couldn't join its picture and sound into one file; {error} = ffmpeg's reason, in English; {files} = the downloaded parts' file names, kept in the download folder; "Also delete the file from disk" is the Delete box's choice
+#. {error} = an error message (keep the braces as they are)
+#, machine
+	its picture and sound couldn't be joined into one file ({error}). What was downloaded stays in the folder for Resume to join again ({files}); deleting the download with "Also delete the file from disk" removes it	其画面和声音无法合并为一个文件 ({error})。已下载的内容保留在文件夹中，以便“恢复”再次合并 ({files})；使用“同时从磁盘删除文件”删除下载会将其移除
 #. text in errors.rs
 #, machine
 	its release information is not as expected: {detail}	其发布信息与预期不符: {detail}
@@ -2381,7 +2503,7 @@
 #. Torrent settings: an upload speed limit for all torrents together, followed by a box with the speed and "KBytes/sec"
 #, machine
 	Limit uploading for all torrents to	将所有 torrent 的上传限制为
-#. window title in the Link grabber window; group box title in the Options window
+#. message or event log entry in the main window; window title in the Link grabber window; group box title in the Options window
 #. Options → Archives: group box title
 #, machine
 	Link grabber	链接抓取器
@@ -2474,10 +2596,18 @@
 #. a country's name (where a download's server is)
 #, machine
 	Macau	澳门
+#. text in the Options window
+#. tooltip of "Mark downloaded files as coming from the internet" on macOS
+#, machine
+	macOS checks the files marked this way: Gatekeeper before a program first opens. Unticked, no download is marked.	macOS 会检查这样标记的文件：Gatekeeper 在程序首次打开前检查。如果未勾选，则不会标记任何下载。
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
 	Madagascar	马达加斯加
+#. text in the Link grabber window
+#. Link grabber, a link's status: a magnet link (a torrent, its files looked up once it is added)
+#, machine
+	Magnet link	磁力链接
 #. message or event log entry in the main window
 #, machine
 	Main download queue	主下载队列
@@ -2521,6 +2651,9 @@
 #. text in the Scheduler window
 #, machine
 	March	三月
+#. checkbox in the Options window
+#, machine
+	Mark downloaded files as coming from the internet	将下载的文件标记为来自互联网
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -2602,6 +2735,19 @@
 #. how far a download's server is, by its round trip (60 to 150 ms)
 #, machine
 	medium	中
+#. text in the download list (sizes, speeds, status)
+#. the list's Status column while a video's picture and sound are joined into one file (ffmpeg); {percent} how far, e.g. "45%". One short word: the column is narrow
+#, machine
+	Merging {percent}	正在合并 {percent}
+#. text in the download list (sizes, speeds, status)
+#. a video's status while its picture and sound are joined into one file (ffmpeg)
+#. the trailing ... means it is still going on: keep it
+#, machine
+	Merging...	正在合并...
+#. text in the download list (sizes, speeds, status)
+#. a video's status while its picture and sound are joined into one file (ffmpeg); {percent} how far, e.g. "45%"
+#, machine
+	Merging... ({percent})	正在合并... ({percent})
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -2759,6 +2905,10 @@
 #. a country's name (where a download's server is)
 #, machine
 	Mozambique	莫桑比克
+#. text in the Download video window
+#. why "Embed chapters" is greyed in Download video: the choice is a sound converted to MP3, Opus or FLAC, which MDM saves without chapters
+#, machine
+	MP3, Opus and FLAC files are saved without chapters	MP3、Opus 和 FLAC 文件不保存章节
 #. text in errors.rs
 #, machine
 	much slower than the other connections; reconnecting	比其他连接慢得多；正在重新连接
@@ -2901,6 +3051,9 @@
 #, machine
 	No day is ticked: the queue will not start	未勾选任何日期：队列将不会启动
 #. message or event log entry in the main window
+#, machine
+	No download links were found in the clipboard. Copy a text with http, https, ftp or magnet links in it, and try again.	剪贴板中未找到下载链接。请复制包含 http、https、ftp 或 magnet 链接的文本，然后重试。
+#. message or event log entry in the main window
 #. title in the empty download list (this category or queue has no downloads)
 #, machine
 	No downloads here	此处无下载
@@ -2972,7 +3125,7 @@
 #. message or event log entry in the main window
 #, machine
 	No web addresses were found in {file}.	在 {file} 中未找到任何网址。
-#. text in the Download video window
+#. text in the Options window; text in the Download video window
 #. in the Subtitles list of Download video: download no subtitles
 #, machine
 	None	无
@@ -3033,7 +3186,12 @@
 #. Video helpers: no copy of this helper yet
 #, machine
 	Not installed yet	尚未安装
-#. button in helpers.rs
+#. text in the Link grabber window
+#. Link grabber, a link's status: a web page sent it (Click'n'Load), so it isn't looked up (name, size, online) before it is added
+#, machine
+	Not looked up	未查找
+#. text in cnl.rs; button in helpers.rs
+#. button in the Click'n'Load window: refuse these links, ask again next time
 #, machine
 	Not now	暂不
 #. text in helpers.rs
@@ -3175,11 +3333,16 @@
 #. verb: opens the file
 #, machine
 	Open	打开
-#. button in crashui.rs; button in a dialog box; button in torrentfiles.rs
+#. button in crashui.rs; button in a dialog box; text in a dialog box; button in torrentfiles.rs
 #. crash report window button: show the report's file in its folder
+#. title of the message when the folder of a downloaded file can't be shown
 #. button that opens the torrent's containing folder in the file manager
 #, machine
 	Open folder	打开文件夹
+#. text in a download's progress window
+#. button in a download's progress window when the site sent a web page (a waiting page, a captcha) instead of the file: opens the download's link in the web browser
+#, machine
+	Open in browser	在浏览器中打开
 #. checkbox in the Add torrent window
 #, machine
 	Open magnet links and .torrent files with Mister Download Manager	使用 Mister Download Manager 打开磁力链接和 .torrent 文件
@@ -3229,6 +3392,10 @@
 #. tab title: what happens when the download finishes
 #, machine
 	Options on completion	完成后选项
+#. text in the Options window
+#. Options → Add an account: label before the field for an API key the user made at the service (Mega-Debrid: My Account → API Key; the other way to sign in)
+#, machine
+	Or paste an application's API key:	或粘贴应用程序的 API 密钥：
 #. text in the Options window
 #. Options → Add an account: label before the field for the service's API token (the other way to sign in)
 #, machine
@@ -3294,6 +3461,7 @@
 	Password	密码
 #. text in the Link grabber window; text in the Options window
 #. Link grabber: the package's archives' password (a label before its box)
+#. Options → Add an account: label before the field for the password at the debrid service
 #, machine
 	Password:	密码:
 #. text in the Add torrent window
@@ -3395,6 +3563,10 @@
 #. Options → Accounts: a debrid account's state; {days} the days of premium left
 #, machine
 	premium, {days} days left	高级版，剩余 {days} 天
+#. text in the Options window
+#. Options → General: shown inside the shortcut recorder box while waiting for the user to press a 2-key or 3-key shortcut (#558)
+#. the trailing ... means it is still going on: keep it
+	Press keys...	请按下组合键...
 #. button in a dialog box
 #. verb: open the part already downloaded
 #, machine
@@ -3417,7 +3589,7 @@
 #. text in a download's progress window
 #, machine
 	Property	属性
-#. text in the Options window
+#. text in errors.rs; text in the Options window
 #. tab title
 #, machine
 	Proxy / Socks	代理/SOCKS
@@ -3487,6 +3659,11 @@
 #. the trailing ... means it is still going on: keep it
 #, machine
 	Reading the torrent...	正在读取 torrent...
+#. message or event log entry in the main window
+#. the status strip while Tasks → Import reads a file; {file} is its name
+#. the trailing ... means it is still going on: keep it
+#, machine
+	Reading {file}...	正在读取 {file}...
 #. text in helpers.rs
 #, machine
 	Reads a page and lists every quality the site offers, up to 4K, from YouTube, Vimeo and over a thousand other sites.	读取页面并列出网站提供的所有质量，最高可达 4K，来自 YouTube、Vimeo 和一千多个其他网站。
@@ -3564,8 +3741,9 @@
 #. {name} = a file name (keep the braces as they are)
 #, machine
 	Remove {name} from the list?	从列表中删除 {name}？
-#. text in a download's progress window
+#. text in a download's progress window; text in torrent_rename.rs
 #. noun: label before the deferred new file or folder name in the progress window
+#. noun: label before the new file or folder name in Add torrent
 #, machine
 	Rename	重命名
 #. text in the Batch download window
@@ -3631,7 +3809,7 @@
 #. verb: stop the queue
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
-	S&top	停&止
+	S&top	停止(&T)
 #. text in the Scheduler window
 #. Saturday, as short as a calendar's column head (two letters in English)
 #, machine
@@ -3875,13 +4053,16 @@
 #. {error} = an error message (keep the braces as they are)
 #, machine
 	Sharing stopped: {error}	共享停止：{error}
+#. text in the Options window
+#. Options → General: label for the global keyboard shortcut that shows or hides MDM's main window (#558)
+	Shortcut to show or hide window:	显示或隐藏窗口的快捷键：
 #. text in the download list
 #, machine
 	Show	显示
 #. message or event log entry in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
-	Show &categories	显示&类别
+	Show &categories	显示类别(&C)
 #. text in the Options window
 #, machine
 	Show a dialog and ask what to do.	显示对话框并询问如何操作。
@@ -3901,6 +4082,9 @@
 #. checkbox in the Options window; checkbox in a download's progress window
 #, machine
 	Show download complete dialog	显示下载完成对话框
+#. checkbox in the Options window
+#, machine
+	Show download progress dialog when a download starts	下载开始时显示下载进度对话框
 #. button in a dialog box
 #. button: shows these downloads in MDM's list, selected
 #, machine
@@ -3933,6 +4117,10 @@
 #, machine
 	Sierra Leone	塞拉利昂
 #. button in the Options window
+#. button: sign in to the debrid service with the user name and password typed in
+#, machine
+	Sign in	登录
+#. button in the Options window
 #. button: sign in to the debrid service in the browser, by typing a code there
 #, machine
 	Sign in in the browser	在浏览器中登录
@@ -3948,6 +4136,10 @@
 #. Options → Accounts: where the debrid accounts' sign-ins and the other passwords are kept (Windows' own Credential Manager, in Control Panel)
 #, machine
 	Sign-ins and passwords are kept in Windows Credential Manager.	登录信息和密码保存在 Windows 凭据管理器中。
+#. text in the Options window
+#. Options → Add an account: signed in, the service gives no account name; {state} premium or not
+#, machine
+	Signed in ({state})	已登录 ({state})
 #. text in the Options window
 #. Options → Add an account: signed in; {user} the account's name, {state} premium or not
 #, machine
@@ -3990,6 +4182,7 @@
 #, machine
 	Size	大小
 #. text in the Download video window
+#. the video's file size is not known
 #, machine
 	size unknown	大小未知
 #. text in a download's Properties window
@@ -4363,6 +4556,9 @@
 #. Options → Remote → Status: the settings were changed; they apply on OK
 #, machine
 	The changes apply when you click OK.	更改将在您单击“确定”时应用。
+#. message or event log entry in the main window
+#, machine
+	The clipboard holds no text. Copy some links, or a text with links in it, and try again.	剪贴板中没有文本。请复制一些链接或包含链接的文本，然后重试。
 #. text in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. Tell a friend: Copy failed (another program holds the clipboard)
 #, machine
@@ -4404,6 +4600,11 @@
 #, machine
 	the connection closed before the part was complete	连接在部分完成前已关闭
 #. text in errors.rs
+#. a helper (yt-dlp, ffmpeg) couldn't be downloaded: the connection to its server ({host}) was cut as it opened
+#. {host} = a server name such as "example.com" (keep the braces as they are)
+#, machine
+	the connection to {host} was cut: a firewall, or a network that blocks it	到 {host} 的连接已断开：防火墙或网络阻止了连接
+#. text in errors.rs
 #, machine
 	the connection was lost while receiving data	接收数据时连接丢失
 #. text in the Add torrent window
@@ -4413,6 +4614,11 @@
 #. text in errors.rs
 #, machine
 	the disk is full	磁盘已满
+#. text in errors.rs
+#. a helper (yt-dlp, ffmpeg) couldn't be downloaded: the connection to its server ({host}) closed before all of it came
+#. {host} = a server name such as "example.com" (keep the braces as they are)
+#, machine
+	the download from {host} was cut short	从 {host} 下载已中断
 #. tooltip (why a control is greyed) in a download's Properties window
 #. tooltip of the greyed Open button in File Properties
 #, machine
@@ -4554,6 +4760,11 @@
 #. an FTPS (or other TLS) connection could not be secured
 #, machine
 	the secure connection failed	安全连接失败
+#. text in errors.rs
+#. a helper (yt-dlp, ffmpeg) couldn't be downloaded: the secure connection to its server ({host}) failed, usually because an antivirus or a proxy reads secure (HTTPS) connections with a certificate of its own
+#. {host} = a server name such as "example.com" (keep the braces as they are)
+#, machine
+	the secure connection to {host} failed: an antivirus's web filter or a proxy may be reading HTTPS	到 {host} 的安全连接失败：可能是防病毒软件的网络筛选器或代理正在读取 HTTPS
 #. text in a dialog box
 #. \\n starts a new line: break lines where they fit the translation
 #, machine
@@ -4575,10 +4786,15 @@
 	the server is busy ({status}); try again later	服务器正忙({status})；请稍后重试
 #. text in errors.rs
 #, machine
-	the server sent a web page instead of the file (sign-in needed or the link expired?)	服务器发送的是网页而不是文件(需要登录或链接已过期?)
-#. text in errors.rs
-#, machine
 	the server sent an unexpected part of the file ({detail})	服务器发送了意外的文件部分({detail})
+#. text in debrid.rs
+#. Options → Accounts: the service doesn't say whether the account is premium (Mega-Debrid, signed in with an API key); a free account's links are refused when downloading
+#, machine
+	the service doesn't say whether it is premium	服务未说明是否为高级账户
+#. text in errors.rs
+#. why a download failed (#701): a file host answered with its own web page (a countdown before the link, a captcha, a sign-in) where the file was expected. The browser gets past it; MDM's browser extension then hands the real file back to MDM
+#, machine
+	the site sent a web page instead of the file (a waiting page, a captcha or a sign-in): open the link in your browser, finish there, and the download comes back to MDM	网站发送了网页而不是文件（等待页面、验证码或登录页面）：请在浏览器中打开链接，完成后下载将返回 MDM
 #. text in the Download video window
 #. the Download video window: the site asked for a sign-in although the browser's extension passed the page's cookies
 #, machine
@@ -4599,6 +4815,10 @@
 #. the Download video window: the site's bot check (Cloudflare) turned yt-dlp away and no browser cookies were used
 #, machine
 	The site's bot check (Cloudflare) refused yt-dlp. If the page opens in your browser, choose that browser in Options → Sites Logins → Cookies for video sites and look the page up again, or use the Download video button over the video.	站点的机器人检查 (Cloudflare) 拒绝了 yt-dlp。如果页面在您的浏览器中打开，请在“选项”→“站点登录”→“视频站点 Cookie”中选择该浏览器，然后重新查找该页面，或使用视频上方的“下载视频”按钮。
+#. text in the Download video window
+#. the Download video window: the site's certificate is trusted neither by yt-dlp nor by the computer (asked again with the computer's certificates, #955); usually an antivirus or a proxy that reads secure (HTTPS) connections signs sites with a certificate of its own
+#, machine
+	The site's certificate isn't trusted, by yt-dlp nor by this computer: an antivirus's web filter or a proxy that reads HTTPS may be in the way. Turn its HTTPS scanning off, or add its certificate to the computer's, then look the page up again.	yt-dlp 和此计算机均不信任该网站的证书：可能是防病毒软件的网络筛选器或读取 HTTPS 的代理在阻止。请关闭其 HTTPS 扫描，或将其证书添加到计算机中，然后重新查找该页面。
 #. text in crashui.rs
 #. crash report window: the symbols couldn't be downloaded; the report still works
 #, machine
@@ -4755,6 +4975,7 @@
 #, machine
 	This name is reserved by Windows	此名称为 Windows 保留名称
 #. tooltip (why a control is greyed) in the Download video window
+#. why "Embed chapters" is greyed: ffmpeg (a helper program) is not installed
 #. why "Put them into the video" is greyed: ffmpeg (a helper program) is not installed
 #, machine
 	This needs ffmpeg	这需要 ffmpeg
@@ -4771,6 +4992,9 @@
 #. {name} = a file name (keep the braces as they are)
 #, machine
 	this program isn't {name}	此程序不是 {name}
+#. text in the Options window
+#. Options → General: shown when the chosen global shortcut is already registered by another program (#558)
+	This shortcut is already in use	此快捷键已被占用
 #. text in errors.rs
 #. why a download failed: the site's bot check (Cloudflare) lets browsers through, not programs. Alt+click: the link clicked with the Alt key held, which leaves the download to the browser
 #, machine
@@ -4909,6 +5133,15 @@
 #. button in helpers.rs
 #, machine
 	Try again	重试
+#. text in errors.rs
+#. what to do when a helper couldn't be downloaded because its server limits requests; {name} = yt-dlp, ffmpeg or gallery-dl; {helpers} and {other} = the buttons Helpers and Use another program
+#. {name} = a file name (keep the braces as they are)
+#, machine
+	Try again in an hour, or download {name} yourself and choose it in {helpers} → {other}.	请在一小时后重试，或者自行下载 {name}，然后在“{helpers}”→“{other}”中选择。
+#. text in errors.rs
+#. {name} = a file name (keep the braces as they are)
+#, machine
+	Try again later, or download {name} yourself and choose it in {helpers} → {other}.	请稍后重试，或者自行下载 {name}，然后在“{helpers}”→“{other}”中选择。
 #. text in the Scheduler window
 #. Tuesday, as short as a calendar's column head (two letters in English)
 #, machine
@@ -5055,6 +5288,7 @@
 #, machine
 	United States Minor Outlying Islands	美国本土外小岛屿
 #. text in a download's Properties window
+#. the web page is not known
 #, machine
 	Unknown	未知
 #. text in a dialog box; text in a download's progress window; text in whereis.rs
@@ -5093,7 +5327,7 @@
 #. text in the Options window
 #, machine
 	Use advanced browser integration	使用高级浏览器集成
-#. button in helpers.rs
+#. text in errors.rs; button in helpers.rs
 #. Video helpers: button: pick a program (yt-dlp or ffmpeg) already on the computer
 #. the trailing ... means it opens a window: keep it
 #, machine
@@ -5150,6 +5384,10 @@
 #. column title: the user name
 #, machine
 	User	用户
+#. text in the Options window
+#. Options → Add an account: label before the field for the user name at the debrid service
+#, machine
+	User name:	用户名：
 #. page title in the Options window
 #, machine
 	User names and passwords for servers/sites	服务器/站点的用户名和密码
@@ -5193,9 +5431,14 @@
 #, machine
 	Verify checksum	验证校验和
 #. text in the download list (sizes, speeds, status)
+#. a download's status while the finished file is checked against its checksum
 #. the trailing ... means it is still going on: keep it
 #, machine
 	Verifying...	正在验证...
+#. text in the download list (sizes, speeds, status)
+#. a download's status while the finished file is checked against its checksum; {percent} how much is checked, e.g. "45%"
+#, machine
+	Verifying... ({percent})	正在验证... ({percent})
 #. text in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. {version} = a version number (keep the braces as they are)
 #, machine
@@ -5296,6 +5539,9 @@
 #. remote control page (on a phone): label of the choice: start the new download now, or let it wait in a queue
 #, machine
 	When	何时
+#. text in the Options window
+#, machine
+	When it is off, downloads go on in the main window's list. Double-click one there to see its progress.	关闭时，下载会在主窗口列表中继续。双击列表中的下载可查看其进度。
 #. text in the Batch download window
 #, machine
 	Wildcard size	通配符大小
@@ -5303,6 +5549,13 @@
 #. the Scheduler, under "Wake the computer to run this queue" (Windows): "Allow wake timers" is on when plugged in, off on battery
 #, machine
 	Windows allows wake timers only while plugged in	Windows 仅在接通电源时允许唤醒计时器
+#. text in the Options window
+#. Options → General → Shortcut to show or hide window: shown in the disabled shortcut box on Linux (#558)
+	Windows and macOS	Windows 和 macOS
+#. text in the Options window
+#. tooltip of "Mark downloaded files as coming from the internet" on Windows
+#, machine
+	Windows checks the files marked this way: SmartScreen before a program first runs, Office's Protected View before a document opens. Unticked, or under Windows' policy "Do not preserve zone information in file attachments", no download is marked.	Windows 会检查这样标记的文件：SmartScreen 在程序首次运行前检查，Office 的受保护视图在文档打开前检查。如果未勾选，或者在 Windows 策略“不保留文件附件中的区域信息”下，则不会标记任何下载。
 #. text in the Options window
 #. Options → Accounts: Windows Credential Manager didn't answer, so the sign-ins stay in MDM's settings, encrypted so that only this Windows account can read them
 #, machine
@@ -5413,6 +5666,10 @@
 #. Video helpers (macOS, Linux): {path} = the system's ffmpeg
 #, machine
 	Your system's: {path}	您的系统：{path}
+#. text in the Download video window
+#. in Download video and the browser's video menu: yt-dlp had no JavaScript runtime, so YouTube listed only some qualities (often only the sound); Node.js and Deno are program names
+#, machine
+	YouTube needs a JavaScript runtime to list its video qualities: install Node.js or Deno, then look it up again	YouTube 需要 JavaScript 运行时才能列出其视频质量：请安装 Node.js 或 Deno，然后再次查找
 #. text in the Download video window
 #. the Download video window: yt-dlp couldn't read the cookies of the browser chosen in Options (Chrome, Edge...), which holds them while it runs; {browser} = its name
 #, machine
@@ -5547,6 +5804,14 @@
 #. text in a dialog box
 #, machine
 	{file} is no longer where it was saved (moved or deleted). Redownload, in its right-click menu, gets it again.	{file} 已不在原来的保存位置（已移动或删除）。可通过右键菜单中的“重新下载”再次下载。
+#. message or event log entry in the main window
+#. Import refused a file; {size} = its size and {limit} = the largest Import reads, like "4.50 GB" and "64.00 MB"
+#. {size} = a file size such as "4.2 MB" (keep the braces as they are)
+#, machine
+	{file} is too large to be a list of addresses ({size}). Import reads text files, web pages and .ef2 exports of up to {limit}.	{file} ({size}) 过大，无法作为地址列表。导入功能可读取大小不超过 {limit} 的文本文件、网页和 .ef2 导出文件。
+#. text in a dialog box
+#, machine
+	{file} was moved elsewhere by dragging it out of Download complete, and MDM couldn't learn where. Look for it where you dropped it.	{file} 已从“下载完成”拖出并移动到其他位置，MDM 无法识别具体位置。请在您放置它的位置查找。
 #. text in the Checksum window
 #. {algorithm} = a checksum algorithm such as "SHA-256" (keep the braces as they are)
 #, machine
@@ -5565,6 +5830,35 @@
 #. {size} = a file size such as "4.2 MB" (keep the braces as they are)
 #, machine
 	{have} of {total} pieces ({size} each)	{total} 个片段中的 {have} 个（每个 {size}）
+#. text in errors.rs
+#. a helper (yt-dlp, ffmpeg) couldn't be downloaded: its server ({host}) answered with an HTTP error ({status}, such as "404 Not Found")
+#. {host} = a server name such as "example.com" (keep the braces as they are)
+#, machine
+	{host} answered {status}	{host} 回复 {status}
+#. text in errors.rs
+#. a helper (yt-dlp, ffmpeg) couldn't be downloaded: its server's name ({host}, such as api.github.com) wasn't found
+#. {host} = a server name such as "example.com" (keep the braces as they are)
+#, machine
+	{host} could not be found: no connection, or a network that blocks it	找不到 {host}：无连接或网络阻止了连接
+#. text in errors.rs
+#. a helper (yt-dlp, ffmpeg) couldn't be downloaded: there is no way to its server ({host}); the network may be down
+#. {host} = a server name such as "example.com" (keep the braces as they are)
+#, machine
+	{host} could not be reached: check the connection	无法访问 {host}：请检查连接
+#. text in errors.rs
+#. a helper (yt-dlp, ffmpeg) couldn't be downloaded: its server ({host}) didn't answer in time
+#. {host} = a server name such as "example.com" (keep the braces as they are)
+#, machine
+	{host} did not answer in time	{host} 未及时响应
+#. text in errors.rs
+#. a helper (yt-dlp, ffmpeg) couldn't be downloaded: its server ({host}) or something on the way refused the connection
+#. {host} = a server name such as "example.com" (keep the braces as they are)
+#, machine
+	{host} refused the connection: a firewall, or a network that blocks it	{host} 拒绝连接：防火墙或网络阻止了连接
+#. text in errors.rs
+#. {host} = a server name such as "example.com" (keep the braces as they are)
+#, machine
+	{host} refused the request ({status}): too many requests from your network for now	{host} 拒绝请求 ({status})：您的网络请求过多
 #. text in the download list (sizes, speeds, status)
 #. {h} = hours; {m} = minutes (keep the braces as they are)
 #, machine
@@ -5645,6 +5939,10 @@
 #. text in errors.rs
 #, machine
 	{problem} ({cause})	{problem} ({cause})
+#. text in errors.rs
+#. why a helper couldn't be downloaded ({problem}), then what to do about it ({advice}, whole sentences)
+#, machine
+	{problem}. {advice}	{problem}. {advice}
 #. text in errors.rs
 #. a debrid service's error: too many requests; MDM waits and retries
 #, machine
@@ -6172,6 +6470,10 @@ extension	This page's player streams its video in pieces, so there's no file to 
 #, machine
 extension	Turn on	启用
 #. text in the browser extension
+#. link beside "Downloads from <site> stay with the browser" in the toolbar button's popup: take the site off the excluded sites again
+#, machine
+extension	Undo	撤销
+#. text in the browser extension
 #. status when the app is older than the extension; keep the name Mister Download Manager as it is
 #, machine
 extension	Update Mister Download Manager to use everything this extension offers	更新 Mister Download Manager 以使用此扩展提供的所有功能
@@ -6207,6 +6509,10 @@ key	Ctrl+0	Ctrl+0
 #. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
 #, machine
 key	Ctrl+A	Ctrl+A
+#. key name or combination in the Help menu's windows (About, updates, shortcuts, Tell a friend)
+#. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
+#, machine
+key	Ctrl+B	Ctrl+B
 #. key name or combination in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
 #, machine
@@ -6300,15 +6606,15 @@ menu	&About Mister Download Manager	关于 Mister Download Manager(&A)
 #, machine
 menu	&Add new download	添加新下载(&D)
 #. menu command in the main window
+#. View → Window system: MDM chooses the window system itself at each start
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#. the trailing ... means it opens a window: keep it
 #, machine
-menu	&Add new download...	添&加新下载...
+menu	&Automatic	&自动
 #. menu command in the main window
 #. View → Text: letters drawn the classic way, hinted to whole pixels (crisp, coarse on a dense screen)
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
-menu	&Classic	经&典
+menu	&Classic	经典(&C)
 #. menu command in standard windows
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
@@ -6338,7 +6644,7 @@ menu	&Import	导入(&I)
 #. View menu: submenu choosing how large MDM draws its windows and text (100 % to 200 %), as a browser's zoom
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
-menu	&Interface size	界面&大小
+menu	&Interface size	界面大小(&I)
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
@@ -6379,13 +6685,13 @@ menu	&Report a problem	报告问题(&R)
 #. header menu: put the columns back as they first were (order, widths, all shown)
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
-menu	&Reset columns	&重置列
+menu	&Reset columns	重置列(&R)
 #. menu command in the main window
 #. Tasks menu: the RSS feeds window (feeds of torrents, and rules that add them)
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #. the trailing ... means it opens a window: keep it
 #, machine
-menu	&RSS feeds...	R&SS 源...
+menu	&RSS feeds...	RSS 源(&S)...
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
@@ -6399,7 +6705,7 @@ menu	&Show hidden tabs	显示隐藏的选项卡(&S)
 #. View → Text: letters drawn smooth, as Windows' modern apps draw them, anti-aliased at any size
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
-menu	&Smooth	&平滑
+menu	&Smooth	平滑(&S)
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
@@ -6408,11 +6714,6 @@ menu	&Stop All	停止所有(&T)
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
 menu	&Stop Download	停止下载(&S)
-#. menu command in the main window
-#. View menu: submenu choosing how the text is drawn (smooth or classic)
-#. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
-menu	&Text	&文本
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
@@ -6430,6 +6731,11 @@ menu	&Undo	撤销(&U)
 #, machine
 menu	&Video downloads	视频下载(&V)
 #. menu command in the main window
+#. View menu: submenu choosing the window system MDM's windows use on Linux (X11 through XWayland, or Wayland)
+#. & marks the keyboard shortcut letter: keep one & before a letter of the translation
+#, machine
+menu	&Window system	&窗口系统
+#. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
 menu	Add &batch download	添加批量下载(&B)
@@ -6438,6 +6744,11 @@ menu	Add &batch download	添加批量下载(&B)
 #. the trailing ... means it opens a window: keep it
 #, machine
 menu	Add &magnet link...	添加磁力链接(&M)...
+#. menu command in the main window
+#. & marks the keyboard shortcut letter: keep one & before a letter of the translation
+#. the trailing ... means it opens a window: keep it
+#, machine
+menu	Add &new download...	添加新下载(&N)...
 #. menu command in the main window
 #. View → Theme: picks a theme file or a Base16 or pywal colour scheme, copies it into the themes folder and uses it
 #, machine
@@ -6523,7 +6834,7 @@ menu	By Save &Path	按保存路径(&P)
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
-menu	By St&atus	按状态(&U)
+menu	By Stat&us	按状态(&U)
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
@@ -6572,9 +6883,17 @@ menu	Delete from queue	从队列中删除
 #, machine
 menu	Direct3D	Direct3D
 #. menu command in the main window
+#. View → Draw with: a greyed note; what draws the windows and why: Direct3D 12 through Windows' own software renderer (WARP, keep the name), because this computer's graphics card has no Direct3D 12 driver
+#, machine
+menu	Direct3D 12 (WARP): this graphics card has no Direct3D 12 driver	Direct3D 12 (WARP)：此显卡没有 Direct3D 12 驱动程序
+#. menu command in the main window
 #. View → Draw with: a greyed note; Direct3D failed on this computer, so OpenGL draws the windows
 #, machine
 menu	Direct3D didn't start here: OpenGL draws	Direct3D 未能启动：使用 OpenGL 绘制
+#. menu command in the main window
+#. View → Draw with: a greyed note; Direct3D draws the windows through Windows' own software renderer (WARP) instead of a graphics card
+#, machine
+menu	Direct3D draws with Windows' software renderer (WARP)	Direct3D 使用 Windows 高级光栅化平台 (WARP) 绘制
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #. the trailing ... means it opens a window: keep it
@@ -6645,6 +6964,14 @@ menu	Hide drop target	隐藏拖放目标
 #, machine
 menu	High contrast	高对比度
 #. menu command in the main window
+#. View → Window system: a greyed note; MDM's windows are Wayland's now
+#, machine
+menu	In use: Wayland	正在使用：Wayland
+#. menu command in the main window
+#. View → Window system: a greyed note; MDM's windows are X11's (through XWayland) now
+#, machine
+menu	In use: X11 (XWayland)	正在使用：X11 (XWayland)
+#. menu command in the main window
 #. View → Draw with: a greyed note under "… didn't start here"; why: another error, written in MDM's log
 #, machine
 menu	It couldn't start: the log says why	无法启动：日志中说明了原因
@@ -6668,6 +6995,10 @@ menu	Metal	Metal
 #. View → Draw with: a greyed note; Metal failed on this computer, so OpenGL draws the windows
 #, machine
 menu	Metal didn't start here: OpenGL draws	Metal 未在此处启动: OpenGL 正在绘制
+#. menu command in the main window
+#. View → Draw with: a greyed note; Metal draws the windows through a software renderer instead of a graphics card
+#, machine
+menu	Metal draws with a software renderer	Metal 使用软件渲染器绘制
 #. menu command in the main window
 #. View → Theme: a style theme's name (Windows 8's flat look); keep "Metro" unless your language writes it otherwise
 #, machine
@@ -6699,7 +7030,7 @@ menu	Open	打开
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #. the trailing ... means it opens a window: keep it
 #, machine
-menu	Open &torrent file...	打开&torrent 文件...
+menu	Open &torrent file...	打开 torrent 文件(&T)...
 #. menu command in the main window
 #, machine
 menu	Open folder	打开文件夹
@@ -6716,6 +7047,26 @@ menu	Open with...	打开方式...
 #, machine
 menu	OpenGL	OpenGL
 #. menu command in the main window
+#. View → Draw with: a greyed note; why MDM no longer draws with OpenGL: it couldn't start on this computer
+#, machine
+menu	OpenGL didn't start here	OpenGL 未在此处启动
+#. menu command in the main window
+#. View → Draw with: a greyed note; why MDM no longer draws with OpenGL: its window froze inside the graphics card's driver while OpenGL drew
+#, machine
+menu	OpenGL froze inside the graphics driver here	OpenGL 在此处的图形驱动程序中冻结
+#. menu command in the main window
+#. View → Draw with: a greyed note; this computer's OpenGL (its graphics driver) is too old, so MDM doesn't draw with it
+#, machine
+menu	OpenGL here is too old to draw MDM	此处的 OpenGL 版本过旧，无法绘制 MDM
+#. menu command in the main window
+#. View → Draw with: a greyed note; why MDM no longer draws with OpenGL: its window stayed empty for 10 seconds, so MDM started again another way
+#, machine
+menu	OpenGL's first frame didn't show within 10 seconds	OpenGL 的第一帧在 10 秒内未显示
+#. menu command in the main window
+#. View → Draw with: a greyed note; why MDM no longer draws with OpenGL: MDM crashed or was closed while starting with it
+#, machine
+menu	OpenGL's last start ended before its first frame	OpenGL 的上次启动在第一帧显示前结束
+#. menu command in the main window
 #. what double-clicking a download does — noun: show its properties
 #. noun: opens the download's Properties window
 #. noun: opens the category's properties
@@ -6729,7 +7080,7 @@ menu	pywal	pywal 配色
 #. verb: download the file again from the start
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
-menu	R&edownload	重新&下载
+menu	R&edownload	重新下载(&E)
 #. menu command in the main window
 #. right-click → Torrent: ask the torrent's trackers for peers again now
 #, machine
@@ -6753,7 +7104,7 @@ menu	Remove	删除
 #. verb: removes the selected download from the list and its file from the disk
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
-menu	Remove with &files	删除&文件
+menu	Remove with &files	删除文件(&F)
 #. menu command in the main window
 #. verb: removes the download from the list and its file from the disk
 #, machine
@@ -6764,16 +7115,16 @@ menu	Resume Download	恢复下载
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
-menu	S&cheduler	计划&任务
+menu	S&cheduler	计划任务(&C)
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #. the trailing ... means it opens a window: keep it
 #, machine
-menu	S&ettings...	&设置...
+menu	S&ettings...	设置(&E)...
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
-menu	S&top queue	停止&队列
+menu	S&top queue	停止队列(&T)
 #. menu command in the main window
 #. command: opens this queue's schedule (when it starts and stops)
 #, machine
@@ -6785,18 +7136,18 @@ menu	Select &all	全选(&A)
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
-menu	Show &drop target	显示&拖放目标
+menu	Show &drop target	显示拖放目标(&D)
 #. menu command in the main window
 #, machine
 menu	Show Mister Download Manager	显示 Mister Download Manager
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
-menu	Speed &Limiter	速度&限制器
+menu	Speed &Limiter	速度限制器(&L)
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
-menu	Start &queue	启动&队列
+menu	Start &queue	启动队列(&Q)
 #. menu command in the main window
 #, machine
 menu	Start now	立即开始
@@ -6810,11 +7161,16 @@ menu	Stop Download	停止下载
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
-menu	Support &MDM	支持 &MDM
+menu	Support &MDM	支持 MDM(&M)
+#. menu command in the main window
+#. View menu: submenu choosing how the text is drawn (smooth or classic)
+#. & marks the keyboard shortcut letter: keep one & before a letter of the translation
+#, machine
+menu	Te&xt	文本(&X)
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
-menu	Tell a &friend	推荐给&朋友
+menu	Tell a &friend	推荐给朋友(&F)
 #. menu command in the main window
 #. View → Draw with: a greyed note under "… didn't start here"; why: the graphics card stopped working twice (a driver update or reset)
 #, machine
@@ -6827,12 +7183,12 @@ menu	Theme	主题
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #. the trailing ... means it opens a window: keep it
 #, machine
-menu	To &IDM export file...	导出到 &IDM 文件...
+menu	To &IDM export file...	导出到 IDM 文件(&I)...
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #. the trailing ... means it opens a window: keep it
 #, machine
-menu	To &text file...	导出到&文本文件...
+menu	To &text file...	导出到文本文件(&T)...
 #. menu command in the main window
 #. noun: the toolbar (submenu of View with its settings)
 #, machine
@@ -6845,15 +7201,15 @@ menu	Torrent	种子
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #. the trailing ... means it opens a window: keep it
 #, machine
-menu	Torrent setti&ngs...	Torrent 设&置...
+menu	Torrent setti&ngs...	Torrent 设置(&N)...
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
-menu	Turn o&n	打&开
+menu	Turn o&n	打开(&N)
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
-menu	Turn of&f	关&闭
+menu	Turn of&f	关闭(&F)
 #. menu command in the main window
 #. the trailing ... means it opens a window: keep it
 #, machine
@@ -6866,26 +7222,30 @@ menu	Vulkan	Vulkan
 #. View → Draw with: a greyed note; Vulkan failed on this computer, so OpenGL draws the windows
 #, machine
 menu	Vulkan didn't start here: OpenGL draws	Vulkan 未在此处启动: OpenGL 正在绘制
+#. menu command in the main window
+#. View → Draw with: a greyed note; Vulkan draws the windows through a software renderer instead of a graphics card
+#, machine
+menu	Vulkan draws with a software renderer	Vulkan 使用软件渲染器绘制
 #. menu bar title in the main window (menus, toolbar, Categories pane)
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
-menubar	&Downloads	&下载
+menubar	&Downloads	下载(&D)
 #. menu bar title in the main window (menus, toolbar, Categories pane)
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
-menubar	&File	&文件
+menubar	&File	文件(&F)
 #. menu bar title in the main window (menus, toolbar, Categories pane)
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
-menubar	&Help	&帮助
+menubar	&Help	帮助(&H)
 #. menu bar title in the main window (menus, toolbar, Categories pane)
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
-menubar	&Tasks	&任务
+menubar	&Tasks	任务(&T)
 #. menu bar title in the main window (menus, toolbar, Categories pane)
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
-menubar	&View	&视图
+menubar	&View	视图(&V)
 #. toolbar button in the main window
 #, machine
 toolbar	Add Torrent	添加 Torrent

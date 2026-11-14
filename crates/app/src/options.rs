@@ -41,6 +41,9 @@ enum Sub {
     Panels(bool, String, String),
     /// General → Keys...: (also take the files the browser would open).
     Keys(bool),
+    /// Downloads → Customize "Download progress" dialog → Edit... (#1041): (show it when a
+    /// download starts).
+    Progress(bool),
     /// General → Test browser integration...: the checks, as found when it opened.
     Test(Vec<crate::extension::Check>),
     /// File types → "Don't start downloading automatically from the following addresses" →
@@ -209,6 +212,8 @@ pub struct OptionsDialog {
     learned: Vec<(String, u32)>,
     /// 7-Zip's program (Archives: RAR goes through it), looked for when the window opens.
     seven_zip: Option<std::path::PathBuf>,
+    /// HatchZip's command line program (Archives: extract in place), looked for with 7-Zip.
+    hatch_zip: Option<std::path::PathBuf>,
     /// Proxy / Socks → Network adapter (#35): the computer's adapters, read again every 2 s.
     adapters: Option<(std::time::Instant, Vec<mdm_engine::net::Adapter>)>,
     /// Remote (#141): the running remote control (its state, paired devices, pairing), the
@@ -221,6 +226,11 @@ pub struct OptionsDialog {
     /// Sites Logins → Cookies for video sites (#229): the browser in the list (an index into
     /// `mdm_tools::proc::cookie_browsers`), kept while Off is chosen.
     cookie_browser: usize,
+    /// General → Shortcut to show or hide window (#558): waiting for a key combination.
+    recording_hotkey: bool,
+    /// General → Shortcut to show or hide window (#558): true when the chosen shortcut could not
+    /// be registered because another program holds it.
+    hotkey_taken: bool,
     /// Downloads → User-Agent → Automatic (#668): the default browser's, the box then shows it;
     /// unticked, the box's own text (empty is automatic again when the window opens next).
     ua_auto: bool,
@@ -232,6 +242,20 @@ pub struct OptionsDialog {
 }
 
 impl OptionsDialog {
+    /// True while the user is recording a new global shortcut in General (#558).
+    pub fn is_recording_hotkey(&self) -> bool {
+        self.recording_hotkey
+    }
+
+    /// The shortcut currently shown in General (#558), for live registration while Options is open.
+    pub fn draft_hotkey(&self) -> &str {
+        &self.s.show_hide_hotkey
+    }
+
+    /// Updates whether the current shortcut failed to register because another program holds it.
+    pub fn set_hotkey_taken(&mut self, taken: bool) {
+        self.hotkey_taken = taken;
+    }
     /// Open on tab `page` (the numbers in `tabs`: 0 General … 4 Connection, 5 Proxy / Socks,
     /// 6 Sites Logins, 7 Accounts, 8 Sounds, 9 Regional, 10 Archives); for `/show options:<tab>`.
     pub fn on_page(mut self, page: usize) -> Self {
@@ -262,12 +286,14 @@ impl OptionsDialog {
         self
     }
 
-    /// With General → Test browser integration's window over it, or Accounts → Add's (`/show
-    /// options:test`, `options:account`: screenshots, #192).
+    /// With General → Test browser integration's window over it, Accounts → Add's, or
+    /// Downloads → Customize "Download progress" dialog's (`/show options:test`,
+    /// `options:account`, `options:progress`: screenshots, #192, #1041).
     pub fn with_window(mut self, name: &str) -> Self {
         match name {
             "test" => self.sub = Some(Sub::Test(crate::extension::checks(&self.s))),
             "account" => self.sub = Some(Sub::Account(AccountEdit::default())),
+            "progress" => self.sub = Some(Sub::Progress(self.s.show_progress)),
             _ => {}
         }
         self
@@ -300,11 +326,14 @@ impl OptionsDialog {
             restore_ask: None,
             learned,
             seven_zip: crate::extractq::seven_zip(),
+            hatch_zip: crate::extractq::hatch_zip(),
             adapters: None,
             remote: None,
             port: settings.remote_port.to_string(),
             device_rows: Default::default(),
             cookie_browser: cookie_browser_at(settings),
+            recording_hotkey: false,
+            hotkey_taken: false,
             ua_auto: settings.own_user_agent().is_none(),
             snoozed_until: None,
             resume_snooze: false,
@@ -314,6 +343,9 @@ impl OptionsDialog {
     /// `Done(settings)` on OK.
     pub fn show(&mut self, ctx: &egui::Context, downloads: &std::path::Path) -> Outcome<Settings> {
         let modal = self.sub.is_some() || self.cat_edit.is_some() || self.restore_ask.is_some();
+        if modal || self.page != 0 {
+            self.recording_hotkey = false;
+        }
         let outcome = window(
             ctx,
             "options",
@@ -517,13 +549,171 @@ impl OptionsDialog {
                 ));
             }
         }
+        // MDM's (#558): global keyboard shortcut (2-key or 3-key combination) to show or hide
+        // the main window (Windows and macOS).
+        let hk_supported = cfg!(any(windows, target_os = "macos"));
+        let hk_taken = hk_supported
+            && self.hotkey_taken
+            && !self.recording_hotkey
+            && !s.show_hide_hotkey.is_empty();
+        let (clear_x, clear_w) =
+            winui::buttons_to_right(&p, 392.0, 0.0, &[("Clear", 56.0)], 110.0)[0];
+        let box_w = 126.0;
+        let box_x = clear_x - 6.0 - box_w;
+        // i18n: Options → General: label for the global keyboard shortcut that shows or hides MDM's main window (#558)
+        let base_hk_label = crate::i18n::t("Shortcut to show or hide window:");
+        // i18n: Options → General: shown when the chosen global shortcut is already registered by another program (#558)
+        let taken_msg = crate::i18n::t("This shortcut is already in use");
+        let (hk_label, lbl_ink) = if hk_taken {
+            (taken_msg, winui::ERROR())
+        } else if hk_supported {
+            (base_hk_label, LIGHT_TEXT())
+        } else {
+            (base_hk_label, LIGHT_DISABLED())
+        };
+        let (lbl_rc, lbl_cut) = winui::text_fit(
+            &p,
+            o.x + 30.0,
+            o.y + 243.0,
+            hk_label,
+            lbl_ink,
+            o.x + box_x - 6.0,
+        );
+        if lbl_cut {
+            winui::full_on_hover(ui, lbl_rc, ("general-hotkey", 243), hk_label);
+        }
+        let box_rc = r(o, box_x, 229.0, box_w, 21.0);
+        let box_resp = ui.interact(
+            box_rc,
+            egui::Id::unique("hotkey-recorder"),
+            if hk_supported {
+                Sense::click()
+            } else {
+                Sense::hover()
+            },
+        );
+        box_resp.ctx.accesskit_node_builder(box_resp.id, |node| {
+            node.set_role(egui::accesskit::Role::Button);
+            node.set_label(base_hk_label.trim_end_matches(':').trim().to_owned());
+            if !hk_supported {
+                node.set_disabled();
+            }
+        });
+        let box_resp = if hk_taken && box_resp.hovered() {
+            box_resp.on_hover_text(taken_msg)
+        } else {
+            box_resp
+        };
+        if hk_supported && box_resp.clicked() {
+            self.recording_hotkey = !self.recording_hotkey;
+        }
+        if hk_supported && self.recording_hotkey {
+            match ui.input(crate::hotkey::capture_from_egui) {
+                crate::hotkey::CaptureEvent::Recorded(sc) => {
+                    s.show_hide_hotkey = sc.canonical();
+                    self.recording_hotkey = false;
+                    winui::take_key(ui, egui::Key::Escape);
+                    winui::take_key(ui, egui::Key::Enter);
+                }
+                crate::hotkey::CaptureEvent::Clear => {
+                    s.show_hide_hotkey.clear();
+                    self.recording_hotkey = false;
+                    winui::take_key(ui, egui::Key::Escape);
+                }
+                crate::hotkey::CaptureEvent::Cancel => {
+                    self.recording_hotkey = false;
+                    winui::take_key(ui, egui::Key::Escape);
+                }
+                crate::hotkey::CaptureEvent::None => {
+                    if ui.input(|i| i.pointer.any_pressed()) && !box_resp.hovered() {
+                        self.recording_hotkey = false;
+                    }
+                }
+            }
+        }
+        p.rect_filled(
+            box_rc,
+            0.0,
+            if hk_supported {
+                winui::FIELD()
+            } else {
+                LIGHT_BG()
+            },
+        );
+        let border = if self.recording_hotkey {
+            winui::SELECTION()
+        } else if hk_taken {
+            winui::ERROR()
+        } else {
+            winui::FIELD_EDGE()
+        };
+        p.rect_stroke(
+            box_rc,
+            0.0,
+            egui::Stroke::new(1.0, border),
+            egui::StrokeKind::Inside,
+        );
+        let (hk_text, hk_ink) = if !hk_supported {
+            (
+                // i18n: Options → General → Shortcut to show or hide window: shown in the disabled shortcut box on Linux (#558)
+                crate::i18n::t("Windows and macOS").to_owned(),
+                LIGHT_DISABLED(),
+            )
+        } else if self.recording_hotkey {
+            match ui.input(|i| crate::hotkey::pending_modifiers_preview(i.modifiers)) {
+                Some(mods) => (crate::i18n::ltr(&mods), LIGHT_TEXT()),
+                // i18n: Options → General: shown inside the shortcut recorder box while waiting for the user to press a 2-key or 3-key shortcut (#558)
+                None => (crate::i18n::t("Press keys...").to_owned(), winui::MUTED()),
+            }
+        } else if s.show_hide_hotkey.is_empty() {
+            (crate::i18n::t("None").to_owned(), winui::MUTED())
+        } else {
+            let shown = crate::hotkey::Shortcut::parse(&s.show_hide_hotkey).map_or_else(
+                || s.show_hide_hotkey.clone(),
+                crate::hotkey::Shortcut::display,
+            );
+            let ink = if hk_taken {
+                winui::ERROR()
+            } else {
+                LIGHT_TEXT()
+            };
+            (crate::i18n::ltr(&shown), ink)
+        };
+        winui::fit(
+            ui,
+            &p,
+            o.x + box_x + 6.0,
+            o.y + 243.0,
+            &hk_text,
+            hk_ink,
+            o.x + box_x + box_w - 6.0,
+            "hotkey-value",
+        );
+        let clear_kind =
+            if hk_supported && (!s.show_hide_hotkey.is_empty() || self.recording_hotkey) {
+                ButtonKind::Normal
+            } else {
+                ButtonKind::Disabled
+            };
+        if winui::button_light(
+            ui,
+            r(o, clear_x, 229.0, clear_w, 21.0),
+            "Clear",
+            clear_kind,
+            false,
+        )
+        .clicked()
+        {
+            s.show_hide_hotkey.clear();
+            self.recording_hotkey = false;
+        }
         group(
             ui,
             o,
             16.0,
-            234.0,
+            256.0,
             392.0,
-            160.0,
+            138.0,
             "Capture downloads from the following browsers:",
         );
         // Check list: one row per browser in the shared row list (Space ticks the selected
@@ -534,7 +724,7 @@ impl OptionsDialog {
         let ev = winui::row_list(
             ui,
             "browsers",
-            r(o, 30.0, 244.0, 362.0, 78.0),
+            r(o, 30.0, 266.0, 362.0, 56.0),
             browsers.len(),
             17.0,
             &mut self.browser_rows,
@@ -904,8 +1094,7 @@ impl OptionsDialog {
         {
             let (title, from) = (dir_line.clone(), self.cat_dir.clone());
             winui::start_pick(ui.ctx(), "options-category-folder", move || {
-                rfd::FileDialog::new()
-                    .set_title(title)
+                crate::winui::file_dialog(&title)
                     .set_directory(from)
                     .pick_folder()
             });
@@ -931,16 +1120,41 @@ impl OptionsDialog {
             "Set file creation date as provided by the server",
             true,
         );
-        group(ui, o, 21.0, 334.0, 380.0, 118.0, "Temporary directory");
+        // #813: the Mark of the Web (macOS' quarantine): like the date, what the file carries.
+        #[cfg(windows)]
+        let tip = crate::i18n::t(
+            // i18n: tooltip of "Mark downloaded files as coming from the internet" on Windows
+            "Windows checks the files marked this way: SmartScreen before a program first runs, Office's Protected View before a document opens. Unticked, or under Windows' policy \"Do not preserve zone information in file attachments\", no download is marked.",
+        );
+        #[cfg(target_os = "macos")]
+        let tip = crate::i18n::t(
+            // i18n: tooltip of "Mark downloaded files as coming from the internet" on macOS
+            "macOS checks the files marked this way: Gatekeeper before a program first opens. Unticked, no download is marked.",
+        );
+        #[cfg(all(unix, not(target_os = "macos")))]
+        let tip = crate::i18n::t(
+            // i18n: tooltip of "Mark downloaded files as coming from the internet" on Linux
+            "File managers show where the files marked this way came from. Unticked, no download is marked.",
+        );
+        winui::checkbox_light(
+            ui,
+            o + vec2(33.0, 329.0),
+            &mut self.s.mark_downloads,
+            "Mark downloaded files as coming from the internet",
+            true,
+        )
+        .on_hover_text(tip);
+        // Down by the row above it; its empty bottom shortened by as much.
+        group(ui, o, 21.0, 356.0, 380.0, 96.0, "Temporary directory");
         // D-004: no temporary directory — parts are written next to the file, so there is
         // nothing to assemble at the end.
         let none = crate::i18n::t("Not used: file parts are written next to the file");
         let (browse_x, browse_w) =
             winui::buttons_to_right(&p, 390.0, 0.0, &[("Browse", 73.0)], 160.0)[0];
-        readonly(ui, r(o, 30.0, 349.0, browse_x - 6.0 - 30.0, 23.0), none);
+        readonly(ui, r(o, 30.0, 371.0, browse_x - 6.0 - 30.0, 23.0), none);
         winui::button_light(
             ui,
-            r(o, browse_x, 350.0, browse_w, 21.0),
+            r(o, browse_x, 372.0, browse_w, 21.0),
             // i18n: verb: choose a folder
             "Browse",
             ButtonKind::Disabled,
@@ -949,7 +1163,7 @@ impl OptionsDialog {
         winui::paragraph(
             &p,
             o.x + 30.0,
-            o.y + 387.0,
+            o.y + 409.0,
             crate::i18n::t(
                 "Mister Download Manager writes every connection straight into the final\nfile (a sparse part file next to it), so no temporary directory and no\nassembling step are needed.",
             ),
@@ -1012,7 +1226,6 @@ impl OptionsDialog {
             58.0,
             398.0,
         );
-        let s = &mut self.s;
         // Edit... as wide as its label in this language (#192), its caption before it.
         let (edit_x, edit_w) =
             winui::buttons_to_right(&p, 392.0, 0.0, &[("Edit...", 73.0)], 160.0)[0];
@@ -1021,17 +1234,22 @@ impl OptionsDialog {
             o.x + edit_x - 13.0,
             o.y + 104.0,
             crate::i18n::t("Customize \"Download progress\" dialog"),
-            LIGHT_DISABLED(),
+            LIGHT_TEXT(),
         );
-        // The progress dialog customisation dialog is not built yet.
-        winui::button_light(
+        // Whether a download's progress window opens when it starts (#1041).
+        if winui::button_light(
             ui,
             r(o, edit_x, 89.0, edit_w, 21.0),
             // i18n: verb: edit the item
             "Edit...",
-            ButtonKind::Disabled,
+            ButtonKind::Normal,
             false,
-        );
+        )
+        .clicked()
+        {
+            self.sub = Some(Sub::Progress(self.s.show_progress));
+        }
+        let s = &mut self.s;
         winui::checkbox_light(
             ui,
             o + vec2(24.0, 120.0),
@@ -2128,7 +2346,7 @@ impl OptionsDialog {
         {
             let title = pick_title.to_owned();
             winui::start_pick(ui.ctx(), "options-cookie-profile", move || {
-                rfd::FileDialog::new().set_title(title).pick_folder()
+                crate::winui::file_dialog(&title).pick_folder()
             });
         }
         if let Some(dir) = winui::picked(ui.ctx(), "options-cookie-profile") {
@@ -2175,7 +2393,7 @@ impl OptionsDialog {
         );
         let s = &mut self.s;
         // i18n: Options → Archives: group box title
-        group(ui, o, 16.0, 92.0, 392.0, 196.0, "Archives");
+        group(ui, o, 16.0, 92.0, 392.0, 228.0, "Archives");
         winui::checkbox_light(
             ui,
             o + vec2(30.0, 110.0),
@@ -2234,8 +2452,18 @@ impl OptionsDialog {
             o.x + 400.0,
             13.0,
         );
-        let (rar, ink) = match &self.seven_zip {
-            Some(path) => (
+        // HatchZip only when asked for (in place); without it, 7z and RAR need 7-Zip.
+        let hatch = self.hatch_zip.as_ref().filter(|_| s.extract_in_place);
+        let (rar, ink) = match (hatch, &self.seven_zip) {
+            (Some(path), _) => (
+                crate::i18n::fmt(
+                    // i18n: Options → Archives, when Extract in place with HatchZip (a program's name) is on: {path} is where its program is
+                    crate::i18n::t("7z and RAR archives are extracted by HatchZip ({path})."),
+                    &[("path", &crate::i18n::ltr(&path.display().to_string()))],
+                ),
+                LIGHT_TEXT(),
+            ),
+            (None, Some(path)) => (
                 crate::i18n::fmt(
                     // i18n: Options → Archives: {path} is where 7-Zip's program is
                     crate::i18n::t("7z and RAR archives are extracted by 7-Zip ({path})."),
@@ -2243,7 +2471,7 @@ impl OptionsDialog {
                 ),
                 LIGHT_TEXT(),
             ),
-            None => (
+            (None, None) => (
                 // i18n: Options → Archives, when 7-Zip isn't installed
                 crate::i18n::t(
                     "7z and RAR archives need 7-Zip (7-zip.org), which isn't installed.",
@@ -2262,11 +2490,25 @@ impl OptionsDialog {
             o.x + 400.0,
             "opt-rar-tool",
         );
-        // i18n: Options → Archives: group box title
-        group(ui, o, 16.0, 300.0, 392.0, 100.0, "Link grabber");
+        let has_hatchzip = self.hatch_zip.is_some();
         winui::checkbox_light(
             ui,
-            o + vec2(30.0, 318.0),
+            o + vec2(30.0, 294.0),
+            &mut s.extract_in_place,
+            if has_hatchzip {
+                // i18n: Options → Archives check box: HatchZip (a program's name) removes the archive while extracting it, so only the extracted files need disk space
+                "Extract in place with HatchZip: only the files need room"
+            } else {
+                // i18n: Options → Archives check box, greyed: HatchZip (a program's name, hatchzip.dev its site) isn't installed
+                "Extract in place with HatchZip (hatchzip.dev, not installed)"
+            },
+            has_hatchzip,
+        );
+        // i18n: Options → Archives: group box title
+        group(ui, o, 16.0, 320.0, 392.0, 132.0, "Link grabber");
+        winui::checkbox_light(
+            ui,
+            o + vec2(30.0, 338.0),
             &mut s.grabber_check,
             // i18n: Options → Archives → Link grabber check box (IDM's Download all links looks every link up)
             "Look links up when they arrive (name, size, online)",
@@ -2274,15 +2516,23 @@ impl OptionsDialog {
         );
         winui::checkbox_light(
             ui,
-            o + vec2(30.0, 342.0),
+            o + vec2(30.0, 362.0),
             &mut s.grabber_hide_pages,
             "Hide web pages",
+            true,
+        );
+        winui::checkbox_light(
+            ui,
+            o + vec2(30.0, 386.0),
+            &mut s.cnl_on,
+            // i18n: Options → Archives → Link grabber check box: Click'n'Load, a link site's button that sends its links to a program on this computer (port 9666, as JDownloader)
+            "Accept Click'n'Load from web pages (port 9666)",
             true,
         );
         winui::paragraph(
             &p,
             o.x + 30.0,
-            o.y + 380.0,
+            o.y + 418.0,
             crate::i18n::t(
                 "Tasks → Link grabber, or the browser's \"Download all links\": a split\narchive's volumes are one package, the other links of a page another.",
             ),
@@ -2587,8 +2837,7 @@ impl OptionsDialog {
                 // i18n: the kind of file the Open dialog lists (sound files)
                 let kind = crate::i18n::t("Sounds").to_owned();
                 winui::start_pick(ui.ctx(), &format!("sound-{i}"), move || {
-                    rfd::FileDialog::new()
-                        .set_title(title)
+                    crate::winui::file_dialog(&title)
                         .add_filter(kind, &["wav"])
                         .pick_file()
                 });
@@ -3251,7 +3500,8 @@ impl OptionsDialog {
                             &p,
                             o.x + 14.0,
                             o.y + 133.0,
-                            crate::i18n::t("(separate names by spaces)"),
+                            // i18n: under Download panels site exclusions list
+                            crate::i18n::t("(separate by spaces; * matches anything)"),
                             LIGHT_TEXT(),
                         );
                         // The list as a file, to keep or carry to a new installation (#424).
@@ -3275,8 +3525,7 @@ impl OptionsDialog {
                         {
                             let title = crate::i18n::t("Export").to_owned();
                             winui::start_pick(ui.ctx(), "opt-panels-export", move || {
-                                rfd::FileDialog::new()
-                                    .set_title(title)
+                                crate::winui::file_dialog(&title)
                                     .add_filter("TXT", &["txt"])
                                     .set_file_name("sites.txt")
                                     .save_file()
@@ -3293,8 +3542,7 @@ impl OptionsDialog {
                         {
                             let title = crate::i18n::t("Import").to_owned();
                             winui::start_pick(ui.ctx(), "opt-panels-import", move || {
-                                rfd::FileDialog::new()
-                                    .set_title(title)
+                                crate::winui::file_dialog(&title)
                                     .add_filter("TXT", &["txt"])
                                     .pick_file()
                             });
@@ -3490,6 +3738,23 @@ impl OptionsDialog {
                 match out {
                     Outcome::Open => self.sub = Some(Sub::Keys(opened)),
                     Outcome::Done(()) => self.s.capture_opened = opened,
+                    Outcome::Closed => {}
+                }
+            }
+            Sub::Progress(mut shown) => {
+                let out = window(
+                    ctx,
+                    "opt-progress",
+                    // i18n: window title: Options → Downloads → Edit... (the progress window's settings)
+                    "Download progress dialog",
+                    [400.0, 150.0],
+                    false,
+                    LIGHT_BG(),
+                    |ui, o| progress_dialog(ui, o, &mut shown),
+                );
+                match out {
+                    Outcome::Open => self.sub = Some(Sub::Progress(shown)),
+                    Outcome::Done(()) => self.s.show_progress = shown,
                     Outcome::Closed => {}
                 }
             }
@@ -3822,10 +4087,13 @@ fn dns_dialog(ui: &mut Ui, o: Pos2, e: &mut DnsEdit) -> Outcome<()> {
     ok_cancel(ui, o, 238.0, 278.0, choice.is_ok())
 }
 
-/// Accounts → Add...: the service, a token typed in, and the sign-in on its thread (#44).
+/// Accounts → Add...: the service, a token (or user name and password) typed in, and the sign-in
+/// on its thread (#44).
 struct AccountEdit {
     service: mdm_debrid::ServiceKind,
     token: String,
+    user: String,
+    password: String,
     signin: crate::debrid::SignIn,
 }
 
@@ -3836,13 +4104,16 @@ impl Default for AccountEdit {
         AccountEdit {
             service: mdm_debrid::ServiceKind::ALL[0],
             token: String::new(),
+            user: String::new(),
+            password: String::new(),
             signin: Default::default(),
         }
     }
 }
 
 /// Accounts → Add...: sign in by code in the browser (Real-Debrid's device flow, AllDebrid's PIN),
-/// or paste the API token (Premiumize: its API key only); the account is checked before it is kept.
+/// with the user name and password (Mega-Debrid), or paste the API token (Premiumize: its API key
+/// only); the account is checked before it is kept.
 fn account_dialog(ui: &mut Ui, o: Pos2, e: &mut AccountEdit) -> Outcome<settings::DebridAccount> {
     use crate::debrid::SignInState as S;
     let p = ui.painter().clone();
@@ -3874,6 +4145,8 @@ fn account_dialog(ui: &mut Ui, o: Pos2, e: &mut AccountEdit) -> Outcome<settings
         // Another service: what was signed in to (or typed) belongs to the one before.
         e.service = all[i];
         e.token.clear();
+        e.user.clear();
+        e.password.clear();
         *e.signin.state.lock().unwrap() = S::Idle;
     }
     let by_code = e.service.signs_in_by_code();
@@ -3884,8 +4157,11 @@ fn account_dialog(ui: &mut Ui, o: Pos2, e: &mut AccountEdit) -> Outcome<settings
             ButtonKind::Disabled
         }
     };
+    if e.service.signs_in_with_password() {
+        password_signin(ui, o, e, busy);
+    }
     // i18n: button: sign in to the debrid service in the browser, by typing a code there
-    if winui::button_light(
+    else if winui::button_light(
         ui,
         r(o, 14.0, 44.0, 220.0, 23.0),
         "Sign in in the browser",
@@ -3973,7 +4249,10 @@ fn account_dialog(ui: &mut Ui, o: Pos2, e: &mut AccountEdit) -> Outcome<settings
     } else {
         crate::dialogs::grow_px(&ctx, "opt-account", 0.0);
     }
-    let label = if by_code {
+    let label = if e.service.signs_in_with_password() {
+        // i18n: Options → Add an account: label before the field for an API key the user made at the service (Mega-Debrid: My Account → API Key; the other way to sign in)
+        crate::i18n::t("Or paste an application's API key:")
+    } else if by_code {
         // i18n: Options → Add an account: label before the field for the service's API token (the other way to sign in)
         crate::i18n::t("Or paste your API token:")
     } else {
@@ -4023,6 +4302,15 @@ fn account_dialog(ui: &mut Ui, o: Pos2, e: &mut AccountEdit) -> Outcome<settings
     let (line, ok) = match &state {
         // i18n: Options → Add an account: the sign-in is starting or being checked
         S::Starting | S::Checking => (crate::i18n::t("Asking the service...").to_owned(), true),
+        // Signed in by a key that names no account (Mega-Debrid's application keys).
+        S::Done { user, state, .. } if user.is_empty() => (
+            crate::i18n::fmt(
+                // i18n: Options → Add an account: signed in, the service gives no account name; {state} premium or not
+                crate::i18n::t("Signed in ({state})"),
+                &[("state", state)],
+            ),
+            true,
+        ),
         S::Done { user, state, .. } => (
             crate::i18n::fmt(
                 // i18n: Options → Add an account: signed in; {user} the account's name, {state} premium or not
@@ -4073,12 +4361,79 @@ fn account_dialog(ui: &mut Ui, o: Pos2, e: &mut AccountEdit) -> Outcome<settings
     }
 }
 
-/// Open a service's web page in the browser; never in an off-screen test run (MDM_OFFSCREEN),
-/// whose clicks come from scripts, not from a person at the browser.
-fn open_page(url: &str) {
-    if !crate::offscreen() {
-        crate::launch::open(url);
+/// Accounts → Add...: the user name and password a service signs in with (Mega-Debrid), where
+/// the others have "Sign in in the browser". Kept sealed, as the tokens are.
+fn password_signin(ui: &mut Ui, o: Pos2, e: &mut AccountEdit, busy: bool) {
+    let p = ui.painter().clone();
+    // The fields start after the longer label in this language (#192).
+    // i18n: Options → Add an account: label before the field for the user name at the debrid service
+    let user_label = crate::i18n::t("User name:");
+    // i18n: Options → Add an account: label before the field for the password at the debrid service
+    let password_label = crate::i18n::t("Password:");
+    let x =
+        (14.0 + winui::text_width(&p, user_label).max(winui::text_width(&p, password_label)) + 8.0)
+            .min(200.0);
+    text(&p, o.x + 14.0, o.y + 48.0, user_label, LIGHT_TEXT());
+    winui::edit_light(
+        ui,
+        r(o, x, 44.0, 300.0 - x + 14.0, 21.0),
+        &mut e.user,
+        !busy,
+        false,
+    );
+    text(&p, o.x + 14.0, o.y + 76.0, password_label, LIGHT_TEXT());
+    winui::password_light(
+        ui,
+        r(o, x, 72.0, 300.0 - x + 14.0, 21.0),
+        &mut e.password,
+        !busy,
+    );
+    let ready = !busy && !e.user.trim().is_empty() && !e.password.is_empty();
+    // i18n: button: sign in to the debrid service with the user name and password typed in
+    if winui::button_light(
+        ui,
+        r(
+            o,
+            x,
+            100.0,
+            winui::button_fit_width(&p, "Sign in", 90.0, 300.0),
+            21.0,
+        ),
+        "Sign in",
+        if ready {
+            ButtonKind::Normal
+        } else {
+            ButtonKind::Disabled
+        },
+        false,
+    )
+    .clicked()
+    {
+        let ctx = ui.ctx().clone();
+        e.signin.by_password(
+            e.service,
+            e.user.trim().to_owned(),
+            e.password.clone(),
+            &ctx,
+        );
     }
+    winui::paragraph(
+        &p,
+        o.x + 14.0,
+        o.y + 130.0,
+        // i18n: Options → Add an account: a note under the user name and password fields (Mega-Debrid bans the address for some minutes after a few wrong passwords)
+        crate::i18n::t(
+            "After a few wrong passwords the service blocks this connection for some minutes.",
+        ),
+        LIGHT_TEXT(),
+        o.x + 406.0,
+        14.0,
+    );
+}
+
+/// Open a service's web page in the browser (never in an off-screen test run).
+fn open_page(url: &str) {
+    crate::launch::open_page(url);
 }
 
 /// A list of sites from a file (Download panels' Import, #424): text, and no more than a list
@@ -4090,6 +4445,31 @@ fn read_sites_file(path: &std::path::Path) -> std::io::Result<String> {
         .take(1 << 20)
         .read_to_end(&mut text)?;
     String::from_utf8(text).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))
+}
+
+/// Downloads → Customize "Download progress" dialog → Edit... (#1041): whether a download's
+/// progress window opens when it starts, and where to find it when it doesn't.
+fn progress_dialog(ui: &mut Ui, o: Pos2, shown: &mut bool) -> Outcome<()> {
+    let p = ui.painter().clone();
+    winui::checkbox_light(
+        ui,
+        o + vec2(14.0, 16.0),
+        shown,
+        "Show download progress dialog when a download starts",
+        true,
+    );
+    winui::paragraph(
+        &p,
+        o.x + 14.0,
+        o.y + 58.0,
+        crate::i18n::t(
+            "When it is off, downloads go on in the main window's list. Double-click one there to see its progress.",
+        ),
+        LIGHT_TEXT(),
+        o.x + 386.0,
+        14.0,
+    );
+    ok_cancel(ui, o, 232.0, 117.0, true)
 }
 
 fn ok_cancel(ui: &mut Ui, o: Pos2, x: f32, y: f32, valid: bool) -> Outcome<()> {
@@ -4715,5 +5095,80 @@ mod tests {
         let (back, added) = mdm_ipc::capture::merge_sites("", &text);
         assert_eq!((back.as_str(), added), (sites, 2));
         assert_eq!(mdm_ipc::capture::merge_sites(sites, &text).1, 0);
+    }
+
+    /// One frame of `draw` at the origin, with `events` as its input.
+    fn frame(ctx: &egui::Context, events: Vec<egui::Event>, draw: impl FnMut(&mut Ui)) {
+        let input = egui::RawInput {
+            screen_rect: Some(Rect::from_min_size(Pos2::ZERO, vec2(430.0, 506.0))),
+            events,
+            ..Default::default()
+        };
+        let mut out = ctx.run_ui(input, draw);
+        out.textures_delta.clear();
+    }
+
+    /// A click at `at`, a frame each: there, pressed, released.
+    fn click(ctx: &egui::Context, at: Pos2, mut draw: impl FnMut(&mut Ui)) {
+        let button = |pressed| egui::Event::PointerButton {
+            pos: at,
+            button: egui::PointerButton::Primary,
+            pressed,
+            modifiers: egui::Modifiers::NONE,
+        };
+        frame(ctx, vec![egui::Event::PointerMoved(at)], &mut draw);
+        frame(ctx, vec![button(true)], &mut draw);
+        frame(ctx, vec![button(false)], &mut draw);
+    }
+
+    fn context() -> egui::Context {
+        let ctx = egui::Context::default();
+        let mut defs = egui::FontDefinitions::default();
+        winui::install_fonts(&mut defs, None);
+        ctx.set_fonts(defs);
+        ctx
+    }
+
+    /// #1041: Downloads → Customize "Download progress" dialog → Edit... opens its dialog, with
+    /// the setting as it is (it did nothing: drawn disabled).
+    #[test]
+    fn edit_opens_the_download_progress_dialog() {
+        let ctx = context();
+        let settings = Settings {
+            show_progress: false,
+            ..Settings::default()
+        };
+        let mut dlg = OptionsDialog::new(&settings, std::path::Path::new("."), Vec::new());
+        let mut edit = Rect::NOTHING;
+        frame(&ctx, Vec::new(), |ui| {
+            let (x, w) =
+                winui::buttons_to_right(ui.painter(), 392.0, 0.0, &[("Edit...", 73.0)], 160.0)[0];
+            edit = Rect::from_min_size(pos2(x, 89.0), vec2(w, 21.0));
+            dlg.downloads(ui, Pos2::ZERO);
+        });
+        assert!(dlg.sub.is_none());
+        click(&ctx, edit.center(), |ui| dlg.downloads(ui, Pos2::ZERO));
+        assert!(matches!(dlg.sub, Some(Sub::Progress(false))));
+    }
+
+    /// #1041: its check box turns the progress window off, and OK keeps it.
+    #[test]
+    fn the_download_progress_dialog_turns_the_window_off() {
+        let ctx = context();
+        let mut shown = true;
+        let mut out = Outcome::Open;
+        frame(&ctx, Vec::new(), |ui| {
+            out = progress_dialog(ui, Pos2::ZERO, &mut shown)
+        });
+        click(&ctx, pos2(20.0, 22.0), |ui| {
+            out = progress_dialog(ui, Pos2::ZERO, &mut shown);
+        });
+        assert!(!shown);
+        assert!(matches!(out, Outcome::Open));
+        click(&ctx, pos2(268.0, 127.0), |ui| {
+            out = progress_dialog(ui, Pos2::ZERO, &mut shown);
+        });
+        assert!(matches!(out, Outcome::Done(())));
+        assert!(!shown);
     }
 }

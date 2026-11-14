@@ -407,6 +407,20 @@ fn plain(label: &str) -> (String, Option<usize>) {
     (out, mnemonic)
 }
 
+/// The access key of `label`: the letter after its `&`, in lower case (None without one). An
+/// open menu runs its first enabled item with the key pressed.
+pub fn access_key(label: &str) -> Option<String> {
+    let (text, at) = plain(label);
+    at.and_then(|at| text.chars().nth(at))
+        .map(|c| c.to_lowercase().to_string())
+}
+
+/// The menu bar's titles, in English (their translations: context "menubar").
+#[cfg(test)]
+pub fn bar_titles() -> Vec<&'static str> {
+    MENUS.iter().map(|m| m.0).collect()
+}
+
 pub enum PopupResult<C> {
     Open,
     Chosen(C),
@@ -447,6 +461,164 @@ fn without_shortcut(text: &str) -> &str {
         }
     }
     t
+}
+
+/// Where the menu opened from the keyboard that a screen reader is to follow is, in its window:
+/// its lit item's node, kept for [`tell_screen_readers`] at the end of that window's pass.
+fn lit_menu_item_key(ctx: &egui::Context) -> egui::Id {
+    egui::Id::unique(("menu-lit-item", ctx.viewport_id()))
+}
+
+/// The open menu, told in the window it was opened from, for screen readers (#328). They follow
+/// the keyboard focus, and a menu's windows never take it (the main window keeps the keys, as
+/// with Win32's menus), so a menu opened with Alt, F10, Shift+F10 or a drop-down's keys showed
+/// and moved without a word. Here its levels are menus of this window too (at their places on
+/// the screen, in this window's points) with the item the keyboard lit as the focus's active
+/// descendant ([`tell_screen_readers`]): NVDA and Narrator say the item as it lights, and the
+/// control that had the focus again once the menu closes. A menu opened with the pointer is left
+/// to its own windows' nodes (a screen reader's pointer reads those).
+#[allow(clippy::too_many_arguments)]
+fn mirror_for_screen_readers<C>(
+    ctx: &egui::Context,
+    id: &str,
+    origin: Pos2,
+    at: Pos2,
+    entries: &[MenuEntry<C>],
+    sub_key: egui::Id,
+    hint: &dyn Fn(&C) -> Option<&'static str>,
+) {
+    let Some((Some(hl0), hl1)) =
+        ctx.data(|d| d.get_temp::<(Option<usize>, Option<usize>)>(sub_key.with("kb")))
+    else {
+        return;
+    };
+    if hl0 == usize::MAX {
+        return;
+    }
+    let size = menu_size(ctx, entries, hint);
+    let screen = Rect::from_min_size(place_menu(ctx, at, size, None), size);
+    let open_sub = ctx.data(|d| d.get_temp::<usize>(sub_key));
+    let sub_screen = ctx.data(|d| d.get_temp::<Rect>(sub_key.with("sub-rect")));
+    let mut ui = egui::Ui::new(
+        ctx.clone(),
+        egui::Id::unique(("menu-mirror", id)),
+        egui::UiBuilder::new().max_rect(screen.translate(-origin.to_vec2())),
+    );
+    // One level: its menu node at `rect` (this window's points) under `parent`, its items under
+    // it; the node of item `lit`, when it is one.
+    let mut level = |parent: Option<egui::Id>,
+                     depth: usize,
+                     rect: Rect,
+                     here: &[MenuEntry<C>],
+                     lit: Option<usize>,
+                     open: Option<usize>| {
+        let mut b = egui::UiBuilder::new().max_rect(rect);
+        if let Some(p) = parent {
+            b = b.accessibility_parent(p);
+        }
+        let mut level_ui = ui.new_child(b);
+        let menu = level_ui.interact(
+            rect,
+            egui::Id::unique(("menu-mirror-node", id, depth)),
+            egui::Sense::hover(),
+        );
+        winui::expose(&menu, egui::Role::Menu, "", true, None);
+        let items = level_ui.new_child(egui::UiBuilder::new().accessibility_parent(menu.id));
+        let (mut y, mut found, mut sub_node) = (rect.min.y + 3.0, None, None);
+        for (i, e) in here.iter().enumerate() {
+            if matches!(e, MenuEntry::Sep) {
+                y += SEP;
+                continue;
+            }
+            let slot =
+                Rect::from_min_max(pos2(rect.min.x + 6.0, y), pos2(rect.max.x - 6.0, y + SLOT));
+            y += SLOT;
+            let (label, enabled, checked) = match e {
+                MenuEntry::Item(l, _, en, ch) | MenuEntry::Radio(l, _, en, ch) => (*l, *en, *ch),
+                MenuEntry::Sub(l, en, _) => (*l, *en, false),
+                MenuEntry::Sep => continue,
+            };
+            let (t, _) = plain(crate::i18n::tc("menu", label));
+            let t = match e {
+                MenuEntry::Item(_, c, ..) | MenuEntry::Radio(_, c, ..) if hint(c).is_some() => {
+                    without_shortcut(&t).to_owned()
+                }
+                _ => t,
+            };
+            let item = items.interact(
+                slot,
+                egui::Id::unique(("menu-mirror-item", id, depth, i)),
+                egui::Sense::hover(),
+            );
+            let (role, on) = match e {
+                MenuEntry::Radio(..) => (egui::Role::MenuItemRadio, Some(checked)),
+                MenuEntry::Item(..) if checked => (egui::Role::MenuItemCheckBox, Some(true)),
+                _ => (egui::Role::MenuItem, None),
+            };
+            winui::expose(&item, role, &t, enabled, on);
+            if let MenuEntry::Sub(..) = e {
+                ctx.accesskit_node_builder(item.id, |n| {
+                    n.set_has_popup(egui::accesskit::HasPopup::Menu);
+                    n.set_expanded(open == Some(i));
+                });
+                if open == Some(i) {
+                    sub_node = Some(item.id);
+                }
+            }
+            if lit == Some(i) {
+                found = Some(item.id);
+            }
+        }
+        (found, sub_node)
+    };
+    let (mut lit, sub_parent) = level(
+        None,
+        0,
+        screen.translate(-origin.to_vec2()),
+        entries,
+        Some(hl0),
+        open_sub,
+    );
+    if let (Some(i), Some(r)) = (open_sub, sub_screen)
+        && let Some(MenuEntry::Sub(_, _, children)) = entries.get(i)
+    {
+        let (in_sub, _) = level(
+            sub_parent,
+            1,
+            r.translate(-origin.to_vec2()),
+            children,
+            hl1,
+            None,
+        );
+        if hl1.is_some() {
+            lit = in_sub;
+        }
+    }
+    if let Some(item) = lit {
+        // The key first: asking the context inside its data lock deadlocks.
+        let key = lit_menu_item_key(ctx);
+        ctx.data_mut(|d| d.insert_temp(key, item));
+    }
+}
+
+/// At the end of a window's pass: the menu item a screen reader is to follow ([`mirror_for_screen_readers`]),
+/// made the active descendant of what has the accessibility focus there (the focused control's
+/// node, else the window's own), so the screen reader says it as if it had the focus (#328).
+pub fn tell_screen_readers(ctx: &egui::Context) {
+    let key = lit_menu_item_key(ctx);
+    let Some(item) = ctx.data_mut(|d| {
+        let item = d.get_temp::<egui::Id>(key);
+        d.remove::<egui::Id>(key);
+        item
+    }) else {
+        return;
+    };
+    // As egui names the focus in its tree update: the focused widget, if it has a node.
+    let focus = ctx
+        .memory(|m| m.focused())
+        .filter(|f| ctx.has_accesskit_node(*f))
+        .unwrap_or_else(egui::accesskit_root_id);
+    ctx.accesskit_node_builder(focus, |n| n.set_active_descendant(item.accesskit_id()));
 }
 
 /// Open a menu from the keyboard: its first item is highlighted.
@@ -594,10 +766,7 @@ fn keyboard<C: Clone>(
                 if name.chars().count() == 1 {
                     target = level.iter().position(|e| {
                         entry_label(e).is_some_and(|(l, en)| {
-                            let (t, m) = plain(crate::i18n::tc("menu", l));
-                            en && m
-                                .and_then(|m| t.chars().nth(m))
-                                .is_some_and(|c| c.to_lowercase().to_string() == name)
+                            en && access_key(crate::i18n::tc("menu", l)).is_some_and(|k| k == name)
                         })
                     });
                 }
@@ -714,6 +883,15 @@ pub fn popup<C: Clone>(
         0,
         hint,
     );
+    mirror_for_screen_readers(
+        ctx,
+        id,
+        origin,
+        origin + pos.to_vec2(),
+        entries,
+        sub_key,
+        hint,
+    );
     if let Some(c) = result {
         ctx.data_mut(|d| {
             d.remove::<usize>(sub_key);
@@ -731,8 +909,11 @@ pub fn popup<C: Clone>(
     // gives that window the focus, and must not count as clicking away.
     let focused = ctx.input(|i| i.viewport().focused) == Some(true)
         || ctx.data(|d| d.get_temp::<bool>(window_focus).unwrap_or(false));
-    // (first pass, last pass, the focus): focus is only *lost* if it was had, and only when no
-    // window of ours gets it back within FOCUS_GRACE (#250).
+    // Away from our windows, the system may say who has it now: another program (#859).
+    let elsewhere = !focused && another_program_in_front();
+    // (first pass, last pass, the focus): focus is only *lost* if it was had, and then at once
+    // when another program has it, else when no window of ours gets it back within FOCUS_GRACE
+    // (#250).
     let now = ctx.input(|i| i.time);
     let (first, verdict) = ctx.data_mut(|d| {
         let (first, last, seen) = d.get_temp::<(u64, u64, MenuFocus)>(shown).unwrap_or((
@@ -745,7 +926,7 @@ pub fn popup<C: Clone>(
         } else {
             (first, seen)
         };
-        let verdict = seen.pass(focused, now);
+        let verdict = seen.pass(focused, elsewhere, now);
         d.insert_temp(shown, (first, pass, seen));
         (first == pass, verdict)
     });
@@ -776,12 +957,31 @@ pub fn popup<C: Clone>(
     PopupResult::Open
 }
 
-/// How long the focus may be away from every window of ours before an open menu counts as left.
+/// How long the focus may be away from every window of ours before an open menu counts as left,
+/// when the system doesn't say that another program has it ([`another_program_in_front`]).
 /// On Linux a window manager may give a menu's window the focus (KWin, sway, and GNOME under
 /// Wayland give it to a submenu's as it opens). When that submenu closes (the pointer back on
 /// another item of its parent), its window passes the focus on, and for a frame or more no
 /// window of ours has it: counted as the app losing the focus, it closed the whole menu (#250).
 const FOCUS_GRACE: f64 = 0.4;
+
+/// Whether the system says another program's window is in front now: the click that took the
+/// focus away landed outside MDM (the desktop, the taskbar, another program's window), and an
+/// open menu closes on this pass, as Win32's own menus do. Waiting FOCUS_GRACE for it kept a
+/// menu on the screen 0.4 s after such a click (#859): a menu's window never takes the focus on
+/// Windows (WS_EX_NOACTIVATE), so there the grace only ever delayed the close.
+fn another_program_in_front() -> bool {
+    #[cfg(windows)]
+    {
+        crate::win32::foreground_is_another_program()
+    }
+    // Linux and macOS: a program isn't told whose window has the focus (Wayland never says; X11
+    // and macOS would, through calls MDM doesn't make), so FOCUS_GRACE decides there, as before.
+    #[cfg(not(windows))]
+    {
+        false
+    }
+}
 
 /// Whether an open menu still has the focus: the main window's or one of the menu's windows'.
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
@@ -803,8 +1003,9 @@ enum FocusVerdict {
 }
 
 impl MenuFocus {
-    /// After a pass at `now`: `focused` is whether one of our windows had the focus in it.
-    fn pass(&mut self, focused: bool, now: f64) -> FocusVerdict {
+    /// After a pass at `now`: `focused` is whether one of our windows had the focus in it, and
+    /// `elsewhere` whether the system said another program has it.
+    fn pass(&mut self, focused: bool, elsewhere: bool, now: f64) -> FocusVerdict {
         if focused {
             self.had = true;
             self.away_since = None;
@@ -812,6 +1013,10 @@ impl MenuFocus {
         }
         if !self.had {
             return FocusVerdict::Here;
+        }
+        // Another program has it: no window of ours is about to take it back (#859).
+        if elsewhere {
+            return FocusVerdict::Left;
         }
         let since = *self.away_since.get_or_insert(now);
         let away = now - since;
@@ -931,8 +1136,8 @@ pub enum PopupLook {
 /// resizable, no taskbar button, always on top. On Windows it is created hidden: its first pass
 /// makes it a plain popup ([`style_popup`]) and [`show_popup`] shows it then.
 pub fn popup_viewport(title: &str) -> egui::ViewportBuilder {
-    egui::ViewportBuilder::default()
-        .with_title(title)
+    crate::window_builder()
+        .with_title(crate::i18n::os_text(title))
         .with_decorations(false)
         .with_resizable(false)
         .with_taskbar(false)
@@ -1106,6 +1311,8 @@ fn popup_level<C: Clone>(
     depth: usize,
     hint: &dyn Fn(&C) -> Option<&'static str>,
 ) {
+    // A system dialog waits for this window to close (winui::start_pick, #615).
+    winui::menu_drawn(ctx);
     let size = menu_size(ctx, entries, hint);
     let kb_key = sub_key.with("kb");
     let kb: Option<usize> = ctx
@@ -1177,7 +1384,10 @@ fn popup_level<C: Clone>(
             o.y + size.y - 1.0,
             POPUP_BG(),
         );
-        let pointer = ui.ctx().pointer_hover_pos();
+        // Where the pointer is, or was on this pass: a tap on a touch screen ends with the pointer
+        // gone (egui-winit lets go of it as the finger lifts, so nothing stays lit), in the very
+        // pass that releases it, where the hover position is none and no item was chosen (#733).
+        let pointer = ui.input(|i| i.pointer.hover_pos().or(i.pointer.interact_pos()));
         // The item under the pointer (none on a separator or the padding): one item is lit at a
         // time, so an open submenu's entry gives up its light to it (#579).
         let under = pointer.and_then(|p| item_at(entries, o, w, p));
@@ -2385,10 +2595,35 @@ mod tests {
         assert_eq!(steps, [Some(0), Some(1), Some(1), Some(2)]);
     }
 
-    /// The focus over a menu's passes (`(focused, time)` each), as `MenuFocus` judges it.
+    /// The focus over a menu's passes (`(focused, time)` each), as `MenuFocus` judges it, the
+    /// system saying nothing of who has it (Linux, macOS).
     fn focus_run(passes: &[(bool, f64)]) -> Vec<FocusVerdict> {
         let mut f = MenuFocus::default();
-        passes.iter().map(|&(on, t)| f.pass(on, t)).collect()
+        passes.iter().map(|&(on, t)| f.pass(on, false, t)).collect()
+    }
+
+    /// #859: a click on the desktop (Windows 10's video), the taskbar or another program's window
+    /// while a menu is open. The system says another program is in front: the menu closes on
+    /// the very pass that learns the focus left, not FOCUS_GRACE later.
+    #[test]
+    fn a_click_in_another_program_closes_the_menu_at_once() {
+        let mut f = MenuFocus::default();
+        assert_eq!(f.pass(true, false, 0.0), FocusVerdict::Here);
+        assert_eq!(f.pass(true, false, 0.5), FocusVerdict::Here);
+        assert_eq!(f.pass(false, true, 1.0), FocusVerdict::Left);
+        // Away from our windows without another program in front (focus passing between our
+        // own windows): the grace, as on Linux.
+        let mut f = MenuFocus::default();
+        f.pass(true, false, 0.0);
+        assert_eq!(
+            f.pass(false, false, 1.0),
+            FocusVerdict::Away { wait: FOCUS_GRACE }
+        );
+        assert_eq!(f.pass(false, true, 1.01), FocusVerdict::Left);
+        // A menu opened while another program was in front (a tray menu): nothing to lose.
+        let mut f = MenuFocus::default();
+        assert_eq!(f.pass(false, true, 0.0), FocusVerdict::Here);
+        assert_eq!(f.pass(false, true, 5.0), FocusVerdict::Here);
     }
 
     /// #250: Tasks open, Import's submenu open with the focus (KWin, sway), the pointer back
@@ -2606,6 +2841,166 @@ mod tests {
         assert_eq!(open(&ctx), Some(3), "kept on the way into it");
     }
 
+    /// #733: a tap on a touch screen chooses the item under the finger. egui-winit makes the
+    /// tap a press and a release of the pointer, then lets go of it (PointerGone) as the finger
+    /// lifts, in the same pass as the release (in one pass with the press too, for a quick tap):
+    /// the item was looked for under a pointer that was gone, and none was chosen.
+    #[test]
+    fn a_tap_chooses_the_item_under_the_finger() {
+        let [a, b, c] = ["a", "b", "c"]; // not texts to translate (tools/i18n/extract.py)
+        let entries: Vec<MenuEntry<u8>> = vec![
+            MenuEntry::Item(a, 0, true, false),
+            MenuEntry::Sep,
+            MenuEntry::Item(b, 1, true, false),
+            MenuEntry::Item(c, 2, true, false),
+        ];
+        // Each pass's events; what the menu chose.
+        let run = |passes: &[&dyn Fn(egui::Pos2) -> Vec<egui::Event>]| {
+            let ctx = egui::Context::default();
+            let sub_key = egui::Id::unique(("popup-sub", "t733"));
+            let mut t = 0.0;
+            let mut chosen = None;
+            let mut pass = |events: Vec<egui::Event>| {
+                t += 0.016;
+                let raw = egui::RawInput {
+                    time: Some(t),
+                    screen_rect: Some(Rect::from_min_size(
+                        pos2(0.0, 0.0),
+                        egui::vec2(1200.0, 800.0),
+                    )),
+                    events,
+                    ..Default::default()
+                };
+                let mut out = ctx.run_ui(raw, |ui| {
+                    let mut result = None;
+                    super::popup_level(
+                        ui.ctx(),
+                        MenuKind::Context,
+                        "t733",
+                        pos2(100.0, 100.0),
+                        None,
+                        &entries,
+                        sub_key,
+                        &mut result,
+                        0,
+                        &|_| None,
+                    );
+                    if result.is_some() {
+                        chosen = result;
+                    }
+                });
+                out.textures_delta.clear();
+            };
+            pass(Vec::new());
+            let o = ctx
+                .data(|d| d.get_temp::<egui::Pos2>(sub_key.with(("origin", 0usize))))
+                .expect("drawn");
+            // "b": below "a" (3..25) and the separator (25..34), at 34..56.
+            let on_b = o + egui::vec2(60.0, 45.0);
+            for p in passes {
+                pass(p(on_b));
+            }
+            chosen
+        };
+        let button = |pos, pressed| egui::Event::PointerButton {
+            pos,
+            button: egui::PointerButton::Primary,
+            pressed,
+            modifiers: Default::default(),
+        };
+        let down = |p: egui::Pos2| vec![egui::Event::PointerMoved(p), button(p, true)];
+        let up_gone = |p: egui::Pos2| vec![button(p, false), egui::Event::PointerGone];
+        let tap = |p: egui::Pos2| {
+            vec![
+                egui::Event::PointerMoved(p),
+                button(p, true),
+                button(p, false),
+                egui::Event::PointerGone,
+            ]
+        };
+        let up = |p: egui::Pos2| vec![button(p, false)];
+        // A tap: the finger down in one pass, up (and the pointer gone) in the next.
+        assert_eq!(run(&[&down, &up_gone]), Some(1));
+        // A quick tap, all in one pass.
+        assert_eq!(run(&[&tap]), Some(1));
+        // The mouse, as before.
+        assert_eq!(run(&[&down, &up]), Some(1));
+    }
+
+    /// #615: a menu item that opens a system dialog (View → Theme → Add a theme file) is chosen
+    /// in a frame that still draws its menu; the dialog starts only once a frame has gone by
+    /// without the menu (whose end closed its window): on macOS, started earlier, the menu's
+    /// window stayed on top of every window until MDM quit.
+    #[test]
+    fn a_system_dialog_waits_for_the_menu_to_close() {
+        let [a, b] = ["a", "b"]; // not texts to translate (tools/i18n/extract.py)
+        let entries: Vec<MenuEntry<u8>> = vec![
+            MenuEntry::Item(a, 0, true, false),
+            MenuEntry::Item(b, 1, true, false),
+        ];
+        let ctx = egui::Context::default();
+        let sub_key = egui::Id::unique(("popup-sub", "t615"));
+        let (started, rx) = std::sync::mpsc::channel::<()>();
+        let mut t = 0.0;
+        // One frame: the menu drawn or not, then the dialog asked for or not (as the app runs a
+        // menu's choice after drawing it).
+        let mut frame = |menu: bool, ask: Option<&str>| {
+            t += 0.016;
+            let raw = egui::RawInput {
+                time: Some(t),
+                screen_rect: Some(Rect::from_min_size(
+                    pos2(0.0, 0.0),
+                    egui::vec2(1200.0, 800.0),
+                )),
+                ..Default::default()
+            };
+            let mut out = ctx.run_ui(raw, |ui| {
+                if menu {
+                    let mut result = None;
+                    super::popup_level(
+                        ui.ctx(),
+                        MenuKind::Bar,
+                        "t615",
+                        pos2(100.0, 100.0),
+                        None,
+                        &entries,
+                        sub_key,
+                        &mut result,
+                        0,
+                        &|_| None,
+                    );
+                }
+                if let Some(key) = ask {
+                    let started = started.clone();
+                    crate::winui::start_pick(ui.ctx(), key, move || {
+                        started.send(()).unwrap();
+                        None
+                    });
+                }
+            });
+            out.textures_delta.clear();
+        };
+        let quiet = std::time::Duration::from_millis(300);
+        frame(true, None);
+        // Chosen: the frame still draws the menu.
+        frame(true, Some("t615"));
+        assert!(rx.recv_timeout(quiet).is_err(), "not with the menu drawn");
+        // The frame without the menu: its window closes at its end.
+        frame(false, None);
+        assert!(
+            rx.recv_timeout(quiet).is_err(),
+            "not before the menu's window closed"
+        );
+        frame(false, None);
+        rx.recv_timeout(std::time::Duration::from_secs(10))
+            .expect("started once the menu is gone");
+        // Without a menu (a button, a shortcut): as the next frame begins.
+        frame(false, Some("t615-b"));
+        frame(false, None);
+        rx.recv_timeout(std::time::Duration::from_secs(10))
+            .expect("started on the next frame");
+    }
+
     /// #579: the entry under the pointer, separators and padding none.
     #[test]
     fn the_item_under_the_pointer() {
@@ -2659,5 +3054,114 @@ mod tests {
             run(&[MenuBarEvent::Open(0), MenuBarEvent::Open(4)]),
             [Some(0), Some(4)]
         );
+    }
+
+    /// #328: a menu opened from the keyboard is said to screen readers. Its windows never take
+    /// the focus, so the window that has it shows the menu too, with the lit item as its focus's
+    /// active descendant; the arrows move it, and once the menu closes the focus is the control's
+    /// again. A menu opened with the pointer adds nothing there.
+    #[test]
+    fn a_menu_opened_from_the_keyboard_is_said_to_screen_readers() {
+        use egui::accesskit::{NodeId, Role};
+        let [one, two, three] = ["one", "two", "three"]; // not texts to translate
+        let entries: Vec<MenuEntry<u8>> = vec![
+            MenuEntry::Item(one, 0, true, false),
+            MenuEntry::Sep,
+            MenuEntry::Item(two, 1, true, false),
+            MenuEntry::Item(three, 2, false, false),
+        ];
+        let ctx = egui::Context::default();
+        ctx.enable_accesskit();
+        let button = egui::Id::unique("t328-button");
+        let mut t = 0.0;
+        // One pass of the window: a focused button (a toolbar's), the menu while `open`; the
+        // tree's focus, and what the screen reader takes for it (the focused node's active
+        // descendant, by name).
+        let mut pass = |open: bool, events: Vec<egui::Event>| {
+            t += 0.016;
+            let raw = egui::RawInput {
+                time: Some(t),
+                screen_rect: Some(Rect::from_min_size(
+                    pos2(0.0, 0.0),
+                    egui::vec2(1200.0, 800.0),
+                )),
+                events,
+                ..Default::default()
+            };
+            let mut out = ctx.run_ui(raw, |ui| {
+                let r = ui.interact(
+                    Rect::from_min_size(pos2(10.0, 40.0), egui::vec2(60.0, 40.0)),
+                    button,
+                    egui::Sense::click(),
+                );
+                r.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, true, "Add URL"));
+                if !ui.ctx().memory(|m| m.has_focus(button)) {
+                    ui.ctx().memory_mut(|m| m.request_focus(button));
+                }
+                if open {
+                    super::popup(
+                        ui.ctx(),
+                        MenuKind::Bar,
+                        "t328",
+                        pos2(10.0, 20.0),
+                        &entries,
+                        &|_| None,
+                    );
+                }
+                super::tell_screen_readers(ui.ctx());
+            });
+            out.textures_delta.clear();
+            let update = out
+                .platform_output
+                .accesskit_update
+                .expect("AccessKit is on");
+            let by_id: std::collections::HashMap<NodeId, &egui::accesskit::Node> =
+                update.nodes.iter().map(|(id, n)| (*id, n)).collect();
+            let focus = by_id[&update.focus];
+            let said = focus.active_descendant().map(|d| {
+                (
+                    by_id[&d].role(),
+                    by_id[&d].label().unwrap_or_default().to_owned(),
+                )
+            });
+            // The menu shown in this window for screen readers (the menu's own window, which a
+            // test embeds in this one, isn't counted).
+            let mirror = egui::Id::unique(("menu-mirror-node", "t328", 0usize)).accesskit_id();
+            let menus = update
+                .nodes
+                .iter()
+                .filter(|(id, n)| *id == mirror && n.role() == Role::Menu)
+                .count();
+            (update.focus == button.accesskit_id(), said, menus)
+        };
+        assert_eq!(pass(false, Vec::new()), (true, None, 0));
+        // Opened from the keyboard (Alt, F10): the first item.
+        super::start_keyboard(&ctx, "t328");
+        assert_eq!(
+            pass(true, Vec::new()),
+            (true, Some((Role::MenuItem, "one".to_owned())), 1)
+        );
+        let down = egui::Event::Key {
+            key: egui::Key::ArrowDown,
+            physical_key: None,
+            pressed: true,
+            repeat: false,
+            modifiers: egui::Modifiers::NONE,
+        };
+        // Down: over the separator to the next item; and to the disabled one, which is said too.
+        assert_eq!(
+            pass(true, vec![down.clone()]).1,
+            Some((Role::MenuItem, "two".to_owned()))
+        );
+        assert_eq!(
+            pass(true, vec![down]).1,
+            Some((Role::MenuItem, "three".to_owned()))
+        );
+        // Closed: the button again, and no menu in this window.
+        assert_eq!(pass(false, Vec::new()), (true, None, 0));
+        // Opened with the pointer (no item lit by the keyboard): nothing added here.
+        let pointer = egui::Id::unique(("popup-sub", "t328")).with("kb");
+        ctx.data_mut(|d| d.remove::<(Option<usize>, Option<usize>)>(pointer));
+        assert_eq!(pass(true, Vec::new()), (true, None, 0));
     }
 }

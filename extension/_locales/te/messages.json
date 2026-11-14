@@ -92,6 +92,9 @@
       }
     }
   },
+  "popup_undo": {
+    "message": "రద్దు చేయి"
+  },
   "popup_excluded": {
     "message": "$site$ నుండి డౌన్‌లోడ్‌లు బ్రౌజర్‌తో ఉంటాయి",
     "placeholders": {

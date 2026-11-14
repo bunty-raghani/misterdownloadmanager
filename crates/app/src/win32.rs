@@ -17,9 +17,9 @@ use windows_sys::Win32::UI::Shell::{
 };
 use windows_sys::Win32::UI::WindowsAndMessaging::{
     DestroyIcon, EnumWindows, GWL_EXSTYLE, GWL_STYLE, GetIconInfo, GetWindowLongPtrW,
-    GetWindowThreadProcessId, ICONINFO, InternalGetWindowText, NCCALCSIZE_PARAMS, SWP_FRAMECHANGED,
-    SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOZORDER, SetWindowLongPtrW, SetWindowPos, WM_NCCALCSIZE,
-    WM_NCHITTEST, WS_EX_DLGMODALFRAME, WS_THICKFRAME,
+    GetWindowThreadProcessId, ICONINFO, InternalGetWindowText, SWP_FRAMECHANGED, SWP_NOACTIVATE,
+    SWP_NOMOVE, SWP_NOZORDER, SetWindowLongPtrW, SetWindowPos, WM_NCCALCSIZE, WM_NCHITTEST,
+    WS_EX_DLGMODALFRAME, WS_THICKFRAME,
 };
 
 struct Find {
@@ -161,7 +161,8 @@ fn own_window(title: &str, known: Option<HWND>) -> Option<HWND> {
     if let Some(h) = known.filter(|h| unsafe { IsWindow(*h) } != 0) {
         return Some(h);
     }
-    let title: Vec<u16> = title.encode_utf16().collect();
+    // As the window was given it (dialogs.rs, progress.rs): without isolates (#919).
+    let title: Vec<u16> = crate::i18n::os_text(title).encode_utf16().collect();
     let mut f = Find {
         pid: unsafe { GetCurrentProcessId() },
         buf: vec![0; title.len() + 2],
@@ -432,6 +433,13 @@ pub fn forget_caption(hwnd: isize) {
             s.remove(&hwnd);
         }
     });
+    for set in [&ANIMATING, &FADING] {
+        set.with(|s| {
+            if let Ok(mut s) = s.try_borrow_mut() {
+                s.remove(&hwnd);
+            }
+        });
+    }
 }
 
 /// Was "Hide to the notification area" chosen in window `hwnd`'s system menu (once)?
@@ -496,199 +504,24 @@ fn set_max_button(hwnd: HWND, state: MaxButton) {
     }
 }
 
-/// The sizing frame's thickness at the window's top, in client pixels (Windows' own measure for
-/// the window's DPI).
-fn top_frame(hwnd: HWND) -> i32 {
-    use windows_sys::Win32::UI::HiDpi::{GetDpiForWindow, GetSystemMetricsForDpi};
-    use windows_sys::Win32::UI::WindowsAndMessaging::{SM_CXPADDEDBORDER, SM_CYSIZEFRAME};
-    // SAFETY: plain calls about our own window.
-    unsafe {
-        let dpi = GetDpiForWindow(hwnd).max(96);
-        GetSystemMetricsForDpi(SM_CYSIZEFRAME, dpi) + GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi)
-    }
-}
-
-/// A resizable window with its title bar drawn by us (the main window with a style theme, #45),
-/// as Windows Terminal does it: the system frame and WS_CAPTION stay (resizing on every edge,
-/// Aero Snap and shake, the system menu and Alt+Space, the DWM shadow), the caption is given to
-/// the client, which draws it; the hit test reads where the drawn parts are. The top sizing edge
-/// is ours (the client starts at the window's top), and Maximize answers as the system's.
-unsafe extern "system" fn drawn_frame_proc(
-    hwnd: HWND,
-    msg: u32,
-    wparam: WPARAM,
-    lparam: LPARAM,
-    _id: usize,
-    _data: usize,
-) -> LRESULT {
-    use windows_sys::Win32::UI::Input::KeyboardAndMouse::{
-        TME_LEAVE, TME_NONCLIENT, TRACKMOUSEEVENT, TrackMouseEvent,
-    };
-    use windows_sys::Win32::UI::WindowsAndMessaging::{
-        HTMAXBUTTON, HTTOP, HTTOPLEFT, HTTOPRIGHT, IsZoomed, SC_MAXIMIZE, SC_RESTORE, SendMessageW,
-        WM_NCACTIVATE, WM_NCLBUTTONDBLCLK, WM_NCLBUTTONDOWN, WM_NCLBUTTONUP, WM_NCMOUSELEAVE,
-        WM_NCMOUSEMOVE, WM_SYSCOMMAND,
-    };
-    const HT_MAX: LRESULT = HTMAXBUTTON as LRESULT;
-    if msg == WM_NCCALCSIZE && wparam != 0 {
-        // SAFETY: with wParam TRUE, lParam points to NCCALCSIZE_PARAMS (Win32 contract).
-        let p = unsafe { &mut *(lparam as *mut NCCALCSIZE_PARAMS) };
-        let top = p.rgrc[0].top;
-        let res = unsafe { DefSubclassProc(hwnd, msg, wparam, lparam) };
-        // No system caption: the client starts at the window's top; maximized, the window
-        // overhangs the screen by its frame, so the bar starts that much lower.
-        // SAFETY: our own window.
-        let zoomed = unsafe { IsZoomed(hwnd) } != 0;
-        p.rgrc[0].top = if zoomed { top + top_frame(hwnd) } else { top };
-        return res;
-    }
-    if msg == WM_NCACTIVATE {
-        return unsafe { DefSubclassProc(hwnd, msg, wparam, -1) };
-    }
-    if msg == WM_SYSCOMMAND && (wparam & 0xFFF0) == SC_HIDE_TO_TRAY {
-        HIDE_ASKED.with(|s| {
-            if let Ok(mut s) = s.try_borrow_mut() {
-                s.insert(hwnd as isize);
-            }
-        });
-        return 0;
-    }
-    // Maximize: pressed and released on it toggles the window (the system's own button would
-    // draw itself over ours).
-    if (msg == WM_NCLBUTTONDOWN || msg == WM_NCLBUTTONDBLCLK) && wparam as LRESULT == HT_MAX {
-        set_max_button(
-            hwnd,
-            MaxButton {
-                hot: true,
-                pressed: true,
-            },
-        );
-        return 0;
-    }
-    if msg == WM_NCLBUTTONUP && wparam as LRESULT == HT_MAX {
-        let was = max_button_state(hwnd as isize);
-        set_max_button(
-            hwnd,
-            MaxButton {
-                hot: true,
-                pressed: false,
-            },
-        );
-        if was.pressed {
-            // SAFETY: our own window, a system command it handles.
-            let zoomed = unsafe { IsZoomed(hwnd) } != 0;
-            let cmd = if zoomed { SC_RESTORE } else { SC_MAXIMIZE };
-            unsafe { SendMessageW(hwnd, WM_SYSCOMMAND, cmd as WPARAM, 0) };
-        }
-        return 0;
-    }
-    if msg == WM_NCMOUSEMOVE {
-        let on = wparam as LRESULT == HT_MAX;
-        let was = max_button_state(hwnd as isize);
-        set_max_button(
-            hwnd,
-            MaxButton {
-                hot: on,
-                pressed: was.pressed && on,
-            },
-        );
-        if on {
-            let mut t = TRACKMOUSEEVENT {
-                cbSize: size_of::<TRACKMOUSEEVENT>() as u32,
-                dwFlags: TME_LEAVE | TME_NONCLIENT,
-                hwndTrack: hwnd,
-                dwHoverTime: 0,
-            };
-            // SAFETY: a plain call with a filled struct, our own window.
-            unsafe { TrackMouseEvent(&mut t) };
-        }
-    }
-    if msg == WM_NCMOUSELEAVE {
-        set_max_button(hwnd, MaxButton::default());
-    }
-    let res = unsafe { DefSubclassProc(hwnd, msg, wparam, lparam) };
-    if msg == WM_NCHITTEST && res == HTCLIENT {
-        use windows_sys::Win32::Foundation::POINT;
-        use windows_sys::Win32::Graphics::Gdi::ScreenToClient;
-        let mut pt = POINT {
-            x: (lparam & 0xffff) as i16 as i32,
-            y: ((lparam >> 16) & 0xffff) as i16 as i32,
-        };
-        // SAFETY: our own window; the point is a local.
-        unsafe { ScreenToClient(hwnd, &mut pt) };
-        // The top sizing edge (corners too), where the system's caption had it.
-        // SAFETY: our own window.
-        if unsafe { IsZoomed(hwnd) } == 0 && pt.y >= 0 && pt.y < top_frame(hwnd) {
-            let mut rc: RECT = unsafe { zeroed() };
-            unsafe { windows_sys::Win32::UI::WindowsAndMessaging::GetClientRect(hwnd, &mut rc) };
-            let corner = 2 * top_frame(hwnd);
-            return if pt.x < corner {
-                HTTOPLEFT as LRESULT
-            } else if pt.x >= rc.right - corner {
-                HTTOPRIGHT as LRESULT
-            } else {
-                HTTOP as LRESULT
-            };
-        }
-        let hit = CAPTION_HITS.with(|m| {
-            m.try_borrow().ok().and_then(|m| {
-                m.get(&(hwnd as isize)).map(|h| {
-                    if h.max_button
-                        .and_then(|i| h.buttons.get(i))
-                        .is_some_and(|b| inside(b, pt.x, pt.y))
-                    {
-                        HT_MAX
-                    } else {
-                        frame_hit(pt.x, pt.y, h)
-                    }
-                })
-            })
-        });
-        return hit.unwrap_or(HTCLIENT);
-    }
-    res
-}
-
 /// Give the resizable window titled `title` its title bar drawn by us (`on`), or the system's
 /// back. Returns the window when done.
 pub fn drawn_frame(title: &str, on: bool) -> Option<isize> {
-    use windows_sys::Win32::UI::Shell::RemoveWindowSubclass;
     let hwnd = find_own_window(title)?;
-    if windows_11() {
-        // SAFETY: our own window, on its thread.
-        unsafe {
-            if on {
-                caption_less(hwnd, Drawn::Sizable);
-            } else {
-                caption_back(hwnd);
-            }
-        }
-        if !on {
-            forget_caption(hwnd as isize);
-        }
-        return Some(hwnd as isize);
-    }
-    // SAFETY: our own window; the subclass id is ours.
+    // Without a caption style on every version, as the progress window and the dialogs (#802):
+    // on Windows 10 the caption style hidden by our WM_NCCALCSIZE put the window's picture a
+    // title bar lower than its input there too, a black band above the bar and every click
+    // landing above what it showed (#620).
+    // SAFETY: our own window, on its thread.
     unsafe {
         if on {
-            SetWindowSubclass(hwnd, Some(drawn_frame_proc), 0x1d7, 0);
+            caption_less(hwnd, Drawn::Sizable);
         } else {
-            RemoveWindowSubclass(hwnd, Some(drawn_frame_proc), 0x1d7);
-            forget_caption(hwnd as isize);
+            caption_back(hwnd);
         }
-        SetWindowPos(
-            hwnd,
-            std::ptr::null_mut(),
-            0,
-            0,
-            0,
-            0,
-            SWP_FRAMECHANGED
-                | SWP_NOMOVE
-                | windows_sys::Win32::UI::WindowsAndMessaging::SWP_NOSIZE
-                | SWP_NOZORDER
-                | SWP_NOACTIVATE,
-        );
+    }
+    if !on {
+        forget_caption(hwnd as isize);
     }
     Some(hwnd as isize)
 }
@@ -730,8 +563,9 @@ pub fn thin_frame(
             }
         }
         // The window is the client and the frame its styles describe round it, for its own DPI:
-        // none on Windows 11, the 1 px border on Windows 10.
-        let style = GetWindowLongPtrW(hwnd, GWL_STYLE) as u32;
+        // none on Windows 11, the 1 px border on Windows 10 (without the caption style a
+        // minimized window has for its animation, [`animation_caption`]).
+        let style = drawn_style(GetWindowLongPtrW(hwnd, GWL_STYLE) as u32, kind);
         let ex = GetWindowLongPtrW(hwnd, GWL_EXSTYLE) as u32;
         let mut rc = RECT {
             left: 0,
@@ -758,10 +592,10 @@ pub fn thin_frame(
 /// version ([`thin_frame`]): with the caption style hidden by our WM_NCCALCSIZE, a Windows 11
 /// Insider build (#208) and Windows 10 22H2 (#620) showed the window's picture where the style's
 /// client would have been, a black band a title bar tall above it, every click landing above what
-/// it showed. The resizable main window with a style theme is framed so on Windows 11 only
-/// ([`drawn_frame`]), which colours the sizing frame's strip above its title bar
-/// ([`caption_colour`]); Windows 10 can't (DWMWA_CAPTION_COLOR is Windows 11's), so there it keeps
-/// its caption style, given to the client.
+/// it showed. The resizable main window with a style theme is framed so too ([`drawn_frame`],
+/// #802). Windows 11 colours the sizing frame's strip above its title bar ([`caption_colour`]);
+/// Windows 10 can't (DWMWA_CAPTION_COLOR is Windows 11's), so there the strip, 7 px at 100 %, keeps
+/// the system's title bar colour (white, the accent colour, or black in dark mode).
 fn windows_11() -> bool {
     use windows_sys::Win32::System::Registry::HKEY_LOCAL_MACHINE;
     static ON: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
@@ -894,6 +728,7 @@ unsafe fn caption_back(hwnd: HWND) {
     // SAFETY: (the caller's) our own window; DWM attributes read from locals during the calls.
     unsafe {
         RemoveWindowSubclass(hwnd, Some(caption_less_proc), DRAWN_SUBCLASS);
+        dwm_frame_off(hwnd, false);
         let style = GetWindowLongPtrW(hwnd, GWL_STYLE) as u32;
         SetWindowLongPtrW(hwnd, GWL_STYLE, ((style & !WS_POPUP) | WS_CAPTION) as isize);
         let corner = DWMWCP_DEFAULT;
@@ -925,6 +760,224 @@ unsafe fn caption_back(hwnd: HWND) {
             m.remove(&(hwnd as isize));
         }
     });
+    for set in [&ANIMATING, &FADING] {
+        set.with(|s| {
+            if let Ok(mut s) = s.try_borrow_mut() {
+                s.remove(&(hwnd as isize));
+            }
+        });
+    }
+}
+
+thread_local! {
+    /// The windows framed by [`caption_less`] that have the caption style for the length of a
+    /// minimize, maximize or restore ([`animation_caption`]), by HWND.
+    static ANIMATING: std::cell::RefCell<std::collections::HashSet<isize>> = Default::default();
+    /// Those of them that have it for the moment they are hidden ([`fade_caption`]).
+    static FADING: std::cell::RefCell<std::collections::HashSet<isize>> = Default::default();
+}
+
+fn animating(hwnd: HWND) -> bool {
+    ANIMATING.with(|s| s.try_borrow().is_ok_and(|s| s.contains(&(hwnd as isize))))
+}
+
+/// The message a window framed by [`caption_less`] posts itself when it changed size or place
+/// with the caption style of its animation still on: it is taken off once the window is out of
+/// the taskbar ([`animation_caption`]).
+fn settled_message() -> u32 {
+    use windows_sys::Win32::UI::WindowsAndMessaging::RegisterWindowMessageW;
+    static ID: std::sync::OnceLock<u32> = std::sync::OnceLock::new();
+    *ID.get_or_init(|| {
+        let name: Vec<u16> = "MDM.caption-less.settled\0".encode_utf16().collect();
+        // SAFETY: a NUL-terminated string read during the call.
+        unsafe { RegisterWindowMessageW(name.as_ptr()) }
+    })
+}
+
+/// The caption style on (`on`) or off a window framed by [`caption_less`], for the length of the
+/// system's minimize, maximize or restore (#874). Windows plays those animations only for a
+/// window with a caption style; one without just pops in and out. The style is given as the
+/// system's command starts and taken back as soon as the window is in its new state (minimized:
+/// once it is back), and WM_NCCALCSIZE keeps the frame of the window without it the whole time
+/// (the client filling the window inside its frame), so its picture never moves: a caption style
+/// hidden for good is what put the black band above the title bar on Windows 10 (#620, #802).
+///
+/// # Safety
+/// `hwnd` is a window of this thread framed by [`caption_less`] as `kind`.
+unsafe fn animation_caption(hwnd: HWND, kind: Drawn, on: bool) {
+    use windows_sys::Win32::UI::WindowsAndMessaging::{IsZoomed, SWP_NOSIZE, WS_CAPTION};
+    if animating(hwnd) == on {
+        return;
+    }
+    // First: the subclass's WM_STYLECHANGING keeps the caption style only while it is listed.
+    ANIMATING.with(|s| {
+        if let Ok(mut s) = s.try_borrow_mut() {
+            if on {
+                s.insert(hwnd as isize);
+            } else {
+                s.remove(&(hwnd as isize));
+            }
+        }
+    });
+    // SAFETY: (the caller's) our own window, on its thread.
+    unsafe {
+        if on {
+            dwm_frame_off(hwnd, true);
+        }
+        let style = drawn_style(GetWindowLongPtrW(hwnd, GWL_STYLE) as u32, kind);
+        let style = if on { style | WS_CAPTION } else { style };
+        SetWindowLongPtrW(hwnd, GWL_STYLE, style as isize);
+        // The frame measured again: the same, by our WM_NCCALCSIZE with the caption style on, by
+        // the system's without it. Maximized with the caption style, the window was placed by
+        // the system for a caption's frame, a pixel wider than its own on every side: put back
+        // where it is maximized without it, its client the work area.
+        let maximized = (!on && kind == Drawn::Sizable && IsZoomed(hwnd) != 0)
+            .then(|| maximized_to_work_area(hwnd))
+            .flatten();
+        let (r, place) = match maximized {
+            Some((r, _)) => (r, 0),
+            None => (zeroed(), SWP_NOMOVE | SWP_NOSIZE),
+        };
+        SetWindowPos(
+            hwnd,
+            std::ptr::null_mut(),
+            r.left,
+            r.top,
+            r.right - r.left,
+            r.bottom - r.top,
+            SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOACTIVATE | place,
+        );
+        if !on {
+            dwm_frame_off(hwnd, false);
+        }
+    }
+}
+
+/// A set of windows by HWND, kept by the window thread ([`ANIMATING`], [`FADING`]).
+type WindowSet = std::thread::LocalKey<std::cell::RefCell<std::collections::HashSet<isize>>>;
+
+fn fading(hwnd: HWND) -> bool {
+    FADING.with(|s| s.try_borrow().is_ok_and(|s| s.contains(&(hwnd as isize))))
+}
+
+/// The caption style on (`on`) or off a window framed by [`caption_less`] for the moment it is
+/// hidden (the main window or a progress window into the tray): Windows fades a window out only
+/// when it has a caption style as it goes (#874). Unlike [`animation_caption`], the style alone
+/// changes: nothing is measured again, so the window's frame and picture stay as they are. Not
+/// while it has the caption of a minimize, nor taken off one minimized meanwhile (its restore
+/// takes it off). (Shown again, a window appears at once, with Classic too: Windows fades in
+/// none of MDM's windows.)
+///
+/// # Safety
+/// `hwnd` is a window of this thread framed by [`caption_less`] as `kind`.
+unsafe fn fade_caption(hwnd: HWND, kind: Drawn, on: bool) {
+    use windows_sys::Win32::UI::WindowsAndMessaging::{IsIconic, WS_CAPTION};
+    if on == fading(hwnd) || (on && animating(hwnd)) {
+        return;
+    }
+    // First: the subclass's WM_STYLECHANGING keeps the caption style only while it is listed.
+    let list = |set: &'static WindowSet| {
+        set.with(|s| {
+            if let Ok(mut s) = s.try_borrow_mut() {
+                if on {
+                    s.insert(hwnd as isize);
+                } else {
+                    s.remove(&(hwnd as isize));
+                }
+            }
+        })
+    };
+    list(&FADING);
+    // SAFETY: (the caller's) our own window, on its thread.
+    unsafe {
+        if !on && IsIconic(hwnd) != 0 {
+            return;
+        }
+        list(&ANIMATING);
+        if on {
+            dwm_frame_off(hwnd, true);
+        }
+        let style = drawn_style(GetWindowLongPtrW(hwnd, GWL_STYLE) as u32, kind);
+        let style = if on { style | WS_CAPTION } else { style };
+        SetWindowLongPtrW(hwnd, GWL_STYLE, style as isize);
+        if !on {
+            dwm_frame_off(hwnd, false);
+        }
+    }
+}
+
+/// DWM's own frame off (`caption`) or back on a window framed by [`caption_less`] for as long as it
+/// has the caption style of an animation or a fade, on Windows 10: there DWM draws the caption
+/// style's title bar over the window's for those frames, a white (or accent-coloured) band above
+/// MDM's own title bar (#874). With DWM's frame off, a thin edge shows instead; the window is the
+/// same before and after. Windows 11 draws no such band.
+///
+/// # Safety
+/// `hwnd` is a window of this thread.
+unsafe fn dwm_frame_off(hwnd: HWND, caption: bool) {
+    use windows_sys::Win32::Graphics::Dwm::{
+        DWMNCRP_DISABLED, DWMNCRP_USEWINDOWSTYLE, DWMWA_NCRENDERING_POLICY, DwmSetWindowAttribute,
+    };
+    if windows_11() {
+        return;
+    }
+    let policy = if caption {
+        DWMNCRP_DISABLED
+    } else {
+        DWMNCRP_USEWINDOWSTYLE
+    };
+    // SAFETY: (the caller's) our own window; the policy is read from a local during the call.
+    unsafe {
+        DwmSetWindowAttribute(
+            hwnd,
+            DWMWA_NCRENDERING_POLICY as u32,
+            &policy as *const _ as *const c_void,
+            size_of::<i32>() as u32,
+        );
+    }
+}
+
+/// The frame (left, top, right, bottom) of a window framed by [`caption_less`] as `kind`, in its
+/// own DPI's pixels, without the caption style of its animation ([`animation_caption`]).
+///
+/// # Safety
+/// `hwnd` is a window of this thread.
+unsafe fn drawn_frame_edges(hwnd: HWND, kind: Drawn) -> [i32; 4] {
+    use windows_sys::Win32::UI::HiDpi::{AdjustWindowRectExForDpi, GetDpiForWindow};
+    // SAFETY: (the caller's) our own window; the rectangle is a local.
+    unsafe {
+        let style = drawn_style(GetWindowLongPtrW(hwnd, GWL_STYLE) as u32, kind);
+        let ex = GetWindowLongPtrW(hwnd, GWL_EXSTYLE) as u32;
+        let mut f: RECT = zeroed();
+        AdjustWindowRectExForDpi(&mut f, style, 0, ex, GetDpiForWindow(hwnd).max(96));
+        [-f.left, -f.top, f.right, f.bottom]
+    }
+}
+
+/// Minimize our window `hwnd` as its title bar's own Minimize does: by the system's command
+/// (WM_SYSCOMMAND), which a window framed by [`caption_less`] animates (#874), where winit
+/// minimizes it at once.
+pub fn minimize(hwnd: isize) {
+    use windows_sys::Win32::UI::WindowsAndMessaging::{PostMessageW, SC_MINIMIZE, WM_SYSCOMMAND};
+    // SAFETY: a message posted to our own window, a system command it handles.
+    unsafe { PostMessageW(hwnd as HWND, WM_SYSCOMMAND, SC_MINIMIZE as WPARAM, 0) };
+}
+
+/// Maximize our window `hwnd`, or restore it when it is maximized, as its title bar's own
+/// Maximize does (see [`minimize`]).
+pub fn toggle_maximized(hwnd: isize) {
+    use windows_sys::Win32::UI::WindowsAndMessaging::{
+        IsZoomed, PostMessageW, SC_MAXIMIZE, SC_RESTORE, WM_SYSCOMMAND,
+    };
+    // SAFETY: a query about our own window, and a system command posted to it.
+    unsafe {
+        let cmd = if IsZoomed(hwnd as HWND) != 0 {
+            SC_RESTORE
+        } else {
+            SC_MAXIMIZE
+        };
+        PostMessageW(hwnd as HWND, WM_SYSCOMMAND, cmd as WPARAM, 0);
+    }
 }
 
 thread_local! {
@@ -935,7 +988,8 @@ thread_local! {
 
 /// The colour of the sizing frame's strip above the main window's drawn title bar (`rgb`, the
 /// top of the bar), so the two read as one bar (Windows 11 paints the frame of a window without
-/// a caption style in its caption colour). Cheap: DWM is asked only when it changes.
+/// a caption style in its caption colour; Windows 10 in its own, which no app can set). Cheap:
+/// DWM is asked only when it changes.
 pub fn caption_colour(hwnd: isize, rgb: [u8; 3]) {
     use windows_sys::Win32::Graphics::Dwm::{DWMWA_CAPTION_COLOR, DwmSetWindowAttribute};
     if !windows_11() {
@@ -1027,10 +1081,11 @@ unsafe extern "system" fn caption_less_proc(
         TME_LEAVE, TME_NONCLIENT, TRACKMOUSEEVENT, TrackMouseEvent,
     };
     use windows_sys::Win32::UI::WindowsAndMessaging::{
-        DefWindowProcW, HTMAXBUTTON, IsZoomed, PostMessageW, SC_CLOSE, SC_MAXIMIZE, SC_RESTORE,
-        STYLESTRUCT, SendMessageW, WM_GETMINMAXINFO, WM_NCACTIVATE, WM_NCLBUTTONDBLCLK,
-        WM_NCLBUTTONDOWN, WM_NCLBUTTONUP, WM_NCMOUSELEAVE, WM_NCMOUSEMOVE, WM_NCRBUTTONUP,
-        WM_STYLECHANGING, WM_SYSCOMMAND,
+        DefWindowProcW, HTMAXBUTTON, IsIconic, IsZoomed, NCCALCSIZE_PARAMS, PostMessageW, SC_CLOSE,
+        SC_MAXIMIZE, SC_MINIMIZE, SC_RESTORE, STYLESTRUCT, SWP_HIDEWINDOW, SendMessageW, WINDOWPOS,
+        WM_GETMINMAXINFO, WM_NCACTIVATE, WM_NCLBUTTONDBLCLK, WM_NCLBUTTONDOWN, WM_NCLBUTTONUP,
+        WM_NCMOUSELEAVE, WM_NCMOUSEMOVE, WM_NCRBUTTONUP, WM_STYLECHANGING, WM_SYSCOMMAND,
+        WM_WINDOWPOSCHANGED, WM_WINDOWPOSCHANGING, WS_CAPTION, WS_MINIMIZE,
     };
     const HT_MAX: LRESULT = HTMAXBUTTON as LRESULT;
     let kind = Drawn::of(data);
@@ -1047,15 +1102,96 @@ unsafe extern "system" fn caption_less_proc(
             // whose styleNew the window may alter (Win32 contract).
             let s = unsafe { &mut *(lparam as *mut STYLESTRUCT) };
             match wparam as i32 {
-                GWL_STYLE => s.styleNew = drawn_style(s.styleNew, kind),
+                GWL_STYLE => {
+                    // The caption style stays only for the length of an animation.
+                    let caption = if animating(hwnd) { WS_CAPTION } else { 0 };
+                    s.styleNew = drawn_style(s.styleNew, kind) | caption;
+                }
                 GWL_EXSTYLE => s.styleNew = drawn_ex_style(s.styleNew),
                 _ => {}
             }
             return 0;
         }
+        // With the caption style of an animation (#874): the frame of the window without it,
+        // the client filling the window inside its sizing frame as before, so its picture
+        // doesn't move. Minimized, the system's.
+        // SAFETY: our own window.
+        WM_NCCALCSIZE
+            if lparam != 0
+                && animating(hwnd)
+                && unsafe { GetWindowLongPtrW(hwnd, GWL_STYLE) } as u32 & WS_MINIMIZE == 0 =>
+        {
+            // SAFETY: with wParam TRUE, lParam points to NCCALCSIZE_PARAMS, whose first
+            // rectangle is the window's and becomes its client's; with FALSE, to that rectangle
+            // alone (Win32 contract).
+            let r = unsafe {
+                if wparam != 0 {
+                    &mut (*(lparam as *mut NCCALCSIZE_PARAMS)).rgrc[0]
+                } else {
+                    &mut *(lparam as *mut RECT)
+                }
+            };
+            let [l, t, rt, b] = unsafe { drawn_frame_edges(hwnd, kind) };
+            r.left += l;
+            r.top += t;
+            r.right -= rt;
+            r.bottom -= b;
+            return 0;
+        }
         // The system's frame for these styles, nothing of ours or winit's: what any reading of
         // the styles finds.
         WM_NCCALCSIZE => return unsafe { DefWindowProcW(hwnd, msg, wparam, lparam) },
+        // Minimize, maximize and restore (the title bar's buttons, the taskbar, Win+Up and
+        // Win+Down, the window menu all send these) animated: the caption style for their
+        // length (#874), taken back once the window is in its new state, or once it is back
+        // when it went to the taskbar.
+        WM_SYSCOMMAND
+            if matches!(
+                (wparam & 0xFFF0) as u32,
+                SC_MINIMIZE | SC_MAXIMIZE | SC_RESTORE
+            ) =>
+        {
+            // SAFETY: our own window, framed by caption_less as `kind`, on its thread.
+            unsafe {
+                animation_caption(hwnd, kind, true);
+                let res = DefSubclassProc(hwnd, msg, wparam, lparam);
+                if IsIconic(hwnd) == 0 {
+                    animation_caption(hwnd, kind, false);
+                }
+                return res;
+            }
+        }
+        // Hidden (into the tray): the caption style for that moment, so it fades out as a window
+        // with a title bar does (#874), taken back once it is hidden.
+        WM_WINDOWPOSCHANGING | WM_WINDOWPOSCHANGED if lparam != 0 => {
+            // SAFETY: for both, lParam points to the WINDOWPOS of the change (Win32 contract),
+            // read here.
+            let flags = unsafe { (*(lparam as *const WINDOWPOS)).flags };
+            if flags & SWP_HIDEWINDOW != 0 {
+                // SAFETY: our own window, framed by caption_less as `kind`, on its thread.
+                unsafe { fade_caption(hwnd, kind, msg == WM_WINDOWPOSCHANGING) };
+            }
+            if msg == WM_WINDOWPOSCHANGED && animating(hwnd) {
+                // As below.
+                // SAFETY: a message posted to our own window.
+                unsafe { PostMessageW(hwnd, settled_message(), 0, 0) };
+            }
+        }
+        // Back from the taskbar some other way (winit restoring it, a program's ShowWindow):
+        // the caption style goes as soon as the change is over.
+        WM_WINDOWPOSCHANGED if animating(hwnd) => {
+            // SAFETY: a message posted to our own window.
+            unsafe { PostMessageW(hwnd, settled_message(), 0, 0) };
+        }
+        m if m == settled_message() => {
+            // SAFETY: our own window, framed by caption_less as `kind`, on its thread.
+            unsafe {
+                if IsIconic(hwnd) == 0 {
+                    animation_caption(hwnd, kind, false);
+                }
+            }
+            return 0;
+        }
         // Activation changes repaint the non-client area: with lParam -1 the system skips that.
         WM_NCACTIVATE => return unsafe { DefSubclassProc(hwnd, msg, wparam, -1) },
         WM_SYSCOMMAND if (wparam & 0xFFF0) == SC_HIDE_TO_TRAY => {
@@ -1153,9 +1289,15 @@ unsafe extern "system" fn caption_less_proc(
             let info = unsafe {
                 &mut *(lparam as *mut windows_sys::Win32::UI::WindowsAndMessaging::MINMAXINFO)
             };
-            if let Some((pos, size)) = maximized_to_work_area(hwnd) {
-                info.ptMaxPosition = pos;
-                info.ptMaxSize = size;
+            if let Some((r, m)) = maximized_to_work_area(hwnd) {
+                info.ptMaxPosition = POINT {
+                    x: r.left - m.x,
+                    y: r.top - m.y,
+                };
+                info.ptMaxSize = POINT {
+                    x: r.right - r.left,
+                    y: r.bottom - r.top,
+                };
             }
             return res;
         }
@@ -1187,21 +1329,16 @@ unsafe extern "system" fn caption_less_proc(
     res
 }
 
-/// Where and how large window `hwnd` is when maximized: its monitor's work area (not over the
-/// taskbar), with its sizing frame beyond the work area's edges, as a window with a caption
-/// style is maximized (Windows maximizes one without a caption over the whole monitor). In the
-/// coordinates WM_GETMINMAXINFO takes: from the monitor's top left.
-fn maximized_to_work_area(
-    hwnd: HWND,
-) -> Option<(
-    windows_sys::Win32::Foundation::POINT,
-    windows_sys::Win32::Foundation::POINT,
-)> {
+/// Where window `hwnd` is when maximized, on the screen: its monitor's work area (not over the
+/// taskbar), with its sizing frame (without the caption style it has while it maximizes, #874)
+/// beyond the work area's edges, as a window with a caption style is maximized (Windows maximizes
+/// one without a caption over the whole monitor). And its monitor's top left, from which
+/// WM_GETMINMAXINFO counts.
+fn maximized_to_work_area(hwnd: HWND) -> Option<(RECT, windows_sys::Win32::Foundation::POINT)> {
     use windows_sys::Win32::Foundation::POINT;
     use windows_sys::Win32::Graphics::Gdi::{
         GetMonitorInfoW, MONITOR_DEFAULTTONEAREST, MONITORINFO, MonitorFromWindow,
     };
-    use windows_sys::Win32::UI::HiDpi::{AdjustWindowRectExForDpi, GetDpiForWindow};
     // SAFETY: plain queries about our own window and its monitor, into locals.
     unsafe {
         let mon = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
@@ -1210,24 +1347,18 @@ fn maximized_to_work_area(
         if mon.is_null() || GetMonitorInfoW(mon, &mut mi) == 0 {
             return None;
         }
-        let style = GetWindowLongPtrW(hwnd, GWL_STYLE) as u32;
-        let ex = GetWindowLongPtrW(hwnd, GWL_EXSTYLE) as u32;
-        let mut f = RECT {
-            left: 0,
-            top: 0,
-            right: 0,
-            bottom: 0,
-        };
-        AdjustWindowRectExForDpi(&mut f, style, 0, ex, GetDpiForWindow(hwnd).max(96));
         let (w, m) = (mi.rcWork, mi.rcMonitor);
+        let [l, t, r, b] = drawn_frame_edges(hwnd, Drawn::Sizable);
         Some((
-            POINT {
-                x: w.left - m.left + f.left,
-                y: w.top - m.top + f.top,
+            RECT {
+                left: w.left - l,
+                top: w.top - t,
+                right: w.right + r,
+                bottom: w.bottom + b,
             },
             POINT {
-                x: (w.right - w.left) + f.right - f.left,
-                y: (w.bottom - w.top) + f.bottom - f.top,
+                x: m.left,
+                y: m.top,
             },
         ))
     }
@@ -1267,9 +1398,9 @@ mod frame_tests {
 mod caption_less_tests {
     use super::*;
     use windows_sys::Win32::UI::WindowsAndMessaging::{
-        AdjustWindowRectEx, CreateWindowExW, DestroyWindow, GetClientRect, GetWindowRect,
-        MINMAXINFO, SendMessageW, WM_GETMINMAXINFO, WS_BORDER, WS_CAPTION, WS_EX_APPWINDOW,
-        WS_POPUP,
+        AdjustWindowRectEx, CreateWindowExW, DestroyWindow, DispatchMessageW, GetClientRect,
+        GetWindowRect, MINMAXINFO, MSG, PM_REMOVE, PeekMessageW, SWP_NOSIZE, SendMessageW,
+        WM_GETMINMAXINFO, WS_BORDER, WS_CAPTION, WS_EX_APPWINDOW, WS_POPUP,
     };
 
     /// The styles winit gives the progress window (a caption, a sizing frame trimmed by us, a
@@ -1432,7 +1563,30 @@ mod caption_less_tests {
                 );
                 GetClientRect(hwnd, &mut c);
                 assert_eq!([c.right, c.bottom], [700 - l - r, 500 - t - b]);
-                // Maximized (asked, not done: that would show it): its monitor's work area.
+                // Minimizing, maximizing or restoring (#874): the caption style for the length of
+                // the animation, and the window framed as without it, its client in place.
+                animation_caption(hwnd, kind, true);
+                let on = GetWindowLongPtrW(hwnd, GWL_STYLE) as u32;
+                assert_eq!(on, st | WS_CAPTION);
+                // winit setting its own styles again: it stays while the animation lasts.
+                SetWindowLongPtrW(hwnd, GWL_STYLE, st as isize);
+                assert_eq!(GetWindowLongPtrW(hwnd, GWL_STYLE) as u32, on);
+                let framed = |hwnd| {
+                    let (mut w, mut c): (RECT, RECT) = (zeroed(), zeroed());
+                    GetWindowRect(hwnd, &mut w);
+                    GetClientRect(hwnd, &mut c);
+                    let mut at = windows_sys::Win32::Foundation::POINT { x: 0, y: 0 };
+                    windows_sys::Win32::Graphics::Gdi::ClientToScreen(hwnd, &mut at);
+                    [
+                        at.x - w.left,
+                        at.y - w.top,
+                        w.right - w.left - c.right,
+                        w.bottom - w.top - c.bottom,
+                    ]
+                };
+                assert_eq!(framed(hwnd), [l, t, l + r, t + b]);
+                // Maximized (asked, not done: that would show it): its monitor's work area, with
+                // the caption style of the animation on as without it.
                 if sizable {
                     let mut info: MINMAXINFO = zeroed();
                     SendMessageW(
@@ -1459,6 +1613,68 @@ mod caption_less_tests {
                         [wa.right - wa.left + l + r, wa.bottom - wa.top + t + b]
                     );
                 }
+                // Moved or sized with it on (a window back from the taskbar): it goes once the
+                // window has settled, by the message the window posts itself; nothing else moves.
+                SetWindowPos(
+                    hwnd,
+                    std::ptr::null_mut(),
+                    -19990,
+                    -19990,
+                    0,
+                    0,
+                    SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE,
+                );
+                assert_eq!(GetWindowLongPtrW(hwnd, GWL_STYLE) as u32, on);
+                assert_eq!(framed(hwnd), [l, t, l + r, t + b]);
+                let mut msg: MSG = zeroed();
+                while PeekMessageW(&mut msg, hwnd, 0, 0, PM_REMOVE) != 0 {
+                    DispatchMessageW(&msg);
+                }
+                assert_eq!(GetWindowLongPtrW(hwnd, GWL_STYLE) as u32, st);
+                assert!(!animating(hwnd));
+                assert_eq!(framed(hwnd), [l, t, l + r, t + b]);
+                // Hidden (#874: into the tray, so Windows fades it out): the caption style from
+                // the change's start, kept if winit sets its styles meanwhile, the frame
+                // untouched, gone once it is hidden. Shown, or moved, nothing changes. (The
+                // messages of the change, sent as the system sends them: the test window itself
+                // never shows.)
+                use windows_sys::Win32::UI::WindowsAndMessaging::{
+                    SWP_HIDEWINDOW, SWP_SHOWWINDOW, WINDOWPOS, WM_WINDOWPOSCHANGED,
+                    WM_WINDOWPOSCHANGING,
+                };
+                for change in [SWP_HIDEWINDOW, SWP_SHOWWINDOW, 0] {
+                    let mut pos: WINDOWPOS = zeroed();
+                    pos.hwnd = hwnd;
+                    pos.flags = change | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE;
+                    let lp = &mut pos as *mut WINDOWPOS as LPARAM;
+                    SendMessageW(hwnd, WM_WINDOWPOSCHANGING, 0, lp);
+                    let during = if change == SWP_HIDEWINDOW {
+                        st | WS_CAPTION
+                    } else {
+                        st
+                    };
+                    assert_eq!(GetWindowLongPtrW(hwnd, GWL_STYLE) as u32, during);
+                    SetWindowLongPtrW(hwnd, GWL_STYLE, st as isize);
+                    assert_eq!(GetWindowLongPtrW(hwnd, GWL_STYLE) as u32, during);
+                    assert_eq!(framed(hwnd), [l, t, l + r, t + b]);
+                    SendMessageW(hwnd, WM_WINDOWPOSCHANGED, 0, lp);
+                    assert_eq!(GetWindowLongPtrW(hwnd, GWL_STYLE) as u32, st);
+                    assert!(!animating(hwnd) && !fading(hwnd));
+                    assert_eq!(framed(hwnd), [l, t, l + r, t + b]);
+                }
+                // Hidden while it sits minimized with the caption of its animation: it keeps
+                // it (it goes once the window is back, as above).
+                animation_caption(hwnd, kind, true);
+                let mut pos: WINDOWPOS = zeroed();
+                pos.hwnd = hwnd;
+                pos.flags = SWP_HIDEWINDOW | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER;
+                let lp = &mut pos as *mut WINDOWPOS as LPARAM;
+                SendMessageW(hwnd, WM_WINDOWPOSCHANGING, 0, lp);
+                SendMessageW(hwnd, WM_WINDOWPOSCHANGED, 0, lp);
+                assert_eq!(GetWindowLongPtrW(hwnd, GWL_STYLE) as u32, st | WS_CAPTION);
+                assert!(animating(hwnd));
+                animation_caption(hwnd, kind, false);
+                assert_eq!(GetWindowLongPtrW(hwnd, GWL_STYLE) as u32, st);
                 DestroyWindow(hwnd);
             }
         }
@@ -1517,6 +1733,27 @@ mod find_own_window_tests {
                 DestroyWindow(longer);
             }
         }
+    }
+
+    /// #919: a window is given its title without isolates, and found by the title MDM knows it
+    /// by, isolates and all.
+    #[test]
+    fn a_window_titled_without_isolates_is_found() {
+        let title = format!(
+            "71% {} {}",
+            crate::i18n::isolate("mdm isolate test.zip"),
+            std::process::id()
+        );
+        let given = crate::i18n::os_text(&title);
+        assert!(
+            !given
+                .chars()
+                .any(|c| ('\u{2066}'..='\u{2069}').contains(&c))
+        );
+        let window = test_window(&given);
+        assert_eq!(find_own_window(&title), Some(window));
+        // SAFETY: the test's own window, made on this thread.
+        unsafe { DestroyWindow(window) };
     }
 
     /// A hidden test window of this thread titled `title`, destroyed by the caller.
@@ -1950,6 +2187,25 @@ pub fn tray_icon_tip(hwnd: isize, id: u32, tip: &str) -> bool {
     }
     // SAFETY: nid lives for the call; the shell only reads it.
     unsafe { Shell_NotifyIconW(NIM_MODIFY, &nid) != 0 }
+}
+
+/// Whether the window in front (the foreground window, which takes the keyboard) is another
+/// program's: a click outside MDM's windows (the desktop, the taskbar, another program) put it
+/// there. False while one of ours is in front, and while none is (Windows passing the foreground
+/// on). An open menu closes at once on it (chrome.rs, #859).
+pub fn foreground_is_another_program() -> bool {
+    use windows_sys::Win32::UI::WindowsAndMessaging::GetForegroundWindow;
+    // SAFETY: plain queries about a window handle, which may be gone (then pid stays 0); the
+    // out pointer is a local.
+    unsafe {
+        let front = GetForegroundWindow();
+        if front.is_null() {
+            return false;
+        }
+        let mut pid = 0u32;
+        GetWindowThreadProcessId(front, &mut pid);
+        pid != 0 && pid != GetCurrentProcessId()
+    }
 }
 
 /// What a borderless window of ours is, for [`popup_window`]: every one is a plain popup
@@ -2464,22 +2720,6 @@ mod menus_dark_tests {
     }
 }
 
-/// One of our windows by handle, for crates that take a `raw-window-handle` window.
-struct OwnWindow(HWND);
-
-impl raw_window_handle::HasWindowHandle for OwnWindow {
-    fn window_handle(
-        &self,
-    ) -> Result<raw_window_handle::WindowHandle<'_>, raw_window_handle::HandleError> {
-        let h = std::num::NonZeroIsize::new(self.0 as isize)
-            .ok_or(raw_window_handle::HandleError::Unavailable)?;
-        let raw =
-            raw_window_handle::RawWindowHandle::Win32(raw_window_handle::Win32WindowHandle::new(h));
-        // SAFETY: the handle belongs to a live window of this process for the call's duration.
-        Ok(unsafe { raw_window_handle::WindowHandle::borrow_raw(raw) })
-    }
-}
-
 /// A drag out of Download complete is under way ([`drag_file_out`]): one at a time, the mouse
 /// holds only one.
 static DRAGGING: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
@@ -2500,10 +2740,19 @@ pub fn dragging_out() -> bool {
 }
 
 /// Start dragging `file` out of our window (to Explorer, a mail, a chat…), like IDM's Download
-/// complete grip. The drag preview is the file's shell icon. The window is the one holding the
-/// mouse (the button is down on its grip: winit captured the mouse for it), so it is the right
-/// one when several show the same title; else our window titled `title`, given in the interface
-/// language, as it shows.
+/// complete grip. The drag is the shell's own for the file, as Explorer's is (its preview, its
+/// formats). The window is the one holding the mouse (the button is down on its grip: winit
+/// captured the mouse for it), so it is the right one when several show the same title; else
+/// our window titled `title`, given in the interface language, as it shows.
+///
+/// The drop target decides what the drag does (#869): MDM offers a move, a copy and a link, so
+/// Explorer applies its own rules, as for a file dragged in Explorer: moved on the same drive or
+/// with Shift, copied to another drive or with Ctrl, a shortcut with Alt. A move is followed:
+/// `followed` is told where the file went (from the shell's change notifications), or that it
+/// went where MDM can't learn; a copy, a link or a cancelled drag tell nothing. It may come long
+/// after the drop (a move to another drive copies first), from the drag's thread. MDM never
+/// deletes the file itself, even for a target that asks the source to (a move it doesn't
+/// optimize): the file stays, so nothing is lost.
 ///
 /// The drag runs on a thread of its own (#561): OLE's drag loop lasts as long as the button is
 /// held, and each step calls the program under the pointer (its drop target, in its own process),
@@ -2511,7 +2760,11 @@ pub fn dragging_out() -> bool {
 /// answers the drop, froze every window until it answered. That thread shares the window
 /// thread's input ([`with_shared_input`]): OLE reads the held button and takes the mouse from
 /// there, as it did from the window thread.
-pub fn drag_file_out(title: &str, file: &std::path::Path) -> Result<(), String> {
+pub fn drag_file_out(
+    title: &str,
+    file: &std::path::Path,
+    followed: impl FnOnce(crate::dialogs::DraggedOut) + Send + 'static,
+) -> Result<(), String> {
     use std::sync::atomic::Ordering;
     let hwnd = own_capture()
         .or_else(|| find_own_window(title))
@@ -2526,9 +2779,9 @@ pub fn drag_file_out(title: &str, file: &std::path::Path) -> Result<(), String> 
         }
         // Looked for here, beside the window (#743): a drive slow to answer doesn't hold it.
         let result = if file.exists() {
-            drag_on_this_thread(hwnd as HWND, &file)
+            dragout::drag(hwnd as HWND, &file)
         } else {
-            Ok(())
+            Ok(None)
         };
         if let Ok(mut t) = DRAG_ENDED.lock() {
             *t = Some(std::time::Instant::now());
@@ -2538,8 +2791,15 @@ pub fn drag_file_out(title: &str, file: &std::path::Path) -> Result<(), String> 
         // the next press on the grip only ended the drag the window still thought was on, and
         // the grip worked every other time.
         release_button(hwnd as HWND);
-        if let Err(e) = result {
+        let dropped = result.unwrap_or_else(|e| {
             tracing::warn!("drag out: {e}");
+            None
+        });
+        // Once the window's input is given back: what became of the file.
+        move || {
+            if let Some(out) = dropped.and_then(dragout::Dropped::follow) {
+                followed(out);
+            }
         }
     });
     if started.is_err() {
@@ -2573,38 +2833,16 @@ fn release_button(hwnd: HWND) {
     }
 }
 
-/// The drag itself, on the thread [`drag_file_out`] started (OLE initialised there).
-fn drag_on_this_thread(hwnd: HWND, file: &std::path::Path) -> Result<(), String> {
-    let name = file.file_name().and_then(|n| n.to_str()).unwrap_or("");
-    let what = crate::fileicons::What::of(crate::fileicons::Kind::File(name));
-    let preview = file_icon(&what, 32)
-        .and_then(|icon| {
-            let crate::fileicons::Native::Rgba { side, rgba, .. } = icon else {
-                return None;
-            };
-            let img = image::RgbaImage::from_raw(side, side, rgba)?;
-            let mut png = Vec::new();
-            img.write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png)
-                .ok()?;
-            Some(png)
-        })
-        .unwrap_or_default();
-    drag::start_drag(
-        &OwnWindow(hwnd),
-        drag::DragItem::Files(vec![file.to_path_buf()]),
-        drag::Image::Raw(preview),
-        |_, _| {},
-        drag::Options::default(),
-    )
-    .map_err(|e| e.to_string())
-}
-
 /// Run `work` on a new thread named `name`, with OLE (a single-threaded apartment) and the
 /// calling thread's input state: the keys and mouse buttons held, the mouse capture and the
 /// focus (AttachThreadInput), as a modal loop like OLE's drag needs when the button went down in
 /// the caller's window. `work` is told whether the input is shared. Returns at once; the input
-/// is detached and OLE closed when `work` ends. The caller has a message queue (a window thread).
-fn with_shared_input(name: &str, work: impl FnOnce(bool) + Send + 'static) -> Result<(), String> {
+/// is detached when `work` ends, then what `work` returned runs (still with OLE: the drag's
+/// follow-up), and OLE is closed. The caller has a message queue (a window thread).
+fn with_shared_input<A: FnOnce()>(
+    name: &str,
+    work: impl FnOnce(bool) -> A + Send + 'static,
+) -> Result<(), String> {
     use windows_sys::Win32::System::Threading::{AttachThreadInput, GetCurrentThreadId};
     use windows_sys::Win32::UI::WindowsAndMessaging::{MSG, PM_NOREMOVE, PeekMessageW};
     #[link(name = "ole32")]
@@ -2627,11 +2865,12 @@ fn with_shared_input(name: &str, work: impl FnOnce(bool) + Send + 'static) -> Re
             // SAFETY: plain calls with two live threads of this process; undone below.
             let me = unsafe { GetCurrentThreadId() };
             let attached = unsafe { AttachThreadInput(me, caller, 1) } != 0;
-            work(attached);
+            let after = work(attached);
             if attached {
                 // SAFETY: as above.
                 unsafe { AttachThreadInput(me, caller, 0) };
             }
+            after();
             if ole {
                 // SAFETY: matches the OleInitialize above, on this thread.
                 unsafe { OleUninitialize() };
@@ -2670,6 +2909,7 @@ mod drag_thread_tests {
             // SAFETY: a plain query.
             let me = unsafe { GetCurrentThreadId() };
             tx.send((me, shared, hr, kind)).unwrap();
+            || {}
         })
         .unwrap();
         go_tx.send(()).unwrap();
@@ -2682,6 +2922,669 @@ mod drag_thread_tests {
             kind == 0 || kind == 3,
             "a single-threaded apartment, not {kind}"
         );
+    }
+}
+
+/// Dragging a downloaded file out of Download complete (#869): the shell's own data object for
+/// it (Explorer's drag image, its formats), offered for a move, a copy or a link so the drop
+/// target applies Explorer's rules, and a move followed through the shell's change
+/// notifications, so the download can point where its file went.
+mod dragout {
+    use std::cell::RefCell;
+    use std::ffi::c_void;
+    use std::mem::zeroed;
+    use std::path::{Path, PathBuf};
+    use std::time::{Duration, Instant};
+
+    use windows_sys::Win32::Foundation::{HWND, LPARAM, LRESULT, WPARAM};
+    use windows_sys::Win32::System::LibraryLoader::GetModuleHandleW;
+    use windows_sys::Win32::UI::WindowsAndMessaging::{
+        CreateWindowExW, DefWindowProcW, DestroyWindow, DispatchMessageW, HWND_MESSAGE, MSG,
+        MsgWaitForMultipleObjects, PM_REMOVE, PeekMessageW, QS_ALLINPUT, RegisterClassW,
+        TranslateMessage, WM_APP, WNDCLASSW,
+    };
+
+    use crate::dialogs::DraggedOut;
+
+    type HResult = i32;
+    const DROPEFFECT_COPY: u32 = 1;
+    const DROPEFFECT_MOVE: u32 = 2;
+    const DROPEFFECT_LINK: u32 = 4;
+    /// SHDoDragDrop's (DoDragDrop's) answer when the file was dropped, not cancelled.
+    const DRAGDROP_S_DROP: HResult = 0x0004_0100;
+    /// SHChangeNotifyRegister: the shell's own notifications (what Explorer and every program
+    /// using the shell's file operations do), not the disks' (which would watch every drive),
+    /// delivered as a handle to lock.
+    const SHCNRF_SHELL_LEVEL: i32 = 0x0002;
+    const SHCNRF_NEW_DELIVERY: i32 = 0x8000;
+    const SHCNE_RENAMEITEM: i32 = 0x0000_0001;
+    const SHCNE_CREATE: i32 = 0x0000_0002;
+    const SHCNE_DELETE: i32 = 0x0000_0004;
+    const SHCNE_MKDIR: i32 = 0x0000_0008;
+    const SHCNE_RMDIR: i32 = 0x0000_0010;
+    const SHCNE_RENAMEFOLDER: i32 = 0x0002_0000;
+    /// The notification's message to our watching window.
+    const WM_SHELL_CHANGED: u32 = WM_APP + 0x69;
+    /// The formats a drop target sets on the data object to say what it did (Shell Clipboard
+    /// Formats): an optimized move (Explorer's, on any drive) answers "none" to the drag, so
+    /// the source doesn't delete the file the target already moved, and says "move" here.
+    const PERFORMED: &str = "Performed DropEffect";
+    const LOGICAL_PERFORMED: &str = "Logical Performed DropEffect";
+    /// How long a dropped file is watched while it is still there: a target that said it moves
+    /// it may be copying it to another drive first; one that said nothing may do so on its own
+    /// thread.
+    const MOVING_FOR: Duration = Duration::from_secs(30 * 60);
+    const DROPPED_FOR: Duration = Duration::from_secs(60);
+    /// How long the shell's word on where it went is waited for once the file is gone.
+    const GONE_FOR: Duration = Duration::from_secs(3);
+
+    #[repr(C)]
+    struct Guid(u32, u16, u16, [u8; 8]);
+    const IID_IDATAOBJECT: Guid = Guid(0x0000_010e, 0, 0, [0xC0, 0, 0, 0, 0, 0, 0, 0x46]);
+
+    #[repr(C)]
+    struct NotifyEntry {
+        pidl: *const c_void,
+        recursive: i32,
+    }
+
+    #[repr(C)]
+    struct FormatEtc {
+        cf: u16,
+        ptd: *mut c_void,
+        aspect: u32,
+        lindex: i32,
+        tymed: u32,
+    }
+
+    #[repr(C)]
+    struct StgMedium {
+        tymed: u32,
+        handle: *mut c_void,
+        unk_for_release: *mut c_void,
+    }
+
+    /// IDataObject's vtable up to GetData (index 3), all we call.
+    #[repr(C)]
+    struct DataObjectVtbl {
+        _query_interface: usize,
+        _add_ref: usize,
+        release: unsafe extern "system" fn(*mut c_void) -> u32,
+        get_data:
+            unsafe extern "system" fn(*mut c_void, *const FormatEtc, *mut StgMedium) -> HResult,
+    }
+
+    #[link(name = "shell32")]
+    unsafe extern "system" {
+        fn ILCreateFromPathW(path: *const u16) -> *mut c_void;
+        fn ILFree(pidl: *mut c_void);
+        fn ILClone(pidl: *const c_void) -> *mut c_void;
+        fn ILRemoveLastID(pidl: *mut c_void) -> i32;
+        fn ILFindLastID(pidl: *const c_void) -> *mut c_void;
+        fn SHCreateDataObject(
+            folder: *const c_void,
+            count: u32,
+            items: *const *const c_void,
+            inner: *mut c_void,
+            riid: *const Guid,
+            out: *mut *mut c_void,
+        ) -> HResult;
+        fn SHDoDragDrop(
+            hwnd: HWND,
+            data: *mut c_void,
+            source: *mut c_void,
+            effects: u32,
+            effect: *mut u32,
+        ) -> HResult;
+        fn SHGetSpecialFolderLocation(hwnd: HWND, csidl: i32, pidl: *mut *mut c_void) -> HResult;
+        fn SHChangeNotifyRegister(
+            hwnd: HWND,
+            sources: i32,
+            events: i32,
+            msg: u32,
+            count: i32,
+            entries: *const NotifyEntry,
+        ) -> u32;
+        fn SHChangeNotifyDeregister(id: u32) -> i32;
+        fn SHChangeNotification_Lock(
+            change: *mut c_void,
+            pid: u32,
+            pidls: *mut *mut *mut c_void,
+            event: *mut i32,
+        ) -> *mut c_void;
+        fn SHChangeNotification_Unlock(lock: *mut c_void) -> i32;
+        fn SHGetPathFromIDListEx(pidl: *const c_void, path: *mut u16, len: u32, opts: i32) -> i32;
+    }
+    #[link(name = "ole32")]
+    unsafe extern "system" {
+        fn ReleaseStgMedium(medium: *mut StgMedium);
+    }
+    #[link(name = "kernel32")]
+    unsafe extern "system" {
+        fn GlobalLock(h: *mut c_void) -> *mut c_void;
+        fn GlobalUnlock(h: *mut c_void) -> i32;
+        fn GlobalSize(h: *mut c_void) -> usize;
+    }
+    #[link(name = "user32")]
+    unsafe extern "system" {
+        fn RegisterClipboardFormatW(name: *const u16) -> u32;
+    }
+
+    fn wide(s: &std::ffi::OsStr) -> Vec<u16> {
+        use std::os::windows::ffi::OsStrExt;
+        s.encode_wide().chain(Some(0)).collect()
+    }
+
+    /// What the shell said happened to a file or folder, as paths.
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub(super) enum Seen {
+        Renamed(PathBuf, PathBuf),
+        Created(PathBuf),
+        Deleted(PathBuf),
+    }
+
+    thread_local! {
+        /// What this drag's watch saw (one drag per thread).
+        static SEEN: RefCell<Vec<Seen>> = const { RefCell::new(Vec::new()) };
+    }
+
+    /// Two paths name the same file: Windows' names don't tell case apart.
+    fn same(a: &Path, b: &Path) -> bool {
+        let norm = |p: &Path| {
+            p.to_string_lossy()
+                .replace('/', "\\")
+                .trim_end_matches('\\')
+                .to_lowercase()
+        };
+        norm(a) == norm(b)
+    }
+
+    /// `path` without the `\\?\` that canonicalize puts before it (the shell's paths have none).
+    pub(super) fn plain(path: PathBuf) -> PathBuf {
+        let s = path.to_string_lossy();
+        if let Some(rest) = s.strip_prefix(r"\\?\UNC\") {
+            PathBuf::from(format!(r"\\{rest}"))
+        } else if let Some(rest) = s.strip_prefix(r"\\?\") {
+            PathBuf::from(rest)
+        } else {
+            path
+        }
+    }
+
+    /// In a drive's Recycle Bin (`$Recycle.Bin`): thrown away, not put somewhere to open.
+    pub(super) fn in_recycle_bin(path: &Path) -> bool {
+        path.components().any(|c| {
+            c.as_os_str()
+                .to_string_lossy()
+                .eq_ignore_ascii_case("$Recycle.Bin")
+        })
+    }
+
+    /// Where `original` went, from what the shell saw: renamed or moved on its drive (one
+    /// notification with both paths, followed as often as it moved), or, gone from its place,
+    /// the one file of its name made elsewhere meanwhile (a move to another drive copies then
+    /// deletes). None while nothing says, or when two places could be it.
+    pub(super) fn followed(original: &Path, seen: &[Seen]) -> Option<PathBuf> {
+        let mut at = original.to_path_buf();
+        let (mut renamed, mut deleted) = (false, false);
+        for s in seen {
+            match s {
+                Seen::Renamed(from, to) if same(from, &at) => {
+                    at = to.clone();
+                    renamed = true;
+                }
+                Seen::Deleted(p) if same(p, original) => deleted = true,
+                _ => {}
+            }
+        }
+        if renamed {
+            return Some(at);
+        }
+        if !deleted {
+            return None;
+        }
+        let name = original.file_name()?.to_string_lossy().to_lowercase();
+        let mut made = seen.iter().filter_map(|s| match s {
+            Seen::Created(p)
+                if !same(p, original)
+                    && p.file_name()
+                        .is_some_and(|n| n.to_string_lossy().to_lowercase() == name) =>
+            {
+                Some(p)
+            }
+            _ => None,
+        });
+        let first = made.next()?;
+        if made.any(|p| !same(p, first)) {
+            return None;
+        }
+        Some(first.clone())
+    }
+
+    /// The shell's path of an item, if it is one on a disk.
+    fn path_of(pidl: *const c_void) -> Option<PathBuf> {
+        if pidl.is_null() {
+            return None;
+        }
+        let mut buf = vec![0u16; 32_768];
+        // SAFETY: `pidl` is the shell's, valid while its notification is locked; `buf` is as
+        // long as said.
+        let ok = unsafe { SHGetPathFromIDListEx(pidl, buf.as_mut_ptr(), buf.len() as u32, 0) };
+        let len = buf.iter().position(|&c| c == 0).unwrap_or(0);
+        (ok != 0 && len > 0).then(|| PathBuf::from(String::from_utf16_lossy(&buf[..len])))
+    }
+
+    /// The watching window's procedure: each notification, as paths, into [`SEEN`].
+    unsafe extern "system" fn watch_proc(
+        hwnd: HWND,
+        msg: u32,
+        wparam: WPARAM,
+        lparam: LPARAM,
+    ) -> LRESULT {
+        if msg != WM_SHELL_CHANGED {
+            // SAFETY: the system's default for every other message.
+            return unsafe { DefWindowProcW(hwnd, msg, wparam, lparam) };
+        }
+        let mut pidls: *mut *mut c_void = std::ptr::null_mut();
+        let mut event = 0i32;
+        // SAFETY: a new-delivery notification: wParam its handle, lParam the process to lock
+        // it for; the two items read before it is unlocked.
+        unsafe {
+            let lock = SHChangeNotification_Lock(
+                wparam as *mut c_void,
+                lparam as u32,
+                &mut pidls,
+                &mut event,
+            );
+            if lock.is_null() || pidls.is_null() {
+                return 0;
+            }
+            let item = |i: usize| path_of(*pidls.add(i));
+            // The low bits: the event (the high one says it came from the disk).
+            let seen = match event & 0x7FFF_FFFF {
+                SHCNE_RENAMEITEM | SHCNE_RENAMEFOLDER => {
+                    item(0).zip(item(1)).map(|(a, b)| Seen::Renamed(a, b))
+                }
+                SHCNE_CREATE | SHCNE_MKDIR => item(0).map(Seen::Created),
+                SHCNE_DELETE | SHCNE_RMDIR => item(0).map(Seen::Deleted),
+                _ => None,
+            };
+            SHChangeNotification_Unlock(lock);
+            if let Some(s) = seen {
+                tracing::debug!("drag out: the shell saw {s:?}");
+                SEEN.with(|v| v.borrow_mut().push(s));
+            }
+        }
+        0
+    }
+
+    /// A hidden window of the drag's thread, told by the shell of every file renamed, made or
+    /// deleted through it (the whole namespace: a move goes anywhere).
+    struct Watch {
+        hwnd: HWND,
+        id: u32,
+    }
+
+    impl Watch {
+        fn start() -> Option<Watch> {
+            static CLASS: std::sync::Once = std::sync::Once::new();
+            let class: Vec<u16> = "mdm-drag-out-watch\0".encode_utf16().collect();
+            // SAFETY: a class with our procedure, registered once; a message-only window of
+            // this thread, destroyed in Drop (or below when the shell won't watch); the desktop's
+            // item list freed once registered (the shell keeps its own copy).
+            unsafe {
+                let module = GetModuleHandleW(std::ptr::null());
+                CLASS.call_once(|| {
+                    let mut wc: WNDCLASSW = zeroed();
+                    wc.lpfnWndProc = Some(watch_proc);
+                    wc.hInstance = module;
+                    wc.lpszClassName = class.as_ptr();
+                    RegisterClassW(&wc);
+                });
+                let hwnd = CreateWindowExW(
+                    0,
+                    class.as_ptr(),
+                    std::ptr::null(),
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    HWND_MESSAGE,
+                    std::ptr::null_mut(),
+                    module,
+                    std::ptr::null(),
+                );
+                if hwnd.is_null() {
+                    return None;
+                }
+                let mut desktop = std::ptr::null_mut();
+                // CSIDL_DESKTOP (0): the namespace's root.
+                if SHGetSpecialFolderLocation(std::ptr::null_mut(), 0, &mut desktop) < 0 {
+                    DestroyWindow(hwnd);
+                    return None;
+                }
+                let entry = NotifyEntry {
+                    pidl: desktop,
+                    recursive: 1,
+                };
+                let id = SHChangeNotifyRegister(
+                    hwnd,
+                    SHCNRF_SHELL_LEVEL | SHCNRF_NEW_DELIVERY,
+                    SHCNE_RENAMEITEM
+                        | SHCNE_RENAMEFOLDER
+                        | SHCNE_CREATE
+                        | SHCNE_MKDIR
+                        | SHCNE_DELETE
+                        | SHCNE_RMDIR,
+                    WM_SHELL_CHANGED,
+                    1,
+                    &entry,
+                );
+                ILFree(desktop);
+                if id == 0 {
+                    DestroyWindow(hwnd);
+                    return None;
+                }
+                SEEN.with(|v| v.borrow_mut().clear());
+                Some(Watch { hwnd, id })
+            }
+        }
+
+        /// Wait up to `wait` for messages, and hand every one of this thread's to its window.
+        fn pump(&self, wait: Duration) {
+            // SAFETY: waits on no handle, then the thread's own message loop.
+            unsafe {
+                MsgWaitForMultipleObjects(
+                    0,
+                    std::ptr::null(),
+                    0,
+                    wait.as_millis() as u32,
+                    QS_ALLINPUT,
+                );
+                let mut msg: MSG = zeroed();
+                while PeekMessageW(&mut msg, std::ptr::null_mut(), 0, 0, PM_REMOVE) != 0 {
+                    TranslateMessage(&msg);
+                    DispatchMessageW(&msg);
+                }
+            }
+        }
+    }
+
+    impl Drop for Watch {
+        fn drop(&mut self) {
+            // SAFETY: what `start` registered and made, on the same thread.
+            unsafe {
+                SHChangeNotifyDeregister(self.id);
+                DestroyWindow(self.hwnd);
+            }
+            SEEN.with(|v| v.borrow_mut().clear());
+        }
+    }
+
+    /// The shell's data object for one file: what Explorer itself drags (the file, its item, its
+    /// drag image), and where a drop target says what it did.
+    struct DataObject(*mut c_void);
+
+    impl DataObject {
+        fn of(path: &Path) -> Option<DataObject> {
+            let w = wide(path.as_os_str());
+            // SAFETY: the item lists made from a NUL-terminated path (its folder's, and the
+            // file's within it, as Explorer's own drags give them) are freed once the data object
+            // has its own copies; `out` receives an IDataObject we release in Drop.
+            unsafe {
+                let pidl = ILCreateFromPathW(w.as_ptr());
+                if pidl.is_null() {
+                    return None;
+                }
+                let folder = ILClone(pidl);
+                if folder.is_null() {
+                    ILFree(pidl);
+                    return None;
+                }
+                ILRemoveLastID(folder);
+                let item = ILFindLastID(pidl) as *const c_void;
+                let mut out = std::ptr::null_mut();
+                let hr = SHCreateDataObject(
+                    folder,
+                    1,
+                    &item,
+                    std::ptr::null_mut(),
+                    &IID_IDATAOBJECT,
+                    &mut out,
+                );
+                ILFree(folder);
+                ILFree(pidl);
+                (hr >= 0 && !out.is_null()).then_some(DataObject(out))
+            }
+        }
+
+        /// A drop effect the drop target set on it, under the format `name`.
+        fn effect(&self, name: &str) -> Option<u32> {
+            let w = wide(std::ffi::OsStr::new(name));
+            // SAFETY: GetData through the object's vtable with a FORMATETC for an HGLOBAL; the
+            // medium is read under its lock and released.
+            unsafe {
+                let cf = RegisterClipboardFormatW(w.as_ptr());
+                if cf == 0 {
+                    return None;
+                }
+                let fmt = FormatEtc {
+                    cf: cf as u16,
+                    ptd: std::ptr::null_mut(),
+                    aspect: 1,
+                    lindex: -1,
+                    tymed: 1,
+                };
+                let mut medium: StgMedium = zeroed();
+                let vtbl = *(self.0 as *const *const DataObjectVtbl);
+                if ((*vtbl).get_data)(self.0, &fmt, &mut medium) < 0 {
+                    return None;
+                }
+                let mut value = None;
+                if medium.tymed == 1 && GlobalSize(medium.handle) >= 4 {
+                    let p = GlobalLock(medium.handle) as *const u32;
+                    if !p.is_null() {
+                        value = Some(p.read_unaligned());
+                        GlobalUnlock(medium.handle);
+                    }
+                }
+                ReleaseStgMedium(&mut medium);
+                value
+            }
+        }
+
+        fn release(&mut self) {
+            if !self.0.is_null() {
+                // SAFETY: our one reference, released once.
+                unsafe {
+                    let vtbl = *(self.0 as *const *const DataObjectVtbl);
+                    ((*vtbl).release)(self.0);
+                }
+                self.0 = std::ptr::null_mut();
+            }
+        }
+    }
+
+    impl Drop for DataObject {
+        fn drop(&mut self) {
+            self.release();
+        }
+    }
+
+    /// A file dropped somewhere: what it took to learn what became of it.
+    pub(super) struct Dropped {
+        file: PathBuf,
+        data: DataObject,
+        watch: Option<Watch>,
+        /// What the drag returned.
+        effect: u32,
+    }
+
+    /// Drag `file` out of `hwnd` (on the drag's thread, OLE set up), offering a move, a copy and
+    /// a link. Some when it was dropped.
+    pub(super) fn drag(hwnd: HWND, file: &Path) -> Result<Option<Dropped>, String> {
+        let file = plain(std::fs::canonicalize(file).map_err(|e| e.to_string())?);
+        // Watched from before the drop: a move on the same drive is done before the drag ends.
+        // MDM_TEST_NO_SHELL_WATCH=1 (debug builds, for checks): not watched, as when the shell
+        // won't say, so a move is one MDM can't follow.
+        let unwatched = cfg!(debug_assertions)
+            && std::env::var_os("MDM_TEST_NO_SHELL_WATCH").is_some_and(|v| v == "1");
+        let watch = if unwatched { None } else { Watch::start() };
+        if watch.is_none() {
+            tracing::warn!("drag out: the shell won't say where files go: a move isn't followed");
+        }
+        let data = DataObject::of(&file).ok_or("the shell has no data object for the file")?;
+        let mut effect = 0u32;
+        // SAFETY: our window and data object; the shell makes the drop source and drag image,
+        // and runs OLE's drag loop on this thread until the drop.
+        let hr = unsafe {
+            SHDoDragDrop(
+                hwnd,
+                data.0,
+                std::ptr::null_mut(),
+                DROPEFFECT_COPY | DROPEFFECT_MOVE | DROPEFFECT_LINK,
+                &mut effect,
+            )
+        };
+        if hr < 0 {
+            return Err(format!("SHDoDragDrop failed, {hr:#010x}"));
+        }
+        if hr != DRAGDROP_S_DROP {
+            return Ok(None);
+        }
+        tracing::info!(
+            "drag out: dropped, effect {effect}, performed {:?}, logical {:?}",
+            data.effect(PERFORMED),
+            data.effect(LOGICAL_PERFORMED)
+        );
+        Ok(Some(Dropped {
+            file,
+            data,
+            watch,
+            effect,
+        }))
+    }
+
+    impl Dropped {
+        /// What became of the file: moved (where to, or that MDM can't learn where), or None
+        /// when it stayed (a copy, a link, a drop that did nothing). Waits as long as a move may
+        /// take, on the drag's thread.
+        pub(super) fn follow(mut self) -> Option<DraggedOut> {
+            let since = Instant::now();
+            let mut gone: Option<Instant> = None;
+            loop {
+                match &self.watch {
+                    Some(w) => w.pump(Duration::from_millis(250)),
+                    None => std::thread::sleep(Duration::from_millis(250)),
+                }
+                let said = [
+                    Some(self.effect),
+                    self.data.effect(PERFORMED),
+                    self.data.effect(LOGICAL_PERFORMED),
+                ];
+                let moving = said.iter().flatten().any(|e| e & DROPEFFECT_MOVE != 0);
+                // A copy or a link, said so: the file stays.
+                let kept = !moving
+                    && said
+                        .iter()
+                        .flatten()
+                        .any(|e| e & (DROPEFFECT_COPY | DROPEFFECT_LINK) != 0);
+                if kept {
+                    return None;
+                }
+                let seen = SEEN.with(|v| v.borrow().clone());
+                if let Some(to) = followed(&self.file, &seen) {
+                    tracing::info!("drag out: the file was moved");
+                    self.data.release();
+                    return Some(if in_recycle_bin(&to) {
+                        DraggedOut::MovedAway
+                    } else {
+                        DraggedOut::Moved(to)
+                    });
+                }
+                if std::fs::symlink_metadata(&self.file).is_ok() {
+                    gone = None;
+                    if since.elapsed() > if moving { MOVING_FOR } else { DROPPED_FOR } {
+                        return None;
+                    }
+                } else if gone.get_or_insert_with(Instant::now).elapsed() > GONE_FOR {
+                    tracing::info!("drag out: the file was moved where the shell didn't say");
+                    return Some(DraggedOut::MovedAway);
+                }
+            }
+        }
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        fn p(s: &str) -> PathBuf {
+            PathBuf::from(s)
+        }
+
+        /// A move on the same drive is one notification with both paths, followed however
+        /// often the file moved; a move to another drive is a copy made there and the file
+        /// deleted here; the Recycle Bin is no place to open.
+        #[test]
+        fn a_moved_file_is_followed_by_what_the_shell_saw() {
+            let file = p(r"C:\Downloads\video.mp4");
+            let moved = Seen::Renamed(file.clone(), p(r"C:\Movies\video.mp4"));
+            assert_eq!(
+                followed(&file, std::slice::from_ref(&moved)),
+                Some(p(r"C:\Movies\video.mp4"))
+            );
+            // Case and separators don't matter (Windows' names).
+            let other_case = Seen::Renamed(p(r"c:\downloads\VIDEO.mp4"), p(r"C:\Movies\video.mp4"));
+            assert!(followed(&file, &[other_case]).is_some());
+            // Moved again: its last place; a name taken there: the numbered one.
+            let again = Seen::Renamed(p(r"C:\Movies\video.mp4"), p(r"C:\Old\video (2).mp4"));
+            assert_eq!(
+                followed(&file, &[moved.clone(), again]),
+                Some(p(r"C:\Old\video (2).mp4"))
+            );
+            // Another drive: made there, then deleted here.
+            let made = Seen::Created(p(r"E:\Backup\video.mp4"));
+            let deleted = Seen::Deleted(file.clone());
+            assert_eq!(
+                followed(&file, std::slice::from_ref(&made)),
+                None,
+                "still here"
+            );
+            assert_eq!(
+                followed(&file, &[made.clone(), deleted.clone()]),
+                Some(p(r"E:\Backup\video.mp4"))
+            );
+            // Two files of its name made meanwhile: can't tell which.
+            let made2 = Seen::Created(p(r"F:\video.mp4"));
+            assert_eq!(followed(&file, &[made, made2, deleted.clone()]), None);
+            // Deleted, nothing of its name made: not known.
+            assert_eq!(followed(&file, &[deleted]), None);
+            // Other files' changes say nothing.
+            let others = [
+                Seen::Renamed(p(r"C:\Downloads\a.zip"), p(r"C:\b.zip")),
+                Seen::Deleted(p(r"C:\Downloads\a.zip")),
+            ];
+            assert_eq!(followed(&file, &others), None);
+            assert!(in_recycle_bin(&p(
+                r"C:\$Recycle.Bin\S-1-5-21-1\$RAB12CD.mp4"
+            )));
+            assert!(!in_recycle_bin(&p(r"C:\Movies\video.mp4")));
+        }
+
+        #[test]
+        fn canonical_paths_as_the_shell_writes_them() {
+            assert_eq!(
+                plain(p(r"\\?\C:\Downloads\a.zip")),
+                p(r"C:\Downloads\a.zip")
+            );
+            assert_eq!(
+                plain(p(r"\\?\UNC\server\share\a.zip")),
+                p(r"\\server\share\a.zip")
+            );
+            assert_eq!(plain(p(r"C:\a.zip")), p(r"C:\a.zip"));
+        }
     }
 }
 
@@ -3289,7 +4192,19 @@ fn reg_string_in(
 }
 
 fn reg_dword(key: &str, name: &str) -> Option<u32> {
-    use windows_sys::Win32::System::Registry::{HKEY_CURRENT_USER, RRF_RT_REG_DWORD, RegGetValueW};
+    reg_dword_in(
+        windows_sys::Win32::System::Registry::HKEY_CURRENT_USER,
+        key,
+        name,
+    )
+}
+
+fn reg_dword_in(
+    root: windows_sys::Win32::System::Registry::HKEY,
+    key: &str,
+    name: &str,
+) -> Option<u32> {
+    use windows_sys::Win32::System::Registry::{RRF_RT_REG_DWORD, RegGetValueW};
     let key: Vec<u16> = key.encode_utf16().chain(Some(0)).collect();
     let name: Vec<u16> = name.encode_utf16().chain(Some(0)).collect();
     let mut value: u32 = 0;
@@ -3297,7 +4212,7 @@ fn reg_dword(key: &str, name: &str) -> Option<u32> {
     // SAFETY: plain registry read into a u32 of the stated size.
     let rc = unsafe {
         RegGetValueW(
-            HKEY_CURRENT_USER,
+            root,
             key.as_ptr(),
             name.as_ptr(),
             RRF_RT_REG_DWORD,
@@ -4590,6 +5505,14 @@ pub fn gl_driver(gl: &eframe::glow::Context) -> String {
     format!("{renderer} ({version})")
 }
 
+/// Windows' clipboard sequence number: it changes each time the clipboard does, and asking for
+/// it neither opens the clipboard nor waits for its owner (clipboard.rs: the watch for copied
+/// links reads the clipboard only when it changed).
+pub fn clipboard_sequence() -> u32 {
+    // SAFETY: takes nothing, returns a number.
+    unsafe { windows_sys::Win32::System::DataExchange::GetClipboardSequenceNumber() }
+}
+
 /// End process `pid` (a frozen MDM the user chose to close from the crash report).
 pub fn end_process(pid: u32) -> bool {
     use windows_sys::Win32::Foundation::CloseHandle;
@@ -4705,13 +5628,59 @@ pub fn browsers() -> Vec<(String, std::path::PathBuf)> {
 
 /// Open `url` in the browser whose program is `program` (from `browsers`).
 pub fn open_in(program: &std::path::Path, url: &str) {
-    let _ = std::process::Command::new(program).arg(url).spawn();
+    let program = program.to_owned();
+    let url = url.to_owned();
+    crate::launch::spawn("open browser", move || {
+        let _ = std::process::Command::new(program).arg(url).spawn();
+    });
+}
+
+/// Windows' Group Policy "Do not preserve zone information in file attachments" (#813), as
+/// (the computer's, the user's) `SaveZoneInformation` values: 1 keeps no zone information, 2
+/// keeps it; None where it isn't set. Browsers save their downloads through Windows'
+/// attachment services, which follow it; `webmark::keeps_zones` decides the same way. Two
+/// registry reads: for a thread other than the window's (the download's, as it starts).
+pub fn zone_policy() -> (Option<u32>, Option<u32>) {
+    use windows_sys::Win32::System::Registry::{HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE};
+    const KEY: &str = r"Software\Microsoft\Windows\CurrentVersion\Policies\Attachments";
+    const NAME: &str = "SaveZoneInformation";
+    (
+        reg_dword_in(HKEY_LOCAL_MACHINE, KEY, NAME),
+        reg_dword_in(HKEY_CURRENT_USER, KEY, NAME),
+    )
+}
+
+#[cfg(test)]
+mod zone_policy_tests {
+    use super::*;
+    use windows_sys::Win32::System::Registry::HKEY_LOCAL_MACHINE;
+
+    /// The policy's values are read as Windows keeps them (a DWORD under either root), and one
+    /// that isn't set reads as none. The policy key itself is the administrators' to write, even
+    /// the user's: a DWORD every Windows 10 and 11 has stands in for it.
+    #[test]
+    fn a_dword_is_read_and_a_missing_value_is_none() {
+        let key = r"SOFTWARE\Microsoft\Windows NT\CurrentVersion";
+        assert_eq!(
+            reg_dword_in(HKEY_LOCAL_MACHINE, key, "CurrentMajorVersionNumber"),
+            Some(10)
+        );
+        assert_eq!(
+            reg_dword_in(HKEY_LOCAL_MACHINE, key, "NoSuchValueOfMdm"),
+            None
+        );
+        // A string isn't taken for a number.
+        assert_eq!(reg_dword_in(HKEY_LOCAL_MACHINE, key, "ProductName"), None);
+        // Whatever this PC's policy is, it is read without failing.
+        let _ = zone_policy();
+    }
 }
 
 /// Mark-of-the-Web on a file being downloaded from `url` (`referrer`'s page): the zone stream
 /// browsers write, so SmartScreen checks a program, Office opens a document in Protected View and
 /// archive tools pass the mark on, as for the browser's own download. Written on the part file
-/// as it is created (the engine renames it, the stream going along).
+/// as it is created (the engine renames it, the stream going along). Through `webmark::mark`,
+/// which asks the option and Windows' policy first.
 pub fn mark_downloaded(path: &std::path::Path, url: &str, referrer: Option<&str>) {
     // Only addresses from the web: never a login's password (the engine has none in `url`).
     let clean = |u: &str| u.split(['\r', '\n']).next().unwrap_or("").to_owned();
@@ -5087,10 +6056,12 @@ pub fn open_power_options() {
         return;
     }
     use std::os::windows::process::CommandExt;
-    let _ = std::process::Command::new("control.exe")
-        .arg("powercfg.cpl,,3")
-        .creation_flags(0x0800_0000)
-        .spawn();
+    crate::launch::spawn("power options", move || {
+        let _ = std::process::Command::new("control.exe")
+            .arg("powercfg.cpl,,3")
+            .creation_flags(0x0800_0000)
+            .spawn();
+    });
 }
 
 /// A change to the wake timer, and where its result goes.
@@ -5274,8 +6245,9 @@ pub fn text_rasterizer(
 }
 
 /// Does [`text_rasterizer`] draw this character? One code point that needs no shaping: Latin,
-/// Greek and Cyrillic letters, digits and punctuation. Scripts whose letters change shape (Arabic,
-/// Indic, ...) and the invisible marks are left to egui and its shaper; so are the brackets of a
+/// Greek and Cyrillic letters, digits and punctuation, and the CJK characters whose face comes
+/// from the interface language's script font. Scripts whose letters change shape (Arabic, Indic,
+/// ...) and the invisible marks are left to egui and its shaper; so are the brackets of a
 /// right-to-left line, which the shaper mirrors.
 fn classic_char(c: char, rtl: bool) -> bool {
     if rtl
@@ -5296,7 +6268,7 @@ fn classic_char(c: char, rtl: bool) -> bool {
         | '\u{2010}'..='\u{2027}' // dashes, quotes, bullets, ellipsis
         | '\u{2030}'..='\u{205E}' // per mille, primes, guillemets
         | '\u{20A0}'..='\u{20BF}' // currency
-    )
+    ) || crate::theme::cjk_script(c).is_some()
 }
 
 /// The font file of a family `theme.rs` sets up (Segoe UI leads the two built-in ones).
@@ -5320,7 +6292,8 @@ mod classic_text {
     use egui::epaint::text::{GlyphBitmap, GlyphRasterizerRequest, RasterizedGlyph};
     use egui::epaint::{Color32, ColorImage};
     use windows::Win32::Graphics::DirectWrite::{
-        DWRITE_FACTORY_TYPE_SHARED, DWRITE_FONT_FACE_TYPE_TRUETYPE, DWRITE_FONT_METRICS,
+        DWRITE_FACTORY_TYPE_SHARED, DWRITE_FONT_FACE_TYPE_TRUETYPE,
+        DWRITE_FONT_FACE_TYPE_TRUETYPE_COLLECTION, DWRITE_FONT_METRICS,
         DWRITE_FONT_SIMULATIONS_NONE, DWRITE_GLYPH_METRICS, DWRITE_GLYPH_OFFSET, DWRITE_GLYPH_RUN,
         DWRITE_GRID_FIT_MODE_ENABLED, DWRITE_MEASURING_MODE_GDI_CLASSIC,
         DWRITE_MEASURING_MODE_NATURAL, DWRITE_RENDERING_MODE_GDI_CLASSIC,
@@ -5372,7 +6345,12 @@ mod classic_text {
                             .ok()?;
                         factory
                             .CreateFontFace(
-                                DWRITE_FONT_FACE_TYPE_TRUETYPE,
+                                // A .ttc holds a collection: face 0 is its regular face.
+                                if file.to_ascii_lowercase().ends_with(".ttc") {
+                                    DWRITE_FONT_FACE_TYPE_TRUETYPE_COLLECTION
+                                } else {
+                                    DWRITE_FONT_FACE_TYPE_TRUETYPE
+                                },
                                 &[Some(font)],
                                 0,
                                 DWRITE_FONT_SIMULATIONS_NONE,
@@ -5381,6 +6359,41 @@ mod classic_text {
                     }
                 })
                 .clone()
+        }
+
+        /// The face and glyph id for `ch`: the family's own face for the scripts it draws, or the
+        /// interface language's CJK face for Chinese, Japanese and Korean text. None when no face
+        /// has a glyph for it: egui and its shaper draw it instead.
+        fn lookup(
+            &mut self,
+            family: &egui::FontFamily,
+            ch: char,
+        ) -> Option<(IDWriteFontFace, u16, DWRITE_FONT_METRICS)> {
+            let files: Vec<&'static str> = if crate::theme::cjk_script(ch).is_some() {
+                crate::theme::cjk_font_files(ch)
+            } else {
+                super::classic_font_file(family).into_iter().collect()
+            };
+            for file in files {
+                let Some(face) = self.face(file) else {
+                    continue;
+                };
+                let mut id = 0u16;
+                // SAFETY: the pointer is to one element, the count given.
+                if unsafe { face.GetGlyphIndices(&(ch as u32), 1, &mut id) }.is_err() {
+                    continue;
+                }
+                if id == 0 {
+                    continue;
+                }
+                let mut font = DWRITE_FONT_METRICS::default();
+                // SAFETY: the pointer is to one element.
+                unsafe {
+                    face.GetMetrics(&mut font);
+                }
+                return Some((face, id, font));
+            }
+            None
         }
 
         pub fn glyph(
@@ -5397,22 +6410,16 @@ mod classic_text {
             if req.font_size_px.is_nan() || req.font_size_px < 1.0 {
                 return None;
             }
-            let face = self.face(super::classic_font_file(req.family)?)?;
+            let (face, id, font) = self.lookup(req.family, ch)?;
             // GDI's sizes are whole pixels; the natural look keeps the size it is asked for.
             let em = if smooth {
                 req.font_size_px
             } else {
                 req.font_size_px.round()
             };
-            let mut id = 0u16;
             let mut metrics = DWRITE_GLYPH_METRICS::default();
-            let mut font = DWRITE_FONT_METRICS::default();
             // SAFETY: each pointer is to one element, the count given.
             unsafe {
-                face.GetGlyphIndices(&(ch as u32), 1, &mut id).ok()?;
-                if id == 0 {
-                    return None;
-                }
                 if smooth {
                     face.GetDesignGlyphMetrics(&id, 1, &mut metrics, false)
                         .ok()?;
@@ -5429,7 +6436,6 @@ mod classic_text {
                     )
                     .ok()?;
                 }
-                face.GetMetrics(&mut font);
             }
             let advance = metrics.advanceWidth as f32 * em / f32::from(font.designUnitsPerEm);
             // Smooth: the font's own width, as egui lays a line out by it (and places each letter
@@ -5524,6 +6530,113 @@ mod classic_text {
             })
         }
     }
+}
+
+/// What Explorer's "Open with → Choose another app" asks of the chooser: the "Always use this
+/// app" choice may be saved for the file's type (`ALLOW_REGISTRATION`, `REGISTER_EXT`), and the
+/// app chosen opens the file (`EXEC`; without it the chooser only records the choice).
+const OPEN_WITH_FLAGS: windows_sys::Win32::UI::Shell::OPEN_AS_INFO_FLAGS = {
+    use windows_sys::Win32::UI::Shell::{OAIF_ALLOW_REGISTRATION, OAIF_EXEC, OAIF_REGISTER_EXT};
+    OAIF_ALLOW_REGISTRATION | OAIF_REGISTER_EXT | OAIF_EXEC
+};
+
+/// `path` as `SHOpenWithDialog` reads it: the path itself, wide and NUL-ended, with no quotes
+/// round it (a path with spaces is one string here, not a command line).
+fn open_with_file(path: &std::path::Path) -> Vec<u16> {
+    use std::os::windows::ffi::OsStrExt;
+    path.as_os_str().encode_wide().chain(Some(0)).collect()
+}
+
+/// Windows' own "Open with" chooser for the file `path` ("How do you want to open this file?"),
+/// as Explorer shows it: the app chosen there opens the file (#720). It waits until the chooser
+/// is closed, so it is called on a thread of its own (with COM, apartment-threaded, as the shell
+/// expects). `Err(HRESULT)` when Windows couldn't show it; closing the chooser without a choice
+/// is `Ok`.
+///
+/// It used to run `rundll32 shell32.dll,OpenAs_RunDLL <path>`, which takes the rest of its
+/// command line as the path, quotes included: the quotes a path with a space gets made it a file
+/// that isn't there, and the chooser never showed.
+pub fn open_with_dialog(path: &std::path::Path) -> Result<(), i32> {
+    use windows_sys::Win32::Foundation::ERROR_CANCELLED;
+    use windows_sys::Win32::UI::Shell::{OPENASINFO, SHOpenWithDialog};
+    com_on_this_thread();
+    let file = open_with_file(path);
+    let info = OPENASINFO {
+        pcszFile: file.as_ptr(),
+        pcszClass: std::ptr::null(),
+        oaifInFlags: OPEN_WITH_FLAGS,
+    };
+    // SAFETY: `info` and the NUL-ended `file` it points to outlive the call, which only reads
+    // them. No owner window: the window's thread isn't this one, and an owner would tie the two
+    // threads' input together while the chooser is open.
+    let hr = unsafe { SHOpenWithDialog(std::ptr::null_mut(), &info) };
+    // HRESULT_FROM_WIN32(ERROR_CANCELLED): the chooser closed without a choice.
+    let cancelled = (0x8007_0000 | ERROR_CANCELLED) as i32;
+    if hr >= 0 || hr == cancelled {
+        Ok(())
+    } else {
+        Err(hr)
+    }
+}
+
+#[cfg(test)]
+mod open_with_tests {
+    use super::*;
+
+    #[test]
+    fn the_chooser_opens_the_file_chosen() {
+        use windows_sys::Win32::UI::Shell::{OAIF_EXEC, OAIF_REGISTER_EXT};
+        assert_eq!(OPEN_WITH_FLAGS & OAIF_EXEC, OAIF_EXEC);
+        assert_eq!(OPEN_WITH_FLAGS & OAIF_REGISTER_EXT, OAIF_REGISTER_EXT);
+    }
+
+    #[test]
+    fn a_path_with_spaces_is_given_whole_and_unquoted() {
+        let path = std::path::Path::new(r"C:\Users\A B\Downloads\my file.zip");
+        let wide = open_with_file(path);
+        assert_eq!(wide.last(), Some(&0));
+        assert_eq!(
+            String::from_utf16(&wide[..wide.len() - 1]).unwrap(),
+            r"C:\Users\A B\Downloads\my file.zip"
+        );
+        assert!(!wide.contains(&u16::from(b'"')));
+    }
+}
+
+/// Open a file with its registered default application via Win32 `ShellExecuteW` (#811).
+///
+/// Unlike invoking `explorer.exe <file>`, which fails with `ExitStatus(1)` on archive files
+/// (.zip, .7z) when a third-party tool such as 7-Zip is the default handler, `ShellExecuteW`
+/// invokes the user's registered file association directly.
+pub fn open_file_shell(path: &std::path::Path) -> Result<(), std::io::Error> {
+    use std::os::windows::ffi::OsStrExt;
+    use windows_sys::Win32::UI::Shell::ShellExecuteW;
+    use windows_sys::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL;
+
+    com_on_this_thread();
+    let wide: Vec<u16> = path.as_os_str().encode_wide().chain(Some(0)).collect();
+    // SAFETY: lpFile is a null-terminated UTF-16 string; lpOperation is NULL so Windows
+    // executes the default action registered for the file type.
+    let ret = unsafe {
+        ShellExecuteW(
+            std::ptr::null_mut(),
+            std::ptr::null(),
+            wide.as_ptr(),
+            std::ptr::null(),
+            std::ptr::null(),
+            SW_SHOWNORMAL,
+        )
+    };
+    let code = ret as usize;
+    if code <= 32 {
+        let err = std::io::Error::last_os_error();
+        return Err(if err.raw_os_error().unwrap_or(0) != 0 {
+            err
+        } else {
+            std::io::Error::from_raw_os_error(code as i32)
+        });
+    }
+    Ok(())
 }
 
 /// The program Windows runs to open folders, when that isn't Explorer (a file manager such as
@@ -5673,6 +6786,119 @@ mod classic_text_tests {
         }
     }
 
+    /// #837: Chinese, Japanese and Korean characters are drawn by the same rasterizer as the
+    /// Latin beside them, at whole-pixel widths in the classic look. Fractional interface sizes
+    /// (110 %, 115 %…) round to a whole em instead of blurring the CJK fallback.
+    #[test]
+    fn cjk_letters_are_drawn_with_whole_pixel_advances() {
+        let mut g = glyphs();
+        let dir = std::env::var_os("WINDIR")
+            .map(|w| std::path::PathBuf::from(w).join("Fonts"))
+            .unwrap();
+        for ch in ['中', '文', '語', 'か', '한', '，', '。'] {
+            // A computer without that script's font (a CI image with no CJK fonts) draws it
+            // through egui's provider, if at all: nothing to check here.
+            if !crate::theme::cjk_font_files(ch)
+                .iter()
+                .any(|f| dir.join(f).exists())
+            {
+                eprintln!("no font for {ch}, not checked");
+                continue;
+            }
+            for size in [11.0, 12.0, 13.2] {
+                let text = ch.to_string();
+                let glyph = g
+                    .glyph(&req(&text, &FontFamily::Proportional, size), false, false)
+                    .unwrap_or_else(|| panic!("{ch} at {size} not drawn"));
+                assert_eq!(glyph.advance_px.fract(), 0.0, "{ch} at {size}");
+                assert!(glyph.advance_px >= 1.0, "{ch} at {size}");
+                assert!(glyph.bitmap.image.size[0] > 0, "{ch} at {size}: no bitmap");
+            }
+        }
+    }
+
+    /// #837: a mark that a shaper must place with its base, and every multi-codepoint cluster,
+    /// stay with egui.
+    #[test]
+    fn cjk_marks_and_clusters_stay_with_egui() {
+        let mut g = glyphs();
+        let f = FontFamily::Proportional;
+        for not in [
+            "\u{302A}",         // combining left tone mark
+            "\u{3099}",         // combining voiced sound mark
+            "\u{304B}\u{3099}", // か + voiced mark
+            "\u{4E2D}\u{302A}", // 中 + tone mark
+        ] {
+            assert!(
+                g.glyph(&req(not, &f, 12.0), false, false).is_none(),
+                "{not:?}"
+            );
+        }
+    }
+
+    /// #837: the boundaries of the ranges the rasterizer takes, and the ones a shaper must keep
+    /// (conjoining Jamo, combining marks, halfwidth sound marks).
+    #[test]
+    fn cjk_script_boundaries() {
+        use crate::theme::cjk_script;
+        for not in [
+            '\u{1100}',
+            '\u{11FF}',
+            '\u{A960}',
+            '\u{A97F}',
+            '\u{D7B0}',
+            '\u{D7FF}',
+            '\u{302A}',
+            '\u{302F}',
+            '\u{3099}',
+            '\u{309A}',
+            '\u{FF9E}',
+            '\u{FF9F}',
+            '\u{2000}',
+            '\u{1FFFF}',
+            '\u{40000}',
+        ] {
+            assert_eq!(cjk_script(not), None, "U+{:04X}", not as u32);
+        }
+        for c in ['\u{3040}', '\u{30FF}', '\u{FF9D}'] {
+            assert_eq!(cjk_script(c), Some("japanese"), "U+{:04X}", c as u32);
+        }
+        for c in ['\u{3130}', '\u{318F}', '\u{AC00}', '\u{D7A3}'] {
+            assert_eq!(cjk_script(c), Some("hangul"), "U+{:04X}", c as u32);
+        }
+        for c in ['\u{4E00}', '\u{9FFF}', '\u{20000}', '\u{3FFFF}'] {
+            assert_eq!(cjk_script(c), Some("han"), "U+{:04X}", c as u32);
+        }
+    }
+
+    /// #837: the interface language's own face leads its Han text; kana and Hangul keep their
+    /// script's face whatever the interface language. A language parameter, so no global race.
+    #[test]
+    fn cjk_faces_follow_the_interface_language() {
+        use crate::theme::cjk_font_files_for;
+        assert_eq!(cjk_font_files_for('\u{4E2D}', "zh-hans")[0], "msyh.ttc");
+        assert_eq!(cjk_font_files_for('\u{4E2D}', "zh-hant")[0], "msjh.ttc");
+        assert_eq!(cjk_font_files_for('\u{4E2D}', "ja")[0], "YuGothM.ttc");
+        assert_eq!(cjk_font_files_for('\u{4E2D}', "ko")[0], "malgun.ttf");
+        assert_eq!(cjk_font_files_for('\u{4E2D}', "en")[0], "msyh.ttc");
+        assert_eq!(cjk_font_files_for('\u{304B}', "ko")[0], "YuGothM.ttc");
+        assert_eq!(cjk_font_files_for('\u{D55C}', "zh-hans")[0], "malgun.ttf");
+    }
+
+    /// #837: a supplementary Han character no face has returns to egui instead of drawing tofu.
+    #[test]
+    fn an_unassigned_supplementary_han_falls_back_to_egui() {
+        let mut g = glyphs();
+        assert!(
+            g.glyph(
+                &req("\u{3FFFF}", &FontFamily::Proportional, 12.0),
+                false,
+                false
+            )
+            .is_none()
+        );
+    }
+
     /// The smooth look keeps the font's own width and draws more levels of grey than the
     /// classic one, whose letters are fitted to whole pixels.
     #[test]
@@ -5730,5 +6956,94 @@ mod classic_text_tests {
         // A family it isn't told about stays with egui.
         let other = FontFamily::Name("other".into());
         assert!(g.glyph(&req("a", &other, 12.0), false, false).is_none());
+    }
+}
+
+/// Global shortcut registration via Win32 `RegisterHotKey` on a dedicated message-queue thread (#558).
+pub struct GlobalHotKeyOs {
+    thread_id: std::sync::Arc<std::sync::atomic::AtomicU32>,
+    stop: std::sync::Arc<std::sync::atomic::AtomicBool>,
+    handle: Option<std::thread::JoinHandle<()>>,
+}
+
+impl GlobalHotKeyOs {
+    pub fn register(
+        shortcut: crate::hotkey::Shortcut,
+        fired: std::sync::Arc<std::sync::atomic::AtomicBool>,
+        taken: std::sync::Arc<std::sync::atomic::AtomicBool>,
+        ctx: egui::Context,
+    ) -> Option<Self> {
+        use std::sync::Arc;
+        use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
+        use windows_sys::Win32::System::Threading::GetCurrentThreadId;
+        use windows_sys::Win32::UI::Input::KeyboardAndMouse::{RegisterHotKey, UnregisterHotKey};
+        use windows_sys::Win32::UI::WindowsAndMessaging::{
+            GetMessageW, MSG, PM_NOREMOVE, PeekMessageW, WM_HOTKEY,
+        };
+
+        let thread_id = Arc::new(AtomicU32::new(0));
+        let stop = Arc::new(AtomicBool::new(false));
+        let tid_clone = thread_id.clone();
+        let stop_clone = stop.clone();
+        let vk = shortcut.key.win32_vk();
+        let mods = shortcut.win32_modifiers();
+        let handle = std::thread::Builder::new()
+            .name("mdm-global-hotkey".into())
+            .spawn(move || {
+                // SAFETY: creates the thread's message queue (`PeekMessageW` with `PM_NOREMOVE`)
+                // before publishing `thread_id`, so `PostThreadMessageW(WM_QUIT)` from `Drop`
+                // never targets a thread without a queue; clears `thread_id` if `RegisterHotKey`
+                // fails or when the message loop ends.
+                unsafe {
+                    let mut msg: MSG = zeroed();
+                    PeekMessageW(&mut msg, std::ptr::null_mut(), 0, 0, PM_NOREMOVE);
+                    tid_clone.store(GetCurrentThreadId(), Ordering::SeqCst);
+                    if stop_clone.load(Ordering::SeqCst) {
+                        tid_clone.store(0, Ordering::SeqCst);
+                        return;
+                    }
+                    if RegisterHotKey(std::ptr::null_mut(), 1, mods, vk) == 0 {
+                        tid_clone.store(0, Ordering::SeqCst);
+                        taken.store(true, Ordering::SeqCst);
+                        ctx.request_ui_pass(egui::ViewportId::ROOT);
+                        ctx.request_repaint();
+                        return;
+                    }
+                    while GetMessageW(&mut msg, std::ptr::null_mut(), 0, 0) > 0 {
+                        if msg.message == WM_HOTKEY {
+                            fired.store(true, Ordering::SeqCst);
+                            ctx.request_ui_pass(egui::ViewportId::ROOT);
+                            ctx.request_repaint();
+                        }
+                    }
+                    let _ = UnregisterHotKey(std::ptr::null_mut(), 1);
+                    tid_clone.store(0, Ordering::SeqCst);
+                }
+            })
+            .ok()?;
+        Some(Self {
+            thread_id,
+            stop,
+            handle: Some(handle),
+        })
+    }
+}
+
+impl Drop for GlobalHotKeyOs {
+    fn drop(&mut self) {
+        use std::sync::atomic::Ordering;
+        use windows_sys::Win32::UI::WindowsAndMessaging::{PostThreadMessageW, WM_QUIT};
+
+        self.stop.store(true, Ordering::SeqCst);
+        let tid = self.thread_id.swap(0, Ordering::SeqCst);
+        if tid != 0 {
+            // SAFETY: posts `WM_QUIT` to our own hotkey listener thread whose message queue exists.
+            unsafe {
+                let _ = PostThreadMessageW(tid, WM_QUIT, 0, 0);
+            }
+        }
+        if let Some(h) = self.handle.take() {
+            let _ = h.join();
+        }
     }
 }

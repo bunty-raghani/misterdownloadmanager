@@ -197,9 +197,7 @@ pub async fn fetch(
             .map(|(_, u)| u.clone())
             .ok_or_else(|| Error::Missing(file.to_owned()))
     };
-    let client = mdm_engine::net::client_builder(&net.dns, &net.route, &url("SHA256SUMS.txt")?)?
-        .user_agent(crate::USER_AGENT)
-        .build()?;
+    let client = crate::client(net, &url("SHA256SUMS.txt")?)?;
     let sums = crate::signed_list(
         &client,
         &url("SHA256SUMS.txt")?,

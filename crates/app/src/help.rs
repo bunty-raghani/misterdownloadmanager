@@ -324,15 +324,8 @@ impl Updates {
         // once the new copy (or the installer) has started.
         if let Some(res) = self.job.as_ref().and_then(crate::update::Job::result) {
             self.job = None;
-            let started = res.and_then(|next| match next {
-                crate::update::Next::Restart(mut cmd) => cmd
-                    .spawn()
-                    .map(|_| crate::update::Next::Restart(cmd))
-                    .map_err(|e| e.to_string()),
-                opened => Ok(opened),
-            });
-            match started {
-                Ok(crate::update::Next::Restart(_)) => return Outcome::Done(true),
+            match res {
+                Ok(crate::update::Next::Restart) => return Outcome::Done(true),
                 Ok(crate::update::Next::Opened) => self.status = Some(UpdateStatus::Opened),
                 Err(e) => self.status = Some(UpdateStatus::Failed(e)),
             }
@@ -820,8 +813,12 @@ impl About {
 // Keyboard shortcuts
 
 /// Every shortcut the main window answers (keep in step with `app.rs` and `list.rs`).
-const SHORTCUTS: [(&str, &str); 25] = [
+const SHORTCUTS: [(&str, &str); 26] = [
     ("Ctrl+N", "Add a download (Add URL)"),
+    (
+        "Ctrl+B",
+        "Download the links in the clipboard (Add batch download from clipboard)",
+    ),
     ("Ctrl+F", "Find a download"),
     ("F3", "Find the next match"),
     ("Enter", "Open the selected download"),

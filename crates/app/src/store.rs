@@ -120,6 +120,9 @@ fn load_from(p: &Path, empty: Loaded) -> Loaded {
     match parsed {
         Some(mut f) => {
             for i in &mut f.items {
+                // The page it came from is sent again (#795): the browser's other context
+                // (cookies, User-Agent) is memory only.
+                i.context.referer = i.referer.clone();
                 // Downloads that were running when the app closed are now stopped (resumable).
                 if i.status == Status::Downloading {
                     i.status = Status::Stopped;
@@ -502,6 +505,7 @@ mod tests {
                 i.video = Some(crate::model::VideoSpec {
                     selector: "bv*[height<=1080]+ba/b[height<=1080]".into(),
                     subs: Default::default(),
+                    parts: Vec::new(),
                 });
                 i
             })

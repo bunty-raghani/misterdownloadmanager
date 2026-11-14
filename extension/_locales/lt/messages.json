@@ -92,6 +92,9 @@
       }
     }
   },
+  "popup_undo": {
+    "message": "Atšaukti"
+  },
   "popup_excluded": {
     "message": "Atsisiuntimai iš $site$ lieka naršyklėje",
     "placeholders": {

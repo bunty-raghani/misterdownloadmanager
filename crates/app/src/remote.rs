@@ -257,14 +257,21 @@ pub fn qr_text(text: &str) -> String {
 /// A torrent's files being looked up: filled in on the runtime when they are known.
 pub type Slot = Arc<Mutex<Option<Result<mdm_torrent::Meta, String>>>>;
 
-/// A torrent a paired device sent: its files looked up on the runtime, then added as Add
-/// torrent would with everything chosen.
+/// A torrent a paired device sent, or a magnet link ticked in Link grabber (#709): its files
+/// looked up on the runtime, then added as Add torrent would with everything chosen.
 pub struct Lookup {
     pub slot: Slot,
     pub category: Option<Category>,
     /// The queue it waits in (by index), or None to start now.
     pub queue: Option<usize>,
     pub from_magnet: bool,
+    /// The folder its own folder goes in (Link grabber's package's), else its category's.
+    pub dir: Option<std::path::PathBuf>,
+    /// The downloads added with it (#766): it joins their group, for one summary.
+    pub group: Option<u64>,
+    /// Someone waits for it at the computer: a look-up that fails says so (a paired device's
+    /// is only logged).
+    pub tell: bool,
 }
 
 #[cfg(test)]

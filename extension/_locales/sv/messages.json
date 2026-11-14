@@ -92,6 +92,9 @@
       }
     }
   },
+  "popup_undo": {
+    "message": "Ångra"
+  },
   "popup_excluded": {
     "message": "Nedladdningar från $site$ stannar kvar i webbläsaren",
     "placeholders": {

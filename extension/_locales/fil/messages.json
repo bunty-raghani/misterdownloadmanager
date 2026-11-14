@@ -92,6 +92,9 @@
       }
     }
   },
+  "popup_undo": {
+    "message": "I-undo"
+  },
   "popup_excluded": {
     "message": "Mananatili sa browser ang mga download mula sa $site$",
     "placeholders": {

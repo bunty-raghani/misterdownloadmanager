@@ -18,7 +18,7 @@ Some buttons are greyed. They belong to features that aren't built yet.
 - **Keep running when closing the window** — closing the main window hides it in the notification area instead of quitting, and downloads, queues and schedules go on. On by default; unticked, closing quits MDM (so a [portable copy](portable.md)'s folder can then be deleted). If there is no icon for MDM at all — not even behind the ^ hidden icons — the window minimizes to the taskbar instead, so downloads continue and the window stays reachable; an icon behind ^ can be clicked to bring it back, or start MDM again. Greyed where no tray shows MDM's icon (some Linux desktops): closing quits there.
 - **Minimize to the notification area** — Minimize hides the main window, and a download's progress window, in the notification area; downloads go on. On by default. Where the tray has no icon, the main window minimizes to the taskbar instead. The close setting above is separate; when it is on, closing hides there too (or minimizes to the taskbar if there is no icon at all). Greyed where no tray shows MDM's icon (some Linux desktops); in a Wayland session the main window stays minimized in the dock, since Wayland can't hide a window.
 - **Capture downloads from the following browsers** — untick a browser to leave its downloads alone.
-- **Customize MDM Download panels in browsers → Edit...** — the download button over videos on web pages: turn it off, or list the sites it never shows on (separate them by spaces; `*.example.com` covers its subdomains). See [Browser integration](browser-integration.md#the-download-button-over-videos).
+- **Customize MDM Download panels in browsers → Edit...** — the download button over videos on web pages: turn it off, or list the sites it never shows on (separate them by spaces; wildcards like `*.youtube.*`, `youtube.*` or `*.example.com` work). See [Browser integration](browser-integration.md#the-download-button-over-videos).
 
 See [Browser integration](browser-integration.md).
 
@@ -28,7 +28,7 @@ See [Browser integration](browser-integration.md).
 *File types: what the browser hands over, and the sites left alone.*
 
 - **Automatically start downloading the following file types** — the file types the browser hands over (and the clipboard picks up). Separate them by spaces; `*` matches any characters, as in `R0*`. **Default** puts the original list back. The list starts with the usual archives, programs and installers (Windows, macOS and Linux ones: DMG, PKG, DEB, RPM, APPIMAGE, MSIX), music and videos, PDF and Office files, AI models and datasets (GGUF, SAFETENSORS, CKPT, PT, ONNX, PARQUET), 3D and CAD files (GLB, FBX, OBJ, STL, BLEND, STEP), design and camera RAW files, ebooks, disk images and split archives. Pages, scripts, plain text and web images are left out on purpose, so saving a picture or a page stays with the browser; add any type you need, or put a single `*` in the box to take every file that has an extension. A list you never changed gains the types a new version adds; one you edited stays as it is.
-- **Don't start downloading automatically from the following sites** — sites whose downloads stay in the browser, separated by spaces. `*.example.com` covers every part of a site. **Default** puts the original list back.
+- **Don't start downloading automatically from the following sites** — sites whose downloads stay in the browser, separated by spaces. A name covers the site's subdomains too (`example.com` covers `www.example.com` and `dl.example.com`, as does `*.example.com`), `*` matches anything as in the Download panels' list (`*.example.*`), and the files its pages link to on another server (a download server or a CDN), told by the page the download came from. A download with no page known is matched by its own address. **Default** puts the original list back.
 
 ## Save to
 
@@ -42,6 +42,7 @@ See [Browser integration](browser-integration.md).
 - **Default download directory for "…" category** — the category's folder. Type a path or click **Browse**.
 - **Change folder for "…" category on last selected** — when you pick another folder in **Download File Info**, it becomes the category's folder from then on. On by default. (It sets the first state of **Remember this path** in that window.)
 - **Set file creation date as provided by the server** — give finished files the date the server reports, not the date you downloaded them.
+- **Mark downloaded files as coming from the internet** — on by default. Every file MDM downloads (from the browser, a link you add, a video, a gallery, a torrent, and the files extracted from an archive) carries the mark a browser's downloads carry. On Windows that is the Mark of the Web: SmartScreen checks a program before it first runs, and Office opens a document in Protected View. On a Mac it is the quarantine attribute Gatekeeper checks; on Linux, where the file came from, which file managers show. Unticked, no download is marked. On Windows, MDM also follows the Group Policy **Do not preserve zone information in file attachments**, as browsers do: when it is on (for the computer or for you), no download is marked, whatever this box says.
 
 MDM doesn't use a temporary folder: every connection writes straight into the final file's place, so there is nothing to put together at the end.
 
@@ -50,6 +51,7 @@ MDM doesn't use a temporary folder: every connection writes straight into the fi
 ![Options on its Downloads page: the start download dialog, Download complete and duplicate links](images/help/options-downloads.webp)
 *Downloads: which windows show, and what a duplicate link does.*
 
+- **Customize "Download progress" dialog → Edit...** — **Show download progress dialog when a download starts**: on by default. Untick it and a download no longer opens its progress window when it starts, from the browser, a link you add, a video or a queue; it goes on in the main window's list, where a double-click opens its progress window. **Download complete** still shows when it finishes, as **Show download complete dialog** below says.
 - **Show start download dialog** — show **Download File Info** for each new download. With it off, downloads start at once, or only join the queue if you tick **Do not start downloading, only add files to the queue**.
 - **Show download complete dialog** — show **Download complete** when a file finishes.
 - **Start downloading immediately while displaying "Download File Info" dialog** — on by default, so the download is already under way while you choose a folder.
@@ -121,7 +123,7 @@ The passwords (these, the proxy's and the debrid accounts') are kept in the syst
 ![Options on its Accounts page: debrid service accounts](images/help/options-accounts.webp)
 *Accounts: your debrid accounts.*
 
-Your debrid service accounts (Real-Debrid, AllDebrid, Premiumize, TorBox; experimental): **Add...** signs in by code in the browser or with your API token or key; a link from a host the service supports is then downloaded through it. The list's order is the order accounts are asked. See [Debrid service accounts](debrid.md).
+Your debrid service accounts (Real-Debrid, AllDebrid, Premiumize, TorBox, Mega-Debrid; experimental): **Add...** signs in by code in the browser, with your user name and password, or with your API token or key; a link from a host the service supports is then downloaded through it. The list's order is the order accounts are asked. See [Debrid service accounts](debrid.md).
 
 ## Sounds
 
@@ -150,9 +152,11 @@ Archives (zip, 7z, rar, tar, gz, xz), and [Link grabber](link-grabber.md).
 - **Extract archives when their download completes** (off by default) — every archive downloaded, as soon as it (or a split archive's last volume) is in. A Link grabber package has its own **Extract when done**.
 - **Then move the archives to the Recycle Bin** (off by default; the Trash on macOS and Linux) — after a successful extraction only. This is also the default of a new package's **Delete archives after extracting**.
 - **What an archive holds goes** — into a folder named after it when it holds several things (the default), always into such a folder, or straight into the archive's folder.
-- Whether **7-Zip** was found: 7z and RAR archives need it.
+- Whether **7-Zip** was found: 7z and RAR archives need it, unless they are extracted in place with HatchZip.
+- **Extract in place with HatchZip** (off by default; greyed out when HatchZip isn't installed) — the archive is removed while its files come out, so only they need room. See [Extracting archives](link-grabber.md#in-place-with-hatchzip).
 - **Look links up when they arrive (name, size, online)** — Link grabber asks each server about its file (on by default).
 - **Hide web pages** — Link grabber's default for the same box (on).
+- **Accept Click'n'Load from web pages (port 9666)** (off by default) — a link site's Click'n'Load button sends its links to MDM's Link grabber. See [Click'n'Load](link-grabber.md#clickn-load).
 
 ## Remote
 

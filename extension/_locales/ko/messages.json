@@ -92,6 +92,9 @@
       }
     }
   },
+  "popup_undo": {
+    "message": "실행 취소"
+  },
   "popup_excluded": {
     "message": "$site$에서 다운로드한 파일은 브라우저에 남아 있습니다.",
     "placeholders": {

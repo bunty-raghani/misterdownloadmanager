@@ -43,6 +43,17 @@ pub fn open(target: impl AsRef<OsStr>) {
     });
 }
 
+/// Open a web page in the browser (a service's sign-in, a site's page the download needs, #701).
+/// Never in an off-screen test run (MDM_OFFSCREEN), whose clicks come from scripts, not from a
+/// person at the browser: its log says what would have opened.
+pub fn open_page(url: &str) {
+    if crate::offscreen() {
+        tracing::info!("open in the browser (off-screen, not opened): {url}");
+    } else {
+        open(url);
+    }
+}
+
 /// Run `job` on a thread of its own named `name`, and return at once: for what a window hands
 /// over that may wait (a program, a file on a sleeping hard disk, a USB drive or a network
 /// folder: #743, #751).

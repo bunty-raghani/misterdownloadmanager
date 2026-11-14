@@ -304,6 +304,14 @@ impl PlaylistView {
         self.sound
     }
 
+    /// The quality chosen converts the sound (MP3, Opus, FLAC), which keeps no chapters (#827).
+    pub fn converts(&self) -> bool {
+        let picks = picks(true);
+        picks
+            .get(self.pick.min(picks.len().saturating_sub(1)))
+            .is_some_and(|p| mdm_tools::resolve::audio_conversion(&p.selector).is_some())
+    }
+
     /// Fewer listed than the site says the list has.
     fn short(&self) -> bool {
         self.total.is_some_and(|t| (self.entries.len() as u64) < t)

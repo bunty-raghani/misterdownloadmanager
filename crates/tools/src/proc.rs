@@ -8,6 +8,7 @@ use std::collections::VecDeque;
 use std::io::{BufRead, BufReader, Read};
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
@@ -172,10 +173,12 @@ fn with_cookies(ours: &[String], chosen: Option<&BrowserCookies>) -> bool {
             .any(|a| a == "--cookies" || a == "--cookies-from-browser")
 }
 
-/// A page's `-J` output, and whether it took looking the page up without cookies.
+/// A page's `-J` output, whether it took looking the page up without cookies, and yt-dlp's
+/// `WARNING:` lines on the way (#852: the one saying it has no JavaScript runtime).
 pub struct LookedUp {
     pub json: Vec<u8>,
     pub without_cookies: bool,
+    pub warnings: Vec<String>,
 }
 
 /// Look a page up (`yt-dlp -J`, `ours` holding its arguments). yt-dlp's `-J` chooses a format too,
@@ -184,32 +187,119 @@ pub struct LookedUp {
 /// (it looks for Deno alone) every video is dropped: "Requested format is not available". The
 /// same page without the cookies lists its qualities, so a look-up that fails this way and had
 /// cookies is made once more without them; if that fails too, the first error is the one told.
+/// A look-up whose secure connection failed for a certificate yt-dlp doesn't trust is made once
+/// more with the system's certificates ([`with_system_certs`], #955).
 pub fn look_up(
     exe: &Path,
     ours: &[String],
     url: &str,
     timeout: Duration,
 ) -> Result<LookedUp, ProcError> {
-    let run = |args: &[String]| output(ytdlp(exe, &[], args, url)?, "yt-dlp", timeout);
-    match run(ours) {
-        Ok(json) => Ok(LookedUp {
+    // A plain file a server's program sends gets its real type (#695).
+    let run = |args: &[String]| {
+        output_warned(ytdlp(exe, &[], args, url)?, "yt-dlp", timeout)
+            .map(|(json, warnings)| (crate::resolve::typed_scripts(json), warnings))
+    };
+    match with_system_certs(&SYSTEM_CERTS, || run(ours)) {
+        Ok((json, warnings)) => Ok(LookedUp {
             json,
             without_cookies: false,
+            warnings,
         }),
         Err(first)
             if with_cookies(ours, browser_cookies().as_ref())
                 && crate::servers::format_unavailable(&first.to_string()) =>
         {
             match run(&without_cookies(ours)) {
-                Ok(json) => Ok(LookedUp {
+                Ok((json, warnings)) => Ok(LookedUp {
                     json,
                     without_cookies: true,
+                    warnings,
                 }),
                 Err(_) => Err(first),
             }
         }
         Err(e) => Err(e),
     }
+}
+
+/// yt-dlp checks the sites' certificates with the system's (`--compat-options no-certifi`)
+/// rather than its own list, Mozilla's (#955). Set once a look-up needed it: every later run of
+/// yt-dlp (the download, a fresh address, a playlist) needs it too.
+static SYSTEM_CERTS: AtomicBool = AtomicBool::new(false);
+
+/// yt-dlp's arguments for the certificates it checks sites with: its own list (Mozilla's, from
+/// Python's `certifi`), or the system's (`system`). The system's is what MDM's own connections
+/// and the browsers trust (rustls-platform-verifier, #668): there an antivirus's web filter or a
+/// proxy that reads HTTPS adds the certificate it signs sites with, and yt-dlp's own list,
+/// without it, said `CERTIFICATE_VERIFY_FAILED` for every page the browser opened (#955). Not
+/// the default: Windows fetches a root certificate the first time a connection needs it, so its
+/// store can lack one Mozilla's list has.
+fn cert_args(system: bool) -> &'static [&'static str] {
+    if system {
+        &["--compat-options", "no-certifi"]
+    } else {
+        &[]
+    }
+}
+
+/// Did yt-dlp fail for a certificate it doesn't trust (Python's `ssl` words, in yt-dlp's
+/// message)? An expired or another site's certificate says so in other words.
+pub fn untrusted_certificate(message: &str) -> bool {
+    message.contains("CERTIFICATE_VERIFY_FAILED")
+        && (message.contains("unable to get local issuer certificate")
+            || message.contains("self-signed certificate in certificate chain")
+            || message.contains("self signed certificate in certificate chain"))
+}
+
+/// `run` a yt-dlp run; when it failed for a certificate its own list doesn't trust, once more
+/// with the system's (`system`, [`cert_args`]), kept for the runs after when that worked. A
+/// second refusal of the certificate goes back to yt-dlp's own list and tells the first error;
+/// another failure is the new run's (the certificate was fine).
+fn with_system_certs<T>(
+    system: &AtomicBool,
+    mut run: impl FnMut() -> Result<T, ProcError>,
+) -> Result<T, ProcError> {
+    let first = match run() {
+        Err(e) if !system.load(Ordering::Relaxed) && untrusted_certificate(&e.to_string()) => e,
+        done => return done,
+    };
+    tracing::info!(
+        "yt-dlp didn't trust the site's certificate: asking with the system's ({first})"
+    );
+    system.store(true, Ordering::Relaxed);
+    match run() {
+        Err(e) if untrusted_certificate(&e.to_string()) => {
+            system.store(false, Ordering::Relaxed);
+            Err(first)
+        }
+        done => done,
+    }
+}
+
+/// Did yt-dlp's look-up say YouTube's qualities went missing for want of a JavaScript runtime
+/// (#852)? yt-dlp needs Deno, Node.js or Bun to solve YouTube's challenges; without one it asks
+/// only the players that need none, and their list is short (on some days only the sound and a
+/// low quality). Its own words, `warnings` as [`Spawned::warnings`] gives them:
+/// - "No supported JavaScript runtime could be found. [...] some formats may be missing" (when
+///   it looks a YouTube video up without one);
+/// - "n challenge solving failed" / "Signature solving failed: Some formats may be missing"
+///   (signed in, it asks the players that need one all the same): a runtime's want only when
+///   this computer has none (`runtime_here`); otherwise its solver script is what failed.
+pub fn missing_js_runtime(warnings: &[String], runtime_here: bool) -> bool {
+    warnings.iter().any(|w| {
+        let w = w.to_ascii_lowercase();
+        w.contains("no supported javascript runtime")
+            || (!runtime_here
+                && (w.contains("challenge solving failed")
+                    || w.contains("signature solving failed")))
+    })
+}
+
+/// Has this computer a JavaScript runtime yt-dlp can use (Deno, Node.js or Bun), where the
+/// helpers' runs look for one ([`js_runtime_found`])?
+pub fn js_runtime_here() -> bool {
+    js_runtime_found().is_some()
 }
 
 /// Does yt-dlp's `WARNING:` (or `ERROR:`) line say it couldn't read the browser's cookies?
@@ -458,10 +548,13 @@ pub fn safe(s: &str) -> Result<&str, ProcError> {
 /// What the browser's request for a page carried, so yt-dlp asks as the browser did: the page
 /// that embeds a player (Referer), the browser's User-Agent, and the page's cookies, which sign a
 /// member's or a site's own videos in: each with its domain and flags (`jar`), or, from an older
-/// extension, a Cookie header's `name=value; …` (`cookies`).
+/// extension, a Cookie header's `name=value; …` (`cookies`). For a stream the page's player
+/// asked for, the `Origin` it sent too (#900): a site's video server may serve its own pages'
+/// players only.
 #[derive(Clone, Debug, Default)]
 pub struct FromBrowser {
     pub referer: Option<String>,
+    pub origin: Option<String>,
     pub user_agent: Option<String>,
     pub cookies: Option<String>,
     pub jar: Vec<mdm_ipc::BrowserCookie>,
@@ -490,6 +583,14 @@ impl FromBrowser {
         }
         if let Some(ua) = given(&self.user_agent) {
             args.extend(["--user-agent".to_owned(), safe(ua)?.to_owned()]);
+        }
+        // yt-dlp sends it with the address and keeps it in each format's headers, which MDM's
+        // engine sends with the stream's playlists and each of its pieces (#769).
+        if let Some(origin) = given(&self.origin) {
+            args.extend([
+                "--add-header".to_owned(),
+                format!("Origin:{}", safe(origin)?),
+            ]);
         }
         let host = url::Url::parse(url)
             .ok()
@@ -605,12 +706,12 @@ fn header_domain(host: &str) -> &str {
 }
 
 /// A cookie file's `text` ([`jar_cookies`], [`header_cookies`]) in a file only this user can
-/// read.
+/// read, in the helpers' temporary folder ([`crate::workdir::temp_dir`]).
 fn cookie_file(text: &str) -> std::io::Result<CookieFile> {
     use std::io::Write;
     use std::sync::atomic::{AtomicU64, Ordering};
     static N: AtomicU64 = AtomicU64::new(0);
-    let path = std::env::temp_dir().join(format!(
+    let path = crate::workdir::temp_dir().join(format!(
         "mdm-cookies-{}-{}.txt",
         std::process::id(),
         N.fetch_add(1, Ordering::Relaxed)
@@ -666,8 +767,17 @@ fn layers_with(
 
 /// The file named `name` (`name.exe` on Windows) in one of `dirs`.
 fn program_in(dirs: &[PathBuf], name: &str) -> Option<PathBuf> {
-    let file = format!("{name}{}", std::env::consts::EXE_SUFFIX);
-    dirs.iter().map(|d| d.join(&file)).find(|p| p.is_file())
+    file_in(dirs, &format!("{name}{}", std::env::consts::EXE_SUFFIX))
+}
+
+/// `file` in one of `dirs`, the absolute ones only: a relative PATH entry (`.`, `bin`) is a
+/// folder under wherever MDM was started, so a program found there is one anybody who could
+/// put a file in that folder chose.
+fn file_in(dirs: &[PathBuf], file: &str) -> Option<PathBuf> {
+    dirs.iter()
+        .filter(|d| d.is_absolute())
+        .map(|d| d.join(file))
+        .find(|p| p.is_file())
 }
 
 /// Node.js from nvm (`~/.nvm/versions/node/<version>/bin/node`), the newest name first: a program
@@ -684,16 +794,49 @@ fn nvm_node(home: &Path) -> Option<PathBuf> {
 }
 
 /// What yt-dlp should be told about JavaScript (#360, #352, #351): YouTube's formats need a
-/// runtime, and yt-dlp looks for Deno alone unless told of another. Deno found: nothing to say.
-/// Else Node.js or Bun, if there is one.
-fn js_runtime(dirs: &[PathBuf], home: Option<&Path>) -> Option<(&'static str, PathBuf)> {
+/// runtime, and yt-dlp looks for Deno alone, on the PATH, unless told of another. Deno on the
+/// PATH (`dirs`): nothing to say. Else Deno where its own installer puts it
+/// (`~/.deno/bin`, #852: no PATH of a program started from the desktop has it), or in `more`
+/// (folders a runtime installed after MDM started is in, [`runtime_dirs`]); else Node.js or Bun.
+fn js_runtime(
+    dirs: &[PathBuf],
+    more: &[PathBuf],
+    home: Option<&Path>,
+) -> Option<(&'static str, PathBuf)> {
     if program_in(dirs, "deno").is_some() {
         return None;
     }
-    program_in(dirs, "node")
-        .or_else(|| home.and_then(nvm_node))
-        .map(|p| ("node", p))
+    let own_deno = home.map(|h| h.join(".deno").join("bin"));
+    program_in(own_deno.as_slice(), "deno")
+        .or_else(|| program_in(more, "deno"))
+        .map(|p| ("deno", p))
+        .or_else(|| {
+            program_in(dirs, "node")
+                .or_else(|| home.and_then(nvm_node))
+                .or_else(|| program_in(more, "node"))
+                .map(|p| ("node", p))
+        })
         .or_else(|| program_in(dirs, "bun").map(|p| ("bun", p)))
+}
+
+/// Where Windows' installers put a JavaScript runtime (#852): winget's links (Deno, Node.js) and
+/// Node.js's own installer. They add these to the PATH of programs started after them, not to
+/// MDM's own, so a runtime installed while MDM runs is found here when the video is looked up
+/// again. None elsewhere: a package manager's folder is on the PATH already ([`usable_dirs`]).
+fn runtime_dirs() -> Vec<PathBuf> {
+    #[cfg(windows)]
+    {
+        let under = |var: &str, rel: &str| std::env::var_os(var).map(|v| Path::new(&v).join(rel));
+        [
+            under("LOCALAPPDATA", r"Microsoft\WinGet\Links"),
+            under("ProgramFiles", "nodejs"),
+        ]
+        .into_iter()
+        .flatten()
+        .collect()
+    }
+    #[cfg(not(windows))]
+    Vec::new()
 }
 
 /// The folders of `path` (a PATH value) a helper can walk, in their order (#508): yt-dlp looks
@@ -790,24 +933,40 @@ fn with_usable_path(cmd: &mut Command) {
     }
 }
 
-/// `--js-runtimes` for this computer's Node.js or Bun, looked for once in the PATH folders a
-/// helper gets ([`usable_dirs`]): a node.exe behind a junction is named by its real folder.
-fn js_runtime_args() -> &'static [String] {
-    static ARGS: std::sync::OnceLock<Vec<String>> = std::sync::OnceLock::new();
-    ARGS.get_or_init(|| {
+/// This computer's JavaScript runtime for yt-dlp ([`js_runtime`]): `Some` with the arguments
+/// that tell yt-dlp of it (none for Deno on the PATH, which it finds itself), in the PATH
+/// folders a helper gets ([`usable_dirs`]: a node.exe behind a junction is named by its real
+/// folder). Kept once found; while there is none it is looked for again at each run, so one
+/// installed meanwhile counts at the next look-up (#852).
+fn js_runtime_found() -> Option<Vec<String>> {
+    static FOUND: Mutex<Option<Vec<String>>> = Mutex::new(None);
+    let mut found = FOUND
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    if found.is_none() {
         let dirs: Vec<PathBuf> = std::env::var_os("PATH")
             .map(|p| usable_dirs(&p))
             .unwrap_or_default();
-        let home = std::env::var_os("HOME").map(PathBuf::from);
-        js_runtime(&dirs, home.as_deref())
-            .map(|(name, path)| {
+        let home = std::env::var_os("HOME")
+            .or_else(|| std::env::var_os("USERPROFILE"))
+            .map(PathBuf::from);
+        *found = if program_in(&dirs, "deno").is_some() {
+            Some(Vec::new())
+        } else {
+            js_runtime(&dirs, &runtime_dirs(), home.as_deref()).map(|(name, path)| {
                 vec![
                     "--js-runtimes".to_owned(),
                     format!("{name}:{}", path.display()),
                 ]
             })
-            .unwrap_or_default()
-    })
+        };
+    }
+    found.clone()
+}
+
+/// `--js-runtimes` for this computer's runtime, when yt-dlp must be told of it.
+fn js_runtime_args() -> Vec<String> {
+    js_runtime_found().unwrap_or_default()
 }
 
 /// `yt-dlp` with arguments in layers: `user` extras, then `ours` (then the chosen browser's
@@ -825,6 +984,7 @@ pub fn ytdlp(
     layers(&mut cmd, user, ours)?;
     cmd.args(["--ignore-config", "--no-exec", "--no-update"]);
     cmd.args(js_runtime_args());
+    cmd.args(cert_args(SYSTEM_CERTS.load(Ordering::Relaxed)));
     cmd.args(UTF8);
     cmd.args(route);
     cmd.arg("--");
@@ -845,6 +1005,7 @@ pub fn ytdlp_info(
     layers(&mut cmd, user, ours)?;
     cmd.args(["--ignore-config", "--no-exec", "--no-update"]);
     cmd.args(js_runtime_args());
+    cmd.args(cert_args(SYSTEM_CERTS.load(Ordering::Relaxed)));
     cmd.args(UTF8);
     cmd.args(route);
     cmd.arg("--load-info-json");
@@ -902,15 +1063,22 @@ impl Spawned {
         self.warnings.lock().unwrap().clone()
     }
 
+    /// Once it has ended: wait for its last stderr lines (the reader is another thread, and on
+    /// a busy machine it comes after the exit was seen), up to two seconds, as something it
+    /// started may keep stderr open.
+    fn settle(&self) {
+        let end = Instant::now() + Duration::from_secs(2);
+        while !self.stderr_done.load(std::sync::atomic::Ordering::Acquire) && Instant::now() < end {
+            std::thread::sleep(Duration::from_millis(10));
+        }
+    }
+
     /// A failure with what the tool said (its last `ERROR:` line, else its last line). Called
     /// once it has ended: its last lines are waited for (the stderr reader is another thread, and
     /// on a busy machine it came after the exit was seen: "stopped without saying why"), up to
     /// two seconds, as something it started may keep stderr open.
     pub fn failure(&self) -> ProcError {
-        let end = Instant::now() + Duration::from_secs(2);
-        while !self.stderr_done.load(std::sync::atomic::Ordering::Acquire) && Instant::now() < end {
-            std::thread::sleep(Duration::from_millis(10));
-        }
+        self.settle();
         let tail = self.tail.lock().unwrap();
         let message = tail
             .iter()
@@ -948,9 +1116,11 @@ fn with_cookie_trouble(message: String, warnings: &[String], tail: &VecDeque<Str
 }
 
 /// Start `cmd` supervised: no window, in the job, stdout piped for the caller, stderr kept as a
-/// tail, with a PATH it can walk ([`with_usable_path`], #508).
+/// tail, with a PATH it can walk ([`with_usable_path`], #508), in a folder it can write that is
+/// also its TEMP ([`crate::workdir`], #834: never MDM's install folder).
 pub fn spawn(mut cmd: Command, name: &str) -> Result<Spawned, ProcError> {
     with_usable_path(&mut cmd);
+    crate::workdir::apply(&mut cmd, crate::workdir::folders());
     cmd.stdin(Stdio::null())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
@@ -1005,6 +1175,15 @@ pub fn spawn(mut cmd: Command, name: &str) -> Result<Spawned, ProcError> {
 
 /// Run `cmd` to the end within `timeout` and return its stdout (killed on timeout).
 pub fn output(cmd: Command, name: &str, timeout: Duration) -> Result<Vec<u8>, ProcError> {
+    output_warned(cmd, name, timeout).map(|(out, _)| out)
+}
+
+/// [`output`], with the `WARNING:` lines it wrote ([`Spawned::warnings`]).
+pub fn output_warned(
+    cmd: Command,
+    name: &str,
+    timeout: Duration,
+) -> Result<(Vec<u8>, Vec<String>), ProcError> {
     let mut s = spawn(cmd, name)?;
     let mut out = s.child.stdout.take().expect("piped");
     let reader = std::thread::spawn(move || {
@@ -1018,7 +1197,8 @@ pub fn output(cmd: Command, name: &str, timeout: Duration) -> Result<Vec<u8>, Pr
             Ok(Some(status)) => {
                 let stdout = reader.join().unwrap_or_default();
                 return if status.success() {
-                    Ok(stdout)
+                    s.settle();
+                    Ok((stdout, s.warnings()))
                 } else {
                     // `failure` waits for the stderr reader's last lines.
                     Err(s.failure())
@@ -1038,6 +1218,19 @@ pub fn output(cmd: Command, name: &str, timeout: Duration) -> Result<Vec<u8>, Pr
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// A program is looked for in absolute folders only: `.` on the PATH would be wherever MDM
+    /// was started from.
+    #[test]
+    fn a_relative_folder_is_never_searched() {
+        let here = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        assert_eq!(file_in(&[PathBuf::from("src")], "lib.rs"), None);
+        assert_eq!(file_in(&[PathBuf::from(".")], "Cargo.toml"), None);
+        assert_eq!(
+            file_in(&[PathBuf::from("."), here.join("src")], "lib.rs"),
+            Some(here.join("src").join("lib.rs"))
+        );
+    }
 
     #[test]
     fn the_browsers_context_for_ytdlp() {
@@ -1071,6 +1264,36 @@ mod tests {
         assert!(!path.exists(), "removed once done");
         let none = FromBrowser::default().args("https://x.test/").unwrap();
         assert!(none.0.is_empty() && none.1.is_none());
+    }
+
+    /// #900: the Origin a page's player sent with a stream goes to yt-dlp as a header of its
+    /// own, which yt-dlp keeps in each format's headers (the engine's for every piece); one that
+    /// would break the command line is refused, as a Referer is.
+    #[test]
+    fn the_origin_the_player_sent_goes_to_ytdlp() {
+        let b = FromBrowser {
+            referer: Some("https://player.test/".into()),
+            origin: Some("https://player.test".into()),
+            ..Default::default()
+        };
+        let (args, _) = b.args("https://cdn.test/x.m3u8").unwrap();
+        assert_eq!(
+            args,
+            [
+                "--referer",
+                "https://player.test/",
+                "--add-header",
+                "Origin:https://player.test"
+            ]
+        );
+        let bad = FromBrowser {
+            origin: Some("https://x.test\r\nCookie: a=1".into()),
+            ..Default::default()
+        };
+        assert!(matches!(
+            bad.args("https://x.test/"),
+            Err(ProcError::BadArgument)
+        ));
     }
 
     /// #229: the button over a YouTube video sends the watch page (its player plays a blob:, and
@@ -1376,22 +1599,78 @@ mod tests {
         let (path, home) = (root.path().join("bin"), root.path().join("home"));
         let dirs = vec![path.clone()];
         std::fs::create_dir_all(&path).unwrap();
-        assert_eq!(js_runtime(&dirs, Some(&home)), None);
+        assert_eq!(js_runtime(&dirs, &[], Some(&home)), None);
         for v in ["v20.1.0", "v22.3.0"] {
             touch(&home.join(".nvm/versions/node").join(v).join("bin"), "node");
         }
-        let (name, found) = js_runtime(&dirs, Some(&home)).unwrap();
+        let (name, found) = js_runtime(&dirs, &[], Some(&home)).unwrap();
         assert_eq!(name, "node");
         assert!(found.to_string_lossy().contains("v22.3.0"));
         touch(&path, "bun");
-        assert_eq!(js_runtime(&dirs, None).unwrap().0, "bun");
+        assert_eq!(js_runtime(&dirs, &[], None).unwrap().0, "bun");
         touch(&path, "node");
         assert_eq!(
-            js_runtime(&dirs, None).unwrap().1,
+            js_runtime(&dirs, &[], None).unwrap().1,
             path.join(format!("node{}", std::env::consts::EXE_SUFFIX))
         );
+        // #852: Deno from its own installer (`~/.deno/bin`), or one in a folder a runtime
+        // installed after MDM started is in (Windows: winget's links), named to yt-dlp; Node.js
+        // there when there is nothing else.
+        let more = root.path().join("winget-links");
+        let exe =
+            |dir: &Path, name: &str| dir.join(format!("{name}{}", std::env::consts::EXE_SUFFIX));
+        touch(&more, "node");
+        assert_eq!(
+            js_runtime(&[], std::slice::from_ref(&more), None),
+            Some(("node", exe(&more, "node")))
+        );
+        touch(&more, "deno");
+        assert_eq!(
+            js_runtime(&dirs, std::slice::from_ref(&more), None),
+            Some(("deno", exe(&more, "deno")))
+        );
+        touch(&home.join(".deno/bin"), "deno");
+        assert_eq!(
+            js_runtime(&dirs, &[], Some(&home)),
+            Some(("deno", exe(&home.join(".deno/bin"), "deno")))
+        );
+        // Deno on the PATH: yt-dlp finds it itself.
         touch(&path, "deno");
-        assert_eq!(js_runtime(&dirs, Some(&home)), None);
+        assert_eq!(js_runtime(&dirs, &[], Some(&home)), None);
+    }
+
+    /// #852: what yt-dlp 2026.10.26 wrote looking a YouTube video up (`-J`, its stderr as is):
+    /// with no runtime on the PATH; asking a player that needs one with none there (as when
+    /// signed in); and with Node.js.
+    #[test]
+    fn a_youtube_look_up_without_a_javascript_runtime_is_told_apart() {
+        let warnings = |stderr: &str| -> Vec<String> {
+            stderr
+                .lines()
+                .filter_map(|l| l.strip_prefix("WARNING:"))
+                .map(|w| w.trim().to_owned())
+                .collect()
+        };
+        let none = warnings(include_str!(
+            "../tests/fixtures/ytdlp-js-runtime/no-runtime.stderr"
+        ));
+        let unsolved = warnings(include_str!(
+            "../tests/fixtures/ytdlp-js-runtime/challenge-failed.stderr"
+        ));
+        let node = warnings(include_str!(
+            "../tests/fixtures/ytdlp-js-runtime/with-node.stderr"
+        ));
+        assert_eq!((none.len(), unsolved.len(), node.len()), (1, 3, 1));
+        // Its own words say it, whatever MDM found.
+        assert!(missing_js_runtime(&none, false));
+        assert!(missing_js_runtime(&none, true));
+        // A challenge left unsolved is a runtime's want only when this computer has none: with
+        // one, the solver script is what failed, and installing Node.js wouldn't help.
+        assert!(missing_js_runtime(&unsolved, false));
+        assert!(!missing_js_runtime(&unsolved, true));
+        // A look-up that had one says nothing of the kind.
+        assert!(!missing_js_runtime(&node, false));
+        assert!(!missing_js_runtime(&[], false));
     }
 
     /// #508: a helper's PATH keeps its folders in their order and leaves out those that can't be
@@ -1615,6 +1894,91 @@ foreach ($d in $env:PATH.Split(';')) {
         );
     }
 
+    /// #955: yt-dlp's words for a certificate its own list doesn't trust (an antivirus or a
+    /// proxy that reads HTTPS), as the reporter's yt-dlp 2026.10.26 said them on Windows.
+    const UNTRUSTED: &str = "[youtube] X6ek6j1gTQA: Unable to download API page: [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1085) (caused by CertificateVerifyError('[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1085)')); please report this issue on  https://github.com/yt-dlp/yt-dlp/issues?q= , filling out the appropriate issue template. Confirm you are on the latest version using  yt-dlp -U";
+
+    fn failed(message: &str) -> ProcError {
+        ProcError::Failed {
+            tool: "yt-dlp".into(),
+            message: message.into(),
+        }
+    }
+
+    #[test]
+    fn an_untrusted_certificate_is_told_apart() {
+        assert!(untrusted_certificate(UNTRUSTED));
+        assert!(untrusted_certificate(
+            "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: self-signed certificate in certificate chain (_ssl.c:1006)"
+        ));
+        // The system's certificates wouldn't help: an expired one, another site's.
+        assert!(!untrusted_certificate(
+            "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: certificate has expired (_ssl.c:1006)"
+        ));
+        assert!(!untrusted_certificate(
+            "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'x'. (_ssl.c:1006)"
+        ));
+        assert!(!untrusted_certificate(
+            "Sign in to confirm you're not a bot."
+        ));
+        assert_eq!(cert_args(false), &[] as &[&str]);
+        assert_eq!(cert_args(true), ["--compat-options", "no-certifi"]);
+    }
+
+    /// The reporter's computer: an antivirus or a proxy signs the sites, and only the system has
+    /// its certificate. yt-dlp's own list refuses; once more with the system's works, and the
+    /// runs after (the download, a fresh address) keep it.
+    #[test]
+    fn a_certificate_yt_dlp_refuses_is_asked_with_the_systems() {
+        let system = AtomicBool::new(false);
+        let mut runs = Vec::new();
+        let mut run = || {
+            let with_system = system.load(Ordering::Relaxed);
+            runs.push(with_system);
+            if with_system {
+                Ok("json")
+            } else {
+                Err(failed(UNTRUSTED))
+            }
+        };
+        assert_eq!(with_system_certs(&system, &mut run).unwrap(), "json");
+        assert_eq!(with_system_certs(&system, &mut run).unwrap(), "json");
+        assert_eq!(runs, [false, true, true]);
+        assert!(system.load(Ordering::Relaxed));
+    }
+
+    /// The system doesn't trust it either: back to yt-dlp's own list, and the first error is
+    /// told. Another failure isn't a certificate's: no second run.
+    #[test]
+    fn a_certificate_nobody_trusts_goes_back_to_yt_dlps_list() {
+        let system = AtomicBool::new(false);
+        let mut runs = 0;
+        let e = with_system_certs(&system, || -> Result<(), _> {
+            runs += 1;
+            Err(failed(&format!("{UNTRUSTED} ({runs})")))
+        })
+        .unwrap_err();
+        assert_eq!(runs, 2);
+        assert!(e.to_string().ends_with("(1)"), "{e}");
+        assert!(!system.load(Ordering::Relaxed));
+        let mut runs = 0;
+        let e = with_system_certs(&system, || -> Result<(), _> {
+            runs += 1;
+            Err(failed("Video unavailable"))
+        })
+        .unwrap_err();
+        assert_eq!(runs, 1);
+        assert!(e.to_string().contains("Video unavailable"), "{e}");
+        // With the system's already: a refusal isn't asked again.
+        system.store(true, Ordering::Relaxed);
+        let mut runs = 0;
+        let _ = with_system_certs(&system, || -> Result<(), _> {
+            runs += 1;
+            Err(failed(UNTRUSTED))
+        });
+        assert_eq!(runs, 1);
+    }
+
     #[test]
     fn hostile_text_never_reaches_the_argument_list() {
         let exe = Path::new("yt-dlp");
@@ -1670,6 +2034,42 @@ foreach ($d in $env:PATH.Split(';')) {
         slow.args(["/C", "ping -n 30 127.0.0.1 >nul"]);
         let err = output(slow, "cmd", Duration::from_millis(500)).unwrap_err();
         assert!(matches!(err, ProcError::Timeout(_)), "{err}");
+    }
+
+    /// #834: a helper (here a stand-in that prints where it runs and its temporary folders)
+    /// starts in the helpers' folder, not in MDM's own working folder, and has it as TEMP, TMP
+    /// and TMPDIR.
+    #[test]
+    fn a_helper_runs_in_the_helpers_folder() {
+        let dir = crate::workdir::folders()
+            .dir
+            .clone()
+            .expect("a temporary folder that can be written");
+        #[cfg(windows)]
+        let cmd = {
+            let mut c = Command::new("cmd");
+            c.args(["/C", "cd& echo %TEMP%& echo %TMP%& echo %TMPDIR%"]);
+            c
+        };
+        #[cfg(unix)]
+        let cmd = {
+            let mut c = Command::new("/bin/sh");
+            c.args(["-c", r#"pwd -P; echo "$TEMP"; echo "$TMP"; echo "$TMPDIR""#]);
+            c
+        };
+        let out = output(cmd, "stand-in", Duration::from_secs(10)).unwrap();
+        let out = String::from_utf8_lossy(&out);
+        let lines: Vec<&str> = out.lines().map(str::trim).collect();
+        assert_eq!(lines.len(), 4, "{out}");
+        let real = |p: &Path| std::fs::canonicalize(p).unwrap();
+        assert_eq!(real(Path::new(lines[0])), real(&dir), "{out}");
+        assert_ne!(
+            real(Path::new(lines[0])),
+            real(&std::env::current_dir().unwrap())
+        );
+        for temp in &lines[1..] {
+            assert_eq!(Path::new(temp), dir, "{out}");
+        }
     }
 
     /// #61: killing a helper ends what it started too (yt-dlp.exe is a launcher whose child

@@ -5,8 +5,10 @@ mod batch;
 mod categories;
 mod checksum;
 mod chrome;
+mod clipbatch;
 mod clipboard;
 mod clock;
+mod cnl;
 mod countries;
 mod crash;
 mod crashui;
@@ -27,6 +29,7 @@ mod grabber;
 mod headless;
 mod help;
 mod helpers;
+mod hotkey;
 mod i18n;
 mod icons;
 mod langpick;
@@ -61,6 +64,7 @@ mod store;
 mod theme;
 mod themefile;
 mod themeicons;
+mod torrent_rename;
 mod torrentdlg;
 mod torrentfiles;
 mod torrents;
@@ -72,12 +76,29 @@ mod update;
 mod videodlg;
 mod videolookup;
 mod wake;
+mod webmark;
 mod whereis;
 #[cfg(windows)]
 mod win32;
 mod winui;
 #[cfg(any(target_os = "linux", test))]
 mod xdgicons;
+
+/// The application's id: Wayland's app_id and X11's WM_CLASS of every window of ours
+/// ([`window_builder`]). The desktop matches a window to the desktop entry whose
+/// `StartupWMClass=` names it (tools/installer/build-linux.sh, in the AppImage and the packages),
+/// so a window pinned to the taskbar or the dock is the launcher's, whatever name an AppImage
+/// manager gave the entry (#940). Also the entry's own name and the program's.
+pub const APP_ID: &str = "misterdownloadmanager";
+
+/// A new window's builder: every window of ours starts from it, so each carries [`APP_ID`]
+/// (eframe gives the main window its app name, a dialog nothing). Without it a dialog had no
+/// app_id on Wayland and X11's default WM_CLASS, the program's file name (an AppImage's own name),
+/// so the dock showed it apart from the launcher and the main window (#940). Windows and macOS
+/// have no such id: nothing changes there.
+pub fn window_builder() -> egui::ViewportBuilder {
+    egui::ViewportBuilder::default().with_app_id(APP_ID)
+}
 
 /// The main window's title (dialogs find their owner by it).
 pub const MAIN_TITLE: &str = concat!("Mister Download Manager ", env!("CARGO_PKG_VERSION"));
@@ -124,12 +145,40 @@ pub fn offscreen() -> bool {
 /// address came from it, and was fetched). It may wait for the clipboard's owner for ever:
 /// never called on the window's thread, only by `clipboard`'s reader (#418, #661).
 pub fn clipboard_text() -> Option<String> {
+    // Off-screen test copies: MDM_TEST_CLIPBOARD=<file> is what they find in the clipboard
+    // (#709's checks of Add batch download from clipboard), read when they ask, as the
+    // clipboard would be; the person's own clipboard is never read.
+    if offscreen()
+        && let Some(file) = std::env::var_os("MDM_TEST_CLIPBOARD")
+    {
+        return std::fs::read_to_string(file).ok();
+    }
     // Nor in unit tests: the person's clipboard isn't theirs, and tests opening a window that
     // reads it (Download video's) on parallel threads corrupted the heap (Windows' clipboard,
     // opened from two threads at once).
     read_clipboard(offscreen() || cfg!(test), || {
         arboard::Clipboard::new().ok()?.get_text().ok()
     })
+}
+
+/// A number that changes whenever the clipboard does, so the watch for copied links
+/// (clipboard.rs) reads it only then: Windows' sequence number. None where the system keeps none
+/// a program can ask for without opening the clipboard (Linux, macOS): read at each look.
+/// Off-screen test copies: when their `MDM_TEST_CLIPBOARD` file last changed (or never).
+pub fn clipboard_changes() -> Option<u64> {
+    if offscreen() {
+        let changed = std::env::var_os("MDM_TEST_CLIPBOARD")
+            .and_then(|f| std::fs::metadata(f).ok()?.modified().ok())
+            .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+            .map_or(0, |d| d.as_nanos() as u64);
+        return Some(changed);
+    }
+    #[cfg(windows)]
+    return Some(u64::from(win32::clipboard_sequence()));
+    // Linux and macOS: no such number without the clipboard's own protocol (X11's XFixes,
+    // macOS's changeCount): the watch reads the text each time, off the window's thread.
+    #[cfg(not(windows))]
+    None
 }
 
 /// How long a read or write of the clipboard waits for the one under way in this process.
@@ -343,8 +392,9 @@ fn app() -> eframe::Result {
     };
     #[cfg(windows)]
     win32::mark_running();
-    // Started with the session (#226): in the notification area, not in front.
-    let start = start_mode(cmd.as_ref().is_some_and(|c| c.startup), can_hide());
+    // Started with the session (#226): read before the command goes to the channel; the start's
+    // mode once the window system is known (below).
+    let at_login = cmd.as_ref().is_some_and(|c| c.startup);
     // This launch is MDM: its fonts are looked up while the rest starts (only the instance pays
     // for them, not a launch that hands its command over).
     theme::prepare_fonts();
@@ -367,6 +417,9 @@ fn app() -> eframe::Result {
             ctx.request_repaint();
         }
     });
+    // macOS: so do the .torrent files and magnet links Finder and the browsers hand over (#698).
+    #[cfg(target_os = "macos")]
+    unix::open_events::start(tx.clone(), wake.clone());
     // The remote control (#141) sends its commands down the same channel.
     let sink = mdm_ipc::Sink::new(tx.clone(), wake.clone());
     let _ = mdm_ipc::serve(tx, move || wake());
@@ -407,6 +460,8 @@ fn app() -> eframe::Result {
     #[cfg(target_os = "linux")]
     {
         i18n::set_lang(loaded.settings.language.as_deref());
+        // View → Window system's choice (#624): the same however MDM was started.
+        unix::set_window_system_pick(loaded.settings.window_system);
         let ws = unix::window_system();
         if !ws.missing.is_empty() {
             crash::clean_exit();
@@ -419,6 +474,9 @@ fn app() -> eframe::Result {
             tracing::warn!("{text}");
         }
     }
+    // Started with the session (#226): in the notification area, not in front, where a window
+    // can be hidden (Linux: known once the window system is chosen above, with the saved choice).
+    let start = start_mode(at_login, can_hide());
     // Secrets from before (sealed, or kept as they were) go to the system's keychain now; the
     // list is saved with their references once it holds them (secrets.rs, #44).
     let _ = loaded.settings.for_disk();
@@ -433,7 +491,7 @@ fn app() -> eframe::Result {
         .filter(|[x, y, w, h]| *w >= 600 && *h >= 300 && on_a_screen(x + 40, y + 10));
     let size = saved.map_or([930.0 * z, 470.0 * z], |[_, _, w, h]| [w as f32, h as f32]);
     let mut viewport = quiet(
-        egui::ViewportBuilder::default()
+        window_builder()
             .with_title(MAIN_TITLE)
             .with_inner_size(size)
             .with_min_inner_size([600.0 * z, 300.0 * z])
@@ -452,11 +510,12 @@ fn app() -> eframe::Result {
         tracing::info!("started with the session: hidden");
         viewport = viewport.with_visible(false);
     }
-    // OpenGL or Direct3D (View → Draw with, #89), the other one when it can't start.
+    // OpenGL or Direct3D (View → Draw with, #89), the next way when one can't start (Direct3D on
+    // WARP before OpenGL, #847).
     let plan = renderer::plan(
         loaded.settings.renderer,
         renderer::overridden(&args).as_deref(),
-        renderer::failed_before().is_some(),
+        renderer::Known::read(),
     );
     let options = || eframe::NativeOptions {
         viewport: viewport.clone(),
@@ -465,7 +524,7 @@ fn app() -> eframe::Result {
         event_loop_builder: unix::event_loop_hook(),
         ..Default::default()
     };
-    let result = renderer::run("misterdownloadmanager", &plan, options, move |cc| {
+    let result = renderer::run(APP_ID, &plan, options, move |cc| {
         #[cfg(windows)]
         win32::set_main_window(cc);
         scale::start(&cc.egui_ctx, z);
@@ -582,5 +641,54 @@ mod tests {
             .collect();
         let reads: u32 = threads.into_iter().map(|t| t.join().unwrap()).sum();
         assert!(reads > 0);
+    }
+
+    /// Every window carries the application's id (#940): the main window, the dialogs, the
+    /// menus, the crash report. A builder made another way would leave its window apart from the
+    /// launcher in the dock.
+    #[test]
+    fn every_window_has_the_app_id() {
+        assert_eq!(
+            super::window_builder().app_id.as_deref(),
+            Some(super::APP_ID)
+        );
+        // Split, so this test's own line isn't one.
+        let made = ["ViewportBuilder", "::default()"].concat();
+        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("src");
+        let mut found = Vec::new();
+        for entry in std::fs::read_dir(dir).unwrap() {
+            let path = entry.unwrap().path();
+            let Ok(src) = std::fs::read_to_string(&path) else {
+                continue;
+            };
+            let own = path.file_name().is_some_and(|n| n == "main.rs");
+            for (n, line) in src.lines().enumerate() {
+                let code = line.split("//").next().unwrap_or_default();
+                if code.contains(&made) && !(own && code.contains(".with_app_id(APP_ID)")) {
+                    found.push(format!("{}:{}", path.display(), n + 1));
+                }
+            }
+        }
+        assert!(found.is_empty(), "windows without the app id: {found:?}");
+    }
+
+    /// The desktop entry the AppImage and the packages install names the class the windows
+    /// carry (#940): a taskbar or a dock matches them by it.
+    #[test]
+    fn desktop_entry_names_the_window_class() {
+        let script = include_str!("../../../tools/installer/build-linux.sh").replace(
+            "
+", "
+",
+        );
+        let entry = script
+            .split("[Desktop Entry]")
+            .nth(1)
+            .and_then(|e| e.split("\nEOF\n").next())
+            .expect("the desktop entry in build-linux.sh");
+        let class = entry
+            .lines()
+            .find_map(|l| l.strip_prefix("StartupWMClass="));
+        assert_eq!(class, Some(super::APP_ID));
     }
 }

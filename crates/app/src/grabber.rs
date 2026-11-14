@@ -1,5 +1,7 @@
 //! Link grabber (#37): the links of a page (the browser's "Download all links"), of a list file
-//! (Tasks → Import), dropped or pasted, gathered into packages to tick before they are added.
+//! (Tasks → Import), copied (Tasks → Add batch download from clipboard, #709), dropped or
+//! pasted, gathered into packages to tick before they are added. An address that came on its own
+//! and turns out to be a web page is read for its links, which join as that page's (#705).
 //! It grew out of the Import window and keeps its ways (IDM's "Download all links": every link
 //! looked up for its name and size, Check all / Uncheck all, "Hide web pages", OK adds the
 //! ticked ones to the queue); the packages come from JDownloader's link grabber: a split
@@ -23,6 +25,8 @@ const BUTTONS_Y: f32 = 446.0;
 /// Links looked up at once, and at once from one host.
 const CHECKS: usize = 8;
 const CHECKS_PER_HOST: usize = 4;
+/// Web pages read for their links at once.
+const READS: usize = 2;
 
 crate::theme::themed! {
     // The lists' header colour (winui::LIST_HEADER), as Add torrent's file list.
@@ -60,6 +64,8 @@ pub enum Origin {
     Various,
     /// In the download list already.
     Known,
+    /// Packed by its site (Click'n'Load): the site's package name.
+    Site(String),
 }
 
 impl Origin {
@@ -96,6 +102,7 @@ impl Origin {
             Origin::Various => crate::i18n::t("Various files").to_owned(),
             // i18n: Link grabber: the package of links the download list has already
             Origin::Known => crate::i18n::t("Already in the list").to_owned(),
+            Origin::Site(name) => name.clone(),
         }
     }
 }
@@ -133,10 +140,57 @@ pub struct Link {
     pub state: LinkState,
     pub on: bool,
     known: bool,
+    /// A magnet link (#709): a torrent, added once its files are known; never looked up here.
+    magnet: bool,
     check: Option<Check>,
+    /// Its look-up found a web page (`ProbeInfo::web_page`).
+    page: bool,
+    /// Reading it for its links (#705): asked (`Some`), and its answer once it came.
+    read: Option<Read>,
+}
+
+impl Link {
+    /// A web page, as its look-up found or its name says (IDM's "Hide HTML files").
+    fn is_page(&self) -> bool {
+        self.page || web_page(&self.name)
+    }
+
+    /// A web page given on its own (pasted, copied, typed, in a list), not found on a page: one
+    /// to read for its links (#705). A page's own links aren't read in turn, and a link a web
+    /// page sent (Click'n'Load) never is: reading it is a request the user didn't ask for.
+    fn to_read(&self) -> bool {
+        self.page
+            && self.state == LinkState::Online
+            && self.found.referer.is_none()
+            && !self.found.from_page
+            && self.read.is_none()
+            && !self.known
+    }
+
+    /// Its files' category: a torrent's are Torrents, whatever its name says.
+    fn category(&self) -> Category {
+        if self.magnet {
+            Category::Torrents
+        } else {
+            Category::of(&self.name)
+        }
+    }
+}
+
+/// A magnet link's name: the one it gives (`dn=`), else its torrent's hash.
+fn magnet_name(url: &Url) -> String {
+    url.query_pairs()
+        .find(|(k, _)| k == "dn")
+        .map(|(_, v)| v.into_owned())
+        .filter(|n| !n.trim().is_empty())
+        .or_else(|| crate::transfer::magnet_hash(url.as_str()))
+        .unwrap_or_else(|| url.to_string())
 }
 
 type Check = Arc<Mutex<Option<Result<mdm_engine::ProbeInfo, LinkState>>>>;
+/// A page's links as they were read (`None` until then; empty when it had none or couldn't be
+/// read).
+type Read = Arc<Mutex<Option<Vec<Imported>>>>;
 
 /// A package's ticked links, as the window hands them over.
 pub struct Picked {
@@ -198,21 +252,39 @@ impl Grabber {
     /// package; one the download list has (`known`) comes unticked under "Already in the list";
     /// a link here already is not added again.
     pub fn add(&mut self, found: Vec<Imported>, source: String, known: impl Fn(&Url) -> bool) {
+        // The addresses already here, looked up once: a list of 10,000 compared each link with
+        // every other one, and its packages' defaults were worked out again for each (#805).
+        let mut here: std::collections::HashSet<Url> =
+            self.links.iter().map(|l| address_key(&l.url)).collect();
+        let mut settle = Vec::new();
         for d in found {
             let Ok(url) = Url::parse(&d.url) else {
                 continue;
             };
-            if self.links.iter().any(|l| same_address(&l.url, &url)) {
+            if !here.insert(address_key(&url)) {
                 continue;
             }
-            let name = mdm_engine::naming::sanitize(&mdm_engine::naming::file_name(None, &url));
+            let magnet = url.scheme() == "magnet";
+            let name = mdm_engine::naming::sanitize(&if magnet {
+                magnet_name(&url)
+            } else {
+                mdm_engine::naming::file_name(None, &url)
+            });
             let known = known(&url);
             let origin = if known {
                 Origin::Known
+            } else if let Some(site) = d.package.as_deref().filter(|p| !p.trim().is_empty()) {
+                Origin::Site(site.trim().to_owned())
             } else {
                 Origin::of(&url, &name, d.referer.as_deref())
             };
             let pkg = self.package_for(origin);
+            // The site's archive password, unless one is typed already.
+            if let Some(pw) = d.password.as_deref().filter(|p| !p.is_empty())
+                && self.packages[pkg].password.is_empty()
+            {
+                self.packages[pkg].password = pw.to_owned();
+            }
             self.links.push(Link {
                 found: d,
                 url,
@@ -222,8 +294,16 @@ impl Grabber {
                 state: LinkState::Unchecked,
                 on: !known,
                 known,
+                magnet,
                 check: None,
+                page: false,
+                read: None,
             });
+            if !settle.contains(&pkg) {
+                settle.push(pkg);
+            }
+        }
+        for pkg in settle {
             self.settle(pkg);
         }
         if !source.is_empty() && !self.source.split(", ").any(|s| s == source) {
@@ -298,7 +378,7 @@ impl Grabber {
     /// did); "Extract when done" when it holds an archive.
     fn settle(&mut self, k: usize) {
         let links: Vec<&Link> = self.links.iter().filter(|l| l.pkg == k).collect();
-        let mut cats = links.iter().map(|l| Category::of(&l.name));
+        let mut cats = links.iter().map(|l| l.category());
         let first = cats.next().unwrap_or(Category::General);
         let folder = if cats.all(|c| c == first) {
             category_folder(first, &self.downloads, &self.dirs)
@@ -307,7 +387,9 @@ impl Grabber {
         } else {
             String::new()
         };
-        let archives = links.iter().any(|l| crate::extractq::archive_name(&l.name));
+        let archives = links
+            .iter()
+            .any(|l| !l.magnet && crate::extractq::archive_name(&l.name));
         let p = &mut self.packages[k];
         if !p.folder_set {
             p.folder = folder;
@@ -319,7 +401,7 @@ impl Grabber {
 
     /// Shown (not a hidden web page)?
     fn shows(&self, l: &Link) -> bool {
-        !(self.hide_pages && web_page(&l.name))
+        !(self.hide_pages && l.is_page())
     }
 
     fn visible_rows(&self) -> Vec<Row> {
@@ -359,8 +441,12 @@ impl Grabber {
                 break;
             }
             let host = l.url.host_str().unwrap_or_default();
+            // A link a web page sent (Click'n'Load) is never looked up: the page chose it, and a
+            // look-up is a request the user didn't ask for.
             if l.state != LinkState::Unchecked
                 || l.known
+                || l.found.from_page
+                || l.magnet
                 || hosts.iter().filter(|h| **h == host).count() >= CHECKS_PER_HOST
             {
                 continue;
@@ -380,6 +466,46 @@ impl Grabber {
         }
     }
 
+    /// Web pages to read for their links now (#705), at most `READS` at once: the caller reads
+    /// each ([`Grabber::reading`]) with the page's request.
+    pub fn to_read(&self) -> Vec<(usize, Url, Imported)> {
+        let busy = self
+            .links
+            .iter()
+            .filter(|l| l.read.as_ref().is_some_and(|r| r.lock().unwrap().is_none()))
+            .count();
+        self.links
+            .iter()
+            .enumerate()
+            .filter(|(_, l)| l.to_read())
+            .take(READS.saturating_sub(busy))
+            .map(|(i, l)| (i, l.url.clone(), l.found.clone()))
+            .collect()
+    }
+
+    /// Page `i` is being read; its links come in `slot`.
+    pub fn reading(&mut self, i: usize, slot: Read) {
+        if let Some(l) = self.links.get_mut(i) {
+            l.read = Some(slot);
+        }
+    }
+
+    /// The links of the pages read since the last call, each page's as one list. A page that
+    /// had links is unticked: its links were what was wanted, not the page.
+    pub fn pages_read(&mut self) -> Vec<Vec<Imported>> {
+        let mut out = Vec::new();
+        for l in &mut self.links {
+            let Some(found) = l.read.as_ref().and_then(|r| r.lock().unwrap().take()) else {
+                continue;
+            };
+            if !found.is_empty() {
+                l.on = false;
+                out.push(found);
+            }
+        }
+        out
+    }
+
     /// Answers that came: the server's name and size, or why the link is no good.
     fn take_answers(&mut self) {
         let mut moved = Vec::new();
@@ -392,6 +518,7 @@ impl Grabber {
             match answer {
                 Ok(info) => {
                     l.state = LinkState::Online;
+                    l.page = info.web_page;
                     l.size = info.size;
                     let named = mdm_engine::naming::sanitize(&info.file_name);
                     if !named.is_empty() && named != l.name {
@@ -424,7 +551,7 @@ impl Grabber {
         let to = on < n;
         let hide = self.hide_pages;
         for l in self.links.iter_mut().filter(|l| l.pkg == k) {
-            if !(hide && web_page(&l.name)) {
+            if !(hide && l.is_page()) {
                 l.on = to;
             }
         }
@@ -544,7 +671,7 @@ impl Grabber {
         if picks[0].clicked() {
             let hide = self.hide_pages;
             for l in &mut self.links {
-                l.on = !(hide && web_page(&l.name));
+                l.on = !(hide && l.is_page());
             }
         }
         if picks[1].clicked() {
@@ -749,7 +876,15 @@ impl Grabber {
                             let glyph = pos2(row.left() + 40.0, top + 2.0);
                             let mut on = l.on;
                             let size = l.size.map(crate::dialogs::dialog_size).unwrap_or_default();
-                            let state = state_text(&l.state);
+                            let state = if l.found.from_page && l.state == LinkState::Unchecked {
+                                // i18n: Link grabber, a link's status: a web page sent it (Click'n'Load), so it isn't looked up (name, size, online) before it is added
+                                crate::i18n::t("Not looked up").to_owned()
+                            } else if l.magnet && l.state == LinkState::Unchecked {
+                                // i18n: Link grabber, a link's status: a magnet link (a torrent, its files looked up once it is added)
+                                crate::i18n::t("Magnet link").to_owned()
+                            } else {
+                                state_text(&l.state)
+                            };
                             look.name = [l.name.as_str(), &size, &state]
                                 .iter()
                                 .filter(|s| !s.is_empty())
@@ -1013,15 +1148,17 @@ impl Grabber {
     }
 }
 
-/// Two addresses for one file: the same but for case in the host, a default port or a
-/// `#fragment`.
-fn same_address(a: &Url, b: &Url) -> bool {
-    let norm = |u: &Url| {
-        let mut u = u.clone();
-        u.set_fragment(None);
-        u
-    };
-    norm(a) == norm(b)
+/// A link's address as Link grabber tells links apart: without its `#fragment` (the same file);
+/// a magnet link by its torrent's hash alone (its name and trackers aside).
+fn address_key(u: &Url) -> Url {
+    if let Some(hash) = crate::transfer::magnet_hash(u.as_str())
+        && let Ok(key) = Url::parse(&format!("magnet:?xt=urn:btih:{hash}"))
+    {
+        return key;
+    }
+    let mut u = u.clone();
+    u.set_fragment(None);
+    u
 }
 
 /// What looking a link up found, as its row says it.
@@ -1072,6 +1209,79 @@ mod tests {
 
     fn grabber() -> Grabber {
         Grabber::new(PathBuf::from("D:\\dl"), Vec::new(), true, false)
+    }
+
+    #[test]
+    fn a_sites_packages_keep_its_names_and_password() {
+        let site = |url: &str, pkg: &str, pw: Option<&str>| Imported {
+            url: url.into(),
+            package: Some(pkg.into()),
+            password: pw.map(str::to_owned),
+            from_page: true,
+            ..Default::default()
+        };
+        let mut g = grabber();
+        g.add(
+            vec![
+                // Volumes, but the site packed them: its package, not the volumes'.
+                site("https://h.org/v.part1.rar", "Holiday", Some("secret")),
+                site("https://h.org/v.part2.rar", "Holiday", Some("other")),
+                site("https://h.org/notes.txt", "Notes", None),
+            ],
+            "Click'n'Load".into(),
+            |_| false,
+        );
+        let got: Vec<(&str, &str, usize)> = g
+            .packages
+            .iter()
+            .enumerate()
+            .map(|(k, p)| {
+                (
+                    p.name.as_str(),
+                    p.password.as_str(),
+                    g.links.iter().filter(|l| l.pkg == k).count(),
+                )
+            })
+            .collect();
+        assert_eq!(got, vec![("Holiday", "secret", 2), ("Notes", "", 1)]);
+        assert!(g.packages[0].extract);
+        // Sent by a page: none is looked up; a link the user brought is.
+        assert!(g.to_check().is_empty());
+        g.add(
+            vec![link("https://h.org/mine.zip", None)],
+            String::new(),
+            |_| false,
+        );
+        let check: Vec<String> = g.to_check().iter().map(|(_, u, _)| u.to_string()).collect();
+        assert_eq!(check, vec!["https://h.org/mine.zip"]);
+    }
+
+    #[test]
+    fn a_long_list_is_added_at_once_each_link_once() {
+        // #805: 20,000 links, each compared with every other, held the window's thread.
+        let lists = |n: usize| {
+            let many: Vec<Imported> = (0..n)
+                .map(|i| link(&format!("https://dl.example.com/f/{i}.zip"), None))
+                .collect();
+            // Added again (and with a #fragment): nothing more.
+            let again: Vec<Imported> = many
+                .iter()
+                .map(|d| link(&format!("{}#again", d.url), None))
+                .collect();
+            (grabber(), many, again)
+        };
+        let add = |(mut g, many, again): (Grabber, Vec<Imported>, Vec<Imported>)| {
+            g.add(many, "list.txt".into(), |_| false);
+            g.add(again, "list.txt".into(), |_| false);
+            g
+        };
+        // Each link compared once: 8 times the links cost about 8 times as long (not 64).
+        mdm_labserver::growth::assert_linear(1_000, &lists, &add);
+        let g = add(lists(20_000));
+        assert_eq!(g.links.len(), 20_000);
+        // Settled as before: one package of archives, to extract.
+        assert_eq!(g.packages.len(), 1);
+        assert!(g.packages[0].extract);
     }
 
     #[test]
@@ -1182,6 +1392,110 @@ mod tests {
     }
 
     #[test]
+    fn a_link_a_page_sent_is_never_read_for_its_links() {
+        // A web page's address sent through Click'n'Load: not looked up, and not read either,
+        // even if it ever came to be known as a web page (here: answered as one by hand).
+        let mut g = grabber();
+        g.add(
+            vec![Imported {
+                url: "https://example.com/water/epanet".into(),
+                from_page: true,
+                ..Default::default()
+            }],
+            "Click'n'Load".into(),
+            |_| false,
+        );
+        assert!(g.to_check().is_empty());
+        let slot: Check = Default::default();
+        *slot.lock().unwrap() = Some(Ok(mdm_engine::ProbeInfo {
+            final_url: g.links[0].url.clone(),
+            size: None,
+            file_name: "epanet.html".into(),
+            server: None,
+            web_page: true,
+        }));
+        g.checking(0, slot);
+        g.take_answers();
+        assert_eq!(g.links[0].state, LinkState::Online);
+        assert!(g.to_read().is_empty());
+    }
+
+    #[test]
+    fn a_page_given_on_its_own_is_read_for_its_links() {
+        let mut g = grabber();
+        let page = "https://example.com/water/epanet";
+        let found_on = "https://example.com/files/setup.exe";
+        g.add(
+            vec![
+                link(page, None),
+                link(found_on, Some("https://example.com/other")),
+            ],
+            "Pasted".into(),
+            |_| false,
+        );
+        assert!(
+            g.to_read().is_empty(),
+            "nothing is read before it is looked up"
+        );
+        // The look-ups: the address is a web page, and so is the link found on a page.
+        for (i, url, _) in g.to_check() {
+            let slot: Check = Default::default();
+            *slot.lock().unwrap() = Some(Ok(mdm_engine::ProbeInfo {
+                final_url: url.clone(),
+                size: None,
+                file_name: "epanet.html".into(),
+                server: None,
+                web_page: true,
+            }));
+            g.checking(i, slot);
+        }
+        g.take_answers();
+        // Hidden as a web page, though its address doesn't end in one.
+        assert!(g.links.iter().all(|l| !g.shows(l)));
+        // Only the page given on its own is read, once.
+        let reads = g.to_read();
+        assert_eq!(reads.len(), 1);
+        assert_eq!(reads[0].1.as_str(), page);
+        let slot: Read = Default::default();
+        g.reading(reads[0].0, slot.clone());
+        assert!(g.to_read().is_empty());
+        assert!(g.pages_read().is_empty(), "nothing came yet");
+        let on_page = |u: &str| Imported {
+            url: u.into(),
+            referer: Some(page.into()),
+            ..Default::default()
+        };
+        *slot.lock().unwrap() = Some(vec![
+            on_page("https://dl.example.org/epanet2.2_setup.exe"),
+            on_page("https://dl.example.org/epanet2.2.zip"),
+        ]);
+        let read = g.pages_read();
+        assert_eq!(read.len(), 1);
+        g.add(read.into_iter().flatten().collect(), String::new(), |_| {
+            false
+        });
+        assert!(g.pages_read().is_empty() && g.to_read().is_empty());
+        // The page's links, as one package named after the page; the page itself unticked.
+        let shown: Vec<&str> = g
+            .links
+            .iter()
+            .filter(|l| g.shows(l))
+            .map(|l| l.name.as_str())
+            .collect();
+        assert_eq!(shown, ["epanet2.2_setup.exe", "epanet2.2.zip"]);
+        let page_link = g.links.iter().find(|l| l.url.as_str() == page).unwrap();
+        assert!(!page_link.on);
+        let pkg = g
+            .links
+            .iter()
+            .find(|l| l.name == "epanet2.2.zip")
+            .unwrap()
+            .pkg;
+        assert!(g.links.iter().filter(|l| l.pkg == pkg).count() == 2);
+        assert!(g.source.contains("Pasted"));
+    }
+
+    #[test]
     fn web_pages_hide_and_stay_out() {
         let mut g = grabber();
         g.add(
@@ -1220,5 +1534,72 @@ mod tests {
             g.checking(i, Arc::default());
         }
         assert!(g.to_check().is_empty());
+    }
+
+    /// #709, Tasks → Add batch download from clipboard, as the window takes it: the clipboard
+    /// read off the window's thread, its 15 links (written twice, among other text) and a
+    /// magnet link become 16 ticked rows in two packages, the magnet one never looked up;
+    /// Start hands them all over.
+    #[test]
+    fn copied_links_become_ticked_rows() {
+        let mut post = String::from("Season 1, all episodes:\n");
+        for k in 1..=15 {
+            post.push_str(&format!(
+                "- [Episode {k}](https://media.example.org/s1/ep{k:02}.mp4)\n"
+            ));
+        }
+        post.push_str("Mirror of the first: https://media.example.org/s1/ep01.mp4.\n");
+        post.push_str("Or the torrent: magnet:?xt=urn:btih:0123456789abcdef0123456789abcdef01234567&dn=Season%201\n");
+        let text = post.clone();
+        let reader: &'static crate::clipboard::Reader = Box::leak(Box::new(
+            crate::clipboard::Reader::new(move || Some(text.clone()), || {}),
+        ));
+        let mut asked = crate::clipboard::Prefill::ask_of(reader);
+        let until = std::time::Instant::now() + std::time::Duration::from_secs(5);
+        let got = loop {
+            if let Some(got) = asked.answer() {
+                break got;
+            }
+            assert!(
+                std::time::Instant::now() < until,
+                "the clipboard never answered"
+            );
+            std::thread::sleep(std::time::Duration::from_millis(2));
+        };
+        let crate::clipbatch::Clip::Links(found) = crate::clipbatch::read(got.as_deref()) else {
+            panic!("links expected");
+        };
+        let mut g = grabber();
+        g.add(found, "Clipboard".into(), |_| false);
+        assert_eq!(g.links.len(), 16);
+        assert!(g.links.iter().all(|l| l.on), "every row ticked");
+        let rows = g.visible_rows();
+        assert_eq!(rows.len(), 16 + 1, "one package: Various files");
+        assert_eq!(g.packages[0].name, "Various files");
+        let magnet = g.links.iter().find(|l| l.magnet).unwrap();
+        assert_eq!(magnet.name, "Season 1");
+        assert_eq!(magnet.category(), Category::Torrents);
+        assert!(
+            g.to_check().iter().all(|(_, u, _)| u.scheme() == "https"),
+            "a magnet link is not looked up over HTTP"
+        );
+        let picked = g.picked();
+        let all: Vec<&str> = picked
+            .iter()
+            .flat_map(|p| p.links.iter().map(|l| l.0.url.as_str()))
+            .collect();
+        assert_eq!(all.len(), 16);
+        assert_eq!(all[0], "https://media.example.org/s1/ep01.mp4");
+        assert!(all[15].starts_with("magnet:?"));
+        // The same torrent copied again with its trackers: not a second row.
+        g.add(
+            vec![link(
+                "magnet:?xt=urn:btih:0123456789ABCDEF0123456789ABCDEF01234567&tr=udp%3A%2F%2Ft.example%3A80",
+                None,
+            )],
+            String::new(),
+            |_| false,
+        );
+        assert_eq!(g.links.len(), 16);
     }
 }

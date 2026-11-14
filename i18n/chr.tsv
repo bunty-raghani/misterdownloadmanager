@@ -270,6 +270,11 @@
 #. a download's server's round trip: {ms} a number of milliseconds, {reach} near, medium or far
 #, machine
 	about {ms} ms ({reach})	ᎾᏍᎩ {ms} ms ({reach})
+#. text in the Download video window
+#. a file size that is only an estimate, as a screen reader says it in the Download video window's list of qualities; {size} is "532 MB"
+#. {size} = a file size such as "4.2 MB" (keep the braces as they are)
+#, machine
+	about {size}	ᎢᎦᎢ {size}
 #. checkbox in the Add torrent window
 #. Torrent settings: other peers may connect to this computer
 #, machine
@@ -900,10 +905,6 @@
 #. the trailing ... means it is still going on: keep it
 #, machine
 	Checking {name} ({n} of {total})...	ᎠᎪᎵᏰᏗ {name} ({n} ᎤᎾᏓᏑᏴ {total})...
-#. text in the download list (sizes, speeds, status)
-#. a torrent's status while its files are read and checked; {percent} is how much is checked, e.g. "42%"
-#, machine
-	Checking {percent}	ᎠᎾᎦᏔᎲᏍᎬ {percent}
 #. text in the Checksum window; text in the Link grabber window
 #. the trailing ... means it is still going on: keep it
 #, machine
@@ -1517,7 +1518,7 @@
 #. a country's name (where a download's server is)
 #, machine
 	Eritrea	ᎡᎵᏟᎠ
-#. text in a dialog box; item in the Categories tree in the download list; value in a column's filter list in the download list; text in the download list (sizes, speeds, status); text in remote.rs
+#. text in a dialog box; item in the Categories tree in the download list; value in a column's filter list in the download list; text in the download list (sizes, speeds, status); text in a download's progress window; text in remote.rs
 #. in Download File Info, where the size goes: the address didn't answer
 #. a download's status (state it is in, not a command)
 #. a download's status (state it is in, not a command): it failed
@@ -1661,6 +1662,10 @@
 #. noun: a file of no known type
 #, machine
 	File	ᎢᏗᏢ
+#. text in the Options window
+#. tooltip of "Mark downloaded files as coming from the internet" on Linux
+#, machine
+	File managers show where the files marked this way came from. Unticked, no download is marked.	ᎢᏗᏟᏍᏙᏗ ᏗᏂᏃᎩᏍᏗ ᎬᏂᎨᏒᎢᏍᏗᎭ ᎭᏢᏃ ᎾᏍᎩᏯᎢ ᎢᏗᏟᏍᏙᏗ ᏗᏂᏃᎩᏍᏗ ᏧᏂᎷᏨᎢ. ᎢᏳᏃ ᏂᏓᏙᏢᎾ, ᎥᏝ ᎢᏗᏟᏍᏙᏗ ᏗᏂᏃᎩᏍᏗ ᏱᏚᎾᏙᏢ.
 #. text in the Scheduler window
 #, machine
 	File Name	ᎢᏗᏢ ᏚᏙᎥ
@@ -1997,7 +2002,7 @@
 #. window title: where MDM takes its helper programs (yt-dlp, ffmpeg, gallery-dl) from
 #, machine
 	Helpers	ᏗᏓᏍᏕᎵᏍᎩ
-#. button in gallerydlg.rs; button in the Download video window
+#. text in errors.rs; button in gallerydlg.rs; button in the Download video window
 #. button in Download video: where MDM takes yt-dlp and ffmpeg from
 #. the trailing ... means it opens a window: keep it
 #, machine
@@ -2381,7 +2386,7 @@
 #. Torrent settings: an upload speed limit for all torrents together, followed by a box with the speed and "KBytes/sec"
 #, machine
 	Limit uploading for all torrents to	ᎦᎸᎳᏗᏗᏢ ᎦᏁᏟᏴᏍᏗ ᏂᎦᏛ ᎤᏃᎴᎢ ᎯᎠ
-#. window title in the Link grabber window; group box title in the Options window
+#. message or event log entry in the main window; window title in the Link grabber window; group box title in the Options window
 #. Options → Archives: group box title
 #, machine
 	Link grabber	ᎢᏗᎦᎴᏴᏔᏅᎯ ᎢᏗᎦᎴᏴᏔᏅᎯ
@@ -2474,6 +2479,10 @@
 #. a country's name (where a download's server is)
 #, machine
 	Macau	ᎹᎧᎣ
+#. text in the Options window
+#. tooltip of "Mark downloaded files as coming from the internet" on macOS
+#, machine
+	macOS checks the files marked this way: Gatekeeper before a program first opens. Unticked, no download is marked.	macOS ᏚᎪᎵᏯ ᎾᏍᎩᏯᎢ ᎢᏗᏟᏍᏍᏔᏅᎯ ᏗᏟᏍᏙᏗ: Gatekeeper ᎢᎬᏱᏱ ᎢᏗᏟᏍᏙᏗ ᏂᏚᏂᏍᏚᎢᏒᎾ. ᎢᏳᏃ ᏂᏓᏙᏢᎾ, ᎥᏝ ᎢᏗᏟᏍᏙᏗ ᏗᏂᏃᎩᏍᏗ ᏱᏚᎾᏙᏢ.
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -2521,6 +2530,9 @@
 #. text in the Scheduler window
 #, machine
 	March	ᎠᏅᏱ
+#. checkbox in the Options window
+#, machine
+	Mark downloaded files as coming from the internet	ᎢᏗᏟᏍᏙᏗ ᏗᏂᏃᎩᏍᏗ ᏚᎾᏙᏢᎯ ᎾᏍᎩᏯᎢ ᎢᏗᏟᏍᏙᏗ ᏗᏂᏃᎩᏍᏗ ᏧᏂᎷᏨᎢ
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -3175,8 +3187,9 @@
 #. verb: opens the file
 #, machine
 	Open	ᎤᏍᏚᎢᏓ
-#. button in crashui.rs; button in a dialog box; button in torrentfiles.rs
+#. button in crashui.rs; button in a dialog box; text in a dialog box; button in torrentfiles.rs
 #. crash report window button: show the report's file in its folder
+#. title of the message when the folder of a downloaded file can't be shown
 #. button that opens the torrent's containing folder in the file manager
 #, machine
 	Open folder	ᏗᏟᎶᏍᏔᏅᎯ ᏗᎦᎴᏴᏍᏗ
@@ -3417,7 +3430,7 @@
 #. text in a download's progress window
 #, machine
 	Property	ᏗᏟᎶᏍᏔᏅ
-#. text in the Options window
+#. text in errors.rs; text in the Options window
 #. tab title
 #, machine
 	Proxy / Socks	ᏗᏟᎶᏍᏔᏅᎢ / Socks
@@ -3487,6 +3500,11 @@
 #. the trailing ... means it is still going on: keep it
 #, machine
 	Reading the torrent...	ᏗᏓᏁᏟᏴᏗ ᎦᏁᏟᏴᏛ...
+#. message or event log entry in the main window
+#. the status strip while Tasks → Import reads a file; {file} is its name
+#. the trailing ... means it is still going on: keep it
+#, machine
+	Reading {file}...	{file} ᏕᎪᎵᏰCLUDES...
 #. text in helpers.rs
 #, machine
 	Reads a page and lists every quality the site offers, up to 4K, from YouTube, Vimeo and over a thousand other sites.	ᏓᏓᏁᏟᏴᏍᎪᎢ ᎤᎾᏛᏅᎢᏍᏓᏁᎸᎢ ᎠᎴ ᏓᏓᏁᏟᏴᏍᎪᎢ ᏂᎦᎥ ᎤᏟᏍᏗ ᏂᏚᎾᏓᏁᎸᎢ, 4K ᎢᏴᏛ, YouTube-ᏂᏚᎾᏓᏁᎸᎢ, Vimeo-ᏂᏚᎾᏓᏁᎸᎢ ᎠᎴ ᎢᏯᎦᏴᎵ ᎤᏟᏍᏗ ᏂᏚᎾᏓᏁᎸᎢ.
@@ -3901,6 +3919,9 @@
 #. checkbox in the Options window; checkbox in a download's progress window
 #, machine
 	Show download complete dialog	ᎬᏂᎨᏒᎢ ᏗᎦᏃᏍᏓᏁᏗ ᎤᏍᏆᏛᎯ ᎧᏃᎮᏗ
+#. checkbox in the Options window
+#, machine
+	Show download progress dialog when a download starts	ᎬᏂᎨᏒᎢ ᏗᎦᏟᏏᏍᏗ ᎦᎴᏴᏔᏅᎯ ᎦᎴᏴᏔᏅᎯ ᎢᏳᏃ ᏗᎦᏟᏏᏍᏗ ᎤᎾᎴᏅᎲᏍᎬᎢ
 #. button in a dialog box
 #. button: shows these downloads in MDM's list, selected
 #, machine
@@ -3990,6 +4011,7 @@
 #, machine
 	Size	ᎦᏟᏗ
 #. text in the Download video window
+#. the video's file size is not known
 #, machine
 	size unknown	ᎦᏟᏗ ᏂᎦᏔᎲᎾ
 #. text in a download's Properties window
@@ -4575,9 +4597,6 @@
 	the server is busy ({status}); try again later	ᎤᎾᏓᏅᏏᏍᎩ ᏚᎸᏫᏍᏓᏁ ({status}); ᎣᏂᏃ ᏔᎵᏁ ᎭᏓᏅпробуй
 #. text in errors.rs
 #, machine
-	the server sent a web page instead of the file (sign-in needed or the link expired?)	ᎢᎬᎾᏕᏏᏗ ᎤᎵᏓᏍᏔᏅ ᎢᎬᎾᏕᏏᏗ ᎢᎬᎾᏕᏏᏗ ᎢᎬᎾᏕᏏᏗ
-#. text in errors.rs
-#, machine
 	the server sent an unexpected part of the file ({detail})	ᎤᎾᏓᏅᏏᏍᎩ ᎤᏓᎴᎩ ᎠᏑᏴᏔ ᎤᏙᏢᏒ ᎤᏓᏅᏒ ({detail})
 #. text in the Download video window
 #. the Download video window: the site asked for a sign-in although the browser's extension passed the page's cookies
@@ -4755,6 +4774,7 @@
 #, machine
 	This name is reserved by Windows	ᎯᎠ ᏚᏙᎥ Windows ᎤᏤᎵ ᎠᏍᏆᏂᎪᏔᏅ
 #. tooltip (why a control is greyed) in the Download video window
+#. why "Embed chapters" is greyed: ffmpeg (a helper program) is not installed
 #. why "Put them into the video" is greyed: ffmpeg (a helper program) is not installed
 #, machine
 	This needs ffmpeg	ᎯᎠ ffmpeg ᎤᏚᎵᎭ
@@ -5055,6 +5075,7 @@
 #, machine
 	United States Minor Outlying Islands	ᎤᎾᎵᎪᏒᎯ ᏍᏓᏗᎢ ᏧᎾᏍᏗ ᏙᏱᏗᏢ ᏚᎦᏚᏛᎢ
 #. text in a download's Properties window
+#. the web page is not known
 #, machine
 	Unknown	ᏄᏬᎵᏍᏔᏅᎾ
 #. text in a dialog box; text in a download's progress window; text in whereis.rs
@@ -5093,7 +5114,7 @@
 #. text in the Options window
 #, machine
 	Use advanced browser integration	ᎬᏔᏅᎢ ᎦᎸᎳᏗᏢ ᎢᏗᏴᏍᏗ ᎦᎷᎩ ᏗᏙᎳᏤᏗ
-#. button in helpers.rs
+#. text in errors.rs; button in helpers.rs
 #. Video helpers: button: pick a program (yt-dlp or ffmpeg) already on the computer
 #. the trailing ... means it opens a window: keep it
 #, machine
@@ -5193,6 +5214,7 @@
 #, machine
 	Verify checksum	ᎠᏓᏁᎶᏗ checksum
 #. text in the download list (sizes, speeds, status)
+#. a download's status while the finished file is checked against its checksum
 #. the trailing ... means it is still going on: keep it
 #, machine
 	Verifying...	ᎠᏓᏁᎶᏗ...
@@ -5296,6 +5318,9 @@
 #. remote control page (on a phone): label of the choice: start the new download now, or let it wait in a queue
 #, machine
 	When	ᎢᏳ
+#. text in the Options window
+#, machine
+	When it is off, downloads go on in the main window's list. Double-click one there to see its progress.	ᎢᏳᏃ ᎤᎾᏕᏴᎲᏍᎬᎢ, ᏗᎦᏟᏏᏍᏗ ᎤᎾᏕᏴᎲᏍᎬᎢ ᎾᎿ ᏗᎦᏟᏏᏍᏗ. ᏔᎵᏁ ᎢᎦᏟᏏᏍᏗ ᎾᎿ ᏗᎦᏟᏏᏍᏗ ᎤᎾᏕᏴᎲᏍᎬᎢ.
 #. text in the Batch download window
 #, machine
 	Wildcard size	Wildcard ᎤᏍᎪᏂᏗ
@@ -5303,6 +5328,10 @@
 #. the Scheduler, under "Wake the computer to run this queue" (Windows): "Allow wake timers" is on when plugged in, off on battery
 #, machine
 	Windows allows wake timers only while plugged in	Windows ᎤᎾᎴᏗᏱ ᎤᎾᏓᎾᏅᏓᏗᏍᏗ ᎤᏩᏒ ᎢᎪᎯᏛ ᎤᎾᏓᎾᏅᏓᏗᏍᏗ ᎨᏒᎢ
+#. text in the Options window
+#. tooltip of "Mark downloaded files as coming from the internet" on Windows
+#, machine
+	Windows checks the files marked this way: SmartScreen before a program first runs, Office's Protected View before a document opens. Unticked, or under Windows' policy "Do not preserve zone information in file attachments", no download is marked.	Windows ᏚᎪᎵᏯ ᎾᏍᎩᏯᎢ ᎢᏗᏟᏍᏍᏔᏅᎯ ᏗᏟᏍᏙᏗ: SmartScreen ᎢᎬᏱᏱ ᎢᏗᏟᏍᏙᏗ ᏂᏚᏂᏍᏚᎢᏒᎾ, Office's Protected View ᎢᎬᏱᏱ ᏗᏟᏍᏙᏗ ᏂᏚᏂᏍᏚᎢᏒᎾ. ᎢᏳᏃ ᏂᏓᏙᏢᎾ, ᎠᎴ ᎾᏍᎩᏯᎢ Windows' policy "Do not preserve zone information in file attachments", ᎥᏝ ᎢᏗᏟᏍᏙᏗ ᏗᏂᏃᎩᏍᏗ ᏱᏚᎾᏙᏢ.
 #. text in the Options window
 #. Options → Accounts: Windows Credential Manager didn't answer, so the sign-ins stay in MDM's settings, encrypted so that only this Windows account can read them
 #, machine
@@ -5547,6 +5576,11 @@
 #. text in a dialog box
 #, machine
 	{file} is no longer where it was saved (moved or deleted). Redownload, in its right-click menu, gets it again.	{file} ᎥᏝ ᎿᏉ ᏱᏚᏍᏆᏂᎪᏔᏅ (ᎤᏓᏅᏒᎯ ᎠᎴ ᎤᏲᏨᎯ). ᏔᎵᏁ ᎭᏓᎴᎯᏍᏗ, ᎤᎦᏘᏗᏢ ᏗᏟᏍᏔᏅᎯ ᎨᏒᎢ, ᏔᎵᏁ ᏓᎭᏩᏛᎯ.
+#. message or event log entry in the main window
+#. Import refused a file; {size} = its size and {limit} = the largest Import reads, like "4.50 GB" and "64.00 MB"
+#. {size} = a file size such as "4.2 MB" (keep the braces as they are)
+#, machine
+	{file} is too large to be a list of addresses ({size}). Import reads text files, web pages and .ef2 exports of up to {limit}.	{file} ᎤᏔᎾᏓᎪᏗ {size} ᎢᎬᏁᏗ ᏂᎨᏒᎾ. Import ᎪᎵᏰᏗ ᏗᎪᏪᎵ, ᎢᏗᏔᎴᎬᎢ, ᎠᎴ .ef2 ᏗᎦᎴᏴᏔᏅᎢ {limit} ᎢᏴᎦᏘ.
 #. text in the Checksum window
 #. {algorithm} = a checksum algorithm such as "SHA-256" (keep the braces as they are)
 #, machine
@@ -5645,6 +5679,10 @@
 #. text in errors.rs
 #, machine
 	{problem} ({cause})	{problem} ({cause})
+#. text in errors.rs
+#. why a helper couldn't be downloaded ({problem}), then what to do about it ({advice}, whole sentences)
+#, machine
+	{problem}. {advice}	{problem}. {advice}
 #. text in errors.rs
 #. a debrid service's error: too many requests; MDM waits and retries
 #, machine
@@ -6172,6 +6210,10 @@ extension	This page's player streams its video in pieces, so there's no file to 
 #, machine
 extension	Turn on	ᏗᏓᎴᏔᏅᎢ
 #. text in the browser extension
+#. link beside "Downloads from <site> stay with the browser" in the toolbar button's popup: take the site off the excluded sites again
+#, machine
+extension	Undo	ᏔᎵᏁ ᏔᏚᎵ
+#. text in the browser extension
 #. status when the app is older than the extension; keep the name Mister Download Manager as it is
 #, machine
 extension	Update Mister Download Manager to use everything this extension offers	ᎤᎾᏕᎳᎰᏒᎢ Mister Download Manager ᎤᎾᏕᎳᎰᏒᎢ ᎯᎠ ᎾᎿᏉ ᎤᎾᏕᎳᎰᏒᎢ
@@ -6207,6 +6249,10 @@ key	Ctrl+0	Ctrl+0
 #. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
 #, machine
 key	Ctrl+A	Ctrl+A
+#. key name or combination in the Help menu's windows (About, updates, shortcuts, Tell a friend)
+#. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
+#, machine
+key	Ctrl+B	Ctrl+B
 #. key name or combination in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
 #, machine
@@ -6300,10 +6346,10 @@ menu	&About Mister Download Manager	&Mister Download Manager ᎤᎬᏩᎵ
 #, machine
 menu	&Add new download	Ꭲ&ᏓᏁᏟᏴᏓ ᎢᏤ ᏗᎦᏁᏟᏴᏗ
 #. menu command in the main window
+#. View → Window system: MDM chooses the window system itself at each start
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#. the trailing ... means it opens a window: keep it
 #, machine
-menu	&Add new download...	Ꭲ&ᏓᏁᏟᏴᏓ ᎢᏤ ᎭᏓᎴᎯᏍᏗ...
+menu	&Automatic	Ꮎ&ᎪᏪᎸ
 #. menu command in the main window
 #. View → Text: letters drawn the classic way, hinted to whole pixels (crisp, coarse on a dense screen)
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
@@ -6409,11 +6455,6 @@ menu	&Stop All	&ᏂᎦᏗᏳ ᎠᏑᏰᏍᏗ
 #, machine
 menu	&Stop Download	&ᎠᏑᏰᏍᏗ ᏗᎦᏁᏟᏴᏗ
 #. menu command in the main window
-#. View menu: submenu choosing how the text is drawn (smooth or classic)
-#. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
-menu	&Text	&ᏗᎪᏪᎵ
-#. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
 menu	&Tray icon	&ᏗᏟᎶᏍᏔᏅ ᎦᏁᎳ
@@ -6430,6 +6471,11 @@ menu	&Undo	ᏔᎵᏁ &ᏂᎦᎵᏍᏔᏅᏗ
 #, machine
 menu	&Video downloads	&ᏗᏟᎶᏍᏔᏅ ᏗᎦᏁᏟᏴᏗ
 #. menu command in the main window
+#. View menu: submenu choosing the window system MDM's windows use on Linux (X11 through XWayland, or Wayland)
+#. & marks the keyboard shortcut letter: keep one & before a letter of the translation
+#, machine
+menu	&Window system	&ᏙᎾᏗᏒᎢ ᏗᏟᎶᏍᏔᏅᎢ
+#. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
 menu	Add &batch download	Ꭲ&ᏓᏁᏟᏴᏓ ᎤᏂᎪᏗᏗ ᏗᎦᏁᏟᏴᏗ
@@ -6438,6 +6484,11 @@ menu	Add &batch download	Ꭲ&ᏓᏁᏟᏴᏓ ᎤᏂᎪᏗᏗ ᏗᎦᏁᏟᏴᏗ
 #. the trailing ... means it opens a window: keep it
 #, machine
 menu	Add &magnet link...	Ꭲ&ᏓᏁᏟᏴᏓ ᏗᎦᏁᏟᏴᏗ ᏗᏟᎶᏍᏔᏅ...
+#. menu command in the main window
+#. & marks the keyboard shortcut letter: keep one & before a letter of the translation
+#. the trailing ... means it opens a window: keep it
+#, machine
+menu	Add &new download...	Ꭲ&ᏓᏁᏟᏴᏓ ᎢᏤ ᎭᏓᎴᎯᏍᏗ...
 #. menu command in the main window
 #. View → Theme: picks a theme file or a Base16 or pywal colour scheme, copies it into the themes folder and uses it
 #, machine
@@ -6523,7 +6574,7 @@ menu	By Save &Path	Ꮧ&ᏓᏟᏍᏔᏅᎯ ᎢᏗᏁᏟᏴᏍᏗ
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
-menu	By St&atus	Ꮧ&ᏓᏟᏍᏔᏅᎯ ᎢᏗᏁᏟᏴᏍᏗ
+menu	By Stat&us	Ꮧ&ᏓᏟᏍᏔᏅᎯ ᎢᏗᏁᏟᏴᏍᏗ
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
@@ -6572,9 +6623,17 @@ menu	Delete from queue	ᏗᏓᏟᏍᏔᏅᎯ ᎢᏗᏁᏟᏴᏍᏗ
 #, machine
 menu	Direct3D	Direct3D
 #. menu command in the main window
+#. View → Draw with: a greyed note; what draws the windows and why: Direct3D 12 through Windows' own software renderer (WARP, keep the name), because this computer's graphics card has no Direct3D 12 driver
+#, machine
+menu	Direct3D 12 (WARP): this graphics card has no Direct3D 12 driver	Direct3D 12 (WARP): ᎯᎠ ᏗᏟᎶᏍᏔᏅᎢ ᎢᏗᏢᏅᏗ ᎥᏝ Direct3D 12 ᏗᏟᎶᏍᏔᏅᎢ ᎢᏗᏢᏅᏗ ᏱᎩ
+#. menu command in the main window
 #. View → Draw with: a greyed note; Direct3D failed on this computer, so OpenGL draws the windows
 #, machine
 menu	Direct3D didn't start here: OpenGL draws	Direct3D ᎥᏝ ᏳᎴᏅᎮ ᎠᏂ: OpenGL ᏕᎪᏪᎵᏍᎪᎢ
+#. menu command in the main window
+#. View → Draw with: a greyed note; Direct3D draws the windows through Windows' own software renderer (WARP) instead of a graphics card
+#, machine
+menu	Direct3D draws with Windows' software renderer (WARP)	Direct3D Windows' software renderer (WARP) ᎬᏗᎭ
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #. the trailing ... means it opens a window: keep it
@@ -6596,6 +6655,10 @@ menu	E&xport	Ꮧ&ᏓᏟᏍᏔᏅᎯ ᎢᏗᏁᏟᏴᏍᏗ
 #. menu command in the main window
 #, machine
 menu	Edit queue	ᏗᏓᏟᏍᏔᏅᎯ ᎢᏗᏁᏟᏴᏍᏗ
+#. menu command in the main window
+#. View → Theme: a style theme's name (a white canvas, emerald fills, 6-point corners), a name: keep "Emerald" as written
+#, machine
+menu	Emerald	ᎡᎻᎳᎵ
 #. menu command in the main window
 #. verb: unpack the downloaded archive (zip, 7z, rar) into its folder
 #, machine
@@ -6641,6 +6704,14 @@ menu	Hide drop target	ᏗᏓᏟᏍᏔᏅᎯ ᎢᏗᏁᏟᏴᏍᏗ
 #, machine
 menu	High contrast	ᎦᎸᎳᏗᏢ ᎬᏂᎨᏒᎢ
 #. menu command in the main window
+#. View → Window system: a greyed note; MDM's windows are Wayland's now
+#, machine
+menu	In use: Wayland	ᎦᏙᎬᎢ: Wayland
+#. menu command in the main window
+#. View → Window system: a greyed note; MDM's windows are X11's (through XWayland) now
+#, machine
+menu	In use: X11 (XWayland)	ᎦᏙᎬᎢ: X11 (XWayland)
+#. menu command in the main window
 #. View → Draw with: a greyed note under "… didn't start here"; why: another error, written in MDM's log
 #, machine
 menu	It couldn't start: the log says why	ᎠᎴᏅᏗᏱ ᎢᎬᏩᏁᎸᎯ ᎥᏝ: ᏗᎪᏪᎵ ᎦᏛᎬᏍᏗᎭ
@@ -6664,6 +6735,10 @@ menu	Metal	Metal
 #. View → Draw with: a greyed note; Metal failed on this computer, so OpenGL draws the windows
 #, machine
 menu	Metal didn't start here: OpenGL draws	Metal ᎥᏝ ᏳᎴᏅᏔᏃ: OpenGL ᏕᎬᎪᏍᏗ
+#. menu command in the main window
+#. View → Draw with: a greyed note; Metal draws the windows through a software renderer instead of a graphics card
+#, machine
+menu	Metal draws with a software renderer	Metal software renderer ᎬᏗᎭ
 #. menu command in the main window
 #. View → Theme: a style theme's name (Windows 8's flat look); keep "Metro" unless your language writes it otherwise
 #, machine
@@ -6711,6 +6786,26 @@ menu	Open with...	ᎤᏍᏚᎢᏍᏗ...
 #. View → Draw with: a graphics system's name, usually kept as is
 #, machine
 menu	OpenGL	OpenGL
+#. menu command in the main window
+#. View → Draw with: a greyed note; why MDM no longer draws with OpenGL: it couldn't start on this computer
+#, machine
+menu	OpenGL didn't start here	OpenGL ᎥᏝ ᎤᎴᏅᎲ ᎾᎿ
+#. menu command in the main window
+#. View → Draw with: a greyed note; why MDM no longer draws with OpenGL: its window froze inside the graphics card's driver while OpenGL drew
+#, machine
+menu	OpenGL froze inside the graphics driver here	OpenGL ᎤᏁᎳᎩ ᎤᏪᏅᏒ ᎾᎿ ᏗᏟᎶᏍᏔᏅᎢ ᎢᏗᏢᏅᏗ ᎾᎿ
+#. menu command in the main window
+#. View → Draw with: a greyed note; this computer's OpenGL (its graphics driver) is too old, so MDM doesn't draw with it
+#, machine
+menu	OpenGL here is too old to draw MDM	OpenGL ᎡᏂᎢᏳᏍᏗ MDM ᎥᏝ ᎬᏗᏍᏗ ᏱᎩ
+#. menu command in the main window
+#. View → Draw with: a greyed note; why MDM no longer draws with OpenGL: its window stayed empty for 10 seconds, so MDM started again another way
+#, machine
+menu	OpenGL's first frame didn't show within 10 seconds	OpenGL ᎤᎾᎴᏅᎲᎯ ᎥᏝ ᏱᎬᏂᎨᏒ ᏱᏄᎵᏍᏔᏅ 10 ᎢᏯᏗᏔᏍᏗ ᎢᏴᏓ
+#. menu command in the main window
+#. View → Draw with: a greyed note; why MDM no longer draws with OpenGL: MDM crashed or was closed while starting with it
+#, machine
+menu	OpenGL's last start ended before its first frame	OpenGL ᎤᎾᎴᏅᎲᎯ ᎥᏝ ᏱᎬᏂᎨᏒ ᏱᏄᎵᏍᏔᏅ ᎤᎾᎴᏅᎲᎯ ᎢᏴᏓ
 #. menu command in the main window
 #. what double-clicking a download does — noun: show its properties
 #. noun: opens the download's Properties window
@@ -6808,6 +6903,11 @@ menu	Stop Download	ᎠᏠᏯᏍᏗ ᎤᎵᏍᏛ
 #, machine
 menu	Support &MDM	MDM &ᎠᎵᏍᏕᎸᏙᏗ
 #. menu command in the main window
+#. View menu: submenu choosing how the text is drawn (smooth or classic)
+#. & marks the keyboard shortcut letter: keep one & before a letter of the translation
+#, machine
+menu	Te&xt	&ᏗᎪᏪᎵ
+#. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
 menu	Tell a &friend	Ꭿ&ᎵᏥᏙᏅᏗ ᎢᎦᎵᎢ
@@ -6862,6 +6962,10 @@ menu	Vulkan	Vulkan
 #. View → Draw with: a greyed note; Vulkan failed on this computer, so OpenGL draws the windows
 #, machine
 menu	Vulkan didn't start here: OpenGL draws	Vulkan ᎥᏝ ᏳᎴᏅᏔᏃ: OpenGL ᏕᎬᎪᏍᏗ
+#. menu command in the main window
+#. View → Draw with: a greyed note; Vulkan draws the windows through a software renderer instead of a graphics card
+#, machine
+menu	Vulkan draws with a software renderer	Vulkan software renderer ᎬᏗᎭ
 #. menu bar title in the main window (menus, toolbar, Categories pane)
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine

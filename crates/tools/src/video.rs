@@ -45,6 +45,14 @@ pub struct Progress {
     pub engine: Option<crate::streams::View>,
     /// Why yt-dlp downloads this one itself (#769), once a run has found out.
     pub helper: Option<crate::streams::Helper>,
+    /// Once every stream is in: their file being joined into one (ffmpeg, run by yt-dlp; #736),
+    /// with how far that is (0 to 1) when its file's size tells.
+    pub merging: Option<Option<f64>>,
+    /// It failed joining its streams: what of it is kept beside its file, the whole streams
+    /// among them, for Resume to join again without downloading them (yt-dlp takes them as they
+    /// are; the engine's `fetch` keeps a whole one). Deleting the download with its files
+    /// removes them.
+    pub merge_failed: Option<Vec<PathBuf>>,
 }
 
 /// A subtitle language the site wouldn't give (#68).
@@ -201,6 +209,27 @@ fn subtitle_args(subs: &Subs, ffmpeg: bool) -> Vec<String> {
     // on its own (`attempt`).
     out.push("--ignore-errors".into());
     out
+}
+
+/// Download video's Embed chapters (#827): on unless the app says otherwise ([`set_chapters`]).
+static CHAPTERS: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
+
+/// Whether the videos started from now on get their chapters (the app's setting, shared as it
+/// changes; the command line keeps the default, on).
+pub fn set_chapters(on: bool) {
+    CHAPTERS.store(on, std::sync::atomic::Ordering::Relaxed);
+}
+
+/// The chapters a video's page lists, put into the file (#827): `--embed-chapters` on yt-dlp's
+/// last run, the one that merges and fixes the file up (after MDM's engine too). Only with ffmpeg,
+/// which writes them, and for a video or the sound as the site has it, not a conversion to MP3,
+/// Opus or FLAC. A video without chapters is left as it is.
+fn chapter_args(chapters: bool, ffmpeg: bool, converted: bool) -> Vec<String> {
+    if chapters && ffmpeg && !converted {
+        vec!["--embed-chapters".into()]
+    } else {
+        Vec::new()
+    }
 }
 
 /// The subtitle files saved beside `video` (`<stem>.<lang>.<srt|vtt…>`, as yt-dlp names them).
@@ -540,11 +569,12 @@ pub struct VideoJob {
     current: Arc<crate::streams::Current>,
 }
 
-/// A private file for the looked-up page (its links are signed; removed when the run ends).
+/// A private file for the looked-up page (its links are signed; removed when the run ends), in
+/// the helpers' temporary folder ([`crate::workdir::temp_dir`]).
 fn info_file() -> PathBuf {
     use std::sync::atomic::{AtomicU64, Ordering};
     static N: AtomicU64 = AtomicU64::new(0);
-    std::env::temp_dir().join(format!(
+    crate::workdir::temp_dir().join(format!(
         "mdm-video-{}-{}.json",
         std::process::id(),
         N.fetch_add(1, Ordering::Relaxed)
@@ -580,6 +610,9 @@ enum Attempt {
         error: String,
         rerouted: bool,
     },
+    /// Every stream came, and joining them failed: no other server or look-up mends that. With
+    /// the streams' format ids (`MDMQ`'s `1280+aud-English`).
+    MergeFailed(String, Vec<String>),
 }
 
 /// End yt-dlp and everything it started (#79): whenever the download is given up, nothing may
@@ -692,6 +725,21 @@ fn supervise(
                         p.downloaded = len;
                     }
                     p.state = State::Done(f);
+                }
+                return;
+            }
+            Attempt::MergeFailed(error, ids) => {
+                end(child);
+                // The streams stay for Resume (the merge's own unfinished file is gone).
+                let kept = template_of(&ours)
+                    .map(|(dir, stem)| kept_parts(&dir, &stem, &ids))
+                    .unwrap_or_default();
+                let mut p = progress.lock().unwrap();
+                if p.state != State::Stopped {
+                    p.speed = 0.0;
+                    p.merging = None;
+                    p.merge_failed = Some(kept);
+                    p.state = State::Failed(error);
                 }
                 return;
             }
@@ -859,6 +907,10 @@ impl Meter {
             .flatten()
             .or(f.get(2).copied().flatten())
             .map(|t| t.max(0.0) as u64);
+        // Only an estimate, and no more than what came: yt-dlp's first line for a stream in
+        // pieces, before it knows how many there are (1 KB of 1 KB), or its last one. It says
+        // nothing of how much is left, and the bar must not hold on to its end (#622).
+        let blind = f.get(1).copied().flatten().is_none() && total.is_some_and(|t| t <= got);
         let id = fields
             .get(4)
             .map(|id| id.trim())
@@ -912,6 +964,13 @@ impl Meter {
             p.total = None;
             return;
         }
+        // Such a line leaves the bar where it was (none yet: no percentage). The stream's bytes
+        // still count in full when the next one starts.
+        if blind {
+            p.total = (self.frac > 0.0)
+                .then(|| ((downloaded as f64 / self.frac).round() as u64).max(downloaded + 1));
+            return;
+        }
         let mut whole = self.finished + self.last_total.max(got);
         // The window's size stands for the streams still to come (less what is known so far);
         // in the last stream, once its own total is known, nothing is left to come. When that
@@ -953,6 +1012,8 @@ struct Ran {
     warnings: Vec<String>,
     /// What it said when it failed.
     failure: String,
+    /// The merge's file when yt-dlp said it merges next and never that it was done.
+    merging: Option<PathBuf>,
 }
 
 /// Run yt-dlp with `ours` on the page looked up into `file`, following its progress with
@@ -985,32 +1046,52 @@ fn run(
     };
     let mut saved = None;
     let mut quality = None;
-    // Every line to the end, read as bytes (#79): a line that isn't UTF-8 (a title in a legacy
-    // code page) used to end the reading there, while yt-dlp went on; it is read leniently now,
-    // and the saved file is also found by its name (`attempt`).
-    let mut reader = BufReader::new(stdout);
-    let mut buf = Vec::new();
-    loop {
-        buf.clear();
-        match reader.read_until(b'\n', &mut buf) {
-            Ok(0) | Err(_) => break,
-            Ok(_) => {}
-        }
-        let text = String::from_utf8_lossy(&buf);
-        let line = text.trim_end_matches(['\r', '\n']);
-        if let Some(rest) = line.strip_prefix("MDMF ") {
-            saved = Some(PathBuf::from(rest.trim()));
-        } else if let Some(rest) = line.strip_prefix("MDMQ ") {
-            if let Some(m) = meter.as_deref_mut() {
-                m.quality(rest);
+    progress.lock().unwrap().merging = None;
+    // The merge's file, once yt-dlp says it's next; watched until the reading ends.
+    let merged: Mutex<Option<PathBuf>> = Mutex::new(None);
+    let read_all = std::sync::atomic::AtomicBool::new(false);
+    std::thread::scope(|scope| {
+        scope.spawn(|| watch_merge(&merged, &read_all, progress));
+        // Every line to the end, read as bytes (#79): a line that isn't UTF-8 (a title in a
+        // legacy code page) used to end the reading there, while yt-dlp went on; it is read
+        // leniently now, and the saved file is also found by its name (`attempt`).
+        let mut reader = BufReader::new(stdout);
+        let mut buf = Vec::new();
+        loop {
+            buf.clear();
+            match reader.read_until(b'\n', &mut buf) {
+                Ok(0) | Err(_) => break,
+                Ok(_) => {}
             }
-            quality = Some(rest.trim().to_owned());
-        } else if let Some(rest) = line.strip_prefix("MDMP ")
-            && let Some(m) = meter.as_deref_mut()
-        {
-            m.line(rest, &mut progress.lock().unwrap());
+            let text = String::from_utf8_lossy(&buf);
+            let line = text.trim_end_matches(['\r', '\n']);
+            if let Some(rest) = line.strip_prefix("MDMF ") {
+                saved = Some(PathBuf::from(rest.trim()));
+                // Merged and moved: done joining.
+                *merged.lock().unwrap() = None;
+                progress.lock().unwrap().merging = None;
+            } else if let Some(rest) = line.strip_prefix("MDMQ ") {
+                if let Some(m) = meter.as_deref_mut() {
+                    m.quality(rest);
+                }
+                quality = Some(rest.trim().to_owned());
+            } else if let Some(rest) = line.strip_prefix("MDMP ")
+                && let Some(m) = meter.as_deref_mut()
+            {
+                m.line(rest, &mut progress.lock().unwrap());
+            } else if let Some(rest) = line.strip_prefix("MDMM ")
+                && quality.as_deref().is_some_and(several_streams)
+            {
+                // Several streams: ffmpeg joins them now (#736). Told by this run's `MDMQ`, not
+                // by the meter: when MDM's engine downloaded the streams (#769) there is none,
+                // and that is how most videos come down.
+                *merged.lock().unwrap() = Some(merge_file(Path::new(rest.trim())));
+                progress.lock().unwrap().merging = Some(None);
+            }
         }
-    }
+        read_all.store(true, std::sync::atomic::Ordering::Relaxed);
+    });
+    let merging = merged.into_inner().unwrap_or_else(|e| e.into_inner());
     // Poll (the lock is free in between, so stop() can still kill it).
     let status = loop {
         let mut slot = child.lock().unwrap();
@@ -1040,7 +1121,73 @@ fn run(
         quality,
         warnings,
         failure,
+        merging,
     }))
+}
+
+/// The file yt-dlp's merge writes for `path` before it renames it there: `<stem>.temp.<ext>`
+/// (yt-dlp's `prepend_extension`).
+fn merge_file(path: &Path) -> PathBuf {
+    match (path.file_stem(), path.extension()) {
+        (Some(stem), Some(ext)) => {
+            let mut name = stem.to_os_string();
+            name.push(".temp.");
+            name.push(ext);
+            path.with_file_name(name)
+        }
+        _ => {
+            let mut name = path.as_os_str().to_os_string();
+            name.push(".temp");
+            PathBuf::from(name)
+        }
+    }
+}
+
+/// How far a merge is (#736): the joined file's size against the streams' (ffmpeg copies them
+/// as they are, so it ends about as big), read every quarter second while it is `merged`; at
+/// most 99 %, the rename is still to come, and never back ([`merge_step`]). Ends when the
+/// reading does.
+fn watch_merge(
+    merged: &Mutex<Option<PathBuf>>,
+    read_all: &std::sync::atomic::AtomicBool,
+    progress: &Mutex<Progress>,
+) {
+    while !read_all.load(std::sync::atomic::Ordering::Relaxed) {
+        std::thread::sleep(std::time::Duration::from_millis(250));
+        let Some(file) = merged.lock().unwrap().clone() else {
+            continue;
+        };
+        let Ok(len) = std::fs::metadata(&file).map(|m| m.len()) else {
+            continue;
+        };
+        let mut p = progress.lock().unwrap();
+        if let Some(was) = p.merging
+            && p.downloaded > 0
+        {
+            p.merging = Some(Some(merge_step(was, merge_fraction(len, p.downloaded))));
+        }
+    }
+}
+
+/// Whether `MDMQ`'s quality (`137+140 1920x1080`) is a choice of several streams, which
+/// yt-dlp's ffmpeg merges.
+fn several_streams(quality: &str) -> bool {
+    quality
+        .split_whitespace()
+        .next()
+        .is_some_and(|ids| ids.contains('+'))
+}
+
+/// A merge's share done: `written` of about `streams` bytes, held short of the end.
+fn merge_fraction(written: u64, streams: u64) -> f64 {
+    (written as f64 / streams.max(1) as f64).min(0.99)
+}
+
+/// The merge's share after a reading of `now`, from `was` (none yet): never back. The file can
+/// read smaller than before (empty a moment while it is written again, made again by a second
+/// pass, read between ffmpeg's truncating and writing it): the bar holds where it was.
+fn merge_step(was: Option<f64>, now: f64) -> f64 {
+    was.map_or(now, |was| was.max(now))
 }
 
 /// The media file yt-dlp saved under our output name (`<dir>/<stem>.%(ext)s`), when it didn't say
@@ -1051,22 +1198,52 @@ fn saved_by_name(ours: &[String]) -> Option<PathBuf> {
         "mp4", "mkv", "webm", "mov", "m4v", "m4a", "mp3", "opus", "ogg", "oga", "flac", "wav",
         "aac", "flv", "3gp",
     ];
-    let template = ours
-        .iter()
-        .position(|a| a == "-o")
-        .and_then(|i| ours.get(i + 1))?;
-    let t = Path::new(template);
-    let dir = t.parent()?;
-    let stem = t
-        .file_name()?
-        .to_string_lossy()
-        .strip_suffix(".%(ext)s")?
-        .replace("%%", "%");
+    let (dir, stem) = template_of(ours)?;
     MEDIA
         .iter()
         .map(|ext| dir.join(format!("{stem}.{ext}")))
         .filter(|p| p.is_file())
         .max_by_key(|p| std::fs::metadata(p).and_then(|m| m.modified()).ok())
+}
+
+/// What a failed merge left in `dir` for `<stem>.%(ext)s`: what [`own_files`] tells (unfinished
+/// files, streams named by a numbered or `hls-` id), and each stream of format `ids` by its name,
+/// `<stem>.f<id>.<ext>`, however yt-dlp named it (`Talk.faud-English.mp4`, an HLS sound's).
+fn kept_parts(dir: &Path, stem: &str, ids: &[String]) -> Vec<PathBuf> {
+    let mut kept = own_files(dir, stem, false);
+    let named: Vec<String> = ids
+        .iter()
+        .map(|id| format!("{}.f{}.", stem, id).to_lowercase())
+        .collect();
+    if let Ok(rd) = std::fs::read_dir(dir) {
+        for e in rd.filter_map(Result::ok) {
+            let name = e.file_name().to_string_lossy().to_lowercase();
+            let whole = named.iter().any(|n| {
+                name.strip_prefix(n.as_str())
+                    .is_some_and(|ext| MEDIA.contains(&ext))
+            });
+            if whole && e.file_type().is_ok_and(|t| t.is_file()) && !kept.contains(&e.path()) {
+                kept.push(e.path());
+            }
+        }
+    }
+    kept.sort();
+    kept
+}
+
+/// The folder and the file stem of our output template (`-o <dir>/<stem>.%(ext)s`).
+fn template_of(ours: &[String]) -> Option<(PathBuf, String)> {
+    let template = ours
+        .iter()
+        .position(|a| a == "-o")
+        .and_then(|i| ours.get(i + 1))?;
+    let t = Path::new(template);
+    let stem = t
+        .file_name()?
+        .to_string_lossy()
+        .strip_suffix(".%(ext)s")?
+        .replace("%%", "%");
+    Some((t.parent()?.to_path_buf(), stem))
 }
 
 /// What a saved file holds when its name says otherwise: an HLS stream's pieces joined as they
@@ -1262,6 +1439,18 @@ fn attempt(
         }
         (Ok(s), None) if s.success() => {
             return failed("yt-dlp didn't say where it saved the file".into(), rerouted);
+        }
+        // Every stream in, and joining them failed (yt-dlp said it merges next, never that it
+        // was done): what ffmpeg left half written goes.
+        _ if let Some(temp) = &ran.merging => {
+            let _ = std::fs::remove_file(temp);
+            let ids = ran
+                .quality
+                .as_deref()
+                .and_then(|q| q.split_whitespace().next())
+                .map(|ids| ids.split('+').map(str::to_owned).collect())
+                .unwrap_or_default();
+            return Attempt::MergeFailed(ran.failure, ids);
         }
         _ => return failed(ran.failure, rerouted),
     };
@@ -1460,7 +1649,16 @@ impl ByEngine {
             &self.current,
             &Reporter(progress),
         );
-        progress.lock().unwrap().speed = 0.0;
+        // The engine's part is over: no connection receives while yt-dlp joins the streams
+        // (#736); the last view taken of a stream in pieces still had them under way.
+        let mut p = progress.lock().unwrap();
+        p.speed = 0.0;
+        if let (crate::streams::Fetched::Done, Some(view)) = (&out, &mut p.engine) {
+            view.connections
+                .iter_mut()
+                .for_each(mdm_engine::download::ConnView::finish);
+        }
+        drop(p);
         match out {
             crate::streams::Fetched::Done => Engined::Ready,
             crate::streams::Fetched::Stopped => Engined::Stopped,
@@ -1537,6 +1735,9 @@ pub fn limit_args(rate: Option<u64>) -> Vec<String> {
 const PROGRESS: &str = "download:MDMP %(progress.downloaded_bytes)s %(progress.total_bytes)s %(progress.total_bytes_estimate)s %(progress.speed)s %(info.format_id)s";
 /// The final file: `MDMF <path>`.
 const FINAL: &str = "after_move:MDMF %(filepath)s";
+/// Every stream is in, the file they make is next (`MDMM <path>`): printed before yt-dlp's
+/// post-processing, its merge first (#736).
+const MERGE: &str = "post_process:MDMM %(filepath)s";
 /// The quality yt-dlp chose, before it downloads: `MDMQ <format id> <resolution>` (the log names
 /// it when it isn't the one asked for, #94).
 const QUALITY: &str = "video:MDMQ %(format_id)s %(resolution)s";
@@ -1587,7 +1788,8 @@ impl VideoJob {
     ) -> Result<VideoJob, ProcError> {
         proc::safe(url)?;
         let preloaded = preloaded.filter(|p| p.selector == selector);
-        let output = dir.join(format!("{}.%(ext)s", template_text(stem)));
+        // A full path: yt-dlp runs in a folder of its own (#834).
+        let output = crate::workdir::absolute(dir).join(format!("{}.%(ext)s", template_text(stem)));
         // An MP3, Opus or FLAC choice (#32, #70): the best sound, converted by ffmpeg.
         let convert = crate::resolve::audio_conversion(selector);
         let format = if convert.is_some() {
@@ -1630,6 +1832,8 @@ impl VideoJob {
             FINAL.into(),
             "--print".into(),
             QUALITY.into(),
+            "--print".into(),
+            MERGE.into(),
         ];
         ours.extend(limit_args(rate));
         // A subtitles-only second run, for the ones a site refuses (#68): the same output name.
@@ -1638,6 +1842,7 @@ impl VideoJob {
             output.to_string_lossy().into_owned(),
             "--no-playlist".into(),
         ];
+        let converted = convert.is_some();
         match convert {
             Some(a) => {
                 let x = ["-x".into(), "--audio-format".into(), a.format.into()];
@@ -1649,6 +1854,11 @@ impl VideoJob {
             }
             None => ours.extend(subtitle_args(subs, ffmpeg.is_some())),
         }
+        ours.extend(chapter_args(
+            CHAPTERS.load(std::sync::atomic::Ordering::Relaxed),
+            ffmpeg.is_some(),
+            converted,
+        ));
         let (theirs, cookies) = browser.args(url)?;
         retry_base.extend(theirs.iter().cloned());
         ours.extend(theirs.iter().cloned());
@@ -1714,6 +1924,8 @@ impl VideoJob {
             sub_problems: Vec::new(),
             engine: None,
             helper: None,
+            merging: None,
+            merge_failed: None,
         }));
         let child: Child = Arc::new(Mutex::new(None));
         let current = Arc::new(crate::streams::Current::new(
@@ -1885,6 +2097,30 @@ mod tests {
         assert_eq!(names(true), want);
         assert!(own_files(&d.join("missing"), "Clip", true).is_empty());
     }
+    /// #736: the merge's own file, which yt-dlp renames when it's done, and its share done.
+    #[test]
+    fn a_merge_is_followed_by_its_file() {
+        assert_eq!(
+            merge_file(Path::new("/v/Big Buck Bunny.mp4")),
+            PathBuf::from("/v/Big Buck Bunny.temp.mp4")
+        );
+        assert_eq!(
+            merge_file(Path::new("/v/clip")),
+            PathBuf::from("/v/clip.temp")
+        );
+        assert_eq!(merge_fraction(45, 100), 0.45);
+        // About as big as the streams, never "done" before the rename.
+        assert_eq!(merge_fraction(120, 100), 0.99);
+        // A smaller file read later (truncated and written again): the share holds, then goes on.
+        assert_eq!(merge_step(None, 0.4), 0.4);
+        assert_eq!(merge_step(Some(0.4), 0.0), 0.4);
+        assert_eq!(merge_step(Some(0.4), 0.45), 0.45);
+        // A merge is a choice of several streams, as `MDMQ` names them.
+        assert!(several_streams("401+140 3840x2160"));
+        assert!(!several_streams("18 640x360"));
+        assert!(!several_streams("140 audio only"));
+    }
+
     /// #569: what a file joined from HLS pieces holds, from its first bytes. YouTube's sound:
     /// pieces each led by an ID3 tag (Apple's timestamp), then ADTS frames.
     #[test]
@@ -2077,6 +2313,8 @@ mod tests {
             sub_problems: Vec::new(),
             engine: None,
             helper: None,
+            merging: None,
+            merge_failed: None,
         };
         // `MDMQ …` as yt-dlp prints it before it downloads; every other line is an `MDMP` one's.
         lines
@@ -2477,6 +2715,17 @@ mod tests {
         );
     }
 
+    /// Embed chapters (#827): `--embed-chapters` for a video or the sound as the site has it,
+    /// with ffmpeg; nothing when the option is off, without ffmpeg (which writes them), or for a
+    /// conversion to MP3, Opus or FLAC.
+    #[test]
+    fn chapter_arguments() {
+        assert_eq!(chapter_args(true, true, false), ["--embed-chapters"]);
+        assert!(chapter_args(false, true, false).is_empty());
+        assert!(chapter_args(true, false, false).is_empty());
+        assert!(chapter_args(true, true, true).is_empty());
+    }
+
     /// yt-dlp's warnings for subtitles it couldn't get (#68): each language once, a site's
     /// "too many requests" told apart from other reasons, other warnings ignored.
     #[test]
@@ -2601,11 +2850,12 @@ mod tests {
         const PAGE: &str = r#"{"title": "T", "duration": 10, "formats": [
             {"format_id": "18", "ext": "mp4", "height": 360, "vcodec": "avc1", "acodec": "mp4a", "tbr": 500}]}"#;
         let page = PAGE.as_bytes();
-        assert!(offered(page, "b[height=360]", "360p MP4", false).is_some());
-        assert!(offered(page, "b[height=720]", "720p MP4", false).is_none());
-        assert!(offered(page, "b[height=360]", "360p WEBM", false).is_none());
-        assert!(offered(page, "b[height=360]", "360p MP4", true).is_none());
-        assert!(offered(page, "bv*[height=360]+ba/b[height=360]", "360p MP4", true).is_some());
+        let label = "360p · H.264";
+        assert!(offered(page, "18/b[height=360]", label, false).is_some());
+        assert!(offered(page, "18/b[height=720]", "720p · H.264", false).is_none());
+        assert!(offered(page, "18/b[height=360]", "360p · WEBM · H.264", false).is_none());
+        assert!(offered(page, "18/b[height=360]", label, true).is_none());
+        assert!(offered(page, "18/bv*[height=360]+ba/b[height=360]", label, true).is_some());
         assert!(offered(b"not json", "b", "b", false).is_none());
 
         let slot = InfoSlot::new(Instant::now());
@@ -2681,5 +2931,42 @@ mod tests {
     #[test]
     fn percent_signs_in_titles_stay_text() {
         assert_eq!(template_text("100% fun"), "100%% fun");
+    }
+
+    /// #622: a Dropbox video (an HLS stream whose size nobody knows beforehand) read 99.9 % from
+    /// its first second to its end, the size growing with what came and 0 seconds left. yt-dlp's
+    /// first line for a stream gives an estimate as big as what came (1 KB of 1 KB: it knows
+    /// nothing yet), and the bar held on to that 99.9 % ever after. These are the lines yt-dlp
+    /// printed for a Dropbox video, its 1080p stream then its sound.
+    #[test]
+    fn a_first_estimate_as_big_as_what_came_is_no_end() {
+        let lines = [
+            "MDMQ 1080p+aud192k-Track_1 1920x1080",
+            "1024 NA 1024 491.2 1080p",
+            "3072 NA 20480.0 491.2 1080p",
+            "7168 NA 61440.0 491.2 1080p",
+            "1047552 NA 10465280.0 452673.0 1080p",
+            "1206648 NA 12046000.0 502170.4 1080p",
+            "9775640 NA 37005408.0 1553343.6 1080p",
+            "22221428 NA 39449345.4 1594996.9 1080p",
+            "36687072 NA 42130818.8 1439490.0 1080p",
+            "39940760 NA 39940760 1343764.3 1080p",
+            "64512 NA 253952.0 19016.1 aud192k-Track_1",
+            "1122012 NA 2178488.0 258367.6 aud192k-Track_1",
+            "2185904 NA 2460726.8 369230.2 aud192k-Track_1",
+        ];
+        let got = run(None, &lines);
+        // Nothing known at the first line: no percentage, rather than the end.
+        assert_eq!(got[0], (1024, None));
+        let f: Vec<f64> = got[1..]
+            .iter()
+            .map(|(d, t)| (*d as f64 / t.unwrap() as f64).min(MAX_WHILE_RUNNING))
+            .collect();
+        // A sliver at first, then what the estimate says: about a quarter at 9.8 MB of ~37 MB.
+        assert!(f[0] < 0.2, "{f:?}");
+        assert!(f[4] > 0.2 && f[4] < 0.3, "{f:?}");
+        assert!(f[6] > 0.85 && f[6] < 0.9, "{f:?}");
+        // The time left counts down from a size that is not just what came.
+        assert!(got[5].1.unwrap() > got[5].0 * 3, "{got:?}");
     }
 }

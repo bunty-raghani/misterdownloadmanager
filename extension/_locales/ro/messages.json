@@ -92,6 +92,9 @@
       }
     }
   },
+  "popup_undo": {
+    "message": "Anulați"
+  },
   "popup_excluded": {
     "message": "Descărcările de pe $site$ rămân în browser",
     "placeholders": {

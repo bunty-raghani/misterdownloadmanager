@@ -34,6 +34,11 @@ pub struct Command {
     pub start_queue: bool,
     /// From the browser: request context to reuse.
     pub referer: Option<String>,
+    /// From the browser (#900): the `Origin` its page's player sent with a video's stream or
+    /// file (`video_page`, `video_lookup`), sent again with it, its playlists and each of its
+    /// pieces, as a site's video server may serve its own pages' players only.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub origin: Option<String>,
     pub cookies: Option<String>,
     /// From the browser: the same cookies, each with the domain, path and flags the browser
     /// keeps for it, for yt-dlp's cookie file. yt-dlp may ask another host than the page's (a
@@ -139,6 +144,10 @@ pub struct Command {
     /// From the browser's toolbar button: leave this site's downloads (a host name) to the
     /// browser from now on (Options → File types → excluded sites).
     pub exclude_site: Option<String>,
+    /// That button's Undo (#404): the host name `exclude_site` listed is taken off the excluded
+    /// sites again (a pattern of the user's own that covers it stays).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub include_site: Option<String>,
 }
 
 /// One cookie as the browser keeps it (`cookies.getAll`'s fields, under the extension's names
@@ -287,7 +296,13 @@ static DATA_DIR: std::sync::OnceLock<PathBuf> = std::sync::OnceLock::new();
 
 /// Use `dir` as the data folder from now on (over `MDM_DATA_DIR`): `--headless --data <dir>`.
 pub fn set_data_dir(dir: PathBuf) {
-    let _ = DATA_DIR.set(dir);
+    let _ = DATA_DIR.set(full(dir));
+}
+
+/// `dir` as a full path (#834): the helpers run in a folder of their own, and are given paths in
+/// the data folder (their programs, ffmpeg's place, the files MDM writes for them).
+fn full(dir: PathBuf) -> PathBuf {
+    std::path::absolute(&dir).unwrap_or(dir)
 }
 
 /// The app's data folder, `%APPDATA%\misterdownloadmanager` (list, settings, channel, crash
@@ -306,7 +321,7 @@ pub fn data_dir() -> Option<PathBuf> {
     static RESOLVED: std::sync::OnceLock<Option<PathBuf>> = std::sync::OnceLock::new();
     once(&RESOLVED, || {
         if let Some(dir) = std::env::var_os("MDM_DATA_DIR") {
-            return Some(PathBuf::from(dir));
+            return Some(full(PathBuf::from(dir)));
         }
         if let Some(dir) = portable_dir() {
             return Some(dir);

@@ -651,19 +651,23 @@ pub fn show_in_folder(path: &Path) {
     });
 }
 
-/// Options → Downloads → open magnet links and .torrent files with Mister Download Manager:
-/// Linux records it with xdg-mime for the desktop entry the packages install (turning it off
-/// leaves the choice to the desktop's settings). Not on macOS yet: it hands links to an app as
-/// open-URL events, which the app doesn't receive.
+/// Torrent settings → open magnet links and .torrent files with Mister Download Manager: Linux
+/// records it with xdg-mime for the desktop entry the packages install, macOS with Launch
+/// Services for the app (`open_events::make_default`, #698). Turning it off leaves the choice to
+/// the desktop's settings (macOS: Finder's Get Info → Open with).
 pub fn set_torrent_handlers(on: bool) {
-    if on && !cfg!(target_os = "macos") {
-        spawn(Command::new("xdg-mime").args([
-            "default",
-            "misterdownloadmanager.desktop",
-            "x-scheme-handler/magnet",
-            "application/x-bittorrent",
-        ]));
+    if !on {
+        return;
     }
+    #[cfg(target_os = "macos")]
+    open_events::make_default();
+    #[cfg(not(target_os = "macos"))]
+    spawn(Command::new("xdg-mime").args([
+        "default",
+        "misterdownloadmanager.desktop",
+        "x-scheme-handler/magnet",
+        "application/x-bittorrent",
+    ]));
 }
 
 /// `win32::assistive_technology_listening`: Linux's AT-SPI adapter answers a screen reader with
@@ -1415,22 +1419,101 @@ pub struct WindowSystem {
     pub x11_missing: Vec<&'static WindowLib>,
     /// The chosen system lacks these: no window can open (#265).
     pub missing: Vec<&'static WindowLib>,
+    /// A Wayland session that runs XWayland too: View → Window system offers the choice (#624).
+    pub both: bool,
+    /// What decided it, for the log.
+    pub why: &'static str,
 }
 
-/// The windows run through X11 (XWayland, in a Wayland session) when there is one, unless
-/// `MDM_WAYLAND=1` (#50). Wayland lets no program place its own windows, and MDM's menus and drop
-/// lists are windows it places under what was clicked: Wayland put them in the middle of the
-/// screen. Without the libraries X11's windows need, Wayland's when there is one (#265).
-/// `loads`: whether a library can be loaded.
+/// Who chose the window system for this start, strongest first (#624): `MDM_WAYLAND=1` or `0`,
+/// else View → Window system (saved, so every way MDM starts agrees: its menu entry, the
+/// browser's helper, the session's autostart), else MDM itself (`Pick::Auto`).
+#[cfg(target_os = "linux")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Pick {
+    Wayland(&'static str),
+    X11(&'static str),
+    Auto,
+}
+
+#[cfg(target_os = "linux")]
+impl Pick {
+    /// From `MDM_WAYLAND`'s value and the saved choice.
+    pub fn of(
+        env: Option<&std::ffi::OsStr>,
+        saved: Option<crate::settings::WindowSystemPick>,
+    ) -> Pick {
+        use crate::settings::WindowSystemPick as Saved;
+        match env.and_then(|v| v.to_str()).map(str::trim) {
+            Some("1") => return Pick::Wayland("MDM_WAYLAND=1"),
+            Some("0") => return Pick::X11("MDM_WAYLAND=0"),
+            _ => {}
+        }
+        match saved {
+            Some(Saved::Wayland) => Pick::Wayland("View → Window system"),
+            Some(Saved::X11) => Pick::X11("View → Window system"),
+            None => Pick::Auto,
+        }
+    }
+}
+
+/// How X11's windows would look in this Wayland session, for MDM's own choice (#624).
+#[cfg(target_os = "linux")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum X11Fit {
+    /// The desktop looks after X11 programs: a settings daemon tells them its scale and fonts
+    /// (GNOME, KDE Plasma: XSETTINGS).
+    CaredFor,
+    /// Nothing does, but no screen is scaled: X11's windows are drawn as they are.
+    Unscaled,
+    /// Nothing does, and a screen is scaled: the compositor scales X11's windows up (blurry), or
+    /// leaves them at a fraction of the size (Hyprland's `force_zero_scaling`).
+    Scaled,
+}
+
+/// The windows' system. In a Wayland session that runs XWayland too, `pick` decides; MDM's own
+/// choice (`Pick::Auto`) is X11 unless X11's windows would be scaled (`x11_fit`, #624):
+///
+/// - X11 (XWayland) lets MDM place its menus and drop lists, windows of their own, under what
+///   was clicked (#50; override-redirect: exactly there on tiling compositors too, #267), and
+///   hide its window in the notification area. Wayland lets no program place or hide its
+///   windows, and winit 0.30 has no popup windows (xdg_popup) there: a menu opens where the
+///   compositor puts new windows (labwc and sway: the middle of the screen).
+/// - An X11 program is drawn at the screen's scale only when the desktop tells it that scale:
+///   GNOME and KDE Plasma run a settings daemon for XWayland (XSETTINGS). wlroots compositors
+///   (labwc, Hyprland, sway, …) run none: on a scaled screen they scale X11's windows up,
+///   blurry (Hyprland, #624), and Wayland's own windows are right. At scale 1 X11's are right
+///   too, and keep their menus in place.
+///
+/// Without the libraries X11's windows need, Wayland's when there is one (#265). `loads`:
+/// whether a library can be loaded. `x11_fit` is only asked when it decides.
 #[cfg(target_os = "linux")]
 fn choose_window_system(
     wayland_session: bool,
     x11_session: bool,
-    keep_wayland: bool,
+    pick: Pick,
+    x11_fit: impl FnOnce() -> X11Fit,
     loads: impl Fn(&WindowLib) -> bool,
 ) -> WindowSystem {
     let lacking = |libs: &'static [WindowLib]| libs.iter().filter(|l| !loads(l)).collect();
-    let mut ws = WindowSystem::default();
+    let mut ws = WindowSystem {
+        both: wayland_session && x11_session,
+        ..Default::default()
+    };
+    let (keep_wayland, why) = match pick {
+        _ if !ws.both => (wayland_session, "the session's only one"),
+        Pick::Wayland(why) => (true, why),
+        Pick::X11(why) => (false, why),
+        Pick::Auto => match x11_fit() {
+            X11Fit::CaredFor => (false, "automatic: the desktop looks after X11 programs"),
+            X11Fit::Unscaled => (false, "automatic: no screen is scaled"),
+            X11Fit::Scaled => (
+                true,
+                "automatic: a screen is scaled and nothing tells X11 programs (no XSETTINGS)",
+            ),
+        },
+    };
+    ws.why = why;
     if x11_session && !(wayland_session && keep_wayland) {
         ws.missing = lacking(X11_LIBS);
         if ws.missing.is_empty() {
@@ -1441,6 +1524,7 @@ fn choose_window_system(
             return ws;
         }
         ws.x11_missing = std::mem::take(&mut ws.missing);
+        ws.why = "X11's libraries are missing";
     }
     if wayland_session {
         ws.wayland = true;
@@ -1449,20 +1533,146 @@ fn choose_window_system(
     ws
 }
 
+/// View → Window system's saved choice, given before the first window opens.
+#[cfg(target_os = "linux")]
+static SAVED_PICK: std::sync::OnceLock<Option<crate::settings::WindowSystemPick>> =
+    std::sync::OnceLock::new();
+
+/// Linux: View → Window system's saved choice (#624), for [`window_system`]: main.rs gives it
+/// once the settings are read, before the first window opens.
+#[cfg(target_os = "linux")]
+pub fn set_window_system_pick(saved: Option<crate::settings::WindowSystemPick>) {
+    let _ = SAVED_PICK.set(saved);
+}
+
 /// Linux: the display system MDM's windows use (see `choose_window_system`), decided at the
-/// first question.
+/// first question, and said in the log.
 #[cfg(target_os = "linux")]
 pub fn window_system() -> &'static WindowSystem {
     static CHOSEN: std::sync::OnceLock<WindowSystem> = std::sync::OnceLock::new();
     CHOSEN.get_or_init(|| {
         let set = |name: &str| std::env::var_os(name).is_some_and(|v| !v.is_empty());
-        choose_window_system(
+        if SAVED_PICK.get().is_none() {
+            tracing::warn!("windows: chosen before the settings were read (View → Window system)");
+        }
+        let pick = Pick::of(
+            std::env::var_os("MDM_WAYLAND").as_deref(),
+            SAVED_PICK.get().copied().flatten(),
+        );
+        let ws = choose_window_system(
             set("WAYLAND_DISPLAY"),
             set("DISPLAY"),
-            std::env::var_os("MDM_WAYLAND").is_some_and(|v| v == "1"),
+            pick,
+            x11_fit,
             |lib| lib.names.iter().any(|n| loads(n)),
-        )
+        );
+        let system = match (ws.wayland, ws.x11_over_wayland) {
+            (true, _) => "Wayland",
+            (false, true) => "X11 (XWayland)",
+            (false, false) => "X11",
+        };
+        tracing::info!("windows: {system} ({})", ws.why);
+        ws
     })
+}
+
+/// How X11's windows would look here (#624): looked after by the desktop (a settings daemon owns
+/// XSETTINGS on the X server, or the desktop is one that starts one with XWayland,
+/// `desktop_looks_after_x11`), else scaled when a Wayland screen has a scale above 1
+/// (`wayland_scaled`; unknown: as at scale 1, MDM's choice until now).
+#[cfg(target_os = "linux")]
+fn x11_fit() -> X11Fit {
+    let desktop = std::env::var("XDG_CURRENT_DESKTOP").unwrap_or_default();
+    if desktop_looks_after_x11(&desktop) || xsettings_owned().unwrap_or(false) {
+        return X11Fit::CaredFor;
+    }
+    match wayland_scaled() {
+        Ok(true) => X11Fit::Scaled,
+        Ok(false) => X11Fit::Unscaled,
+        Err(e) => {
+            tracing::info!("windows: the screens' scale is unknown ({e})");
+            X11Fit::Unscaled
+        }
+    }
+}
+
+/// Whether a screen of the Wayland session has a scale above 1, as the compositor tells its
+/// programs (`wl_output`'s scale: a fractional scale such as 1.25 is told rounded up, 2).
+#[cfg(target_os = "linux")]
+fn wayland_scaled() -> Result<bool, Box<dyn std::error::Error>> {
+    use wayland_client::protocol::{wl_output, wl_registry};
+    use wayland_client::{Connection, Dispatch, QueueHandle};
+    #[derive(Default)]
+    struct Outputs {
+        scales: Vec<i32>,
+    }
+    impl Dispatch<wl_registry::WlRegistry, ()> for Outputs {
+        fn event(
+            _: &mut Self,
+            registry: &wl_registry::WlRegistry,
+            event: wl_registry::Event,
+            _: &(),
+            _: &Connection,
+            qh: &QueueHandle<Self>,
+        ) {
+            if let wl_registry::Event::Global {
+                name,
+                interface,
+                version,
+            } = event
+                && interface == "wl_output"
+                && version >= 2
+            {
+                registry.bind::<wl_output::WlOutput, _, _>(name, 2, qh, ());
+            }
+        }
+    }
+    impl Dispatch<wl_output::WlOutput, ()> for Outputs {
+        fn event(
+            state: &mut Self,
+            _: &wl_output::WlOutput,
+            event: wl_output::Event,
+            _: &(),
+            _: &Connection,
+            _: &QueueHandle<Self>,
+        ) {
+            if let wl_output::Event::Scale { factor } = event {
+                state.scales.push(factor);
+            }
+        }
+    }
+    let conn = Connection::connect_to_env()?;
+    let mut queue = conn.new_event_queue();
+    let qh = queue.handle();
+    conn.display().get_registry(&qh, ());
+    let mut outputs = Outputs::default();
+    // The globals, then each screen's own events.
+    queue.roundtrip(&mut outputs)?;
+    queue.roundtrip(&mut outputs)?;
+    Ok(outputs.scales.iter().any(|s| *s > 1))
+}
+
+/// The desktops (`XDG_CURRENT_DESKTOP`, a `:`-separated list) whose Wayland session starts a
+/// settings daemon for XWayland's programs: GNOME (Ubuntu's too: `ubuntu:GNOME`) starts
+/// gsd-xsettings with XWayland, which it starts at the first X11 program (so its XSETTINGS may
+/// come a moment after that program asks), KDE Plasma xsettingsd.
+#[cfg(target_os = "linux")]
+fn desktop_looks_after_x11(desktop: &str) -> bool {
+    desktop.split(':').any(|d| {
+        ["GNOME", "KDE"]
+            .iter()
+            .any(|known| d.trim().eq_ignore_ascii_case(known))
+    })
+}
+
+/// Whether a settings daemon owns the X server's XSETTINGS.
+#[cfg(target_os = "linux")]
+fn xsettings_owned() -> Result<bool, Box<dyn std::error::Error>> {
+    use x11rb::protocol::xproto::ConnectionExt;
+    let (conn, screen) = x11rb::rust_connection::RustConnection::connect(None)?;
+    let name = format!("_XSETTINGS_S{screen}");
+    let atom = conn.intern_atom(false, name.as_bytes())?.reply()?.atom;
+    Ok(conn.get_selection_owner(atom)?.reply()?.owner != x11rb::NONE)
 }
 
 /// Whether the library `name` can be loaded, as winit's loaders would load it (and unloaded
@@ -1508,6 +1718,49 @@ pub fn event_loop_hook() -> Option<eframe::EventLoopBuilderHook> {
 #[cfg(target_os = "linux")]
 pub fn on_wayland() -> bool {
     window_system().wayland
+}
+
+/// Linux: MDM's windows are X11's in a Wayland session (XWayland), its default there.
+#[cfg(target_os = "linux")]
+pub fn on_xwayland() -> bool {
+    window_system().x11_over_wayland
+}
+
+/// Linux: the vendor of the GLX that will draw MDM's OpenGL windows on the X display, before any
+/// of them is made (their swap interval is chosen when the first one is): `glXGetClientString`'s
+/// `GLX_VENDOR` ("NVIDIA Corporation", "Mesa Project and SGI"). libglvnd picks the driver for
+/// the display the same way when eframe makes its context. None without libGL or a display.
+#[cfg(target_os = "linux")]
+#[allow(unsafe_code)]
+pub fn glx_vendor() -> Option<String> {
+    let xlib = x11_dl::xlib::Xlib::open().ok()?;
+    let glx = x11_dl::glx::Glx::open().ok()?;
+    // SAFETY: a display opened here and closed before returning; the vendor string belongs to
+    // the GLX library, and is copied while the display is open.
+    unsafe {
+        let display = (xlib.XOpenDisplay)(std::ptr::null());
+        if display.is_null() {
+            return None;
+        }
+        let vendor = (glx.glXGetClientString)(display, x11_dl::glx::GLX_VENDOR);
+        let vendor = (!vendor.is_null()).then(|| {
+            std::ffi::CStr::from_ptr(vendor)
+                .to_string_lossy()
+                .into_owned()
+        });
+        (xlib.XCloseDisplay)(display);
+        vendor
+    }
+}
+
+/// Linux: the vendor OpenGL says it is (`GL_VENDOR`), with eframe's context current.
+#[cfg(target_os = "linux")]
+#[allow(unsafe_code)]
+pub fn gl_vendor(gl: &eframe::glow::Context) -> String {
+    use eframe::glow::{self, HasContext as _};
+    // SAFETY: called while eframe makes the app, with its context current on this thread;
+    // glGetString only reads the driver's strings.
+    unsafe { gl.get_parameter_string(glow::VENDOR) }
 }
 
 /// Linux, X11 and XWayland (MDM's default): a menu's window as X11 menus are (GTK's, Qt's).
@@ -1620,6 +1873,8 @@ pub fn tell_window_failed(text: &str) {
     eprintln!("{text}");
     tracing::error!("{text}");
     let title = "Mister Download Manager";
+    // A program of the desktop's draws it: without isolates (#919).
+    let text = &crate::i18n::os_text(text);
     let boxes: [(&str, Vec<&str>); 2] = [
         (
             "zenity",
@@ -1831,6 +2086,234 @@ pub fn file_icon(what: &crate::fileicons::What, px: u32) -> Option<crate::fileic
             premultiplied: true,
         })
     })
+}
+
+/// macOS hands an app what it should open (a .torrent double-clicked in Finder or dropped on
+/// MDM's icon in the Dock, a magnet link clicked in a browser) as Apple events, not on its
+/// command line, also to an MDM already running (#698). These receive them and send each one
+/// down the command channel, as a .torrent or magnet link on Windows' or Linux's command line
+/// goes (`mdm_ipc::parse_args`): Add torrent opens for it. The app's Info.plist
+/// (tools/installer/build-macos.sh) tells macOS that MDM opens them.
+#[cfg(target_os = "macos")]
+#[allow(unsafe_code)]
+pub mod open_events {
+    use std::ffi::c_void;
+    use std::sync::Arc;
+    use std::sync::mpsc::Sender;
+
+    use objc2::rc::Retained;
+    use objc2::{DefinedClass as _, MainThreadMarker, MainThreadOnly, define_class, msg_send, sel};
+    use objc2_foundation::{
+        NSAppleEventDescriptor, NSAppleEventManager, NSNotification, NSNotificationCenter,
+        NSObject, NSString,
+    };
+
+    /// Apple event codes (four characters): open documents, get URL, and an event's direct
+    /// object (the files, the link).
+    const CORE_EVENT_CLASS: u32 = u32::from_be_bytes(*b"aevt");
+    const OPEN_DOCUMENTS: u32 = u32::from_be_bytes(*b"odoc");
+    const INTERNET_EVENT_CLASS: u32 = u32::from_be_bytes(*b"GURL");
+    const GET_URL: u32 = u32::from_be_bytes(*b"GURL");
+    const DIRECT_OBJECT: u32 = u32::from_be_bytes(*b"----");
+
+    pub struct Ivars {
+        tx: Sender<mdm_ipc::Incoming>,
+        wake: Arc<dyn Fn() + Send + Sync>,
+    }
+
+    define_class!(
+        // SAFETY: NSObject has no subclassing requirements, and OpenEvents doesn't implement Drop.
+        #[unsafe(super(NSObject))]
+        #[thread_kind = MainThreadOnly]
+        #[name = "MDMOpenEvents"]
+        #[ivars = Ivars]
+        pub struct OpenEvents;
+
+        impl OpenEvents {
+            /// AppKit installs its own handlers as the app starts, and dispatches the events
+            /// that launched it after this notification: Apple's moment for an app's own
+            /// handlers (installed earlier, AppKit's would replace them).
+            #[unsafe(method(willFinishLaunching:))]
+            fn will_finish_launching(&self, _note: &NSNotification) {
+                let manager = NSAppleEventManager::sharedAppleEventManager();
+                // SAFETY: both selectors are this class's, taking (event, reply) as the manager
+                // calls them; the handler lives as long as MDM (`start`). The event codes are
+                // AEEventClass and AEEventID, 32-bit codes.
+                unsafe {
+                    let _: () = msg_send![&*manager, setEventHandler: self,
+                        andSelector: sel!(openDocuments:withReplyEvent:),
+                        forEventClass: CORE_EVENT_CLASS, andEventID: OPEN_DOCUMENTS];
+                    let _: () = msg_send![&*manager, setEventHandler: self,
+                        andSelector: sel!(getURL:withReplyEvent:),
+                        forEventClass: INTERNET_EVENT_CLASS, andEventID: GET_URL];
+                }
+            }
+
+            #[unsafe(method(openDocuments:withReplyEvent:))]
+            fn open_documents(
+                &self,
+                event: &NSAppleEventDescriptor,
+                _reply: &NSAppleEventDescriptor,
+            ) {
+                for path in direct_object(event).map(|l| file_paths(&l)).unwrap_or_default() {
+                    self.hand(path);
+                }
+            }
+
+            #[unsafe(method(getURL:withReplyEvent:))]
+            fn get_url(&self, event: &NSAppleEventDescriptor, _reply: &NSAppleEventDescriptor) {
+                if let Some(link) = direct_object(event).and_then(|d| link(&d)) {
+                    self.hand(link);
+                }
+            }
+        }
+    );
+
+    impl OpenEvents {
+        /// A .torrent's path or a magnet link to the app, as its command line would.
+        fn hand(&self, item: String) {
+            match mdm_ipc::parse_args(std::slice::from_ref(&item)) {
+                Some(cmd) => {
+                    tracing::info!("opened from the system: {item}");
+                    let _ = self.ivars().tx.send(mdm_ipc::Incoming { cmd, reply: None });
+                    (self.ivars().wake)();
+                }
+                None => tracing::info!("opened from the system, not a torrent: {item}"),
+            }
+        }
+    }
+
+    /// Receive the open-documents and get-URL events from now on (`app` calls it on the main
+    /// thread, before the window's event loop starts).
+    pub fn start(tx: Sender<mdm_ipc::Incoming>, wake: Arc<dyn Fn() + Send + Sync>) {
+        let Some(mtm) = MainThreadMarker::new() else {
+            return;
+        };
+        let this = OpenEvents::alloc(mtm).set_ivars(Ivars { tx, wake });
+        // SAFETY: NSObject's init, on the object just allocated with its ivars set.
+        let this: Retained<OpenEvents> = unsafe { msg_send![super(this), init] };
+        let name = NSString::from_str("NSApplicationWillFinishLaunchingNotification");
+        // SAFETY: the selector is this class's and takes the notification.
+        unsafe {
+            NSNotificationCenter::defaultCenter().addObserver_selector_name_object(
+                &this,
+                sel!(willFinishLaunching:),
+                Some(&*name),
+                None,
+            );
+        }
+        // Neither the notification centre nor the event manager keeps its observer or handler:
+        // this one lives as long as MDM.
+        std::mem::forget(this);
+    }
+
+    /// The app's identifier and the .torrent file type, as Info.plist names them
+    /// (tools/installer/build-macos.sh).
+    pub const BUNDLE_ID: &str = "io.github.anefzaoui.misterdownloadmanager";
+    pub const TORRENT_TYPE: &str = "org.bittorrent.torrent";
+
+    #[link(name = "CoreServices", kind = "framework")]
+    unsafe extern "C" {
+        fn LSSetDefaultHandlerForURLScheme(scheme: *const c_void, bundle_id: *const c_void) -> i32;
+        fn LSSetDefaultRoleHandlerForContentType(
+            content_type: *const c_void,
+            role: u32,
+            bundle_id: *const c_void,
+        ) -> i32;
+    }
+
+    /// MDM the default app for magnet links and .torrent files (Torrent settings' switch). A
+    /// copy started outside its app (`cargo run`) has nothing to register: the log says so.
+    pub fn make_default() {
+        let id = NSString::from_str(BUNDLE_ID);
+        let scheme = NSString::from_str("magnet");
+        let torrent = NSString::from_str(TORRENT_TYPE);
+        // kLSRolesAll: viewer, editor, shell.
+        const ALL_ROLES: u32 = 0xFFFF_FFFF;
+        // SAFETY: NSString is toll-free bridged to CFString; the strings outlive the calls.
+        let (magnet, file) = unsafe {
+            (
+                LSSetDefaultHandlerForURLScheme(cf(&scheme), cf(&id)),
+                LSSetDefaultRoleHandlerForContentType(cf(&torrent), ALL_ROLES, cf(&id)),
+            )
+        };
+        if magnet != 0 || file != 0 {
+            tracing::info!(
+                "torrents: Launch Services didn't take MDM for magnet links ({magnet}) or                  .torrent files ({file})"
+            );
+        }
+    }
+
+    fn cf(s: &NSString) -> *const c_void {
+        (s as *const NSString).cast()
+    }
+
+    fn direct_object(event: &NSAppleEventDescriptor) -> Option<Retained<NSAppleEventDescriptor>> {
+        // SAFETY: paramDescriptorForKeyword: takes an AEKeyword (a 32-bit code).
+        unsafe { msg_send![event, paramDescriptorForKeyword: DIRECT_OBJECT] }
+    }
+
+    /// The paths of an open-documents event's files (a list, numbered from 1, of file URLs or
+    /// aliases).
+    pub fn file_paths(list: &NSAppleEventDescriptor) -> Vec<String> {
+        (1..=list.numberOfItems())
+            .filter_map(|i| list.descriptorAtIndex(i))
+            .filter_map(|d| d.fileURLValue())
+            .filter_map(|u| u.path())
+            .map(|p| p.to_string())
+            .collect()
+    }
+
+    /// A get-URL event's link.
+    pub fn link(d: &NSAppleEventDescriptor) -> Option<String> {
+        d.stringValue()
+            .map(|s| s.to_string())
+            .filter(|s| !s.is_empty())
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+        use objc2_foundation::NSURL;
+
+        /// #698: the files of an open-documents event, as Finder sends them, and a magnet
+        /// link's get-URL event become what MDM's command line takes.
+        #[test]
+        fn finder_events_become_commands() {
+            let list = NSAppleEventDescriptor::listDescriptor();
+            let files = [
+                "/Users/me/Downloads/debian.iso.torrent",
+                "/tmp/a b/ü.torrent",
+            ];
+            for (i, p) in files.iter().enumerate() {
+                let url = NSURL::fileURLWithPath(&NSString::from_str(p));
+                list.insertDescriptor_atIndex(
+                    &NSAppleEventDescriptor::descriptorWithFileURL(&url),
+                    i as isize + 1,
+                );
+            }
+            let paths = file_paths(&list);
+            // A file URL's path comes back as the file system spells it: `ü` decomposed (u and
+            // its diaeresis), the same file to every macOS call that opens it.
+            assert_eq!(
+                paths,
+                [
+                    "/Users/me/Downloads/debian.iso.torrent",
+                    "/tmp/a b/u\u{308}.torrent"
+                ]
+            );
+            let cmd = mdm_ipc::parse_args(&paths[..1]).unwrap();
+            assert_eq!(cmd.url.as_deref(), Some(files[0]));
+
+            let magnet = "magnet:?xt=urn:btih:7acf8fb590b2060dd9c3146ef770169d593433b0&dn=x";
+            let d = NSAppleEventDescriptor::descriptorWithString(&NSString::from_str(magnet));
+            let got = link(&d).unwrap();
+            assert_eq!(got, magnet);
+            let cmd = mdm_ipc::parse_args(&[got]).unwrap();
+            assert_eq!(cmd.url.as_deref(), Some(magnet));
+            assert!(file_paths(&NSAppleEventDescriptor::listDescriptor()).is_empty());
+        }
+    }
 }
 
 // ---- Crash reports (crash.rs, mdm-crash) -------------------------------------------------------
@@ -2067,7 +2550,9 @@ pub fn open_in(program: &Path, url: &str) {
 
 /// The counterpart of win32's Mark-of-the-Web on a file being downloaded from `url`: macOS'
 /// quarantine attribute (Gatekeeper checks a program before its first start, as for a browser's
-/// download), and on Linux the freedesktop.org origin attributes file managers show.
+/// download), and on Linux the freedesktop.org origin attributes file managers show. Through
+/// `webmark::mark`, which asks Options' "Mark downloaded files as coming from the internet" first
+/// (neither system has a policy like Windows' "Do not preserve zone information").
 pub fn mark_downloaded(path: &Path, url: &str, referrer: Option<&str>) {
     #[cfg(target_os = "macos")]
     {
@@ -2125,6 +2610,317 @@ fn set_xattr(path: &Path, name: &str, value: &str) {
             0,
         )
     };
+}
+
+/// macOS: whether `NSApplication.sharedApplication` is currently the active foreground app with a
+/// visible, non-minimized titled window (#558).
+#[cfg(target_os = "macos")]
+#[allow(unsafe_code)]
+pub fn macos_is_active_and_visible() -> bool {
+    use objc2::msg_send;
+    use objc2::runtime::{AnyClass, AnyObject, Bool};
+    // SAFETY: called on the main UI thread; queries `NSApplication.sharedApplication`.
+    unsafe {
+        let Some(cls) = AnyClass::get(c"NSApplication") else {
+            return false;
+        };
+        let app: *mut AnyObject = msg_send![cls, sharedApplication];
+        if app.is_null() {
+            return false;
+        }
+        let active: Bool = msg_send![app, isActive];
+        if !active.as_bool() {
+            return false;
+        }
+        let hidden: Bool = msg_send![app, isHidden];
+        if hidden.as_bool() {
+            return false;
+        }
+        let windows: *mut AnyObject = msg_send![app, windows];
+        if windows.is_null() {
+            return false;
+        }
+        let count: usize = msg_send![windows, count];
+        for i in 0..count {
+            let win: *mut AnyObject = msg_send![windows, objectAtIndex: i];
+            if win.is_null() {
+                continue;
+            }
+            let style: usize = msg_send![win, styleMask];
+            // NSWindowStyleMaskTitled = 1 << 0 (skips borderless status bar / internal windows).
+            if (style & 1) == 0 {
+                continue;
+            }
+            let visible: Bool = msg_send![win, isVisible];
+            let mini: Bool = msg_send![win, isMiniaturized];
+            if visible.as_bool() && !mini.as_bool() {
+                return true;
+            }
+        }
+        false
+    }
+}
+
+/// macOS: orders out the main window and hides the application when no other titled window is
+/// visible, so focus returns cleanly to the previously active app (#558).
+#[cfg(target_os = "macos")]
+#[allow(unsafe_code)]
+pub fn macos_hide_window() {
+    use objc2::msg_send;
+    use objc2::runtime::{AnyClass, AnyObject, Bool};
+    // SAFETY: called on the main UI thread; orders out titled windows and hides `NSApp`.
+    unsafe {
+        let Some(cls) = AnyClass::get(c"NSApplication") else {
+            return;
+        };
+        let app: *mut AnyObject = msg_send![cls, sharedApplication];
+        if app.is_null() {
+            return;
+        }
+        let null_obj: *mut AnyObject = std::ptr::null_mut();
+        let windows: *mut AnyObject = msg_send![app, windows];
+        let mut visible_titled = 0usize;
+        if !windows.is_null() {
+            let count: usize = msg_send![windows, count];
+            for i in 0..count {
+                let win: *mut AnyObject = msg_send![windows, objectAtIndex: i];
+                if win.is_null() {
+                    continue;
+                }
+                let style: usize = msg_send![win, styleMask];
+                if (style & 1) == 0 {
+                    continue;
+                }
+                let visible: Bool = msg_send![win, isVisible];
+                let mini: Bool = msg_send![win, isMiniaturized];
+                if visible.as_bool() && !mini.as_bool() {
+                    visible_titled += 1;
+                    let _: () = msg_send![win, orderOut: null_obj];
+                }
+            }
+        }
+        if visible_titled <= 1 {
+            let _: () = msg_send![app, hide: null_obj];
+        }
+    }
+}
+
+/// macOS: brings MDM and its windows to the topmost foreground in front of all other apps when
+/// woken from the menu bar icon or the global hotkey (#558).
+#[cfg(target_os = "macos")]
+#[allow(unsafe_code)]
+pub fn macos_activate_and_show() {
+    use objc2::msg_send;
+    use objc2::runtime::{AnyClass, AnyObject, Bool};
+    // SAFETY: called on the main UI thread; activates `NSRunningApplication.currentApplication` and
+    // `NSApplication.sharedApplication`, and orders all titled windows to the front.
+    unsafe {
+        let Some(cls) = AnyClass::get(c"NSApplication") else {
+            return;
+        };
+        let app: *mut AnyObject = msg_send![cls, sharedApplication];
+        if app.is_null() {
+            return;
+        }
+        let null_obj: *mut AnyObject = std::ptr::null_mut();
+        let _: () = msg_send![app, unhide: null_obj];
+        if let Some(run_cls) = AnyClass::get(c"NSRunningApplication") {
+            let cur: *mut AnyObject = msg_send![run_cls, currentApplication];
+            if !cur.is_null() {
+                // NSApplicationActivateAllWindows (1) | NSApplicationActivateIgnoringOtherApps (2) = 3
+                let _: Bool = msg_send![cur, activateWithOptions: 3usize];
+            }
+        }
+        let _: () = msg_send![app, activateIgnoringOtherApps: Bool::YES];
+        let windows: *mut AnyObject = msg_send![app, windows];
+        if !windows.is_null() {
+            let count: usize = msg_send![windows, count];
+            for i in 0..count {
+                let win: *mut AnyObject = msg_send![windows, objectAtIndex: i];
+                if win.is_null() {
+                    continue;
+                }
+                let style: usize = msg_send![win, styleMask];
+                if (style & 1) == 0 {
+                    continue;
+                }
+                let mini: Bool = msg_send![win, isMiniaturized];
+                if mini.as_bool() {
+                    let _: () = msg_send![win, deminiaturize: null_obj];
+                }
+                let _: () = msg_send![win, makeKeyAndOrderFront: null_obj];
+                let _: () = msg_send![win, orderFrontRegardless];
+            }
+        }
+    }
+}
+
+#[cfg(target_os = "macos")]
+#[allow(unsafe_code)]
+mod macos_hotkey {
+    use crate::hotkey::Shortcut;
+    use std::ffi::c_void;
+    use std::sync::Arc;
+    use std::sync::atomic::{AtomicBool, Ordering};
+
+    type OSStatus = i32;
+    type EventTargetRef = *mut c_void;
+    type EventHandlerCallRef = *mut c_void;
+    type EventRef = *mut c_void;
+    type EventHandlerRef = *mut c_void;
+    type EventHotKeyRef = *mut c_void;
+    type EventHandlerUPP =
+        unsafe extern "C" fn(EventHandlerCallRef, EventRef, *mut c_void) -> OSStatus;
+
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    struct EventTypeSpec {
+        event_class: u32,
+        event_kind: u32,
+    }
+
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    struct EventHotKeyID {
+        signature: u32,
+        id: u32,
+    }
+
+    const K_EVENT_CLASS_KEYBOARD: u32 = u32::from_be_bytes(*b"keyb");
+    const K_EVENT_HOT_KEY_PRESSED: u32 = 5;
+    const HOTKEY_SIGNATURE: u32 = u32::from_be_bytes(*b"MDMH");
+
+    #[link(name = "Carbon", kind = "framework")]
+    unsafe extern "C" {
+        fn GetApplicationEventTarget() -> EventTargetRef;
+        fn InstallEventHandler(
+            in_target: EventTargetRef,
+            in_handler: EventHandlerUPP,
+            in_num_types: u32,
+            in_list: *const EventTypeSpec,
+            in_user_data: *mut c_void,
+            out_ref: *mut EventHandlerRef,
+        ) -> OSStatus;
+        fn RemoveEventHandler(in_handler_ref: EventHandlerRef) -> OSStatus;
+        fn RegisterEventHotKey(
+            in_hot_key_code: u32,
+            in_hot_key_modifiers: u32,
+            in_hot_key_id: EventHotKeyID,
+            in_target: EventTargetRef,
+            in_options: u32,
+            out_ref: *mut EventHotKeyRef,
+        ) -> OSStatus;
+        fn UnregisterEventHotKey(in_hot_key_ref: EventHotKeyRef) -> OSStatus;
+    }
+
+    struct CallbackCtx {
+        fired: Arc<AtomicBool>,
+        ctx: egui::Context,
+    }
+
+    unsafe extern "C" fn hotkey_handler(
+        _next: EventHandlerCallRef,
+        _event: EventRef,
+        user_data: *mut c_void,
+    ) -> OSStatus {
+        if !user_data.is_null() {
+            // SAFETY: `user_data` points to `Box<CallbackCtx>` owned by `GlobalHotKeyOs` until
+            // after `RemoveEventHandler` completes in `Drop`.
+            let cb = unsafe { &*(user_data as *const CallbackCtx) };
+            cb.fired.store(true, Ordering::SeqCst);
+            cb.ctx.request_ui_pass(egui::ViewportId::ROOT);
+            cb.ctx.request_repaint();
+        }
+        0
+    }
+
+    pub struct GlobalHotKeyOs {
+        hotkey_ref: EventHotKeyRef,
+        handler_ref: EventHandlerRef,
+        _cb: Box<CallbackCtx>,
+    }
+
+    impl GlobalHotKeyOs {
+        pub fn register(
+            shortcut: Shortcut,
+            fired: Arc<AtomicBool>,
+            taken: Arc<AtomicBool>,
+            ctx: egui::Context,
+        ) -> Option<Self> {
+            let mut cb = Box::new(CallbackCtx { fired, ctx });
+            let user_data = (&mut *cb as *mut CallbackCtx).cast::<c_void>();
+            let spec = EventTypeSpec {
+                event_class: K_EVENT_CLASS_KEYBOARD,
+                event_kind: K_EVENT_HOT_KEY_PRESSED,
+            };
+            let mut handler_ref: EventHandlerRef = std::ptr::null_mut();
+            let mut hotkey_ref: EventHotKeyRef = std::ptr::null_mut();
+
+            // SAFETY: called on the main UI thread; installs a Carbon application event handler
+            // and registers the global hotkey with HIToolbox.
+            unsafe {
+                let target = GetApplicationEventTarget();
+                if target.is_null() {
+                    return None;
+                }
+                let status = InstallEventHandler(
+                    target,
+                    hotkey_handler,
+                    1,
+                    &spec,
+                    user_data,
+                    &mut handler_ref,
+                );
+                if status != 0 || handler_ref.is_null() {
+                    tracing::warn!("global hotkey: InstallEventHandler failed ({status})");
+                    return None;
+                }
+                let id = EventHotKeyID {
+                    signature: HOTKEY_SIGNATURE,
+                    id: 1,
+                };
+                let reg_status = RegisterEventHotKey(
+                    shortcut.key.carbon_vk(),
+                    shortcut.carbon_modifiers(),
+                    id,
+                    target,
+                    0,
+                    &mut hotkey_ref,
+                );
+                if reg_status != 0 || hotkey_ref.is_null() {
+                    let _ = RemoveEventHandler(handler_ref);
+                    taken.store(true, Ordering::SeqCst);
+                    tracing::warn!(
+                        "global hotkey: RegisterEventHotKey({}) failed ({reg_status})",
+                        shortcut.canonical()
+                    );
+                    return None;
+                }
+            }
+            tracing::info!("global hotkey registered: {}", shortcut.canonical());
+            Some(Self {
+                hotkey_ref,
+                handler_ref,
+                _cb: cb,
+            })
+        }
+    }
+
+    impl Drop for GlobalHotKeyOs {
+        fn drop(&mut self) {
+            // SAFETY: unregisters the hotkey and removes the handler before `_cb` is dropped.
+            unsafe {
+                if !self.hotkey_ref.is_null() {
+                    let _ = UnregisterEventHotKey(self.hotkey_ref);
+                    self.hotkey_ref = std::ptr::null_mut();
+                }
+                if !self.handler_ref.is_null() {
+                    let _ = RemoveEventHandler(self.handler_ref);
+                    self.handler_ref = std::ptr::null_mut();
+                }
+            }
+        }
+    }
 }
 
 /// Rename `from` to `to` without ever replacing an existing entry (`ErrorKind::AlreadyExists`
@@ -2213,11 +3009,17 @@ pub(crate) fn fallback_rename_no_replace(from: &Path, to: &Path) -> std::io::Res
     }
 }
 
+#[cfg(target_os = "macos")]
+pub use macos_hotkey::GlobalHotKeyOs;
+
 #[cfg(all(test, target_os = "linux"))]
 mod tests {
     use zbus::zvariant::Value;
 
-    use super::{WindowLib, X11_LIBS, choose_window_system, install_command, menu_window_type};
+    use super::{
+        Pick, WindowLib, X11_LIBS, X11Fit, choose_window_system, desktop_looks_after_x11,
+        install_command, menu_window_type,
+    };
 
     /// #277: each menu's window says which menu it is, as GTK's and Qt's do.
     #[test]
@@ -2230,7 +3032,7 @@ mod tests {
             X11WindowType::PopupMenu
         );
         assert_eq!(menu_window_type(MenuKind::List), X11WindowType::Combo);
-        let b = super::menu_window(egui::ViewportBuilder::default(), MenuKind::Bar);
+        let b = super::menu_window(crate::window_builder(), MenuKind::Bar);
         assert_eq!(b.override_redirect, Some(true));
         assert_eq!(b.window_type, Some(X11WindowType::DropdownMenu));
     }
@@ -2242,30 +3044,105 @@ mod tests {
         lib.names[0] != X11_KEYBOARD
     }
 
+    /// MDM's own choice, with the desktop looking after X11 programs (GNOME, KDE Plasma).
+    const CARED: fn() -> X11Fit = || X11Fit::CaredFor;
+
     /// #265: without libxkbcommon-x11, an X11 session can't open the window (said, not a
     /// panic); a Wayland session opens it on Wayland instead; with everything there, X11 as
     /// before (#50).
     #[test]
     fn a_missing_x11_library_is_named_or_wayland_used() {
-        let x11_only = choose_window_system(false, true, false, without_x11_keyboard);
+        let x11_only = choose_window_system(false, true, Pick::Auto, CARED, without_x11_keyboard);
         assert!(!x11_only.wayland);
         let names: Vec<&str> = x11_only.missing.iter().map(|l| l.names[0]).collect();
         assert_eq!(names, [X11_KEYBOARD]);
 
-        let both = choose_window_system(true, true, false, without_x11_keyboard);
+        let both = choose_window_system(true, true, Pick::Auto, CARED, without_x11_keyboard);
         assert!(both.wayland && both.missing.is_empty(), "{both:?}");
         assert_eq!(both.x11_missing.len(), 1);
         assert!(!both.x11_over_wayland);
 
-        let fine = choose_window_system(true, true, false, |_| true);
+        let fine = choose_window_system(true, true, Pick::Auto, CARED, |_| true);
         assert!(!fine.wayland && fine.x11_over_wayland && fine.missing.is_empty());
-        let asked = choose_window_system(true, true, true, |_| true);
+        let asked =
+            choose_window_system(true, true, Pick::Wayland("MDM_WAYLAND=1"), CARED, |_| true);
         assert!(asked.wayland && !asked.x11_over_wayland && asked.x11_missing.is_empty());
 
         // Nothing loads: on Wayland, its own libraries are named.
-        let none = choose_window_system(true, false, false, |_| false);
+        let none = choose_window_system(true, false, Pick::Auto, CARED, |_| false);
         assert!(none.wayland);
         assert_eq!(none.missing[0].names[0], "libxkbcommon.so.0");
+    }
+
+    /// #624: MDM_WAYLAND first (1 or 0), then View → Window system's saved choice, then MDM's
+    /// own: the same however MDM is started, as the saved choice goes with every start.
+    #[test]
+    fn the_window_system_is_picked_the_same_way_at_every_start() {
+        use crate::settings::WindowSystemPick as Saved;
+        use std::ffi::OsStr;
+        let env = |v: &'static str| Some(OsStr::new(v));
+        assert_eq!(Pick::of(None, None), Pick::Auto);
+        assert_eq!(Pick::of(env(""), None), Pick::Auto);
+        assert_eq!(Pick::of(env("yes"), None), Pick::Auto);
+        assert!(matches!(
+            Pick::of(None, Some(Saved::Wayland)),
+            Pick::Wayland(_)
+        ));
+        assert!(matches!(Pick::of(None, Some(Saved::X11)), Pick::X11(_)));
+        assert!(matches!(
+            Pick::of(env("1"), Some(Saved::X11)),
+            Pick::Wayland(_)
+        ));
+        assert!(matches!(
+            Pick::of(env("0"), Some(Saved::Wayland)),
+            Pick::X11(_)
+        ));
+        assert!(matches!(Pick::of(env("0"), None), Pick::X11(_)));
+    }
+
+    /// #624: MDM chooses X11 (XWayland: its menus placed under their titles, its window hidden in
+    /// the tray) unless X11's windows would be scaled up, blurry: a scaled screen, and nothing
+    /// to tell X11 programs (Hyprland at 1.5, labwc or sway at 2). A choice made wins either
+    /// way; the desktop is only asked when it decides.
+    #[test]
+    fn mdm_chooses_wayland_where_x11_windows_would_be_scaled() {
+        let ok = |_: &WindowLib| true;
+        let scaled = choose_window_system(true, true, Pick::Auto, || X11Fit::Scaled, ok);
+        assert!(scaled.wayland && scaled.both, "{scaled:?}");
+        let unscaled = choose_window_system(true, true, Pick::Auto, || X11Fit::Unscaled, ok);
+        assert!(!unscaled.wayland && unscaled.x11_over_wayland && unscaled.both);
+        let cared = choose_window_system(true, true, Pick::Auto, CARED, ok);
+        assert!(!cared.wayland && cared.x11_over_wayland && cared.both);
+        let x11 = choose_window_system(true, true, Pick::X11("saved"), || panic!("asked"), ok);
+        assert!(!x11.wayland && x11.x11_over_wayland && x11.why == "saved");
+        let wl = choose_window_system(true, true, Pick::Wayland("saved"), || panic!("asked"), ok);
+        assert!(wl.wayland && wl.why == "saved");
+        // One system only: no choice to offer, nothing asked.
+        let x11_session =
+            choose_window_system(false, true, Pick::Wayland("saved"), || panic!(), ok);
+        assert!(!x11_session.wayland && !x11_session.both && !x11_session.x11_over_wayland);
+        let wayland_only = choose_window_system(true, false, Pick::X11("saved"), || panic!(), ok);
+        assert!(wayland_only.wayland && !wayland_only.both);
+    }
+
+    /// The desktops that start a settings daemon for XWayland's programs, by
+    /// XDG_CURRENT_DESKTOP; the others are asked through XSETTINGS itself.
+    #[test]
+    fn gnome_and_plasma_look_after_x11_programs() {
+        for d in ["GNOME", "ubuntu:GNOME", "KDE", "Budgie:GNOME", "gnome"] {
+            assert!(desktop_looks_after_x11(d), "{d}");
+        }
+        for d in [
+            "",
+            "labwc:wlroots",
+            "Hyprland",
+            "sway",
+            "niri",
+            "river",
+            "Wayfire",
+        ] {
+            assert!(!desktop_looks_after_x11(d), "{d}");
+        }
     }
 
     /// The package to install, by the distribution's family (/etc/os-release's ID and ID_LIKE).

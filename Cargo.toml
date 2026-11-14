@@ -12,6 +12,7 @@ publish = false
 
 [workspace.dependencies]
 mdm-cli = { path = "crates/cli" }
+mdm-cnl = { path = "crates/cnl" }
 mdm-crash = { path = "crates/crash", default-features = false }
 mdm-debrid = { path = "crates/debrid" }
 # Without its browser-like connection unless asked (the app asks: its `browser-connection`).
@@ -37,6 +38,9 @@ egui = "0.37.0"
 # The lock that keeps MDM's own clipboard reads and writes apart from egui's (main.rs, #629).
 egui-winit = { version = "0.37.0", default-features = false }
 egui_extras = { version = "0.37.0", features = ["svg", "image"] }
+# The font parser egui reads fonts with, the same version: a system font is checked with it
+# before egui is given it, since egui stops on a configured font it can't read (theme.rs, #931).
+skrifa = { version = "0.44.0", default-features = false, features = ["std"] }
 image = { version = "0.25.10", default-features = false, features = ["png"] }
 dirs = "7.0.0"
 # Gzipped IP blocklists, read to convert them for librqbit (crates/torrent blocklist.rs).
@@ -56,6 +60,7 @@ windows-sys = { version = "0.61.2", features = [
     "Win32_Storage_FileSystem",
     "Win32_System_Com",
     "Win32_System_Console",
+    "Win32_System_DataExchange",
     "Win32_System_IO",
     "Win32_System_Ioctl",
     "Win32_System_LibraryLoader",
@@ -202,7 +207,9 @@ debug = "line-tables-only"
 # window built hidden stays hidden after its first frame (a start with the session waits in the
 # notification area, #226); a monitor that has just gone away has no size instead of a panic (#335); the clipboard used
 # by one thread at a time, egui's copy and paste and MDM's own reads (`egui_winit::clipboard::
-# lock_system_clipboard`, #629). craft-libs can take the same commits to share one egui again.
+# lock_system_clipboard`, #629); a dialog that changes its size is drawn at the window's new size
+# (its size applied before the pass, the Direct3D surface matched to the window before painting,
+# #471, by aniyow07). craft-libs can take the same commits to share one egui again.
 [patch.crates-io]
 # librqbit 9.1.0 with per-torrent rate limits that change while a torrent runs (#39), and a
 # magnet lookup's progress counted (#92), and every socket bound to one address (`bind_ip`,
@@ -222,14 +229,30 @@ librqbit-peer-protocol = { git = "https://github.com/anefzaoui/rqbit.git", rev =
 librqbit-sha1-wrapper = { git = "https://github.com/anefzaoui/rqbit.git", rev = "694291b61fcfd6a77fef7762541b0ef25773ae31" }
 librqbit-tracker-comms = { git = "https://github.com/anefzaoui/rqbit.git", rev = "694291b61fcfd6a77fef7762541b0ef25773ae31" }
 librqbit-upnp = { git = "https://github.com/anefzaoui/rqbit.git", rev = "694291b61fcfd6a77fef7762541b0ef25773ae31" }
-ecolor = { git = "https://github.com/anefzaoui/egui.git", rev = "4ad60e5365470a6d12166a8075478f8aea44c9f8" }
-emath = { git = "https://github.com/anefzaoui/egui.git", rev = "4ad60e5365470a6d12166a8075478f8aea44c9f8" }
-epaint = { git = "https://github.com/anefzaoui/egui.git", rev = "4ad60e5365470a6d12166a8075478f8aea44c9f8" }
-epaint_default_fonts = { git = "https://github.com/anefzaoui/egui.git", rev = "4ad60e5365470a6d12166a8075478f8aea44c9f8" }
-egui = { git = "https://github.com/anefzaoui/egui.git", rev = "4ad60e5365470a6d12166a8075478f8aea44c9f8" }
-egui-winit = { git = "https://github.com/anefzaoui/egui.git", rev = "4ad60e5365470a6d12166a8075478f8aea44c9f8" }
-egui_glow = { git = "https://github.com/anefzaoui/egui.git", rev = "4ad60e5365470a6d12166a8075478f8aea44c9f8" }
-egui-wgpu = { git = "https://github.com/anefzaoui/egui.git", rev = "4ad60e5365470a6d12166a8075478f8aea44c9f8" }
-egui_extras = { git = "https://github.com/anefzaoui/egui.git", rev = "4ad60e5365470a6d12166a8075478f8aea44c9f8" }
-eframe = { git = "https://github.com/anefzaoui/egui.git", rev = "4ad60e5365470a6d12166a8075478f8aea44c9f8" }
+ecolor = { git = "https://github.com/anefzaoui/egui.git", rev = "91dd7f70ed2ccfcfd3196a87ceda0d106e22c98d" }
+emath = { git = "https://github.com/anefzaoui/egui.git", rev = "91dd7f70ed2ccfcfd3196a87ceda0d106e22c98d" }
+epaint = { git = "https://github.com/anefzaoui/egui.git", rev = "91dd7f70ed2ccfcfd3196a87ceda0d106e22c98d" }
+epaint_default_fonts = { git = "https://github.com/anefzaoui/egui.git", rev = "91dd7f70ed2ccfcfd3196a87ceda0d106e22c98d" }
+egui = { git = "https://github.com/anefzaoui/egui.git", rev = "91dd7f70ed2ccfcfd3196a87ceda0d106e22c98d" }
+egui-winit = { git = "https://github.com/anefzaoui/egui.git", rev = "91dd7f70ed2ccfcfd3196a87ceda0d106e22c98d" }
+egui_glow = { git = "https://github.com/anefzaoui/egui.git", rev = "91dd7f70ed2ccfcfd3196a87ceda0d106e22c98d" }
+egui-wgpu = { git = "https://github.com/anefzaoui/egui.git", rev = "91dd7f70ed2ccfcfd3196a87ceda0d106e22c98d" }
+egui_extras = { git = "https://github.com/anefzaoui/egui.git", rev = "91dd7f70ed2ccfcfd3196a87ceda0d106e22c98d" }
+eframe = { git = "https://github.com/anefzaoui/egui.git", rev = "91dd7f70ed2ccfcfd3196a87ceda0d106e22c98d" }
 winit = { git = "https://github.com/storytold/winit.git", rev = "a517b3846ee8457d84ee4975110bfda6797c44dc" }
+# wgpu-hal 30.0.1 (the v30.0.1 release commit) with one change: a window's Direct3D 12 swap chain
+# is made with DXGI_SCALING_NONE instead of STRETCH, so while a dialog resizes, Windows shows the
+# last frame unscaled until one of the new size comes, instead of stretching it (#471, by
+# aniyow07; branch mdm-dxgi-scaling-none). Every crate of that repository MDM uses comes from
+# the same commit, so there is one copy of each (wgpu-hal's own dependencies are paths in it).
+# Drop them when wgpu offers the scaling mode on SurfaceConfiguration (gfx-rs/wgpu#10196) and
+# MDM asks for it there; moving to a wgpu other than 30.0.1 needs the change on that release.
+naga = { git = "https://github.com/anefzaoui/wgpu.git", rev = "1c6f336e239ff7bc46b4dec194f1d96d3d4f8e04" }
+naga-types = { git = "https://github.com/anefzaoui/wgpu.git", rev = "1c6f336e239ff7bc46b4dec194f1d96d3d4f8e04" }
+wgpu = { git = "https://github.com/anefzaoui/wgpu.git", rev = "1c6f336e239ff7bc46b4dec194f1d96d3d4f8e04" }
+wgpu-core = { git = "https://github.com/anefzaoui/wgpu.git", rev = "1c6f336e239ff7bc46b4dec194f1d96d3d4f8e04" }
+wgpu-core-deps-apple = { git = "https://github.com/anefzaoui/wgpu.git", rev = "1c6f336e239ff7bc46b4dec194f1d96d3d4f8e04" }
+wgpu-core-deps-windows-linux-android = { git = "https://github.com/anefzaoui/wgpu.git", rev = "1c6f336e239ff7bc46b4dec194f1d96d3d4f8e04" }
+wgpu-hal = { git = "https://github.com/anefzaoui/wgpu.git", rev = "1c6f336e239ff7bc46b4dec194f1d96d3d4f8e04" }
+wgpu-naga-bridge = { git = "https://github.com/anefzaoui/wgpu.git", rev = "1c6f336e239ff7bc46b4dec194f1d96d3d4f8e04" }
+wgpu-types = { git = "https://github.com/anefzaoui/wgpu.git", rev = "1c6f336e239ff7bc46b4dec194f1d96d3d4f8e04" }

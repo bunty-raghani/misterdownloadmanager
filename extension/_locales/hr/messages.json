@@ -92,6 +92,9 @@
       }
     }
   },
+  "popup_undo": {
+    "message": "Poništi"
+  },
   "popup_excluded": {
     "message": "Preuzimanja s $site$ ostaju u pregledniku",
     "placeholders": {

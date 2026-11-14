@@ -1,0 +1,21 @@
+{
+  "about": "A page's media file's name (#345, #695, #800): the address, the type its server said and the tab's title, and the name both the engine (naming.rs, answer_name) and the browser extension (background.js, mediaName with the switch off) give it. Checked by both: cargo test -p mdm-engine and node tools/extension/test.mjs.",
+  "cases": [
+    ["https://v.test/remote_control.php?id=7&t=1", "video/mp4", "Movie: the title", "Movie the title.mp4"],
+    ["https://v.test/remote_control.php?id=7", "video/mp4", "", "remote_control.mp4"],
+    ["https://v.test/baigiang/stream.php?file=FL262-1E01-4.mp4&token=x", "video/mp4", "Lecture", "FL262-1E01-4.mp4"],
+    ["https://v.test/get.php?filename=talks%2Fclip.webm", "", "Lecture", "clip.webm"],
+    ["https://v.test/get.php?file=setup.exe", "video/mp4", "", "get.mp4"],
+    ["https://v.test/videoplayback?id=3", "video/webm", "A talk", "A talk.webm"],
+    ["https://v.test/media/123456", "audio/mpeg", "", "123456.mp3"],
+    ["https://v.test/watch.html", "video/mp4", "A talk", "watch.mp4"],
+    ["https://v.test/v/SFp1NUcrZFRkRUVrUWlqM3paMitkakJIUW9J.mp4", "video/mp4", "A film", "A film.mp4"],
+    ["https://v.test/a/movie.mp4", "video/webm", "A film", "movie.mp4"],
+    ["https://v.test/a/setup.zip", "video/mp4", "A film", "setup.zip"],
+    ["https://v.test/stream.php", "application/octet-stream", "A talk", "A talk.php"],
+    ["https://v.test/stream.php", "application/x-msdownload", "", "stream.php"],
+    ["https://v.test/stream.php", "text/html", "", "stream.php"],
+    ["https://v.test/s.aspx?id=1", "video/mp4; codecs=\"avc1\"", "Talk...", "Talk.mp4"],
+    ["https://v.test/a%20b/my%20clip.ogg", "audio/ogg", "x", "my clip.ogg"]
+  ]
+}

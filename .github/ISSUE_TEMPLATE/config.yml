@@ -1,7 +1,11 @@
-# Every issue starts from a form (bug.yml, feature.yml, website.yml), so reports carry the
-# system and version they happened on.
+# Every issue starts from a form (bug.yml, crash.yml, website.yml), so reports carry the
+# system and version they happened on. Ideas go to Discussions (Ideas), where people talk them
+# over and vote; the issues are kept for problems and the work planned.
 blank_issues_enabled: false
 contact_links:
+  - name: Suggest an idea
+    url: https://github.com/anefzaoui/misterdownloadmanager/discussions/new?category=ideas
+    about: Something MDM should do, or do differently. Ideas are talked over and voted on in Discussions.
   - name: Security problem
     url: https://misterdownloadmanager.com/security.html
     about: Report it privately, not as an issue.

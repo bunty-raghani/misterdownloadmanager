@@ -92,6 +92,9 @@
       }
     }
   },
+  "popup_undo": {
+    "message": "Razveljavi"
+  },
   "popup_excluded": {
     "message": "Prenosi iz $site$ ostanejo v brskalniku",
     "placeholders": {

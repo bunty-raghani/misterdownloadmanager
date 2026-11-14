@@ -92,6 +92,9 @@
       }
     }
   },
+  "popup_undo": {
+    "message": "પૂર્વવત્ કરો"
+  },
   "popup_excluded": {
     "message": "$site$ માંથી ડાઉનલોડ્સ બ્રાઉઝર સાથે રહે છે",
     "placeholders": {

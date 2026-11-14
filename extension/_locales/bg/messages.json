@@ -92,6 +92,9 @@
       }
     }
   },
+  "popup_undo": {
+    "message": "Отмяна"
+  },
   "popup_excluded": {
     "message": "Изтеглянията от $site$ остават в браузъра",
     "placeholders": {

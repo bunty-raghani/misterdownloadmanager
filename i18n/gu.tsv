@@ -227,6 +227,11 @@
 #. {name} = a file name (keep the braces as they are)
 #, machine
 	A file of this torrent can't be saved safely: {name}	આ ટૉરેન્ટની ફાઇલ સુરક્ષિત રીતે સાચવી શકાતી નથી: {name}
+#. message or event log entry in the main window
+#. Link grabber added a magnet link whose torrent could not be found; {error} says why
+#. {error} = an error message (keep the braces as they are)
+#, machine
+	A magnet link's files could not be looked up: {error}	મેગ્નેટ લિંકની ફાઇલો શોધી શકાઈ નથી: {error}
 #. text in the settings
 #. Options → DNS: the NextDNS configuration ID typed isn't one
 #, machine
@@ -270,6 +275,11 @@
 #. a download's server's round trip: {ms} a number of milliseconds, {reach} near, medium or far
 #, machine
 	about {ms} ms ({reach})	લગભગ {ms} મિલીસેકન્ડ ({reach})
+#. text in the Download video window
+#. a file size that is only an estimate, as a screen reader says it in the Download video window's list of qualities; {size} is "532 MB"
+#. {size} = a file size such as "4.2 MB" (keep the braces as they are)
+#, machine
+	about {size}	લગભગ {size}
 #. checkbox in the Add torrent window
 #. Torrent settings: other peers may connect to this computer
 #, machine
@@ -301,6 +311,10 @@
 #. text in the tray icon's menu
 #, machine
 	Add batch download	બૅચ ડાઉનલોડ ઉમેરો
+#. message or event log entry in the main window; text in the tray icon's menu
+#. title of the note when Tasks → Add batch download from clipboard finds nothing to download
+#, machine
+	Add batch download from clipboard	ક્લિપબોર્ડમાંથી બેચ ડાઉનલોડ ઉમેરો
 #. text in the Options window
 #. the trailing ... means it is still going on: keep it
 #, machine
@@ -860,6 +874,11 @@
 #. check box in the update window: look for a new version every time MDM starts
 #, machine
 	Check for updates at every start	દરેક શરૂઆતમાં અપડેટ્સ માટે તપાસો
+#. text in errors.rs
+#. what to do when the proxy set in Options didn't let a helper's download connect; {proxy} = the Options tab Proxy / Socks; {name} = yt-dlp, ffmpeg or gallery-dl; {helpers} and {other} = the buttons Helpers and Use another program
+#. {name} = a file name (keep the braces as they are)
+#, machine
+	Check the proxy in Options → {proxy}, or download {name} yourself and choose it in {helpers} → {other}.	વિકલ્પો → {proxy} માં પ્રોક્સી તપાસો, અથવા {name} જાતે ડાઉનલોડ કરો અને તેને {helpers} → {other} માં પસંદ કરો.
 #. text in helpers.rs
 #, machine
 	Check your connection, then try again, or get them later from the video window.	તમારું કનેક્શન તપાસો, પછી ફરી પ્રયાસ કરો અથવા પછીથી વીડિયો વિન્ડોમાંથી મેળવો.
@@ -901,9 +920,9 @@
 #, machine
 	Checking {name} ({n} of {total})...	{name} ({n} માંથી {total}) તપાસી રહ્યું છે...
 #. text in the download list (sizes, speeds, status)
-#. a torrent's status while its files are read and checked; {percent} is how much is checked, e.g. "42%"
+#. the list's Status column while a torrent's files or a finished file are checked (against the torrent's hashes or a checksum); {percent} how much is checked, e.g. "42%". One short word: the column is narrow
 #, machine
-	Checking {percent}	{percent} તપાસી રહ્યું છે
+	Checking {percent}	તપાસી રહ્યું છે {percent}
 #. text in the Checksum window; text in the Link grabber window
 #. the trailing ... means it is still going on: keep it
 #, machine
@@ -946,6 +965,10 @@
 #. column title: the peer's torrent program
 #, machine
 	Client	ક્લાયંટ
+#. message or event log entry in the main window
+#. Link grabber: where the links came from: the clipboard (Tasks → Add batch download from clipboard)
+#, machine
+	Clipboard	ક્લિપબોર્ડ
 #. text in the Options window
 #, machine
 	Clock:	ઘડિયાળ:
@@ -1060,6 +1083,20 @@
 #. {error} = an error message (keep the braces as they are)
 #, machine
 	Could not be read: {error}	વાંચી શકાયું નથી: {error}
+#. text in errors.rs
+#. a helper (yt-dlp, ffmpeg) couldn't be downloaded: the proxy set in Options ({proxy}, its address) didn't let MDM connect
+#, machine
+	could not connect through the proxy {proxy}	પ્રોક્સી {proxy} મારફતે કનેક્ટ થઈ શકાયું નથી
+#. text in errors.rs
+#. a helper (yt-dlp, ffmpeg) couldn't be downloaded: its server ({host}) couldn't be reached
+#. {host} = a server name such as "example.com" (keep the braces as they are)
+#, machine
+	could not reach {host}	{host} સુધી પહોંચી શકાયું નથી
+#. text in errors.rs
+#. a helper (yt-dlp, ffmpeg) couldn't be downloaded: its server ({host}) couldn't be reached, for the system's reason {cause}
+#. {host} = a server name such as "example.com" (keep the braces as they are)
+#, machine
+	could not reach {host} ({cause})	{host} સુધી પહોંચી શકાયું નથી ({cause})
 #. text in extracting archives (a download's log, the Archive password window)
 #. in a download's log: {name} is the archive's file name, {why} the reason
 #. {name} = a file name (keep the braces as they are)
@@ -1320,6 +1357,10 @@
 #. window title: the download button the extension shows over videos
 #, machine
 	Download panels	ડાઉનલોડ પેનલો
+#. window title in the Options window
+#. window title: Options → Downloads → Edit... (the progress window's settings)
+#, machine
+	Download progress dialog	ડાઉનલોડ પ્રગતિ સંવાદ
 #. text in rssdlg.rs
 #. RSS feeds window: the tab of the rules that add articles by themselves
 #, machine
@@ -1332,6 +1373,9 @@
 #. Options → Accounts: checkbox: links of the file hosts these services support are downloaded through the accounts
 #, machine
 	Download supported file-host links through these accounts	આ એકાઉન્ટ્સ દ્વારા સપોર્ટેડ ફાઇલ હોસ્ટની લિંક્સ ડાઉનલોડ થાય
+#. what a keyboard shortcut does in the Help menu's windows (About, updates, shortcuts, Tell a friend)
+#, machine
+	Download the links in the clipboard (Add batch download from clipboard)	ક્લિપબોર્ડમાંની લિંક્સ ડાઉનલોડ કરો (ક્લિપબોર્ડમાંથી બેચ ડાઉનલોડ ઉમેરો)
 #. text in a dialog box
 #. Download File Info: a check box, ticked when the download goes through the user's debrid account; {service} the service and the account, "Real-Debrid (labuser)". Unticked: downloaded directly
 #, machine
@@ -1429,6 +1473,12 @@
 #, machine
 	Drag the file into a folder or an app	ફાઇલને ફોલ્ડર અથવા એપ્લિકેશનમાં ખેંચો
 #. message or event log entry in the main window
+#, machine
+	Dragged out of Download complete and moved to a place MDM couldn't learn	પૂર્ણ થયેલા ડાઉનલોડની યાદીમાંથી ખેંચીને એવી જગ્યાએ ખસેડવામાં આવ્યું જ્યાં MDM તેનું સ્થાન જાણી શક્યું નહીં
+#. message or event log entry in the main window
+#, machine
+	Dragged out of Download complete and moved to {folder}	પૂર્ણ થયેલા ડાઉનલોડની યાદીમાંથી ખેંચીને {folder} પર ખસેડવામાં આવ્યું
+#. message or event log entry in the main window
 #. in Import, where the addresses came from: dragged onto the window
 #, machine
 	Dropped links	ડ્રોપ કરેલી લિંક્સ
@@ -1477,6 +1527,10 @@
 #. button in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #, machine
 	Email	ઈમેલ
+#. text in the Download video window
+#. checkbox in Download video: the chapters a video's page lists (YouTube's, for one) go into the video file, where players show them and skip between them
+#, machine
+	Embed chapters	પ્રકરણો એમ્બેડ કરો
 #. text in gallerydlg.rs
 #. in Download a gallery, after the "Files at most" box
 #, machine
@@ -1517,7 +1571,7 @@
 #. a country's name (where a download's server is)
 #, machine
 	Eritrea	એરિટ્રિયા
-#. text in a dialog box; item in the Categories tree in the download list; value in a column's filter list in the download list; text in the download list (sizes, speeds, status); text in remote.rs
+#. text in a dialog box; item in the Categories tree in the download list; value in a column's filter list in the download list; text in the download list (sizes, speeds, status); text in a download's progress window; text in remote.rs
 #. in Download File Info, where the size goes: the address didn't answer
 #. a download's status (state it is in, not a command)
 #. a download's status (state it is in, not a command): it failed
@@ -1661,6 +1715,10 @@
 #. noun: a file of no known type
 #, machine
 	File	ફાઇલ
+#. text in the Options window
+#. tooltip of "Mark downloaded files as coming from the internet" on Linux
+#, machine
+	File managers show where the files marked this way came from. Unticked, no download is marked.	ફાઇલ મેનેજર આ રીતે ચિહ્નિત કરેલી ફાઇલો ક્યાંથી આવી છે તે દર્શાવે છે. જો ચેકબૉક્સ પસંદ ન હોય, તો કોઈ ડાઉનલોડ ચિહ્નિત થતું નથી.
 #. text in the Scheduler window
 #, machine
 	File Name	ફાઇલનું નામ
@@ -1739,6 +1797,11 @@
 #. remote control page (on a phone): tab: downloads finished
 #, machine
 	Finished	પૂર્ણ થયું
+#. text in a download's progress window
+#. a download's status: every byte is in, the file is being written out and given its name
+#. the trailing ... means it is still going on: keep it
+#, machine
+	Finishing...	પૂર્ણ થઈ રહ્યું છે...
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -1997,7 +2060,7 @@
 #. window title: where MDM takes its helper programs (yt-dlp, ffmpeg, gallery-dl) from
 #, machine
 	Helpers	હેલ્પર્સ
-#. button in gallerydlg.rs; button in the Download video window
+#. text in errors.rs; button in gallerydlg.rs; button in the Download video window
 #. button in Download video: where MDM takes yt-dlp and ffmpeg from
 #. the trailing ... means it opens a window: keep it
 #, machine
@@ -2047,6 +2110,11 @@
 #. button in Test browser integration: open the help page's section for the problem
 #, machine
 	How to fix it	તેને કેવી રીતે ઠીક કરવું
+#. text in the Download video window; text in videolookup.rs
+#. link after the note that YouTube needs a JavaScript runtime: opens the help page that says how to install Node.js or Deno
+#. link in the browser's video menu, after the note that YouTube needs a JavaScript runtime: opens the help page that says how to install Node.js or Deno
+#, machine
+	How to install one	કેવી રીતે ઇન્સ્ટોલ કરવું
 #. checkbox in the Options window
 #, machine
 	http	http
@@ -2074,6 +2142,11 @@
 #. Options → DNS settings: checkbox: when the chosen DNS can't be reached, use the system's instead
 #, machine
 	If it can't be reached, use the system's DNS	જો તે પહોંચી શકાય તેમ ન હોય, તો સિસ્ટમનો DNS વાપરો
+#. text in errors.rs
+#. what to do when a helper's server couldn't be reached; {proxy} = the Options tab Proxy / Socks; {name} = yt-dlp, ffmpeg or gallery-dl; {helpers} and {other} = the buttons Helpers and Use another program
+#. {name} = a file name (keep the braces as they are)
+#, machine
+	If you use a proxy, set it in Options → {proxy}. Or download {name} yourself and choose it in {helpers} → {other}.	જો તમે પ્રોક્સીનો ઉપયોગ કરો છો, તો તેને વિકલ્પો → {proxy} માં સેટ કરો. અથવા {name} જાતે ડાઉનલોડ કરો અને તેને {helpers} → {other} માં પસંદ કરો.
 #. checkbox in the Options window
 #, machine
 	Ignore file modification time changes when resuming a download	ડાઉનલોડ ફરી શરૂ કરતી વખતે ફાઇલ સંશોધન સમયના ફેરફારોને અવગણો
@@ -2220,6 +2293,16 @@
 #. {error} = an error message (keep the braces as they are)
 #, machine
 	its files could not be written: {error}	તેની ફાઇલો લખી શકાઈ નથી: {error}
+#. text in the download list (sizes, speeds, status)
+#. why a video download failed: ffmpeg couldn't join its picture and sound into one file; {error} = ffmpeg's reason, in English
+#. {error} = an error message (keep the braces as they are)
+#, machine
+	its picture and sound couldn't be joined into one file ({error})	તેના વિડિયો અને ઑડિયોને એક ફાઇલમાં જોડી શકાયા નથી ({error})
+#. text in the download list (sizes, speeds, status)
+#. why a video download failed: ffmpeg couldn't join its picture and sound into one file; {error} = ffmpeg's reason, in English; {files} = the downloaded parts' file names, kept in the download folder; "Also delete the file from disk" is the Delete box's choice
+#. {error} = an error message (keep the braces as they are)
+#, machine
+	its picture and sound couldn't be joined into one file ({error}). What was downloaded stays in the folder for Resume to join again ({files}); deleting the download with "Also delete the file from disk" removes it	તેના વિડિયો અને ઑડિયોને એક ફાઇલમાં જોડી શકાયા નથી ({error}). ડાઉનલોડ કરેલા ભાગો ફરીથી જોડવા માટે ફોલ્ડરમાં રહે છે ({files}); “ડિસ્કમાંથી ફાઇલ પણ કાઢી નાખો” પસંદ કરીને ડાઉનલોડ કાઢી નાખવાથી તે ફાઇલ પણ દૂર થાય છે
 #. text in errors.rs
 #, machine
 	its release information is not as expected: {detail}	તેની રિલીઝ માહિતી અપેક્ષા મુજબ નથી: {detail}
@@ -2381,7 +2464,7 @@
 #. Torrent settings: an upload speed limit for all torrents together, followed by a box with the speed and "KBytes/sec"
 #, machine
 	Limit uploading for all torrents to	બધા ટોરેન્ટ્સ માટે અપલોડિંગ આના સુધી મર્યાદિત કરો
-#. window title in the Link grabber window; group box title in the Options window
+#. message or event log entry in the main window; window title in the Link grabber window; group box title in the Options window
 #. Options → Archives: group box title
 #, machine
 	Link grabber	લિંક ગ્રેબર
@@ -2474,10 +2557,18 @@
 #. a country's name (where a download's server is)
 #, machine
 	Macau	મકાઉ
+#. text in the Options window
+#. tooltip of "Mark downloaded files as coming from the internet" on macOS
+#, machine
+	macOS checks the files marked this way: Gatekeeper before a program first opens. Unticked, no download is marked.	macOS આ રીતે ચિહ્નિત કરેલી ફાઇલો તપાસે છે: કોઈ પ્રોગ્રામ પહેલી વાર ખોલવામાં આવે તે પહેલાં Gatekeeper તપાસે છે. જો ચેકબૉક્સ પસંદ ન હોય, તો કોઈ ડાઉનલોડ ચિહ્નિત થતું નથી.
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
 	Madagascar	મેડાગાસ્કર
+#. text in the Link grabber window
+#. Link grabber, a link's status: a magnet link (a torrent, its files looked up once it is added)
+#, machine
+	Magnet link	મેગ્નેટ લિંક
 #. message or event log entry in the main window
 #, machine
 	Main download queue	મુખ્ય ડાઉનલોડ કતાર
@@ -2521,6 +2612,9 @@
 #. text in the Scheduler window
 #, machine
 	March	માર્ચ
+#. checkbox in the Options window
+#, machine
+	Mark downloaded files as coming from the internet	ડાઉનલોડ કરેલી ફાઇલોને ઇન્ટરનેટ પરથી આવેલી તરીકે ચિહ્નિત કરો
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -2602,6 +2696,19 @@
 #. how far a download's server is, by its round trip (60 to 150 ms)
 #, machine
 	medium	મધ્યમ
+#. text in the download list (sizes, speeds, status)
+#. the list's Status column while a video's picture and sound are joined into one file (ffmpeg); {percent} how far, e.g. "45%". One short word: the column is narrow
+#, machine
+	Merging {percent}	મર્જ કરી રહ્યું છે {percent}
+#. text in the download list (sizes, speeds, status)
+#. a video's status while its picture and sound are joined into one file (ffmpeg)
+#. the trailing ... means it is still going on: keep it
+#, machine
+	Merging...	મર્જ થઈ રહ્યું છે...
+#. text in the download list (sizes, speeds, status)
+#. a video's status while its picture and sound are joined into one file (ffmpeg); {percent} how far, e.g. "45%"
+#, machine
+	Merging... ({percent})	મર્જ થઈ રહ્યું છે... ({percent})
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -2759,6 +2866,10 @@
 #. a country's name (where a download's server is)
 #, machine
 	Mozambique	મોઝામ્બિક
+#. text in the Download video window
+#. why "Embed chapters" is greyed in Download video: the choice is a sound converted to MP3, Opus or FLAC, which MDM saves without chapters
+#, machine
+	MP3, Opus and FLAC files are saved without chapters	MP3, Opus અને FLAC ફાઇલો પ્રકરણો વિના સાચવવામાં આવે છે
 #. text in errors.rs
 #, machine
 	much slower than the other connections; reconnecting	અન્ય કનેક્શન્સ કરતાં ઘણું ધીમું; ફરીથી કનેક્ટ થઈ રહ્યું છે
@@ -2900,6 +3011,9 @@
 #. tooltip on the Scheduler's weekdays when none is ticked
 #, machine
 	No day is ticked: the queue will not start	કોઈ દિવસ પસંદ નથી: કતાર શરૂ થશે નહીં
+#. message or event log entry in the main window
+#, machine
+	No download links were found in the clipboard. Copy a text with http, https, ftp or magnet links in it, and try again.	ક્લિપબોર્ડમાં કોઈ ડાઉનલોડ લિંક્સ મળી નથી. તેમાં http, https, ftp અથવા મેગ્નેટ લિંક્સ સાથેનો ટેક્સ્ટ કૉપિ કરો અને ફરી પ્રયાસ કરો.
 #. message or event log entry in the main window
 #. title in the empty download list (this category or queue has no downloads)
 #, machine
@@ -3175,11 +3289,16 @@
 #. verb: opens the file
 #, machine
 	Open	ખોલો
-#. button in crashui.rs; button in a dialog box; button in torrentfiles.rs
+#. button in crashui.rs; button in a dialog box; text in a dialog box; button in torrentfiles.rs
 #. crash report window button: show the report's file in its folder
+#. title of the message when the folder of a downloaded file can't be shown
 #. button that opens the torrent's containing folder in the file manager
 #, machine
 	Open folder	ફોલ્ડર ખોલો
+#. text in a download's progress window
+#. button in a download's progress window when the site sent a web page (a waiting page, a captcha) instead of the file: opens the download's link in the web browser
+#, machine
+	Open in browser	બ્રાઉઝરમાં ખોલો
 #. checkbox in the Add torrent window
 #, machine
 	Open magnet links and .torrent files with Mister Download Manager	મેગ્નેટ લિંક્સ અને .torrent ફાઇલો Mister Download Manager વડે ખોલો
@@ -3417,7 +3536,7 @@
 #. text in a download's progress window
 #, machine
 	Property	ગુણધર્મ
-#. text in the Options window
+#. text in errors.rs; text in the Options window
 #. tab title
 #, machine
 	Proxy / Socks	પ્રોક્સી / SOCKS
@@ -3487,6 +3606,11 @@
 #. the trailing ... means it is still going on: keep it
 #, machine
 	Reading the torrent...	ટોરેન્ટ વાંચી રહ્યું છે...
+#. message or event log entry in the main window
+#. the status strip while Tasks → Import reads a file; {file} is its name
+#. the trailing ... means it is still going on: keep it
+#, machine
+	Reading {file}...	{file} વાંચી રહ્યું છે...
 #. text in helpers.rs
 #, machine
 	Reads a page and lists every quality the site offers, up to 4K, from YouTube, Vimeo and over a thousand other sites.	એક પૃષ્ઠ વાંચે છે અને YouTube, Vimeo અને એક હજારથી વધુ અન્ય સાઇટ્સ પરથી 4K સુધીની દરેક ગુણવત્તાની સૂચિ આપે છે.
@@ -3901,6 +4025,9 @@
 #. checkbox in the Options window; checkbox in a download's progress window
 #, machine
 	Show download complete dialog	ડાઉનલોડ પૂર્ણ થયું ડાયલોગ બતાવો
+#. checkbox in the Options window
+#, machine
+	Show download progress dialog when a download starts	જ્યારે ડાઉનલોડ શરૂ થાય ત્યારે ડાઉનલોડ પ્રગતિ સંવાદ બતાવો
 #. button in a dialog box
 #. button: shows these downloads in MDM's list, selected
 #, machine
@@ -3990,6 +4117,7 @@
 #, machine
 	Size	કદ
 #. text in the Download video window
+#. the video's file size is not known
 #, machine
 	size unknown	કદ અજ્ઞાત
 #. text in a download's Properties window
@@ -4363,6 +4491,9 @@
 #. Options → Remote → Status: the settings were changed; they apply on OK
 #, machine
 	The changes apply when you click OK.	જ્યારે તમે OK ક્લિક કરશો ત્યારે ફેરફારો લાગુ પડશે.
+#. message or event log entry in the main window
+#, machine
+	The clipboard holds no text. Copy some links, or a text with links in it, and try again.	ક્લિપબોર્ડમાં કોઈ ટેક્સ્ટ નથી. કેટલીક લિંક્સ, અથવા લિંક્સ સાથેનો ટેક્સ્ટ કૉપિ કરો અને ફરી પ્રયાસ કરો.
 #. text in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. Tell a friend: Copy failed (another program holds the clipboard)
 #, machine
@@ -4404,6 +4535,11 @@
 #, machine
 	the connection closed before the part was complete	ભાગ પૂર્ણ થાય તે પહેલાં કનેક્શન બંધ થઈ ગયું
 #. text in errors.rs
+#. a helper (yt-dlp, ffmpeg) couldn't be downloaded: the connection to its server ({host}) was cut as it opened
+#. {host} = a server name such as "example.com" (keep the braces as they are)
+#, machine
+	the connection to {host} was cut: a firewall, or a network that blocks it	{host} સાથેનું કનેક્શન કપાઈ ગયું: ફાયરવોલ, અથવા તેને બ્લોક કરતું નેટવર્ક
+#. text in errors.rs
 #, machine
 	the connection was lost while receiving data	ડેટા પ્રાપ્ત કરતી વખતે કનેક્શન ખોવાઈ ગયું
 #. text in the Add torrent window
@@ -4413,6 +4549,11 @@
 #. text in errors.rs
 #, machine
 	the disk is full	ડિસ્ક ભરાઈ ગઈ છે
+#. text in errors.rs
+#. a helper (yt-dlp, ffmpeg) couldn't be downloaded: the connection to its server ({host}) closed before all of it came
+#. {host} = a server name such as "example.com" (keep the braces as they are)
+#, machine
+	the download from {host} was cut short	{host} પરથી ડાઉનલોડ અધૂરું કપાઈ ગયું
 #. tooltip (why a control is greyed) in a download's Properties window
 #. tooltip of the greyed Open button in File Properties
 #, machine
@@ -4554,6 +4695,11 @@
 #. an FTPS (or other TLS) connection could not be secured
 #, machine
 	the secure connection failed	સુરક્ષિત કનેક્શન નિષ્ફળ થયું
+#. text in errors.rs
+#. a helper (yt-dlp, ffmpeg) couldn't be downloaded: the secure connection to its server ({host}) failed, usually because an antivirus or a proxy reads secure (HTTPS) connections with a certificate of its own
+#. {host} = a server name such as "example.com" (keep the braces as they are)
+#, machine
+	the secure connection to {host} failed: an antivirus's web filter or a proxy may be reading HTTPS	{host} સાથેનું સુરક્ષિત કનેક્શન નિષ્ફળ ગયું: એન્ટિવાયરસનું વેબ ફિલ્ટર અથવા પ્રોક્સી HTTPS વાંચી રહ્યું હોઈ શકે છે
 #. text in a dialog box
 #. \\n starts a new line: break lines where they fit the translation
 #, machine
@@ -4575,10 +4721,11 @@
 	the server is busy ({status}); try again later	સર્વર વ્યસ્ત છે ({status}); પછીથી ફરી પ્રયાસ કરો
 #. text in errors.rs
 #, machine
-	the server sent a web page instead of the file (sign-in needed or the link expired?)	સર્વરે ફાઇલને બદલે વેબ પેજ મોકલ્યું (સાઇન ઇન કરવું જરૂરી છે અથવા લિંકની સમયમર્યાદા પૂરી થઈ ગઈ છે?)
-#. text in errors.rs
-#, machine
 	the server sent an unexpected part of the file ({detail})	સર્વરે ફાઇલનો અણધાર્યો ભાગ મોકલ્યો ({detail})
+#. text in errors.rs
+#. why a download failed (#701): a file host answered with its own web page (a countdown before the link, a captcha, a sign-in) where the file was expected. The browser gets past it; MDM's browser extension then hands the real file back to MDM
+#, machine
+	the site sent a web page instead of the file (a waiting page, a captcha or a sign-in): open the link in your browser, finish there, and the download comes back to MDM	સાઇટે ફાઇલને બદલે વેબ પેજ મોકલ્યું (એક રાહ જોવાનું પેજ, કેપ્ચા અથવા સાઇન-ઇન): તમારા બ્રાઉઝરમાં લિંક ખોલો, ત્યાં પૂર્ણ કરો, અને ડાઉનલોડ MDM પર પાછું આવશે
 #. text in the Download video window
 #. the Download video window: the site asked for a sign-in although the browser's extension passed the page's cookies
 #, machine
@@ -4599,6 +4746,10 @@
 #. the Download video window: the site's bot check (Cloudflare) turned yt-dlp away and no browser cookies were used
 #, machine
 	The site's bot check (Cloudflare) refused yt-dlp. If the page opens in your browser, choose that browser in Options → Sites Logins → Cookies for video sites and look the page up again, or use the Download video button over the video.	સાઇટના બોટ ચેક (Cloudflare) એ yt-dlp ને નકારી કાઢ્યું. જો પેજ તમારા બ્રાઉઝરમાં ખુલે છે, તો વિકલ્પો → સાઇટ્સ લૉગિન → વિડિઓ સાઇટ્સ માટે કૂકીઝમાં તે બ્રાઉઝર પસંદ કરો અને પેજ ફરીથી જુઓ, અથવા વિડિઓ પરના ડાઉનલોડ વિડિઓ બટનનો ઉપયોગ કરો.
+#. text in the Download video window
+#. the Download video window: the site's certificate is trusted neither by yt-dlp nor by the computer (asked again with the computer's certificates, #955); usually an antivirus or a proxy that reads secure (HTTPS) connections signs sites with a certificate of its own
+#, machine
+	The site's certificate isn't trusted, by yt-dlp nor by this computer: an antivirus's web filter or a proxy that reads HTTPS may be in the way. Turn its HTTPS scanning off, or add its certificate to the computer's, then look the page up again.	સાઇટનું પ્રમાણપત્ર yt-dlp દ્વારા કે આ કમ્પ્યુટર દ્વારા વિશ્વસનીય નથી: એન્ટિવાયરસનું વેબ ફિલ્ટર અથવા HTTPS વાંચતો પ્રોક્સી અવરોધરૂપ હોઈ શકે છે. તેના HTTPS સ્કેનિંગને બંધ કરો, અથવા તેનું પ્રમાણપત્ર કમ્પ્યુટરમાં ઉમેરો, પછી પૃષ્ઠને ફરીથી જુઓ.
 #. text in crashui.rs
 #. crash report window: the symbols couldn't be downloaded; the report still works
 #, machine
@@ -4755,6 +4906,7 @@
 #, machine
 	This name is reserved by Windows	આ નામ Windows દ્વારા અનામત રાખવામાં આવ્યું છે
 #. tooltip (why a control is greyed) in the Download video window
+#. why "Embed chapters" is greyed: ffmpeg (a helper program) is not installed
 #. why "Put them into the video" is greyed: ffmpeg (a helper program) is not installed
 #, machine
 	This needs ffmpeg	આ માટે ffmpeg જરૂરી છે
@@ -4909,6 +5061,15 @@
 #. button in helpers.rs
 #, machine
 	Try again	ફરી પ્રયાસ કરો
+#. text in errors.rs
+#. what to do when a helper couldn't be downloaded because its server limits requests; {name} = yt-dlp, ffmpeg or gallery-dl; {helpers} and {other} = the buttons Helpers and Use another program
+#. {name} = a file name (keep the braces as they are)
+#, machine
+	Try again in an hour, or download {name} yourself and choose it in {helpers} → {other}.	એક કલાક પછી ફરી પ્રયાસ કરો, અથવા {name} જાતે ડાઉનલોડ કરો અને તેને {helpers} → {other} માં પસંદ કરો.
+#. text in errors.rs
+#. {name} = a file name (keep the braces as they are)
+#, machine
+	Try again later, or download {name} yourself and choose it in {helpers} → {other}.	પછીથી ફરી પ્રયાસ કરો, અથવા {name} જાતે ડાઉનલોડ કરો અને તેને {helpers} → {other} માં પસંદ કરો.
 #. text in the Scheduler window
 #. Tuesday, as short as a calendar's column head (two letters in English)
 #, machine
@@ -5055,6 +5216,7 @@
 #, machine
 	United States Minor Outlying Islands	યુનાઇટેડ સ્ટેટ્સ માઇનોર આઉટલાઇંગ ટાપુઓ
 #. text in a download's Properties window
+#. the web page is not known
 #, machine
 	Unknown	અજાણ્યું
 #. text in a dialog box; text in a download's progress window; text in whereis.rs
@@ -5093,7 +5255,7 @@
 #. text in the Options window
 #, machine
 	Use advanced browser integration	અદ્યતન બ્રાઉઝર એકીકરણનો ઉપયોગ કરો
-#. button in helpers.rs
+#. text in errors.rs; button in helpers.rs
 #. Video helpers: button: pick a program (yt-dlp or ffmpeg) already on the computer
 #. the trailing ... means it opens a window: keep it
 #, machine
@@ -5193,9 +5355,14 @@
 #, machine
 	Verify checksum	ચેકસમ ચકાસો
 #. text in the download list (sizes, speeds, status)
+#. a download's status while the finished file is checked against its checksum
 #. the trailing ... means it is still going on: keep it
 #, machine
 	Verifying...	ચકાસી રહ્યું છે...
+#. text in the download list (sizes, speeds, status)
+#. a download's status while the finished file is checked against its checksum; {percent} how much is checked, e.g. "45%"
+#, machine
+	Verifying... ({percent})	ચકાસણી થઈ રહી છે... ({percent})
 #. text in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. {version} = a version number (keep the braces as they are)
 #, machine
@@ -5296,6 +5463,9 @@
 #. remote control page (on a phone): label of the choice: start the new download now, or let it wait in a queue
 #, machine
 	When	ક્યારે
+#. text in the Options window
+#, machine
+	When it is off, downloads go on in the main window's list. Double-click one there to see its progress.	જ્યારે તે બંધ હોય, ત્યારે ડાઉનલોડ્સ મુખ્ય વિન્ડોની સૂચિમાં ચાલુ રહે છે. તેની પ્રગતિ જોવા માટે ત્યાં એક પર ડબલ-ક્લિક કરો.
 #. text in the Batch download window
 #, machine
 	Wildcard size	વાઇલ્ડકાર્ડનું કદ
@@ -5303,6 +5473,10 @@
 #. the Scheduler, under "Wake the computer to run this queue" (Windows): "Allow wake timers" is on when plugged in, off on battery
 #, machine
 	Windows allows wake timers only while plugged in	Windows વેક ટાઇમરની મંજૂરી ફક્ત પ્લગ ઇન હોય ત્યારે આપે છે
+#. text in the Options window
+#. tooltip of "Mark downloaded files as coming from the internet" on Windows
+#, machine
+	Windows checks the files marked this way: SmartScreen before a program first runs, Office's Protected View before a document opens. Unticked, or under Windows' policy "Do not preserve zone information in file attachments", no download is marked.	Windows આ રીતે ચિહ્નિત કરેલી ફાઇલો તપાસે છે: કોઈ પ્રોગ્રામ પહેલી વાર ચાલે તે પહેલાં SmartScreen અને કોઈ દસ્તાવેજ ખોલવામાં આવે તે પહેલાં Officeનું Protected View તપાસે છે. જો ચેકબૉક્સ પસંદ ન હોય, અથવા Windowsની “ફાઇલ જોડાણોમાં ઝોનની માહિતી જાળવી રાખશો નહીં” નીતિ લાગુ હોય, તો કોઈ ડાઉનલોડ ચિહ્નિત થતું નથી.
 #. text in the Options window
 #. Options → Accounts: Windows Credential Manager didn't answer, so the sign-ins stay in MDM's settings, encrypted so that only this Windows account can read them
 #, machine
@@ -5413,6 +5587,10 @@
 #. Video helpers (macOS, Linux): {path} = the system's ffmpeg
 #, machine
 	Your system's: {path}	તમારી સિસ્ટમનો: {path}
+#. text in the Download video window
+#. in Download video and the browser's video menu: yt-dlp had no JavaScript runtime, so YouTube listed only some qualities (often only the sound); Node.js and Deno are program names
+#, machine
+	YouTube needs a JavaScript runtime to list its video qualities: install Node.js or Deno, then look it up again	YouTube ને તેની વિડિઓ ગુણવત્તા સૂચિબદ્ધ કરવા માટે JavaScript રનટાઇમની જરૂર છે: Node.js અથવા Deno ઇન્સ્ટોલ કરો, પછી તેને ફરીથી જુઓ
 #. text in the Download video window
 #. the Download video window: yt-dlp couldn't read the cookies of the browser chosen in Options (Chrome, Edge...), which holds them while it runs; {browser} = its name
 #, machine
@@ -5547,6 +5725,14 @@
 #. text in a dialog box
 #, machine
 	{file} is no longer where it was saved (moved or deleted). Redownload, in its right-click menu, gets it again.	{file} હવે જ્યાં સાચવવામાં આવી હતી ત્યાં નથી (ખસેડવામાં આવી છે અથવા કાઢી નાખવામાં આવી છે). તેને ફરીથી મેળવવા માટે, તેના રાઇટ-ક્લિક મેનૂમાં ફરીથી ડાઉનલોડ કરો પસંદ કરો.
+#. message or event log entry in the main window
+#. Import refused a file; {size} = its size and {limit} = the largest Import reads, like "4.50 GB" and "64.00 MB"
+#. {size} = a file size such as "4.2 MB" (keep the braces as they are)
+#, machine
+	{file} is too large to be a list of addresses ({size}). Import reads text files, web pages and .ef2 exports of up to {limit}.	{file} સરનામાઓની સૂચિ બનવા માટે ખૂબ મોટી છે ({size}). આયાત {limit} સુધીની ટેક્સ્ટ ફાઇલો, વેબ પૃષ્ઠો અને .ef2 નિકાસ વાંચે છે.
+#. text in a dialog box
+#, machine
+	{file} was moved elsewhere by dragging it out of Download complete, and MDM couldn't learn where. Look for it where you dropped it.	{file} ને પૂર્ણ થયેલા ડાઉનલોડની યાદીમાંથી ખેંચીને બીજી જગ્યાએ ખસેડવામાં આવી હતી, અને MDM તેનું સ્થાન જાણી શક્યું નહીં. તમે તેને જ્યાં મૂક્યું હતું ત્યાં શોધો.
 #. text in the Checksum window
 #. {algorithm} = a checksum algorithm such as "SHA-256" (keep the braces as they are)
 #, machine
@@ -5565,6 +5751,35 @@
 #. {size} = a file size such as "4.2 MB" (keep the braces as they are)
 #, machine
 	{have} of {total} pieces ({size} each)	{total} ટુકડાઓમાંથી {have} (દરેક {size})
+#. text in errors.rs
+#. a helper (yt-dlp, ffmpeg) couldn't be downloaded: its server ({host}) answered with an HTTP error ({status}, such as "404 Not Found")
+#. {host} = a server name such as "example.com" (keep the braces as they are)
+#, machine
+	{host} answered {status}	{host} એ {status} જવાબ આપ્યો
+#. text in errors.rs
+#. a helper (yt-dlp, ffmpeg) couldn't be downloaded: its server's name ({host}, such as api.github.com) wasn't found
+#. {host} = a server name such as "example.com" (keep the braces as they are)
+#, machine
+	{host} could not be found: no connection, or a network that blocks it	{host} મળી શક્યું નથી: કોઈ કનેક્શન નથી, અથવા તેને બ્લોક કરતું નેટવર્ક
+#. text in errors.rs
+#. a helper (yt-dlp, ffmpeg) couldn't be downloaded: there is no way to its server ({host}); the network may be down
+#. {host} = a server name such as "example.com" (keep the braces as they are)
+#, machine
+	{host} could not be reached: check the connection	{host} સુધી પહોંચી શકાયું નથી: કનેક્શન તપાસો
+#. text in errors.rs
+#. a helper (yt-dlp, ffmpeg) couldn't be downloaded: its server ({host}) didn't answer in time
+#. {host} = a server name such as "example.com" (keep the braces as they are)
+#, machine
+	{host} did not answer in time	{host} એ સમયસર જવાબ આપ્યો નથી
+#. text in errors.rs
+#. a helper (yt-dlp, ffmpeg) couldn't be downloaded: its server ({host}) or something on the way refused the connection
+#. {host} = a server name such as "example.com" (keep the braces as they are)
+#, machine
+	{host} refused the connection: a firewall, or a network that blocks it	{host} એ કનેક્શનનો ઇનકાર કર્યો: ફાયરવોલ, અથવા તેને બ્લોક કરતું નેટવર્ક
+#. text in errors.rs
+#. {host} = a server name such as "example.com" (keep the braces as they are)
+#, machine
+	{host} refused the request ({status}): too many requests from your network for now	{host} એ વિનંતીનો ઇનકાર કર્યો ({status}): હાલમાં તમારા નેટવર્ક પરથી ઘણી બધી વિનંતીઓ
 #. text in the download list (sizes, speeds, status)
 #. {h} = hours; {m} = minutes (keep the braces as they are)
 #, machine
@@ -5645,6 +5860,10 @@
 #. text in errors.rs
 #, machine
 	{problem} ({cause})	{problem} ({cause})
+#. text in errors.rs
+#. why a helper couldn't be downloaded ({problem}), then what to do about it ({advice}, whole sentences)
+#, machine
+	{problem}. {advice}	{problem}. {advice}
 #. text in errors.rs
 #. a debrid service's error: too many requests; MDM waits and retries
 #, machine
@@ -6172,6 +6391,10 @@ extension	This page's player streams its video in pieces, so there's no file to 
 #, machine
 extension	Turn on	ચાલુ કરો
 #. text in the browser extension
+#. link beside "Downloads from <site> stay with the browser" in the toolbar button's popup: take the site off the excluded sites again
+#, machine
+extension	Undo	પૂર્વવત્ કરો
+#. text in the browser extension
 #. status when the app is older than the extension; keep the name Mister Download Manager as it is
 #, machine
 extension	Update Mister Download Manager to use everything this extension offers	આ એક્સ્ટેંશન જે કંઈ આપે છે તેનો ઉપયોગ કરવા માટે Mister Download Manager અપડેટ કરો
@@ -6207,6 +6430,10 @@ key	Ctrl+0	Ctrl+0
 #. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
 #, machine
 key	Ctrl+A	Ctrl+A
+#. key name or combination in the Help menu's windows (About, updates, shortcuts, Tell a friend)
+#. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
+#, machine
+key	Ctrl+B	Ctrl+B
 #. key name or combination in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
 #, machine
@@ -6300,10 +6527,10 @@ menu	&About Mister Download Manager	Mister Download Manager વિશે(&A)
 #, machine
 menu	&Add new download	નવું ડાઉનલોડ ઉમેરો(&A)
 #. menu command in the main window
+#. View → Window system: MDM chooses the window system itself at each start
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#. the trailing ... means it opens a window: keep it
 #, machine
-menu	&Add new download...	નવું ડાઉનલોડ ઉમેરો(&A)...
+menu	&Automatic	આપોઆપ(&A)
 #. menu command in the main window
 #. View → Text: letters drawn the classic way, hinted to whole pixels (crisp, coarse on a dense screen)
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
@@ -6409,11 +6636,6 @@ menu	&Stop All	બધા રોકો(&S)
 #, machine
 menu	&Stop Download	ડાઉનલોડ રોકો(&S)
 #. menu command in the main window
-#. View menu: submenu choosing how the text is drawn (smooth or classic)
-#. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#, machine
-menu	&Text	&ટેક્સ્ટ
-#. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
 menu	&Tray icon	ટ્રે આઇકન(&T)
@@ -6430,6 +6652,16 @@ menu	&Undo	પૂર્વવત્ કરો(&U)
 #, machine
 menu	&Video downloads	વિડિઓ ડાઉનલોડ્સ(&V)
 #. menu command in the main window
+#. View → Window system: Wayland's own windows (the name of a Linux display system, usually kept as is)
+#. & marks the keyboard shortcut letter: keep one & before a letter of the translation
+#, machine
+menu	&Wayland	વેલેન્ડ(&W)
+#. menu command in the main window
+#. View menu: submenu choosing the window system MDM's windows use on Linux (X11 through XWayland, or Wayland)
+#. & marks the keyboard shortcut letter: keep one & before a letter of the translation
+#, machine
+menu	&Window system	વિન્ડો સિસ્ટમ(&W)
+#. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
 menu	Add &batch download	બૅચ ડાઉનલોડ ઉમેરો(&b)
@@ -6438,6 +6670,11 @@ menu	Add &batch download	બૅચ ડાઉનલોડ ઉમેરો(&b)
 #. the trailing ... means it opens a window: keep it
 #, machine
 menu	Add &magnet link...	મેગ્નેટ લિંક ઉમેરો...(&m)
+#. menu command in the main window
+#. & marks the keyboard shortcut letter: keep one & before a letter of the translation
+#. the trailing ... means it opens a window: keep it
+#, machine
+menu	Add &new download...	નવું ડાઉનલોડ ઉમેરો(&N)...
 #. menu command in the main window
 #. View → Theme: picks a theme file or a Base16 or pywal colour scheme, copies it into the themes folder and uses it
 #, machine
@@ -6523,7 +6760,7 @@ menu	By Save &Path	પાથ સાચવો દ્વારા(&P)
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
-menu	By St&atus	સ્થિતિ દ્વારા(&a)
+menu	By Stat&us	સ્થિતિ દ્વારા(&u)
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
@@ -6572,9 +6809,17 @@ menu	Delete from queue	કતારમાંથી કાઢી નાખો
 #, machine
 menu	Direct3D	Direct3D
 #. menu command in the main window
+#. View → Draw with: a greyed note; what draws the windows and why: Direct3D 12 through Windows' own software renderer (WARP, keep the name), because this computer's graphics card has no Direct3D 12 driver
+#, machine
+menu	Direct3D 12 (WARP): this graphics card has no Direct3D 12 driver	Direct3D 12 (WARP): આ ગ્રાફિક્સ કાર્ડમાં Direct3D 12 ડ્રાઇવર નથી
+#. menu command in the main window
 #. View → Draw with: a greyed note; Direct3D failed on this computer, so OpenGL draws the windows
 #, machine
 menu	Direct3D didn't start here: OpenGL draws	Direct3D અહીં શરૂ થયું નથી: OpenGL ડ્રો કરે છે
+#. menu command in the main window
+#. View → Draw with: a greyed note; Direct3D draws the windows through Windows' own software renderer (WARP) instead of a graphics card
+#, machine
+menu	Direct3D draws with Windows' software renderer (WARP)	Direct3D Windows ના સોફ્ટવેર રેન્ડરર (WARP) વડે રેન્ડર કરે છે
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #. the trailing ... means it opens a window: keep it
@@ -6645,6 +6890,14 @@ menu	Hide drop target	ડ્રોપ લક્ષ્ય છુપાવો
 #, machine
 menu	High contrast	ઉચ્ચ કોન્ટ્રાસ્ટ
 #. menu command in the main window
+#. View → Window system: a greyed note; MDM's windows are Wayland's now
+#, machine
+menu	In use: Wayland	ઉપયોગમાં: વેલેન્ડ
+#. menu command in the main window
+#. View → Window system: a greyed note; MDM's windows are X11's (through XWayland) now
+#, machine
+menu	In use: X11 (XWayland)	ઉપયોગમાં: X11 (XWayland)
+#. menu command in the main window
 #. View → Draw with: a greyed note under "… didn't start here"; why: another error, written in MDM's log
 #, machine
 menu	It couldn't start: the log says why	તે શરૂ થઈ શક્યું નથી: લોગ કારણ જણાવે છે
@@ -6668,6 +6921,10 @@ menu	Metal	Metal
 #. View → Draw with: a greyed note; Metal failed on this computer, so OpenGL draws the windows
 #, machine
 menu	Metal didn't start here: OpenGL draws	Metal અહીં શરૂ થયું નથી: OpenGL ડ્રો કરે છે
+#. menu command in the main window
+#. View → Draw with: a greyed note; Metal draws the windows through a software renderer instead of a graphics card
+#, machine
+menu	Metal draws with a software renderer	Metal સોફ્ટવેર રેન્ડરર સાથે ડ્રો કરે છે
 #. menu command in the main window
 #. View → Theme: a style theme's name (Windows 8's flat look); keep "Metro" unless your language writes it otherwise
 #, machine
@@ -6715,6 +6972,26 @@ menu	Open with...	આની સાથે ખોલો...
 #. View → Draw with: a graphics system's name, usually kept as is
 #, machine
 menu	OpenGL	OpenGL
+#. menu command in the main window
+#. View → Draw with: a greyed note; why MDM no longer draws with OpenGL: it couldn't start on this computer
+#, machine
+menu	OpenGL didn't start here	OpenGL અહીં શરૂ થઈ શક્યું નથી
+#. menu command in the main window
+#. View → Draw with: a greyed note; why MDM no longer draws with OpenGL: its window froze inside the graphics card's driver while OpenGL drew
+#, machine
+menu	OpenGL froze inside the graphics driver here	OpenGL અહીં ગ્રાફિક્સ ડ્રાઇવરમાં થીજી ગયું છે
+#. menu command in the main window
+#. View → Draw with: a greyed note; this computer's OpenGL (its graphics driver) is too old, so MDM doesn't draw with it
+#, machine
+menu	OpenGL here is too old to draw MDM	અહીં OpenGL એટલું જૂનું છે કે તે MDM ને રેન્ડર કરી શકતું નથી
+#. menu command in the main window
+#. View → Draw with: a greyed note; why MDM no longer draws with OpenGL: its window stayed empty for 10 seconds, so MDM started again another way
+#, machine
+menu	OpenGL's first frame didn't show within 10 seconds	OpenGL ની પ્રથમ ફ્રેમ 10 સેકન્ડમાં દેખાઈ નથી
+#. menu command in the main window
+#. View → Draw with: a greyed note; why MDM no longer draws with OpenGL: MDM crashed or was closed while starting with it
+#, machine
+menu	OpenGL's last start ended before its first frame	OpenGL ની છેલ્લી શરૂઆત તેની પ્રથમ ફ્રેમ દેખાય તે પહેલાં જ સમાપ્ત થઈ ગઈ
 #. menu command in the main window
 #. what double-clicking a download does — noun: show its properties
 #. noun: opens the download's Properties window
@@ -6812,6 +7089,11 @@ menu	Stop Download	ડાઉનલોડ રોકો
 #, machine
 menu	Support &MDM	MDM ને સપોર્ટ કરો(&M)
 #. menu command in the main window
+#. View menu: submenu choosing how the text is drawn (smooth or classic)
+#. & marks the keyboard shortcut letter: keep one & before a letter of the translation
+#, machine
+menu	Te&xt	&ટેક્સ્ટ
+#. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
 menu	Tell a &friend	મિત્રને કહો(&f)
@@ -6866,6 +7148,10 @@ menu	Vulkan	Vulkan
 #. View → Draw with: a greyed note; Vulkan failed on this computer, so OpenGL draws the windows
 #, machine
 menu	Vulkan didn't start here: OpenGL draws	Vulkan અહીં શરૂ થયું નથી: OpenGL ડ્રો કરે છે
+#. menu command in the main window
+#. View → Draw with: a greyed note; Vulkan draws the windows through a software renderer instead of a graphics card
+#, machine
+menu	Vulkan draws with a software renderer	Vulkan સોફ્ટવેર રેન્ડરર સાથે ડ્રો કરે છે
 #. menu bar title in the main window (menus, toolbar, Categories pane)
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine

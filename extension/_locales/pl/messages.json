@@ -92,6 +92,9 @@
       }
     }
   },
+  "popup_undo": {
+    "message": "Cofnij"
+  },
   "popup_excluded": {
     "message": "Pobrane pliki z $site$ pozostają w przeglądarce",
     "placeholders": {

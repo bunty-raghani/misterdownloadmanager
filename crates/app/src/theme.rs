@@ -387,13 +387,57 @@ fn symbol_fonts() -> Vec<Vec<u8>> {
     #[cfg(any(windows, target_os = "macos"))]
     return SYMBOL_FONTS
         .iter()
-        .filter_map(|f| std::fs::read(font_dir().join(f)).ok())
+        .filter_map(|f| read_font(&font_dir().join(f)))
         .collect();
     #[cfg(not(any(windows, target_os = "macos")))]
-    return fc_match(SYMBOL_PATTERN)
-        .and_then(|f| std::fs::read(f).ok())
+    return fc_font(SYMBOL_PATTERN)
+        .map(|(_, bytes)| bytes)
         .into_iter()
         .collect();
+}
+
+/// Whether egui can draw with `bytes`: a TrueType or OpenType font, or a collection of them (its
+/// first face), as the parser egui reads fonts with reads it. A bitmap font (PCF or BDF, gzipped
+/// or not), a Type 1 font, a file cut short or anything else is not one, and egui stops on a font
+/// it was given and can't read (#931: fontconfig named a gzipped PCF font for Japanese).
+fn loadable_font(bytes: &[u8]) -> bool {
+    use skrifa::raw::TableProvider as _;
+    let Ok(font) = skrifa::FontRef::from_index(bytes, 0) else {
+        return false;
+    };
+    // A font whose list of tables is whole but whose tables are cut short (a copy that stopped)
+    // passes the first look: every table it lists is in the file, and those every font has read.
+    font.table_directory
+        .table_records()
+        .iter()
+        .all(|table| font.table_data(table.tag()).is_some())
+        && font.head().is_ok()
+        && font.hhea().is_ok()
+        && font.maxp().is_ok()
+        && font.cmap().is_ok()
+}
+
+/// A font file's bytes, when egui can draw with them ([`loadable_font`]). Any other file is
+/// passed over, and the log says so (once a run: the fonts are loaded again with each change of
+/// language): the next font in line is used instead.
+pub(crate) fn read_font(path: &std::path::Path) -> Option<Vec<u8>> {
+    static SAID: std::sync::Mutex<Option<std::collections::HashSet<std::path::PathBuf>>> =
+        std::sync::Mutex::new(None);
+    let bytes = std::fs::read(path).ok()?;
+    if loadable_font(&bytes) {
+        return Some(bytes);
+    }
+    let mut said = SAID.lock().unwrap_or_else(|e| e.into_inner());
+    if said
+        .get_or_insert_with(Default::default)
+        .insert(path.to_owned())
+    {
+        tracing::warn!(
+            "fonts: {} is not a TrueType or OpenType font, passed over",
+            path.display()
+        );
+    }
+    None
 }
 
 /// The folder the font tables name files in.
@@ -596,6 +640,88 @@ fn fallback_entry(fonts: &'static [FallbackFont], c: char) -> Option<&'static Fa
         .find(|f| f.ranges.iter().any(|&(a, b)| (a..=b).contains(&cp)))
 }
 
+/// The CJK script `c` belongs to, or `None`: Chinese and Japanese characters (`"han"`), kana
+/// (`"japanese"`) and Hangul (`"hangul"`). The combining tone marks Japanese and Chinese put on
+/// kana and letters (U+302A–302F, U+3099–309A) are `None`: a shaper must place them with their
+/// base, so egui keeps them (as it keeps every multi-codepoint cluster).
+#[cfg(windows)]
+pub(crate) fn cjk_script(c: char) -> Option<&'static str> {
+    let cp = c as u32;
+    if matches!(cp, 0x302A..=0x302F | 0x3099..=0x309A) {
+        return None;
+    }
+    if matches!(
+        cp,
+        0x3040..=0x30FF // hiragana, katakana
+        | 0x31F0..=0x31FF // katakana phonetic extensions
+        | 0xFF66..=0xFF9D // halfwidth katakana
+    ) {
+        return Some("japanese");
+    }
+    if matches!(cp, 0x3130..=0x318F | 0xAC00..=0xD7A3) {
+        return Some("hangul");
+    }
+    if matches!(
+        cp,
+        0x2E80..=0x2FFF // radicals
+        | 0x3000..=0x303F // CJK punctuation
+        | 0x3100..=0x312F // bopomofo
+        | 0x31A0..=0x31BF // bopomofo extended
+        | 0x3200..=0x33FF // enclosed and compatibility characters
+        | 0x3400..=0x4DBF // Han extension A
+        | 0x4E00..=0x9FFF // Han
+        | 0xF900..=0xFAFF // compatibility ideographs
+        | 0xFE30..=0xFE4F // compatibility forms
+        | 0xFF00..=0xFF65 // fullwidth forms and punctuation
+        | 0xFFE0..=0xFFE6 // fullwidth signs
+        | 0x20000..=0x3FFFF // Han extensions B and later, and the compatibility supplement
+    ) {
+        return Some("han");
+    }
+    None
+}
+
+/// The system font files to try for a CJK character, in order (Windows): the interface language's
+/// own face first, then the fallback table's. It is the same one source the loaded script fonts
+/// use ([`SCRIPT_FONTS`]), so a Chinese, Japanese or Korean interface keeps its language's glyph
+/// variants. Empty for a character [`cjk_script`] leaves to egui.
+#[cfg(windows)]
+pub(crate) fn cjk_font_files(c: char) -> Vec<&'static str> {
+    cjk_font_files_for(c, crate::i18n::code())
+}
+
+/// [`cjk_font_files`] for an interface language `code` (the production path and its tests).
+#[cfg(windows)]
+pub(crate) fn cjk_font_files_for(c: char, code: &str) -> Vec<&'static str> {
+    let Some(script) = cjk_script(c) else {
+        return Vec::new();
+    };
+    let own = match script {
+        "han" => match code {
+            "zh-hant" => "han-tc",
+            "ja" => "japanese",
+            "ko" => "hangul",
+            _ => "han-sc",
+        },
+        other => other,
+    };
+    let mut files = Vec::new();
+    let mut add = |list: &'static [&'static str]| {
+        for file in list {
+            if !files.contains(file) {
+                files.push(*file);
+            }
+        }
+    };
+    if let Some((_, own_files, _)) = SCRIPT_FONTS.iter().find(|(key, ..)| *key == own) {
+        add(own_files);
+    }
+    if let Some(entry) = fallback_entry(FALLBACK_FONTS, c) {
+        add(entry.files);
+    }
+    files
+}
+
 /// The bytes of the font for `c`, loaded once per font, shared by every family that asks.
 fn fallback_font(c: char) -> Option<(String, egui::FontData)> {
     use std::collections::HashMap;
@@ -617,9 +743,7 @@ fn fallback_font(c: char) -> Option<(String, egui::FontData)> {
         let block = (c as u32) >> 8;
         (
             format!("fallback:{block:x}"),
-            fc_lookup(&format!(":charset={:x}", c as u32))
-                .into_iter()
-                .collect(),
+            fc_lookup(&format!(":charset={:x}", c as u32)),
         )
     };
 
@@ -628,7 +752,7 @@ fn fallback_font(c: char) -> Option<(String, egui::FontData)> {
     let font = loaded
         .entry(key.clone())
         .or_insert_with(|| {
-            let bytes = files.iter().find_map(|f| std::fs::read(f).ok())?;
+            let bytes = files.iter().find_map(|f| read_font(f))?;
             let mut tweak = egui::FontTweak::default();
             tweak.set_baseline_fallback(true);
             #[cfg(windows)]
@@ -647,16 +771,66 @@ fn fallback_font(c: char) -> Option<(String, egui::FontData)> {
     Some((key, font))
 }
 
-/// `fc-match` for one pattern, asked right now (Linux, a character no loaded font has).
+/// `fc-match` for one pattern, asked right now (Linux, a character no loaded font has): the font
+/// files in fontconfig's order ([`fc_match`]).
 #[cfg(not(any(windows, target_os = "macos")))]
-fn fc_lookup(pattern: &str) -> Option<std::path::PathBuf> {
-    let out = std::process::Command::new("fc-match")
-        .args(["-f", "%{file}", pattern])
-        .output()
-        .ok()?;
-    let file = String::from_utf8(out.stdout).ok()?;
-    let file = file.trim();
-    (out.status.success() && !file.is_empty()).then(|| file.into())
+fn fc_lookup(pattern: &str) -> Vec<std::path::PathBuf> {
+    match fc_match(pattern).output() {
+        Ok(out) if out.status.success() => fc_candidates(&String::from_utf8_lossy(&out.stdout)),
+        _ => Vec::new(),
+    }
+}
+
+/// `fc-match` for `pattern`: every font that matches it, best first (`-s`), one file a line. Its
+/// best answer alone can be a font egui can't draw with, a bitmap font fontconfig prefers for a
+/// language (#931: a gzipped PCF font for Japanese). So the fonts that scale come first
+/// (`scalable=true` outranks the family and the language in fontconfig's order: Noto Sans CJK
+/// before a preferred bitmap font), and MDM takes the first it can read ([`pick_font`]: a
+/// scalable Type 1 font is no more readable than a bitmap one).
+#[cfg(not(any(windows, target_os = "macos")))]
+fn fc_match(pattern: &str) -> std::process::Command {
+    let mut command = std::process::Command::new("fc-match");
+    command
+        .args(["-s", "-f", "%{file}\\n"])
+        .arg(format!("{pattern}:scalable=true"));
+    command
+}
+
+/// The font files in `fc-match`'s answer ([`fc_match`]), in its order, each once.
+#[cfg_attr(any(windows, target_os = "macos"), allow(dead_code))]
+fn fc_candidates(out: &str) -> Vec<std::path::PathBuf> {
+    let mut files: Vec<std::path::PathBuf> = Vec::new();
+    for line in out.lines().map(str::trim).filter(|l| !l.is_empty()) {
+        let file = std::path::PathBuf::from(line);
+        if !files.contains(&file) {
+            files.push(file);
+        }
+    }
+    files
+}
+
+/// The first of `candidates` (fontconfig's files, best first) egui can draw with: its file and
+/// bytes. `looked` holds the files looked at already and whether each was one: a file loaded
+/// already (several languages share a font: Devanagari, the CJK collection) gives nothing new,
+/// and one that wasn't a font egui can draw with is not read again.
+#[cfg_attr(any(windows, target_os = "macos"), allow(dead_code))]
+fn pick_font(
+    candidates: &[std::path::PathBuf],
+    looked: &mut std::collections::HashMap<std::path::PathBuf, bool>,
+) -> Option<(std::path::PathBuf, Vec<u8>)> {
+    for file in candidates {
+        match looked.get(file) {
+            Some(true) => return None,
+            Some(false) => continue,
+            None => {}
+        }
+        let bytes = read_font(file);
+        looked.insert(file.clone(), bytes.is_some());
+        if let Some(bytes) = bytes {
+            return Some((file.clone(), bytes));
+        }
+    }
+    None
 }
 
 impl egui::FontProvider for ScriptFallback {
@@ -676,13 +850,13 @@ fn add_script_fallback(ctx: &egui::Context) {
 /// The interface font: Segoe UI as IDM has it on Windows, the system's own elsewhere.
 fn ui_font() -> Option<Vec<u8>> {
     #[cfg(windows)]
-    return std::fs::read(font_dir().join("segoeui.ttf")).ok();
+    return read_font(&font_dir().join("segoeui.ttf"));
     #[cfg(target_os = "macos")]
     return ["SFNS.ttf", "Helvetica.ttc"]
         .iter()
-        .find_map(|f| std::fs::read(font_dir().join(f)).ok());
+        .find_map(|f| read_font(&font_dir().join(f)));
     #[cfg(not(any(windows, target_os = "macos")))]
-    return fc_match("sans-serif").and_then(|f| std::fs::read(f).ok());
+    return fc_font("sans-serif").map(|(_, bytes)| bytes);
 }
 
 /// The script fonts for `code` (every language's with `all`): (key, bytes), in fallback order.
@@ -696,34 +870,29 @@ fn script_fonts(code: &str, all: bool) -> Vec<(String, Vec<u8>)> {
             // The first file there is used (older systems name some differently); a .ttc's
             // first face is the regular one.
             .filter_map(|(key, files, _)| {
-                let bytes = files
-                    .iter()
-                    .find_map(|f| std::fs::read(font_path(&dir, f)).ok())?;
+                let bytes = files.iter().find_map(|f| read_font(&font_path(&dir, f)))?;
                 Some(((*key).to_owned(), bytes))
             })
             .collect()
     }
     #[cfg(not(any(windows, target_os = "macos")))]
     {
-        let mut seen = std::collections::HashSet::new();
+        // Several languages share a font (Devanagari, the CJK collection): loaded once.
+        let mut looked = std::collections::HashMap::new();
         SCRIPT_LANGS
             .iter()
             .filter(|(ours, _)| all || *ours == code)
-            .filter_map(|(_, fc)| fc_match(&format!(":lang={fc}")))
-            // Several languages share a font (Devanagari, the CJK collection): loaded once.
-            .filter(|f| seen.insert(f.clone()))
-            .filter_map(|f| {
-                let bytes = std::fs::read(&f).ok()?;
-                Some((format!("fc:{}", f.display()), bytes))
-            })
+            .filter_map(|(_, fc)| pick_font(fc_files().get(&format!(":lang={fc}"))?, &mut looked))
+            .map(|(f, bytes)| (format!("fc:{}", f.display()), bytes))
             .collect()
     }
 }
 
-/// The font file fontconfig picks for `pattern` (one of [`fc_files`]'s).
+/// The font fontconfig picks for `pattern` (one of [`fc_files`]'s): the first of its answers egui
+/// can draw with, its file and bytes.
 #[cfg(not(any(windows, target_os = "macos")))]
-fn fc_match(pattern: &str) -> Option<std::path::PathBuf> {
-    fc_files().get(pattern).cloned()
+fn fc_font(pattern: &str) -> Option<(std::path::PathBuf, Vec<u8>)> {
+    pick_font(fc_files().get(pattern)?, &mut Default::default())
 }
 
 /// Every font file the windows may need, as fontconfig picks it: the interface font
@@ -734,9 +903,9 @@ fn fc_match(pattern: &str) -> Option<std::path::PathBuf> {
 /// opens; the fonts only wait for what is still running. A font installed while MDM runs is
 /// used from its next start.
 #[cfg(not(any(windows, target_os = "macos")))]
-fn fc_files() -> &'static std::collections::HashMap<String, std::path::PathBuf> {
-    use std::process::{Command, Stdio};
-    static FILES: std::sync::OnceLock<std::collections::HashMap<String, std::path::PathBuf>> =
+fn fc_files() -> &'static std::collections::HashMap<String, Vec<std::path::PathBuf>> {
+    use std::process::Stdio;
+    static FILES: std::sync::OnceLock<std::collections::HashMap<String, Vec<std::path::PathBuf>>> =
         std::sync::OnceLock::new();
     FILES.get_or_init(|| {
         let running: Vec<_> = ["sans-serif", SYMBOL_PATTERN]
@@ -744,8 +913,7 @@ fn fc_files() -> &'static std::collections::HashMap<String, std::path::PathBuf> 
             .map(str::to_owned)
             .chain(SCRIPT_LANGS.iter().map(|(_, fc)| format!(":lang={fc}")))
             .filter_map(|pattern| {
-                let child = Command::new("fc-match")
-                    .args(["-f", "%{file}", &pattern])
+                let child = fc_match(&pattern)
                     .stdin(Stdio::null())
                     .stdout(Stdio::piped())
                     .stderr(Stdio::null())
@@ -758,9 +926,8 @@ fn fc_files() -> &'static std::collections::HashMap<String, std::path::PathBuf> 
             .into_iter()
             .filter_map(|(pattern, child)| {
                 let out = child.wait_with_output().ok()?;
-                let file = String::from_utf8(out.stdout).ok()?;
-                let file = file.trim();
-                (out.status.success() && !file.is_empty()).then(|| (pattern, file.into()))
+                let files = fc_candidates(&String::from_utf8_lossy(&out.stdout));
+                (out.status.success() && !files.is_empty()).then_some((pattern, files))
             })
             .collect()
     })
@@ -896,11 +1063,20 @@ fn fonts(ctx: &egui::Context, code: &str, all: bool) {
 /// interface's direction changes: a right-to-left line needs its brackets mirrored by the shaper.
 #[cfg(windows)]
 fn classic_text(ctx: &egui::Context) {
-    use std::sync::atomic::{AtomicI8, Ordering};
-    static DRAWN: AtomicI8 = AtomicI8::new(-1);
+    use std::sync::atomic::{AtomicU64, Ordering};
+    static DRAWN: AtomicU64 = AtomicU64::new(u64::MAX);
     let rtl = crate::i18n::rtl();
     let smooth = SMOOTH_TEXT.load(Ordering::Relaxed);
-    let now = i8::from(rtl) | (i8::from(smooth) << 1);
+    // A CJK face depends on the interface language (its glyph variants), and the glyph atlas
+    // keeps what was rasterized: a change of CJK language installs the rasterizer again.
+    let lang = match crate::i18n::code() {
+        "zh-hans" => 1,
+        "zh-hant" => 2,
+        "ja" => 3,
+        "ko" => 4,
+        _ => 0,
+    };
+    let now = u64::from(rtl) | (u64::from(smooth) << 1) | (lang << 2);
     if DRAWN.swap(now, Ordering::Relaxed) != now {
         ctx.set_glyph_rasterizers(
             crate::win32::text_rasterizer(font_dir(), rtl, smooth)
@@ -954,14 +1130,46 @@ fn text_styles(ctx: &egui::Context) {
     ctx.all_styles_mut(|s| {
         use egui::{FontId, TextStyle};
         s.text_styles = [
-            (TextStyle::Small, FontId::proportional(m.font_small)),
-            (TextStyle::Body, FontId::proportional(m.font_body)),
-            (TextStyle::Button, FontId::proportional(m.font_body)),
-            (TextStyle::Monospace, FontId::monospace(m.font_body)),
-            (TextStyle::Heading, FontId::proportional(m.font_heading)),
+            (
+                TextStyle::Small,
+                FontId::proportional(font_size(m.font_small)),
+            ),
+            (
+                TextStyle::Body,
+                FontId::proportional(font_size(m.font_body)),
+            ),
+            (
+                TextStyle::Button,
+                FontId::proportional(font_size(m.font_body)),
+            ),
+            (
+                TextStyle::Monospace,
+                FontId::monospace(font_size(m.font_body)),
+            ),
+            (
+                TextStyle::Heading,
+                FontId::proportional(font_size(m.font_heading)),
+            ),
         ]
         .into();
     });
+}
+
+/// The size a role is drawn at: in a Chinese, Japanese or Korean interface, no smaller than the
+/// theme's `font.cjk` (their glyphs are denser than Latin's at the same size, #837). Other
+/// languages keep the role's size exactly.
+pub fn font_size(size: f32) -> f32 {
+    font_size_for(crate::i18n::code(), size, metrics().font_cjk)
+}
+
+/// [`font_size`] for an interface language `code` and a theme's CJK floor (also the production
+/// path, so the test covers what the UI calls).
+fn font_size_for(code: &str, size: f32, cjk: f32) -> f32 {
+    if crate::i18n::cjk_code(code) {
+        size.max(cjk)
+    } else {
+        size
+    }
 }
 
 pub fn apply(ctx: &egui::Context) {
@@ -1038,7 +1246,7 @@ pub fn apply_theme(ctx: &egui::Context) {
 
 #[cfg(test)]
 mod mode_tests {
-    use super::wanted;
+    use super::{font_size_for, wanted};
 
     /// #60: Always dark wins whatever the system says; otherwise Dark Mode support follows it.
     #[test]
@@ -1050,6 +1258,131 @@ mod mode_tests {
             assert_eq!(wanted(true, false, system), system, "following the system");
             assert!(!wanted(false, false, system), "support off: light");
         }
+    }
+
+    /// #837: Chinese, Japanese and Korean text keeps the theme's floor; English and the other
+    /// languages keep their measured size. A role already larger keeps it.
+    #[test]
+    fn cjk_text_keeps_the_themes_floor() {
+        assert_eq!(crate::palette::Metrics::CLASSIC.font_cjk, 12.0);
+        for code in ["zh-hans", "zh-hant", "ja", "ko"] {
+            assert_eq!(font_size_for(code, 11.0, 12.0), 12.0, "{code}");
+            assert_eq!(font_size_for(code, 13.0, 12.0), 13.0, "{code}");
+        }
+        for code in ["en", "de", "ar", "ru", "th"] {
+            assert_eq!(font_size_for(code, 11.0, 12.0), 11.0, "{code}");
+        }
+        // A theme that asks for a larger floor gets it; one that asks for less than the role
+        // doesn't shrink the role.
+        assert_eq!(font_size_for("zh-hans", 11.0, 14.0), 14.0);
+        assert_eq!(font_size_for("zh-hans", 16.0, 14.0), 16.0);
+    }
+}
+
+/// #931: a font the system names that egui can't read (fontconfig answered a gzipped PCF bitmap
+/// font for Japanese) is passed over for the next one, never given to egui, which stops on it.
+#[cfg(test)]
+mod font_file_tests {
+    use super::{fc_candidates, loadable_font, pick_font, read_font};
+    use std::collections::HashMap;
+
+    /// A real TrueType font, and another: egui's own (Ubuntu Light, Hack).
+    fn real_ttf(name: &str) -> Vec<u8> {
+        egui::FontDefinitions::default().font_data[name]
+            .bytes()
+            .to_vec()
+    }
+
+    #[test]
+    fn only_fonts_egui_can_read_are_taken() {
+        let ttf = real_ttf("Ubuntu-Light");
+        assert!(loadable_font(&ttf), "a real TrueType font");
+        assert!(loadable_font(&real_ttf("Hack")), "another");
+
+        // The start of 12x13ja.pcf.gz: gzip's magic, read as the sfnt version 0x1F8B0800.
+        let mut pcf_gz = vec![0x1f, 0x8b, 0x08, 0x00, 0, 0, 0, 0, 0x02, 0x03];
+        pcf_gz.extend((0..4000u32).map(|i| (i * 31 % 251) as u8));
+        // An uncompressed PCF ("\x01fcp"), a BDF, a Type 1 (.pfb) font.
+        let mut pcf = b"\x01fcp".to_vec();
+        pcf.extend([8, 0, 0, 0].iter().chain(&[0u8; 200]));
+        let bdf =
+            b"STARTFONT 2.1\nFONT -misc-fixed-medium-r-normal--13-120-75-75-c-120-iso10646-1\n";
+        let mut pfb = vec![0x80, 0x01, 0x10, 0x00, 0x00, 0x00];
+        pfb.extend(b"%!PS-AdobeFont-1.0: Test 001.000\n");
+        // Random bytes (a fixed xorshift, so the test is the same every run).
+        let mut x = 0x9e37_79b9u32;
+        let random: Vec<u8> = (0..8192)
+            .map(|_| {
+                x ^= x << 13;
+                x ^= x >> 17;
+                x ^= x << 5;
+                x as u8
+            })
+            .collect();
+        for (what, bytes) in [
+            ("a gzipped PCF font", pcf_gz.as_slice()),
+            ("a PCF font", &pcf),
+            ("a BDF font", bdf),
+            ("a Type 1 font", &pfb),
+            ("random bytes", &random),
+            ("an empty file", &[]),
+            ("a TrueType font cut in half", &ttf[..ttf.len() / 2]),
+            (
+                "a TrueType font cut after its table list",
+                &ttf[..ttf.len().min(400)],
+            ),
+        ] {
+            assert!(!loadable_font(bytes), "{what} was taken");
+        }
+    }
+
+    /// fontconfig's answer, best first: its first font egui can read is the one taken. A font
+    /// loaded already for another language gives nothing new; a file refused once isn't read again.
+    #[test]
+    fn the_first_font_egui_can_read_in_fontconfigs_answer_is_taken() {
+        let dir = tempfile::tempdir().unwrap();
+        let file = |name: &str, bytes: &[u8]| {
+            let path = dir.path().join(name);
+            std::fs::write(&path, bytes).unwrap();
+            path
+        };
+        let pcf = file("12x13ja.pcf.gz", &[0x1f, 0x8b, 0x08, 0x00, 1, 2, 3, 4]);
+        let bdf = file("fixed.bdf", b"STARTFONT 2.1\n");
+        let ubuntu = file("Ubuntu-Light.ttf", &real_ttf("Ubuntu-Light"));
+        let hack = file("Hack-Regular.ttf", &real_ttf("Hack"));
+        let gone = dir.path().join("gone.ttf");
+        let answer = [&pcf, &bdf, &pcf, &ubuntu, &hack]
+            .iter()
+            .map(|p| format!("{}\n", p.display()))
+            .collect::<String>();
+
+        // As fc-match -s prints it: one file a line (blank lines and repeats ignored).
+        let candidates = fc_candidates(&format!("\n{answer}\n"));
+        assert_eq!(
+            candidates,
+            [pcf.clone(), bdf.clone(), ubuntu.clone(), hack.clone()]
+        );
+
+        let mut looked = HashMap::new();
+        let (picked, bytes) = pick_font(&candidates, &mut looked).expect("a font");
+        assert_eq!(picked, ubuntu);
+        assert_eq!(bytes, real_ttf("Ubuntu-Light"));
+        assert_eq!(looked.get(&pcf), Some(&false));
+        assert_eq!(looked.get(&bdf), Some(&false));
+        assert!(
+            !looked.contains_key(&hack),
+            "read no further than the first"
+        );
+
+        // Another language whose best answer is the same font: loaded already, nothing new.
+        assert!(pick_font(&[pcf.clone(), ubuntu.clone()], &mut looked).is_none());
+        // A refused file and a missing one are passed over, and the next font is taken.
+        let (picked, _) = pick_font(&[pcf.clone(), gone, hack.clone()], &mut looked).unwrap();
+        assert_eq!(picked, hack);
+        // Nothing egui can read: nothing.
+        assert!(pick_font(std::slice::from_ref(&bdf), &mut HashMap::new()).is_none());
+        assert!(read_font(&bdf).is_none());
+        assert!(read_font(&ubuntu).is_some());
     }
 }
 
@@ -1284,5 +1617,72 @@ mod glyph_tests {
             "marks without a glyph:\n{}",
             report.join("\n")
         );
+    }
+}
+
+#[cfg(test)]
+mod status_width_tests {
+    /// #736: the list's Status cell while a torrent's files or a finished file are checked or a
+    /// video joined, a short word and how far ("Checking 45%", "Merging 63%"), fits its column
+    /// at the default width in English, German, French, Russian and Arabic, at 100 % and at
+    /// 150 % (View → Interface size), the widest percentage ("100 %") and "..." before it is
+    /// known included. "63% merged" was cut to "63% me..." at 65 px, and a torrent's "Wird
+    /// überprüft 45 %" in German.
+    ///
+    /// In the list's font as this system draws it: Segoe UI on Windows, the system font on
+    /// macOS, fontconfig's interface font on Linux (DejaVu Sans on a bare Ubuntu, where German
+    /// needs 147 px). The default grows with the font there ([`crate::list::status_width`]); on
+    /// Windows it stays 132 px, so the list's other columns keep their room.
+    #[test]
+    fn finishing_fits_the_status_column() {
+        let i18n = crate::i18n::i18n();
+        #[cfg(not(any(windows, target_os = "macos")))]
+        println!(
+            "interface font: {:?}",
+            super::fc_font("sans-serif").map(|(f, _)| f)
+        );
+        let mut widest = (0.0f32, String::new());
+        for code in ["en", "de", "fr", "ru", "ar"] {
+            let lang = i18n.from_code(code).expect("a catalog");
+            let full = craft_i18n::Format::from_tag(code).percent(1.0, 0);
+            for zoom in [1.0, 1.5] {
+                let ctx = egui::Context::default();
+                ctx.set_pixels_per_point(zoom);
+                super::fonts(&ctx, code, false);
+                let mut out = ctx.run_ui(Default::default(), |_| {});
+                out.textures_delta.clear();
+                let font = crate::winui::tahoma();
+                let measure = |text: &str| {
+                    ctx.fonts_mut(|f| {
+                        f.layout_no_wrap(text.to_owned(), font.clone(), egui::Color32::WHITE)
+                            .size()
+                            .x
+                    })
+                };
+                let column = crate::list::status_width(code, &full, measure);
+                let room = column - crate::list::CELL_PAD;
+                println!("{code} at {zoom}: Status {column} px");
+                #[cfg(windows)]
+                assert_eq!(
+                    column,
+                    crate::list::DEFAULT_WIDTHS[crate::list::STATUS],
+                    "{code} at {zoom}: Segoe UI fits in the default"
+                );
+                for source in ["Checking {percent}", "Merging {percent}"] {
+                    for percent in [full.as_str(), "100%", "..."] {
+                        let text = i18n.t(lang, source).replace("{percent}", percent);
+                        let width = measure(&text);
+                        if width > widest.0 {
+                            widest = (width, format!("{code} at {zoom}: {text}"));
+                        }
+                        assert!(
+                            width <= room,
+                            "{code} at {zoom}: {text}: {width} px, {room} px of room"
+                        );
+                    }
+                }
+            }
+        }
+        println!("widest: {} px, {}", widest.0, widest.1);
     }
 }

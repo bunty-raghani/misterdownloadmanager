@@ -43,7 +43,8 @@ Minimize hides the main window, and a progress window, in the notification area 
 leaving them on the taskbar. Closing the main window does the same: MDM keeps running until you
 choose **Tasks → Exit** or **Exit** in the tray menu.
 
-The tray menu also has **Add new download**, **Add batch download**, the **Speed Limiter**, the
+The tray menu also has **Add new download**, **Add batch download**, **Add batch download from
+clipboard**, the **Speed Limiter**, the
 **Scheduler**, the main download queue and **Options**.
 
 ## Light while it waits

@@ -18,8 +18,9 @@ pub struct Batch {
     focused: bool,
     /// The pattern's addresses (or why none), and the inputs they were made from.
     cached: Option<(PatternKey, Result<Vec<url::Url>, &'static str>)>,
-    /// The clipboard's address, read off the window's thread (#661).
-    clip: crate::clipboard::Prefill,
+    /// The keys go to To when it opens (a pattern made from a copied address, #709), else to
+    /// the address.
+    focus_to: bool,
 }
 
 /// What a pattern's addresses are made from: address, letters, from, to, size.
@@ -32,9 +33,8 @@ pub struct Added {
 }
 
 impl Batch {
-    /// Pre-filled from the clipboard when it holds an http(s) or ftp(s) address, as IDM's: read
-    /// off the window's thread, the address put in the box on the frame it comes.
-    pub fn new(from_clipboard: bool) -> Self {
+    /// Empty, the range 0 to 10.
+    pub fn new() -> Self {
         Batch {
             address: String::new(),
             letters: false,
@@ -46,21 +46,20 @@ impl Batch {
             password: String::new(),
             focused: false,
             cached: None,
-            clip: if from_clipboard {
-                crate::clipboard::Prefill::ask()
-            } else {
-                Default::default()
-            },
+            focus_to: false,
         }
     }
 
-    /// The clipboard's text as the address, when it is one MDM downloads and the box is still
-    /// empty (nothing typed meanwhile).
-    fn fill_from_clipboard(&mut self, clip: &str) {
-        let clip = clip.trim();
-        if self.address.is_empty() && url::Url::parse(clip).is_ok_and(|u| mdm_engine::supported(&u))
-        {
-            self.address = clip.to_owned();
+    /// Add batch download from clipboard (#709): the copied address with its number as the
+    /// `*`, From that number and To too, the keys in To (its number selected) for the last one.
+    pub fn with_pattern(p: crate::clipbatch::Pattern) -> Self {
+        Batch {
+            address: p.address,
+            from: p.from.to_string(),
+            to: p.to.to_string(),
+            size: p.width.clamp(1, 10).to_string(),
+            focus_to: true,
+            ..Self::new()
         }
     }
 
@@ -134,9 +133,6 @@ impl Batch {
     }
 
     pub fn show(&mut self, ctx: &egui::Context) -> Outcome<Added> {
-        if let Some(clip) = self.clip.take() {
-            self.fill_from_clipboard(&clip);
-        }
         // Worked out again only when the pattern changes (up to 100,000 addresses).
         let key = (
             self.address.clone(),
@@ -229,9 +225,9 @@ impl Batch {
             true,
             false,
         );
-        if !self.focused {
+        let focus_address = !self.focused && !self.focus_to;
+        if focus_address {
             edit.request_focus();
-            self.focused = true;
         }
 
         // Replace asterisk to: Numbers / Letters, From, To, Wildcard size.
@@ -276,7 +272,20 @@ impl Batch {
             crate::i18n::t("To:"),
             LIGHT_TEXT(),
         );
-        self.spin(ui, o, 204.0, 239.0, "to");
+        let to = self.spin(ui, o, 204.0, 239.0, "to");
+        if !self.focused {
+            if self.focus_to {
+                to.request_focus();
+            }
+            self.focused = true;
+        }
+        // Its number selected once the window has the keys (a window shown a few frames after
+        // it opens, on Linux, put the caret after it, and "12" typed made "112").
+        if self.focus_to && to.has_focus() && ui.ctx().input(|i| i.viewport().focused == Some(true))
+        {
+            winui::select_all_text(ui.ctx(), to.id, &self.to);
+            self.focus_to = false;
+        }
         // A longer translation starts earlier instead of running into the box (down to just
         // after the To box), cut with "..." past that, whole on hover.
         let size_label = crate::i18n::t("Wildcard size");
@@ -403,7 +412,7 @@ impl Batch {
     }
 
     /// An edit with its up-down buddy (`x` edit, `spin_x` buddy), 26 px tall.
-    fn spin(&mut self, ui: &mut Ui, o: Pos2, x: f32, spin_x: f32, which: &str) {
+    fn spin(&mut self, ui: &mut Ui, o: Pos2, x: f32, spin_x: f32, which: &str) -> egui::Response {
         let letters = self.letters && which != "size";
         let value = match which {
             "from" => &mut self.from,
@@ -420,10 +429,9 @@ impl Batch {
             (0, 999_999_999)
         };
         if !letters {
-            winui::spin_box(ui, rc, value, min, max, true, &id);
-            return;
+            return winui::spin_box(ui, rc, value, min, max, true, &id);
         }
-        let (_, step) = winui::spin_frame(ui, rc, true, &id, |ui, text| {
+        let (resp, step) = winui::spin_frame(ui, rc, true, &id, |ui, text| {
             winui::field_text(ui, text, value, true)
         });
         value.retain(|c| c.is_ascii_alphabetic());
@@ -441,6 +449,7 @@ impl Batch {
                 (n as char).to_string()
             };
         }
+        resp
     }
 }
 
@@ -451,26 +460,38 @@ mod tests {
     fn batch(address: &str) -> Batch {
         Batch {
             address: address.into(),
-            ..Batch::new(false)
+            ..Batch::new()
         }
     }
 
-    /// #661: the clipboard's address comes a frame or more after the window opens: it fills
-    /// an empty box only, and only with an address MDM downloads.
+    /// #709: a numbered address copied (Add batch download from clipboard): the window opens
+    /// with its pattern, the copied address first, To ready for the last number.
     #[test]
-    fn the_clipboard_fills_only_an_empty_box() {
-        let mut b = batch("");
-        b.fill_from_clipboard(
-            " http://x/img*.jpg
-",
+    fn a_copied_numbered_address_fills_the_pattern() {
+        let p = crate::clipbatch::numbered("https://media.example.org/show/ep01.mp4").unwrap();
+        let mut b = Batch::with_pattern(p);
+        assert!(b.focus_to);
+        assert_eq!(
+            (
+                b.address.as_str(),
+                b.from.as_str(),
+                b.to.as_str(),
+                b.size.as_str()
+            ),
+            ("https://media.example.org/show/ep*.mp4", "1", "1", "2")
         );
-        assert_eq!(b.address, "http://x/img*.jpg");
-        let mut b = batch("http://typed/*.png");
-        b.fill_from_clipboard("http://x/img*.jpg");
-        assert_eq!(b.address, "http://typed/*.png");
-        let mut b = batch("");
-        b.fill_from_clipboard("not an address");
-        assert_eq!(b.address, "");
+        assert_eq!(
+            b.expand().iter().map(|u| u.as_str()).collect::<Vec<_>>(),
+            ["https://media.example.org/show/ep01.mp4"]
+        );
+        b.to = "12".into();
+        let urls = b.expand();
+        assert_eq!(urls.len(), 12);
+        assert_eq!(urls[11].as_str(), "https://media.example.org/show/ep12.mp4");
+        assert!(
+            !Batch::new().focus_to,
+            "File → Add batch download: the address"
+        );
     }
 
     #[test]

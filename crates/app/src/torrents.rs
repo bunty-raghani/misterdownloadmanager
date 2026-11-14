@@ -785,6 +785,7 @@ impl Host {
     /// Forget a torrent the list no longer has; its files stay unless `files` (and the session
     /// runs: it knows which files are the torrent's).
     pub fn forget(&self, rt: &tokio::runtime::Handle, hash: &str, files: bool) {
+        crate::torrent_rename::on_forget_torrent(hash);
         if let Some(t) = self.get() {
             let hash = hash.to_owned();
             rt.spawn(async move {
@@ -858,10 +859,7 @@ fn mark_files(folder: &Path, files: &[mdm_torrent::FileEntry]) {
         if !path.is_file() {
             continue;
         }
-        #[cfg(windows)]
-        crate::win32::mark_downloaded(&path, TORRENT_ORIGIN, None);
-        #[cfg(unix)]
-        crate::unix::mark_downloaded(&path, TORRENT_ORIGIN, None);
+        crate::webmark::mark(&path, TORRENT_ORIGIN, None);
     }
 }
 
@@ -1000,6 +998,7 @@ impl Run {
             // A torrent has peers, not one server (#140).
             server: None,
             at_service: None,
+            finishing: None,
         };
         if *self.stopped.lock().unwrap() {
             s.state = State::Cancelled;

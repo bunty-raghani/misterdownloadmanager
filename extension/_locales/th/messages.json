@@ -92,6 +92,9 @@
       }
     }
   },
+  "popup_undo": {
+    "message": "เลิกทำ"
+  },
   "popup_excluded": {
     "message": "การดาวน์โหลดจาก $site$ จะยังคงอยู่ในเบราว์เซอร์",
     "placeholders": {

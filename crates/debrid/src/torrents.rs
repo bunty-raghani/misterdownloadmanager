@@ -15,6 +15,7 @@
 //!   the user's own cloud.
 //! - TorBox: `torrents/createtorrent` (`magnet`), `torrents/mylist?id=`, `torrents/requestdl` for
 //!   each file (a direct link), `torrents/controltorrent` (`delete`).
+//! - Mega-Debrid: not yet (`ServiceKind::takes_magnets`).
 
 use std::path::{Component, Path, PathBuf};
 use std::sync::{Arc, Mutex};
@@ -67,13 +68,15 @@ impl Session {
                 t.await
             }
             ServiceKind::AllDebrid => {
-                alldebrid::add_magnet(&self.http, &self.token(false).await?, magnet).await
+                alldebrid::add_magnet(&self.http, &self.token(None).await?, magnet).await
             }
+            // Never asked: `torrent_account` skips it.
+            ServiceKind::MegaDebrid => Err(Fault::Unsupported),
             ServiceKind::Premiumize => {
-                premiumize::create(&self.http, &self.token(false).await?, magnet).await
+                premiumize::create(&self.http, &self.token(None).await?, magnet).await
             }
             ServiceKind::TorBox => {
-                let key = self.token(false).await?;
+                let key = self.token(None).await?;
                 let id = torbox::create(&self.http, &key, torbox::Kind::Torrent, "magnet", magnet)
                     .await?;
                 Ok(id.to_string())
@@ -90,14 +93,16 @@ impl Session {
                 .await
             }
             ServiceKind::AllDebrid => {
-                alldebrid::magnet_status(&self.http, &self.token(false).await?, id).await
+                alldebrid::magnet_status(&self.http, &self.token(None).await?, id).await
             }
+            // Never asked: `torrent_account` skips it.
+            ServiceKind::MegaDebrid => Err(Fault::Unsupported),
             ServiceKind::Premiumize => {
-                premiumize::transfer_status(&self.http, &self.token(false).await?, id).await
+                premiumize::transfer_status(&self.http, &self.token(None).await?, id).await
             }
             ServiceKind::TorBox => {
                 let (kind, n) = (torbox::Kind::Torrent, torbox::torrent_id(id)?);
-                let key = self.token(false).await?;
+                let key = self.token(None).await?;
                 let i = torbox::item(&self.http, &key, kind, n).await?;
                 match torbox::state(&i) {
                     Some(s) => Ok(s),
@@ -119,16 +124,18 @@ impl Session {
                 .await
             }
             ServiceKind::AllDebrid => {
-                alldebrid::magnet_delete(&self.http, &self.token(false).await?, id).await
+                alldebrid::magnet_delete(&self.http, &self.token(None).await?, id).await
             }
+            // Never asked: `torrent_account` skips it.
+            ServiceKind::MegaDebrid => Err(Fault::Unsupported),
             ServiceKind::Premiumize => {
-                premiumize::transfer_delete(&self.http, &self.token(false).await?, id).await
+                premiumize::transfer_delete(&self.http, &self.token(None).await?, id).await
             }
             ServiceKind::TorBox => {
                 let n = torbox::torrent_id(id)?;
                 torbox::delete(
                     &self.http,
-                    &self.token(false).await?,
+                    &self.token(None).await?,
                     torbox::Kind::Torrent,
                     n,
                 )
@@ -139,12 +146,13 @@ impl Session {
 }
 
 impl Debrid {
-    /// The account torrents go to: the first one (every service takes magnets).
+    /// The account torrents go to: the first one whose service takes magnets.
     pub fn torrent_account(&self) -> Option<(u64, ServiceKind)> {
         self.sessions
             .read()
             .unwrap()
-            .first()
+            .iter()
+            .find(|s| s.account.service.takes_magnets())
             .map(|s| (s.account.id, s.account.service))
     }
 
@@ -194,6 +202,8 @@ pub struct Order {
     pub transfer: Option<String>,
     /// Its folder: the files go under it, in their paths.
     pub folder: PathBuf,
+    /// Custom file or folder name chosen in Add torrent (#517), when renamed from the torrent's own.
+    pub renamed: Option<String>,
     /// The downloads' options (connections, proxy, DNS, adapter, speed limit); the unlocker is
     /// set here.
     pub net: mdm_engine::Options,
@@ -344,9 +354,13 @@ impl RemoteTorrent {
         let folder = if files.len() == 1 {
             order.folder.clone()
         } else {
-            order
-                .folder
-                .join(safe_path(&name).unwrap_or_else(|| PathBuf::from("torrent")))
+            let folder_name = order
+                .renamed
+                .as_deref()
+                .and_then(safe_path)
+                .or_else(|| safe_path(&name))
+                .unwrap_or_else(|| PathBuf::from("torrent"));
+            order.folder.join(folder_name)
         };
         let within = |path: &str| {
             let t = path.trim_start_matches(['/', '\\']);
@@ -376,7 +390,16 @@ impl RemoteTorrent {
                     "the service gave a link MDM can't read".into(),
                 ))
             })?;
-            let dest = match safe_path(&within(&f.path)) {
+            let chosen_rel = if files.len() == 1 {
+                order
+                    .renamed
+                    .as_deref()
+                    .and_then(safe_path)
+                    .or_else(|| safe_path(&within(&f.path)))
+            } else {
+                safe_path(&within(&f.path))
+            };
+            let dest = match chosen_rel {
                 Some(rel) => {
                     let path = folder.join(rel);
                     if let Some(dir) = path.parent() {
@@ -575,6 +598,7 @@ impl RemoteTorrent {
             events,
             server,
             at_service,
+            finishing: None,
         }
     }
 }

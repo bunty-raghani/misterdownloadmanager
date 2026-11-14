@@ -20,7 +20,9 @@ Right-click a page in the browser for **Download all links with Mister Download 
 select part of it for **Download selected links with Mister Download Manager**. The page's referrer and cookies go with each
 link. You can also import a text file or an `.ef2` export with **Tasks → Import**, drop a list on
 the download list, or open **Tasks → Link grabber...** and paste any text with **Ctrl+V**: every
-web address in it is added.
+web address in it is added. Copied a list of links, or a forum post with links in it?
+**Tasks → Add batch download from clipboard** (Ctrl+B) opens Link grabber with every http, ftp and
+magnet link in the text, each once, ticked.
 
 A link that is already in your download list goes under **Already in the list**, unticked.
 

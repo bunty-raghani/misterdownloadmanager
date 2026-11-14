@@ -6,6 +6,10 @@
 #. never shown for a single file
 #. {n} = a number (keep the braces as they are)
 @plural	Also delete the {n} file from disk|Also delete the {n} files from disk	Also delete the {n} file from disk|Also delete the {n} files from disk
+#. count in cnl.rs
+#. Click'n'Load window: a page whose web site the browser doesn't name, so MDM can't tell which site it is
+#. {n} = a number (keep the braces as they are)
+@plural	An unknown site wants to send {n} link to Link grabber.|An unknown site wants to send {n} links to Link grabber.	An unknown site wants to send {n} link to Link grabber.|An unknown site wants to send {n} links to Link grabber.
 #. count in a dialog box
 #. never shown for a single download
 #. {n} = a number (keep the braces as they are)
@@ -106,6 +110,10 @@
 #. where a magnet's peers came from: {n} = trackers asked; {peers} = "3 peers"
 #. {n} = a number (keep the braces as they are)
 @plural	{n} tracker: {peers}|{n} trackers: {peers}	{n} tracker: {peers}|{n} trackers: {peers}
+#. count in cnl.rs
+#. Click'n'Load window: {site} is a web site's name such as "example.com"
+#. {site} = a web site's name such as "example.com"; {n} = a number (keep the braces as they are)
+@plural	{site} wants to send {n} link to Link grabber.|{site} wants to send {n} links to Link grabber.	{site} wants to send {n} link to Link grabber.|{site} wants to send {n} links to Link grabber.
 #. count in playlistdlg.rs
 #. in Download video: a playlist title then how many videos it has ({count})
 #. {count} = a number (keep the braces as they are)
@@ -139,6 +147,9 @@
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 	&Start now	&Start now
 #. text in the Options window
+#. under Download panels site exclusions list
+	(separate by spaces; * matches anything)	(separate by spaces; * matches anything)
+#. text in the Options window
 	(separate names by spaces)	(separate names by spaces)
 #. text in rssdlg.rs
 #. RSS feeds window, Download rules: shown in the empty Save to box
@@ -161,6 +172,9 @@
 #. Options → Archives: {path} is where 7-Zip's program is
 	7z and RAR archives are extracted by 7-Zip ({path}).	7z and RAR archives are extracted by 7-Zip ({path}).
 #. text in the Options window
+#. Options → Archives, when Extract in place with HatchZip (a program's name) is on: {path} is where its program is
+	7z and RAR archives are extracted by HatchZip ({path}).	7z and RAR archives are extracted by HatchZip ({path}).
+#. text in the Options window
 #. Options → Archives, when 7-Zip isn't installed
 	7z and RAR archives need 7-Zip (7-zip.org), which isn't installed.	7z and RAR archives need 7-Zip (7-zip.org), which isn't installed.
 #. text in extracting archives (a download's log, the Archive password window)
@@ -177,6 +191,10 @@
 #. a torrent through a debrid service: one of its files has a name that would be written outside its folder; nothing was written. {name} the file's name as the service gave it
 #. {name} = a file name (keep the braces as they are)
 	A file of this torrent can't be saved safely: {name}	A file of this torrent can't be saved safely: {name}
+#. message or event log entry in the main window
+#. Link grabber added a magnet link whose torrent could not be found; {error} says why
+#. {error} = an error message (keep the braces as they are)
+	A magnet link's files could not be looked up: {error}	A magnet link's files could not be looked up: {error}
 #. text in the settings
 #. Options → DNS: the NextDNS configuration ID typed isn't one
 	A NextDNS configuration ID is six letters and digits (0-9, a-f).	A NextDNS configuration ID is six letters and digits (0-9, a-f).
@@ -209,6 +227,13 @@
 #. text in whereis.rs
 #. a download's server's round trip: {ms} a number of milliseconds, {reach} near, medium or far
 	about {ms} ms ({reach})	about {ms} ms ({reach})
+#. text in the Download video window
+#. a file size that is only an estimate, as a screen reader says it in the Download video window's list of qualities; {size} is "532 MB"
+#. {size} = a file size such as "4.2 MB" (keep the braces as they are)
+	about {size}	about {size}
+#. text in the Options window
+#. Options → Archives → Link grabber check box: Click'n'Load, a link site's button that sends its links to a program on this computer (port 9666, as JDownloader)
+	Accept Click'n'Load from web pages (port 9666)	Accept Click'n'Load from web pages (port 9666)
 #. checkbox in the Add torrent window
 #. Torrent settings: other peers may connect to this computer
 	Accept incoming connections	Accept incoming connections
@@ -232,6 +257,9 @@
 	Add an account	Add an account
 #. text in the tray icon's menu
 	Add batch download	Add batch download
+#. message or event log entry in the main window; text in the tray icon's menu
+#. title of the note when Tasks → Add batch download from clipboard finds nothing to download
+	Add batch download from clipboard	Add batch download from clipboard
 #. text in the Options window
 #. the trailing ... means it is still going on: keep it
 	Add browser...	Add browser...
@@ -321,6 +349,9 @@
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Afghanistan	Afghanistan
+#. text in the Options window
+#. Options → Add an account: a note under the user name and password fields (Mega-Debrid bans the address for some minutes after a few wrong passwords)
+	After a few wrong passwords the service blocks this connection for some minutes.	After a few wrong passwords the service blocks this connection for some minutes.
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Aland Islands	Aland Islands
@@ -342,10 +373,16 @@
 #. text in the Download video window
 #. in the Subtitles list of Download video: every language the video's uploader gave
 	All the uploader's	All the uploader's
+#. text in cnl.rs
+#. button in the Click'n'Load window: let this site send links (remembered)
+	Allow	Allow
 #. text in the Options window
 #. checkbox under the number of connections per download; {n} is 32
 #. {n} = a number (keep the braces as they are)
 	Allow more than {n} connections	Allow more than {n} connections
+#. text in cnl.rs
+#. Click'n'Load window, under the question: nothing happens to the links before the user adds them in Link grabber
+	Allow only sites you use. Nothing is looked up or downloaded before you add it in Link grabber.	Allow only sites you use. Nothing is looked up or downloaded before you add it in Link grabber.
 #. text in errors.rs
 	already being downloaded: {path}	already being downloaded: {path}
 #. text in the Link grabber window
@@ -511,6 +548,9 @@
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Bhutan	Bhutan
+#. text in cnl.rs
+#. button in the Click'n'Load window: refuse this site's links (remembered)
+	Block	Block
 #. text in the Add torrent window
 #. Torrent settings: the address of an IP blocklist (empty: none)
 	Block the addresses in this list (P2P or eMule format):	Block the addresses in this list (P2P or eMule format):
@@ -645,6 +685,10 @@
 #. checkbox in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. check box in the update window: look for a new version every time MDM starts
 	Check for updates at every start	Check for updates at every start
+#. text in errors.rs
+#. what to do when the proxy set in Options didn't let a helper's download connect; {proxy} = the Options tab Proxy / Socks; {name} = yt-dlp, ffmpeg or gallery-dl; {helpers} and {other} = the buttons Helpers and Use another program
+#. {name} = a file name (keep the braces as they are)
+	Check the proxy in Options → {proxy}, or download {name} yourself and choose it in {helpers} → {other}.	Check the proxy in Options → {proxy}, or download {name} yourself and choose it in {helpers} → {other}.
 #. text in helpers.rs
 	Check your connection, then try again, or get them later from the video window.	Check your connection, then try again, or get them later from the video window.
 #. text in the Options window
@@ -677,7 +721,7 @@
 #. the trailing ... means it is still going on: keep it
 	Checking {name} ({n} of {total})...	Checking {name} ({n} of {total})...
 #. text in the download list (sizes, speeds, status)
-#. a torrent's status while its files are read and checked; {percent} is how much is checked, e.g. "42%"
+#. the list's Status column while a torrent's files or a finished file are checked (against the torrent's hashes or a checksum); {percent} how much is checked, e.g. "42%". One short word: the column is narrow
 	Checking {percent}	Checking {percent}
 #. text in the Checksum window; text in the Link grabber window
 #. the trailing ... means it is still going on: keep it
@@ -704,12 +748,26 @@
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Christmas Island	Christmas Island
-#. button in the download list
+#. button in the download list; button in the Options window
 #. verb: clears this filter
 	Clear	Clear
+#. message or event log entry in the main window; window title in cnl.rs
+#. title of the notice when Click'n'Load couldn't start
+#. window title: a web page used Click'n'Load (a link site's button that sends its links to this program)
+	Click'n'Load	Click'n'Load
+#. text in cnl.rs
+#. notice: Click'n'Load couldn't start; {port} is 9666; JDownloader is another download manager that uses the same port
+	Click'n'Load can't start: another program (JDownloader?) is using port {port}. Close it, then turn Click'n'Load off and on again in Options.	Click'n'Load can't start: another program (JDownloader?) is using port {port}. Close it, then turn Click'n'Load off and on again in Options.
+#. text in cnl.rs
+#. notice: Click'n'Load couldn't start; {error} the system's reason
+#. {error} = an error message (keep the braces as they are)
+	Click'n'Load can't start: {error}	Click'n'Load can't start: {error}
 #. text in a download's progress window
 #. column title: the peer's torrent program
 	Client	Client
+#. message or event log entry in the main window
+#. Link grabber: where the links came from: the clipboard (Tasks → Add batch download from clipboard)
+	Clipboard	Clipboard
 #. text in the Options window
 	Clock:	Clock:
 #. text in the Checksum window; text in the main window (menus, toolbar, Categories pane); button in crashui.rs; button in a dialog box; button in extension.rs; button in the Help menu's windows (About, updates, shortcuts, Tell a friend); button in helpers.rs; button in the download list; button in the Options window; button in rssdlg.rs; button in torrentfiles.rs; text in standard windows
@@ -795,6 +853,17 @@
 #. RSS feeds window: the selected feed's last fetch failed, with why
 #. {error} = an error message (keep the braces as they are)
 	Could not be read: {error}	Could not be read: {error}
+#. text in errors.rs
+#. a helper (yt-dlp, ffmpeg) couldn't be downloaded: the proxy set in Options ({proxy}, its address) didn't let MDM connect
+	could not connect through the proxy {proxy}	could not connect through the proxy {proxy}
+#. text in errors.rs
+#. a helper (yt-dlp, ffmpeg) couldn't be downloaded: its server ({host}) couldn't be reached
+#. {host} = a server name such as "example.com" (keep the braces as they are)
+	could not reach {host}	could not reach {host}
+#. text in errors.rs
+#. a helper (yt-dlp, ffmpeg) couldn't be downloaded: its server ({host}) couldn't be reached, for the system's reason {cause}
+#. {host} = a server name such as "example.com" (keep the braces as they are)
+	could not reach {host} ({cause})	could not reach {host} ({cause})
 #. text in extracting archives (a download's log, the Archive password window)
 #. in a download's log: {name} is the archive's file name, {why} the reason
 #. {name} = a file name (keep the braces as they are)
@@ -983,6 +1052,9 @@
 #. window title in the Options window
 #. window title: the download button the extension shows over videos
 	Download panels	Download panels
+#. window title in the Options window
+#. window title: Options → Downloads → Edit... (the progress window's settings)
+	Download progress dialog	Download progress dialog
 #. text in rssdlg.rs
 #. RSS feeds window: the tab of the rules that add articles by themselves
 	Download rules	Download rules
@@ -992,6 +1064,8 @@
 #. checkbox in the Options window
 #. Options → Accounts: checkbox: links of the file hosts these services support are downloaded through the accounts
 	Download supported file-host links through these accounts	Download supported file-host links through these accounts
+#. what a keyboard shortcut does in the Help menu's windows (About, updates, shortcuts, Tell a friend)
+	Download the links in the clipboard (Add batch download from clipboard)	Download the links in the clipboard (Add batch download from clipboard)
 #. text in a dialog box
 #. Download File Info: a check box, ticked when the download goes through the user's debrid account; {service} the service and the account, "Real-Debrid (labuser)". Unticked: downloaded directly
 	Download through {service}	Download through {service}
@@ -1065,6 +1139,10 @@
 #. tooltip of the handle in Download complete: drag it to drop the downloaded file somewhere
 	Drag the file into a folder or an app	Drag the file into a folder or an app
 #. message or event log entry in the main window
+	Dragged out of Download complete and moved to a place MDM couldn't learn	Dragged out of Download complete and moved to a place MDM couldn't learn
+#. message or event log entry in the main window
+	Dragged out of Download complete and moved to {folder}	Dragged out of Download complete and moved to {folder}
+#. message or event log entry in the main window
 #. in Import, where the addresses came from: dragged onto the window
 	Dropped links	Dropped links
 #. window title in a dialog box
@@ -1100,6 +1178,9 @@
 	El Salvador	El Salvador
 #. button in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 	Email	Email
+#. text in the Download video window
+#. checkbox in Download video: the chapters a video's page lists (YouTube's, for one) go into the video file, where players show them and skip between them
+	Embed chapters	Embed chapters
 #. text in gallerydlg.rs
 #. in Download a gallery, after the "Files at most" box
 	Empty: all of them. On most sites the newest come first.	Empty: all of them. On most sites the newest come first.
@@ -1129,7 +1210,7 @@
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Eritrea	Eritrea
-#. text in a dialog box; item in the Categories tree in the download list; value in a column's filter list in the download list; text in the download list (sizes, speeds, status); text in remote.rs
+#. text in a dialog box; item in the Categories tree in the download list; value in a column's filter list in the download list; text in the download list (sizes, speeds, status); text in a download's progress window; text in remote.rs
 #. in Download File Info, where the size goes: the address didn't answer
 #. a download's status (state it is in, not a command)
 #. a download's status (state it is in, not a command): it failed
@@ -1191,6 +1272,12 @@
 #. checkbox in the Options window
 #. Options → Archives check box (a Link grabber package has its own "Extract when done")
 	Extract archives when their download completes	Extract archives when their download completes
+#. text in the Options window
+#. Options → Archives check box, greyed: HatchZip (a program's name, hatchzip.dev its site) isn't installed
+	Extract in place with HatchZip (hatchzip.dev, not installed)	Extract in place with HatchZip (hatchzip.dev, not installed)
+#. text in the Options window
+#. Options → Archives check box: HatchZip (a program's name) removes the archive while extracting it, so only the extracted files need disk space
+	Extract in place with HatchZip: only the files need room	Extract in place with HatchZip: only the files need room
 #. text in the Link grabber window
 #. Link grabber check box: extract the package's archives once they are downloaded
 	Extract when done	Extract when done
@@ -1236,6 +1323,9 @@
 #. text in a download's progress window; text in a download's Properties window
 #. noun: a file of no known type
 	File	File
+#. text in the Options window
+#. tooltip of "Mark downloaded files as coming from the internet" on Linux
+	File managers show where the files marked this way came from. Unticked, no download is marked.	File managers show where the files marked this way came from. Unticked, no download is marked.
 #. text in the Scheduler window
 	File Name	File Name
 #. text in the Download video window
@@ -1292,6 +1382,10 @@
 #. adjective: the downloads that are complete
 #. remote control page (on a phone): tab: downloads finished
 	Finished	Finished
+#. text in a download's progress window
+#. a download's status: every byte is in, the file is being written out and given its name
+#. the trailing ... means it is still going on: keep it
+	Finishing...	Finishing...
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Finland	Finland
@@ -1470,6 +1564,9 @@
 	Haiti	Haiti
 #. checkbox in a download's progress window; checkbox in the Scheduler window
 	Hang up modem when done	Hang up modem when done
+#. text in extracting archives (a download's log, the Archive password window)
+#. in a download's log: HatchZip (a program's name) extracted the archive in place, removing it as it went
+	HatchZip extracted it in place: the archive was removed as its files came out	HatchZip extracted it in place: the archive was removed as its files came out
 #. text in a download's progress window
 #. legend: pieces downloaded
 	Have	Have
@@ -1482,7 +1579,7 @@
 #. window title in helpers.rs
 #. window title: where MDM takes its helper programs (yt-dlp, ffmpeg, gallery-dl) from
 	Helpers	Helpers
-#. button in gallerydlg.rs; button in the Download video window
+#. text in errors.rs; button in gallerydlg.rs; button in the Download video window
 #. button in Download video: where MDM takes yt-dlp and ffmpeg from
 #. the trailing ... means it opens a window: keep it
 	Helpers...	Helpers...
@@ -1519,6 +1616,10 @@
 #. button in the Options window
 #. button in Test browser integration: open the help page's section for the problem
 	How to fix it	How to fix it
+#. text in the Download video window; text in videolookup.rs
+#. link after the note that YouTube needs a JavaScript runtime: opens the help page that says how to install Node.js or Deno
+#. link in the browser's video menu, after the note that YouTube needs a JavaScript runtime: opens the help page that says how to install Node.js or Deno
+	How to install one	How to install one
 #. checkbox in the Options window
 	http	http
 #. checkbox in the Options window
@@ -1538,6 +1639,10 @@
 #. text in the Options window
 #. Options → DNS settings: checkbox: when the chosen DNS can't be reached, use the system's instead
 	If it can't be reached, use the system's DNS	If it can't be reached, use the system's DNS
+#. text in errors.rs
+#. what to do when a helper's server couldn't be reached; {proxy} = the Options tab Proxy / Socks; {name} = yt-dlp, ffmpeg or gallery-dl; {helpers} and {other} = the buttons Helpers and Use another program
+#. {name} = a file name (keep the braces as they are)
+	If you use a proxy, set it in Options → {proxy}. Or download {name} yourself and choose it in {helpers} → {other}.	If you use a proxy, set it in Options → {proxy}. Or download {name} yourself and choose it in {helpers} → {other}.
 #. checkbox in the Options window
 	Ignore file modification time changes when resuming a download	Ignore file modification time changes when resuming a download
 #. message or event log entry in the main window; text in the Options window
@@ -1628,6 +1733,9 @@
 #. text in extracting archives (a download's log, the Archive password window)
 #. why an archive wasn't extracted (after "Couldn't extract {name}: ")
 	it needs a password	it needs a password
+#. text in extracting archives (a download's log, the Archive password window)
+#. why an archive wasn't extracted in place (after "Couldn't extract {name}: "); {folder} holds the files extracted so far
+	it stopped partway. The files extracted so far are in {folder}, the rest is still in the archive: Extract continues	it stopped partway. The files extracted so far are in {folder}, the rest is still in the archive: Extract continues
 #. text in the Add torrent window
 #. Torrent settings, under "Find peers on the local network"
 	It tells the computers on your network which torrents you have.	It tells the computers on your network which torrents you have.
@@ -1644,9 +1752,21 @@
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Italy	Italy
+#. text in extracting archives (a download's log, the Archive password window)
+#. why an archive wasn't extracted in place (after "Couldn't extract {name}: "); HatchZip took its files out (the archive is gone), but moving them stopped: {to} holds those moved, {left} the others, {error} the system's reason
+#. {error} = an error message (keep the braces as they are)
+	its files came out, but moving them stopped ({error}). Those moved are in {to}, the others still in {left}; nothing was deleted	its files came out, but moving them stopped ({error}). Those moved are in {to}, the others still in {left}; nothing was deleted
 #. text in errors.rs
 #. {error} = an error message (keep the braces as they are)
 	its files could not be written: {error}	its files could not be written: {error}
+#. text in the download list (sizes, speeds, status)
+#. why a video download failed: ffmpeg couldn't join its picture and sound into one file; {error} = ffmpeg's reason, in English
+#. {error} = an error message (keep the braces as they are)
+	its picture and sound couldn't be joined into one file ({error})	its picture and sound couldn't be joined into one file ({error})
+#. text in the download list (sizes, speeds, status)
+#. why a video download failed: ffmpeg couldn't join its picture and sound into one file; {error} = ffmpeg's reason, in English; {files} = the downloaded parts' file names, kept in the download folder; "Also delete the file from disk" is the Delete box's choice
+#. {error} = an error message (keep the braces as they are)
+	its picture and sound couldn't be joined into one file ({error}). What was downloaded stays in the folder for Resume to join again ({files}); deleting the download with "Also delete the file from disk" removes it	its picture and sound couldn't be joined into one file ({error}). What was downloaded stays in the folder for Resume to join again ({files}); deleting the download with "Also delete the file from disk" removes it
 #. text in errors.rs
 	its release information is not as expected: {detail}	its release information is not as expected: {detail}
 #. text in countries.rs
@@ -1765,7 +1885,7 @@
 #. text in the Add torrent window
 #. Torrent settings: an upload speed limit for all torrents together, followed by a box with the speed and "KBytes/sec"
 	Limit uploading for all torrents to	Limit uploading for all torrents to
-#. window title in the Link grabber window; group box title in the Options window
+#. message or event log entry in the main window; window title in the Link grabber window; group box title in the Options window
 #. Options → Archives: group box title
 	Link grabber	Link grabber
 #. text in the Link grabber window
@@ -1836,9 +1956,15 @@
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Macau	Macau
+#. text in the Options window
+#. tooltip of "Mark downloaded files as coming from the internet" on macOS
+	macOS checks the files marked this way: Gatekeeper before a program first opens. Unticked, no download is marked.	macOS checks the files marked this way: Gatekeeper before a program first opens. Unticked, no download is marked.
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Madagascar	Madagascar
+#. text in the Link grabber window
+#. Link grabber, a link's status: a magnet link (a torrent, its files looked up once it is added)
+	Magnet link	Magnet link
 #. message or event log entry in the main window
 	Main download queue	Main download queue
 #. what a keyboard shortcut does in the Help menu's windows (About, updates, shortcuts, Tell a friend)
@@ -1870,6 +1996,8 @@
 	Map the port on the router (UPnP)	Map the port on the router (UPnP)
 #. text in the Scheduler window
 	March	March
+#. checkbox in the Options window
+	Mark downloaded files as coming from the internet	Mark downloaded files as coming from the internet
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Marshall Islands	Marshall Islands
@@ -1930,6 +2058,16 @@
 #. text in whereis.rs
 #. how far a download's server is, by its round trip (60 to 150 ms)
 	medium	medium
+#. text in the download list (sizes, speeds, status)
+#. the list's Status column while a video's picture and sound are joined into one file (ffmpeg); {percent} how far, e.g. "45%". One short word: the column is narrow
+	Merging {percent}	Merging {percent}
+#. text in the download list (sizes, speeds, status)
+#. a video's status while its picture and sound are joined into one file (ffmpeg)
+#. the trailing ... means it is still going on: keep it
+	Merging...	Merging...
+#. text in the download list (sizes, speeds, status)
+#. a video's status while its picture and sound are joined into one file (ffmpeg); {percent} how far, e.g. "45%"
+	Merging... ({percent})	Merging... ({percent})
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Mexico	Mexico
@@ -2045,6 +2183,9 @@
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Mozambique	Mozambique
+#. text in the Download video window
+#. why "Embed chapters" is greyed in Download video: the choice is a sound converted to MP3, Opus or FLAC, which MDM saves without chapters
+	MP3, Opus and FLAC files are saved without chapters	MP3, Opus and FLAC files are saved without chapters
 #. text in errors.rs
 	much slower than the other connections; reconnecting	much slower than the other connections; reconnecting
 #. text in the download list (sizes, speeds, status)
@@ -2150,6 +2291,8 @@
 #. tooltip on the Scheduler's weekdays when none is ticked
 	No day is ticked: the queue will not start	No day is ticked: the queue will not start
 #. message or event log entry in the main window
+	No download links were found in the clipboard. Copy a text with http, https, ftp or magnet links in it, and try again.	No download links were found in the clipboard. Copy a text with http, https, ftp or magnet links in it, and try again.
+#. message or event log entry in the main window
 #. title in the empty download list (this category or queue has no downloads)
 	No downloads here	No downloads here
 #. text in remote.rs
@@ -2201,7 +2344,7 @@
 	No video this can download on that page	No video this can download on that page
 #. message or event log entry in the main window
 	No web addresses were found in {file}.	No web addresses were found in {file}.
-#. text in the Download video window
+#. text in the Options window; text in the Download video window
 #. in the Subtitles list of Download video: download no subtitles
 	None	None
 #. text in the Download video window
@@ -2246,7 +2389,11 @@
 #. text in helpers.rs
 #. Video helpers: no copy of this helper yet
 	Not installed yet	Not installed yet
-#. button in helpers.rs
+#. text in the Link grabber window
+#. Link grabber, a link's status: a web page sent it (Click'n'Load), so it isn't looked up (name, size, online) before it is added
+	Not looked up	Not looked up
+#. text in cnl.rs; button in helpers.rs
+#. button in the Click'n'Load window: refuse these links, ask again next time
 	Not now	Not now
 #. text in helpers.rs
 	Not now? Get them later from Tasks → Download video from a page.	Not now? Get them later from Tasks → Download video from a page.
@@ -2348,10 +2495,14 @@
 #. title of the message when a downloaded file can't be opened
 #. verb: opens the file
 	Open	Open
-#. button in crashui.rs; button in a dialog box; button in torrentfiles.rs
+#. button in crashui.rs; button in a dialog box; text in a dialog box; button in torrentfiles.rs
 #. crash report window button: show the report's file in its folder
+#. title of the message when the folder of a downloaded file can't be shown
 #. button that opens the torrent's containing folder in the file manager
 	Open folder	Open folder
+#. text in a download's progress window
+#. button in a download's progress window when the site sent a web page (a waiting page, a captcha) instead of the file: opens the download's link in the web browser
+	Open in browser	Open in browser
 #. checkbox in the Add torrent window
 	Open magnet links and .torrent files with Mister Download Manager	Open magnet links and .torrent files with Mister Download Manager
 #. text in the tray icon's menu
@@ -2387,6 +2538,9 @@
 #. text in a download's progress window
 #. tab title: what happens when the download finishes
 	Options on completion	Options on completion
+#. text in the Options window
+#. Options → Add an account: label before the field for an API key the user made at the service (Mega-Debrid: My Account → API Key; the other way to sign in)
+	Or paste an application's API key:	Or paste an application's API key:
 #. text in the Options window
 #. Options → Add an account: label before the field for the service's API token (the other way to sign in)
 	Or paste your API token:	Or paste your API token:
@@ -2436,6 +2590,7 @@
 	Password	Password
 #. text in the Link grabber window; text in the Options window
 #. Link grabber: the package's archives' password (a label before its box)
+#. Options → Add an account: label before the field for the password at the debrid service
 	Password:	Password:
 #. text in the Add torrent window
 	Paste a magnet link or choose a .torrent file, then Look up.	Paste a magnet link or choose a .torrent file, then Look up.
@@ -2511,6 +2666,10 @@
 #. text in debrid.rs
 #. Options → Accounts: a debrid account's state; {days} the days of premium left
 	premium, {days} days left	premium, {days} days left
+#. text in the Options window
+#. Options → General: shown inside the shortcut recorder box while waiting for the user to press a 2-key or 3-key shortcut (#558)
+#. the trailing ... means it is still going on: keep it
+	Press keys...	Press keys...
 #. button in a dialog box
 #. verb: open the part already downloaded
 	Preview	Preview
@@ -2527,7 +2686,7 @@
 	Properties of the selected download	Properties of the selected download
 #. text in a download's progress window
 	Property	Property
-#. text in the Options window
+#. text in errors.rs; text in the Options window
 #. tab title
 	Proxy / Socks	Proxy / Socks
 #. page title in the Options window
@@ -2579,6 +2738,10 @@
 #. text in the Add torrent window
 #. the trailing ... means it is still going on: keep it
 	Reading the torrent...	Reading the torrent...
+#. message or event log entry in the main window
+#. the status strip while Tasks → Import reads a file; {file} is its name
+#. the trailing ... means it is still going on: keep it
+	Reading {file}...	Reading {file}...
 #. text in helpers.rs
 	Reads a page and lists every quality the site offers, up to 4K, from YouTube, Vimeo and over a thousand other sites.	Reads a page and lists every quality the site offers, up to 4K, from YouTube, Vimeo and over a thousand other sites.
 #. text in helpers.rs
@@ -2637,8 +2800,9 @@
 #. remote control page (on a phone): question before removing a download; {name} its file name
 #. {name} = a file name (keep the braces as they are)
 	Remove {name} from the list?	Remove {name} from the list?
-#. text in a download's progress window
+#. text in a download's progress window; text in torrent_rename.rs
 #. noun: label before the deferred new file or folder name in the progress window
+#. noun: label before the new file or folder name in Add torrent
 	Rename	Rename
 #. text in the Batch download window
 #. group box title: what the * in the address is replaced with (numbers or letters)
@@ -2868,6 +3032,9 @@
 #. event log entry on a finished torrent when re-attaching it to keep sharing failed; {error} = why
 #. {error} = an error message (keep the braces as they are)
 	Sharing stopped: {error}	Sharing stopped: {error}
+#. text in the Options window
+#. Options → General: label for the global keyboard shortcut that shows or hides MDM's main window (#558)
+	Shortcut to show or hide window:	Shortcut to show or hide window:
 #. text in the download list
 	Show	Show
 #. message or event log entry in the main window
@@ -2886,6 +3053,8 @@
 	Show details >>	Show details >>
 #. checkbox in the Options window; checkbox in a download's progress window
 	Show download complete dialog	Show download complete dialog
+#. checkbox in the Options window
+	Show download progress dialog when a download starts	Show download progress dialog when a download starts
 #. button in a dialog box
 #. button: shows these downloads in MDM's list, selected
 	Show in list	Show in list
@@ -2909,6 +3078,9 @@
 #. a country's name (where a download's server is)
 	Sierra Leone	Sierra Leone
 #. button in the Options window
+#. button: sign in to the debrid service with the user name and password typed in
+	Sign in	Sign in
+#. button in the Options window
 #. button: sign in to the debrid service in the browser, by typing a code there
 	Sign in in the browser	Sign in in the browser
 #. text in the Options window
@@ -2920,6 +3092,9 @@
 #. text in the Options window
 #. Options → Accounts: where the debrid accounts' sign-ins and the other passwords are kept (Windows' own Credential Manager, in Control Panel)
 	Sign-ins and passwords are kept in Windows Credential Manager.	Sign-ins and passwords are kept in Windows Credential Manager.
+#. text in the Options window
+#. Options → Add an account: signed in, the service gives no account name; {state} premium or not
+	Signed in ({state})	Signed in ({state})
 #. text in the Options window
 #. Options → Add an account: signed in; {user} the account's name, {state} premium or not
 	Signed in as {user} ({state})	Signed in as {user} ({state})
@@ -2951,6 +3126,7 @@
 #. column title: file size
 	Size	Size
 #. text in the Download video window
+#. the video's file size is not known
 	size unknown	size unknown
 #. text in a download's Properties window
 	Size:	Size:
@@ -3226,6 +3402,8 @@
 #. text in the Options window
 #. Options → Remote → Status: the settings were changed; they apply on OK
 	The changes apply when you click OK.	The changes apply when you click OK.
+#. message or event log entry in the main window
+	The clipboard holds no text. Copy some links, or a text with links in it, and try again.	The clipboard holds no text. Copy some links, or a text with links in it, and try again.
 #. text in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. Tell a friend: Copy failed (another program holds the clipboard)
 	The clipboard is busy: try again.	The clipboard is busy: try again.
@@ -3257,12 +3435,20 @@
 #. text in errors.rs
 	the connection closed before the part was complete	the connection closed before the part was complete
 #. text in errors.rs
+#. a helper (yt-dlp, ffmpeg) couldn't be downloaded: the connection to its server ({host}) was cut as it opened
+#. {host} = a server name such as "example.com" (keep the braces as they are)
+	the connection to {host} was cut: a firewall, or a network that blocks it	the connection to {host} was cut: a firewall, or a network that blocks it
+#. text in errors.rs
 	the connection was lost while receiving data	the connection was lost while receiving data
 #. text in the Add torrent window
 #. a magnet link's lookup, after 30 seconds: the DHT got no answer from anyone
 	The DHT reached no one. A firewall, a VPN or the network may be blocking UDP, which the DHT and most trackers use.	The DHT reached no one. A firewall, a VPN or the network may be blocking UDP, which the DHT and most trackers use.
 #. text in errors.rs
 	the disk is full	the disk is full
+#. text in errors.rs
+#. a helper (yt-dlp, ffmpeg) couldn't be downloaded: the connection to its server ({host}) closed before all of it came
+#. {host} = a server name such as "example.com" (keep the braces as they are)
+	the download from {host} was cut short	the download from {host} was cut short
 #. tooltip (why a control is greyed) in a download's Properties window
 #. tooltip of the greyed Open button in File Properties
 	The download isn't complete yet	The download isn't complete yet
@@ -3285,6 +3471,9 @@
 	The downloads you add, or drop on this window, show here.	The downloads you add, or drop on this window, show here.
 #. text in errors.rs
 	the drive or network share is no longer available	the drive or network share is no longer available
+#. text in extracting archives (a download's log, the Archive password window)
+#. in a download's log, after HatchZip (a program's name) extracted in place: the entries left out (links, unsafe names) were not deleted, they are still in {folder}
+	The entries left out are still in {folder}	The entries left out are still in {folder}
 #. text in extension.rs
 	The extension is already in this app. Apple hasn't notarized this build, so Safari needs these steps to allow it.	The extension is already in this app. Apple hasn't notarized this build, so Safari needs these steps to allow it.
 #. text in errors.rs
@@ -3365,6 +3554,10 @@
 #. text in errors.rs
 #. an FTPS (or other TLS) connection could not be secured
 	the secure connection failed	the secure connection failed
+#. text in errors.rs
+#. a helper (yt-dlp, ffmpeg) couldn't be downloaded: the secure connection to its server ({host}) failed, usually because an antivirus or a proxy reads secure (HTTPS) connections with a certificate of its own
+#. {host} = a server name such as "example.com" (keep the braces as they are)
+	the secure connection to {host} failed: an antivirus's web filter or a proxy may be reading HTTPS	the secure connection to {host} failed: an antivirus's web filter or a proxy may be reading HTTPS
 #. text in a dialog box
 #. \\n starts a new line: break lines where they fit the translation
 	The selected download is not complete. Are you sure you want to delete\nit from Mister Download Manager list of downloads?	The selected download is not complete. Are you sure you want to delete\nit from Mister Download Manager list of downloads?
@@ -3379,9 +3572,13 @@
 #. text in errors.rs
 	the server is busy ({status}); try again later	the server is busy ({status}); try again later
 #. text in errors.rs
-	the server sent a web page instead of the file (sign-in needed or the link expired?)	the server sent a web page instead of the file (sign-in needed or the link expired?)
-#. text in errors.rs
 	the server sent an unexpected part of the file ({detail})	the server sent an unexpected part of the file ({detail})
+#. text in debrid.rs
+#. Options → Accounts: the service doesn't say whether the account is premium (Mega-Debrid, signed in with an API key); a free account's links are refused when downloading
+	the service doesn't say whether it is premium	the service doesn't say whether it is premium
+#. text in errors.rs
+#. why a download failed (#701): a file host answered with its own web page (a countdown before the link, a captcha, a sign-in) where the file was expected. The browser gets past it; MDM's browser extension then hands the real file back to MDM
+	the site sent a web page instead of the file (a waiting page, a captcha or a sign-in): open the link in your browser, finish there, and the download comes back to MDM	the site sent a web page instead of the file (a waiting page, a captcha or a sign-in): open the link in your browser, finish there, and the download comes back to MDM
 #. text in the Download video window
 #. the Download video window: the site asked for a sign-in although the browser's extension passed the page's cookies
 	The site wants you signed in, even with your browser's cookies for this page. Sign in to it in your browser, then try again.	The site wants you signed in, even with your browser's cookies for this page. Sign in to it in your browser, then try again.
@@ -3397,6 +3594,9 @@
 #. text in the Download video window
 #. the Download video window: the site's bot check (Cloudflare) turned yt-dlp away and no browser cookies were used
 	The site's bot check (Cloudflare) refused yt-dlp. If the page opens in your browser, choose that browser in Options → Sites Logins → Cookies for video sites and look the page up again, or use the Download video button over the video.	The site's bot check (Cloudflare) refused yt-dlp. If the page opens in your browser, choose that browser in Options → Sites Logins → Cookies for video sites and look the page up again, or use the Download video button over the video.
+#. text in the Download video window
+#. the Download video window: the site's certificate is trusted neither by yt-dlp nor by the computer (asked again with the computer's certificates, #955); usually an antivirus or a proxy that reads secure (HTTPS) connections signs sites with a certificate of its own
+	The site's certificate isn't trusted, by yt-dlp nor by this computer: an antivirus's web filter or a proxy that reads HTTPS may be in the way. Turn its HTTPS scanning off, or add its certificate to the computer's, then look the page up again.	The site's certificate isn't trusted, by yt-dlp nor by this computer: an antivirus's web filter or a proxy that reads HTTPS may be in the way. Turn its HTTPS scanning off, or add its certificate to the computer's, then look the page up again.
 #. text in crashui.rs
 #. crash report window: the symbols couldn't be downloaded; the report still works
 	The symbols couldn't be fetched: some lines of the report show addresses instead of names (the developers can still read them).	The symbols couldn't be fetched: some lines of the report show addresses instead of names (the developers can still read them).
@@ -3439,6 +3639,9 @@
 #. text in the Scheduler window
 #. why OK is greyed when naming a new queue
 	There is already a queue with this name	There is already a queue with this name
+#. text in extracting archives (a download's log, the Archive password window)
+#. why an archive wasn't extracted (after "Couldn't extract {name}: "); HatchZip is a program's name
+	there isn't enough free space for its files, HatchZip says; nothing was changed	there isn't enough free space for its files, HatchZip says; nothing was changed
 #. text in a download's progress window
 	These settings are unavailable when "Show download complete dialog" is turned on	These settings are unavailable when "Show download complete dialog" is turned on
 #. text in helpers.rs
@@ -3512,6 +3715,7 @@
 #. reason shown on the Rename box when the entered name is a reserved device name on Windows (CON, NUL, COM1…)
 	This name is reserved by Windows	This name is reserved by Windows
 #. tooltip (why a control is greyed) in the Download video window
+#. why "Embed chapters" is greyed: ffmpeg (a helper program) is not installed
 #. why "Put them into the video" is greyed: ffmpeg (a helper program) is not installed
 	This needs ffmpeg	This needs ffmpeg
 #. text in the Options window
@@ -3524,6 +3728,9 @@
 #. error: a program chosen as yt-dlp or ffmpeg didn't answer as one; {name} = yt-dlp or ffmpeg
 #. {name} = a file name (keep the braces as they are)
 	this program isn't {name}	this program isn't {name}
+#. text in the Options window
+#. Options → General: shown when the chosen global shortcut is already registered by another program (#558)
+	This shortcut is already in use	This shortcut is already in use
 #. text in errors.rs
 #. why a download failed: the site's bot check (Cloudflare) lets browsers through, not programs. Alt+click: the link clicked with the Alt key held, which leaves the download to the browser
 	this site lets only browsers through; Alt+click the link	this site lets only browsers through; Alt+click the link
@@ -3626,6 +3833,13 @@
 	Trinidad and Tobago	Trinidad and Tobago
 #. button in helpers.rs
 	Try again	Try again
+#. text in errors.rs
+#. what to do when a helper couldn't be downloaded because its server limits requests; {name} = yt-dlp, ffmpeg or gallery-dl; {helpers} and {other} = the buttons Helpers and Use another program
+#. {name} = a file name (keep the braces as they are)
+	Try again in an hour, or download {name} yourself and choose it in {helpers} → {other}.	Try again in an hour, or download {name} yourself and choose it in {helpers} → {other}.
+#. text in errors.rs
+#. {name} = a file name (keep the braces as they are)
+	Try again later, or download {name} yourself and choose it in {helpers} → {other}.	Try again later, or download {name} yourself and choose it in {helpers} → {other}.
 #. text in the Scheduler window
 #. Tuesday, as short as a calendar's column head (two letters in English)
 	Tu	Tu
@@ -3735,6 +3949,7 @@
 #. a country's name (where a download's server is)
 	United States Minor Outlying Islands	United States Minor Outlying Islands
 #. text in a download's Properties window
+#. the web page is not known
 	Unknown	Unknown
 #. text in a dialog box; text in a download's progress window; text in whereis.rs
 #. the reason a download failed is not known
@@ -3763,7 +3978,7 @@
 	Uruguay	Uruguay
 #. text in the Options window
 	Use advanced browser integration	Use advanced browser integration
-#. button in helpers.rs
+#. text in errors.rs; button in helpers.rs
 #. Video helpers: button: pick a program (yt-dlp or ffmpeg) already on the computer
 #. the trailing ... means it opens a window: keep it
 	Use another program...	Use another program...
@@ -3804,6 +4019,9 @@
 #. text in the Options window
 #. column title: the user name
 	User	User
+#. text in the Options window
+#. Options → Add an account: label before the field for the user name at the debrid service
+	User name:	User name:
 #. page title in the Options window
 	User names and passwords for servers/sites	User names and passwords for servers/sites
 #. text in the Options window
@@ -3835,8 +4053,12 @@
 #. window title in the Checksum window; text in the Checksum window
 	Verify checksum	Verify checksum
 #. text in the download list (sizes, speeds, status)
+#. a download's status while the finished file is checked against its checksum
 #. the trailing ... means it is still going on: keep it
 	Verifying...	Verifying...
+#. text in the download list (sizes, speeds, status)
+#. a download's status while the finished file is checked against its checksum; {percent} how much is checked, e.g. "45%"
+	Verifying... ({percent})	Verifying... ({percent})
 #. text in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. {version} = a version number (keep the braces as they are)
 	Version {version} ({commit})	Version {version} ({commit})
@@ -3912,11 +4134,19 @@
 #. text in remote.rs
 #. remote control page (on a phone): label of the choice: start the new download now, or let it wait in a queue
 	When	When
+#. text in the Options window
+	When it is off, downloads go on in the main window's list. Double-click one there to see its progress.	When it is off, downloads go on in the main window's list. Double-click one there to see its progress.
 #. text in the Batch download window
 	Wildcard size	Wildcard size
 #. text in the Scheduler window
 #. the Scheduler, under "Wake the computer to run this queue" (Windows): "Allow wake timers" is on when plugged in, off on battery
 	Windows allows wake timers only while plugged in	Windows allows wake timers only while plugged in
+#. text in the Options window
+#. Options → General → Shortcut to show or hide window: shown in the disabled shortcut box on Linux (#558)
+	Windows and macOS	Windows and macOS
+#. text in the Options window
+#. tooltip of "Mark downloaded files as coming from the internet" on Windows
+	Windows checks the files marked this way: SmartScreen before a program first runs, Office's Protected View before a document opens. Unticked, or under Windows' policy "Do not preserve zone information in file attachments", no download is marked.	Windows checks the files marked this way: SmartScreen before a program first runs, Office's Protected View before a document opens. Unticked, or under Windows' policy "Do not preserve zone information in file attachments", no download is marked.
 #. text in the Options window
 #. Options → Accounts: Windows Credential Manager didn't answer, so the sign-ins stay in MDM's settings, encrypted so that only this Windows account can read them
 	Windows Credential Manager didn't answer, so sign-ins and passwords are kept in MDM's settings, encrypted for your Windows account.	Windows Credential Manager didn't answer, so sign-ins and passwords are kept in MDM's settings, encrypted for your Windows account.
@@ -3999,6 +4229,9 @@
 #. text in helpers.rs
 #. Video helpers (macOS, Linux): {path} = the system's ffmpeg
 	Your system's: {path}	Your system's: {path}
+#. text in the Download video window
+#. in Download video and the browser's video menu: yt-dlp had no JavaScript runtime, so YouTube listed only some qualities (often only the sound); Node.js and Deno are program names
+	YouTube needs a JavaScript runtime to list its video qualities: install Node.js or Deno, then look it up again	YouTube needs a JavaScript runtime to list its video qualities: install Node.js or Deno, then look it up again
 #. text in the Download video window
 #. the Download video window: yt-dlp couldn't read the cookies of the browser chosen in Options (Chrome, Edge...), which holds them while it runs; {browser} = its name
 	yt-dlp can't read {browser}'s cookies while {browser} is open. Close {browser} and look the page up again, or choose Firefox in Options → Sites Logins.	yt-dlp can't read {browser}'s cookies while {browser} is open. Close {browser} and look the page up again, or choose Firefox in Options → Sites Logins.
@@ -4100,6 +4333,12 @@
 	{file} could not be read to check it	{file} could not be read to check it
 #. text in a dialog box
 	{file} is no longer where it was saved (moved or deleted). Redownload, in its right-click menu, gets it again.	{file} is no longer where it was saved (moved or deleted). Redownload, in its right-click menu, gets it again.
+#. message or event log entry in the main window
+#. Import refused a file; {size} = its size and {limit} = the largest Import reads, like "4.50 GB" and "64.00 MB"
+#. {size} = a file size such as "4.2 MB" (keep the braces as they are)
+	{file} is too large to be a list of addresses ({size}). Import reads text files, web pages and .ef2 exports of up to {limit}.	{file} is too large to be a list of addresses ({size}). Import reads text files, web pages and .ef2 exports of up to {limit}.
+#. text in a dialog box
+	{file} was moved elsewhere by dragging it out of Download complete, and MDM couldn't learn where. Look for it where you dropped it.	{file} was moved elsewhere by dragging it out of Download complete, and MDM couldn't learn where. Look for it where you dropped it.
 #. text in the Checksum window
 #. {algorithm} = a checksum algorithm such as "SHA-256" (keep the braces as they are)
 	{file}: the file does NOT match its checksum ({algorithm})	{file}: the file does NOT match its checksum ({algorithm})
@@ -4114,6 +4353,29 @@
 #. {have} and {total} = numbers of pieces; {size} = one piece's size
 #. {size} = a file size such as "4.2 MB" (keep the braces as they are)
 	{have} of {total} pieces ({size} each)	{have} of {total} pieces ({size} each)
+#. text in errors.rs
+#. a helper (yt-dlp, ffmpeg) couldn't be downloaded: its server ({host}) answered with an HTTP error ({status}, such as "404 Not Found")
+#. {host} = a server name such as "example.com" (keep the braces as they are)
+	{host} answered {status}	{host} answered {status}
+#. text in errors.rs
+#. a helper (yt-dlp, ffmpeg) couldn't be downloaded: its server's name ({host}, such as api.github.com) wasn't found
+#. {host} = a server name such as "example.com" (keep the braces as they are)
+	{host} could not be found: no connection, or a network that blocks it	{host} could not be found: no connection, or a network that blocks it
+#. text in errors.rs
+#. a helper (yt-dlp, ffmpeg) couldn't be downloaded: there is no way to its server ({host}); the network may be down
+#. {host} = a server name such as "example.com" (keep the braces as they are)
+	{host} could not be reached: check the connection	{host} could not be reached: check the connection
+#. text in errors.rs
+#. a helper (yt-dlp, ffmpeg) couldn't be downloaded: its server ({host}) didn't answer in time
+#. {host} = a server name such as "example.com" (keep the braces as they are)
+	{host} did not answer in time	{host} did not answer in time
+#. text in errors.rs
+#. a helper (yt-dlp, ffmpeg) couldn't be downloaded: its server ({host}) or something on the way refused the connection
+#. {host} = a server name such as "example.com" (keep the braces as they are)
+	{host} refused the connection: a firewall, or a network that blocks it	{host} refused the connection: a firewall, or a network that blocks it
+#. text in errors.rs
+#. {host} = a server name such as "example.com" (keep the braces as they are)
+	{host} refused the request ({status}): too many requests from your network for now	{host} refused the request ({status}): too many requests from your network for now
 #. text in the download list (sizes, speeds, status)
 #. {h} = hours; {m} = minutes (keep the braces as they are)
 	{h} hour(s) {m} min	{h} hour(s) {m} min
@@ -4176,6 +4438,9 @@
 	{percent} at {service}	{percent} at {service}
 #. text in errors.rs
 	{problem} ({cause})	{problem} ({cause})
+#. text in errors.rs
+#. why a helper couldn't be downloaded ({problem}), then what to do about it ({advice}, whole sentences)
+	{problem}. {advice}	{problem}. {advice}
 #. text in errors.rs
 #. a debrid service's error: too many requests; MDM waits and retries
 	{service} asks to slow down; MDM will try again in a minute	{service} asks to slow down; MDM will try again in a minute
@@ -4573,6 +4838,9 @@ extension	This page's player streams its video in pieces, so there's no file to 
 #. button on the download button over a video when it is off on this web site: turns it on again here; verb; very short
 extension	Turn on	Turn on
 #. text in the browser extension
+#. link beside "Downloads from <site> stay with the browser" in the toolbar button's popup: take the site off the excluded sites again
+extension	Undo	Undo
+#. text in the browser extension
 #. status when the app is older than the extension; keep the name Mister Download Manager as it is
 extension	Update Mister Download Manager to use everything this extension offers	Update Mister Download Manager to use everything this extension offers
 #. text in the browser extension
@@ -4599,6 +4867,9 @@ key	Ctrl+0	Ctrl+0
 #. key name or combination in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
 key	Ctrl+A	Ctrl+A
+#. key name or combination in the Help menu's windows (About, updates, shortcuts, Tell a friend)
+#. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
+key	Ctrl+B	Ctrl+B
 #. key name or combination in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
 key	Ctrl+click	Ctrl+click
@@ -4669,9 +4940,9 @@ menu	&About Mister Download Manager	&About Mister Download Manager
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 menu	&Add new download	&Add new download
 #. menu command in the main window
+#. View → Window system: MDM chooses the window system itself at each start
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-#. the trailing ... means it opens a window: keep it
-menu	&Add new download...	&Add new download...
+menu	&Automatic	&Automatic
 #. menu command in the main window
 #. View → Text: letters drawn the classic way, hinted to whole pixels (crisp, coarse on a dense screen)
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
@@ -4754,10 +5025,6 @@ menu	&Stop All	&Stop All
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 menu	&Stop Download	&Stop Download
 #. menu command in the main window
-#. View menu: submenu choosing how the text is drawn (smooth or classic)
-#. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-menu	&Text	&Text
-#. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 menu	&Tray icon	&Tray icon
 #. menu command in the main window
@@ -4770,12 +5037,28 @@ menu	&Undo	&Undo
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 menu	&Video downloads	&Video downloads
 #. menu command in the main window
+#. View → Window system: Wayland's own windows (the name of a Linux display system, usually kept as is)
+#. & marks the keyboard shortcut letter: keep one & before a letter of the translation
+menu	&Wayland	&Wayland
+#. menu command in the main window
+#. View menu: submenu choosing the window system MDM's windows use on Linux (X11 through XWayland, or Wayland)
+#. & marks the keyboard shortcut letter: keep one & before a letter of the translation
+menu	&Window system	&Window system
+#. menu command in the main window
+#. View → Window system: X11's windows, through XWayland in a Wayland session (names of Linux display systems, usually kept as is)
+#. & marks the keyboard shortcut letter: keep one & before a letter of the translation
+menu	&X11 (XWayland)	&X11 (XWayland)
+#. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 menu	Add &batch download	Add &batch download
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #. the trailing ... means it opens a window: keep it
 menu	Add &magnet link...	Add &magnet link...
+#. menu command in the main window
+#. & marks the keyboard shortcut letter: keep one & before a letter of the translation
+#. the trailing ... means it opens a window: keep it
+menu	Add &new download...	Add &new download...
 #. menu command in the main window
 #. View → Theme: picks a theme file or a Base16 or pywal colour scheme, copies it into the themes folder and uses it
 menu	Add a theme file…	Add a theme file…
@@ -4839,7 +5122,7 @@ menu	By R&eferer	By R&eferer
 menu	By Save &Path	By Save &Path
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
-menu	By St&atus	By St&atus
+menu	By Stat&us	By Stat&us
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 menu	By Transfer &Rate	By Transfer &Rate
@@ -4876,8 +5159,14 @@ menu	Delete from queue	Delete from queue
 #. View → Draw with: a graphics system's name (Microsoft's), usually kept as is
 menu	Direct3D	Direct3D
 #. menu command in the main window
+#. View → Draw with: a greyed note; what draws the windows and why: Direct3D 12 through Windows' own software renderer (WARP, keep the name), because this computer's graphics card has no Direct3D 12 driver
+menu	Direct3D 12 (WARP): this graphics card has no Direct3D 12 driver	Direct3D 12 (WARP): this graphics card has no Direct3D 12 driver
+#. menu command in the main window
 #. View → Draw with: a greyed note; Direct3D failed on this computer, so OpenGL draws the windows
 menu	Direct3D didn't start here: OpenGL draws	Direct3D didn't start here: OpenGL draws
+#. menu command in the main window
+#. View → Draw with: a greyed note; Direct3D draws the windows through Windows' own software renderer (WARP) instead of a graphics card
+menu	Direct3D draws with Windows' software renderer (WARP)	Direct3D draws with Windows' software renderer (WARP)
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #. the trailing ... means it opens a window: keep it
@@ -4931,6 +5220,12 @@ menu	Hide drop target	Hide drop target
 #. View → Theme: black and white with strong edges, for low vision
 menu	High contrast	High contrast
 #. menu command in the main window
+#. View → Window system: a greyed note; MDM's windows are Wayland's now
+menu	In use: Wayland	In use: Wayland
+#. menu command in the main window
+#. View → Window system: a greyed note; MDM's windows are X11's (through XWayland) now
+menu	In use: X11 (XWayland)	In use: X11 (XWayland)
+#. menu command in the main window
 #. View → Draw with: a greyed note under "… didn't start here"; why: another error, written in MDM's log
 menu	It couldn't start: the log says why	It couldn't start: the log says why
 #. menu command in the main window
@@ -4948,6 +5243,9 @@ menu	Metal	Metal
 #. menu command in the main window
 #. View → Draw with: a greyed note; Metal failed on this computer, so OpenGL draws the windows
 menu	Metal didn't start here: OpenGL draws	Metal didn't start here: OpenGL draws
+#. menu command in the main window
+#. View → Draw with: a greyed note; Metal draws the windows through a software renderer instead of a graphics card
+menu	Metal draws with a software renderer	Metal draws with a software renderer
 #. menu command in the main window
 #. View → Theme: a style theme's name (Windows 8's flat look); keep "Metro" unless your language writes it otherwise
 menu	Metro	Metro
@@ -4983,6 +5281,21 @@ menu	Open with...	Open with...
 #. menu command in the main window
 #. View → Draw with: a graphics system's name, usually kept as is
 menu	OpenGL	OpenGL
+#. menu command in the main window
+#. View → Draw with: a greyed note; why MDM no longer draws with OpenGL: it couldn't start on this computer
+menu	OpenGL didn't start here	OpenGL didn't start here
+#. menu command in the main window
+#. View → Draw with: a greyed note; why MDM no longer draws with OpenGL: its window froze inside the graphics card's driver while OpenGL drew
+menu	OpenGL froze inside the graphics driver here	OpenGL froze inside the graphics driver here
+#. menu command in the main window
+#. View → Draw with: a greyed note; this computer's OpenGL (its graphics driver) is too old, so MDM doesn't draw with it
+menu	OpenGL here is too old to draw MDM	OpenGL here is too old to draw MDM
+#. menu command in the main window
+#. View → Draw with: a greyed note; why MDM no longer draws with OpenGL: its window stayed empty for 10 seconds, so MDM started again another way
+menu	OpenGL's first frame didn't show within 10 seconds	OpenGL's first frame didn't show within 10 seconds
+#. menu command in the main window
+#. View → Draw with: a greyed note; why MDM no longer draws with OpenGL: MDM crashed or was closed while starting with it
+menu	OpenGL's last start ended before its first frame	OpenGL's last start ended before its first frame
 #. menu command in the main window
 #. what double-clicking a download does — noun: show its properties
 #. noun: opens the download's Properties window
@@ -5056,6 +5369,10 @@ menu	Stop Download	Stop Download
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 menu	Support &MDM	Support &MDM
 #. menu command in the main window
+#. View menu: submenu choosing how the text is drawn (smooth or classic)
+#. & marks the keyboard shortcut letter: keep one & before a letter of the translation
+menu	Te&xt	Te&xt
+#. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 menu	Tell a &friend	Tell a &friend
 #. menu command in the main window
@@ -5097,6 +5414,9 @@ menu	Vulkan	Vulkan
 #. menu command in the main window
 #. View → Draw with: a greyed note; Vulkan failed on this computer, so OpenGL draws the windows
 menu	Vulkan didn't start here: OpenGL draws	Vulkan didn't start here: OpenGL draws
+#. menu command in the main window
+#. View → Draw with: a greyed note; Vulkan draws the windows through a software renderer instead of a graphics card
+menu	Vulkan draws with a software renderer	Vulkan draws with a software renderer
 #. menu bar title in the main window (menus, toolbar, Categories pane)
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 menubar	&Downloads	&Downloads

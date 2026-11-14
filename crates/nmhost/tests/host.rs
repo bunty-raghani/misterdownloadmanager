@@ -233,7 +233,9 @@ fn what_is_left_to_the_browser_is_logged() {
         "{log}"
     );
     assert!(
-        lines[2].contains("kb.zip from dl.update.microsoft.com: its site is in"),
+        lines[2].contains(
+            "kb.zip from dl.update.microsoft.com: its site, or the page it came from, is in"
+        ),
         "{log}"
     );
     assert!(

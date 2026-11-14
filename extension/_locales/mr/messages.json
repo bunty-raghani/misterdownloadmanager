@@ -92,6 +92,9 @@
       }
     }
   },
+  "popup_undo": {
+    "message": "पूर्ववत करा"
+  },
   "popup_excluded": {
     "message": "$site$ वरील डाउनलोड ब्राउझरमध्येच होतील",
     "placeholders": {

@@ -92,6 +92,9 @@
       }
     }
   },
+  "popup_undo": {
+    "message": "পূর্বাবস্থায় ফিরিয়ে আনুন"
+  },
   "popup_excluded": {
     "message": "$site$ থেকে ডাউনলোড ব্রাউজারেই হয়",
     "placeholders": {

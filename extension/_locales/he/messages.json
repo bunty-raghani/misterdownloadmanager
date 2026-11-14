@@ -92,6 +92,9 @@
       }
     }
   },
+  "popup_undo": {
+    "message": "בטל"
+  },
   "popup_excluded": {
     "message": "הורדות מ־$site$ נשארות בדפדפן",
     "placeholders": {

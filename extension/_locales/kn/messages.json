@@ -92,6 +92,9 @@
       }
     }
   },
+  "popup_undo": {
+    "message": "ಮತ್ತೆ ಸೇರಿಸಿ"
+  },
   "popup_excluded": {
     "message": "$site$ ನಿಂದ ಡೌನ್‌ಲೋಡ್‌ಗಳು ಬ್ರೌಸರ್‌ನಲ್ಲೇ ಉಳಿಯುತ್ತವೆ",
     "placeholders": {

@@ -117,6 +117,10 @@
       }
     }
   },
+  "popup_undo": {
+    "message": "Undo",
+    "description": "link beside \"Downloads from <site> stay with the browser\" in the toolbar button's popup: take the site off the excluded sites again"
+  },
   "popup_excluded": {
     "message": "Downloads from $site$ stay with the browser",
     "description": "shown in the toolbar button's popup after the site was excluded",

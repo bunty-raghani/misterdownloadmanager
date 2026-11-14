@@ -31,7 +31,7 @@ crate::theme::themed! {
 /// Tahoma −11 ("MS Shell Dlg 2", 8 pt): every dialog body text.
 pub fn tahoma() -> FontId {
     FontId::new(
-        crate::theme::metrics().font_dialog,
+        crate::theme::font_size(crate::theme::metrics().font_dialog),
         FontFamily::Name("tahoma".into()),
     )
 }
@@ -39,7 +39,7 @@ pub fn tahoma() -> FontId {
 /// Tahoma Bold −13: the Options pages' header titles.
 pub fn tahoma_bold() -> FontId {
     FontId::new(
-        crate::theme::metrics().font_dialog_bold,
+        crate::theme::font_size(crate::theme::metrics().font_dialog_bold),
         FontFamily::Name("tahoma-bold".into()),
     )
 }
@@ -47,7 +47,7 @@ pub fn tahoma_bold() -> FontId {
 /// Tahoma Bold −16: a window's headline (the browser extension's, the helpers').
 pub fn tahoma_title() -> FontId {
     FontId::new(
-        crate::theme::metrics().font_title,
+        crate::theme::font_size(crate::theme::metrics().font_title),
         FontFamily::Name("tahoma-bold".into()),
     )
 }
@@ -65,7 +65,7 @@ pub fn install_fonts(defs: &mut egui::FontDefinitions, font_dir: Option<&std::pa
         ("tahoma-bold", "tahomabd.ttf"),
         ("arial-bold", "arialbd.ttf"),
     ] {
-        let fonts = match font_dir.and_then(|d| std::fs::read(d.join(file)).ok()) {
+        let fonts = match font_dir.and_then(|d| crate::theme::read_font(&d.join(file))) {
             Some(bytes) => {
                 defs.font_data.insert(
                     family.into(),
@@ -338,13 +338,13 @@ fn name_from_caption(resp: &Response) {
 
 /// Segoe UI −12: menu bar, toolbar labels.
 pub fn segoe() -> FontId {
-    FontId::proportional(crate::theme::metrics().font_ui)
+    FontId::proportional(crate::theme::font_size(crate::theme::metrics().font_ui))
 }
 
 /// Arial Bold −13: the Categories close "x".
 pub fn arial_bold() -> FontId {
     FontId::new(
-        crate::theme::metrics().font_ui_bold,
+        crate::theme::font_size(crate::theme::metrics().font_ui_bold),
         FontFamily::Name("arial-bold".into()),
     )
 }
@@ -592,8 +592,9 @@ pub fn ellipsize_middle(p: &Painter, font: &FontId, s: &str, max: f32) -> String
     cut(lo)
 }
 
-/// [`text`] that never runs past `right`: cut with "..." when too long. Returns the drawn
-/// rect and whether the text was cut (then show it whole with [`full_on_hover`]).
+/// [`text`] on one line that never runs past `right`: cut with "..." when too long, line breaks
+/// shown as spaces. Returns the drawn rect and whether the text was cut (then show it whole with
+/// [`full_on_hover`]).
 pub fn text_fit(
     p: &Painter,
     x: f32,
@@ -602,7 +603,17 @@ pub fn text_fit(
     color: Color32,
     right: f32,
 ) -> (Rect, bool) {
-    let shown = ellipsize(p, &tahoma(), s, (right - x).max(0.0));
+    // A one-line label, though the text may come from elsewhere (a site's title, an error): a
+    // line break is a space here, not another row drawn down over the window. Cut means the
+    // whole original, line breaks and all, is shown on hover.
+    let flat;
+    let line = if s.contains(['\n', '\r']) {
+        flat = s.replace("\r\n", " ").replace(['\n', '\r'], " ");
+        flat.as_str()
+    } else {
+        s
+    };
+    let shown = ellipsize(p, &tahoma(), line, (right - x).max(0.0));
     let cut = shown != s;
     (text(p, x, baseline, &shown, color), cut)
 }
@@ -1555,6 +1566,43 @@ pub fn link(ui: &Ui, p: &Painter, x: f32, baseline: f32, label: &str, salt: &str
     resp.clicked()
 }
 
+/// A note (`s`, translated already) from `x` to `right` on at most two lines `line_h` apart,
+/// first baseline `baseline`, with a [`link`] after it (`label`, English, translated here): on
+/// the note's line when they fit together, else the note wraps and the link ends its second
+/// line. A note longer than that is cut, and shown whole on hover. True when the link is
+/// clicked; `salt` tells notes apart.
+#[allow(clippy::too_many_arguments)]
+pub fn note_with_link(
+    ui: &Ui,
+    p: &Painter,
+    x: f32,
+    baseline: f32,
+    line_h: f32,
+    s: &str,
+    color: Color32,
+    right: f32,
+    label: &str,
+    salt: &str,
+) -> bool {
+    const GAP: f32 = 8.0;
+    let link_w = text_width(p, crate::i18n::t(label));
+    if text_width(p, s) + GAP + link_w <= right - x {
+        text(p, x, baseline, s, color);
+        return link(ui, p, x + text_width(p, s) + GAP, baseline, label, salt);
+    }
+    let lines = wrap_lines(p, s, (right - x).max(1.0));
+    let first = lines.first().map_or("", String::as_str);
+    let first_rect = text(p, x, baseline, first, color);
+    let rest = lines.get(1..).unwrap_or_default().join(" ");
+    let second = baseline + line_h;
+    let (rest_rect, cut) = text_fit(p, x, second, &rest, color, right - GAP - link_w);
+    if cut {
+        full_on_hover(ui, first_rect.union(rest_rect), (salt, "note"), s);
+    }
+    let rest_w = text_width(p, &rest).min(right - GAP - link_w - x);
+    link(ui, p, x + rest_w + GAP, second, label, salt)
+}
+
 /// A disabled control says why on hover: `reason` (English, translated here) while `disabled`.
 pub fn why_disabled(resp: Response, disabled: bool, reason: &str) -> Response {
     if disabled {
@@ -1876,9 +1924,14 @@ pub fn field_frame(p: &Painter, rc: Rect, look: FieldLook) {
 /// How far along something is, as IDM shows a download: its green fill on a track (themed: the
 /// track was light in dark mode too), the controls' rounded corners. `fraction` in 0..=1.
 pub fn meter(p: &Painter, rc: Rect, fraction: f32) {
+    meter_in(p, rc, fraction, crate::theme::colors().meter_fill);
+}
+
+/// [`meter`] filled in `fill` (the progress window's check or merge after the last byte, #736).
+pub fn meter_in(p: &Painter, rc: Rect, fraction: f32, fill: Color32) {
     let radius = control_radius().min(rc.height() / 4.0).floor();
     let c = crate::theme::colors();
-    if era_bar(p, rc, 0.0, fraction.clamp(0.0, 1.0), c.meter_fill, false) {
+    if era_bar(p, rc, 0.0, fraction.clamp(0.0, 1.0), fill, false) {
         return;
     }
     let border = crate::theme::metrics().border;
@@ -1887,7 +1940,7 @@ pub fn meter(p: &Painter, rc: Rect, fraction: f32) {
     let w = (fraction.clamp(0.0, 1.0) * inner.width()).floor();
     if w > 0.0 {
         let done = Rect::from_min_size(inner.min, vec2(w, inner.height()));
-        p.rect_filled(done, (radius - border).max(0.0), c.meter_fill);
+        p.rect_filled(done, (radius - border).max(0.0), fill);
     }
     p.rect_stroke(
         rc,
@@ -2244,15 +2297,7 @@ fn edit_text_with(
     name_from_caption(&resp);
     // Tab into a box selects its text, as in Windows (a click places the caret instead).
     if resp.gained_focus() && !ui.input(|i| i.pointer.any_down()) {
-        let mut state = egui::text_edit::TextEditState::load(ui.ctx(), edit_id).unwrap_or_default();
-        let n = value.chars().count();
-        state
-            .cursor
-            .set_char_range(Some(egui::text::CCursorRange::two(
-                egui::text::CCursor::new(0),
-                egui::text::CCursor::new(n),
-            )));
-        state.store(ui.ctx(), edit_id);
+        select_all_text(ui.ctx(), edit_id, value);
     }
     if value.is_empty() && ui.data(|d| d.get_temp::<bool>(was_empty)).is_none() {
         ui.data_mut(|d| d.insert_temp(was_empty, true));
@@ -2261,6 +2306,40 @@ fn edit_text_with(
         edit_menu(&resp, value, password, false);
     }
     resp
+}
+
+/// A text box's right-click menu, each item enabled or not.
+fn edit_entries(
+    undo: bool,
+    copy: bool,
+    paste: bool,
+    delete: bool,
+    select_all: bool,
+) -> Vec<crate::chrome::MenuEntry<EditCmd>> {
+    use crate::chrome::MenuEntry;
+    vec![
+        MenuEntry::Item("&Undo", EditCmd::Undo, undo, false),
+        MenuEntry::Sep,
+        MenuEntry::Item("Cu&t", EditCmd::Cut, copy, false),
+        MenuEntry::Item("&Copy", EditCmd::Copy, copy, false),
+        MenuEntry::Item("&Paste", EditCmd::Paste, paste, false),
+        MenuEntry::Item("&Delete", EditCmd::Delete, delete, false),
+        MenuEntry::Sep,
+        MenuEntry::Item("Select &all", EditCmd::SelectAll, select_all, false),
+    ]
+}
+
+/// A text box's right-click menu, for the access keys' test (app.rs).
+#[cfg(test)]
+pub fn text_box_menu() -> Vec<crate::chrome::MenuEntry<()>> {
+    use crate::chrome::MenuEntry;
+    edit_entries(true, true, true, true, true)
+        .into_iter()
+        .map(|e| match e {
+            MenuEntry::Item(l, _, en, on) => MenuEntry::Item(l, (), en, on),
+            _ => MenuEntry::Sep,
+        })
+        .collect()
 }
 
 #[derive(Clone, Copy)]
@@ -2387,7 +2466,7 @@ fn readonly_with_icon(
 }
 
 pub fn edit_menu(resp: &Response, value: &mut String, password: bool, multiline: bool) {
-    use crate::chrome::{MenuEntry, PopupResult};
+    use crate::chrome::PopupResult;
     use egui::text::{CCursor, CCursorRange};
     use egui::text_edit::TextEditState;
     let ctx = resp.ctx.clone();
@@ -2438,16 +2517,13 @@ pub fn edit_menu(resp: &Response, value: &mut String, password: bool, multiline:
     // egui's own undo history (Ctrl+Z uses it too).
     let mut undoer = state.undoer();
     let now = (state.cursor.char_range().unwrap_or_default(), value.clone());
-    let entries = vec![
-        MenuEntry::Item("&Undo", EditCmd::Undo, undoer.has_undo(&now), false),
-        MenuEntry::Sep,
-        MenuEntry::Item("Cu&t", EditCmd::Cut, has && !password, false),
-        MenuEntry::Item("&Copy", EditCmd::Copy, has && !password, false),
-        MenuEntry::Item("&Paste", EditCmd::Paste, clip.is_some(), false),
-        MenuEntry::Item("&Delete", EditCmd::Delete, has, false),
-        MenuEntry::Sep,
-        MenuEntry::Item("Select &all", EditCmd::SelectAll, n > 0, false),
-    ];
+    let entries = edit_entries(
+        undoer.has_undo(&now),
+        has && !password,
+        clip.is_some(),
+        has,
+        n > 0,
+    );
     let cmd = match crate::chrome::popup(
         &ctx,
         crate::chrome::MenuKind::Context,
@@ -2517,6 +2593,19 @@ pub fn edit_menu(resp: &Response, value: &mut String, password: bool, multiline:
     state.set_undoer(undoer);
     state.store(&ctx, id);
     ctx.memory_mut(|m| m.request_focus(id));
+}
+
+/// The whole text of the box `id` (`value`) selected, so what is typed next replaces it (a box
+/// given the keys by its window as it opens, as Tab into a box does).
+pub fn select_all_text(ctx: &egui::Context, id: egui::Id, value: &str) {
+    let mut state = egui::text_edit::TextEditState::load(ctx, id).unwrap_or_default();
+    state
+        .cursor
+        .set_char_range(Some(egui::text::CCursorRange::two(
+            egui::text::CCursor::new(0),
+            egui::text::CCursor::new(value.chars().count()),
+        )));
+    state.store(ctx, id);
 }
 
 /// A dark edit with right-aligned text (numbers, e.g. the Speed Limiter value).
@@ -2720,6 +2809,15 @@ pub fn combo_arrow(ui: &mut Ui, rc: Rect, id: &str, open: bool) -> Response {
     };
     tint_part(ui.painter(), zone, tint, |p| combo_chevron(p, rc));
     resp
+}
+
+/// [`keep_keys`] for a box that is typed in (an editable combo's, as Save As and Address): Left
+/// and Right are its caret's and Up / Down its history's, `escape` closes its drop list. A box
+/// is drawn first and `keep_keys` called after it, which *replaces* the keys the box asked
+/// egui to leave it: with `horizontal` false, Left / Right in Save As moved the focus to the
+/// control beside it ("..." and the like) instead of the caret to the next character.
+pub fn keep_edit_keys(ui: &Ui, resp: &Response, escape: bool) {
+    keep_keys(ui, resp, true, true, escape);
 }
 
 /// The keys that open an editable combo's drop list while its box has the focus: Alt+Down or
@@ -4833,12 +4931,89 @@ pub fn pass_focus_on(ui: &Ui, resp: &Response, enabled: bool) {
     }
 }
 
+/// A system file or folder dialog titled `title`, for [`start_pick`]: the system draws the title,
+/// so it goes without isolates (#919).
+pub fn file_dialog(title: &str) -> rfd::FileDialog {
+    rfd::FileDialog::new().set_title(crate::i18n::os_text(title))
+}
+
 /// A system file or folder dialog's answer, from its thread.
 type PickSlot = std::sync::Arc<std::sync::Mutex<Option<Option<std::path::PathBuf>>>>;
+
+/// System dialogs asked for and not shown yet ([`start_pick`]), each its thread's work.
+type PendingPicks = std::sync::Arc<std::sync::Mutex<Vec<Box<dyn FnOnce() + Send>>>>;
+
+fn pending_picks_key() -> egui::Id {
+    egui::Id::unique("pending-system-dialogs")
+}
+
+fn menu_frame_key() -> egui::Id {
+    egui::Id::unique("menu-drawn-in-frame")
+}
+
+/// The main window's frame being drawn: every window of ours is drawn in it (they are all
+/// immediate viewports), so it is the app's one clock.
+fn root_frame(ctx: &egui::Context) -> u64 {
+    ctx.cumulative_frame_nr_for(egui::ViewportId::ROOT)
+}
+
+/// A menu's window is drawn in this frame (`chrome::popup_level`): no system dialog starts
+/// before it is gone ([`start_pick`]).
+pub fn menu_drawn(ctx: &egui::Context) {
+    let frame = root_frame(ctx);
+    ctx.data_mut(|d| d.insert_temp(menu_frame_key(), frame));
+}
+
+/// Whether a system dialog may start as the main window's frame `frame` begins, a menu last
+/// drawn in `menu_frame`: none was drawn in the frame before, so the end of that frame closed
+/// every menu's window (eframe closes a viewport's window at the end of the first frame that
+/// doesn't draw it).
+fn menus_gone(menu_frame: Option<u64>, frame: u64) -> bool {
+    menu_frame.is_none_or(|m| m + 1 < frame)
+}
+
+/// Starts the system dialogs [`start_pick`] asked for, as a frame of the main window begins,
+/// once no menu's window is left.
+struct PickStarter;
+
+impl egui::Plugin for PickStarter {
+    fn debug_name(&self) -> &'static str {
+        "mdm-system-dialogs"
+    }
+
+    fn on_begin_pass(&mut self, ui: &mut Ui) {
+        let ctx = ui.ctx();
+        if ctx.viewport_id() != egui::ViewportId::ROOT {
+            return;
+        }
+        let Some(pending) = ctx.data(|d| d.get_temp::<PendingPicks>(pending_picks_key())) else {
+            return;
+        };
+        let mut jobs = pending.lock().unwrap();
+        if jobs.is_empty() {
+            return;
+        }
+        let menu = ctx.data(|d| d.get_temp::<u64>(menu_frame_key()));
+        if !menus_gone(menu, root_frame(ctx)) {
+            // The frame that closes the menu, then this one again.
+            ctx.request_repaint();
+            return;
+        }
+        for job in jobs.drain(..) {
+            std::thread::spawn(job);
+        }
+    }
+}
 
 /// Show a system Open / Save / folder dialog (`ask` builds and runs it) on a thread of its
 /// own: it blocked the app's windows while open (progress windows stood still). One per
 /// `key` at a time; [`picked`] gives its answer on a later frame.
+///
+/// It starts once every menu is closed (#615): a menu item is chosen in a frame that still
+/// draws its menu, whose window closes only at the end of the next frame. On macOS the dialog
+/// runs in a modal loop on the app's main thread (rfd hands it there), which began before that
+/// frame: the menu's window stayed on top of every window until MDM quit. Every system dialog
+/// starts here, so every menu item that opens one closes its menus first, on every system.
 pub fn start_pick(
     ctx: &egui::Context,
     key: &str,
@@ -4851,11 +5026,20 @@ pub fn start_pick(
     let slot: PickSlot = Default::default();
     ctx.data_mut(|d| d.insert_temp(id, slot.clone()));
     let wake = ctx.clone();
-    std::thread::spawn(move || {
+    let job = move || {
         let answer = ask();
         *slot.lock().unwrap() = Some(answer);
         wake.request_repaint();
+    };
+    let pending = ctx.data_mut(|d| {
+        d.get_temp_mut_or_default::<PendingPicks>(pending_picks_key())
+            .clone()
     });
+    pending.lock().unwrap().push(Box::new(job));
+    // Added once: a second plugin of a type is ignored.
+    ctx.add_plugin(PickStarter);
+    // Started as the main window's next frame begins (PickStarter).
+    ctx.request_repaint_of(egui::ViewportId::ROOT);
 }
 
 /// The path chosen in [`start_pick`]'s dialog `key`, once (None while it is open, or when it
@@ -6381,6 +6565,44 @@ mod tests {
             }
         });
         out.textures_delta.clear();
+    }
+
+    #[test]
+    fn a_single_line_label_never_grows_another_row() {
+        with_painter(|p| {
+            // A title that fits is drawn as it is, with nothing to hover.
+            let (rc, cut) = text_fit(p, 11.0, 70.0, "A short title", TEXT(), 489.0);
+            assert!(!cut);
+            assert!(rc.right() <= 489.0);
+            // An empty one draws nothing and is not a cut.
+            let (rc, cut) = text_fit(p, 11.0, 70.0, "", TEXT(), 489.0);
+            assert!(!cut);
+            assert_eq!(rc.width(), 0.0);
+            // A column with room for the "..." alone stays in its column.
+            let right = 11.0 + text_width(p, "...") + 1.0;
+            let (rc, cut) = text_fit(p, 11.0, 70.0, "A title", TEXT(), right);
+            assert!(cut);
+            assert!(rc.right() <= right);
+            // A long title stays one row, whatever it has in it: unbroken, wide Unicode, and
+            // line breaks (a site's title). A cut says the whole original is shown on hover.
+            let cases = [
+                "W".repeat(2000),
+                "日本語".repeat(500),
+                "مرحبا بالعالم ".repeat(100),
+                "🎬".repeat(500),
+                "Short\ntitle".to_owned(),
+                "Short\rtitle".to_owned(),
+                "Long title\r\nwith more than one line\nand a third".to_owned(),
+                "\n".to_owned(),
+                "a\n".repeat(100),
+            ];
+            for s in cases {
+                let (rc, cut) = text_fit(p, 11.0, 70.0, &s, TEXT(), 489.0);
+                assert!(cut, "not cut, so no whole text on hover: {s:?}");
+                assert!(rc.right() <= 489.0, "past its right edge: {s:?}");
+                assert!(rc.height() <= 20.0, "more than one row: {s:?}");
+            }
+        });
     }
 
     #[test]
