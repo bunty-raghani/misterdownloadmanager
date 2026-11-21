@@ -2006,7 +2006,7 @@ button:focus-visible { outline: none; }
   async function startTelegramDownload(src, title) {
     const server = await send({ type: "media-server" });
     if (!server || !server.ok || !server.port || !server.token) {
-      return flash("err", t("video_failed"));
+      return setStatus({ state: "err", text: t("video_failed") }, 2600);
     }
     if (!src) {
       const v = [...document.querySelectorAll("video")].find((v) => v.closest(TELEGRAM_VIEWER));
@@ -2032,10 +2032,10 @@ button:focus-visible { outline: none; }
     });
     if (!started || !started.ok) {
       telegramActive.delete(active.requestId);
-      flash("err", t("video_failed"));
+      setStatus({ state: "err", text: t("video_failed") }, 2600);
       return;
     }
-    flash("ok", t("video_sent"));
+    setStatus({ state: "sent", text: t("video_sent") }, 2600);
   }
 
   // The page's chunks (main world) arrive here; upload them in order to MDM.
@@ -2073,10 +2073,25 @@ button:focus-visible { outline: none; }
           return;
         }
         if (s.state === "Downloading") {
-          window.postMessage(
-            { mdmTelegramResume: a.requestId, offset: s.downloaded },
-            "*",
-          );
+          // Say it again for a moment: the page may still be finishing the paused chunk when
+          // MDM resumes, and a one-off message sent then would be missed. Stop as soon as it
+          // answers with the next chunk (`a.lastSeq` moves on).
+          const pausedAt = a.lastSeq;
+          const resume = () =>
+            window.postMessage(
+              { mdmTelegramResume: a.requestId, offset: s.downloaded },
+              "*",
+            );
+          resume();
+          let tries = 0;
+          const again = () => {
+            if (!telegramActive.has(a.requestId) || a.lastSeq !== pausedAt) return;
+            if (++tries < 10) {
+              resume();
+              setTimeout(again, 300);
+            }
+          };
+          setTimeout(again, 300);
           return;
         }
         if (s.state === "Cancelled" || s.state === "Failed" || s.state === "Done") {
@@ -2190,7 +2205,7 @@ button:focus-visible { outline: none; }
             }).catch(() => {});
           }
           telegramActive.delete(a.requestId);
-          flash("err", t("video_failed"));
+          setStatus({ state: "err", text: t("video_failed") }, 2600);
         }
       })
       .catch(async (error) => {
@@ -2208,7 +2223,7 @@ button:focus-visible { outline: none; }
           );
         }
         telegramActive.delete(a.requestId);
-        flash("err", t("video_failed"));
+        setStatus({ state: "err", text: t("video_failed") }, 2600);
       });
   });
 
