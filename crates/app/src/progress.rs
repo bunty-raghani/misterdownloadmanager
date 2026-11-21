@@ -876,7 +876,7 @@ impl Progress {
             self.details = !self.details;
         }
         let running = item.status == Status::Downloading;
-        let (label, pkind) = pause_button(item.status, live);
+        let (label, pkind) = pause_button(item.status, live, item.resumable);
         if winui::button(
             ui,
             r(lower, pause_at.0, 206.0, pause_at.1, 22.0),
@@ -2363,19 +2363,31 @@ fn segment_bar(p: &egui::Painter, o: Pos2, item: &Item, segments: &[(u64, f64)])
 fn pause_button(
     status: Status,
     live: Option<mdm_tools::video::LiveState>,
+    resumable: Option<bool>,
 ) -> (&'static str, ButtonKind) {
     use mdm_tools::video::LiveState;
     match live {
         // i18n: button in a live stream's progress window: stop recording it and keep what was recorded as a video file
         Some(LiveState::Recording) => (crate::i18n::mark("Stop and save"), ButtonKind::Normal),
         Some(LiveState::Saving) => (crate::i18n::mark("Stop and save"), ButtonKind::Disabled),
-        None => match status {
-            // i18n: verb: pause the download
-            Status::Downloading => (crate::i18n::mark("Pause"), ButtonKind::Normal),
-            // i18n: verb: continue the download
-            Status::Stopped | Status::Error => (crate::i18n::mark("Resume"), ButtonKind::Normal),
-            _ => (crate::i18n::mark("Pause"), ButtonKind::Disabled),
-        },
+        None => {
+            // A download the server cannot continue (the "Resume capability: No" row) must not
+            // offer Pause: it could be stopped but never started again. Telegram's page-only
+            // media is one of these. Cancel is the action that works for it.
+            let cannot_resume = resumable == Some(false);
+            let kind = if cannot_resume {
+                ButtonKind::Disabled
+            } else {
+                ButtonKind::Normal
+            };
+            match status {
+                // i18n: verb: pause the download
+                Status::Downloading => (crate::i18n::mark("Pause"), kind),
+                // i18n: verb: continue the download
+                Status::Stopped | Status::Error => (crate::i18n::mark("Resume"), kind),
+                _ => (crate::i18n::mark("Pause"), ButtonKind::Disabled),
+            }
+        }
     }
 }
 
@@ -2574,8 +2586,8 @@ mod tests {
     #[test]
     fn a_recording_live_streams_pause_button_stops_and_saves_it() {
         use mdm_tools::video::LiveState;
-        let label = |status, live| pause_button(status, live).0;
-        let enabled = |status, live| pause_button(status, live).1 != ButtonKind::Disabled;
+        let label = |status, live| pause_button(status, live, None).0;
+        let enabled = |status, live| pause_button(status, live, None).1 != ButtonKind::Disabled;
         let recording = Some(LiveState::Recording);
         let saving = Some(LiveState::Saving);
         assert_eq!(label(Status::Downloading, recording), "Stop and save");
@@ -2604,6 +2616,29 @@ mod tests {
             assert!(pause_labels(false).contains(&label(status, None)));
         }
         assert!(!pause_labels(false).contains(&"Stop and save"));
+    }
+
+    /// A download whose server cannot continue it (Telegram's page-only media): Pause and
+    /// Resume are greyed out, so the person can only Cancel it. Every other download still
+    /// gets its Pause and Resume, as before.
+    #[test]
+    fn a_download_without_resume_capability_has_no_pause_button() {
+        use winui::ButtonKind::*;
+        for status in [Status::Downloading, Status::Stopped, Status::Error] {
+            let (label, kind) = pause_button(status, None, Some(false));
+            assert!(matches!(kind, Disabled), "{status:?}");
+            assert!(pause_labels(false).contains(&label));
+        }
+        for status in [Status::Downloading, Status::Stopped, Status::Error] {
+            assert!(
+                matches!(pause_button(status, None, Some(true)).1, Normal),
+                "{status:?}"
+            );
+            assert!(
+                matches!(pause_button(status, None, None).1, Normal),
+                "{status:?}"
+            );
+        }
     }
 
     /// A live stream's status says it is saved, else that it records, before anything else

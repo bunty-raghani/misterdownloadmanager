@@ -4972,7 +4972,15 @@ impl App {
             self.stop_queue(q);
         }
         for id in ids {
-            self.stop_by_hand(id);
+            // One without resume capability (Telegram's page-only media) cannot be started
+            // again: Stop All ends it for good rather than leaving a Paused row with no Resume.
+            if self.item(id).is_some_and(|i| i.resumable == Some(false))
+                && self.media_item_upload.contains_key(&id)
+            {
+                self.stop(id);
+            } else {
+                self.stop_by_hand(id);
+            }
         }
     }
 
@@ -8320,6 +8328,9 @@ impl App {
             let startable = running || item.can_start();
             let why = match action {
                 "start" | "remove" | "delete" if busy => Some("busy"),
+                // "Resume capability: No" (Telegram's page-only media): it can be cancelled,
+                // but pausing it would leave a download that cannot be started again.
+                "pause" if item.resumable == Some(false) => Some("not resumable"),
                 "pause" if !running => Some("not running"),
                 "pause" => {
                     self.stop_by_hand(id);
@@ -9679,7 +9690,9 @@ impl App {
         use MenuEntry::{Item as I, Sep, Sub};
         let sel = self.selected_item();
         let picked = self.chosen(None);
-        let running = picked.iter().any(|i| i.live.is_some());
+        let running = picked
+            .iter()
+            .any(|i| i.live.is_some() || self.media_running(i.id));
         let resumable = picked.iter().any(|i| i.can_start());
         let deletable = picked.iter().any(|i| i.live.is_none());
         let can_stop_all = self.can_stop_all();
@@ -10362,7 +10375,9 @@ impl App {
         let done = it.is_some_and(|i| i.status == Status::Complete);
         let live = it.is_some_and(|i| i.live.is_some());
         let any = !chosen.is_empty();
-        let any_live = chosen.iter().any(|i| i.live.is_some());
+        let any_live = chosen
+            .iter()
+            .any(|i| i.live.is_some() || self.media_running(i.id));
         let any_resumable = chosen.iter().any(|i| i.can_start());
         let any_idle = chosen.iter().any(|i| i.live.is_none());
         let all_done = any && chosen.iter().all(|i| i.status == Status::Complete);
@@ -11083,7 +11098,9 @@ impl App {
 
         // Toolbar — full labels (IDM truncates "Delete Co...", "Start Qu...": user decision).
         let picked = self.chosen(None);
-        let running = picked.iter().any(|i| i.live.is_some());
+        let running = picked
+            .iter()
+            .any(|i| i.live.is_some() || self.media_running(i.id));
         let resumable = picked.iter().any(|i| i.can_start());
         let deletable = picked.iter().any(|i| i.live.is_none());
         let can_stop_all = self.can_stop_all();
