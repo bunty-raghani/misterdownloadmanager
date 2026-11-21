@@ -1857,6 +1857,7 @@ fn media_snapshot(
         .then(|| upload.size.load(Ordering::Relaxed));
     let engine = match &state {
         crate::media::UploadState::Downloading => mdm_engine::download::State::Downloading,
+        crate::media::UploadState::Paused => mdm_engine::download::State::Cancelled,
         crate::media::UploadState::Done => mdm_engine::download::State::Done,
         crate::media::UploadState::Failed(_) => mdm_engine::download::State::Failed,
         crate::media::UploadState::Cancelled => mdm_engine::download::State::Cancelled,
@@ -3862,6 +3863,13 @@ impl App {
                     crate::media::UploadState::Downloading => {
                         item.snap = Some(media_snapshot(&upload, state, None));
                     }
+                    crate::media::UploadState::Paused => {
+                        // Keep the temporary file and the item's mapping: Resume continues
+                        // from the bytes already written, on the same upload.
+                        item.status = Status::Stopped;
+                        item.stream_rate = 0.0;
+                        item.snap = Some(media_snapshot(&upload, state, None));
+                    }
                     crate::media::UploadState::Done => {
                         let dest = item.dest.clone();
                         if let Some(parent) = dest.parent() {
@@ -4545,8 +4553,26 @@ impl App {
         self.saved_by_hand.remove(&id);
         let rt = self.rt.clone();
         // Telegram media streamed by its page into MDM: not an engine download (the page-only
-        // URL answers 302 outside the page); its progress window's Resume must not start one.
-        if self.media_item_upload.contains_key(&id) {
+        // URL answers 302 outside the page). Resume carries the page's upload on from the bytes
+        // already written; a cancelled one is gone and cannot be restarted here.
+        if let Some(upload_id) = self.media_item_upload.get(&id).copied() {
+            let paused = self
+                .media
+                .as_ref()
+                .and_then(|s| s.upload(upload_id))
+                .is_some_and(|u| {
+                    matches!(*u.state.lock().unwrap(), crate::media::UploadState::Paused)
+                });
+            if paused {
+                if let Some(server) = &self.media {
+                    server.resume(upload_id);
+                }
+                if let Some(item) = self.item(id) {
+                    item.status = Status::Downloading;
+                    item.note("Resumed from Telegram".to_string());
+                }
+                self.dirty = true;
+            }
             return;
         }
         let Some(item) = self.item(id) else { return };
@@ -4819,6 +4845,16 @@ impl App {
             .retain(|id| self.items.iter().any(|i| i.id == *id) && !ready.contains(id));
     }
 
+    /// A page's Telegram upload is a running download too, though it has no engine job: Pause,
+    /// Pause All and the popup's buttons must see it as one.
+    fn media_running(&self, id: u64) -> bool {
+        self.media_item_upload.get(&id).is_some_and(|&upload_id| {
+            self.media
+                .as_ref()
+                .is_some_and(|s| s.is_downloading(upload_id))
+        })
+    }
+
     fn stop(&mut self, id: u64) {
         // A video waiting for its place doesn't start.
         self.video_places.unwait(id);
@@ -4865,6 +4901,20 @@ impl App {
         // A video waiting for its place doesn't start.
         self.video_places.unwait(id);
         self.stop_healing(id);
+        // A Telegram media item's bytes come from its page, not the engine. Pause the upload
+        // (keeping what was written) instead of doing nothing: the progress window's Pause,
+        // Pause All and the popup's Pause all come through here.
+        if let Some(upload_id) = self.media_item_upload.get(&id).copied()
+            && let Some(server) = &self.media
+        {
+            server.pause(upload_id);
+            if let Some(item) = self.item(id) {
+                item.status = Status::Stopped;
+                item.stream_rate = 0.0;
+            }
+            self.dirty = true;
+            return;
+        }
         // Every other download stops here as `stop` stops it.
         if let Some(l) = self.item(id).and_then(|i| i.live.as_ref()) {
             let before = l.dl.live_state();
@@ -4901,7 +4951,9 @@ impl App {
     /// Stop All (and Pause All) has something to stop: a download, a queue, or a download that
     /// would start again by itself.
     fn can_stop_all(&self) -> bool {
-        self.items.iter().any(|i| i.live.is_some())
+        self.items
+            .iter()
+            .any(|i| i.live.is_some() || self.media_running(i.id))
             || self.queues.iter().any(|q| q.running)
             || !self.restarts_pending().is_empty()
     }
@@ -4910,7 +4962,11 @@ impl App {
     /// A running queue's downloads stop with it (not by hand), so starting it again, or its
     /// schedule, goes on with them.
     fn stop_all(&mut self) {
-        let live = self.items.iter().filter(|i| i.live.is_some()).map(|i| i.id);
+        let live = self
+            .items
+            .iter()
+            .filter(|i| i.live.is_some() || self.media_running(i.id))
+            .map(|i| i.id);
         let (queues, ids) = stop_all_plan(&self.queues, live, self.restarts_pending());
         for q in queues {
             self.stop_queue(q);
@@ -8251,6 +8307,7 @@ impl App {
                 .find(|i| i.id == id)
                 .and_then(|i| i.torrent.as_ref())
                 .is_some_and(|t| self.torrent_host.busy(&t.hash));
+            let media_running = self.media_running(id);
             let Some(item) = self.item(id) else {
                 answer.skipped.push(ipc::api::Skipped {
                     id,
@@ -8258,7 +8315,7 @@ impl App {
                 });
                 continue;
             };
-            let running = item.live.is_some();
+            let running = item.live.is_some() || media_running;
             // As Resume: a finished gallery may start again (#58).
             let startable = running || item.can_start();
             let why = match action {

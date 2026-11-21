@@ -2701,7 +2701,8 @@ if (SAFARI) {
 // Take the finished file into MDM's list and drop the browser's own entry, so it isn't kept
 // twice. The file stays where the browser saved it.
 const telegramImported = new Set();
-ext.downloads.onChanged.addListener(async (delta) => {
+// Safari has no downloads API: the page's browser download stays with the browser there.
+ext.downloads?.onChanged?.addListener(async (delta) => {
   if (!delta.state || delta.state.current !== "complete") return;
   const id = delta.id;
   if (telegramImported.has(id)) return;
@@ -3119,6 +3120,8 @@ function telegramFetchInPage(requestId, src) {
     let total = info.size > 0 ? info.size : null;
     let mime = info.mime;
     let seq = 0;
+    // The ack carries `paused`: the content script is holding this chunk while MDM is paused.
+    // Resolve with it so the loop below can wait for Resume before fetching the next range.
     const waitAck = (n) =>
       new Promise((resolve, reject) => {
         const on = (e) => {
@@ -3133,12 +3136,29 @@ function telegramFetchInPage(requestId, src) {
           clearTimeout(timer);
           window.removeEventListener("message", on);
           if (e.data.abort) reject(new Error("cancelled"));
-          else resolve();
+          else resolve(e.data);
         };
         const timer = setTimeout(() => {
           window.removeEventListener("message", on);
           reject(new Error("MDM did not answer"));
         }, 30000);
+        window.addEventListener("message", on);
+      });
+    // A paused upload keeps its fetch here until the content script says MDM resumed (with the
+    // byte count already written), or the page goes away.
+    const waitResume = () =>
+      new Promise((resolve, reject) => {
+        const on = (e) => {
+          if (e.source !== window || !e.data) return;
+          if (e.data.mdmTelegramResume === requestId) {
+            window.removeEventListener("message", on);
+            resolve(Number(e.data.offset) || 0);
+          } else if (e.data.mdmTelegramAck === requestId && e.data.abort) {
+            // Cancelled while paused: stop for good.
+            window.removeEventListener("message", on);
+            reject(new Error("cancelled"));
+          }
+        };
         window.addEventListener("message", on);
       });
     const usableType = (type) =>
@@ -3202,9 +3222,16 @@ function telegramFetchInPage(requestId, src) {
         if (seq === 0) post({ kind: "start", total, mime, name: info.name });
         const ack = waitAck(seq);
         post({ kind: "chunk", seq, data }, [data]);
-        await ack;
+        const answer = await ack;
         offset += received;
         seq += 1;
+        if (answer && answer.paused) {
+          // MDM paused this upload: hold here, then pick up from the bytes it actually has on
+          // disk. A chunk sent just as Pause was clicked was refused and never written, so the
+          // server's count — not the page's — is the right place to carry on from.
+          const at = await waitResume();
+          if (Number.isSafeInteger(at) && at >= 0) offset = at;
+        }
         if (res.status === 200) break;
         if (total !== null && offset >= total) break;
         if (total === null && received < CHUNK) break;
@@ -3552,28 +3579,6 @@ function senderPage(sender) {
   return /^https?:/i.test(u) ? u : null;
 }
 
-// The page's address as it is now. A content script loaded before an extension update has no
-// `page` in its message, and `sender.url` is the document's first address (YouTube changes the
-// video in the same document, so it still names the previous video). Asking the frame itself
-// is right for both new and old content scripts.
-async function currentPage(sender) {
-  const tabId = sender.tab && sender.tab.id;
-  if (tabId !== undefined && tabId !== null && sender.frameId !== undefined && ext.scripting) {
-    try {
-      const [found] = await ext.scripting.executeScript({
-        target: { tabId, frameIds: [sender.frameId] },
-        func: () => location.href,
-      });
-      if (found && typeof found.result === "string" && /^https?:/i.test(found.result)) {
-        return found.result;
-      }
-    } catch {
-      // A frame the extension may not script (a browser page, a store): the tab's own address.
-    }
-  }
-  return senderPage(sender);
-}
-
 // The object starting at `from` (`{`), to its matching `}`: strings and escapes are skipped,
 // so a `};` inside a description doesn't end it early.
 function objectAt(text, from) {
@@ -3837,13 +3842,10 @@ const beside = (tab) => ({
 });
 
 async function pageMessage(m, sender) {
-  // YouTube changes the video in the same page (a history entry, not a new document): the
-  // content script's message carries the video's current address; `sender.url` can still be
-  // the first video's, which made the button send video 1 after switching to video 2.
-  const page =
-    m.type === "video" && typeof m.page === "string" && /^https?:/i.test(m.page)
-      ? m.page
-      : await currentPage(sender);
+  // The browser's address, never one the page claims in its message. The top frame's tab URL
+  // follows a page that moves in place (YouTube's history entries), so this is both current
+  // and safe: a page cannot name another site as its own.
+  const page = senderPage(sender);
   const tab = sender.tab || {};
   // #758: on Google Drive, pointer movement inside a player's subframe informs the top frame
   // so the floating button stays visible while hovering over the cross-origin player.

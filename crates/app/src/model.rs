@@ -1577,7 +1577,14 @@ impl Item {
             return None;
         }
         let size = self.size?;
-        self.live.as_ref()?.speed.seconds_left(size)
+        if let Some(live) = &self.live {
+            return live.speed.seconds_left(size);
+        }
+        // A Telegram media item has no engine job (`live`): its bytes and speed come from the
+        // local upload server, which keeps a 6-second rate in `stream_rate`. Use the bytes
+        // written so far (the ones the row shows) to work out what is left at that speed.
+        let rate = self.stream_rate;
+        (rate > 1.0).then(|| size.saturating_sub(self.downloaded) as f64 / rate)
     }
 
     /// How much has come, 0 to 1, or None without a size to take a share of (a live stream,
@@ -2293,6 +2300,28 @@ mod tests {
             duration: None,
         });
         it
+    }
+
+    /// A Telegram media item has no engine job, so its time left comes from the upload
+    /// server's rate and the bytes written: without that fallback the progress window and
+    /// the browser popup show no time left at all.
+    #[test]
+    fn a_media_item_has_time_left_from_its_stream_rate() {
+        let url = Url::parse("https://web.telegram.org/k/").unwrap();
+        let mut it = Item::new(1, url, PathBuf::from("clip.mp4"), Category::Video);
+        it.status = Status::Downloading;
+        it.size = Some(1000);
+        it.downloaded = 200;
+        it.stream_rate = 100.0;
+        assert!(it.live.is_none(), "a page upload has no engine job");
+        assert_eq!(it.seconds_left(), Some(8.0));
+        // No speed yet (the 6-second window has not sampled a chunk): no figure.
+        it.stream_rate = 0.0;
+        assert_eq!(it.seconds_left(), None);
+        // Not downloading: no time left, whatever the rate.
+        it.stream_rate = 100.0;
+        it.status = Status::Stopped;
+        assert_eq!(it.seconds_left(), None);
     }
 
     /// Joining a video's streams failed: why, and that what was downloaded stays for Resume,

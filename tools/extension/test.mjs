@@ -90,6 +90,8 @@ function fakeApi({
   };
   if (firefox) downloads.onCreated = event("created");
   else downloads.onDeterminingFilename = event("determining");
+  // Telegram media the page finishes itself is added to MDM from this event.
+  downloads.onChanged = event("downloadChanged");
   const api = {
     downloads,
     storage: {
@@ -2612,7 +2614,12 @@ function videoButton({ stored = {}, location, iframes, videos, subframe = false 
   const storageListeners = [];
   const api = {
     i18n: { getMessage: () => "" },
-    runtime: { id: "ours", sendMessage: async (m) => (m.type === "panel" ? { on: true } : { ok: false }) },
+    runtime: {
+      id: "ours",
+      sendMessage: async (m) => (m.type === "panel" ? { on: true } : { ok: false }),
+      // The Telegram upload's "start" message from the background (video.js).
+      onMessage: { addListener: () => {} },
+    },
     storage: {
       local: {
         get: async (defaults) => ({ ...defaults, ...stored }),
@@ -2626,6 +2633,10 @@ function videoButton({ stored = {}, location, iframes, videos, subframe = false 
     top: null,
     location: loc,
     document: doc,
+    // The page's Telegram uploader listens for its own chunks on `window`.
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    postMessage: () => {},
   };
   win.top = subframe ? {} : win;
   class HTMLAudioElement {}

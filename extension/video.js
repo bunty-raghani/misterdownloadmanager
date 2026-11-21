@@ -2046,6 +2046,51 @@ button:focus-visible { outline: none; }
     if (!a) return;
     const m = event.data;
     const headers = (extra = {}) => ({ "x-mdm-token": a.token, ...extra });
+    // MDM paused this upload. The page is holding its next chunk; watch the local server and
+    // signal it when MDM resumes (with the bytes already written, so it fetches only the rest)
+    // or when MDM cancels, so the page gives up.
+    const watchPause = () => {
+      const tick = async () => {
+        let r;
+        try {
+          r = await fetch(`${a.base}/telegram/state?id=${a.id}`, {
+            method: "POST",
+            headers: headers(),
+          });
+        } catch {
+          telegramActive.delete(a.requestId);
+          return;
+        }
+        if (!r.ok) {
+          telegramActive.delete(a.requestId);
+          return;
+        }
+        let s;
+        try {
+          s = await r.json();
+        } catch {
+          telegramActive.delete(a.requestId);
+          return;
+        }
+        if (s.state === "Downloading") {
+          window.postMessage(
+            { mdmTelegramResume: a.requestId, offset: s.downloaded },
+            "*",
+          );
+          return;
+        }
+        if (s.state === "Cancelled" || s.state === "Failed" || s.state === "Done") {
+          window.postMessage(
+            { mdmTelegramAck: a.requestId, seq: a.lastSeq, abort: true },
+            "*",
+          );
+          telegramActive.delete(a.requestId);
+          return;
+        }
+        setTimeout(tick, 300);
+      };
+      setTimeout(tick, 300);
+    };
     a.chain = a.chain
       .then(async () => {
         if (m.kind === "start") {
@@ -2096,6 +2141,15 @@ button:focus-visible { outline: none; }
           if (!r.ok) throw new Error(`MDM chunk ${r.status}`);
           const reply = await r.json();
           if (reply.continue === false) {
+            if (reply.paused) {
+              // Hold the page's fetch here. Keep the upload and its partial file for Resume.
+              window.postMessage(
+                { mdmTelegramAck: a.requestId, seq: m.seq, abort: false, paused: true },
+                "*",
+              );
+              watchPause();
+              return;
+            }
             window.postMessage(
               { mdmTelegramAck: a.requestId, seq: m.seq, abort: true },
               "*",

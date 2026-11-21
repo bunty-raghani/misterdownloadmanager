@@ -64,6 +64,9 @@ struct RateWindow {
 #[derive(Clone, Debug)]
 pub enum UploadState {
     Downloading,
+    /// Paused by the person: the page stops sending, but the bytes written so far stay on disk
+    /// so Resume can carry on from them (`Server::resume`).
+    Paused,
     Done,
     Failed(String),
     Cancelled,
@@ -136,6 +139,7 @@ impl Server {
                 .route("/telegram/chunk", post(chunk))
                 .route("/telegram/end", post(end))
                 .route("/telegram/cancel", post(cancel))
+                .route("/telegram/state", post(upload_state))
                 .route("/telegram/fail", post(fail))
                 .layer(DefaultBodyLimit::max(MAX_CHUNK))
                 .layer(axum::middleware::from_fn(cors))
@@ -160,7 +164,44 @@ impl Server {
     pub fn cancel(&self, id: u64) {
         if let Some(u) = self.uploads.lock().unwrap().get(&id) {
             u.cancel.store(true, Ordering::Relaxed);
+            *u.state.lock().unwrap() = UploadState::Cancelled;
         }
+        self.ctx.request_repaint();
+    }
+
+    /// Pause: stop the page sending, but keep the bytes written so Resume can go on from them.
+    /// The download stays in the list as Stopped with its progress and its temporary file.
+    pub fn pause(&self, id: u64) {
+        if let Some(u) = self.uploads.lock().unwrap().get(&id) {
+            u.cancel.store(true, Ordering::Relaxed);
+            *u.state.lock().unwrap() = UploadState::Paused;
+        }
+        self.ctx.request_repaint();
+    }
+
+    /// Resume a paused upload: let the page send again, starting a fresh rate window. The page
+    /// picks up from the bytes already written (it reads them from `/telegram/state`), so none
+    /// are fetched or written twice.
+    pub fn resume(&self, id: u64) {
+        if let Some(u) = self.uploads.lock().unwrap().get(&id) {
+            u.cancel.store(false, Ordering::Relaxed);
+            *u.state.lock().unwrap() = UploadState::Downloading;
+            *u.rate_window.lock().unwrap() = RateWindow {
+                samples: VecDeque::from([(
+                    std::time::Instant::now(),
+                    u.downloaded.load(Ordering::Relaxed),
+                )]),
+                rate: 0.0,
+            };
+        }
+        self.ctx.request_repaint();
+    }
+
+    /// Whether this upload is still bringing bytes in: for the app's Pause and Pause All, which
+    /// must see a page upload as a running download (it has no engine job).
+    pub fn is_downloading(&self, id: u64) -> bool {
+        self.upload(id)
+            .is_some_and(|u| matches!(*u.state.lock().unwrap(), UploadState::Downloading))
     }
 
     /// The item is gone from the list: stop its upload and remove the unfinished file.
@@ -192,6 +233,14 @@ struct Id {
     id: u64,
 }
 
+/// What the uploader asks while paused: whether MDM resumed (or stopped) it, and how many
+/// bytes are on disk so the page can fetch the rest from there.
+#[derive(Serialize)]
+struct UploadStateReply {
+    state: &'static str,
+    downloaded: u64,
+}
+
 #[derive(Serialize)]
 struct Started {
     id: u64,
@@ -202,6 +251,10 @@ struct ChunkReply {
     #[serde(rename = "continue")]
     more: bool,
     downloaded: u64,
+    /// True when MDM paused the upload (as opposed to cancelling it): the page holds its place
+    /// and waits for Resume instead of giving up.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    paused: bool,
 }
 
 fn allowed(headers: &HeaderMap, server: &Server) -> bool {
@@ -264,12 +317,12 @@ async fn chunk(
     let Some(upload) = server.uploads.lock().unwrap().get(&q.id).cloned() else {
         return StatusCode::NOT_FOUND.into_response();
     };
-    if upload.cancel.load(Ordering::Relaxed)
-        || !matches!(*upload.state.lock().unwrap(), UploadState::Downloading)
-    {
+    let state = upload.state.lock().unwrap().clone();
+    if upload.cancel.load(Ordering::Relaxed) || !matches!(state, UploadState::Downloading) {
         return Json(ChunkReply {
             more: false,
             downloaded: upload.downloaded.load(Ordering::Relaxed),
+            paused: matches!(state, UploadState::Paused),
         })
         .into_response();
     }
@@ -302,6 +355,7 @@ async fn chunk(
     Json(ChunkReply {
         more: !upload.cancel.load(Ordering::Relaxed),
         downloaded,
+        paused: false,
     })
     .into_response()
 }
@@ -336,6 +390,33 @@ async fn cancel(
     }
     server.ctx.request_repaint();
     StatusCode::NO_CONTENT.into_response()
+}
+
+/// The uploader polls this while paused: on Resume MDM lets it send again and it continues
+/// from `downloaded`; on Cancel (or if the app went away) it stops for good.
+async fn upload_state(
+    State(server): State<Arc<Server>>,
+    Query(q): Query<Id>,
+    headers: HeaderMap,
+) -> Response {
+    if !allowed(&headers, &server) {
+        return StatusCode::FORBIDDEN.into_response();
+    }
+    let Some(upload) = server.uploads.lock().unwrap().get(&q.id).cloned() else {
+        return StatusCode::NOT_FOUND.into_response();
+    };
+    let state = match &*upload.state.lock().unwrap() {
+        UploadState::Downloading => "Downloading",
+        UploadState::Paused => "Paused",
+        UploadState::Done => "Done",
+        UploadState::Failed(_) => "Failed",
+        UploadState::Cancelled => "Cancelled",
+    };
+    Json(UploadStateReply {
+        state,
+        downloaded: upload.downloaded.load(Ordering::Relaxed),
+    })
+    .into_response()
 }
 
 async fn fail(
@@ -390,4 +471,72 @@ async fn cors(req: axum::extract::Request, next: axum::middleware::Next) -> Resp
         HeaderValue::from_static("600"),
     );
     res
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn upload(id: u64, dir: &std::path::Path) -> Arc<Upload> {
+        let temp = dir.join(format!("{id}.part"));
+        std::fs::write(&temp, b"").unwrap();
+        Arc::new(Upload {
+            id,
+            name: "clip.mp4".into(),
+            url: "https://web.telegram.org/k/".into(),
+            size: AtomicU64::new(1000),
+            size_known: AtomicBool::new(true),
+            mime: Mutex::new("video/mp4".into()),
+            temp,
+            downloaded: AtomicU64::new(200),
+            cancel: AtomicBool::new(false),
+            state: Mutex::new(UploadState::Downloading),
+            rate_window: Mutex::new(RateWindow {
+                samples: VecDeque::new(),
+                rate: 0.0,
+            }),
+        })
+    }
+
+    /// Pausing keeps the partial file and the byte count; Resume starts the same upload again
+    /// from those bytes, so the page fetches only the rest. Cancel still stops it for good.
+    #[test]
+    fn pause_keeps_the_bytes_and_resume_carries_on() {
+        let dir = tempfile::tempdir().unwrap();
+        let server = Server {
+            port: 0,
+            token: "token".into(),
+            uploads: Default::default(),
+            ctx: egui::Context::default(),
+            next: AtomicU64::new(1),
+        };
+        let u = upload(1, dir.path());
+        server.uploads.lock().unwrap().insert(1, u.clone());
+
+        assert!(server.is_downloading(1));
+        server.pause(1);
+        assert!(!server.is_downloading(1));
+        assert!(u.cancel.load(Ordering::Relaxed));
+        assert!(matches!(*u.state.lock().unwrap(), UploadState::Paused));
+        assert_eq!(
+            u.downloaded.load(Ordering::Relaxed),
+            200,
+            "bytes stay for Resume"
+        );
+        assert!(u.temp.exists(), "the partial file stays for Resume");
+
+        server.resume(1);
+        assert!(server.is_downloading(1));
+        assert!(!u.cancel.load(Ordering::Relaxed));
+        assert!(matches!(*u.state.lock().unwrap(), UploadState::Downloading));
+        assert_eq!(
+            u.downloaded.load(Ordering::Relaxed),
+            200,
+            "no bytes lost on Resume"
+        );
+
+        server.cancel(1);
+        assert!(!server.is_downloading(1));
+        assert!(matches!(*u.state.lock().unwrap(), UploadState::Cancelled));
+    }
 }
