@@ -110,7 +110,13 @@ impl FtpServer {
         });
         let sh = shared.clone();
         let task = tokio::spawn(async move {
-            while let Ok((sock, _)) = listener.accept().await {
+            loop {
+                // A connection dropped before it was taken (an error on Windows) mustn't end
+                // the server (#1558's tests met it through the SOCKS proxy).
+                let Ok((sock, _)) = listener.accept().await else {
+                    tokio::time::sleep(Duration::from_millis(5)).await;
+                    continue;
+                };
                 let n = sh.sessions.fetch_add(1, Ordering::SeqCst) + 1;
                 let slow = sh
                     .config
@@ -178,12 +184,27 @@ impl Drop for FtpServer {
 /// A test CA and a `localhost` certificate it signed: the server's configuration, and the CA's
 /// DER (FTPS here, HTTPS for `Config::tls`).
 pub(crate) fn certificate() -> Result<(rustls::ServerConfig, Vec<u8>), String> {
+    certificate_of(crate::server::Cert::TestCa)
+}
+
+/// The server's configuration with the certificate `cert` asks for, and the test CA's DER: a
+/// client trusting that CA still refuses an expired certificate, one for another name, and a
+/// self-signed one (which no CA signed).
+pub(crate) fn certificate_of(
+    cert: crate::server::Cert,
+) -> Result<(rustls::ServerConfig, Vec<u8>), String> {
+    use crate::server::Cert;
     use rcgen::{
-        BasicConstraints, CertificateParams, CertifiedIssuer, DnType, IsCa, KeyPair,
-        KeyUsagePurpose,
+        BasicConstraints, CertificateParams, CertifiedIssuer, DnType, ExtendedKeyUsagePurpose,
+        IsCa, KeyPair, KeyUsagePurpose,
     };
     let e = |e: rcgen::Error| e.to_string();
+    // Dates as a real certificate has them: macOS refuses a server's certificate valid for
+    // more than 825 days, before it looks at anything else.
+    let now = time::OffsetDateTime::now_utc();
     let mut ca = CertificateParams::new(Vec::<String>::new()).map_err(e)?;
+    ca.not_before = now - time::Duration::days(1);
+    ca.not_after = now + time::Duration::days(365);
     ca.is_ca = IsCa::Ca(BasicConstraints::Unconstrained);
     ca.distinguished_name
         .push(DnType::CommonName, "MDM lab test CA");
@@ -194,17 +215,39 @@ pub(crate) fn certificate() -> Result<(rustls::ServerConfig, Vec<u8>), String> {
     ];
     let ca = CertifiedIssuer::self_signed(ca, KeyPair::generate().map_err(e)?).map_err(e)?;
     let key = KeyPair::generate().map_err(e)?;
-    let mut leaf = CertificateParams::new(vec!["localhost".to_owned()]).map_err(e)?;
-    leaf.distinguished_name
-        .push(DnType::CommonName, "localhost");
-    let leaf = leaf.signed_by(&key, &ca).map_err(e)?;
+    let name = match cert {
+        Cert::WrongName => "another-site.invalid",
+        _ => "localhost",
+    };
+    // A website's certificate, as a real one is made: its name among the subject's alternative
+    // names, for TLS servers only (the extended key usage every system's verifier requires;
+    // macOS's checks it before the dates), its key for signing the handshake, not a CA.
+    let mut leaf = CertificateParams::new(vec![name.to_owned()]).map_err(e)?;
+    leaf.distinguished_name.push(DnType::CommonName, name);
+    leaf.is_ca = IsCa::ExplicitNoCa;
+    leaf.key_usages = vec![KeyUsagePurpose::DigitalSignature];
+    leaf.extended_key_usages = vec![ExtendedKeyUsagePurpose::ServerAuth];
+    leaf.use_authority_key_identifier_extension = cert != Cert::SelfSigned;
+    leaf.not_before = now - time::Duration::days(1);
+    leaf.not_after = now + time::Duration::days(90);
+    if cert == Cert::Expired {
+        leaf.not_before = rcgen::date_time_ymd(2020, 1, 1);
+        leaf.not_after = rcgen::date_time_ymd(2021, 1, 1);
+    }
+    let chain = match cert {
+        Cert::SelfSigned => vec![leaf.self_signed(&key).map_err(e)?.der().clone()],
+        _ => vec![
+            leaf.signed_by(&key, &ca).map_err(e)?.der().clone(),
+            ca.der().clone(),
+        ],
+    };
     let provider = Arc::new(rustls::crypto::aws_lc_rs::default_provider());
     let config = rustls::ServerConfig::builder_with_provider(provider)
         .with_safe_default_protocol_versions()
         .map_err(|e| e.to_string())?
         .with_no_client_auth()
         .with_single_cert(
-            vec![leaf.der().clone(), ca.der().clone()],
+            chain,
             rustls::pki_types::PrivateKeyDer::Pkcs8(key.serialize_der().into()),
         )
         .map_err(|e| e.to_string())?;
@@ -537,5 +580,9 @@ mod tests {
     #[test]
     fn makes_a_certificate() {
         assert!(certificate().is_ok());
+        use crate::server::Cert;
+        for cert in [Cert::Expired, Cert::SelfSigned, Cert::WrongName] {
+            assert!(certificate_of(cert).is_ok(), "{cert:?}");
+        }
     }
 }

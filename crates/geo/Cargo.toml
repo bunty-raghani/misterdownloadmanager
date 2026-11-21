@@ -14,7 +14,7 @@ lzma-rust2 = { version = "0.23", default-features = false, features = ["std", "x
 
 [dev-dependencies]
 # examples/flag_atlas.rs: the flags drawn into one picture (both already in the tree).
-resvg = { version = "0.45", default-features = false }
+resvg = { version = "0.49", default-features = false }
 png = "0.18"
 
 [lints]

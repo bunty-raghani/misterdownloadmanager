@@ -6,8 +6,13 @@
 //!
 //! A User-Agent typed in Options, or the one a browser hands over with its download (the
 //! extension's), always wins over this one: the download's `Options::automatic_agent` says which.
+//!
+//! MDM's own name (`OWN_USER_AGENT`) is its last word to a site whose bot check refuses whatever
+//! claims to be a browser without connecting like one (#1422): the hosts that let only it through
+//! are remembered for the session (`remember_own`, `own_for`).
 
-use std::sync::RwLock;
+use std::collections::HashSet;
+use std::sync::{Mutex, RwLock};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 /// MDM's User-Agent before #668: Internet Explorer 11's, as IDM 6.42 sends it (lab S1, D-007).
@@ -15,6 +20,60 @@ use std::time::{SystemTime, UNIX_EPOCH};
 /// (#372: a bot check that sees a browser's name on a connection that isn't a browser's lets
 /// this one through), and a setting saved with it means "automatic" (it was the default).
 pub const IE11_USER_AGENT: &str = "Mozilla/5.0 (Windows NT 6.1; Trident/7.0; rv:11.0) like Gecko";
+
+/// MDM naming itself, honestly (#1422): asked with once, on MDM's own connection, when a site's
+/// bot check refused the browser's User-Agent and the browser-like connection too
+/// (`Options::own_agent`). SourceForge's lets programs that say what they are through, and
+/// refuses those that claim to be a browser without connecting like one.
+pub const OWN_USER_AGENT: &str = concat!("MisterDownloadManager/", env!("CARGO_PKG_VERSION"));
+
+/// The sites (host and port) whose bot check let only MDM's own name through, this session.
+static OWN_HOSTS: Mutex<Option<HashSet<String>>> = Mutex::new(None);
+
+/// At most this many are remembered: past it, the list starts again. A forgotten site costs only
+/// the two refused requests it takes to learn it again.
+const OWN_HOSTS_MAX: usize = 512;
+
+/// The site `url` is on, as remembered: its host and port.
+fn site_of(url: &url::Url) -> Option<String> {
+    let host = url.host_str()?.to_ascii_lowercase();
+    Some(match url.port_or_known_default() {
+        Some(port) => format!("{host}:{port}"),
+        None => host,
+    })
+}
+
+/// `url`'s site let MDM through under its own name only (#1422): its next downloads, resumes and
+/// looks this session ask that way at once.
+pub fn remember_own(url: &url::Url) {
+    let Some(site) = site_of(url) else { return };
+    let mut hosts = OWN_HOSTS.lock().unwrap();
+    let hosts = hosts.get_or_insert_with(HashSet::new);
+    if hosts.len() >= OWN_HOSTS_MAX {
+        hosts.clear();
+    }
+    hosts.insert(site);
+}
+
+/// `url`'s site refused MDM's own name after all: it is learnt again, if it still lets it
+/// through, the next time it refuses the browser's.
+pub fn forget_own(url: &url::Url) {
+    let Some(site) = site_of(url) else { return };
+    if let Some(hosts) = OWN_HOSTS.lock().unwrap().as_mut() {
+        hosts.remove(&site);
+    }
+}
+
+/// Whether `url`'s site let MDM through under its own name only, earlier this session.
+pub fn own_for(url: &url::Url) -> bool {
+    site_of(url).is_some_and(|site| {
+        OWN_HOSTS
+            .lock()
+            .unwrap()
+            .as_ref()
+            .is_some_and(|h| h.contains(&site))
+    })
+}
 
 /// A browser whose User-Agent MDM knows how to write.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -295,6 +354,23 @@ pub fn fallback() -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// A site is remembered by host and port: another port of the same host (another lab
+    /// server) or another host is a site of its own.
+    #[test]
+    fn own_name_is_remembered_per_site() {
+        let at = |u: &str| url::Url::parse(u).unwrap();
+        assert!(OWN_USER_AGENT.starts_with("MisterDownloadManager/"));
+        assert!(!own_for(&at("https://own-test.example/a")));
+        remember_own(&at("https://OWN-test.example/project/x.zip"));
+        assert!(own_for(&at("https://own-test.example/other?ts=1")));
+        assert!(own_for(&at("https://own-test.example:443/b")));
+        assert!(!own_for(&at("http://own-test.example/b")));
+        assert!(!own_for(&at("https://own-test.example:8443/b")));
+        assert!(!own_for(&at("https://cdn.own-test.example/b")));
+        forget_own(&at("https://own-test.example/c"));
+        assert!(!own_for(&at("https://own-test.example/a")));
+    }
 
     /// 2026-11-11, the day these were written.
     const TODAY: u64 = 1_794_355_200;

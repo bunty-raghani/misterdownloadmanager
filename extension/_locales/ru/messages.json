@@ -92,9 +92,6 @@
       }
     }
   },
-  "popup_undo": {
-    "message": "Отменить"
-  },
   "popup_excluded": {
     "message": "Загрузки с $site$ остаются в браузере",
     "placeholders": {
@@ -148,6 +145,9 @@
   },
   "declined_integration_off": {
     "message": "Параметр «Использовать расширенную интеграцию с браузером» отключен в меню «Параметры» → «Общие»."
+  },
+  "declined_torrents": {
+    "message": "Это торрент, а параметр «Открывать magnet-ссылки и файлы .torrent с помощью Mister Download Manager» в настройках торрентов отключён."
   },
   "declined_site_access": {
     "message": "Расширению не разрешено читать этот сайт (доступ расширения к сайту в браузере)."
@@ -328,5 +328,424 @@
   },
   "video_original": {
     "message": "оригинал"
+  },
+  "video_compatible": {
+    "message": "Наиболее совместимый"
+  },
+  "popup_video_hide_fullscreen": {
+    "message": "Скрывать кнопку загрузки в полноэкранном режиме"
+  },
+  "popup_video_hide_fullscreen_title": {
+    "message": "Пока страница находится в полноэкранном режиме, её видео не показывают кнопку «Загрузить видео»"
+  },
+  "popup_remote_forget": {
+    "message": "Забыть"
+  },
+  "popup_gear": {
+    "message": "Параметры в Mister Download Manager"
+  },
+  "popup_tabs": {
+    "message": "Разделы всплывающего окна"
+  },
+  "popup_tab_downloads": {
+    "message": "Загрузки"
+  },
+  "popup_tab_page": {
+    "message": "Эта страница"
+  },
+  "popup_tab_settings": {
+    "message": "Параметры"
+  },
+  "popup_conn": {
+    "message": "Подключено · $version$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.5.2"
+      }
+    }
+  },
+  "popup_conn_plain": {
+    "message": "Подключено"
+  },
+  "popup_conn_off": {
+    "message": "Нет подключения"
+  },
+  "popup_conn_paused": {
+    "message": "Приостановлено"
+  },
+  "popup_conn_update": {
+    "message": "Обновить Mister Download Manager"
+  },
+  "popup_conn_remote": {
+    "message": "Отправка на $server$",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_cancel": {
+    "message": "Отмена"
+  },
+  "popup_page_none": {
+    "message": "Это не веб-страница: здесь нечего делать."
+  },
+  "popup_exclude_by_rule": {
+    "message": "Оставлено браузеру по правилу в параметрах"
+  },
+  "popup_dl_search": {
+    "message": "Поиск загрузок"
+  },
+  "popup_dl_filters": {
+    "message": "Показать"
+  },
+  "popup_dl_all": {
+    "message": "Все"
+  },
+  "popup_dl_running": {
+    "message": "Выполняется"
+  },
+  "popup_dl_done_filter": {
+    "message": "Готово"
+  },
+  "popup_dl_failed_filter": {
+    "message": "Сбой"
+  },
+  "popup_dl_clear": {
+    "message": "Очистить завершенные"
+  },
+  "popup_dl_running_count": {
+    "message": "Загружается: $count$",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_remote": {
+    "message": "Это загрузки Mister Download Manager на $server$. Откройте их файлы там.",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_dl_more": {
+    "message": "Показаны $shown$ из $total$ новейших. Mister Download Manager перечисляет их все.",
+    "placeholders": {
+      "shown": {
+        "content": "$1",
+        "example": "60"
+      },
+      "total": {
+        "content": "$2",
+        "example": "245"
+      }
+    }
+  },
+  "popup_dl_of": {
+    "message": "$done$ из $size$",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "12.3 MB"
+      },
+      "size": {
+        "content": "$2",
+        "example": "48.7 MB"
+      }
+    }
+  },
+  "popup_dl_left": {
+    "message": "Осталось $time$",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "0:42"
+      }
+    }
+  },
+  "popup_dl_starting": {
+    "message": "Запуск..."
+  },
+  "popup_dl_paused": {
+    "message": "Приостановлено"
+  },
+  "popup_dl_waiting": {
+    "message": "Ожидание"
+  },
+  "popup_dl_done": {
+    "message": "Готово"
+  },
+  "popup_dl_just_now": {
+    "message": "только что"
+  },
+  "popup_dl_failed": {
+    "message": "Сбой"
+  },
+  "popup_dl_failed_why": {
+    "message": "Сбой: $why$",
+    "placeholders": {
+      "why": {
+        "content": "$1",
+        "example": "the server refused the connection"
+      }
+    }
+  },
+  "popup_dl_gone": {
+    "message": "Файл удален или перемещен"
+  },
+  "popup_dl_loading": {
+    "message": "Поиск загрузок..."
+  },
+  "popup_dl_none": {
+    "message": "Загрузок пока нет"
+  },
+  "popup_dl_none_text": {
+    "message": "То, что вы загружаете с помощью Mister Download Manager, отображается здесь."
+  },
+  "popup_dl_no_match": {
+    "message": "Ничего не найдено"
+  },
+  "popup_dl_no_match_text": {
+    "message": "Имя или адрес загрузки не содержит «$words$».",
+    "placeholders": {
+      "words": {
+        "content": "$1",
+        "example": "report"
+      }
+    }
+  },
+  "popup_dl_show_all": {
+    "message": "Показать все загрузки"
+  },
+  "popup_list_off": {
+    "message": "Mister Download Manager не запущен"
+  },
+  "popup_list_off_text": {
+    "message": "Запустите, чтобы увидеть здесь свои загрузки."
+  },
+  "popup_list_start": {
+    "message": "Запустить Mister Download Manager"
+  },
+  "popup_list_old": {
+    "message": "Обновить Mister Download Manager"
+  },
+  "popup_list_old_text": {
+    "message": "Эта версия пока не может отображать здесь свои загрузки."
+  },
+  "popup_list_busy": {
+    "message": "Mister Download Manager занят. Повторная попытка..."
+  },
+  "popup_list_unreached": {
+    "message": "Не удаётся подключиться к Mister Download Manager"
+  },
+  "popup_list_remote_unreachable": {
+    "message": "Не удаётся подключиться к Mister Download Manager на сервере $server$",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_list_remote_unreachable_text": {
+    "message": "Убедитесь, что он запущен и что этот браузер принимает его сертификат («Параметры» → «Отправлять загрузки в» → «Открыть его»).",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_act_open": {
+    "message": "Открыть"
+  },
+  "popup_act_open_named": {
+    "message": "Открыть $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_folder": {
+    "message": "Показать в папке"
+  },
+  "popup_act_folder_named": {
+    "message": "Показать $file$ в папке",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_copy_file": {
+    "message": "Копировать файл"
+  },
+  "popup_act_share": {
+    "message": "Поделиться..."
+  },
+  "popup_act_copy_link": {
+    "message": "Копировать ссылку"
+  },
+  "popup_act_pause": {
+    "message": "Приостановить"
+  },
+  "popup_act_pause_named": {
+    "message": "Приостановить $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_resume": {
+    "message": "Возобновить"
+  },
+  "popup_act_resume_named": {
+    "message": "Возобновить $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_again": {
+    "message": "Скачать снова"
+  },
+  "popup_act_remove": {
+    "message": "Удалить из списка"
+  },
+  "popup_act_delete": {
+    "message": "Удалить файл..."
+  },
+  "popup_act_more": {
+    "message": "Дополнительные действия"
+  },
+  "popup_act_more_named": {
+    "message": "Дополнительные действия для $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_title": {
+    "message": "Удалить файл?"
+  },
+  "popup_ask_delete": {
+    "message": "$file$ будет удален с вашего компьютера, а загрузка — из списка. Это действие невозможно отменить.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_ok": {
+    "message": "Удалить"
+  },
+  "popup_ask_clear_title": {
+    "message": "Очистить завершенные загрузки?"
+  },
+  "popup_ask_clear": {
+    "message": "$count$ завершенных загрузок будут удалены из списка. Их файлы останутся на месте.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "8"
+      }
+    }
+  },
+  "popup_ask_clear_ok": {
+    "message": "Очистить"
+  },
+  "popup_said_file": {
+    "message": "Скопировано $file$. Вставьте его в папку, чат или сообщение.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_link": {
+    "message": "Ссылка скопирована"
+  },
+  "popup_said_removed": {
+    "message": "$file$ удален из списка",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_deleted": {
+    "message": "$file$ удален",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_again": {
+    "message": "Повторная загрузка $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_cleared": {
+    "message": "Завершенные загрузки очищены"
+  },
+  "popup_act_gone": {
+    "message": "Эта загрузка больше не в списке."
+  },
+  "popup_act_missing": {
+    "message": "Его файл больше не находится там, где он был сохранен (перемещен или удален)."
+  },
+  "popup_act_running": {
+    "message": "Сначала приостановите."
+  },
+  "popup_act_cant": {
+    "message": "Это действие сейчас невозможно выполнить для этой загрузки."
+  },
+  "popup_act_unsupported": {
+    "message": "Эта система не может этого сделать."
+  },
+  "popup_act_off": {
+    "message": "Mister Download Manager не запущен."
+  },
+  "popup_act_busy": {
+    "message": "Mister Download Manager не ответил вовремя. Повторите попытку."
+  },
+  "popup_act_failed": {
+    "message": "Не удалось. Повторите попытку."
+  },
+  "status_running": {
+    "message": "Загружается: $count$",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_open_remote": {
+    "message": "Открыть его страницу"
   }
 }

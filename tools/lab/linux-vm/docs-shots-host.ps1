@@ -40,18 +40,14 @@ $ErrorActionPreference = 'Stop'
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..\..\..')).Path
 $vbox = Join-Path $env:ProgramFiles 'Oracle\VirtualBox\VBoxManage.exe'
 if ($Label -notmatch '^[A-Za-z0-9._-]+$') { throw "label: letters, digits, '.', '_' and '-' only" }
-$user = $env:MDM_VM_USER; $pass = $env:MDM_VM_PASSWORD
-$keys = Join-Path $env:USERPROFILE '.mdm-dev\vm-account.txt'
-if ((-not $user -or -not $pass) -and (Test-Path $keys)) {
-    foreach ($line in Get-Content $keys) {
-        if (-not $user -and $line -match '^\s*user:\s*(\S+)') { $user = $Matches[1] }
-        if (-not $pass -and $line -match '^\s*password:\s*(\S+)') { $pass = $Matches[1] }
-    }
-}
-if (-not $user -or -not $pass) { throw "no VM account: set MDM_VM_USER and MDM_VM_PASSWORD" }
-$auth = @('--username', $user, '--password', $pass)
+# The account, its password only ever in files (account.ps1): never on a command line.
+. (Join-Path $PSScriptRoot 'account.ps1')
+$account = Open-VmAccount
+$user = $account.User
+$auth = $account.Auth
 $local = Join-Path $root "target\linux-shots\$Vm"
 
+try {
 if (-not $NoShoot) {
     $state = (& $vbox showvminfo $Vm --machinereadable | Select-String '^VMState=').ToString()
     if ($state -notmatch 'running') { throw "$Vm is not running ($state)" }
@@ -62,7 +58,8 @@ if (-not $NoShoot) {
     if ($LASTEXITCODE) { throw "copy to $Vm failed ($LASTEXITCODE)" }
     # The guest's errors on its standard output: Windows PowerShell stops at a native command's
     # stderr under ErrorActionPreference Stop.
-    $env_ = "exec 2>&1; export MDM_SUDO_PASSWORD='$pass' MDM_TRAY_AT='$TrayAt' MDM_MAIN_AT='$MainAt'; "
+    Install-VmSudo $account $Vm $vbox
+    $env_ = 'exec 2>&1; ' + $VmSudoEnv + "export MDM_TRAY_AT='$TrayAt' MDM_MAIN_AT='$MainAt'; "
     & $vbox guestcontrol $Vm run --exe /bin/bash @auth --timeout 1200000 --wait-stdout --wait-stderr -- -c `
         ($env_ + "rm -rf '$guestOut'; bash ~/lab/docs-shots.sh '$Label' '$guestOut' '$Modes' '$Only'")
     if ($LASTEXITCODE) { throw "docs-shots.sh failed ($LASTEXITCODE)" }
@@ -109,4 +106,7 @@ for src, dst in jobs:
     print(f"  {dst.relative_to(root).as_posix()}  {im.width}x{im.height}  {kb:.0f} KB" + ("  OVER 300 KB" if kb > 300 else ""))
 '@
     $py | python - $local $root $Desktop
+}
+} finally {
+    Close-VmAccount $account
 }

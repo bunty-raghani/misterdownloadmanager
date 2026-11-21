@@ -92,9 +92,6 @@
       }
     }
   },
-  "popup_undo": {
-    "message": "Urungkan"
-  },
   "popup_excluded": {
     "message": "Unduhan dari $site$ tetap di browser",
     "placeholders": {
@@ -148,6 +145,9 @@
   },
   "declined_integration_off": {
     "message": "Integrasi browser lanjutan tidak aktif di Opsi → Umum."
+  },
+  "declined_torrents": {
+    "message": "Ini adalah torrent, dan Buka tautan magnet dan file .torrent dengan Mister Download Manager tidak aktif di pengaturan Torrent."
   },
   "declined_site_access": {
     "message": "Ekstensi tidak diizinkan untuk membaca situs ini (akses situs browser)."
@@ -328,5 +328,424 @@
   },
   "video_original": {
     "message": "asli"
+  },
+  "video_compatible": {
+    "message": "Paling kompatibel"
+  },
+  "popup_video_hide_fullscreen": {
+    "message": "Sembunyikan tombol unduh dalam layar penuh"
+  },
+  "popup_video_hide_fullscreen_title": {
+    "message": "Saat halaman dalam layar penuh, videonya tidak menampilkan tombol Unduh video"
+  },
+  "popup_remote_forget": {
+    "message": "Lupakan"
+  },
+  "popup_gear": {
+    "message": "Opsi di Mister Download Manager"
+  },
+  "popup_tabs": {
+    "message": "Bagian pop-up"
+  },
+  "popup_tab_downloads": {
+    "message": "Unduhan"
+  },
+  "popup_tab_page": {
+    "message": "Halaman ini"
+  },
+  "popup_tab_settings": {
+    "message": "Pengaturan"
+  },
+  "popup_conn": {
+    "message": "Terhubung · $version$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.5.2"
+      }
+    }
+  },
+  "popup_conn_plain": {
+    "message": "Terhubung"
+  },
+  "popup_conn_off": {
+    "message": "Tidak terhubung"
+  },
+  "popup_conn_paused": {
+    "message": "Dijeda"
+  },
+  "popup_conn_update": {
+    "message": "Perbarui Mister Download Manager"
+  },
+  "popup_conn_remote": {
+    "message": "Mengirim ke $server$",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_cancel": {
+    "message": "Batal"
+  },
+  "popup_page_none": {
+    "message": "Ini bukan halaman web: tidak ada yang bisa dilakukan di sini."
+  },
+  "popup_exclude_by_rule": {
+    "message": "Ditinggalkan ke browser oleh aturan di Opsi"
+  },
+  "popup_dl_search": {
+    "message": "Cari unduhan"
+  },
+  "popup_dl_filters": {
+    "message": "Tampilkan"
+  },
+  "popup_dl_all": {
+    "message": "Semua"
+  },
+  "popup_dl_running": {
+    "message": "Berjalan"
+  },
+  "popup_dl_done_filter": {
+    "message": "Selesai"
+  },
+  "popup_dl_failed_filter": {
+    "message": "Gagal"
+  },
+  "popup_dl_clear": {
+    "message": "Hapus yang selesai"
+  },
+  "popup_dl_running_count": {
+    "message": "$count$ sedang mengunduh sekarang",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_remote": {
+    "message": "Ini adalah unduhan Mister Download Manager di $server$. Buka file-nya di sana.",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_dl_more": {
+    "message": "$shown$ terbaru dari $total$. Mister Download Manager mencantumkan semuanya.",
+    "placeholders": {
+      "shown": {
+        "content": "$1",
+        "example": "60"
+      },
+      "total": {
+        "content": "$2",
+        "example": "245"
+      }
+    }
+  },
+  "popup_dl_of": {
+    "message": "$done$ dari $size$",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "12.3 MB"
+      },
+      "size": {
+        "content": "$2",
+        "example": "48.7 MB"
+      }
+    }
+  },
+  "popup_dl_left": {
+    "message": "$time$ tersisa",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "0:42"
+      }
+    }
+  },
+  "popup_dl_starting": {
+    "message": "Memulai..."
+  },
+  "popup_dl_paused": {
+    "message": "Dijeda"
+  },
+  "popup_dl_waiting": {
+    "message": "Menunggu"
+  },
+  "popup_dl_done": {
+    "message": "Selesai"
+  },
+  "popup_dl_just_now": {
+    "message": "baru saja"
+  },
+  "popup_dl_failed": {
+    "message": "Gagal"
+  },
+  "popup_dl_failed_why": {
+    "message": "Gagal: $why$",
+    "placeholders": {
+      "why": {
+        "content": "$1",
+        "example": "the server refused the connection"
+      }
+    }
+  },
+  "popup_dl_gone": {
+    "message": "File dihapus atau dipindahkan"
+  },
+  "popup_dl_loading": {
+    "message": "Mencari unduhan..."
+  },
+  "popup_dl_none": {
+    "message": "Belum ada unduhan"
+  },
+  "popup_dl_none_text": {
+    "message": "Apa yang Anda unduh dengan Mister Download Manager akan muncul di sini."
+  },
+  "popup_dl_no_match": {
+    "message": "Tidak ada yang cocok"
+  },
+  "popup_dl_no_match_text": {
+    "message": "Tidak ada nama atau alamat unduhan yang memiliki “$words$”.",
+    "placeholders": {
+      "words": {
+        "content": "$1",
+        "example": "report"
+      }
+    }
+  },
+  "popup_dl_show_all": {
+    "message": "Tampilkan semua unduhan"
+  },
+  "popup_list_off": {
+    "message": "Mister Download Manager tidak berjalan"
+  },
+  "popup_list_off_text": {
+    "message": "Mulai untuk melihat unduhan Anda di sini."
+  },
+  "popup_list_start": {
+    "message": "Mulai Mister Download Manager"
+  },
+  "popup_list_old": {
+    "message": "Perbarui Mister Download Manager"
+  },
+  "popup_list_old_text": {
+    "message": "Versi ini belum dapat mencantumkan unduhannya di sini."
+  },
+  "popup_list_busy": {
+    "message": "Mister Download Manager sedang sibuk. Mencoba lagi..."
+  },
+  "popup_list_unreached": {
+    "message": "Tidak dapat menjangkau Mister Download Manager"
+  },
+  "popup_list_remote_unreachable": {
+    "message": "Tidak dapat menjangkau Mister Download Manager di $server$",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_list_remote_unreachable_text": {
+    "message": "Periksa apakah sedang berjalan, dan apakah browser ini menerima sertifikatnya (Pengaturan → Kirim unduhan ke → Buka).",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_act_open": {
+    "message": "Buka"
+  },
+  "popup_act_open_named": {
+    "message": "Buka $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_folder": {
+    "message": "Tampilkan di folder"
+  },
+  "popup_act_folder_named": {
+    "message": "Tampilkan $file$ di folder",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_copy_file": {
+    "message": "Salin file"
+  },
+  "popup_act_share": {
+    "message": "Bagikan..."
+  },
+  "popup_act_copy_link": {
+    "message": "Salin tautan"
+  },
+  "popup_act_pause": {
+    "message": "Jeda"
+  },
+  "popup_act_pause_named": {
+    "message": "Jeda $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_resume": {
+    "message": "Lanjutkan"
+  },
+  "popup_act_resume_named": {
+    "message": "Lanjutkan $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_again": {
+    "message": "Unduh lagi"
+  },
+  "popup_act_remove": {
+    "message": "Hapus dari daftar"
+  },
+  "popup_act_delete": {
+    "message": "Hapus file..."
+  },
+  "popup_act_more": {
+    "message": "Tindakan lainnya"
+  },
+  "popup_act_more_named": {
+    "message": "Tindakan lainnya untuk $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_title": {
+    "message": "Hapus file?"
+  },
+  "popup_ask_delete": {
+    "message": "$file$ akan dihapus dari komputer Anda, dan unduhan dihapus dari daftar. Ini tidak dapat dibatalkan.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_ok": {
+    "message": "Hapus"
+  },
+  "popup_ask_clear_title": {
+    "message": "Hapus unduhan yang selesai?"
+  },
+  "popup_ask_clear": {
+    "message": "$count$ unduhan yang selesai akan dihapus dari daftar. File-nya tetap di tempatnya.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "8"
+      }
+    }
+  },
+  "popup_ask_clear_ok": {
+    "message": "Hapus"
+  },
+  "popup_said_file": {
+    "message": "Menyalin $file$. Tempelkan ke folder, obrolan, atau pesan.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_link": {
+    "message": "Tautan disalin"
+  },
+  "popup_said_removed": {
+    "message": "$file$ dihapus dari daftar",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_deleted": {
+    "message": "$file$ dihapus",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_again": {
+    "message": "Mengunduh $file$ lagi",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_cleared": {
+    "message": "Unduhan yang selesai dihapus"
+  },
+  "popup_act_gone": {
+    "message": "Unduhan itu tidak lagi ada dalam daftar."
+  },
+  "popup_act_missing": {
+    "message": "Filenya tidak lagi berada di tempat penyimpanannya (dipindahkan atau dihapus)."
+  },
+  "popup_act_running": {
+    "message": "Jeda dulu."
+  },
+  "popup_act_cant": {
+    "message": "Itu tidak dapat dilakukan pada unduhan ini sekarang."
+  },
+  "popup_act_unsupported": {
+    "message": "Sistem ini tidak dapat melakukan itu."
+  },
+  "popup_act_off": {
+    "message": "Mister Download Manager tidak berjalan."
+  },
+  "popup_act_busy": {
+    "message": "Mister Download Manager tidak menjawab tepat waktu. Coba lagi."
+  },
+  "popup_act_failed": {
+    "message": "Itu tidak berhasil. Coba lagi."
+  },
+  "status_running": {
+    "message": "Mengunduh: $count$",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_open_remote": {
+    "message": "Buka halamannya"
   }
 }

@@ -312,6 +312,7 @@ async fn measure(
             upnp: false,
             lsd: false,
             offline: true,
+            require_authorization: false,
             ..Config::new(folder.join("state"))
         })
         .await
@@ -337,6 +338,7 @@ async fn measure(
         upnp: false,
         lsd: false,
         offline: true,
+        require_authorization: false,
         ..Config::new(dir.join("leecher-state"))
     })
     .await

@@ -92,9 +92,6 @@
       }
     }
   },
-  "popup_undo": {
-    "message": "تراجع"
-  },
   "popup_excluded": {
     "message": "تبقى التنزيلات من $site$ مع المستعرض",
     "placeholders": {
@@ -144,10 +141,13 @@
     "message": "إنه أصغر من الحجم الأدنى في خيارات ← أنواع الملفات."
   },
   "declined_browser": {
-    "message": "لم يتم تحديد هذا المتصفح في خيارات ← عام."
+    "message": "لم يتم تحديد هذا المستعرض في خيارات ← عام."
   },
   "declined_integration_off": {
-    "message": "استخدام تكامل المتصفح المتقدم معطل في خيارات ← عام."
+    "message": "استخدام الربط المتقدم بالمستعرض معطل في خيارات ← عام."
+  },
+  "declined_torrents": {
+    "message": "إنه تورنت، وخيار «فتح روابط مغناطيسية وملفات .torrent باستخدام Mister Download Manager» متوقف في إعدادات التورنت."
   },
   "declined_site_access": {
     "message": "لا يسمح للملحق بقراءة هذا الموقع (وصول الملحق إلى الموقع)."
@@ -252,7 +252,7 @@
     "message": "أدخل عنوان https:// الخاص به."
   },
   "remote_unreachable": {
-    "message": "لم يتم الوصول إليه. افتح عنوانه مرة واحدة في هذا المتصفح واقبل شهادته، ثم حاول مرة أخرى."
+    "message": "لم يتم الوصول إليه. افتح عنوانه مرة واحدة في هذا المستعرض واقبل شهادته، ثم حاول مرة أخرى."
   },
   "remote_wrong_code": {
     "message": "رمز خاطئ."
@@ -267,7 +267,7 @@
     "message": "لم ينجح الأمر. حاول مرة أخرى."
   },
   "remote_device_name": {
-    "message": "ملحق المتصفح"
+    "message": "ملحق المستعرض"
   },
   "popup_media_title_name": {
     "message": "إضافة عنوان الصفحة قبل أسماء ملفات الوسائط"
@@ -328,5 +328,424 @@
   },
   "video_original": {
     "message": "أصلي"
+  },
+  "video_compatible": {
+    "message": "الأكثر توافقا"
+  },
+  "popup_video_hide_fullscreen": {
+    "message": "إخفاء زر التنزيل في وضع ملء الشاشة"
+  },
+  "popup_video_hide_fullscreen_title": {
+    "message": "أثناء وجود الصفحة في وضع ملء الشاشة، لا تعرض مقاطع الفيديو الخاصة بها زر تنزيل الفيديو"
+  },
+  "popup_remote_forget": {
+    "message": "نسيان"
+  },
+  "popup_gear": {
+    "message": "خيارات في Mister Download Manager"
+  },
+  "popup_tabs": {
+    "message": "أقسام النافذة المنبثقة"
+  },
+  "popup_tab_downloads": {
+    "message": "التنزيلات"
+  },
+  "popup_tab_page": {
+    "message": "هذه الصفحة"
+  },
+  "popup_tab_settings": {
+    "message": "الإعدادات"
+  },
+  "popup_conn": {
+    "message": "متصل · $version$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.5.2"
+      }
+    }
+  },
+  "popup_conn_plain": {
+    "message": "متصل"
+  },
+  "popup_conn_off": {
+    "message": "غير متصل"
+  },
+  "popup_conn_paused": {
+    "message": "متوقف مؤقتا"
+  },
+  "popup_conn_update": {
+    "message": "تحديث Mister Download Manager"
+  },
+  "popup_conn_remote": {
+    "message": "إرسال إلى $server$",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_cancel": {
+    "message": "إلغاء"
+  },
+  "popup_page_none": {
+    "message": "هذه ليست صفحة ويب: لا يوجد شيء لفعله هنا."
+  },
+  "popup_exclude_by_rule": {
+    "message": "ترك للمستعرض بموجب قاعدة في «الخيارات»"
+  },
+  "popup_dl_search": {
+    "message": "البحث في التنزيلات"
+  },
+  "popup_dl_filters": {
+    "message": "إظهار"
+  },
+  "popup_dl_all": {
+    "message": "الكل"
+  },
+  "popup_dl_running": {
+    "message": "قيد التشغيل"
+  },
+  "popup_dl_done_filter": {
+    "message": "تم"
+  },
+  "popup_dl_failed_filter": {
+    "message": "فشل"
+  },
+  "popup_dl_clear": {
+    "message": "مسح المكتملة"
+  },
+  "popup_dl_running_count": {
+    "message": "$count$ قيد التنزيل الآن",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_remote": {
+    "message": "هذه هي تنزيلات Mister Download Manager على $server$. افتح ملفاتها هناك.",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_dl_more": {
+    "message": "أحدث $shown$ من $total$. يسرد Mister Download Manager كل التنزيلات.",
+    "placeholders": {
+      "shown": {
+        "content": "$1",
+        "example": "60"
+      },
+      "total": {
+        "content": "$2",
+        "example": "245"
+      }
+    }
+  },
+  "popup_dl_of": {
+    "message": "$done$ من $size$",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "12.3 MB"
+      },
+      "size": {
+        "content": "$2",
+        "example": "48.7 MB"
+      }
+    }
+  },
+  "popup_dl_left": {
+    "message": "تبقى $time$",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "0:42"
+      }
+    }
+  },
+  "popup_dl_starting": {
+    "message": "قيد البدء..."
+  },
+  "popup_dl_paused": {
+    "message": "متوقف مؤقتا"
+  },
+  "popup_dl_waiting": {
+    "message": "في انتظار"
+  },
+  "popup_dl_done": {
+    "message": "تم"
+  },
+  "popup_dl_just_now": {
+    "message": "الآن"
+  },
+  "popup_dl_failed": {
+    "message": "فشل"
+  },
+  "popup_dl_failed_why": {
+    "message": "فشل: $why$",
+    "placeholders": {
+      "why": {
+        "content": "$1",
+        "example": "the server refused the connection"
+      }
+    }
+  },
+  "popup_dl_gone": {
+    "message": "تم حذف الملف أو نقله"
+  },
+  "popup_dl_loading": {
+    "message": "البحث عن التنزيلات..."
+  },
+  "popup_dl_none": {
+    "message": "لا توجد تنزيلات بعد"
+  },
+  "popup_dl_none_text": {
+    "message": "ما تنزله باستخدام Mister Download Manager يظهر هنا."
+  },
+  "popup_dl_no_match": {
+    "message": "لا يوجد ما يطابق"
+  },
+  "popup_dl_no_match_text": {
+    "message": "لا يوجد تنزيل باسم أو عنوان يتضمن «$words$».",
+    "placeholders": {
+      "words": {
+        "content": "$1",
+        "example": "report"
+      }
+    }
+  },
+  "popup_dl_show_all": {
+    "message": "إظهار كل التنزيلات"
+  },
+  "popup_list_off": {
+    "message": "Mister Download Manager غير قيد التشغيل"
+  },
+  "popup_list_off_text": {
+    "message": "شغله لترى تنزيلاتك هنا."
+  },
+  "popup_list_start": {
+    "message": "تشغيل Mister Download Manager"
+  },
+  "popup_list_old": {
+    "message": "تحديث Mister Download Manager"
+  },
+  "popup_list_old_text": {
+    "message": "لا يمكن لهذا الإصدار سرد تنزيلاته هنا بعد."
+  },
+  "popup_list_busy": {
+    "message": "Mister Download Manager مشغول. تتم إعادة المحاولة..."
+  },
+  "popup_list_unreached": {
+    "message": "تعذر الوصول إلى Mister Download Manager"
+  },
+  "popup_list_remote_unreachable": {
+    "message": "تعذر الوصول إلى Mister Download Manager على $server$",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_list_remote_unreachable_text": {
+    "message": "تحقق من أنه قيد التشغيل، ومن أن هذا المستعرض يقبل شهادته («الإعدادات» ← «إرسال التنزيلات إلى» ← «افتحه»).",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_act_open": {
+    "message": "فتح"
+  },
+  "popup_act_open_named": {
+    "message": "فتح $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_folder": {
+    "message": "إظهار في المجلد"
+  },
+  "popup_act_folder_named": {
+    "message": "إظهار $file$ في المجلد",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_copy_file": {
+    "message": "نسخ الملف"
+  },
+  "popup_act_share": {
+    "message": "مشاركة..."
+  },
+  "popup_act_copy_link": {
+    "message": "نسخ الرابط"
+  },
+  "popup_act_pause": {
+    "message": "إيقاف مؤقت"
+  },
+  "popup_act_pause_named": {
+    "message": "إيقاف $file$ مؤقتا",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_resume": {
+    "message": "متابعة"
+  },
+  "popup_act_resume_named": {
+    "message": "متابعة $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_again": {
+    "message": "إعادة التنزيل"
+  },
+  "popup_act_remove": {
+    "message": "إزالة من القائمة"
+  },
+  "popup_act_delete": {
+    "message": "حذف ملف..."
+  },
+  "popup_act_more": {
+    "message": "إجراءات إضافية"
+  },
+  "popup_act_more_named": {
+    "message": "إجراءات إضافية لـ $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_title": {
+    "message": "حذف الملف؟"
+  },
+  "popup_ask_delete": {
+    "message": "سيتم حذف $file$ من جهاز الكمبيوتر الخاص بك، وسيتم إزالة التنزيل من القائمة. لا يمكن التراجع عن هذا.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_ok": {
+    "message": "حذف"
+  },
+  "popup_ask_clear_title": {
+    "message": "مسح التنزيلات المكتملة؟"
+  },
+  "popup_ask_clear": {
+    "message": "تزال التنزيلات المكتملة البالغ عددها $count$ من القائمة. وتبقى ملفاتها في مكانها.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "8"
+      }
+    }
+  },
+  "popup_ask_clear_ok": {
+    "message": "مسح"
+  },
+  "popup_said_file": {
+    "message": "نسخ $file$. الصقه في مجلد أو دردشة أو رسالة.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_link": {
+    "message": "تم نسخ الرابط"
+  },
+  "popup_said_removed": {
+    "message": "تمت إزالة $file$ من القائمة",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_deleted": {
+    "message": "تم حذف $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_again": {
+    "message": "قيد تنزيل $file$ مرة أخرى",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_cleared": {
+    "message": "مسحت التنزيلات المكتملة"
+  },
+  "popup_act_gone": {
+    "message": "لم يعد هذا التنزيل في القائمة."
+  },
+  "popup_act_missing": {
+    "message": "لم يعد ملف التنزيل في مكانه المحفوظ (نقل أو حذف)."
+  },
+  "popup_act_running": {
+    "message": "أوقفه مؤقتا أولا."
+  },
+  "popup_act_cant": {
+    "message": "لا يمكن إجراء ذلك على هذا التنزيل الآن."
+  },
+  "popup_act_unsupported": {
+    "message": "لا يمكن لهذا النظام القيام بذلك."
+  },
+  "popup_act_off": {
+    "message": "Mister Download Manager ليس قيد التشغيل."
+  },
+  "popup_act_busy": {
+    "message": "لم يستجب Mister Download Manager في الوقت المحدد. حاول مرة أخرى."
+  },
+  "popup_act_failed": {
+    "message": "لم ينجح ذلك. حاول مرة أخرى."
+  },
+  "status_running": {
+    "message": "قيد التنزيل: $count$",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_open_remote": {
+    "message": "فتح صفحته"
   }
 }

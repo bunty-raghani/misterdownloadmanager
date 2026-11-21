@@ -8,7 +8,7 @@ use crate::dialogs::{Outcome, window};
 use crate::icons::Icon;
 use crate::model::Category;
 use crate::regional::DateOrder;
-use crate::settings::{self, Settings};
+use crate::settings::{self, ProxyKind, Settings};
 // Pages are laid out in English pixels: `fill` makes each one where it is on screen, `text`
 // starts at an English pen, and a widget given a screen rect (from `r`) turns it back into its
 // English rect (`winui::rect` both ways) before laying out its inside.
@@ -37,15 +37,17 @@ enum Sub {
     Login(Option<usize>, String, String, String),
     /// Connection → New / Edit exception: (row, server, number).
     Exception(Option<usize>, String, String),
-    /// General → Download panels → Edit...: (the button over videos on, the sites it stays off).
-    Panels(bool, String, String),
+    /// General → Download panels → Edit...: (the button over videos on, its size Compact
+    /// (#1278), the sites it stays off, what Export / Import said).
+    Panels(bool, bool, String, String),
     /// General → Keys...: (also take the files the browser would open).
     Keys(bool),
     /// Downloads → Customize "Download progress" dialog → Edit... (#1041): (show it when a
     /// download starts).
     Progress(bool),
-    /// General → Test browser integration...: the checks, as found when it opened.
-    Test(Vec<crate::extension::Check>),
+    /// General → Test browser integration...: the checks, read beside the window (#1218) when it
+    /// opened, and again once a Set it up finished.
+    Test(crate::extension::Tester),
     /// File types → "Don't start downloading automatically from the following addresses" →
     /// Edit list...: one address pattern per line.
     Addresses(String),
@@ -55,10 +57,14 @@ enum Sub {
     Account(AccountEdit),
     /// Remote → Pair a device...: the code shown, until a device pairs or it is closed.
     Pair,
+    /// Archives → Archive passwords...: one password per line (#37).
+    Passwords(String),
 }
 
 /// Options → Remote's page number (the tabs' numbers).
 const REMOTE_PAGE: usize = 11;
+/// Test browser integration: from a check's line to the path under it (#818).
+const DETAIL_H: f32 = 18.0;
 
 /// Connection → DNS's sub-dialog: a copy of the DNS fields, kept on OK.
 struct DnsEdit {
@@ -75,6 +81,10 @@ struct DnsEdit {
 
 /// A test's answer line and whether it worked, filled in by its thread.
 type TestSlot = std::sync::Arc<std::sync::Mutex<Option<(String, bool)>>>;
+
+/// Archives → Use another program... (#1525): the program picked, and whether it answered as
+/// 7-Zip's command line, once it has.
+type Checked7zip = std::sync::Arc<std::sync::Mutex<Option<(std::path::PathBuf, bool)>>>;
 
 impl DnsEdit {
     fn from(s: &Settings) -> Self {
@@ -210,19 +220,26 @@ pub struct OptionsDialog {
     restore_ask: Option<crate::dialogs::Confirm>,
     /// Connection caps the engine learned, shown as "(auto)" rows under Exceptions.
     learned: Vec<(String, u32)>,
-    /// 7-Zip's program (Archives: RAR goes through it), looked for when the window opens.
+    /// 7-Zip's program (Archives: RAR goes through it): the one chosen there, else the one
+    /// looked for when the window opens.
     seven_zip: Option<std::path::PathBuf>,
+    /// Archives → Use another program... (#1525): the program picked, being asked beside the
+    /// window whether it is 7-Zip's command line (`extractq::is_7zip`), and its answer.
+    checking_7zip: Option<Checked7zip>,
+    /// The program last picked there didn't answer as 7-Zip: said in place of the line that
+    /// names the program, until another is picked.
+    not_7zip: bool,
     /// HatchZip's command line program (Archives: extract in place), looked for with 7-Zip.
     hatch_zip: Option<std::path::PathBuf>,
     /// Proxy / Socks → Network adapter (#35): the computer's adapters, read again every 2 s.
     adapters: Option<(std::time::Instant, Vec<mdm_engine::net::Adapter>)>,
+    /// Proxy / Socks → Test (#1558): the answer, shared with its thread (None while it runs).
+    proxy_test: Option<TestSlot>,
     /// Remote (#141): the running remote control (its state, paired devices, pairing), the
     /// port as typed, and the paired devices list's scroll and selection.
     remote: Option<mdm_remote::Remote>,
     port: String,
     device_rows: winui::RowList,
-    /// Test browser integration → Set it up's runs seen finished (crate::extension).
-    set_up_seen: u64,
     /// Sites Logins → Cookies for video sites (#229): the browser in the list (an index into
     /// `mdm_tools::proc::cookie_browsers`), kept while Off is chosen.
     cookie_browser: usize,
@@ -280,6 +297,7 @@ impl OptionsDialog {
     pub fn with_panels(mut self) -> Self {
         self.sub = Some(Sub::Panels(
             self.s.video_panel,
+            self.s.video_panel_compact,
             self.s.video_panel_sites.clone(),
             String::new(),
         ));
@@ -288,12 +306,18 @@ impl OptionsDialog {
 
     /// With General → Test browser integration's window over it, Accounts → Add's, or
     /// Downloads → Customize "Download progress" dialog's (`/show options:test`,
-    /// `options:account`, `options:progress`: screenshots, #192, #1041).
+    /// `options:account`, `options:progress`: screenshots, #192, #1041), or General → Keys...
+    /// (`options:keys`, #1495).
     pub fn with_window(mut self, name: &str) -> Self {
         match name {
-            "test" => self.sub = Some(Sub::Test(crate::extension::checks(&self.s))),
+            "test" => {
+                self.sub = Some(Sub::Test(crate::extension::Tester::new(
+                    self.s.advanced_integration,
+                )))
+            }
             "account" => self.sub = Some(Sub::Account(AccountEdit::default())),
             "progress" => self.sub = Some(Sub::Progress(self.s.show_progress)),
+            "keys" => self.sub = Some(Sub::Keys(self.s.capture_opened)),
             _ => {}
         }
         self
@@ -304,9 +328,12 @@ impl OptionsDialog {
         downloads: &std::path::Path,
         learned: Vec<(String, u32)>,
     ) -> Self {
-        let s = settings.clone();
+        let mut s = settings.clone();
+        let from = s.clone();
+        strip_proxy_scheme(&mut s);
+        tick_manual_protocols(&mut s);
         OptionsDialog {
-            from: s.clone(),
+            from,
             browser_rows: Default::default(),
             cat_dir: display_dir(&s.category_dir(Category::General, downloads)),
             conns: s.max_connections.clamp(1, s.connection_limit()).to_string(),
@@ -321,13 +348,15 @@ impl OptionsDialog {
             account_rows: Default::default(),
             sound_rows: Default::default(),
             sub: None,
-            set_up_seen: 0,
             cat_edit: None,
             restore_ask: None,
             learned,
-            seven_zip: crate::extractq::seven_zip(),
+            seven_zip: crate::extractq::seven_zip_for(&settings.seven_zip_path),
+            checking_7zip: None,
+            not_7zip: false,
             hatch_zip: crate::extractq::hatch_zip(),
             adapters: None,
+            proxy_test: None,
             remote: None,
             port: settings.remote_port.to_string(),
             device_rows: Default::default(),
@@ -478,7 +507,7 @@ impl OptionsDialog {
         if portable {
             s.launch_on_startup = false;
         }
-        let checks: [(f32, &mut bool, &str); 7] = [
+        let checks: [(f32, &mut bool, &str); 8] = [
             (
                 94.0,
                 &mut s.launch_on_startup,
@@ -506,17 +535,26 @@ impl OptionsDialog {
                 &mut s.confirm_delete,
                 crate::i18n::mark("Confirm before deleting downloads"),
             ),
+            // MDM's: a private window's downloads saved in the list like any other (off: memory
+            // only, gone when MDM closes). The rows below, and the browsers' group, a row lower,
+            // its list a row shorter again (it scrolls).
+            (
+                191.0,
+                &mut s.keep_private_downloads,
+                // i18n: checkbox: downloads started from a browser's private (incognito) window are saved in MDM's download list like any other, so they are still there after MDM restarts
+                crate::i18n::mark("Keep private-window downloads in the list"),
+            ),
             // MDM's (#63): Minimize hides the main window and progress windows in the tray too.
             // The browsers' group starts a row lower again, its list a row shorter (it scrolls).
             (
-                191.0,
+                210.0,
                 &mut s.minimize_to_tray,
                 // i18n: checkbox: the Minimize button hides MDM's windows to the notification area (system tray) instead of the taskbar
                 crate::i18n::mark("Minimize to the notification area"),
             ),
             // MDM's: the × hides the window in the notification area, or quits.
             (
-                210.0,
+                229.0,
                 &mut s.close_to_tray,
                 // i18n: checkbox: closing keeps MDM running, in the notification area when available or else the taskbar, instead of quitting
                 crate::i18n::mark("Keep running when closing the window"),
@@ -529,7 +567,7 @@ impl OptionsDialog {
             // Portable: nothing is written to the registry, so no start with Windows. Manifest 2
             // extensions: an IDM-era Chrome policy with no meaning for MDM's extension (MV3):
             // shown as IDM has it, greyed (D-021).
-            let enabled = !(portable && i == 0) && i != 2 && (i < 5 || tray);
+            let enabled = !(portable && i == 0) && i != 2 && (i < 6 || tray);
             let check = winui::checkbox_light(ui, o + vec2(30.0, y), v, label, enabled);
             // Where a start with the session leaves the window (#226).
             if i == 0 && enabled && check.hovered() {
@@ -542,7 +580,12 @@ impl OptionsDialog {
                         "Started with the computer, it starts minimized: no notification area shows its icon here",
                     )
                 });
-            } else if i == 6 && check.hovered() {
+            } else if i == 5 && check.hovered() {
+                // i18n: tooltip of "Keep private-window downloads in the list": checked, downloads from a browser's private (incognito) window are saved in the list and survive MDM closing or restarting; unchecked, they are kept in memory only and are gone when MDM closes. Their cookies are never saved.
+                check.on_hover_text(crate::i18n::t(
+                    "Checked, downloads from a browser's private window are saved in the list and are still there when MDM restarts; unchecked, they are kept in memory only and are gone when MDM closes. Their cookies are never saved",
+                ));
+            } else if i == 7 && check.hovered() {
                 // i18n: tooltip of the close-setting: checked keeps MDM running when the window closes, in the notification area when available or else the taskbar; downloads continue; unchecked closing quits
                 check.on_hover_text(crate::i18n::t(
                     "Checked, closing the window keeps MDM running: it hides in the notification area when available, or minimizes to the taskbar otherwise, and downloads continue; unchecked, closing quits MDM",
@@ -574,15 +617,15 @@ impl OptionsDialog {
         let (lbl_rc, lbl_cut) = winui::text_fit(
             &p,
             o.x + 30.0,
-            o.y + 243.0,
+            o.y + 262.0,
             hk_label,
             lbl_ink,
             o.x + box_x - 6.0,
         );
         if lbl_cut {
-            winui::full_on_hover(ui, lbl_rc, ("general-hotkey", 243), hk_label);
+            winui::full_on_hover(ui, lbl_rc, ("general-hotkey", 262), hk_label);
         }
-        let box_rc = r(o, box_x, 229.0, box_w, 21.0);
+        let box_rc = r(o, box_x, 248.0, box_w, 21.0);
         let box_resp = ui.interact(
             box_rc,
             egui::Id::unique("hotkey-recorder"),
@@ -683,7 +726,7 @@ impl OptionsDialog {
             ui,
             &p,
             o.x + box_x + 6.0,
-            o.y + 243.0,
+            o.y + 262.0,
             &hk_text,
             hk_ink,
             o.x + box_x + box_w - 6.0,
@@ -697,7 +740,7 @@ impl OptionsDialog {
             };
         if winui::button_light(
             ui,
-            r(o, clear_x, 229.0, clear_w, 21.0),
+            r(o, clear_x, 248.0, clear_w, 21.0),
             "Clear",
             clear_kind,
             false,
@@ -711,9 +754,9 @@ impl OptionsDialog {
             ui,
             o,
             16.0,
-            256.0,
+            275.0,
             392.0,
-            138.0,
+            119.0,
             "Capture downloads from the following browsers:",
         );
         // Check list: one row per browser in the shared row list (Space ticks the selected
@@ -724,7 +767,7 @@ impl OptionsDialog {
         let ev = winui::row_list(
             ui,
             "browsers",
-            r(o, 30.0, 266.0, 362.0, 56.0),
+            r(o, 30.0, 285.0, 362.0, 37.0),
             browsers.len(),
             17.0,
             &mut self.browser_rows,
@@ -753,7 +796,7 @@ impl OptionsDialog {
         // Adding browsers and the browser menu editor are the extension's settings (M8): shown as
         // IDM has them, not yet available.
         let off = |ui: &mut Ui, rc: Rect, label: &str| {
-            winui::button_light(ui, rc, label, ButtonKind::Disabled, false);
+            winui::button_light(ui, rc, label, ButtonKind::Disabled, false)
         };
         // Both as wide as their labels in this language (#192), within the group box.
         let [test_at, add_at] = winui::button_row(
@@ -783,7 +826,9 @@ impl OptionsDialog {
         )
         .clicked()
         {
-            self.sub = Some(Sub::Test(crate::extension::checks(&self.s)));
+            self.sub = Some(Sub::Test(crate::extension::Tester::new(
+                self.s.advanced_integration,
+            )));
         }
         winui::etched_h(&p, o.x + 34.0, o.y + 356.0, 357.0);
         // The buttons at the right as wide as their labels in this language (#192), their
@@ -821,7 +866,8 @@ impl OptionsDialog {
             winui::full_on_hover(ui, rect, ("general-right", 419), label);
         }
         // i18n: verb: edit the item
-        off(ui, r(o, 289.0, 406.0, 103.0, 21.0), "Edit...");
+        let menu_edit = off(ui, r(o, 289.0, 406.0, 103.0, 21.0), "Edit...");
+        winui::name(&menu_edit, label);
         // The download button over videos in the browsers (our own panel, Sub::Panels).
         let label = crate::i18n::t("Customize MDM Download panels in browsers");
         let panels_at = fit_right("Edit...");
@@ -835,18 +881,19 @@ impl OptionsDialog {
         if cut {
             winui::full_on_hover(ui, rect, ("general-right", 452), label);
         }
-        if winui::button_light(
+        let panels_edit = winui::button_light(
             ui,
             r(o, panels_at.0, 438.0, panels_at.1, 21.0),
             // i18n: verb: edit the item
             "Edit...",
             ButtonKind::Normal,
             false,
-        )
-        .clicked()
-        {
+        );
+        winui::name(&panels_edit, label);
+        if panels_edit.clicked() {
             self.sub = Some(Sub::Panels(
                 self.s.video_panel,
+                self.s.video_panel_compact,
                 self.s.video_panel_sites.clone(),
                 String::new(),
             ));
@@ -1519,6 +1566,8 @@ impl OptionsDialog {
             &[(winui::widest_label(&p, &["New", "Delete", "Edit"]), 73.0)],
             92.0,
         )[0];
+        // Named by its caption, as the other lists are (#1407).
+        self.exc_rows.name = crate::i18n::t("Exceptions:");
         let (dbl, del_key) = report(
             ui,
             o,
@@ -1607,8 +1656,13 @@ impl OptionsDialog {
                 winui::label(p, x, baseline, s, on);
             },
         );
-        winui::number_field(ui, boxes[0], &mut self.mb, 1, 999_999, on, LIGHT_PAGE());
-        winui::number_field(ui, boxes[1], &mut self.hours, 1, 999, on, LIGHT_PAGE());
+        // The sentence's words are painted, not exposed: each box is named as its part of it
+        // reads, or a screen reader says only "edit, 200" (#1407).
+        let mb_box = winui::number_field(ui, boxes[0], &mut self.mb, 1, 999_999, on, LIGHT_PAGE());
+        winui::name(&mb_box, crate::i18n::t(crate::quota::LIMITS_MB_NAME));
+        let hours_box =
+            winui::number_field(ui, boxes[1], &mut self.hours, 1, 999, on, LIGHT_PAGE());
+        winui::name(&hours_box, crate::i18n::t(crate::quota::LIMITS_HOURS_NAME));
         winui::checkbox_light(
             ui,
             o + vec2(37.0, 376.0),
@@ -1700,13 +1754,14 @@ impl OptionsDialog {
             false,
         )
         .clicked()
-            && let Some((host, port)) = system_proxy()
+            && let Some(found) = system_proxy()
         {
             s.proxy_mode = 3;
-            s.proxy_host = host;
-            s.proxy_port = port;
-            s.proxy_http = true;
-            s.proxy_https = true;
+            s.proxy_kind = found.kind;
+            s.proxy_host = found.host;
+            s.proxy_port = found.port;
+            s.proxy_http = found.http;
+            s.proxy_https = found.https;
         }
         winui::checkbox_light(
             ui,
@@ -1749,6 +1804,7 @@ impl OptionsDialog {
                 crate::i18n::mark("Manual proxy/socks configuration"),
             ),
         ];
+        let was = s.proxy_mode;
         let mut group = Vec::new();
         for (i, (x, y, label)) in modes.iter().enumerate() {
             let resp = winui::radio_light(
@@ -1765,6 +1821,9 @@ impl OptionsDialog {
         }
         if let Some(i) = winui::radio_keys(ui, &group) {
             s.proxy_mode = i as u8;
+        }
+        if s.proxy_mode != was {
+            tick_manual_protocols(s);
         }
         winui::etched_h(&p, o.x + 22.0, o.y + 159.0, 380.0);
         winui::etched_h(&p, o.x + 21.0, o.y + 187.0, 380.0);
@@ -1783,6 +1842,10 @@ impl OptionsDialog {
             LIGHT_PAGE(),
         );
         let manual = s.proxy_mode == 3;
+        // Manual → Type (#1558): what the proxy speaks. An address typed with its scheme says
+        // it instead, as the engine reads it (`Settings::manual_proxy`).
+        let kind = s.manual_proxy().map_or(s.proxy_kind, |(kind, _, _)| kind);
+        let login = manual && kind.has_login();
         disabled_label(
             &p,
             o.x + 30.0,
@@ -1792,8 +1855,8 @@ impl OptionsDialog {
             false,
         );
         disabled_label(&p, o.x + 172.0, o.y + 278.0, "Port", manual, false);
-        disabled_label(&p, o.x + 229.0, o.y + 278.0, "UserName", manual, false);
-        disabled_label(&p, o.x + 313.0, o.y + 278.0, "Password", manual, false);
+        disabled_label(&p, o.x + 229.0, o.y + 278.0, "UserName", login, false);
+        disabled_label(&p, o.x + 313.0, o.y + 278.0, "Password", login, false);
         winui::edit_light_on(
             ui,
             r(o, 30.0, 286.0, 137.0, 24.0),
@@ -1811,56 +1874,167 @@ impl OptionsDialog {
             manual,
             LIGHT_PAGE(),
         );
+        // SOCKS4 has no login: the boxes keep what was typed, greyed.
         winui::edit_light_on(
             ui,
             r(o, 229.0, 286.0, 78.0, 24.0),
             &mut s.proxy_user,
-            manual,
+            login,
             false,
             LIGHT_PAGE(),
         );
-        password(
+        password(ui, r(o, 312.0, 286.0, 83.0, 24.0), &mut s.proxy_pass, login);
+        // i18n: Options → Proxy / Socks → Manual: label before the kind of proxy (HTTP, HTTPS, SOCKS5, SOCKS4)
+        disabled_label(&p, o.x + 30.0, o.y + 333.0, "Type", manual, false);
+        let type_x = (30.0 + winui::text_width(&p, crate::i18n::t("Type")) + 6.0).max(64.0);
+        let labels: Vec<&str> = ProxyKind::ALL.iter().map(|k| k.label()).collect();
+        let at = ProxyKind::ALL.iter().position(|k| *k == kind).unwrap_or(0);
+        if let Some(i) = winui::combo_light(
             ui,
-            r(o, 312.0, 286.0, 83.0, 24.0),
-            &mut s.proxy_pass,
+            r(o, type_x, 318.0, 82.0, 21.0),
+            &labels,
+            at,
             manual,
-        );
-        disabled_label(
-            &p,
-            o.x + 30.0,
-            o.y + 326.0,
-            "Use this proxy for the following protocols:",
-            manual,
-            false,
-        );
-        winui::checkbox_light(ui, o + vec2(30.0, 334.0), &mut s.proxy_http, "http", manual);
-        winui::checkbox_light(
-            ui,
-            o + vec2(97.0, 334.0),
-            &mut s.proxy_https,
-            "https",
-            manual,
-        );
-        // FTP connects to its servers directly, never through an HTTP proxy: the ftp box
-        // stays greyed (D-021).
-        winui::checkbox_light(ui, o + vec2(174.0, 334.0), &mut s.proxy_ftp, "ftp", false);
-        // Socks settings: with the proxy work in M10.
-        winui::button_light(
-            ui,
-            r(o, 235.0, 339.0, 159.0, 21.0),
-            "Advanced / Socks...",
-            ButtonKind::Disabled,
-            false,
-        );
+            "opt-proxy-type",
+        ) {
+            choose_proxy_kind(s, ProxyKind::ALL[i]);
+        }
+        let after = type_x + 82.0 + 12.0;
+        if kind.is_socks() {
+            // socks5h / socks4a: the proxy looks the site's name up, so this computer's DNS
+            // never sees it (on by default).
+            let mut remote = s
+                .manual_proxy()
+                .map_or(s.proxy_remote_dns, |(_, remote, _)| remote);
+            let was = remote;
+            winui::checkbox_light_until(
+                ui,
+                o + vec2(after, 322.0),
+                &mut remote,
+                // i18n: Options → Proxy / Socks → Manual, SOCKS: the proxy turns the sites' names into addresses (socks5h), so this computer's DNS never sees them
+                "Look up site names through the proxy",
+                manual,
+                Some(o.x + 395.0),
+            );
+            if remote != was {
+                // A scheme typed in the address goes into Type first, then the box says.
+                strip_proxy_scheme(s);
+                s.proxy_remote_dns = remote;
+            }
+        } else {
+            winui::checkbox_light(
+                ui,
+                o + vec2(after, 322.0),
+                &mut s.proxy_http,
+                "http",
+                manual,
+            );
+            let https_x = winui::checkbox_caption_end(&p, after, "http") + 12.0;
+            winui::checkbox_light(
+                ui,
+                o + vec2(https_x, 322.0),
+                &mut s.proxy_https,
+                "https",
+                manual,
+            );
+            // FTP never goes through an HTTP proxy (its servers aren't web servers); a SOCKS
+            // one carries it (#1558). The box stays greyed and says so.
+            let ftp_x = winui::checkbox_caption_end(&p, https_x, "https") + 12.0;
+            let mut ftp = false;
+            let ftp_box = winui::checkbox_light(ui, o + vec2(ftp_x, 322.0), &mut ftp, "ftp", false);
+            winui::why_disabled(
+                ftp_box,
+                true,
+                // i18n: Options → Proxy / Socks: why the "ftp" box of an HTTP proxy is greyed
+                "FTP downloads don't go through an HTTP proxy. Choose SOCKS5 or SOCKS4 to send them through the proxy.",
+            );
+        }
+        self.proxy_test_row(ui, o);
+        let s = &mut self.s;
         winui::etched_h(&p, o.x + 21.0, o.y + 447.0, 381.0);
+        // FTP through a SOCKS proxy is always passive: the proxy can't take the server's
+        // connection back to this computer (#1558). The box shows it, greyed; the setting stays.
+        let socks_ftp = manual && kind.is_socks();
+        let mut passive = s.ftp_passive || socks_ftp;
         winui::checkbox_light(
             ui,
             o + vec2(27.0, 453.0),
-            &mut s.ftp_passive,
+            &mut passive,
             "Use FTP in PASV mode",
-            true,
+            !socks_ftp,
         );
+        if !socks_ftp {
+            s.ftp_passive = passive;
+        }
         self.adapter_row(ui, o);
+    }
+
+    /// Proxy / Socks → Test (#1558): one request through what the page says now (its proxy, the
+    /// DNS and network adapter Options have), on a thread of its own; the line after it says
+    /// whether it answered and the address the internet sees.
+    fn proxy_test_row(&mut self, ui: &mut Ui, o: Pos2) {
+        let p = ui.painter().clone();
+        let running = self
+            .proxy_test
+            .as_ref()
+            .is_some_and(|t| t.lock().unwrap().is_none());
+        let kind = if running {
+            ButtonKind::Disabled
+        } else {
+            ButtonKind::Normal
+        };
+        let w = winui::button_fit_width(&p, "Test", 73.0, 150.0);
+        if winui::button_light(ui, r(o, 30.0, 345.0, w, 21.0), "Test", kind, false).clicked() {
+            let slot = std::sync::Arc::new(std::sync::Mutex::new(None));
+            self.proxy_test = Some(slot.clone());
+            let adapters = self
+                .adapters
+                .as_ref()
+                .map(|(_, a)| a.clone())
+                .unwrap_or_else(crate::netwatch::adapters);
+            let opts = mdm_engine::Options {
+                dns: self.s.dns(),
+                route: mdm_engine::net::route_for(&self.s.net_adapter, &adapters),
+                ..mdm_tools::net(self.s.proxy())
+            };
+            let ctx = ui.ctx().clone();
+            std::thread::spawn(move || {
+                let line = match proxy_probe(&opts) {
+                    Ok((took, ip)) => (
+                        crate::i18n::fmt(
+                            // i18n: Options → Proxy / Socks: Test's answer; {ms} milliseconds; {ip} the internet address the site saw (the proxy's, or this computer's without one)
+                            crate::i18n::t("Answered in {ms} ms. The internet sees {ip}."),
+                            &[
+                                ("ms", &crate::i18n::integer(took.as_millis() as u64)),
+                                ("ip", &ip),
+                            ],
+                        ),
+                        true,
+                    ),
+                    Err(why) => (why, false),
+                };
+                *slot.lock().unwrap() = Some(line);
+                ctx.request_repaint();
+            });
+        }
+        let status = self.proxy_test.as_ref().map(|t| {
+            t.lock().unwrap().clone().unwrap_or_else(|| {
+                // i18n: Options → Proxy / Socks: Test is running
+                (crate::i18n::t("Asking...").to_owned(), true)
+            })
+        });
+        if let Some((line, ok)) = status {
+            let color = if ok {
+                LIGHT_TEXT()
+            } else {
+                crate::theme::colors().error_strong
+            };
+            let x = o.x + 30.0 + w + 8.0;
+            let (rect, cut) = winui::label_into(&p, x, o.y + 360.0, &line, color, o.x + 400.0, x);
+            if cut {
+                winui::full_on_hover(ui, rect, "proxy-test", &line);
+            }
+        }
     }
 
     /// Proxy / Socks → Network adapter (#35): the adapter every connection goes through (a VPN's),
@@ -2372,6 +2546,18 @@ impl OptionsDialog {
         };
         // Two lines at most: a longer language wraps rather than being cut.
         winui::paragraph(&p, o.x + 30.0, o.y + 380.0, note, ink, o.x + 400.0, 13.0);
+        winui::checkbox_light(
+            ui,
+            o + vec2(22.0, 414.0),
+            &mut self.s.ytdlp_config,
+            // i18n: Options → Sites Logins: checkbox under Cookies for video sites: yt-dlp also reads the person's own yt-dlp config file
+            "Use my yt-dlp config file",
+            true,
+        )
+        .on_hover_text(crate::i18n::t(
+            // i18n: Options → Sites Logins → Use my yt-dlp config file: its tooltip
+            "yt-dlp also reads its own config files (on Windows %APPDATA%\\yt-dlp\\config.txt, on Linux and macOS ~/.config/yt-dlp/config). Most of what MDM chooses, the folder, the name and the quality, still wins, but options there that skip or filter videos apply too.",
+        ));
     }
 
     /// Archives (ours, #37): extracting archives when their download completes, what becomes
@@ -2393,7 +2579,7 @@ impl OptionsDialog {
         );
         let s = &mut self.s;
         // i18n: Options → Archives: group box title
-        group(ui, o, 16.0, 92.0, 392.0, 228.0, "Archives");
+        group(ui, o, 16.0, 92.0, 392.0, 243.0, "Archives");
         winui::checkbox_light(
             ui,
             o + vec2(30.0, 110.0),
@@ -2418,7 +2604,7 @@ impl OptionsDialog {
         text(
             &p,
             o.x + 30.0,
-            o.y + 174.0,
+            o.y + 166.0,
             // i18n: Options → Archives: a label before the list of where extracted files go
             crate::i18n::t("What an archive holds goes:"),
             LIGHT_TEXT(),
@@ -2433,7 +2619,7 @@ impl OptionsDialog {
         ];
         if let Some(i) = winui::combo_light(
             ui,
-            r(o, 30.0, 181.0, 364.0, 21.0),
+            r(o, 30.0, 173.0, 364.0, 21.0),
             &INTO,
             s.extract_subfolder.min(2) as usize,
             true,
@@ -2444,7 +2630,7 @@ impl OptionsDialog {
         winui::paragraph(
             &p,
             o.x + 30.0,
-            o.y + 226.0,
+            o.y + 218.0,
             crate::i18n::t(
                 "ZIP, 7Z, RAR, TAR, GZ and XZ; a split archive (.part1.rar, .7z.001) once\nevery volume is in. A file there already is kept: the new one is numbered.",
             ),
@@ -2454,7 +2640,25 @@ impl OptionsDialog {
         );
         // HatchZip only when asked for (in place); without it, 7z and RAR need 7-Zip.
         let hatch = self.hatch_zip.as_ref().filter(|_| s.extract_in_place);
+        // The program picked with Use another program..., once it has answered (#1525).
+        let checked = self
+            .checking_7zip
+            .as_ref()
+            .and_then(|slot| slot.lock().unwrap().take());
+        if let Some((exe, is_7zip)) = checked {
+            self.checking_7zip = None;
+            self.not_7zip = !is_7zip;
+            if is_7zip {
+                s.seven_zip_path = exe.display().to_string();
+                self.seven_zip = Some(exe);
+            }
+        }
         let (rar, ink) = match (hatch, &self.seven_zip) {
+            _ if self.not_7zip => (
+                // i18n: Options → Archives, in red: the program chosen with "Use another program..." isn't 7-Zip's command line program (an archiver's window was picked instead); 7z.exe is that program's file name
+                crate::i18n::t("That isn't 7-Zip's command line program (7z.exe).").to_owned(),
+                winui::ERROR(),
+            ),
             (Some(path), _) => (
                 crate::i18n::fmt(
                     // i18n: Options → Archives, when Extract in place with HatchZip (a program's name) is on: {path} is where its program is
@@ -2484,7 +2688,7 @@ impl OptionsDialog {
             ui,
             &p,
             o.x + 30.0,
-            o.y + 272.0,
+            o.y + 264.0,
             &rar,
             ink,
             o.x + 400.0,
@@ -2493,7 +2697,7 @@ impl OptionsDialog {
         let has_hatchzip = self.hatch_zip.is_some();
         winui::checkbox_light(
             ui,
-            o + vec2(30.0, 294.0),
+            o + vec2(30.0, 284.0),
             &mut s.extract_in_place,
             if has_hatchzip {
                 // i18n: Options → Archives check box: HatchZip (a program's name) removes the archive while extracting it, so only the extracted files need disk space
@@ -2504,11 +2708,92 @@ impl OptionsDialog {
             },
             has_hatchzip,
         );
+        // The passwords tried on an encrypted archive before it is asked (#37).
+        let (pw_x, pw_w) = winui::button_row_from_left(
+            &p,
+            &[("Archive passwords...", 30.0, 150.0)],
+            0.0,
+            389.0,
+            300.0,
+        )[0];
+        // i18n: Options → Archives: button: edit the list of passwords tried on encrypted archives
+        if winui::button_light(
+            ui,
+            r(o, pw_x, 304.0, pw_w, 21.0),
+            "Archive passwords...",
+            ButtonKind::Normal,
+            false,
+        )
+        .clicked()
+        {
+            self.sub = Some(Sub::Passwords(s.archive_passwords.clone()));
+        }
+        // Another 7-Zip than the one found (PeaZip's own, a portable copy), or back to the one
+        // found (#1525), at the row's end.
+        let own = !s.seven_zip_path.is_empty();
+        let tool_label = if own {
+            // i18n: Options → Archives: button, shown once a 7-Zip program was chosen with "Use another program...": go back to the 7-Zip MDM finds on the computer by itself
+            crate::i18n::mark("Find 7-Zip automatically")
+        } else {
+            // i18n: Options → Archives: button: pick the 7-Zip command line program to extract 7z and RAR archives with (PeaZip's own 7z.exe, a portable copy), instead of the one MDM finds
+            crate::i18n::mark("Use another program...")
+        };
+        let (tool_x, tool_w) =
+            winui::buttons_to_right(&p, 394.0, 0.0, &[(tool_label, 150.0)], 200.0)[0];
+        if winui::button_light(
+            ui,
+            r(o, tool_x, 304.0, tool_w, 21.0),
+            tool_label,
+            if self.checking_7zip.is_some() {
+                ButtonKind::Disabled
+            } else {
+                ButtonKind::Normal
+            },
+            false,
+        )
+        .clicked()
+        {
+            self.not_7zip = false;
+            if own {
+                s.seven_zip_path.clear();
+                self.seven_zip = crate::extractq::seven_zip_for("");
+            } else {
+                // i18n: file picker title; {name} = the program to choose (yt-dlp, ffmpeg, 7-Zip)
+                let title = crate::i18n::fmt(crate::i18n::t("Choose {name}"), &[("name", "7-Zip")]);
+                winui::start_pick(ui.ctx(), "options-7zip", move || {
+                    crate::winui::file_dialog(&title).pick_file()
+                });
+            }
+        }
+        if let Some(exe) = winui::picked(ui.ctx(), "options-7zip") {
+            let slot: Checked7zip = Default::default();
+            let (out, wake) = (slot.clone(), ui.ctx().clone());
+            std::thread::spawn(move || {
+                let is_7zip = crate::extractq::is_7zip(&exe);
+                *out.lock().unwrap() = Some((exe, is_7zip));
+                wake.request_repaint();
+            });
+            self.checking_7zip = Some(slot);
+        }
+        let saved = s.archive_password_list().len() as u64;
+        if saved > 0 {
+            winui::fit(
+                ui,
+                &p,
+                o.x + pw_x + pw_w + 10.0,
+                o.y + 320.0,
+                // i18n: Options → Archives: beside the Archive passwords button: how many are saved
+                &crate::i18n::tn(saved, "{n} saved", "{n} saved"),
+                LIGHT_DISABLED(),
+                o.x + tool_x - 8.0,
+                "opt-passwords-saved",
+            );
+        }
         // i18n: Options → Archives: group box title
-        group(ui, o, 16.0, 320.0, 392.0, 132.0, "Link grabber");
+        group(ui, o, 16.0, 335.0, 392.0, 128.0, "Link grabber");
         winui::checkbox_light(
             ui,
-            o + vec2(30.0, 338.0),
+            o + vec2(30.0, 353.0),
             &mut s.grabber_check,
             // i18n: Options → Archives → Link grabber check box (IDM's Download all links looks every link up)
             "Look links up when they arrive (name, size, online)",
@@ -2516,14 +2801,14 @@ impl OptionsDialog {
         );
         winui::checkbox_light(
             ui,
-            o + vec2(30.0, 362.0),
+            o + vec2(30.0, 377.0),
             &mut s.grabber_hide_pages,
             "Hide web pages",
             true,
         );
         winui::checkbox_light(
             ui,
-            o + vec2(30.0, 386.0),
+            o + vec2(30.0, 401.0),
             &mut s.cnl_on,
             // i18n: Options → Archives → Link grabber check box: Click'n'Load, a link site's button that sends its links to a program on this computer (port 9666, as JDownloader)
             "Accept Click'n'Load from web pages (port 9666)",
@@ -2532,7 +2817,7 @@ impl OptionsDialog {
         winui::paragraph(
             &p,
             o.x + 30.0,
-            o.y + 418.0,
+            o.y + 429.0,
             crate::i18n::t(
                 "Tasks → Link grabber, or the browser's \"Download all links\": a split\narchive's volumes are one package, the other links of a page another.",
             ),
@@ -3462,13 +3747,13 @@ impl OptionsDialog {
                     Outcome::Closed => {}
                 }
             }
-            Sub::Panels(mut on, mut sites, mut said) => {
+            Sub::Panels(mut on, mut compact, mut sites, mut said) => {
                 let out = window(
                     ctx,
                     "opt-panels",
                     // i18n: window title: the download button the extension shows over videos
                     "Download panels",
-                    [380.0, 190.0],
+                    [380.0, 241.0],
                     false,
                     LIGHT_BG(),
                     |ui, o| {
@@ -3480,30 +3765,72 @@ impl OptionsDialog {
                             "Show a download button over videos in browsers",
                             true,
                         );
+                        // Its size (#1278): Full, its words where they fit; Compact, the round
+                        // button over every video.
+                        let shade = if on { LIGHT_TEXT() } else { LIGHT_DISABLED() };
+                        // i18n: Options → Download panels: the size of the download button over videos, chosen after it (Full / Compact)
+                        let size_label = crate::i18n::t("Button size:");
+                        winui::text_in_window(ui, &p, o.x + 30.0, o.y + 52.0, size_label, shade);
+                        // i18n: Options → Download panels → Button size: the button with its words ("Download video", the quality) where they fit (the default)
+                        let full_caption = crate::i18n::mark("Full");
+                        let full_x = (30.0 + winui::text_width(&p, size_label) + 12.0).max(110.0);
+                        let compact_x = full_x
+                            + 16.0
+                            + winui::text_width(&p, crate::i18n::t(full_caption))
+                            + 20.0;
+                        let full = winui::radio_light(
+                            ui,
+                            o + vec2(full_x, 42.0),
+                            !compact,
+                            full_caption,
+                            on,
+                        );
+                        let small = winui::radio_light(
+                            ui,
+                            o + vec2(compact_x, 42.0),
+                            compact,
+                            // i18n: Options → Download panels → Button size: only the round button (the logo, the arrow, the close mark) over every video
+                            "Compact",
+                            on,
+                        );
+                        match winui::radio_keys(ui, &[full.clone(), small.clone()]) {
+                            Some(i) => compact = i == 1,
+                            None if full.clicked() => compact = false,
+                            None if small.clicked() => compact = true,
+                            None => {}
+                        }
                         winui::text_in_window(
                             ui,
                             &p,
                             o.x + 14.0,
-                            o.y + 55.0,
+                            o.y + 83.0,
                             crate::i18n::t("Never show it on these sites:"),
-                            if on { LIGHT_TEXT() } else { LIGHT_DISABLED() },
+                            shade,
                         );
                         multiline(
                             ui,
-                            r(o, 14.0, 62.0, 352.0, 55.0),
+                            r(o, 14.0, 90.0, 352.0, 55.0),
                             &mut sites,
                             "panel-sites",
                             on,
                         );
-                        winui::text_in_window(
-                            ui,
+                        // On a row of its own, the list's width: beside Export... and Import... it
+                        // ran under them (English already, German further).
+                        let hint = crate::i18n::t(
+                            // i18n: under Download panels site exclusions list
+                            "(separate by spaces; * matches anything)",
+                        );
+                        let (rect, cut) = winui::text_fit(
                             &p,
                             o.x + 14.0,
-                            o.y + 133.0,
-                            // i18n: under Download panels site exclusions list
-                            crate::i18n::t("(separate by spaces; * matches anything)"),
+                            o.y + 161.0,
+                            hint,
                             LIGHT_TEXT(),
+                            o.x + 366.0,
                         );
+                        if cut {
+                            winui::full_on_hover(ui, rect, "opt-panels-hint", hint);
+                        }
                         // The list as a file, to keep or carry to a new installation (#424).
                         let [export_at, import_at] = winui::button_row(
                             &p,
@@ -3516,7 +3843,7 @@ impl OptionsDialog {
                         };
                         if winui::button_light(
                             ui,
-                            r(o, export_at.0, 128.0, export_at.1, 21.0),
+                            r(o, export_at.0, 172.0, export_at.1, 21.0),
                             "Export...",
                             ButtonKind::Normal,
                             false,
@@ -3533,7 +3860,7 @@ impl OptionsDialog {
                         }
                         if winui::button_light(
                             ui,
-                            r(o, import_at.0, 128.0, import_at.1, 21.0),
+                            r(o, import_at.0, 172.0, import_at.1, 21.0),
                             "Import...",
                             ButtonKind::Normal,
                             false,
@@ -3585,7 +3912,7 @@ impl OptionsDialog {
                             let (rect, cut) = winui::text_fit(
                                 &p,
                                 o.x + 14.0,
-                                o.y + 163.0,
+                                o.y + 187.0,
                                 &said,
                                 LIGHT_TEXT(),
                                 o.x + 205.0,
@@ -3594,13 +3921,14 @@ impl OptionsDialog {
                                 winui::full_on_hover(ui, rect, "opt-panels-said", &said);
                             }
                         }
-                        ok_cancel(ui, o, 212.0, 157.0, true)
+                        ok_cancel(ui, o, 212.0, 208.0, true)
                     },
                 );
                 match out {
-                    Outcome::Open => self.sub = Some(Sub::Panels(on, sites, said)),
+                    Outcome::Open => self.sub = Some(Sub::Panels(on, compact, sites, said)),
                     Outcome::Done(()) => {
                         self.s.video_panel = on;
+                        self.s.video_panel_compact = compact;
                         self.s.video_panel_sites =
                             sites.split_whitespace().collect::<Vec<_>>().join(" ");
                     }
@@ -3656,6 +3984,47 @@ impl OptionsDialog {
                         .signin
                         .stop
                         .store(true, std::sync::atomic::Ordering::Relaxed),
+                }
+            }
+            Sub::Passwords(mut list) => {
+                let out = window(
+                    ctx,
+                    "opt-archive-passwords",
+                    // i18n: window title: the passwords tried on encrypted archives
+                    "Archive passwords",
+                    [420.0, 230.0],
+                    false,
+                    LIGHT_BG(),
+                    |ui, o| {
+                        let p = ui.painter().clone();
+                        winui::paragraph(
+                            &p,
+                            o.x + 14.0,
+                            o.y + 20.0,
+                            // i18n: Archive passwords window: how the list is used
+                            crate::i18n::t(
+                                "One password per line, tried in this order on an encrypted archive before MDM asks. The one that fits moves to the top.",
+                            ),
+                            LIGHT_TEXT(),
+                            o.x + 406.0,
+                            14.0,
+                        );
+                        multiline(
+                            ui,
+                            r(o, 14.0, 52.0, 392.0, 122.0),
+                            &mut list,
+                            "archive-passwords",
+                            true,
+                        );
+                        ok_cancel(ui, o, 252.0, 192.0, true)
+                    },
+                );
+                match out {
+                    Outcome::Open => self.sub = Some(Sub::Passwords(list)),
+                    Outcome::Done(()) => {
+                        self.s.archive_passwords = settings::password_lines(&list).join("\n");
+                    }
+                    Outcome::Closed => {}
                 }
             }
             Sub::Addresses(mut list) => {
@@ -3758,8 +4127,20 @@ impl OptionsDialog {
                     Outcome::Closed => {}
                 }
             }
-            Sub::Test(mut checks) => {
-                let h = 120.0 + checks.len() as f32 * 22.0;
+            Sub::Test(tester) => {
+                // Read beside the window (#1218): the last checks while new ones are read (Set it
+                // up finished), "Checking..." before the first.
+                let found = tester.checks(Some(ctx));
+                let checking = found.is_none();
+                let checks = found.unwrap_or_default();
+                // A check's path takes a line of its own (#818), what to do about it a paragraph
+                // (#1218), as tall as it was last drawn.
+                let details = checks.iter().filter(|c| c.detail.is_some()).count();
+                let rows = checks.len().max(usize::from(checking));
+                let h = 120.0
+                    + rows as f32 * 22.0
+                    + details as f32 * DETAIL_H
+                    + crate::dialogs::grow_extra(ctx, "opt-test-how");
                 let mut set_up = false;
                 let out = window(
                     ctx,
@@ -3771,8 +4152,20 @@ impl OptionsDialog {
                     LIGHT_BG(),
                     |ui, o| {
                         let p = ui.painter().clone();
+                        let mut y = o.y + 22.0;
+                        let mut how_h = 0.0;
+                        if checking {
+                            winui::text_in_window(
+                                ui,
+                                &p,
+                                o.x + 34.0,
+                                y,
+                                // i18n: Test browser integration, while it reads where browser integration stands (a moment, usually)
+                                crate::i18n::t("Checking..."),
+                                LIGHT_TEXT(),
+                            );
+                        }
                         for (k, c) in checks.iter().enumerate() {
-                            let y = o.y + 22.0 + k as f32 * 22.0;
                             let (mark, color) = if c.ok {
                                 ("\u{2714}", winui::SUCCESS())
                             } else {
@@ -3780,7 +4173,37 @@ impl OptionsDialog {
                             };
                             winui::text_in_window(ui, &p, o.x + 14.0, y, mark, color);
                             winui::text_in_window(ui, &p, o.x + 34.0, y, &c.text, LIGHT_TEXT());
+                            if let Some(path) = &c.detail {
+                                y += DETAIL_H;
+                                // A path reads left to right in a right-to-left language too.
+                                winui::fit_middle(
+                                    ui,
+                                    &p,
+                                    o.x + 34.0,
+                                    y,
+                                    &crate::i18n::ltr(path),
+                                    LIGHT_TEXT(),
+                                    o.x + 440.0 - 14.0,
+                                    ("test-detail", k),
+                                );
+                            }
+                            if let Some(how) = &c.how {
+                                let lines = winui::paragraph(
+                                    &p,
+                                    o.x + 34.0,
+                                    y + DETAIL_H,
+                                    how,
+                                    LIGHT_TEXT(),
+                                    o.x + 440.0 - 14.0,
+                                    14.0,
+                                );
+                                let more = DETAIL_H + 14.0 * lines.saturating_sub(1) as f32;
+                                y += more;
+                                how_h += more;
+                            }
+                            y += 22.0;
                         }
+                        crate::dialogs::grow_px(ui.ctx(), "opt-test-how", how_h);
                         let first = checks.iter().find(|c| !c.ok);
                         let y = h - 46.0;
                         // As wide as their labels in this language (#192), short of Close.
@@ -3807,8 +4230,11 @@ impl OptionsDialog {
                             {
                                 crate::help::open_page(&mdm_ipc::extension::help_doc(why));
                             }
+                            // Not from a portable copy, nor one in a temporary folder: neither
+                            // registers (#818).
                             if c.why == Some("not-installed")
                                 && mdm_ipc::portable_dir().is_none()
+                                && !crate::extension::temporary_copy()
                                 && winui::button_light(
                                     ui,
                                     r(o, set_up_at.0, y, set_up_at.1, 25.0),
@@ -3841,11 +4267,8 @@ impl OptionsDialog {
                 if set_up {
                     crate::extension::set_up(ctx);
                 }
-                if crate::extension::set_up_finished(&mut self.set_up_seen) {
-                    checks = crate::extension::checks(&self.s);
-                }
                 if matches!(out, Outcome::Open) {
-                    self.sub = Some(Sub::Test(checks));
+                    self.sub = Some(Sub::Test(tester));
                 }
             }
         }
@@ -3854,12 +4277,105 @@ impl OptionsDialog {
 
 // ---- pieces -----------------------------------------------------------------------------
 
-/// Proxy / Socks → Get System: Windows' own proxy (host, port), if one is set.
-fn system_proxy() -> Option<(String, String)> {
+/// Proxy / Socks → Manual proxy/socks configuration with no protocol ticked uses the proxy for
+/// nothing, and the boxes start unticked (#1448: yt-dlp went straight to YouTube): chosen, or
+/// found so when Options opens, it is ticked for http and https, as Get System ticks it.
+fn tick_manual_protocols(s: &mut Settings) {
+    if s.proxy_mode == 3 && !s.proxy_http && !s.proxy_https {
+        s.proxy_http = true;
+        s.proxy_https = true;
+    }
+}
+
+/// Proxy / Socks → Get System: Windows' own proxy, if one is set (its HTTP one, else its SOCKS
+/// one, #1558).
+fn system_proxy() -> Option<crate::settings::SystemProxy> {
     #[cfg(windows)]
-    return crate::win32::system_proxy();
+    return crate::win32::system_proxy().and_then(|v| crate::settings::parse_system_proxy(&v));
+    // Linux and macOS: their desktops' proxy settings aren't read yet; Use system settings
+    // reads the environment's (and macOS' settings) instead.
     #[cfg(not(windows))]
     None
+}
+
+/// Where Proxy / Socks → Test asks: Cloudflare's trace page answers with the address it saw
+/// (`ip=…`), and nothing more is sent than that request.
+const PROXY_PROBE: &str = "https://one.one.one.one/cdn-cgi/trace";
+
+/// One request through `opts`' proxy, DNS and adapter (#1558): how long it took and the address
+/// the server saw, or why it failed (with the proxy's own words: refused, a login it wants).
+fn proxy_probe(opts: &mdm_engine::Options) -> Result<(std::time::Duration, String), String> {
+    let url = url::Url::parse(PROXY_PROBE).map_err(|e| e.to_string())?;
+    let rt = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .map_err(|e| e.to_string())?;
+    rt.block_on(async {
+        let client = mdm_engine::http_client(opts, &url).map_err(|e| e.to_string())?;
+        let start = std::time::Instant::now();
+        let answer = tokio::time::timeout(std::time::Duration::from_secs(20), async {
+            client
+                .get(url.clone())
+                .send()
+                .await?
+                .error_for_status()?
+                .text()
+                .await
+        })
+        .await
+        // i18n: Options → Proxy / Socks: Test got no answer in time
+        .map_err(|_| crate::i18n::t("No answer within 20 seconds.").to_owned())?
+        .map_err(|e| error_chain(&e))?;
+        let took = start.elapsed();
+        let ip = answer
+            .lines()
+            .find_map(|l| l.strip_prefix("ip="))
+            .map(str::trim)
+            .filter(|ip| !ip.is_empty())
+            .ok_or_else(|| {
+                // i18n: Options → Proxy / Socks: Test's server answered without saying the address it saw
+                crate::i18n::t("The test page didn't say the address it saw.").to_owned()
+            })?;
+        Ok((took, ip.to_owned()))
+    })
+}
+
+/// What went wrong, as specifically as the error says: its innermost cause ("SOCKS error:
+/// credentials not accepted"); reqwest's own line names only the request.
+fn error_chain(e: &dyn std::error::Error) -> String {
+    let mut last = e.to_string();
+    let mut cause = e.source();
+    while let Some(c) = cause {
+        last = c.to_string();
+        cause = c.source();
+    }
+    last
+}
+
+/// Proxy / Socks → Manual → Type chosen (#1558). An address typed with its scheme
+/// (`socks5://host`) loses it, so the address and Type never say two things.
+fn choose_proxy_kind(s: &mut Settings, kind: ProxyKind) {
+    strip_proxy_scheme(s);
+    s.proxy_kind = kind;
+    tick_manual_protocols(s);
+}
+
+/// An address typed with a proxy's scheme (`socks5://host`, as the docs said before Type): the
+/// scheme moves into Type and "Look up site names through the proxy", the address keeps the
+/// host. Done when Options opens, so the page shows what the address says.
+fn strip_proxy_scheme(s: &mut Settings) {
+    let host = s.proxy_host.trim();
+    if let Some((kind, remote)) = host
+        .split_once("://")
+        .and_then(|(scheme, _)| ProxyKind::from_scheme(scheme))
+    {
+        let rest = host.split_once("://").map(|(_, r)| r).unwrap_or_default();
+        s.proxy_host = rest.trim_end_matches('/').to_owned();
+        s.proxy_kind = kind;
+        if kind.is_socks() {
+            s.proxy_remote_dns = remote;
+        }
+    }
 }
 
 pub fn play_sound(file: &str) {
@@ -4875,6 +5391,7 @@ fn report(
         head + 23.0,
         winui::LIST_HEADER(),
     );
+    winui::header_shade(&p, left + 1.0, rc.right() - 2.0, head + 23.0, false);
     let mut x0 = left;
     for (i, (title, right)) in cols.iter().enumerate() {
         let title = crate::i18n::t(title);
@@ -4884,7 +5401,7 @@ fn report(
         if cut {
             winui::full_on_hover(ui, rect, (id, "head", i), title);
         }
-        fill(&p, right, head + 1.0, right, head + 23.0, divider);
+        winui::header_divider(&p, right, head + 1.0, head + 23.0, divider);
         x0 = right;
     }
     // The rows: the shared row list under the header (its frame on the list's).
@@ -5082,6 +5599,80 @@ fn snooze_line(ui: &mut Ui, p: &egui::Painter, o: Pos2, until: crate::finish::Un
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// #1448: Manual proxy/socks configuration with no protocol ticked gets http and https
+    /// ticked, when Options opens on it as when it is chosen; a choice of one is kept, and the
+    /// change is the dialog's (OK saves it, Cancel doesn't).
+    #[test]
+    fn a_manual_proxy_for_nothing_is_ticked_for_http_and_https() {
+        let mut s = Settings {
+            proxy_mode: 3,
+            proxy_host: "127.0.0.1".into(),
+            proxy_port: "7890".into(),
+            ..Settings::default()
+        };
+        let dialog = OptionsDialog::new(&s, std::path::Path::new("."), Vec::new());
+        assert!(dialog.s.proxy_http && dialog.s.proxy_https);
+        assert!(!dialog.from.proxy_http && !dialog.from.proxy_https);
+        s.proxy_http = true;
+        let dialog = OptionsDialog::new(&s, std::path::Path::new("."), Vec::new());
+        assert!(
+            dialog.s.proxy_http && !dialog.s.proxy_https,
+            "http only, as chosen"
+        );
+        let mut other = Settings::default();
+        tick_manual_protocols(&mut other);
+        assert!(
+            !other.proxy_http && !other.proxy_https,
+            "not Manual: as it is"
+        );
+    }
+
+    /// #1558: an address typed the old way (`socks5://host`) opens as Type SOCKS5 with the host
+    /// alone (names looked up here, as it worked); socks5h with them through the proxy. The
+    /// change is the dialog's: OK saves it. Choosing a type drops a scheme left in the address.
+    #[test]
+    fn an_old_socks_address_opens_as_its_type() {
+        let s = Settings {
+            proxy_mode: 3,
+            proxy_host: "socks5://127.0.0.1".into(),
+            proxy_port: "1080".into(),
+            ..Settings::default()
+        };
+        let dialog = OptionsDialog::new(&s, std::path::Path::new("."), Vec::new());
+        assert_eq!(
+            (
+                dialog.s.proxy_kind,
+                dialog.s.proxy_remote_dns,
+                dialog.s.proxy_host.as_str()
+            ),
+            (ProxyKind::Socks5, false, "127.0.0.1")
+        );
+        assert_eq!(dialog.s.proxy(), s.proxy(), "the same proxy as before");
+        assert_eq!(dialog.from.proxy_host, "socks5://127.0.0.1");
+        let mut t = Settings {
+            proxy_host: "socks5h://tor.local/".into(),
+            ..s.clone()
+        };
+        strip_proxy_scheme(&mut t);
+        assert_eq!(
+            (t.proxy_remote_dns, t.proxy_host.as_str()),
+            (true, "tor.local")
+        );
+        t.proxy_host = "socks4://10.0.0.1".into();
+        choose_proxy_kind(&mut t, ProxyKind::Http);
+        assert_eq!(
+            (t.proxy_kind, t.proxy_host.as_str()),
+            (ProxyKind::Http, "10.0.0.1")
+        );
+        // A host with no scheme is left as typed.
+        t.proxy_host = "proxy.corp".into();
+        strip_proxy_scheme(&mut t);
+        assert_eq!(
+            (t.proxy_kind, t.proxy_host.as_str()),
+            (ProxyKind::Http, "proxy.corp")
+        );
+    }
 
     /// #424: the list written and read back through a real file: nothing lost, nothing doubled.
     #[test]

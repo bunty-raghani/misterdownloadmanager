@@ -92,9 +92,6 @@
       }
     }
   },
-  "popup_undo": {
-    "message": "Kumoa"
-  },
   "popup_excluded": {
     "message": "Lataukset sivustolta $site$ jäävät selaimelle",
     "placeholders": {
@@ -148,6 +145,9 @@
   },
   "declined_integration_off": {
     "message": "Käytä laajennettua selainintegraatiota on pois päältä kohdassa Asetukset → Yleiset."
+  },
+  "declined_torrents": {
+    "message": "Se on torrent, ja Avaa magnet-linkit ja .torrent-tiedostot sovelluksella Mister Download Manager on pois päältä Torrent-asetuksissa."
   },
   "declined_site_access": {
     "message": "Laajennuksella ei ole lupaa lukea tätä sivustoa (selaimen sivustokäyttö)."
@@ -328,5 +328,424 @@
   },
   "video_original": {
     "message": "alkuperäinen"
+  },
+  "video_compatible": {
+    "message": "Yhteensopivin"
+  },
+  "popup_video_hide_fullscreen": {
+    "message": "Piilota latauspainike koko näytön tilassa"
+  },
+  "popup_video_hide_fullscreen_title": {
+    "message": "Kun sivu on koko näytön tilassa, sen videoissa ei näy Lataa video -painiketta"
+  },
+  "popup_remote_forget": {
+    "message": "Unohda"
+  },
+  "popup_gear": {
+    "message": "Asetukset ohjelmassa Mister Download Manager"
+  },
+  "popup_tabs": {
+    "message": "Ponnahdusikkunan osat"
+  },
+  "popup_tab_downloads": {
+    "message": "Lataukset"
+  },
+  "popup_tab_page": {
+    "message": "Tämä sivu"
+  },
+  "popup_tab_settings": {
+    "message": "Asetukset"
+  },
+  "popup_conn": {
+    "message": "Yhdistetty · $version$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.5.2"
+      }
+    }
+  },
+  "popup_conn_plain": {
+    "message": "Yhdistetty"
+  },
+  "popup_conn_off": {
+    "message": "Ei yhteyttä"
+  },
+  "popup_conn_paused": {
+    "message": "Keskeytetty"
+  },
+  "popup_conn_update": {
+    "message": "Päivitä Mister Download Manager"
+  },
+  "popup_conn_remote": {
+    "message": "Lähetetään kohteeseen $server$",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_cancel": {
+    "message": "Peruuta"
+  },
+  "popup_page_none": {
+    "message": "Tämä ei ole verkkosivu: täällä ei ole mitään tehtävää."
+  },
+  "popup_exclude_by_rule": {
+    "message": "Jätetty selaimelle asetusten säännön mukaan"
+  },
+  "popup_dl_search": {
+    "message": "Hae latauksia"
+  },
+  "popup_dl_filters": {
+    "message": "Näytä"
+  },
+  "popup_dl_all": {
+    "message": "Kaikki"
+  },
+  "popup_dl_running": {
+    "message": "Käynnissä"
+  },
+  "popup_dl_done_filter": {
+    "message": "Valmis"
+  },
+  "popup_dl_failed_filter": {
+    "message": "Epäonnistui"
+  },
+  "popup_dl_clear": {
+    "message": "Tyhjennä valmiit"
+  },
+  "popup_dl_running_count": {
+    "message": "$count$ latausta käynnissä",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_remote": {
+    "message": "Nämä ovat Mister Download Manager-sovelluksen latauksia osoitteessa $server$. Avaa niiden tiedostot sieltä.",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_dl_more": {
+    "message": "Uusimmat $shown$/$total$ latausta. Mister Download Manager näyttää ne kaikki.",
+    "placeholders": {
+      "shown": {
+        "content": "$1",
+        "example": "60"
+      },
+      "total": {
+        "content": "$2",
+        "example": "245"
+      }
+    }
+  },
+  "popup_dl_of": {
+    "message": "$done$/$size$",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "12.3 MB"
+      },
+      "size": {
+        "content": "$2",
+        "example": "48.7 MB"
+      }
+    }
+  },
+  "popup_dl_left": {
+    "message": "Aikaa jäljellä: $time$",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "0:42"
+      }
+    }
+  },
+  "popup_dl_starting": {
+    "message": "Käynnistetään..."
+  },
+  "popup_dl_paused": {
+    "message": "Keskeytetty"
+  },
+  "popup_dl_waiting": {
+    "message": "Odottaa"
+  },
+  "popup_dl_done": {
+    "message": "Valmis"
+  },
+  "popup_dl_just_now": {
+    "message": "juuri nyt"
+  },
+  "popup_dl_failed": {
+    "message": "Epäonnistui"
+  },
+  "popup_dl_failed_why": {
+    "message": "Epäonnistui: $why$",
+    "placeholders": {
+      "why": {
+        "content": "$1",
+        "example": "the server refused the connection"
+      }
+    }
+  },
+  "popup_dl_gone": {
+    "message": "Tiedosto poistettu tai siirretty"
+  },
+  "popup_dl_loading": {
+    "message": "Etsitään latauksia..."
+  },
+  "popup_dl_none": {
+    "message": "Ei latauksia vielä"
+  },
+  "popup_dl_none_text": {
+    "message": "Mister Download Managerilla (Mister Download Manager) lataamasi näkyvät täällä."
+  },
+  "popup_dl_no_match": {
+    "message": "Mikään ei vastaa"
+  },
+  "popup_dl_no_match_text": {
+    "message": "Yhdenkään latauksen nimessä tai osoitteessa ei ole ”$words$”.",
+    "placeholders": {
+      "words": {
+        "content": "$1",
+        "example": "report"
+      }
+    }
+  },
+  "popup_dl_show_all": {
+    "message": "Näytä kaikki lataukset"
+  },
+  "popup_list_off": {
+    "message": "Mister Download Manager ei ole käynnissä"
+  },
+  "popup_list_off_text": {
+    "message": "Käynnistä sovellus, niin näet latauksesi täällä."
+  },
+  "popup_list_start": {
+    "message": "Käynnistä Mister Download Manager"
+  },
+  "popup_list_old": {
+    "message": "Päivitä Mister Download Manager"
+  },
+  "popup_list_old_text": {
+    "message": "Tämä versio ei voi vielä luetteloida latauksiaan täällä."
+  },
+  "popup_list_busy": {
+    "message": "Mister Download Manager on varattu. Yritetään uudelleen..."
+  },
+  "popup_list_unreached": {
+    "message": "Ei yhteyttä sovellukseen Mister Download Manager"
+  },
+  "popup_list_remote_unreachable": {
+    "message": "Ei yhteyttä sovellukseen Mister Download Manager osoitteessa $server$",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_list_remote_unreachable_text": {
+    "message": "Tarkista, että se on käynnissä ja että tämä selain hyväksyy sen varmenteen (Asetukset → Lähetä lataukset kohteeseen → Avaa se).",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_act_open": {
+    "message": "Avaa"
+  },
+  "popup_act_open_named": {
+    "message": "Avaa $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_folder": {
+    "message": "Näytä kansiossa"
+  },
+  "popup_act_folder_named": {
+    "message": "Näytä $file$ kansiossa",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_copy_file": {
+    "message": "Kopioi tiedosto"
+  },
+  "popup_act_share": {
+    "message": "Jaa..."
+  },
+  "popup_act_copy_link": {
+    "message": "Kopioi linkki"
+  },
+  "popup_act_pause": {
+    "message": "Keskeytä"
+  },
+  "popup_act_pause_named": {
+    "message": "Keskeytä $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_resume": {
+    "message": "Jatka"
+  },
+  "popup_act_resume_named": {
+    "message": "Jatka $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_again": {
+    "message": "Lataa uudelleen"
+  },
+  "popup_act_remove": {
+    "message": "Poista luettelosta"
+  },
+  "popup_act_delete": {
+    "message": "Poista tiedosto..."
+  },
+  "popup_act_more": {
+    "message": "Lisää toimintoja"
+  },
+  "popup_act_more_named": {
+    "message": "Lisää toimintoja tiedostolle $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_title": {
+    "message": "Poistetaanko tiedosto?"
+  },
+  "popup_ask_delete": {
+    "message": "$file$ poistetaan tietokoneeltasi, ja lataus poistetaan luettelosta. Tätä ei voi kumota.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_ok": {
+    "message": "Poista"
+  },
+  "popup_ask_clear_title": {
+    "message": "Tyhjennetäänkö valmiit lataukset?"
+  },
+  "popup_ask_clear": {
+    "message": "$count$ valmista latausta poistetaan luettelosta. Niiden tiedostot pysyvät paikoillaan.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "8"
+      }
+    }
+  },
+  "popup_ask_clear_ok": {
+    "message": "Tyhjennä"
+  },
+  "popup_said_file": {
+    "message": "Tiedosto $file$ kopioitiin. Liitä se kansioon, keskusteluun tai viestiin.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_link": {
+    "message": "Linkki kopioitu"
+  },
+  "popup_said_removed": {
+    "message": "$file$ poistettiin luettelosta",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_deleted": {
+    "message": "$file$ poistettiin",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_again": {
+    "message": "Ladataan tiedostoa $file$ uudelleen",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_cleared": {
+    "message": "Valmiit lataukset tyhjennetty"
+  },
+  "popup_act_gone": {
+    "message": "Lataus ei ole enää luettelossa."
+  },
+  "popup_act_missing": {
+    "message": "Tiedostoa ei enää ole tallennuspaikassaan (siirretty tai poistettu)."
+  },
+  "popup_act_running": {
+    "message": "Keskeytä lataus ensin."
+  },
+  "popup_act_cant": {
+    "message": "Tätä ei voi tehdä tälle lataukselle nyt."
+  },
+  "popup_act_unsupported": {
+    "message": "Tämä järjestelmä ei voi tehdä sitä."
+  },
+  "popup_act_off": {
+    "message": "Mister Download Manager ei ole käynnissä."
+  },
+  "popup_act_busy": {
+    "message": "Mister Download Manager ei vastannut ajoissa. Yritä uudelleen."
+  },
+  "popup_act_failed": {
+    "message": "Toiminto epäonnistui. Yritä uudelleen."
+  },
+  "status_running": {
+    "message": "Ladataan: $count$",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_open_remote": {
+    "message": "Avaa sen sivu"
   }
 }

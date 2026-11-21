@@ -301,6 +301,7 @@ impl Master {
             language: None,
             direct: false,
             needs_js_runtime: false,
+            page_titled: false,
         })
     }
 }
@@ -934,6 +935,7 @@ mod tests {
                 ours,
                 Video {
                     language: None,
+                    page_titled: false,
                     ..theirs.clone()
                 },
                 "{case}"
@@ -971,7 +973,7 @@ mod tests {
         assert_eq!(v.title, "master");
         assert_eq!(v.duration, Some(20.0));
         let labels: Vec<String> = choices(&v, false).into_iter().map(|c| c.label).collect();
-        assert_eq!(labels, ["720p · H.264", "360p · H.264"]);
+        assert_eq!(labels, ["720p MP4 · H.264", "360p MP4 · H.264"]);
     }
 
     /// DRM, a live stream, a picture without its resolution, a playlist on another server, a
@@ -1118,7 +1120,8 @@ mod tests {
         // Longer than any real line: refused from its length alone.
         assert!(attributes(&format!("#EXT-X-KEY:{}", "A".repeat(MAX_BYTES))).is_none());
         assert!(attributes(&format!("#EXT-X-KEY:{}", "A=\"".repeat(MAX_BYTES / 3))).is_none());
-        // Under the cap: 8 times the line costs about 8 times as long (not 64), on any machine.
+        // Under the cap: a line 16 times as long costs about as much as 16 short lines (a square:
+        // 16 times as much), on any machine.
         let crafted = |n: usize| {
             [
                 format!("#EXT-X-KEY:{}", "A".repeat(n)),
@@ -1287,14 +1290,21 @@ mod tests {
     }
 
     /// An answer: status, headers, body, sent after `wait`; `length`: with a Content-Length
-    /// (else the body ends with the connection).
+    /// (else the body ends with the connection). `held`: never sent while the client waits
+    /// for it: the request is held until the client hangs up (or [`HELD`]).
     struct Answer {
         status: u16,
         headers: Vec<(&'static str, String)>,
         body: Vec<u8>,
         wait: Duration,
         length: bool,
+        held: bool,
     }
+
+    /// The most a held request is held: a deadlock breaker for a client that never hangs up,
+    /// longer than any other budget a test gives; also the budget of a test that checks
+    /// something other than time.
+    const HELD: Duration = Duration::from_secs(30);
 
     fn ok(body: &str) -> Answer {
         Answer {
@@ -1303,6 +1313,7 @@ mod tests {
             body: body.as_bytes().to_vec(),
             wait: Duration::ZERO,
             length: true,
+            held: false,
         }
     }
 
@@ -1313,6 +1324,7 @@ mod tests {
             body: Vec::new(),
             wait: Duration::ZERO,
             length: true,
+            held: false,
         }
     }
 
@@ -1361,6 +1373,11 @@ mod tests {
                         });
                         let a = route(&path);
                         std::thread::sleep(a.wait);
+                        if a.held {
+                            // Until the client hangs up: it reads nothing more of this.
+                            let _ = stream.set_read_timeout(Some(HELD));
+                            let _ = reader.read_to_end(&mut Vec::new());
+                        }
                         let mut head = format!("HTTP/1.1 {} X\r\nConnection: close\r\n", a.status);
                         for (n, v) in &a.headers {
                             head.push_str(&format!("{n}: {v}\r\n"));
@@ -1397,6 +1414,7 @@ mod tests {
 
     fn browser() -> FromBrowser {
         FromBrowser {
+            private: false,
             referer: Some("https://videos.test/watch".into()),
             origin: Some("https://videos.test".into()),
             user_agent: Some("UA/1".into()),
@@ -1475,6 +1493,7 @@ mod tests {
             v,
             Video {
                 language: None,
+                page_titled: false,
                 ..theirs
             }
         );
@@ -1533,10 +1552,15 @@ mod tests {
         assert_eq!(looping.seen().len(), 6);
     }
 
+    /// How long the held stream's first request waits for its answer: well within the budget
+    /// it is given (its second request is held).
+    const FIRST: Duration = Duration::from_millis(1500);
+
     /// More than 2 MB, counted as it comes (with no Content-Length to go by), and 5 s for both
     /// requests together, are too much: nothing then.
     #[test]
     fn too_big_or_too_slow_is_nothing() {
+        use std::time::Instant;
         let padded = |size: usize| {
             let mut text = MASTER.to_owned();
             while text.len() < size {
@@ -1564,23 +1588,42 @@ mod tests {
                 wait: Duration::from_millis(250),
                 ..ok(MEDIA)
             },
+            "/held/master.m3u8" => Answer {
+                wait: FIRST,
+                ..ok(MASTER)
+            },
+            "/held/v720.m3u8" => Answer {
+                held: true,
+                ..ok(MEDIA)
+            },
             _ => Answer {
                 status: 404,
                 ..ok("")
             },
         }));
+        // The sizes, with all the time they may need (a busy machine reads 2 MB slowly).
         assert!(
-            fetch_now(&s.url("/small.m3u8"), BUDGET).is_some(),
+            fetch_now(&s.url("/small.m3u8"), HELD).is_some(),
             "under 2 MB"
         );
-        assert!(
-            fetch_now(&s.url("/big.m3u8"), BUDGET).is_none(),
-            "over 2 MB"
-        );
-        // Each request alone fits in 400 ms; both don't.
-        assert!(fetch_now(&s.url("/slow/master.m3u8"), Duration::from_millis(1000)).is_some());
-        let at = std::time::Instant::now();
-        assert!(fetch_now(&s.url("/slow/master.m3u8"), Duration::from_millis(400)).is_none());
-        assert!(at.elapsed() < Duration::from_millis(900));
+        assert!(fetch_now(&s.url("/big.m3u8"), HELD).is_none(), "over 2 MB");
+        // Slow requests within the budget: the stream.
+        assert!(fetch_now(&s.url("/slow/master.m3u8"), BUDGET).is_some());
+        // The budget counts both requests together: the second, held by the server until the
+        // client hangs up, is given what the first left of it, not a budget of its own. Given
+        // its own, the fetch would take at least the first's time and a whole budget more.
+        // Only the fetch is timed: the runtime's threads start before and end after it (a busy
+        // machine took its time for those too).
+        let budget = Duration::from_secs(2);
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        let opts = crate::net(mdm_engine::Proxy::None);
+        let url = s.url("/held/master.m3u8");
+        let at = Instant::now();
+        let got = rt.block_on(fetch_within(&url, &browser(), &opts, budget));
+        let took = at.elapsed();
+        drop(rt);
+        assert!(got.is_none());
+        assert!(took >= budget, "{took:?}");
+        assert!(took < FIRST + budget, "a budget for each request: {took:?}");
     }
 }

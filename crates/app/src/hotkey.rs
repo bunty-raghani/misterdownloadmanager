@@ -499,15 +499,11 @@ impl Shortcut {
             return false;
         }
         let single_ctrl_or_cmd = !self.alt && !self.shift && (self.ctrl != self.cmd);
-        if single_ctrl_or_cmd
+        !(single_ctrl_or_cmd
             && matches!(
                 self.key,
                 HotKeyCode::A | HotKeyCode::C | HotKeyCode::V | HotKeyCode::X | HotKeyCode::Z
-            )
-        {
-            return false;
-        }
-        true
+            ))
     }
 
     /// Parse a saved shortcut string such as `"Cmd+U"`, `"Cmd+Shift+M"`, `"Ctrl+Alt+D"`, or

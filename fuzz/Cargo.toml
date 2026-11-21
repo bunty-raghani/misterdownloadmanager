@@ -1,0 +1,106 @@
+[package]
+name = "mdm-fuzz"
+description = "Fuzz targets for the parsers that read what the network, web pages and downloaded files send (cargo fuzz, libFuzzer)"
+version = "0.0.0"
+edition = "2024"
+license = "GPL-3.0-or-later"
+publish = false
+
+[package.metadata]
+cargo-fuzz = true
+
+# A workspace of its own: `cargo build`, `test` and `clippy --workspace` at the top never build
+# these (they need nightly and libFuzzer), and the top workspace excludes this folder.
+[workspace]
+members = ["."]
+
+[dependencies]
+libfuzzer-sys = "0.4.12"
+mdm-cnl = { path = "../crates/cnl" }
+mdm-engine = { path = "../crates/engine", default-features = false }
+mdm-extract = { path = "../crates/extract" }
+mdm-tools = { path = "../crates/tools" }
+mdm-torrent = { path = "../crates/torrent" }
+# The Click'n'Load target encrypts its input the way a link site does (the crate's own `aes`).
+aes = "0.9.4"
+base64 = "0.23.1"
+serde_json = "1.0.154"
+url = "2.5.8"
+
+# What the top workspace patches, for the crates used here (see its Cargo.toml): librqbit and its
+# uTP from MDM's commits.
+[patch.crates-io]
+librqbit = { git = "https://github.com/anefzaoui/rqbit.git", rev = "c99ca4b4602e586437912bc9adecbe1111f1ee25" }
+librqbit-bencode = { git = "https://github.com/anefzaoui/rqbit.git", rev = "c99ca4b4602e586437912bc9adecbe1111f1ee25" }
+librqbit-buffers = { git = "https://github.com/anefzaoui/rqbit.git", rev = "c99ca4b4602e586437912bc9adecbe1111f1ee25" }
+librqbit-clone-to-owned = { git = "https://github.com/anefzaoui/rqbit.git", rev = "c99ca4b4602e586437912bc9adecbe1111f1ee25" }
+librqbit-core = { git = "https://github.com/anefzaoui/rqbit.git", rev = "c99ca4b4602e586437912bc9adecbe1111f1ee25" }
+librqbit-dht = { git = "https://github.com/anefzaoui/rqbit.git", rev = "c99ca4b4602e586437912bc9adecbe1111f1ee25" }
+librqbit-lsd = { git = "https://github.com/anefzaoui/rqbit.git", rev = "c99ca4b4602e586437912bc9adecbe1111f1ee25" }
+librqbit-peer-protocol = { git = "https://github.com/anefzaoui/rqbit.git", rev = "c99ca4b4602e586437912bc9adecbe1111f1ee25" }
+librqbit-sha1-wrapper = { git = "https://github.com/anefzaoui/rqbit.git", rev = "c99ca4b4602e586437912bc9adecbe1111f1ee25" }
+librqbit-tracker-comms = { git = "https://github.com/anefzaoui/rqbit.git", rev = "c99ca4b4602e586437912bc9adecbe1111f1ee25" }
+librqbit-upnp = { git = "https://github.com/anefzaoui/rqbit.git", rev = "c99ca4b4602e586437912bc9adecbe1111f1ee25" }
+librqbit-utp = { git = "https://github.com/ikatson/librqbit-utp.git", rev = "06e1c53c8df6edb2830d6aab64a6d4bed8479908" }
+
+# Fuzzing builds keep the overflow and debug checks on, so an arithmetic overflow is a finding.
+[profile.release]
+debug = 1
+debug-assertions = true
+overflow-checks = true
+
+[[bin]]
+name = "hls"
+path = "fuzz_targets/hls.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "ytdlp_json"
+path = "fuzz_targets/ytdlp_json.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "web_page"
+path = "fuzz_targets/web_page.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "file_name"
+path = "fuzz_targets/file_name.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "torrent"
+path = "fuzz_targets/torrent.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "signature"
+path = "fuzz_targets/signature.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "click_n_load"
+path = "fuzz_targets/click_n_load.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "archive"
+path = "fuzz_targets/archive.rs"
+test = false
+doc = false
+bench = false

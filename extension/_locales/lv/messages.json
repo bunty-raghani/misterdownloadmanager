@@ -92,9 +92,6 @@
       }
     }
   },
-  "popup_undo": {
-    "message": "Atsaukt"
-  },
   "popup_excluded": {
     "message": "Lejupielādes no $site$ paliek pārlūkprogrammā",
     "placeholders": {
@@ -148,6 +145,9 @@
   },
   "declined_integration_off": {
     "message": "Opcijās → Vispārīgi ir izslēgta opcija Izmantot uzlabotu pārlūkprogrammas integrāciju."
+  },
+  "declined_torrents": {
+    "message": "Tas ir torrents, un opcija „Atvērt magnētsaites un .torrent failus ar Mister Download Manager“ ir izslēgta torrentu iestatījumos."
   },
   "declined_site_access": {
     "message": "Paplašinājumam nav atļauts lasīt šo vietni (pārlūkprogrammas vietnes piekļuve)."
@@ -328,5 +328,424 @@
   },
   "video_original": {
     "message": "oriģināls"
+  },
+  "video_compatible": {
+    "message": "Vislabākā saderība"
+  },
+  "popup_video_hide_fullscreen": {
+    "message": "Paslēpt lejupielādes pogu pilnekrāna režīmā"
+  },
+  "popup_video_hide_fullscreen_title": {
+    "message": "Kamēr lapa ir pilnekrāna režīmā, tās videoklipiem netiek rādīta lejupielādes poga"
+  },
+  "popup_remote_forget": {
+    "message": "Aizmirst"
+  },
+  "popup_gear": {
+    "message": "Opcijas programmā Mister Download Manager"
+  },
+  "popup_tabs": {
+    "message": "Uznirstošā loga sadaļas"
+  },
+  "popup_tab_downloads": {
+    "message": "Lejupielādes"
+  },
+  "popup_tab_page": {
+    "message": "Šī lapa"
+  },
+  "popup_tab_settings": {
+    "message": "Iestatījumi"
+  },
+  "popup_conn": {
+    "message": "Savienots · $version$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.5.2"
+      }
+    }
+  },
+  "popup_conn_plain": {
+    "message": "Savienots"
+  },
+  "popup_conn_off": {
+    "message": "Nav savienots"
+  },
+  "popup_conn_paused": {
+    "message": "Pauzēta"
+  },
+  "popup_conn_update": {
+    "message": "Atjaunināt Mister Download Manager"
+  },
+  "popup_conn_remote": {
+    "message": "Sūta uz $server$",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_cancel": {
+    "message": "Atcelt"
+  },
+  "popup_page_none": {
+    "message": "Šī nav tīmekļa lapa: šeit nav ko darīt."
+  },
+  "popup_exclude_by_rule": {
+    "message": "Atstāts pārlūkprogrammai pēc noteikuma sadaļā Opcijas"
+  },
+  "popup_dl_search": {
+    "message": "Meklēt lejupielādes"
+  },
+  "popup_dl_filters": {
+    "message": "Rādīt"
+  },
+  "popup_dl_all": {
+    "message": "Visi"
+  },
+  "popup_dl_running": {
+    "message": "Notiek"
+  },
+  "popup_dl_done_filter": {
+    "message": "Pabeigts"
+  },
+  "popup_dl_failed_filter": {
+    "message": "Neizdevās"
+  },
+  "popup_dl_clear": {
+    "message": "Notīrīt pabeigtās"
+  },
+  "popup_dl_running_count": {
+    "message": "$count$ lejupielādē pašlaik",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_remote": {
+    "message": "Šīs ir Mister Download Manager lejupielādes serverī $server$. Atveriet to failus tur.",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_dl_more": {
+    "message": "Jaunākās $shown$ no $total$. Mister Download Manager uzskaita tās visas.",
+    "placeholders": {
+      "shown": {
+        "content": "$1",
+        "example": "60"
+      },
+      "total": {
+        "content": "$2",
+        "example": "245"
+      }
+    }
+  },
+  "popup_dl_of": {
+    "message": "$done$ no $size$",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "12.3 MB"
+      },
+      "size": {
+        "content": "$2",
+        "example": "48.7 MB"
+      }
+    }
+  },
+  "popup_dl_left": {
+    "message": "Atlicis $time$",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "0:42"
+      }
+    }
+  },
+  "popup_dl_starting": {
+    "message": "Sākas..."
+  },
+  "popup_dl_paused": {
+    "message": "Pauzēta"
+  },
+  "popup_dl_waiting": {
+    "message": "Gaida"
+  },
+  "popup_dl_done": {
+    "message": "Pabeigts"
+  },
+  "popup_dl_just_now": {
+    "message": "tikko"
+  },
+  "popup_dl_failed": {
+    "message": "Neizdevās"
+  },
+  "popup_dl_failed_why": {
+    "message": "Neizdevās: $why$",
+    "placeholders": {
+      "why": {
+        "content": "$1",
+        "example": "the server refused the connection"
+      }
+    }
+  },
+  "popup_dl_gone": {
+    "message": "Fails dzēsts vai pārvietots"
+  },
+  "popup_dl_loading": {
+    "message": "Meklē lejupielādes..."
+  },
+  "popup_dl_none": {
+    "message": "Vēl nav lejupielāžu"
+  },
+  "popup_dl_none_text": {
+    "message": "Šeit parādās tas, ko lejupielādējat ar Mister Download Manager."
+  },
+  "popup_dl_no_match": {
+    "message": "Nekas neatbilst"
+  },
+  "popup_dl_no_match_text": {
+    "message": "Nevienas lejupielādes nosaukumā vai adresē nav „$words$“.",
+    "placeholders": {
+      "words": {
+        "content": "$1",
+        "example": "report"
+      }
+    }
+  },
+  "popup_dl_show_all": {
+    "message": "Rādīt visas lejupielādes"
+  },
+  "popup_list_off": {
+    "message": "Mister Download Manager nedarbojas"
+  },
+  "popup_list_off_text": {
+    "message": "Palaidiet to, lai šeit redzētu savas lejupielādes."
+  },
+  "popup_list_start": {
+    "message": "Palaist Mister Download Manager"
+  },
+  "popup_list_old": {
+    "message": "Atjaunināt Mister Download Manager"
+  },
+  "popup_list_old_text": {
+    "message": "Šī versija vēl nevar uzskaitīt savas lejupielādes šeit."
+  },
+  "popup_list_busy": {
+    "message": "Mister Download Manager ir aizņemts. Mēģina vēlreiz..."
+  },
+  "popup_list_unreached": {
+    "message": "Nevar sasniegt Mister Download Manager"
+  },
+  "popup_list_remote_unreachable": {
+    "message": "Nevar sasniegt Mister Download Manager serverī $server$",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_list_remote_unreachable_text": {
+    "message": "Pārbaudiet, vai tas darbojas un vai šī pārlūkprogramma pieņem tā sertifikātu (Iestatījumi → Sūtīt lejupielādes uz → Atvērt to).",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_act_open": {
+    "message": "Atvērt"
+  },
+  "popup_act_open_named": {
+    "message": "Atvērt $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_folder": {
+    "message": "Rādīt mapē"
+  },
+  "popup_act_folder_named": {
+    "message": "Rādīt $file$ mapē",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_copy_file": {
+    "message": "Kopēt failu"
+  },
+  "popup_act_share": {
+    "message": "Kopīgot..."
+  },
+  "popup_act_copy_link": {
+    "message": "Kopēt saiti"
+  },
+  "popup_act_pause": {
+    "message": "Pauzēt"
+  },
+  "popup_act_pause_named": {
+    "message": "Pauzēt $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_resume": {
+    "message": "Atsākt"
+  },
+  "popup_act_resume_named": {
+    "message": "Atsākt $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_again": {
+    "message": "Lejupielādēt vēlreiz"
+  },
+  "popup_act_remove": {
+    "message": "Noņemt no saraksta"
+  },
+  "popup_act_delete": {
+    "message": "Dzēst failu..."
+  },
+  "popup_act_more": {
+    "message": "Citas darbības"
+  },
+  "popup_act_more_named": {
+    "message": "Citas darbības failam $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_title": {
+    "message": "Dzēst failu?"
+  },
+  "popup_ask_delete": {
+    "message": "$file$ tiks dzēsts no jūsu datora, un lejupielāde tiks noņemta no saraksta. To nevar atsaukt.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_ok": {
+    "message": "Dzēst"
+  },
+  "popup_ask_clear_title": {
+    "message": "Notīrīt pabeigtās lejupielādes?"
+  },
+  "popup_ask_clear": {
+    "message": "Pabeigtās $count$ lejupielādes tiks noņemtas no saraksta. To faili paliks savās vietās.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "8"
+      }
+    }
+  },
+  "popup_ask_clear_ok": {
+    "message": "Notīrīt"
+  },
+  "popup_said_file": {
+    "message": "Nokopēts $file$. Ielīmējiet to mapē, tērzēšanā vai ziņojumā.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_link": {
+    "message": "Saite nokopēta"
+  },
+  "popup_said_removed": {
+    "message": "$file$ noņemts no saraksta",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_deleted": {
+    "message": "$file$ dzēsts",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_again": {
+    "message": "Notiek $file$ lejupielāde vēlreiz",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_cleared": {
+    "message": "Pabeigtās lejupielādes notīrītas"
+  },
+  "popup_act_gone": {
+    "message": "Šī lejupielāde vairs nav sarakstā."
+  },
+  "popup_act_missing": {
+    "message": "Fails vairs neatrodas saglabāšanas vietā (pārvietots vai dzēsts)."
+  },
+  "popup_act_running": {
+    "message": "Vispirms pauzējiet."
+  },
+  "popup_act_cant": {
+    "message": "To pašlaik nevar izdarīt ar šo lejupielādi."
+  },
+  "popup_act_unsupported": {
+    "message": "Šī sistēma to nevar izdarīt."
+  },
+  "popup_act_off": {
+    "message": "Mister Download Manager nedarbojas."
+  },
+  "popup_act_busy": {
+    "message": "Mister Download Manager neatbildēja laikā. Mēģiniet vēlreiz."
+  },
+  "popup_act_failed": {
+    "message": "Neizdevās. Mēģiniet vēlreiz."
+  },
+  "status_running": {
+    "message": "Notiek lejupielāde: $count$",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_open_remote": {
+    "message": "Atvērt tā lapu"
   }
 }

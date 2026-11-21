@@ -97,6 +97,15 @@ Right-click the list's blank space for **Add new download**, **Select all**, **A
 - On a finished download, double-click shows its **Properties**. To open the file instead, right-click any download and choose **On Double click → Open**.
 - **Alt+Enter** always opens **Properties**.
 
+## Dragging files out of the list
+
+On Windows, drag a finished download from the list onto a folder in Explorer, a program (a
+player, an archive tool) or a chat to drop its file there. Select several to drag them all;
+downloads that haven't finished stay behind. As when you drag files in Explorer, a folder on the
+same drive gets them moved and another drive gets copies (hold **Shift** to move them, **Ctrl**
+to copy them, **Alt** for shortcuts). A download follows its moved file: the list and **Open**
+find it in its new place. On macOS and Linux, use **Open folder** and drag the file from there.
+
 The right-click menu has everything you can do with a download: **Open**, **Open with...**, **Open folder**, **Move/Rename**, **Redownload**, **Resume Download**, **Stop Download**, **Refresh download address**, **Verify checksum...**, **Remove**, **Add to queue** and **Properties**.
 
 ## Properties
@@ -139,18 +148,18 @@ Typing the start of a name while the list has the focus jumps to the first downl
 
 Select one or more downloads and press **Delete**, click **Delete** on the toolbar, or choose **File → Remove**. MDM asks first:
 
-- **Also delete the file from disk** — tick it to delete the files too. For an unfinished download, this deletes the part downloaded so far. Leave it unticked to take the downloads off the list and keep the files.
-- **Don't show this dialog again** — MDM stops asking and does what you answered this time. To be asked again, tick **Options → General → Confirm before deleting downloads**.
+- **Also delete the file from disk** — unticked every time the question opens. Tick it to delete the files too. For an unfinished download, this deletes the part downloaded so far. When finished downloads are among the ones you delete, the question says how many finished files go with them. Leave it unticked to take the downloads off the list and keep the files.
+- **Don't show this dialog again** — MDM stops asking: **Delete** then only takes downloads off the list and keeps their files. To be asked again, tick **Options → General → Confirm before deleting downloads**.
 
 Click **Yes** to delete, or **No** to keep everything.
 
-**Shift+Delete** opens the same question with **Also delete the file from disk** already ticked, for that time only. After a plain **Delete**, MDM remembers your answer and ticks the box the same way next time.
+**Shift+Delete** (or **Remove with files**) opens the same question with **Also delete the file from disk** already ticked, for that time only. It always asks, even after **Don't show this dialog again**: MDM never deletes a file from the disk without asking. The box is never remembered: the next **Delete** starts unticked again.
 
 After deleting, the next download in the list is selected, so you can press **Delete** again.
 
 A download that is running isn't deleted. Stop it first.
 
-**Delete Completed** on the toolbar (or **Downloads → Delete All Completed**) removes every finished download from the list, with the same question.
+**Delete Completed** on the toolbar (or **Downloads → Delete All Completed**) removes every finished download from the list, with the same question. Their files stay unless you tick **Also delete the files from disk** in that question.
 
 ![Confirm deletion of downloads, with Also delete the file from disk](images/help/delete-confirm.webp)
 *Tick Also delete the file from disk only if you want the file gone too.*

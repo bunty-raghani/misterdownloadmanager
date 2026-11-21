@@ -92,9 +92,6 @@
       }
     }
   },
-  "popup_undo": {
-    "message": "ಮತ್ತೆ ಸೇರಿಸಿ"
-  },
   "popup_excluded": {
     "message": "$site$ ನಿಂದ ಡೌನ್‌ಲೋಡ್‌ಗಳು ಬ್ರೌಸರ್‌ನಲ್ಲೇ ಉಳಿಯುತ್ತವೆ",
     "placeholders": {
@@ -148,6 +145,9 @@
   },
   "declined_integration_off": {
     "message": "ಆಯ್ಕೆಗಳು → ಸಾಮಾನ್ಯದಲ್ಲಿ ಸುಧಾರಿತ ಬ್ರೌಸರ್ ಇಂಟಿಗ್ರೇಷನ್ ಬಳಸಿ ಆಫ್ ಆಗಿದೆ."
+  },
+  "declined_torrents": {
+    "message": "ಇದು ಟೊರೆಂಟ್ ಆಗಿದೆ, ಮತ್ತು ಟೊರೆಂಟ್ ಸೆಟ್ಟಿಂಗ್‌ಗಳಲ್ಲಿ Mister Download Manager ನೊಂದಿಗೆ ಮ್ಯಾಗ್ನೆಟ್ ಲಿಂಕ್‌ಗಳು ಮತ್ತು .torrent ಫೈಲ್‌ಗಳನ್ನು ತೆರೆಯಿರಿ ಆಫ್ ಆಗಿದೆ."
   },
   "declined_site_access": {
     "message": "ಈ ಸೈಟ್ ಅನ್ನು ಓದಲು ವಿಸ್ತರಣೆಗೆ ಅನುಮತಿ ಇಲ್ಲ (ಬ್ರೌಸರ್‌ನ ಸೈಟ್ ಪ್ರವೇಶ)."
@@ -328,5 +328,424 @@
   },
   "video_original": {
     "message": "ಮೂಲ"
+  },
+  "video_compatible": {
+    "message": "ಹೆಚ್ಚು ಹೊಂದಾಣಿಕೆಯಾಗುವ"
+  },
+  "popup_video_hide_fullscreen": {
+    "message": "ಪೂರ್ಣ ಪರದೆಯಲ್ಲಿರುವಾಗ ಡೌನ್‌ಲೋಡ್ ಬಟನ್ ಮರೆಮಾಡಿ"
+  },
+  "popup_video_hide_fullscreen_title": {
+    "message": "ಪುಟವು ಪೂರ್ಣ ಪರದೆಯಲ್ಲಿರುವಾಗ, ಅದರ ವೀಡಿಯೊಗಳು ಡೌನ್‌ಲೋಡ್ ವೀಡಿಯೊ ಬಟನ್ ಅನ್ನು ತೋರಿಸುವುದಿಲ್ಲ"
+  },
+  "popup_remote_forget": {
+    "message": "ಮರೆತುಬಿಡಿ"
+  },
+  "popup_gear": {
+    "message": "Mister Download Manager ನಲ್ಲಿ ಆಯ್ಕೆಗಳು"
+  },
+  "popup_tabs": {
+    "message": "ಪಾಪ್‌ಅಪ್ ವಿಭಾಗಗಳು"
+  },
+  "popup_tab_downloads": {
+    "message": "ಡೌನ್‌ಲೋಡ್‌ಗಳು"
+  },
+  "popup_tab_page": {
+    "message": "ಈ ಪುಟ"
+  },
+  "popup_tab_settings": {
+    "message": "ಸೆಟ್ಟಿಂಗ್‌ಗಳು"
+  },
+  "popup_conn": {
+    "message": "ಸಂಪರ್ಕಿಸಲಾಗಿದೆ · $version$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.5.2"
+      }
+    }
+  },
+  "popup_conn_plain": {
+    "message": "ಸಂಪರ್ಕಿಸಲಾಗಿದೆ"
+  },
+  "popup_conn_off": {
+    "message": "ಸಂಪರ್ಕಗೊಂಡಿಲ್ಲ"
+  },
+  "popup_conn_paused": {
+    "message": "ವಿರಾಮಗೊಳಿಸಲಾಗಿದೆ"
+  },
+  "popup_conn_update": {
+    "message": "Mister Download Manager ನವೀಕರಿಸಿ"
+  },
+  "popup_conn_remote": {
+    "message": "$server$ ಗೆ ಕಳುಹಿಸಲಾಗುತ್ತಿದೆ",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_cancel": {
+    "message": "ರದ್ದುಮಾಡಿ"
+  },
+  "popup_page_none": {
+    "message": "ಇದು ವೆಬ್ ಪುಟವಲ್ಲ: ಇಲ್ಲಿ ಏನೂ ಮಾಡಲು ಇಲ್ಲ."
+  },
+  "popup_exclude_by_rule": {
+    "message": "ಆಯ್ಕೆಗಳಲ್ಲಿನ ನಿಯಮದಿಂದ ಬ್ರೌಸರ್‌ಗೆ ಬಿಡಲಾಗಿದೆ"
+  },
+  "popup_dl_search": {
+    "message": "ಡೌನ್‌ಲೋಡ್‌ಗಳನ್ನು ಹುಡುಕಿ"
+  },
+  "popup_dl_filters": {
+    "message": "ತೋರಿಸಿ"
+  },
+  "popup_dl_all": {
+    "message": "ಎಲ್ಲಾ"
+  },
+  "popup_dl_running": {
+    "message": "ಚಾಲನೆಯಲ್ಲಿದೆ"
+  },
+  "popup_dl_done_filter": {
+    "message": "ಮುಗಿದಿದೆ"
+  },
+  "popup_dl_failed_filter": {
+    "message": "ವಿಫಲವಾಗಿದೆ"
+  },
+  "popup_dl_clear": {
+    "message": "ಪೂರ್ಣಗೊಂಡವುಗಳನ್ನು ತೆರವುಗೊಳಿಸಿ"
+  },
+  "popup_dl_running_count": {
+    "message": "$count$ ಈಗ ಡೌನ್‌ಲೋಡ್ ಆಗುತ್ತಿದೆ",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_remote": {
+    "message": "ಇವು $server$ ನಲ್ಲಿರುವ Mister Download Manager ನ ಡೌನ್‌ಲೋಡ್‌ಗಳು. ಅವುಗಳ ಫೈಲ್‌ಗಳನ್ನು ಅಲ್ಲಿ ತೆರೆಯಿರಿ.",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_dl_more": {
+    "message": "$total$ ರಲ್ಲಿ ಹೊಸ $shown$. Mister Download Manager ಎಲ್ಲವನ್ನೂ ಪಟ್ಟಿ ಮಾಡುತ್ತದೆ.",
+    "placeholders": {
+      "shown": {
+        "content": "$1",
+        "example": "60"
+      },
+      "total": {
+        "content": "$2",
+        "example": "245"
+      }
+    }
+  },
+  "popup_dl_of": {
+    "message": "$size$ ರಲ್ಲಿ $done$",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "12.3 MB"
+      },
+      "size": {
+        "content": "$2",
+        "example": "48.7 MB"
+      }
+    }
+  },
+  "popup_dl_left": {
+    "message": "$time$ ಉಳಿದಿದೆ",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "0:42"
+      }
+    }
+  },
+  "popup_dl_starting": {
+    "message": "ಪ್ರಾರಂಭಿಸಲಾಗುತ್ತಿದೆ..."
+  },
+  "popup_dl_paused": {
+    "message": "ವಿರಾಮಗೊಳಿಸಲಾಗಿದೆ"
+  },
+  "popup_dl_waiting": {
+    "message": "ಕಾಯಲಾಗುತ್ತಿದೆ"
+  },
+  "popup_dl_done": {
+    "message": "ಮುಗಿದಿದೆ"
+  },
+  "popup_dl_just_now": {
+    "message": "ಈಗಷ್ಟೇ"
+  },
+  "popup_dl_failed": {
+    "message": "ವಿಫಲವಾಗಿದೆ"
+  },
+  "popup_dl_failed_why": {
+    "message": "ವಿಫಲವಾಗಿದೆ: $why$",
+    "placeholders": {
+      "why": {
+        "content": "$1",
+        "example": "the server refused the connection"
+      }
+    }
+  },
+  "popup_dl_gone": {
+    "message": "ಫೈಲ್ ಅಳಿಸಲಾಗಿದೆ ಅಥವಾ ಸರಿಸಲಾಗಿದೆ"
+  },
+  "popup_dl_loading": {
+    "message": "ಡೌನ್‌ಲೋಡ್‌ಗಳಿಗಾಗಿ ಹುಡುಕಲಾಗುತ್ತಿದೆ..."
+  },
+  "popup_dl_none": {
+    "message": "ಇನ್ನೂ ಯಾವುದೇ ಡೌನ್‌ಲೋಡ್‌ಗಳಿಲ್ಲ"
+  },
+  "popup_dl_none_text": {
+    "message": "Mister Download Manager ನೊಂದಿಗೆ ನೀವು ಡೌನ್‌ಲೋಡ್ ಮಾಡುವುದು ಇಲ್ಲಿ ಕಾಣಿಸುತ್ತದೆ."
+  },
+  "popup_dl_no_match": {
+    "message": "ಯಾವುದೂ ಹೊಂದಿಕೆಯಾಗುವುದಿಲ್ಲ"
+  },
+  "popup_dl_no_match_text": {
+    "message": "ಯಾವುದೇ ಡೌನ್‌ಲೋಡ್‌ನ ಹೆಸರು ಅಥವಾ ವಿಳಾಸದಲ್ಲಿ “$words$” ಇಲ್ಲ.",
+    "placeholders": {
+      "words": {
+        "content": "$1",
+        "example": "report"
+      }
+    }
+  },
+  "popup_dl_show_all": {
+    "message": "ಎಲ್ಲಾ ಡೌನ್‌ಲೋಡ್‌ಗಳನ್ನು ತೋರಿಸಿ"
+  },
+  "popup_list_off": {
+    "message": "Mister Download Manager ಚಾಲನೆಯಲ್ಲಿಲ್ಲ"
+  },
+  "popup_list_off_text": {
+    "message": "ನಿಮ್ಮ ಡೌನ್‌ಲೋಡ್‌ಗಳನ್ನು ಇಲ್ಲಿ ನೋಡಲು ಅದನ್ನು ಪ್ರಾರಂಭಿಸಿ."
+  },
+  "popup_list_start": {
+    "message": "Mister Download Manager ಪ್ರಾರಂಭಿಸಿ"
+  },
+  "popup_list_old": {
+    "message": "Mister Download Manager ನವೀಕರಿಸಿ"
+  },
+  "popup_list_old_text": {
+    "message": "ಈ ಆವೃತ್ತಿಯು ತನ್ನ ಡೌನ್‌ಲೋಡ್‌ಗಳನ್ನು ಇಲ್ಲಿ ಪಟ್ಟಿ ಮಾಡಲು ಸಾಧ್ಯವಿಲ್ಲ."
+  },
+  "popup_list_busy": {
+    "message": "Mister Download Manager ಕಾರ್ಯನಿರತವಾಗಿದೆ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಲಾಗುತ್ತಿದೆ..."
+  },
+  "popup_list_unreached": {
+    "message": "Mister Download Manager ಅನ್ನು ತಲುಪಲು ಸಾಧ್ಯವಿಲ್ಲ"
+  },
+  "popup_list_remote_unreachable": {
+    "message": "$server$ ನಲ್ಲಿರುವ Mister Download Manager ಅನ್ನು ತಲುಪಲು ಸಾಧ್ಯವಿಲ್ಲ",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_list_remote_unreachable_text": {
+    "message": "ಇದು ಚಾಲನೆಯಲ್ಲಿದೆ ಮತ್ತು ಈ ಬ್ರೌಸರ್ ಅದರ ಪ್ರಮಾಣಪತ್ರವನ್ನು ಸ್ವೀಕರಿಸುತ್ತದೆ ಎಂದು ಪರಿಶೀಲಿಸಿ (ಸೆಟ್ಟಿಂಗ್‌ಗಳು → ಡೌನ್‌ಲೋಡ್‌ಗಳನ್ನು ಇಲ್ಲಿಗೆ ಕಳುಹಿಸಿ → ಅದನ್ನು ತೆರೆಯಿರಿ).",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_act_open": {
+    "message": "ತೆರೆಯಿರಿ"
+  },
+  "popup_act_open_named": {
+    "message": "$file$ ತೆರೆಯಿರಿ",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_folder": {
+    "message": "ಫೋಲ್ಡರ್‌ನಲ್ಲಿ ತೋರಿಸಿ"
+  },
+  "popup_act_folder_named": {
+    "message": "$file$ ಅನ್ನು ಫೋಲ್ಡರ್‌ನಲ್ಲಿ ತೋರಿಸಿ",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_copy_file": {
+    "message": "ಫೈಲ್ ನಕಲಿಸಿ"
+  },
+  "popup_act_share": {
+    "message": "ಹಂಚಿಕೊಳ್ಳಿ..."
+  },
+  "popup_act_copy_link": {
+    "message": "ಲಿಂಕ್ ನಕಲಿಸಿ"
+  },
+  "popup_act_pause": {
+    "message": "ವಿರಾಮಗೊಳಿಸಿ"
+  },
+  "popup_act_pause_named": {
+    "message": "$file$ ವಿರಾಮಗೊಳಿಸಿ",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_resume": {
+    "message": "ಮರುಪ್ರಾರಂಭಿಸಿ"
+  },
+  "popup_act_resume_named": {
+    "message": "$file$ ಮರುಪ್ರಾರಂಭಿಸಿ",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_again": {
+    "message": "ಮತ್ತೆ ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ"
+  },
+  "popup_act_remove": {
+    "message": "ಪಟ್ಟಿಯಿಂದ ತೆಗೆದುಹಾಕಿ"
+  },
+  "popup_act_delete": {
+    "message": "ಫೈಲ್ ಅಳಿಸಿ..."
+  },
+  "popup_act_more": {
+    "message": "ಹೆಚ್ಚಿನ ಕ್ರಿಯೆಗಳು"
+  },
+  "popup_act_more_named": {
+    "message": "$file$ ಗಾಗಿ ಹೆಚ್ಚಿನ ಕ್ರಿಯೆಗಳು",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_title": {
+    "message": "ಫೈಲ್ ಅಳಿಸಬೇಕೇ?"
+  },
+  "popup_ask_delete": {
+    "message": "$file$ ಅನ್ನು ನಿಮ್ಮ ಕಂಪ್ಯೂಟರ್‌ನಿಂದ ಅಳಿಸಲಾಗುತ್ತದೆ ಮತ್ತು ಡೌನ್‌ಲೋಡ್ ಅನ್ನು ಪಟ್ಟಿಯಿಂದ ತೆಗೆದುಹಾಕಲಾಗುತ್ತದೆ. ಇದನ್ನು ರದ್ದುಗೊಳಿಸಲು ಸಾಧ್ಯವಿಲ್ಲ.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_ok": {
+    "message": "ಅಳಿಸಿ"
+  },
+  "popup_ask_clear_title": {
+    "message": "ಪೂರ್ಣಗೊಂಡ ಡೌನ್‌ಲೋಡ್‌ಗಳನ್ನು ಪಟ್ಟಿಯಿಂದ ತೆರವುಗೊಳಿಸಬೇಕೇ?"
+  },
+  "popup_ask_clear": {
+    "message": "$count$ ಪೂರ್ಣಗೊಂಡ ಡೌನ್‌ಲೋಡ್‌ಗಳನ್ನು ಪಟ್ಟಿಯಿಂದ ತೆಗೆದುಹಾಕಬೇಕೇ? ಅವುಗಳ ಫೈಲ್‌ಗಳು ಅವು ಇರುವಲ್ಲೇ ಇರುತ್ತವೆ.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "8"
+      }
+    }
+  },
+  "popup_ask_clear_ok": {
+    "message": "ತೆರವುಗೊಳಿಸಿ"
+  },
+  "popup_said_file": {
+    "message": "$file$ ಅನ್ನು ನಕಲಿಸಲಾಗಿದೆ. ಅದನ್ನು ಫೋಲ್ಡರ್, ಚಾಟ್ ಅಥವಾ ಸಂದೇಶಕ್ಕೆ ಅಂಟಿಸಿ.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_link": {
+    "message": "ಲಿಂಕ್ ನಕಲಿಸಲಾಗಿದೆ"
+  },
+  "popup_said_removed": {
+    "message": "$file$ ಅನ್ನು ಪಟ್ಟಿಯಿಂದ ತೆಗೆದುಹಾಕಲಾಗಿದೆ",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_deleted": {
+    "message": "$file$ ಅಳಿಸಲಾಗಿದೆ",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_again": {
+    "message": "$file$ ಅನ್ನು ಮತ್ತೆ ಡೌನ್‌ಲೋಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_cleared": {
+    "message": "ಪೂರ್ಣಗೊಂಡ ಡೌನ್‌ಲೋಡ್‌ಗಳನ್ನು ತೆರವುಗೊಳಿಸಲಾಗಿದೆ"
+  },
+  "popup_act_gone": {
+    "message": "ಆ ಡೌನ್‌ಲೋಡ್ ಇನ್ನು ಪಟ್ಟಿಯಲ್ಲಿಲ್ಲ."
+  },
+  "popup_act_missing": {
+    "message": "ಅದರ ಫೈಲ್ ಅನ್ನು ಉಳಿಸಿದ ಸ್ಥಳದಲ್ಲಿಲ್ಲ (ಸರಿಸಲಾಗಿದೆ ಅಥವಾ ಅಳಿಸಲಾಗಿದೆ)."
+  },
+  "popup_act_running": {
+    "message": "ಮೊದಲು ಅದನ್ನು ವಿರಾಮಗೊಳಿಸಿ."
+  },
+  "popup_act_cant": {
+    "message": "ಈ ಡೌನ್‌ಲೋಡ್‌ಗೆ ಈಗ ಅದನ್ನು ಮಾಡಲು ಸಾಧ್ಯವಿಲ್ಲ."
+  },
+  "popup_act_unsupported": {
+    "message": "ಈ ಸಿಸ್ಟಮ್ ಅದನ್ನು ಮಾಡಲು ಸಾಧ್ಯವಿಲ್ಲ."
+  },
+  "popup_act_off": {
+    "message": "Mister Download Manager ಚಾಲನೆಯಲ್ಲಿಲ್ಲ."
+  },
+  "popup_act_busy": {
+    "message": "Mister Download Manager ಸಮಯಕ್ಕೆ ಉತ್ತರಿಸಲಿಲ್ಲ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ."
+  },
+  "popup_act_failed": {
+    "message": "ಅದು ಕೆಲಸ ಮಾಡಲಿಲ್ಲ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ."
+  },
+  "status_running": {
+    "message": "ಡೌನ್‌ಲೋಡ್ ಆಗುತ್ತಿದೆ: $count$",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_open_remote": {
+    "message": "ಅದರ ಪುಟವನ್ನು ತೆರೆಯಿರಿ"
   }
 }

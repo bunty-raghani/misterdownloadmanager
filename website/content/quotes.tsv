@@ -1,0 +1,14 @@
+# What people wrote about MDM, for the home page and /press.html (build.py quotes_sheet). Copied
+# exactly from the page the link opens, checked there on the date in the comment line below; never
+# shortened, combined or corrected (typos stay). Not quoted: lines calling MDM a clone, identical
+# to IDM or reverse engineered. The English column is our translation of a quote in another
+# language, shown under the original and marked as translated; for an English quote, the original
+# again (other languages' pages translate it).
+# Checked: 2026-11-18
+# lang	language	who	role	outlet	date	url	quote	english
+en	English	bLue	Review	AlternativeTo	2026-11-16	https://alternativeto.net/software/mister-download-manager/about/	Better than IDM with more features and it's free.	Better than IDM with more features and it's free.
+en	English	nighter	Review	Firefox Add-ons	2026-11-10	https://addons.mozilla.org/firefox/addon/mister-download-manager/reviews/2783620/	So far I've had no issues with this thing. UI is similar to IDM, downloads are fast, ram usage is really small like 17mb while running in the backround compared to IDM which used almost 100-200mb. 10/10 would recommend	So far I've had no issues with this thing. UI is similar to IDM, downloads are fast, ram usage is really small like 17mb while running in the backround compared to IDM which used almost 100-200mb. 10/10 would recommend
+en	English	Asad Ali	Article	Asad Webs	2026-11-10	https://asadwebs.com/blog/mister-download-manager-free-idm-alternative	MDM's privacy story is simple, and it is the strongest argument for the program after the price.	MDM's privacy story is simple, and it is the strongest argument for the program after the price.
+zh-Hant	Chinese	Pseric	Article	free.com.tw	2026-11-16	https://free.com.tw/mister-download-manager/	用過 IDM 的人幾乎可以直接上手	Anyone who has used IDM can start using it almost right away.
+it	Italian	Linux Easy	Article	Linux Easy	2026-11-11	https://www.linuxeasy.org/mister-download-manager-ossia-lalternativa-open-a-idm-per-linux/	Mister Download Manager rappresenta una proposta interessante per chi cerca un gestore di download moderno, gratuito e open source.	Mister Download Manager is an interesting option for anyone looking for a modern, free and open-source download manager.
+tr	Turkish	mkyb	Forum post	Tahribat	2026-11-13	https://www.tahribat.com/forum/mister-download-manager---ucretsiz-idm-alternatifi-261841	Bayağı başarılı tavsiye ederim.	Really well done, I recommend it.

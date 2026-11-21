@@ -92,9 +92,6 @@
       }
     }
   },
-  "popup_undo": {
-    "message": "Geri al"
-  },
   "popup_excluded": {
     "message": "$site$ adresinden yapılan indirmeler tarayıcıda kalır",
     "placeholders": {
@@ -148,6 +145,9 @@
   },
   "declined_integration_off": {
     "message": "Gelişmiş tarayıcı entegrasyonunu kullan seçeneği, Seçenekler → Genel bölümünde kapalı."
+  },
+  "declined_torrents": {
+    "message": "Bu bir torrent ve Torrent ayarlarında Mister Download Manager ile mıknatıs bağlantılarını ve .torrent dosyalarını aç seçeneği kapalı."
   },
   "declined_site_access": {
     "message": "Uzantının bu siteyi okumasına izin verilmiyor (tarayıcının site erişimi)."
@@ -328,5 +328,424 @@
   },
   "video_original": {
     "message": "orijinal"
+  },
+  "video_compatible": {
+    "message": "En uyumlu"
+  },
+  "popup_video_hide_fullscreen": {
+    "message": "Tam ekrandayken indirme düğmesini gizle"
+  },
+  "popup_video_hide_fullscreen_title": {
+    "message": "Sayfa tam ekrandayken videolarda “Video indir” düğmesi görünmez"
+  },
+  "popup_remote_forget": {
+    "message": "Unut"
+  },
+  "popup_gear": {
+    "message": "Mister Download Manager Seçenekleri"
+  },
+  "popup_tabs": {
+    "message": "Açılır pencere bölümleri"
+  },
+  "popup_tab_downloads": {
+    "message": "İndirilenler"
+  },
+  "popup_tab_page": {
+    "message": "Bu sayfa"
+  },
+  "popup_tab_settings": {
+    "message": "Ayarlar"
+  },
+  "popup_conn": {
+    "message": "Bağlandı · $version$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.5.2"
+      }
+    }
+  },
+  "popup_conn_plain": {
+    "message": "Bağlandı"
+  },
+  "popup_conn_off": {
+    "message": "Bağlı değil"
+  },
+  "popup_conn_paused": {
+    "message": "Duraklatıldı"
+  },
+  "popup_conn_update": {
+    "message": "Mister Download Manager uygulamasını güncelle"
+  },
+  "popup_conn_remote": {
+    "message": "$server$ adresine gönderiliyor",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_cancel": {
+    "message": "İptal"
+  },
+  "popup_page_none": {
+    "message": "Bu bir web sayfası değil: burada yapılacak bir şey yok."
+  },
+  "popup_exclude_by_rule": {
+    "message": "Seçenekler'deki bir kural nedeniyle tarayıcıya bırakıldı"
+  },
+  "popup_dl_search": {
+    "message": "İndirmeleri ara"
+  },
+  "popup_dl_filters": {
+    "message": "Göster"
+  },
+  "popup_dl_all": {
+    "message": "Tümü"
+  },
+  "popup_dl_running": {
+    "message": "Çalışıyor"
+  },
+  "popup_dl_done_filter": {
+    "message": "Tamamlandı"
+  },
+  "popup_dl_failed_filter": {
+    "message": "Başarısız"
+  },
+  "popup_dl_clear": {
+    "message": "Tamamlananları temizle"
+  },
+  "popup_dl_running_count": {
+    "message": "$count$ indirme şu anda indiriliyor",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_remote": {
+    "message": "Bunlar, $server$ adresindeki Mister Download Manager indirmeleridir. Dosyalarını orada açın.",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_dl_more": {
+    "message": "En yeni $shown$ indirme, toplam $total$ indirme arasından gösteriliyor. Mister Download Manager hepsini listeler.",
+    "placeholders": {
+      "shown": {
+        "content": "$1",
+        "example": "60"
+      },
+      "total": {
+        "content": "$2",
+        "example": "245"
+      }
+    }
+  },
+  "popup_dl_of": {
+    "message": "$size$ boyutunun $done$ kadarı",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "12.3 MB"
+      },
+      "size": {
+        "content": "$2",
+        "example": "48.7 MB"
+      }
+    }
+  },
+  "popup_dl_left": {
+    "message": "$time$ kaldı",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "0:42"
+      }
+    }
+  },
+  "popup_dl_starting": {
+    "message": "Başlatılıyor..."
+  },
+  "popup_dl_paused": {
+    "message": "Duraklatıldı"
+  },
+  "popup_dl_waiting": {
+    "message": "Bekliyor"
+  },
+  "popup_dl_done": {
+    "message": "Tamamlandı"
+  },
+  "popup_dl_just_now": {
+    "message": "şimdi"
+  },
+  "popup_dl_failed": {
+    "message": "Başarısız"
+  },
+  "popup_dl_failed_why": {
+    "message": "Başarısız: $why$",
+    "placeholders": {
+      "why": {
+        "content": "$1",
+        "example": "the server refused the connection"
+      }
+    }
+  },
+  "popup_dl_gone": {
+    "message": "Dosya silindi veya taşındı"
+  },
+  "popup_dl_loading": {
+    "message": "İndirmeler aranıyor..."
+  },
+  "popup_dl_none": {
+    "message": "Henüz indirme yok"
+  },
+  "popup_dl_none_text": {
+    "message": "Mister Download Manager ile indirdiğiniz her şey burada görünür."
+  },
+  "popup_dl_no_match": {
+    "message": "Hiçbir şey eşleşmiyor"
+  },
+  "popup_dl_no_match_text": {
+    "message": "Hiçbir indirmenin adında veya adresinde “$words$” yok.",
+    "placeholders": {
+      "words": {
+        "content": "$1",
+        "example": "report"
+      }
+    }
+  },
+  "popup_dl_show_all": {
+    "message": "Tüm indirmeleri göster"
+  },
+  "popup_list_off": {
+    "message": "Mister Download Manager çalışmıyor"
+  },
+  "popup_list_off_text": {
+    "message": "İndirmelerinizi burada görmek için başlatın."
+  },
+  "popup_list_start": {
+    "message": "Mister Download Manager uygulamasını başlat"
+  },
+  "popup_list_old": {
+    "message": "Mister Download Manager uygulamasını güncelle"
+  },
+  "popup_list_old_text": {
+    "message": "Bu sürümün indirmeleri henüz burada listelenemiyor."
+  },
+  "popup_list_busy": {
+    "message": "Mister Download Manager meşgul. Tekrar deneniyor..."
+  },
+  "popup_list_unreached": {
+    "message": "Mister Download Manager uygulamasına ulaşılamıyor"
+  },
+  "popup_list_remote_unreachable": {
+    "message": "Mister Download Manager uygulamasına $server$ adresinde ulaşılamıyor",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_list_remote_unreachable_text": {
+    "message": "Çalıştığını ve bu tarayıcının sertifikasını kabul ettiğini doğrulayın (Ayarlar → İndirmeleri şuraya gönder → Aç).",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_act_open": {
+    "message": "Aç"
+  },
+  "popup_act_open_named": {
+    "message": "$file$ dosyasını aç",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_folder": {
+    "message": "Klasörde göster"
+  },
+  "popup_act_folder_named": {
+    "message": "$file$ dosyasını klasörde göster",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_copy_file": {
+    "message": "Dosyayı kopyala"
+  },
+  "popup_act_share": {
+    "message": "Paylaş..."
+  },
+  "popup_act_copy_link": {
+    "message": "Bağlantıyı kopyala"
+  },
+  "popup_act_pause": {
+    "message": "Duraklat"
+  },
+  "popup_act_pause_named": {
+    "message": "$file$ dosyasını duraklat",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_resume": {
+    "message": "Sürdür"
+  },
+  "popup_act_resume_named": {
+    "message": "$file$ dosyasını sürdür",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_again": {
+    "message": "Tekrar indir"
+  },
+  "popup_act_remove": {
+    "message": "Listeden kaldır"
+  },
+  "popup_act_delete": {
+    "message": "Dosyayı sil..."
+  },
+  "popup_act_more": {
+    "message": "Diğer eylemler"
+  },
+  "popup_act_more_named": {
+    "message": "$file$ için diğer eylemler",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_title": {
+    "message": "Dosya silinsin mi?"
+  },
+  "popup_ask_delete": {
+    "message": "$file$ bilgisayarınızdan silinecek ve indirme listeden kaldırılacak. Bu işlem geri alınamaz.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_ok": {
+    "message": "Sil"
+  },
+  "popup_ask_clear_title": {
+    "message": "Tamamlanan indirmeler temizlensin mi?"
+  },
+  "popup_ask_clear": {
+    "message": "Tamamlanan $count$ indirme listeden kaldırılacak. Dosyaları yerinde kalacak.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "8"
+      }
+    }
+  },
+  "popup_ask_clear_ok": {
+    "message": "Temizle"
+  },
+  "popup_said_file": {
+    "message": "$file$ kopyalandı. Bir klasöre, sohbete veya mesaja yapıştırın.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_link": {
+    "message": "Bağlantı kopyalandı"
+  },
+  "popup_said_removed": {
+    "message": "$file$ listeden kaldırıldı",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_deleted": {
+    "message": "$file$ silindi",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_again": {
+    "message": "$file$ tekrar indiriliyor",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_cleared": {
+    "message": "Tamamlanan indirmeler temizlendi"
+  },
+  "popup_act_gone": {
+    "message": "Bu indirme artık listede değil."
+  },
+  "popup_act_missing": {
+    "message": "Dosyası kaydedildiği yerde değil (taşındı veya silindi)."
+  },
+  "popup_act_running": {
+    "message": "Önce duraklatın."
+  },
+  "popup_act_cant": {
+    "message": "Bu indirme üzerinde şu anda işlem yapılamaz."
+  },
+  "popup_act_unsupported": {
+    "message": "Bu sistem bunu yapamaz."
+  },
+  "popup_act_off": {
+    "message": "Mister Download Manager çalışmıyor."
+  },
+  "popup_act_busy": {
+    "message": "Mister Download Manager zamanında yanıt vermedi. Tekrar deneyin."
+  },
+  "popup_act_failed": {
+    "message": "İşlem başarısız oldu. Yeniden deneyin."
+  },
+  "status_running": {
+    "message": "İndiriliyor: $count$",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_open_remote": {
+    "message": "Sayfasını aç"
   }
 }

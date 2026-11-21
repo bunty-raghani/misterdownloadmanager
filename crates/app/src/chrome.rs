@@ -239,13 +239,26 @@ pub fn menu_bar(ui: &mut Ui, o: Pos2, width: f32, open: Option<usize>) -> Option
         egui::Sense::hover(),
     );
     winui::expose(&bar, egui::Role::MenuBar, "", true, None);
+    // A screen reader can move its focus to the bar (and to the title the keys are on, below):
+    // the caller then gives the bar the keys, and Tab goes on from it (#1190).
+    if winui::focus_target(ui.ctx(), bar.id) {
+        hit = Some(MenuBarEvent::Keys);
+    }
     let titles_ui = ui.new_child(egui::UiBuilder::new().accessibility_parent(bar.id));
     let released = ui.input(|x| x.pointer.any_released());
     for (i, (label, x, w, tx)) in menus(&p).iter().enumerate() {
         // From the leading edge: the first menu at the right in RTL.
         let rc = winui::rect(Rect::from_min_size(o + vec2(*x, 0.0), vec2(*w, MENU_H)));
-        let resp = titles_ui.interact(rc, egui::Id::unique(("menubar", i)), winui::pointer_only());
-        winui::expose(&resp, egui::Role::MenuItem, &plain(label).0, true, None);
+        let resp = titles_ui.interact(rc, menubar_title_id(i), winui::pointer_only());
+        // Its name carries the key that opens it ("Ver Alt+V", each language's own letter): the
+        // Windows adapter does not pass AccessKit's access key on to UI Automation, so a reader
+        // hears only what the name holds (#1190).
+        let (shown_name, letter_at) = plain(label);
+        let said = match letter_at.and_then(|at| shown_name.chars().nth(at)) {
+            Some(c) => format!("{shown_name} Alt+{}", c.to_uppercase().collect::<String>()),
+            None => shown_name.clone(),
+        };
+        winui::expose(&resp, egui::Role::MenuItem, &said, true, None);
         ui.ctx().accesskit_node_builder(resp.id, |n| {
             n.set_has_popup(egui::accesskit::HasPopup::Menu);
             n.set_expanded(open == Some(i));
@@ -290,6 +303,12 @@ pub fn menu_bar(ui: &mut Ui, o: Pos2, width: f32, open: Option<usize>) -> Option
     hit
 }
 
+/// A menu-bar title's widget id (#1190): the Tab stop of its own, and what the app focuses when
+/// the bar takes the keys.
+pub fn menubar_title_id(i: usize) -> egui::Id {
+    egui::Id::unique(("menubar", i))
+}
+
 /// The menu-bar title under `pos` (main-window coordinates), as [`menu_bar`] lays them out at
 /// `o`: the first menu at the right in RTL.
 pub fn menubar_title_at(p: &egui::Painter, o: Pos2, pos: Pos2) -> Option<usize> {
@@ -314,6 +333,8 @@ pub enum MenuBarEvent {
     Chosen,
     /// Left or Right, or the keyboard (Alt, F10, an access letter), opened menu `i`.
     Open(usize),
+    /// A screen reader moved its focus to the bar: it takes the keys (Tab goes on from it).
+    Keys,
 }
 
 /// The menu bar's open menu after `event` (`open`: the one open before it).
@@ -345,6 +366,8 @@ pub fn menubar_next(open: Option<usize>, event: MenuBarEvent) -> Option<usize> {
         }
         | MenuBarEvent::Chosen => None,
         MenuBarEvent::Open(i) => Some(i),
+        // The bar took the keys: no menu of it opens or shuts by that alone.
+        MenuBarEvent::Keys => open,
     }
 }
 
@@ -539,10 +562,13 @@ fn mirror_for_screen_readers<C>(
                 MenuEntry::Sep => continue,
             };
             let (t, _) = plain(crate::i18n::tc("menu", label));
+            // Its shortcut is said with its name ("Add new download Ctrl+N"), spelled as the
+            // menu draws it in its own column, where a reader cannot reach it (#1190).
             let t = match e {
-                MenuEntry::Item(_, c, ..) | MenuEntry::Radio(_, c, ..) if hint(c).is_some() => {
-                    without_shortcut(&t).to_owned()
-                }
+                MenuEntry::Item(_, c, ..) | MenuEntry::Radio(_, c, ..) => match hint(c) {
+                    Some(keys) => format!("{} {}", without_shortcut(&t), key_label(keys)),
+                    None => t,
+                },
                 _ => t,
             };
             let item = items.interact(
@@ -604,13 +630,17 @@ fn mirror_for_screen_readers<C>(
 /// At the end of a window's pass: the menu item a screen reader is to follow ([`mirror_for_screen_readers`]),
 /// made the active descendant of what has the accessibility focus there (the focused control's
 /// node, else the window's own), so the screen reader says it as if it had the focus (#328).
+/// Without one, what has the keys in a part that keeps them itself (the main window's toolbar,
+/// Categories tree and download list, [`winui::keys_with`], #1190).
 pub fn tell_screen_readers(ctx: &egui::Context) {
     let key = lit_menu_item_key(ctx);
-    let Some(item) = ctx.data_mut(|d| {
+    let lit = ctx.data_mut(|d| {
         let item = d.get_temp::<egui::Id>(key);
         d.remove::<egui::Id>(key);
         item
-    }) else {
+    });
+    let keys = winui::take_keys_with(ctx).filter(|item| ctx.has_accesskit_node(*item));
+    let Some(item) = lit.or(keys) else {
         return;
     };
     // As egui names the focus in its tree update: the focused widget, if it has a node.
@@ -631,16 +661,21 @@ pub fn start_keyboard(ctx: &egui::Context, id: &str) {
 /// Keyboard cues on: the user reached for the keyboard (Alt, F10, a menu opened by keys), so
 /// light mode underlines access letters from now on, the Windows rule (dark mode always does).
 pub fn show_cues(ctx: &egui::Context) {
-    ctx.data_mut(|d| d.insert_temp(egui::Id::unique("keyboard-cues"), true));
+    ctx.data_mut(|d| d.insert_temp(cues_key(), true));
+}
+
+fn cues_key() -> egui::Id {
+    egui::Id::unique("keyboard-cues")
+}
+
+/// Whether [`show_cues`] turned the keyboard cues on, whatever the look.
+pub fn cues_shown(ctx: &egui::Context) -> bool {
+    ctx.data(|d| d.get_temp::<bool>(cues_key()).unwrap_or(false))
 }
 
 /// Whether access letters are underlined: always in dark mode, after [`show_cues`] in light.
 pub fn cues(ctx: &egui::Context) -> bool {
-    crate::theme::colors().access_keys_always
-        || ctx.data(|d| {
-            d.get_temp::<bool>(egui::Id::unique("keyboard-cues"))
-                .unwrap_or(false)
-        })
+    crate::theme::colors().access_keys_always || cues_shown(ctx)
 }
 
 /// The next item of `level` from `from` in direction `dir`, skipping separators (wraps).
@@ -688,20 +723,147 @@ fn menu_keys(i: &egui::InputState) -> Vec<egui::Key> {
         .collect()
 }
 
+/// Whether an open menu takes `e`: a key pressed without Ctrl or Command (those are shortcuts),
+/// or the text a key types. egui-winit sends a typed letter as both, its key and its text: the
+/// menu took the key, and the focused text box under it the text ("p" for Paste pasted and
+/// typed "p").
+fn menu_event(e: &egui::Event) -> bool {
+    match e {
+        egui::Event::Key {
+            pressed: true,
+            modifiers,
+            ..
+        } => !modifiers.command && !modifiers.ctrl,
+        egui::Event::Text(_) => true,
+        _ => false,
+    }
+}
+
+/// Set by [`popup`] in each pass of `viewport` (the window it is drawn from) that ends with a
+/// menu open: the next pass's keys are the menu's ([`MenuKeys`]).
+fn menu_open_key(viewport: egui::ViewportId) -> egui::Id {
+    egui::Id::unique(("menu-open", viewport))
+}
+
+/// The keys [`MenuKeys`] took for the open menu of `viewport` in this pass, for [`keyboard`].
+fn menu_input_key(viewport: egui::ViewportId) -> egui::Id {
+    egui::Id::unique(("menu-input", viewport))
+}
+
+/// While a menu is open the keyboard is the menu's, as in Windows: each pass's keys and typed
+/// text are taken from the window's input as it comes in, before any control of the window
+/// sees them, and handed to the menu ([`keyboard`]). The menu is drawn after the controls under
+/// it (a text box's menu after the box): a focused box typed the letter that chose the item,
+/// and its caret moved with the arrows that moved in the menu.
+struct MenuKeys;
+
+impl egui::Plugin for MenuKeys {
+    fn debug_name(&self) -> &'static str {
+        "mdm-menu-keys"
+    }
+
+    fn input_hook(&mut self, ctx: &egui::Context, input: &mut egui::RawInput) {
+        let viewport = input.viewport_id;
+        let open = ctx
+            .data_mut(|d| d.remove_temp::<bool>(menu_open_key(viewport)))
+            .unwrap_or(false);
+        let taken: Vec<egui::Event> = if open {
+            let (menu, rest) = std::mem::take(&mut input.events)
+                .into_iter()
+                .partition(menu_event);
+            input.events = rest;
+            menu
+        } else {
+            Vec::new()
+        };
+        ctx.data_mut(|d| {
+            if taken.is_empty() {
+                d.remove::<Vec<egui::Event>>(menu_input_key(viewport));
+            } else {
+                d.insert_temp(menu_input_key(viewport), taken);
+            }
+        });
+    }
+}
+
+/// Whether a popup of `kind` has the whole keyboard while it is open, as Windows' menus do (the
+/// menu bar's, a right-click menu): not an editable combo's drop list, whose box takes the typing
+/// meanwhile, as in Windows ([`MenuKind::List`]).
+fn takes_keyboard(kind: MenuKind) -> bool {
+    kind != MenuKind::List
+}
+
+/// A key or a typed text, as an open menu reads them.
+enum Press {
+    Key(egui::Key),
+    Text(String),
+}
+
 /// Keys for an open menu (pressed in the main window or in the menu's own windows): Up and Down
 /// move the highlight (Home / End to the first / last), Right opens a submenu or the next menu, Left closes a submenu or opens
 /// the previous menu, Enter or an item's underlined letter runs it, Escape closes a submenu.
+/// `whole`: the menu has the whole keyboard (a menu: [`takes_keyboard`]); else it takes its keys
+/// as the controls drawn before it leave them, the typed text left (an editable combo's list).
 fn keyboard<C: Clone>(
     ctx: &egui::Context,
     entries: &[MenuEntry<C>],
     sub_key: egui::Id,
+    whole: bool,
 ) -> Option<PopupResult<C>> {
     let kb_key = sub_key.with("kb");
-    let mut keys = ctx.input(menu_keys);
+    let mut keys: Vec<Press> = if whole {
+        // Taken from this pass's input as it came in (MenuKeys), then any left in it (the pass
+        // the menu opened in): no control under the menu sees them.
+        let viewport = ctx.viewport_id();
+        let mut events = ctx
+            .data_mut(|d| d.remove_temp::<Vec<egui::Event>>(menu_input_key(viewport)))
+            .unwrap_or_default();
+        events.extend(ctx.input_mut(|i| {
+            let (menu, rest) = std::mem::take(&mut i.events)
+                .into_iter()
+                .partition(menu_event);
+            i.events = rest;
+            menu
+        }));
+        events
+            .into_iter()
+            .filter_map(|e| match e {
+                egui::Event::Key { key, .. } => Some(Press::Key(key)),
+                egui::Event::Text(t) => Some(Press::Text(t)),
+                _ => None,
+            })
+            .collect()
+    } else {
+        let keys = ctx.input(menu_keys);
+        // The keys are the list's: the controls drawn after it don't take them too.
+        ctx.input_mut(|i| {
+            for k in &keys {
+                i.consume_key(egui::Modifiers::NONE, *k);
+            }
+        });
+        keys.into_iter().map(Press::Key).collect()
+    };
+    // The letter that opened this menu (this pass) is the menu's own: it must not also pick an
+    // item of it — Alt+T opened Tareas and ran "Abrir archivo torrent...", Alt+A opened Archivo
+    // and ran the Delete item's (#1190). The pass's keys are taken before the window's own code
+    // runs (MenuKeys), so the app marks that letter where it opens the menu.
+    if let Some(letter) = ctx
+        .data_mut(|d| d.remove_temp::<(String, u64)>(egui::Id::unique("menu-opened-by-letter")))
+        .filter(|(_, at)| *at == ctx.cumulative_pass_nr())
+        .map(|(letter, _)| letter)
+    {
+        // egui-winit sends a typed letter as both, its key and its text, so both go.
+        keys.retain(|press| !match press {
+            Press::Key(k) => k.name().to_lowercase() == letter,
+            Press::Text(t) => t.to_lowercase() == letter,
+        });
+    }
     // Pressed in the menu's own windows: popup_level noted them as those windows drew.
     keys.extend(
         ctx.data_mut(|d| d.remove_temp::<Vec<egui::Key>>(sub_key.with("window-keys")))
-            .unwrap_or_default(),
+            .unwrap_or_default()
+            .into_iter()
+            .map(Press::Key),
     );
     let (mut hl0, mut hl1): (Option<usize>, Option<usize>) =
         ctx.data(|d| d.get_temp(kb_key)).unwrap_or_default();
@@ -712,15 +874,12 @@ fn keyboard<C: Clone>(
     if keys.is_empty() {
         return None;
     }
-    // The keys are the menu's: the list underneath doesn't move too.
-    ctx.input_mut(|i| {
-        for k in &keys {
-            i.consume_key(egui::Modifiers::NONE, *k);
-        }
-    });
     let mut open_sub = ctx.data(|d| d.get_temp::<usize>(sub_key));
     let mut out = None;
-    for key in keys {
+    // A letter's key ran an item (or opened a submenu): the text it typed, next, is the same
+    // press, not another.
+    let mut typed_by_key = false;
+    for press in keys {
         let children: Option<&[MenuEntry<C>]> = open_sub.and_then(|i| match entries.get(i) {
             Some(MenuEntry::Sub(_, _, c)) => Some(c.as_slice()),
             _ => None,
@@ -732,6 +891,36 @@ fn keyboard<C: Clone>(
             entries
         };
         let hl = if in_sub { hl1 } else { hl0 };
+        // An item's letter: the key's name, or the text it typed, for a letter of another script
+        // (Arabic's "&لصق", Russian's "&Вставить"): egui names that key by the Latin letter in
+        // its place, which no item has.
+        let letter_target = |letter: &str| {
+            level.iter().position(|e| {
+                entry_label(e).is_some_and(|(l, en)| {
+                    en && access_key(crate::i18n::tc("menu", l)).is_some_and(|k| k == letter)
+                })
+            })
+        };
+        let key = match press {
+            Press::Key(key) => key,
+            Press::Text(t) => {
+                if !std::mem::take(&mut typed_by_key)
+                    && let Some(t) = letter_target(&t.to_lowercase())
+                {
+                    if in_sub {
+                        hl1 = Some(t)
+                    } else {
+                        hl0 = Some(t)
+                    }
+                    out = run_target(level, t, in_sub, &mut open_sub, &mut hl1);
+                    if out.is_some() {
+                        break;
+                    }
+                }
+                continue;
+            }
+        };
+        typed_by_key = false;
         let mut target = None;
         match key {
             egui::Key::ArrowDown | egui::Key::ArrowUp => {
@@ -764,11 +953,8 @@ fn keyboard<C: Clone>(
             other => {
                 let name = other.name().to_lowercase();
                 if name.chars().count() == 1 {
-                    target = level.iter().position(|e| {
-                        entry_label(e).is_some_and(|(l, en)| {
-                            en && access_key(crate::i18n::tc("menu", l)).is_some_and(|k| k == name)
-                        })
-                    });
+                    target = letter_target(&name);
+                    typed_by_key = target.is_some();
                 }
             }
         }
@@ -778,16 +964,7 @@ fn keyboard<C: Clone>(
             } else {
                 hl0 = Some(t)
             }
-            match level.get(t) {
-                Some(MenuEntry::Item(_, c, true, _) | MenuEntry::Radio(_, c, true, _)) => {
-                    out = Some(PopupResult::Chosen(c.clone()));
-                }
-                Some(MenuEntry::Sub(_, true, c)) if !in_sub => {
-                    open_sub = Some(t);
-                    hl1 = step(c, None, 1);
-                }
-                _ => {}
-            }
+            out = run_target(level, t, in_sub, &mut open_sub, &mut hl1);
         }
         if out.is_some() {
             break;
@@ -805,6 +982,28 @@ fn keyboard<C: Clone>(
         }
     });
     out
+}
+
+/// Enter or an item's letter on item `t` of `level`: an item runs, a submenu opens (its first
+/// item highlighted).
+fn run_target<C: Clone>(
+    level: &[MenuEntry<C>],
+    t: usize,
+    in_sub: bool,
+    open_sub: &mut Option<usize>,
+    hl1: &mut Option<usize>,
+) -> Option<PopupResult<C>> {
+    match level.get(t) {
+        Some(MenuEntry::Item(_, c, true, _) | MenuEntry::Radio(_, c, true, _)) => {
+            Some(PopupResult::Chosen(c.clone()))
+        }
+        Some(MenuEntry::Sub(_, true, c)) if !in_sub => {
+            *open_sub = Some(t);
+            *hl1 = step(c, None, 1);
+            None
+        }
+        _ => None,
+    }
 }
 
 /// What a popup menu is: how its window says so to the window system (X11's window types) and,
@@ -856,7 +1055,7 @@ pub fn popup<C: Clone>(
             ctx.memory_mut(|m| m.request_focus(had));
         }
     };
-    if let Some(r) = keyboard(ctx, entries, sub_key) {
+    if let Some(r) = keyboard(ctx, entries, sub_key, takes_keyboard(kind)) {
         ctx.data_mut(|d| {
             d.remove::<usize>(sub_key);
             d.remove::<(Option<usize>, Option<usize>)>(sub_key.with("kb"));
@@ -953,6 +1152,13 @@ pub fn popup<C: Clone>(
         });
         give_back(ctx);
         return PopupResult::Dismissed;
+    }
+    if takes_keyboard(kind) {
+        // Still open: the next pass's keys are the menu's (MenuKeys; added once, a second
+        // plugin of a type is ignored).
+        let viewport = ctx.viewport_id();
+        ctx.data_mut(|d| d.insert_temp(menu_open_key(viewport), true));
+        ctx.add_plugin(MenuKeys);
     }
     PopupResult::Open
 }
@@ -1492,10 +1698,18 @@ fn popup_level<C: Clone>(
                 MenuEntry::Item(_, c, ..) | MenuEntry::Radio(_, c, ..) => hint(c),
                 _ => None,
             };
-            let t = if keys.is_some() {
-                without_shortcut(&t).to_owned()
+            // Its shortcut is said with its name ("Add new download Ctrl+N"), spelled as the menu
+            // draws it in its own column (#1190). Only an item that has a shortcut drops it from
+            // the text drawn: a translation without one may end in its own access letter
+            // ("Tell a friend (&F)"), which cutting would take away with the underline it needs.
+            let t_visual: &str = if keys.is_some() {
+                without_shortcut(&t)
             } else {
-                t
+                &t
+            };
+            let t_accessibility = match keys {
+                Some(keys) => format!("{} {}", t_visual, key_label(keys)),
+                None => t.clone(),
             };
             // The entry's node: a menu item (a check or radio item when it is one), its name,
             // whether it can be used, and for a submenu that it opens one.
@@ -1509,7 +1723,7 @@ fn popup_level<C: Clone>(
                 MenuEntry::Item(..) if checked => (egui::Role::MenuItemCheckBox, Some(true)),
                 _ => (egui::Role::MenuItem, None),
             };
-            winui::expose(&item, role, &t, enabled, on);
+            winui::expose(&item, role, &t_accessibility, enabled, on);
             if let MenuEntry::Sub(..) = e {
                 let open = open_sub == Some(i);
                 ui.ctx().accesskit_node_builder(item.id, |n| {
@@ -1539,7 +1753,14 @@ fn popup_level<C: Clone>(
                 }
                 _ => {}
             }
-            let drawn = text_font(&painter, winui::segoe(), o.x + 38.0, y + 14.0, &t, color);
+            let drawn = text_font(
+                &painter,
+                winui::segoe(),
+                o.x + 38.0,
+                y + 14.0,
+                t_visual,
+                color,
+            );
             // The shortcut at the trailing edge, in the menu's quieter ink.
             if let Some(k) = keys {
                 winui::text_right(
@@ -1554,7 +1775,7 @@ fn popup_level<C: Clone>(
             if let Some(m) = mn
                 && cues(ctx)
             {
-                let (x0, x1) = winui::char_span(&painter, &winui::segoe(), &t, m, drawn);
+                let (x0, x1) = winui::char_span(&painter, &winui::segoe(), t_visual, m, drawn);
                 fill(&painter, x0, y + 16.0, x1, y + 16.0, color);
             }
             // The check box column: x 12..21 from the leading edge (the glyphs keep their
@@ -1683,10 +1904,14 @@ fn popup_level<C: Clone>(
 
 // ---- toolbar -------------------------------------------------------------------------------
 
+#[derive(Debug, PartialEq)]
 pub enum ToolbarEvent {
     Click(usize),
     /// A drop-down button's arrow: its menu opens at this point (button left, y 87).
     Drop(usize, Pos2),
+    /// The toolbar takes the keys at this button: the arrows, Home or End moved them there, or
+    /// a screen reader moved its focus there (#1190).
+    Keys(usize),
 }
 
 /// Paint the etch (y 20, 21) and the toolbar band (y 22–91).
@@ -1695,11 +1920,19 @@ pub fn pane_top() -> f32 {
     70.0
 }
 
+/// The main toolbar: `buttons` (icon, English label, enabled), and `keys`, the button that has
+/// the keys while the toolbar has them (Tab reaches it: #1190). With the keys, Left / Right
+/// (mirrored right to left), Home and End move along the buttons, greyed ones too (a screen
+/// reader says they are unavailable); Enter or Space presses the button; Down, Alt+Down or F4
+/// opens a drop-down button's menu. A thin focus ring shows the button once the keyboard is in
+/// use, the one every control has. For screen readers it is a toolbar of named buttons they
+/// can focus and press.
 pub fn toolbar(
     ui: &mut Ui,
     o: Pos2,
     width: f32,
     buttons: &[(Icon, &str, bool)],
+    keys: Option<usize>,
 ) -> Option<ToolbarEvent> {
     let p = ui.painter().clone();
     let top = o.y + MENU_H;
@@ -1732,7 +1965,31 @@ pub fn toolbar(
         })
         .collect();
     let cap = label_cap(&natural, base_w, width);
+    // For screen readers (#1190: the buttons weren't there at all): a toolbar, named as View's
+    // menu item names it, its buttons inside it.
+    let bar = ui.interact(
+        winui::rect(band),
+        egui::Id::unique("toolbar"),
+        egui::Sense::hover(),
+    );
+    winui::expose(
+        &bar,
+        egui::Role::Toolbar,
+        crate::i18n::tc("menu", "Toolbar"),
+        true,
+        None,
+    );
+    ui.ctx()
+        .accesskit_node_builder(bar.id, |n| n.set_author_id("toolbar"));
+    if winui::focus_target(ui.ctx(), bar.id) {
+        event = Some(ToolbarEvent::Keys(keys.unwrap_or(0)));
+    }
+    let bar_ui = ui.new_child(egui::UiBuilder::new().accessibility_parent(bar.id));
+    let keys = keys.map(|k| k.min(buttons.len().saturating_sub(1)));
+    // Each button's leading x, for its drop-down menu opened from the keys.
+    let mut lefts = Vec::with_capacity(buttons.len());
     for (i, (icon, label, enabled)) in buttons.iter().enumerate() {
+        lefts.push(x);
         let full = crate::i18n::tc("toolbar", label);
         let dropdown = is_dropdown(icon);
         // IDM's buttons are 66 px; ours grow only when a full label needs it (user
@@ -1754,8 +2011,27 @@ pub fn toolbar(
             pos2(x, band.top()),
             vec2(total, band_h),
         ));
-        let resp = ui.interact(rc, egui::Id::unique(("tb", i)), winui::pointer_only());
+        let resp = bar_ui.interact(rc, egui::Id::unique(("tb", i)), winui::pointer_only());
         let resp = if cut { resp.on_hover_text(full) } else { resp };
+        // A button named as its whole label, greyed or not; a drop-down's arrow is its Expand
+        // (its menu); a screen reader can move its focus to it (the toolbar takes the keys).
+        winui::expose(&resp, egui::Role::Button, full, *enabled, None);
+        if dropdown {
+            use egui::accesskit::{Action, HasPopup};
+            ui.ctx().accesskit_node_builder(resp.id, |n| {
+                n.set_has_popup(HasPopup::Menu);
+                n.add_action(Action::Expand);
+                // Its menu is shut: without a state, UI Automation calls the node a leaf and a
+                // reader then never says the button holds more than itself (#1190).
+                n.set_expanded(false);
+            });
+            if ui.input(|inp| inp.has_accesskit_action_request(resp.id, Action::Expand)) {
+                event = Some(ToolbarEvent::Drop(i, pos2(winui::mx(x), o.y + 85.0)));
+            }
+        }
+        if winui::focus_target(ui.ctx(), resp.id) {
+            event = Some(ToolbarEvent::Keys(i));
+        }
         let past_button = |q: Pos2| winui::mx(q.x) >= x + bw;
         if *enabled && resp.hovered() {
             // Hover (IDM 6.42, captured 2026-10-30): the button's own width, from the band's top,
@@ -1873,9 +2149,64 @@ pub fn toolbar(
                 ToolbarEvent::Click(i)
             });
         }
+        // The button with the keys: what a screen reader says has the focus, and the focus ring
+        // every control shows, inside the square its hover lights, only once the keyboard is in
+        // use (winui::focus_ring).
+        if keys == Some(i) {
+            winui::keys_with(ui.ctx(), resp.id);
+            let square = Rect::from_min_size(pos2(x, band.top()), vec2(total, 65.0));
+            winui::focus_ring(&p, winui::rect(square.shrink(3.0)));
+        }
         x += total;
     }
+    if let Some(k) = keys
+        && event.is_none()
+    {
+        let enabled = buttons.get(k).is_some_and(|b| b.2);
+        let dropdown = buttons.get(k).is_some_and(|b| is_dropdown(&b.0));
+        let at = pos2(winui::mx(lefts.get(k).copied().unwrap_or(o.x)), o.y + 85.0);
+        event = ui.input_mut(|i| toolbar_keys(i, k, buttons.len(), enabled, dropdown, at));
+    }
     event
+}
+
+/// The toolbar's keys while button `k` of `n` has them ([`toolbar`]): what they do, the keys
+/// taken.
+fn toolbar_keys(
+    i: &mut egui::InputState,
+    k: usize,
+    n: usize,
+    enabled: bool,
+    dropdown: bool,
+    at: Pos2,
+) -> Option<ToolbarEvent> {
+    use egui::{Key, Modifiers};
+    let (back, on) = if winui::rtl() {
+        (Key::ArrowRight, Key::ArrowLeft)
+    } else {
+        (Key::ArrowLeft, Key::ArrowRight)
+    };
+    let last = n.saturating_sub(1);
+    let mut take = |m, key| i.consume_key(m, key);
+    if take(Modifiers::NONE, back) {
+        Some(ToolbarEvent::Keys(k.saturating_sub(1)))
+    } else if take(Modifiers::NONE, on) {
+        Some(ToolbarEvent::Keys((k + 1).min(last)))
+    } else if take(Modifiers::NONE, Key::Home) {
+        Some(ToolbarEvent::Keys(0))
+    } else if take(Modifiers::NONE, Key::End) {
+        Some(ToolbarEvent::Keys(last))
+    } else if dropdown
+        && (take(Modifiers::ALT, Key::ArrowDown)
+            || take(Modifiers::NONE, Key::ArrowDown)
+            || take(Modifiers::NONE, Key::F4))
+    {
+        Some(ToolbarEvent::Drop(k, at))
+    } else if enabled && (take(Modifiers::NONE, Key::Enter) || take(Modifiers::NONE, Key::Space)) {
+        Some(ToolbarEvent::Click(k))
+    } else {
+        None
+    }
 }
 
 /// The widest a toolbar button may grow for its label so that all of them fit in `width`:
@@ -1950,6 +2281,9 @@ pub enum TreeEvent {
     Close,
     /// Right-click: the row whose menu opens (the selection does not move) and where.
     Context(usize, Pos2),
+    /// A screen reader moved its focus to the tree, or to this row (#1190): the tree takes the
+    /// keys, and the row, if it has a view, is chosen.
+    Keys(Option<usize>),
 }
 
 /// The Categories pane: frame x 6 .. `right` (IDM: 148, resizable by the splitter), caption, close "x", tree (rows 16 px, indent 19).
@@ -2058,6 +2392,20 @@ pub fn categories(
         vpos += winui::wheel_rows(ui, 16.0, page_rows);
         hpos -= ui.input(|i| i.smooth_scroll_delta.x);
     }
+    // A node newly chosen (the keys, a screen reader) out of view is brought into it: a screen
+    // reader finds the rows in view only, and the keys follow what they can see.
+    let sel = rows.iter().position(|r| r.selected);
+    let sel_id = scroll_id.with("selected");
+    if ui.ctx().data(|d| d.get_temp::<Option<usize>>(sel_id)) != Some(sel) {
+        ui.ctx().data_mut(|d| d.insert_temp(sel_id, sel));
+        if let Some(s) = sel.map(|s| s as f32) {
+            if s < vpos.round() {
+                vpos = s;
+            } else if s >= vpos.round() + page_rows {
+                vpos = s - page_rows + 1.0;
+            }
+        }
+    }
     vpos = vpos.clamp(0.0, (rows.len() as f32 - page_rows).max(0.0));
     hpos = hpos.clamp(0.0, (content_w - area.width()).max(0.0)).round();
     let first_row = vpos.round();
@@ -2087,6 +2435,15 @@ pub fn categories(
         true,
         None,
     );
+    // A screen reader can move its focus to the tree and its rows (#1190): the tree takes the
+    // keys. While it has them, the chosen row is what the reader says has the focus (the tree
+    // itself while that row is out of view).
+    ui.ctx()
+        .accesskit_node_builder(blank.id, |n| n.set_author_id("categories"));
+    if winui::focus_target(ui.ctx(), blank.id) {
+        event = Some(TreeEvent::Keys(None));
+    }
+    let mut keys_item = blank.id;
     let rows_ui = ui.new_child(egui::UiBuilder::new().accessibility_parent(blank.id));
     // Where the selected row is, for its menu from the keyboard (Shift+F10, the Menu key).
     let mut selected_at: Option<(usize, Pos2)> = None;
@@ -2248,6 +2605,10 @@ pub fn categories(
             let under = resp.rect.left_bottom() + vec2(24.0, 0.0);
             if r.selected {
                 selected_at = Some((k, under));
+                keys_item = resp.id;
+            }
+            if winui::focus_target(ui.ctx(), resp.id) {
+                event = Some(TreeEvent::Keys(Some(k)));
             }
             if (expand && r.expander == Some(false)) || (collapse && r.expander == Some(true)) {
                 event = Some(TreeEvent::Toggle(k));
@@ -2279,6 +2640,9 @@ pub fn categories(
         {
             event = Some(TreeEvent::Context(k, at));
         }
+    }
+    if keys {
+        winui::keys_with(ui.ctx(), keys_item);
     }
     // The selected node's menu from the keyboard, under the node: Shift+F10 or the Menu key.
     if keys
@@ -3163,5 +3527,258 @@ mod tests {
         let pointer = egui::Id::unique(("popup-sub", "t328")).with("kb");
         ctx.data_mut(|d| d.remove::<(Option<usize>, Option<usize>)>(pointer));
         assert_eq!(pass(true, Vec::new()), (true, None, 0));
+    }
+
+    fn key(key: egui::Key, modifiers: egui::Modifiers) -> egui::Event {
+        egui::Event::Key {
+            key,
+            physical_key: None,
+            pressed: true,
+            repeat: false,
+            modifiers,
+        }
+    }
+
+    fn ask(target: egui::accesskit::NodeId, action: egui::accesskit::Action) -> egui::Event {
+        egui::Event::AccessKitActionRequest(egui::accesskit::ActionRequest {
+            action,
+            target_tree: egui::accesskit::TreeId::ROOT,
+            target_node: target,
+            data: None,
+        })
+    }
+
+    /// A context with AccessKit on and the fonts the main window draws with (Tahoma as the
+    /// interface font where the system has none).
+    fn a11y_ctx() -> egui::Context {
+        let ctx = egui::Context::default();
+        let mut defs = egui::FontDefinitions::default();
+        crate::winui::install_fonts(&mut defs, None);
+        ctx.set_fonts(defs);
+        ctx.enable_accesskit();
+        ctx
+    }
+
+    /// One pass of `draw` with AccessKit on: its tree update.
+    fn a11y_pass(
+        ctx: &egui::Context,
+        events: Vec<egui::Event>,
+        mut draw: impl FnMut(&mut egui::Ui),
+    ) -> egui::accesskit::TreeUpdate {
+        let input = egui::RawInput {
+            screen_rect: Some(Rect::from_min_size(
+                pos2(0.0, 0.0),
+                egui::vec2(900.0, 500.0),
+            )),
+            events,
+            ..Default::default()
+        };
+        let mut out = ctx.run_ui(input, |ui| {
+            draw(ui);
+            super::tell_screen_readers(ui.ctx());
+        });
+        out.textures_delta.clear();
+        out.platform_output
+            .accesskit_update
+            .expect("AccessKit is on")
+    }
+
+    /// What a screen reader is told has the focus: the focused node's active descendant, else
+    /// that node (its role and name).
+    fn said(update: &egui::accesskit::TreeUpdate) -> (egui::accesskit::Role, String) {
+        let by_id: std::collections::HashMap<_, _> =
+            update.nodes.iter().map(|(id, n)| (*id, n)).collect();
+        let focus = by_id[&update.focus];
+        let node = focus.active_descendant().map_or(focus, |d| by_id[&d]);
+        (node.role(), node.label().unwrap_or_default().to_owned())
+    }
+
+    /// #1190: the toolbar is a toolbar of named buttons (greyed ones said so) that a screen
+    /// reader can move its focus to, which gives the toolbar the keys; with them, the arrows
+    /// move along the buttons, Enter presses one (not a greyed one), Down opens a drop-down's
+    /// menu, and the button with the keys is what the reader says has the focus.
+    #[test]
+    fn the_toolbar_is_named_focusable_and_driven_by_the_keys() {
+        use super::ToolbarEvent;
+        use crate::icons::Icon;
+        use egui::accesskit::{Action, Role};
+        use egui::{Key, Modifiers};
+        let ctx = a11y_ctx();
+        // Labels from variables: the catalog's extractor takes literal ones as texts to translate.
+        let (add, resume, queue) = ("Add URL", "Resume", "Start Queue");
+        let buttons = [
+            (Icon::AddUrl, add, true),
+            (Icon::Resume, resume, false),
+            (Icon::StartQueue, queue, true),
+        ];
+        let pass = |keys: Option<usize>, events: Vec<egui::Event>| {
+            let mut ev = None;
+            let update = a11y_pass(&ctx, events, |ui| {
+                ev = super::toolbar(ui, pos2(0.0, 0.0), 900.0, &buttons, keys);
+            });
+            (ev, update)
+        };
+        let (_, update) = pass(None, vec![]);
+        let by_id: std::collections::HashMap<_, _> =
+            update.nodes.iter().map(|(id, n)| (*id, n)).collect();
+        let bars: Vec<_> = update
+            .nodes
+            .iter()
+            .filter(|(_, n)| n.role() == Role::Toolbar)
+            .collect();
+        assert_eq!(bars.len(), 1);
+        let bar = &bars[0].1;
+        assert!(bar.supports_action(Action::Focus));
+        // Its buttons, through the containers AccessKit leaves out.
+        fn buttons_in<'a>(
+            by_id: &std::collections::HashMap<egui::accesskit::NodeId, &'a egui::accesskit::Node>,
+            node: &egui::accesskit::Node,
+        ) -> Vec<&'a egui::accesskit::Node> {
+            node.children()
+                .iter()
+                .filter_map(|c| by_id.get(c).copied())
+                .flat_map(|c| match c.role() {
+                    Role::Button => vec![c],
+                    Role::GenericContainer => buttons_in(by_id, c),
+                    _ => vec![],
+                })
+                .collect()
+        }
+        let named: Vec<(String, bool, bool)> = buttons_in(&by_id, bar)
+            .into_iter()
+            .map(|n| {
+                (
+                    n.label().unwrap_or_default().to_owned(),
+                    n.supports_action(Action::Focus),
+                    n.is_disabled(),
+                )
+            })
+            .collect();
+        assert_eq!(
+            named,
+            [
+                ("Add URL".to_owned(), true, false),
+                ("Resume".to_owned(), true, true),
+                ("Start Queue".to_owned(), true, false),
+            ]
+        );
+        // Without the keys, the window says nothing of the toolbar.
+        assert_ne!(said(&update).0, Role::Button);
+        // A screen reader's focus on a button: the toolbar takes the keys there.
+        let third = egui::Id::unique(("tb", 2usize)).accesskit_id();
+        assert_eq!(
+            pass(None, vec![ask(third, Action::Focus)]).0,
+            Some(ToolbarEvent::Keys(2))
+        );
+        // With the keys: said, and moved by the arrows, Home and End.
+        let (ev, update) = pass(Some(1), vec![key(Key::ArrowRight, Modifiers::NONE)]);
+        assert_eq!(ev, Some(ToolbarEvent::Keys(2)));
+        assert_eq!(said(&update), (Role::Button, "Resume".to_owned()));
+        assert_eq!(
+            pass(Some(1), vec![key(Key::ArrowLeft, Modifiers::NONE)]).0,
+            Some(ToolbarEvent::Keys(0))
+        );
+        assert_eq!(
+            pass(Some(2), vec![key(Key::ArrowRight, Modifiers::NONE)]).0,
+            Some(ToolbarEvent::Keys(2)),
+            "the last stays the last"
+        );
+        assert_eq!(
+            pass(Some(2), vec![key(Key::Home, Modifiers::NONE)]).0,
+            Some(ToolbarEvent::Keys(0))
+        );
+        assert_eq!(
+            pass(Some(0), vec![key(Key::End, Modifiers::NONE)]).0,
+            Some(ToolbarEvent::Keys(2))
+        );
+        // Enter and Space press an enabled button; a greyed one does nothing.
+        assert_eq!(
+            pass(Some(0), vec![key(Key::Enter, Modifiers::NONE)]).0,
+            Some(ToolbarEvent::Click(0))
+        );
+        assert_eq!(
+            pass(Some(2), vec![key(Key::Space, Modifiers::NONE)]).0,
+            Some(ToolbarEvent::Click(2))
+        );
+        assert_eq!(
+            pass(Some(1), vec![key(Key::Enter, Modifiers::NONE)]).0,
+            None
+        );
+        // Down or Alt+Down: a drop-down's menu; nothing on a plain button.
+        assert!(matches!(
+            pass(Some(2), vec![key(Key::ArrowDown, Modifiers::NONE)]).0,
+            Some(ToolbarEvent::Drop(2, _))
+        ));
+        assert!(matches!(
+            pass(Some(2), vec![key(Key::ArrowDown, Modifiers::ALT)]).0,
+            Some(ToolbarEvent::Drop(2, _))
+        ));
+        assert_eq!(
+            pass(Some(0), vec![key(Key::ArrowDown, Modifiers::NONE)]).0,
+            None
+        );
+    }
+
+    /// #1190: the Categories tree and its nodes can take a screen reader's focus (the tree then
+    /// takes the keys, the node is chosen), and while the tree has the keys its chosen node is
+    /// what the reader says has the focus.
+    #[test]
+    fn the_categories_tree_takes_and_tells_the_focus() {
+        use super::{IconKey, ShellIcons, TreeEvent, TreeRow};
+        use egui::accesskit::{Action, Role};
+        let ctx = a11y_ctx();
+        let row = |label: &'static str, level, selected| TreeRow {
+            level,
+            label: label.into(),
+            expander: (level == 0).then_some(true),
+            selected,
+            icon: IconKey::Silk("folder"),
+            badge: None,
+            count: None,
+        };
+        let rows = [
+            row("All", 0, false),
+            row("Music", 1, true),
+            row("Video", 1, false),
+        ];
+        let mut icons = ShellIcons;
+        let mut pass = |keys: bool, events: Vec<egui::Event>| {
+            let mut ev = None;
+            let update = a11y_pass(&ctx, events, |ui| {
+                ev = super::categories(ui, &mut icons, pos2(0.0, 0.0), 400.0, 200.0, &rows, keys);
+            });
+            (ev, update)
+        };
+        let (_, update) = pass(false, vec![]);
+        let items: Vec<bool> = update
+            .nodes
+            .iter()
+            .filter(|(_, n)| n.role() == Role::TreeItem)
+            .map(|(_, n)| n.supports_action(Action::Focus))
+            .collect();
+        assert_eq!(items, [true, true, true]);
+        assert!(
+            update
+                .nodes
+                .iter()
+                .any(|(_, n)| n.role() == Role::Tree && n.supports_action(Action::Focus))
+        );
+        assert_ne!(said(&update).0, Role::TreeItem);
+        // With the keys: the chosen node is said.
+        assert_eq!(
+            said(&pass(true, vec![]).1),
+            (Role::TreeItem, "Music".to_owned())
+        );
+        // A screen reader's focus on a node, or on the tree.
+        let video = egui::Id::unique(("tree-row", 2usize)).accesskit_id();
+        assert!(matches!(
+            pass(false, vec![ask(video, Action::Focus)]).0,
+            Some(TreeEvent::Keys(Some(2)))
+        ));
+        let tree = egui::Id::unique("tree-blank").accesskit_id();
+        assert!(matches!(
+            pass(false, vec![ask(tree, Action::Focus)]).0,
+            Some(TreeEvent::Keys(None))
+        ));
     }
 }

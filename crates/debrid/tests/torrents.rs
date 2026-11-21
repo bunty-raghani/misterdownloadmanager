@@ -134,6 +134,46 @@ async fn a_torrent_of_one_file_goes_into_the_folder_itself() {
     }
 }
 
+/// A file already where a one-file torrent goes, with no download state beside it, is taken as
+/// the torrent's (done in an earlier run) only when it has the torrent's size. Another one stays
+/// as it was, untouched, and the torrent's file comes down beside it, numbered.
+#[tokio::test]
+async fn a_file_already_there_is_the_torrents_only_at_its_size() {
+    for service in ServiceKind::ALL.into_iter().filter(|s| s.takes_magnets()) {
+        // Another file of that name: kept, and the torrent's downloaded beside it.
+        let (_lab, d) = setup(service).await;
+        let dir = tempfile::tempdir().unwrap();
+        let theirs = dir.path().join("video.mkv");
+        std::fs::write(&theirs, b"another site's video, not the torrent's").unwrap();
+        let (_t, s) = run(&d, "one00001", dir.path()).await;
+        assert_eq!(s.state, State::Done, "{service:?}: {:?}", s.error);
+        assert_eq!(
+            std::fs::read(&theirs).unwrap(),
+            b"another site's video, not the torrent's",
+            "{service:?}: the file already there is left as it was"
+        );
+        let ours = dir.path().join("video (1).mkv");
+        assert!(same(&ours, "2M", "video.mkv"), "{service:?}");
+        assert_eq!(s.file.as_deref(), Some(ours.as_path()), "{service:?}");
+        assert_eq!(s.downloaded, 2 << 20, "{service:?}");
+
+        // The torrent's size: done in an earlier run, nothing downloaded again.
+        let (_lab, d) = setup(service).await;
+        let dir = tempfile::tempdir().unwrap();
+        let earlier = dir.path().join("video.mkv");
+        std::fs::write(&earlier, vec![7u8; 2 << 20]).unwrap();
+        let (_t, s) = run(&d, "one00001", dir.path()).await;
+        assert_eq!(s.state, State::Done, "{service:?}: {:?}", s.error);
+        assert_eq!(
+            std::fs::read(&earlier).unwrap(),
+            vec![7u8; 2 << 20],
+            "{service:?}"
+        );
+        assert!(!dir.path().join("video (1).mkv").exists(), "{service:?}");
+        assert_eq!(s.file.as_deref(), Some(earlier.as_path()), "{service:?}");
+    }
+}
+
 #[tokio::test]
 async fn a_torrent_the_service_cant_get_fails_with_its_reason() {
     for service in ServiceKind::ALL.into_iter().filter(|s| s.takes_magnets()) {

@@ -20,8 +20,13 @@
   <link rel="icon" href="/assets/favicon-32.png" type="image/png" sizes="32x32">
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
   <link rel="manifest" href="/site.webmanifest">
+  <link rel="stylesheet" href="/vitrine/vitrine.css">
+  <link rel="stylesheet" href="/vitrine/vitrine-modal.css">
   <link rel="stylesheet" href="/styles.css">
   <!--@theme-->
+  <script src="/vitrine/vitrine-core.js" defer></script>
+  <script src="/vitrine/vitrine-modal.js" defer></script>
+  <script src="/vitrine/vitrine.js" defer></script>
   <script src="/main.js" defer></script>
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"{{SITE}}/"},{"@type":"ListItem","position":2,"name":"Free IDM alternative","item":"{{SITE}}/idm-alternative.html"}]}</script>
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Mister Download Manager","alternateName":"MDM","applicationCategory":"UtilitiesApplication","operatingSystem":"Windows 10, Windows 11, macOS, Linux","softwareVersion":"{{VERSION}}","license":"https://www.gnu.org/licenses/gpl-3.0.html","url":"{{SITE}}/","downloadUrl":"{{SITE}}/download.html","description":"A free, open-source download manager laid out like Internet Download Manager (IDM), with torrents and video downloads built in.","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
@@ -65,7 +70,7 @@
       <div class="wrap facts-inner">
         <div class="sec-intro">
           <h2 id="answer-title">In short</h2>
-          <p>If you want <strong>Internet Download Manager (IDM)</strong>'s layout without its price, the free alternative is <strong>Mister Download Manager (MDM)</strong>: a free, open-source download manager for Windows 10 and 11, with macOS and Linux builds to try. It looks and works like IDM, imports your IDM download list, downloaded a 1 GiB file 5.4 times faster than IDM 6.42 in <a href="/benchmark.html">our published benchmark</a>, and downloads torrents, magnet links and videos too.</p>
+          <p>If you want <strong>Internet Download Manager (IDM)</strong>'s layout without its price, the free alternative is <strong>Mister Download Manager (MDM)</strong>: a free, open-source download manager for Windows 10 and 11 and Linux, with macOS builds to try. It looks and works like IDM, imports your IDM download list, downloaded a 1 GiB file 5.4 times faster than IDM 6.42 in <a href="/benchmark.html">our published benchmark</a> (a loopback test, from a server on the same PC), and downloads torrents, magnet links and videos too.</p>
           <p class="fine">Other free options: Free Download Manager, AB Download Manager, Motrix, Neat Download Manager, Prism, JDownloader 2, Xtreme Download Manager, Gopeed and DOWNitUP. <a href="#alternatives">See how they compare</a>.</p>
         </div>
         <div class="sheet sheet-labelled facts-sheet">
@@ -76,8 +81,8 @@
             <div><dt>Layout</dt><dd>IDM's: toolbar, categories, list</dd></div>
             <div><dt>From IDM</dt><dd>Imports your IDM export file</dd></div>
             <div><dt>Downloads</dt><dd>HTTP(S), FTP(S), torrents, magnets, video pages</dd></div>
-            <div><dt>Speed</dt><dd>1 GiB in 1.0 s, IDM 5.5 s <small>our test</small></dd></div>
-            <div><dt>Systems</dt><dd>Windows 10/11; macOS and Linux to try</dd></div>
+            <div><dt>Speed</dt><dd>1 GiB in 1.0 s, IDM 5.5 s <small>local test server</small></dd></div>
+            <div><dt>Systems</dt><dd>Windows 10/11 and Linux; macOS to try</dd></div>
             <div><dt>Languages</dt><dd>86, right to left included</dd></div>
           </dl>
           <div class="wb-code"><!--@barcode--><span translate="no">MDM {{VERSION}}</span></div>
@@ -101,7 +106,7 @@
               <p class="service-tags"><span class="tag stable">Ours</span><span class="stamp live-stamp"><b>Delivered</b><span>1 GiB in 1.01 s</span></span></p>
               <dl class="fields">
                 <div><dt>Good at</dt><dd>IDM's layout and your IDM list, with torrents, video and 86 languages built in</dd></div>
-                <div><dt>Systems</dt><dd>Windows 10/11; macOS, Linux to try</dd></div>
+                <div><dt>Systems</dt><dd>Windows 10/11, Linux; macOS to try</dd></div>
                 <div><dt>Latest</dt><dd>{{VERSION}}</dd></div>
               </dl>
               <a class="btn btn-go" href="/download.html"><svg class="os-ico" aria-hidden="true"><use href="#os-windows"/></svg> Download</a>
@@ -208,7 +213,7 @@
                 <tr><th scope="col">Download manager</th><th scope="col">Open source</th><th scope="col">Torrents</th><th scope="col">Video from pages</th><th scope="col">Browser extension</th><th scope="col">Imports an IDM list</th><th scope="col">Systems</th></tr>
               </thead>
               <tbody>
-                <tr class="decl-ours"><th scope="row"><img class="alt-logo" src="/assets/logo-64.png" width="24" height="24" alt=""><span>Mister Download Manager</span></th><td data-label="Open source"><span class="box on"><span class="sr-only">Yes</span></span><small>GPL-3.0</small></td><td data-label="Torrents"><span class="box on"><span class="sr-only">Yes</span></span></td><td data-label="Video from pages"><span class="box on"><span class="sr-only">Yes</span></span><small>via yt-dlp</small></td><td data-label="Browser extension"><span class="box on"><span class="sr-only">Yes</span></span></td><td data-label="Imports an IDM list"><span class="box on"><span class="sr-only">Yes</span></span></td><td data-label="Systems"><ul class="sys-list" role="list"><li class="sys">Windows</li><li class="sys beta">macOS</li><li class="sys beta">Linux</li></ul></td></tr>
+                <tr class="decl-ours"><th scope="row"><img class="alt-logo" src="/assets/logo-64.png" width="24" height="24" alt=""><span>Mister Download Manager</span></th><td data-label="Open source"><span class="box on"><span class="sr-only">Yes</span></span><small>GPL-3.0</small></td><td data-label="Torrents"><span class="box on"><span class="sr-only">Yes</span></span></td><td data-label="Video from pages"><span class="box on"><span class="sr-only">Yes</span></span><small>via yt-dlp</small></td><td data-label="Browser extension"><span class="box on"><span class="sr-only">Yes</span></span></td><td data-label="Imports an IDM list"><span class="box on"><span class="sr-only">Yes</span></span></td><td data-label="Systems"><ul class="sys-list" role="list"><li class="sys">Windows</li><li class="sys beta">macOS</li><li class="sys">Linux</li></ul></td></tr>
                 <tr><th scope="row"><img class="alt-logo" src="/assets/alts/fdm.png" width="24" height="24" alt=""><span translate="no">Free Download Manager</span></th><td data-label="Open source"><span class="box said"><span class="sr-only">Its site says so</span></span><small>its site says</small></td><td data-label="Torrents"><span class="box on"><span class="sr-only">Yes</span></span></td><td data-label="Video from pages"><span class="box on"><span class="sr-only">Yes</span></span><small>through add-ons</small></td><td data-label="Browser extension"><span class="box on"><span class="sr-only">Yes</span></span></td><td data-label="Imports an IDM list"><span class="box no"><span class="sr-only">Not listed</span></span></td><td data-label="Systems"><ul class="sys-list" role="list"><li class="sys">Windows</li><li class="sys">macOS</li><li class="sys">Linux</li><li class="sys">Android</li></ul></td></tr>
                 <tr><th scope="row"><img class="alt-logo" src="/assets/alts/abdm.png" width="24" height="24" alt=""><span translate="no">AB Download Manager</span></th><td data-label="Open source"><span class="box on"><span class="sr-only">Yes</span></span><small>Apache-2.0</small></td><td data-label="Torrents"><span class="box no"><span class="sr-only">Not listed</span></span></td><td data-label="Video from pages"><span class="box no"><span class="sr-only">Not listed</span></span></td><td data-label="Browser extension"><span class="box on"><span class="sr-only">Yes</span></span></td><td data-label="Imports an IDM list"><span class="box no"><span class="sr-only">Not listed</span></span></td><td data-label="Systems"><ul class="sys-list" role="list"><li class="sys">Windows</li><li class="sys">macOS</li><li class="sys">Linux</li><li class="sys">Android</li></ul></td></tr>
                 <tr><th scope="row"><img class="alt-logo" src="/assets/alts/motrix.png" width="24" height="24" alt=""><span translate="no">Motrix</span></th><td data-label="Open source"><span class="box on"><span class="sr-only">Yes</span></span><small>MIT</small></td><td data-label="Torrents"><span class="box on"><span class="sr-only">Yes</span></span></td><td data-label="Video from pages"><span class="box no"><span class="sr-only">Not listed</span></span></td><td data-label="Browser extension"><span class="box on"><span class="sr-only">Yes</span></span></td><td data-label="Imports an IDM list"><span class="box no"><span class="sr-only">Not listed</span></span></td><td data-label="Systems"><ul class="sys-list" role="list"><li class="sys">Windows</li><li class="sys">macOS</li><li class="sys">Linux</li></ul></td></tr>
@@ -248,11 +253,11 @@
         <ul class="alt-why">
           <li><b>It's free, for good.</b> No trial that runs out, no licence key, no ads. The GNU GPL guarantees it stays free.</li>
           <li><b>Nothing to relearn.</b> The toolbar, categories, download list, progress window, queues, Scheduler and Options sit where you expect them. Even the command-line switches are the same: <code>/d /p /f /a /n /s</code>.</li>
-          <li><b>Faster where it counts.</b> In our benchmark against IDM 6.42 on the same computer and server, MDM downloaded 1 GiB in 1.0 s against 5.5 s, and a small file in 0.03 s against 3.1 s. <a href="/benchmark.html">See every run.</a></li>
+          <li><b>Faster where it counts.</b> In our benchmark against IDM 6.42, both on one computer and downloading from a test server on that same computer (loopback, so no internet in between), MDM downloaded 1 GiB in 1.0 s against 5.5 s, and a small file in 0.03 s against 3.1 s. <a href="/benchmark.html">See every run.</a></li>
           <li><b>Torrents and magnet links.</b> In the same list, with a file tree to pick from. IDM's website doesn't mention BitTorrent.</li>
           <li><b>86 languages built in.</b> Right to left included, chosen on the first start.</li>
           <li><b>Open source.</b> Anyone can read the code, check what it does and build it. No adware, no telemetry.</li>
-          <li><b>Linux and Mac too.</b> Builds with every release, if you use more than Windows. From version 0.5.0, Linux is no longer experimental: it is checked on GNOME, KDE Plasma, Xfce and Cinnamon.</li>
+          <li><b>Linux and Mac too.</b> Builds with every release, if you use more than Windows. Linux is supported since version 0.5.0, checked on GNOME, KDE Plasma, Xfce and Cinnamon; macOS is still experimental.</li>
         </ul>
 
         <h2>MDM and IDM, side by side</h2>
@@ -283,7 +288,7 @@
               <tr class="vs-gh"><th colspan="3" scope="colgroup">Reach</th></tr>
               <tr><td data-label="MDM" class="better"><span class="vs-line"><span class="vs-v"><span class="box on" aria-hidden="true"></span>86, built in</span></span></td><th scope="row">Languages</th><td data-label="IDM"><span class="vs-line"><span class="vs-v">About 40, separate downloads</span></span></td></tr>
               <tr><td data-label="MDM"><span class="vs-line"><span class="vs-v">Firefox, Chrome, Edge, Brave, Opera, Vivaldi, from their stores</span></span></td><th scope="row">Browsers</th><td data-label="IDM"><span class="vs-line"><span class="vs-v">Chrome, Firefox, Edge and more</span></span></td></tr>
-              <tr><td data-label="MDM" class="better"><span class="vs-line"><span class="vs-v"><span class="box on" aria-hidden="true"></span>Windows 10/11; macOS and Linux to try</span></span></td><th scope="row">Systems</th><td data-label="IDM"><span class="vs-line"><span class="vs-v">Windows</span></span></td></tr>
+              <tr><td data-label="MDM" class="better"><span class="vs-line"><span class="vs-v"><span class="box on" aria-hidden="true"></span>Windows 10/11 and Linux; macOS to try</span></span></td><th scope="row">Systems</th><td data-label="IDM"><span class="vs-line"><span class="vs-v">Windows</span></span></td></tr>
               <tr><td data-label="MDM"><span class="vs-line"><span class="vs-v">New</span></span></td><th scope="row">Maturity</th><td data-label="IDM" class="better"><span class="vs-line"><span class="vs-v"><span class="box on" aria-hidden="true"></span>Refined over many years</span></span></td></tr>
             </tbody>
           </table>
@@ -314,7 +319,7 @@
           <details><summary>Is it related to IDM?</summary><p>No. Mister Download Manager is an independent project written from scratch in Rust. It has no connection to Tonec Inc. and contains none of IDM's code, artwork or text. Internet Download Manager and IDM are trademarks of their owner, named here only to compare. <a href="/faq/is-it-idm.html">More</a></p></details>
           <details><summary>Is it really free, or a trial?</summary><p>Really free, with no time limit, paid edition, ads or sign-up. <a href="/faq/is-it-free.html">More</a></p></details>
           <details><summary>Can I keep IDM installed too?</summary><p>Yes. They don't share settings or files. Turn off one browser extension so each download goes to one program.</p></details>
-          <details><summary>Does it work on Mac and Linux?</summary><p>Yes: every release has builds for Linux and macOS. Today's are marked experimental; from version 0.5.0, Linux isn't, after checks on four desktops, and macOS stays experimental. Windows 10 and 11 are the main platform. <a href="/faq/systems.html">More</a></p></details>
+          <details><summary>Does it work on Mac and Linux?</summary><p>Yes: every release has builds for Linux and macOS. Linux is supported, checked on four desktops (GNOME, KDE Plasma, Xfce and Cinnamon); macOS is still experimental. Windows 10 and 11 are the main platform. <a href="/faq/systems.html">More</a></p></details>
         </div>
       </div>
     </section>

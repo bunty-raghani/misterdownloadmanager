@@ -92,9 +92,6 @@
       }
     }
   },
-  "popup_undo": {
-    "message": "செயல்தவிர்"
-  },
   "popup_excluded": {
     "message": "$site$ இலிருந்து பதிவிறக்கங்கள் உலாவியிலேயே இருக்கும்",
     "placeholders": {
@@ -148,6 +145,9 @@
   },
   "declined_integration_off": {
     "message": "மேம்பட்ட உலாவி ஒருங்கிணைப்பைப் பயன்படுத்து விருப்பத்தேர்வுகள் → பொது என்பதில் முடக்கப்பட்டுள்ளது."
+  },
+  "declined_torrents": {
+    "message": "இது ஒரு டோரண்ட், மேலும் Mister Download Manager உடன் காந்த இணைப்புகள் மற்றும் .torrent கோப்புகளைத் திறப்பது டோரண்ட் அமைப்புகளில் முடக்கப்பட்டுள்ளது."
   },
   "declined_site_access": {
     "message": "இந்த தளத்தைப் படிக்க நீட்டிப்புக்கு அனுமதி இல்லை (உலாவியின் தள அணுகல்)."
@@ -328,5 +328,424 @@
   },
   "video_original": {
     "message": "அசல்"
+  },
+  "video_compatible": {
+    "message": "அதிக இணக்கமானது"
+  },
+  "popup_video_hide_fullscreen": {
+    "message": "முழுத்திரையில் பதிவிறக்க பொத்தானை மறை"
+  },
+  "popup_video_hide_fullscreen_title": {
+    "message": "பக்கம் முழுத்திரையில் இருக்கும்போது, அதன் வீடியோக்கள் பதிவிறக்க வீடியோ பொத்தானைக் காட்டாது"
+  },
+  "popup_remote_forget": {
+    "message": "மறந்துவிடு"
+  },
+  "popup_gear": {
+    "message": "Mister Download Manager இல் விருப்பத்தேர்வுகள்"
+  },
+  "popup_tabs": {
+    "message": "பாப்அப் பிரிவுகள்"
+  },
+  "popup_tab_downloads": {
+    "message": "பதிவிறக்கங்கள்"
+  },
+  "popup_tab_page": {
+    "message": "இந்தப் பக்கம்"
+  },
+  "popup_tab_settings": {
+    "message": "அமைப்புகள்"
+  },
+  "popup_conn": {
+    "message": "இணைக்கப்பட்டது · $version$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.5.2"
+      }
+    }
+  },
+  "popup_conn_plain": {
+    "message": "இணைக்கப்பட்டது"
+  },
+  "popup_conn_off": {
+    "message": "இணைக்கப்படவில்லை"
+  },
+  "popup_conn_paused": {
+    "message": "இடைநிறுத்தப்பட்டது"
+  },
+  "popup_conn_update": {
+    "message": "Mister Download Managerஐப் புதுப்பிக்கவும்"
+  },
+  "popup_conn_remote": {
+    "message": "$server$க்கு அனுப்புகிறது",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_cancel": {
+    "message": "ரத்துசெய்"
+  },
+  "popup_page_none": {
+    "message": "இது ஒரு வலைப்பக்கம் அல்ல: இங்கே செய்ய எதுவும் இல்லை."
+  },
+  "popup_exclude_by_rule": {
+    "message": "விருப்பத்தேர்வுகளில் உள்ள ஒரு விதியால் உலாவிக்கு விடப்பட்டது"
+  },
+  "popup_dl_search": {
+    "message": "பதிவிறக்கங்களைத் தேடு"
+  },
+  "popup_dl_filters": {
+    "message": "காட்டு"
+  },
+  "popup_dl_all": {
+    "message": "அனைத்தும்"
+  },
+  "popup_dl_running": {
+    "message": "இயங்குகிறது"
+  },
+  "popup_dl_done_filter": {
+    "message": "முடிந்தது"
+  },
+  "popup_dl_failed_filter": {
+    "message": "தோல்வியடைந்தது"
+  },
+  "popup_dl_clear": {
+    "message": "முடிந்தவற்றை அழி"
+  },
+  "popup_dl_running_count": {
+    "message": "$count$ பதிவிறக்கங்கள் இப்போது நடைபெறுகின்றன",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_remote": {
+    "message": "இவை $server$ இல் உள்ள Mister Download Manager இன் பதிவிறக்கங்கள். அவற்றின் கோப்புகளை அங்கே திறக்கவும்.",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_dl_more": {
+    "message": "$total$ இல் புதிய $shown$. Mister Download Manager அனைத்தையும் பட்டியலிடுகிறது.",
+    "placeholders": {
+      "shown": {
+        "content": "$1",
+        "example": "60"
+      },
+      "total": {
+        "content": "$2",
+        "example": "245"
+      }
+    }
+  },
+  "popup_dl_of": {
+    "message": "$size$ இல் $done$",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "12.3 MB"
+      },
+      "size": {
+        "content": "$2",
+        "example": "48.7 MB"
+      }
+    }
+  },
+  "popup_dl_left": {
+    "message": "$time$ மீதமுள்ளது",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "0:42"
+      }
+    }
+  },
+  "popup_dl_starting": {
+    "message": "தொடங்குகிறது..."
+  },
+  "popup_dl_paused": {
+    "message": "இடைநிறுத்தப்பட்டது"
+  },
+  "popup_dl_waiting": {
+    "message": "காத்திருக்கிறது"
+  },
+  "popup_dl_done": {
+    "message": "முடிந்தது"
+  },
+  "popup_dl_just_now": {
+    "message": "இப்போதுதான்"
+  },
+  "popup_dl_failed": {
+    "message": "தோல்வியடைந்தது"
+  },
+  "popup_dl_failed_why": {
+    "message": "தோல்வியடைந்தது: $why$",
+    "placeholders": {
+      "why": {
+        "content": "$1",
+        "example": "the server refused the connection"
+      }
+    }
+  },
+  "popup_dl_gone": {
+    "message": "கோப்பு நீக்கப்பட்டது அல்லது நகர்த்தப்பட்டது"
+  },
+  "popup_dl_loading": {
+    "message": "பதிவிறக்கங்களைத் தேடுகிறது..."
+  },
+  "popup_dl_none": {
+    "message": "இதுவரை பதிவிறக்கங்கள் இல்லை"
+  },
+  "popup_dl_none_text": {
+    "message": "Mister Download Manager மூலம் நீங்கள் பதிவிறக்குவது இங்கே காட்டப்படும்."
+  },
+  "popup_dl_no_match": {
+    "message": "எதுவும் பொருந்தவில்லை"
+  },
+  "popup_dl_no_match_text": {
+    "message": "எந்தப் பதிவிறக்கத்தின் பெயரிலோ அல்லது முகவரியிலோ “$words$” இல்லை.",
+    "placeholders": {
+      "words": {
+        "content": "$1",
+        "example": "report"
+      }
+    }
+  },
+  "popup_dl_show_all": {
+    "message": "அனைத்துப் பதிவிறக்கங்களையும் காட்டு"
+  },
+  "popup_list_off": {
+    "message": "Mister Download Manager இயங்கவில்லை"
+  },
+  "popup_list_off_text": {
+    "message": "உங்கள் பதிவிறக்கங்களை இங்கே பார்க்க அதைத் தொடங்கவும்."
+  },
+  "popup_list_start": {
+    "message": "Mister Download Managerஐத் தொடங்கு"
+  },
+  "popup_list_old": {
+    "message": "Mister Download Managerஐப் புதுப்பிக்கவும்"
+  },
+  "popup_list_old_text": {
+    "message": "இந்த பதிப்பு அதன் பதிவிறக்கங்களை இங்கே இன்னும் பட்டியலிட முடியாது."
+  },
+  "popup_list_busy": {
+    "message": "Mister Download Manager பிஸியாக உள்ளது. மீண்டும் முயற்சிக்கிறது..."
+  },
+  "popup_list_unreached": {
+    "message": "Mister Download Manager ஐ அணுக முடியவில்லை"
+  },
+  "popup_list_remote_unreachable": {
+    "message": "$server$ இல் உள்ள Mister Download Manager ஐ அணுக முடியவில்லை",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_list_remote_unreachable_text": {
+    "message": "இது இயங்குகிறதா என்பதையும், இந்த உலாவி அதன் சான்றிதழை ஏற்கிறதா என்பதையும் சரிபார்க்கவும் (அமைப்புகள் → பதிவிறக்கங்களை இதற்கு அனுப்பவும் → அதைத் திறக்கவும்).",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_act_open": {
+    "message": "திற"
+  },
+  "popup_act_open_named": {
+    "message": "$file$ஐத் திறக்கவும்",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_folder": {
+    "message": "கோப்புறையில் காட்டு"
+  },
+  "popup_act_folder_named": {
+    "message": "$file$ஐ கோப்புறையில் காட்டு",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_copy_file": {
+    "message": "கோப்பை நகலெடு"
+  },
+  "popup_act_share": {
+    "message": "பகிர்..."
+  },
+  "popup_act_copy_link": {
+    "message": "இணைப்பை நகலெடு"
+  },
+  "popup_act_pause": {
+    "message": "இடைநிறுத்து"
+  },
+  "popup_act_pause_named": {
+    "message": "$file$ஐ இடைநிறுத்து",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_resume": {
+    "message": "மீண்டும் தொடங்கு"
+  },
+  "popup_act_resume_named": {
+    "message": "$file$ஐ மீண்டும் தொடங்கு",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_again": {
+    "message": "மீண்டும் பதிவிறக்கு"
+  },
+  "popup_act_remove": {
+    "message": "பட்டியலிலிருந்து அகற்று"
+  },
+  "popup_act_delete": {
+    "message": "கோப்பை நீக்கு..."
+  },
+  "popup_act_more": {
+    "message": "மேலும் செயல்கள்"
+  },
+  "popup_act_more_named": {
+    "message": "$file$ க்கான மேலும் செயல்கள்",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_title": {
+    "message": "கோப்பை நீக்கவா?"
+  },
+  "popup_ask_delete": {
+    "message": "$file$ உங்கள் கணினியிலிருந்து நீக்கப்படும், மேலும் பதிவிறக்கம் பட்டியலிலிருந்து அகற்றப்படும். இதைச் செயல்தவிர்க்க முடியாது.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_ok": {
+    "message": "நீக்கு"
+  },
+  "popup_ask_clear_title": {
+    "message": "முடிந்த பதிவிறக்கங்களை அழிக்கவா?"
+  },
+  "popup_ask_clear": {
+    "message": "$count$ முடிந்த பதிவிறக்கங்கள் பட்டியலிலிருந்து நீக்கப்படும். அவற்றின் கோப்புகள் இருக்கும் இடத்திலேயே இருக்கும்.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "8"
+      }
+    }
+  },
+  "popup_ask_clear_ok": {
+    "message": "அழி"
+  },
+  "popup_said_file": {
+    "message": "$file$ நகலெடுக்கப்பட்டது. அதை ஒரு கோப்புறை, அரட்டை அல்லது செய்தியில் ஒட்டவும்.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_link": {
+    "message": "இணைப்பு நகலெடுக்கப்பட்டது"
+  },
+  "popup_said_removed": {
+    "message": "$file$ பட்டியலிலிருந்து அகற்றப்பட்டது",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_deleted": {
+    "message": "$file$ நீக்கப்பட்டது",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_again": {
+    "message": "$file$ மீண்டும் பதிவிறக்கப்படுகிறது",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_cleared": {
+    "message": "முடிந்த பதிவிறக்கங்கள் அழிக்கப்பட்டன"
+  },
+  "popup_act_gone": {
+    "message": "அந்தப் பதிவிறக்கம் இப்போது பட்டியலில் இல்லை."
+  },
+  "popup_act_missing": {
+    "message": "அதன் கோப்பு சேமிக்கப்பட்ட இடத்தில் இல்லை (நகர்த்தப்பட்டது அல்லது நீக்கப்பட்டது)."
+  },
+  "popup_act_running": {
+    "message": "முதலில் இடைநிறுத்தவும்."
+  },
+  "popup_act_cant": {
+    "message": "இந்த பதிவிறக்கத்திற்கு இதை இப்போது செய்ய முடியாது."
+  },
+  "popup_act_unsupported": {
+    "message": "இந்த சிஸ்டத்தால் அதைச் செய்ய முடியாது."
+  },
+  "popup_act_off": {
+    "message": "Mister Download Manager இயங்கவில்லை."
+  },
+  "popup_act_busy": {
+    "message": "Mister Download Manager சரியான நேரத்தில் பதிலளிக்கவில்லை. மீண்டும் முயற்சிக்கவும்."
+  },
+  "popup_act_failed": {
+    "message": "அது வேலை செய்யவில்லை. மீண்டும் முயற்சிக்கவும்."
+  },
+  "status_running": {
+    "message": "பதிவிறக்கப்படுகிறது: $count$",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_open_remote": {
+    "message": "அதன் பக்கத்தைத் திற"
   }
 }

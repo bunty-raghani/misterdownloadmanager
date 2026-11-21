@@ -92,9 +92,6 @@
       }
     }
   },
-  "popup_undo": {
-    "message": "Αναίρεση"
-  },
   "popup_excluded": {
     "message": "Οι λήψεις από το $site$ παραμένουν στο πρόγραμμα περιήγησης",
     "placeholders": {
@@ -148,6 +145,9 @@
   },
   "declined_integration_off": {
     "message": "Η επιλογή «Χρήση προηγμένης ενσωμάτωσης προγράμματος περιήγησης» είναι απενεργοποιημένη στις Επιλογές → Γενικά."
+  },
+  "declined_torrents": {
+    "message": "Είναι ένα torrent και η επιλογή Άνοιγμα συνδέσμων magnet και αρχείων .torrent με Mister Download Manager είναι απενεργοποιημένη στις ρυθμίσεις Torrent."
   },
   "declined_site_access": {
     "message": "Η επέκταση δεν επιτρέπεται να διαβάσει αυτόν τον ιστότοπο (πρόσβαση στον ιστότοπο του προγράμματος περιήγησης)."
@@ -328,5 +328,424 @@
   },
   "video_original": {
     "message": "πρωτότυπο"
+  },
+  "video_compatible": {
+    "message": "Πιο συμβατό"
+  },
+  "popup_video_hide_fullscreen": {
+    "message": "Απόκρυψη του κουμπιού λήψης σε πλήρη οθόνη"
+  },
+  "popup_video_hide_fullscreen_title": {
+    "message": "Όταν η σελίδα είναι σε πλήρη οθόνη, τα βίντεό της δεν εμφανίζουν το κουμπί «Λήψη βίντεο»"
+  },
+  "popup_remote_forget": {
+    "message": "Ξεχάστε"
+  },
+  "popup_gear": {
+    "message": "Επιλογές στο Mister Download Manager"
+  },
+  "popup_tabs": {
+    "message": "Ενότητες αναδυόμενου παραθύρου"
+  },
+  "popup_tab_downloads": {
+    "message": "Λήψεις"
+  },
+  "popup_tab_page": {
+    "message": "Αυτή η σελίδα"
+  },
+  "popup_tab_settings": {
+    "message": "Ρυθμίσεις"
+  },
+  "popup_conn": {
+    "message": "Συνδεδεμένο · $version$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.5.2"
+      }
+    }
+  },
+  "popup_conn_plain": {
+    "message": "Συνδεδεμένο"
+  },
+  "popup_conn_off": {
+    "message": "Δεν είναι συνδεδεμένο"
+  },
+  "popup_conn_paused": {
+    "message": "Σε παύση"
+  },
+  "popup_conn_update": {
+    "message": "Ενημέρωση Mister Download Manager"
+  },
+  "popup_conn_remote": {
+    "message": "Αποστολή σε $server$",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_cancel": {
+    "message": "Ακύρωση"
+  },
+  "popup_page_none": {
+    "message": "Αυτή δεν είναι ιστοσελίδα: δεν υπάρχει τίποτα να κάνετε εδώ."
+  },
+  "popup_exclude_by_rule": {
+    "message": "Αφέθηκε στο πρόγραμμα περιήγησης από έναν κανόνα στις Επιλογές"
+  },
+  "popup_dl_search": {
+    "message": "Αναζήτηση λήψεων"
+  },
+  "popup_dl_filters": {
+    "message": "Εμφάνιση"
+  },
+  "popup_dl_all": {
+    "message": "Όλες"
+  },
+  "popup_dl_running": {
+    "message": "Σε εξέλιξη"
+  },
+  "popup_dl_done_filter": {
+    "message": "Ολοκληρώθηκε"
+  },
+  "popup_dl_failed_filter": {
+    "message": "Απέτυχε"
+  },
+  "popup_dl_clear": {
+    "message": "Εκκαθάριση ολοκληρωμένων"
+  },
+  "popup_dl_running_count": {
+    "message": "$count$ λήψεις σε εξέλιξη τώρα",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_remote": {
+    "message": "Αυτές είναι οι λήψεις του Mister Download Manager στο $server$. Ανοίξτε τα αρχεία τους εκεί.",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_dl_more": {
+    "message": "Οι νεότερες $shown$ από $total$. Το Mister Download Manager τις παραθέτει όλες.",
+    "placeholders": {
+      "shown": {
+        "content": "$1",
+        "example": "60"
+      },
+      "total": {
+        "content": "$2",
+        "example": "245"
+      }
+    }
+  },
+  "popup_dl_of": {
+    "message": "$done$ από $size$",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "12.3 MB"
+      },
+      "size": {
+        "content": "$2",
+        "example": "48.7 MB"
+      }
+    }
+  },
+  "popup_dl_left": {
+    "message": "Απομένουν $time$",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "0:42"
+      }
+    }
+  },
+  "popup_dl_starting": {
+    "message": "Εκκίνηση..."
+  },
+  "popup_dl_paused": {
+    "message": "Σε παύση"
+  },
+  "popup_dl_waiting": {
+    "message": "Σε αναμονή"
+  },
+  "popup_dl_done": {
+    "message": "Ολοκληρώθηκε"
+  },
+  "popup_dl_just_now": {
+    "message": "μόλις τώρα"
+  },
+  "popup_dl_failed": {
+    "message": "Απέτυχε"
+  },
+  "popup_dl_failed_why": {
+    "message": "Απέτυχε: $why$",
+    "placeholders": {
+      "why": {
+        "content": "$1",
+        "example": "the server refused the connection"
+      }
+    }
+  },
+  "popup_dl_gone": {
+    "message": "Το αρχείο διαγράφηκε ή μετακινήθηκε"
+  },
+  "popup_dl_loading": {
+    "message": "Αναζήτηση λήψεων..."
+  },
+  "popup_dl_none": {
+    "message": "Δεν υπάρχουν λήψεις ακόμα"
+  },
+  "popup_dl_none_text": {
+    "message": "Ό,τι κατεβάζετε με το Mister Download Manager εμφανίζεται εδώ."
+  },
+  "popup_dl_no_match": {
+    "message": "Τίποτα δεν ταιριάζει"
+  },
+  "popup_dl_no_match_text": {
+    "message": "Κανένα όνομα ή διεύθυνση λήψης δεν περιέχει «$words$».",
+    "placeholders": {
+      "words": {
+        "content": "$1",
+        "example": "report"
+      }
+    }
+  },
+  "popup_dl_show_all": {
+    "message": "Εμφάνιση όλων των λήψεων"
+  },
+  "popup_list_off": {
+    "message": "Το Mister Download Manager δεν εκτελείται"
+  },
+  "popup_list_off_text": {
+    "message": "Εκκινήστε το για να δείτε τις λήψεις σας εδώ."
+  },
+  "popup_list_start": {
+    "message": "Εκκίνηση Mister Download Manager"
+  },
+  "popup_list_old": {
+    "message": "Ενημέρωση Mister Download Manager"
+  },
+  "popup_list_old_text": {
+    "message": "Αυτή η έκδοση δεν μπορεί να παραθέσει τις λήψεις της εδώ ακόμα."
+  },
+  "popup_list_busy": {
+    "message": "Το Mister Download Manager είναι απασχολημένο. Γίνεται νέα προσπάθεια..."
+  },
+  "popup_list_unreached": {
+    "message": "Δεν είναι δυνατή η σύνδεση με το Mister Download Manager"
+  },
+  "popup_list_remote_unreachable": {
+    "message": "Δεν είναι δυνατή η σύνδεση με το Mister Download Manager στον διακομιστή $server$",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_list_remote_unreachable_text": {
+    "message": "Βεβαιωθείτε ότι εκτελείται και ότι αυτό το πρόγραμμα περιήγησης εμπιστεύεται το πιστοποιητικό του (Ρυθμίσεις → Αποστολή λήψεων σε → Άνοιγμα).",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_act_open": {
+    "message": "Άνοιγμα"
+  },
+  "popup_act_open_named": {
+    "message": "Άνοιγμα $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_folder": {
+    "message": "Εμφάνιση στον φάκελο"
+  },
+  "popup_act_folder_named": {
+    "message": "Εμφάνιση του $file$ στον φάκελο",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_copy_file": {
+    "message": "Αντιγραφή αρχείου"
+  },
+  "popup_act_share": {
+    "message": "Κοινή χρήση..."
+  },
+  "popup_act_copy_link": {
+    "message": "Αντιγραφή συνδέσμου"
+  },
+  "popup_act_pause": {
+    "message": "Παύση"
+  },
+  "popup_act_pause_named": {
+    "message": "Παύση $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_resume": {
+    "message": "Συνέχιση"
+  },
+  "popup_act_resume_named": {
+    "message": "Συνέχιση $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_again": {
+    "message": "Λήψη ξανά"
+  },
+  "popup_act_remove": {
+    "message": "Κατάργηση από τη λίστα"
+  },
+  "popup_act_delete": {
+    "message": "Διαγραφή αρχείου..."
+  },
+  "popup_act_more": {
+    "message": "Περισσότερες ενέργειες"
+  },
+  "popup_act_more_named": {
+    "message": "Περισσότερες ενέργειες για το $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_title": {
+    "message": "Διαγραφή του αρχείου;"
+  },
+  "popup_ask_delete": {
+    "message": "Το $file$ θα διαγραφεί από τον υπολογιστή σας και η λήψη θα αφαιρεθεί από τη λίστα. Αυτό δεν μπορεί να αναιρεθεί.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_ok": {
+    "message": "Διαγραφή"
+  },
+  "popup_ask_clear_title": {
+    "message": "Εκκαθάριση ολοκληρωμένων λήψεων;"
+  },
+  "popup_ask_clear": {
+    "message": "Θέλετε να αφαιρεθούν οι $count$ ολοκληρωμένες λήψεις από τη λίστα; Τα αρχεία τους θα παραμείνουν εκεί που είναι.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "8"
+      }
+    }
+  },
+  "popup_ask_clear_ok": {
+    "message": "Εκκαθάριση"
+  },
+  "popup_said_file": {
+    "message": "Αντιγράφηκε το $file$. Επικολλήστε το σε έναν φάκελο, μια συνομιλία ή ένα μήνυμα.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_link": {
+    "message": "Ο σύνδεσμος αντιγράφηκε"
+  },
+  "popup_said_removed": {
+    "message": "Το $file$ καταργήθηκε από τη λίστα",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_deleted": {
+    "message": "Το $file$ διαγράφηκε",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_again": {
+    "message": "Γίνεται λήψη του $file$ ξανά",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_cleared": {
+    "message": "Οι ολοκληρωμένες λήψεις εκκαθαρίστηκαν"
+  },
+  "popup_act_gone": {
+    "message": "Αυτή η λήψη δεν βρίσκεται πλέον στη λίστα."
+  },
+  "popup_act_missing": {
+    "message": "Το αρχείο του δεν βρίσκεται πλέον εκεί που αποθηκεύτηκε (μετακινήθηκε ή διαγράφηκε)."
+  },
+  "popup_act_running": {
+    "message": "Κάντε πρώτα παύση."
+  },
+  "popup_act_cant": {
+    "message": "Αυτό δεν μπορεί να γίνει σε αυτήν τη λήψη τώρα."
+  },
+  "popup_act_unsupported": {
+    "message": "Αυτό το σύστημα δεν μπορεί να το κάνει."
+  },
+  "popup_act_off": {
+    "message": "Το Mister Download Manager δεν εκτελείται."
+  },
+  "popup_act_busy": {
+    "message": "Το Mister Download Manager δεν απάντησε εγκαίρως. Δοκιμάστε ξανά."
+  },
+  "popup_act_failed": {
+    "message": "Αυτό δεν λειτούργησε. Δοκιμάστε ξανά."
+  },
+  "status_running": {
+    "message": "Γίνεται λήψη: $count$",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_open_remote": {
+    "message": "Άνοιγμα της σελίδας του"
   }
 }

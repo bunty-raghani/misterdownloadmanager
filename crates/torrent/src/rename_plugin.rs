@@ -170,10 +170,15 @@ pub fn apply_from_memory(hash: &str, entries: &mut [crate::FileEntry]) {
 #[derive(Clone)]
 pub struct RenameStorageFactory {
     session_dir: PathBuf,
+    guarded: bool,
 }
 
-pub fn storage_factory(session_dir: PathBuf) -> BoxStorageFactory {
-    RenameStorageFactory { session_dir }.boxed()
+pub fn storage_factory(session_dir: PathBuf, guarded: bool) -> BoxStorageFactory {
+    RenameStorageFactory {
+        session_dir,
+        guarded,
+    }
+    .boxed()
 }
 
 impl StorageFactory for RenameStorageFactory {
@@ -186,11 +191,15 @@ impl StorageFactory for RenameStorageFactory {
     ) -> anyhow::Result<Self::Storage> {
         let hash = shared.info_hash.as_string();
         let custom = get_renamed_file(&self.session_dir, &hash);
-        let inner = FilesystemStorageFactory::default().create(shared, metadata)?;
-        Ok(RenameStorage {
-            inner: Box::new(inner),
-            custom,
-        })
+        let inner: Box<dyn TorrentStorage> = if self.guarded {
+            Box::new(crate::authorized_storage::Storage::new(
+                self.session_dir.clone(),
+                hash,
+            ))
+        } else {
+            Box::new(FilesystemStorageFactory::default().create(shared, metadata)?)
+        };
+        Ok(RenameStorage { inner, custom })
     }
 
     fn is_type_id(&self, type_id: TypeId) -> bool {
@@ -298,7 +307,7 @@ mod tests {
         apply_to_entries(dir.path(), hash, &mut entries);
         assert_eq!(entries[0].path, PathBuf::from("RenamedVideo.mp4"));
 
-        let factory = storage_factory(dir.path().to_path_buf());
+        let factory = storage_factory(dir.path().to_path_buf(), false);
         assert!(factory.is_type_id(TypeId::of::<FilesystemStorageFactory>()));
 
         remove_renamed_file(dir.path(), hash);

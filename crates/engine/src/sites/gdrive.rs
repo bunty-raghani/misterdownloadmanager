@@ -109,7 +109,7 @@ fn host_is(url: &Url, host: &str) -> bool {
 }
 
 /// Drive's IDs: letters, digits, `_` and `-`, 25 or more.
-fn is_id(s: &str) -> bool {
+pub fn is_id(s: &str) -> bool {
     s.len() >= 25
         && s.bytes()
             .all(|b| b.is_ascii_alphanumeric() || b == b'_' || b == b'-')

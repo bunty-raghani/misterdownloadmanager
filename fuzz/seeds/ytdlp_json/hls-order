@@ -1,0 +1,35 @@
+{
+ "title": "order",
+ "duration": 115,
+ "language": "en",
+ "subtitles": {},
+ "formats": [
+  {
+   "format_id": "aud-English",
+   "ext": "mp4",
+   "vcodec": "none",
+   "tbr": null,
+   "protocol": "m3u8_native"
+  },
+  {
+   "format_id": "500",
+   "ext": "mp4",
+   "height": 270,
+   "fps": null,
+   "vcodec": "avc1.42e01e",
+   "acodec": "none",
+   "tbr": 500.0,
+   "protocol": "m3u8_native"
+  },
+  {
+   "format_id": "6000",
+   "ext": "mp4",
+   "height": 1080,
+   "fps": null,
+   "vcodec": "avc1.640028",
+   "acodec": "none",
+   "tbr": 6000.0,
+   "protocol": "m3u8_native"
+  }
+ ]
+}

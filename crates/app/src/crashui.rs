@@ -261,7 +261,9 @@ fn prepare(job: &Job, shared: Arc<Mutex<Shared>>, ctx: egui::Context) {
         else {
             return;
         };
-        let Ok(http) = reqwest::Client::builder()
+        // The certificates MDM's own connections trust (the system's, Mozilla's where it lacks a
+        // root: mdm_engine::tls, #1546).
+        let Ok(http) = mdm_engine::tls::configure(reqwest::Client::builder())
             .user_agent(concat!("MisterDownloadManager/", env!("CARGO_PKG_VERSION")))
             .timeout(Duration::from_secs(120))
             .build()

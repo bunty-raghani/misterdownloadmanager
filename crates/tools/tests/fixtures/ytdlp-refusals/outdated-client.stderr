@@ -1,0 +1,2 @@
+WARNING: [youtube] jNQXAC9IVRw: Some web client https formats have been skipped as they are missing a url. YouTube is forcing SABR streaming for this client. See  https://github.com/yt-dlp/yt-dlp/issues/12482  for more details
+ERROR: [youtube] jNQXAC9IVRw: The following content is not available on this app.

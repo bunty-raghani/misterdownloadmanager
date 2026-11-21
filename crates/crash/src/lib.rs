@@ -13,9 +13,11 @@
 //! - `github`: the issue form and the search for one already filed.
 //! - `symbols`: the release's symbols, fetched on demand.
 //! - `logs`: the log MDM keeps in release builds too, and its last lines.
+//! - `frame`: a crash signal's frame, for the app's handler in front of crash-handler's (#1239).
 
 pub mod analyze;
 pub mod client;
+pub mod frame;
 pub mod github;
 pub mod logs;
 mod modules;

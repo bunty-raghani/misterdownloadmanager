@@ -731,6 +731,43 @@ mod tests {
         assert_eq!(t.dark.text, CLASSIC.dark.text);
     }
 
+    /// Windows XP's parts any theme can take: its column headers, scroll bars and menu font,
+    /// and the colours they and the progress window's connections table read.
+    #[test]
+    fn a_file_takes_xp_headers_scroll_bars_and_menu_font() {
+        use crate::palette::{HeaderLook, ScrollLook, UiFont};
+        let l = toml_theme(
+            "xp",
+            r##"
+            [controls]
+            header = "luna"
+            scroll = "luna"
+            ui-font = "tahoma"
+            [light]
+            "progress.connections" = "#beb4bd"
+            "scroll.edge" = "#a4b6dc"
+            "scroll.glyph" = "#4d6185"
+            "##,
+        )
+        .unwrap();
+        assert!(l.warnings.is_empty(), "{:?}", l.warnings);
+        let t = l.theme;
+        assert_eq!(t.controls.header, HeaderLook::Luna);
+        assert_eq!(t.controls.scroll, ScrollLook::Luna);
+        assert_eq!(t.controls.ui_font, UiFont::Tahoma);
+        assert_eq!(t.light.connections, Color32::from_rgb(0xbe, 0xb4, 0xbd));
+        assert_eq!(t.light.scroll_edge, Color32::from_rgb(0xa4, 0xb6, 0xdc));
+        assert_eq!(t.light.scroll_glyph, Color32::from_rgb(0x4d, 0x61, 0x85));
+        // The dark side keeps the list's background for the table.
+        assert_eq!(t.dark.connections, Color32::TRANSPARENT);
+        // Flat headers and the system's font by default; an unknown style is a warning.
+        assert_eq!(CLASSIC.controls.header, HeaderLook::Flat);
+        assert_eq!(CLASSIC.controls.ui_font, UiFont::System);
+        let w = toml_theme("w", "[controls]\nheader = \"wavy\"\nui-font = \"comic\"").unwrap();
+        assert_eq!(w.warnings.len(), 2, "{:?}", w.warnings);
+        assert_eq!(w.theme.controls, CLASSIC.controls);
+    }
+
     #[test]
     fn json_reads_the_same() {
         let v: Value = serde_json::from_str(

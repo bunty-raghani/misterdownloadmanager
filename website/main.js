@@ -87,25 +87,23 @@
   })();
 
   // ---- The language picker: a dialog over the page ------------------------------------------
-  // The header's button opens it (without scripts it is a link to the languages page). The
-  // browser's own modal dialog keeps the focus inside and closes on Escape; a click on the
-  // backdrop closes it too, and the focus goes back to the button.
+  // The header's button opens it (without scripts it is a link to the languages page). It is a
+  // Vitrine modal (website/vitrine/, on the browser's own dialog): the focus stays
+  // inside and starts on the current language, Escape, a click on the backdrop, its close button
+  // or Back close it, the page behind doesn't scroll, and the focus goes back to the button.
   each("[data-lang-open]", function (btn) {
     var dialog = btn.parentNode.querySelector(".lang-dialog");
-    if (!dialog || typeof dialog.showModal !== "function") return;
+    if (!dialog || !window.Vitrine || !Vitrine.modal || typeof dialog.showModal !== "function") return;
     btn.setAttribute("role", "button");
     function open(e) {
       e.preventDefault();
-      dialog.showModal();
-      root.classList.add("dialog-on");
+      if (!Vitrine.modal.open(dialog, btn)) return;
       var cur = dialog.querySelector("[aria-current]");
       if (cur) cur.focus();
     }
     btn.addEventListener("click", open);
     btn.addEventListener("keydown", function (e) { if (e.key === " ") open(e); });
-    dialog.addEventListener("close", function () { root.classList.remove("dialog-on"); btn.focus(); });
-    dialog.addEventListener("click", function (e) { if (e.target === dialog) dialog.close(); });
-    dialog.querySelector("[data-lang-close]").addEventListener("click", function () { dialog.close(); });
+    dialog.querySelector("[data-lang-close]").setAttribute("data-modal-close", "");
   });
 
   // ---- Light / dark ------------------------------------------------------------------------
@@ -315,189 +313,43 @@
   });
 
   // ---- Lightbox: any screenshot, big ----------------------------------------------------------
-  // Images in [data-lightbox] groups (and every screenshot in a help article) open over the page
-  // at their full resolution, fitted to the screen. Click or double-click switches to real pixels
-  // (drag or scroll to look around, the wheel zooms), arrows and swipes go through the group,
-  // Escape or the backdrop closes. The day or night version shown on the page is the one opened.
-  (function () {
-    function visible(img) { return img.offsetParent !== null || img.getClientRects().length > 0; }
-    function groupOf(img) {
-      var g = img.closest("[data-lightbox]") || img.closest(".prose");
-      if (!g) return [img];
-      return Array.prototype.filter.call(g.querySelectorAll("img"), function (i) {
-        return !i.closest(".lb-skip") && (visible(i) || i === img) && i.naturalWidth > 120;
-      });
-    }
-    function caption(img) {
-      var fig = img.closest("figure");
-      var cap = fig && fig.querySelector("figcaption");
-      if (!cap) return img.alt || "";
-      // "Title · what it shows" when the caption leads with a bold title.
-      var b = cap.querySelector("b");
-      var all = cap.textContent.replace(/\s+/g, " ").trim();
-      if (!b) return all;
-      var t = b.textContent.trim();
-      return all.indexOf(t) === 0 && all.length > t.length ? t + " · " + all.slice(t.length).trim() : all;
-    }
-    var box, stage, pic, capEl, countEl, prevB, nextB, list = [], at = 0, zoomed = false, opener = null;
-    var scale = 1, fit = 1, tx = 0, ty = 0, drag = null, moved = false;
-
-    function build() {
-      box = document.createElement("div");
-      box.className = "lb";
-      box.setAttribute("role", "dialog");
-      box.setAttribute("aria-modal", "true");
-      box.setAttribute("aria-label", t("Image viewer"));
-      box.innerHTML =
-        '<div class="lb-stage"><img class="lb-pic" alt=""></div>' +
-        '<div class="lb-bar"><span class="lb-count"></span><p class="lb-cap"></p>' +
-        '<span class="lb-hint">' + t("Click to zoom · drag to move") + '</span>' +
-        '<button type="button" class="lb-btn lb-close" aria-label="' + t("Close") + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>' +
-        '<button type="button" class="lb-btn lb-nav lb-prev" aria-label="' + t("Previous image") + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>' +
-        '<button type="button" class="lb-btn lb-nav lb-next" aria-label="' + t("Next image") + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>';
-      document.body.appendChild(box);
-      stage = box.querySelector(".lb-stage");
-      pic = box.querySelector(".lb-pic");
-      capEl = box.querySelector(".lb-cap");
-      countEl = box.querySelector(".lb-count");
-      prevB = box.querySelector(".lb-prev");
-      nextB = box.querySelector(".lb-next");
-      box.querySelector(".lb-close").addEventListener("click", close);
-      prevB.addEventListener("click", function () { go(-1); });
-      nextB.addEventListener("click", function () { go(1); });
-      // The backdrop closes; the picture zooms.
-      stage.addEventListener("click", function (e) {
-        if (moved) { moved = false; return; }
-        if (e.target !== pic) return close();
-        zoomAt(zoomed ? null : e);
-      });
-      stage.addEventListener("wheel", function (e) {
-        e.preventDefault();
-        var r = pic.getBoundingClientRect();
-        var k = Math.exp(-e.deltaY * 0.0015);
-        var next = Math.max(fit, Math.min(4, scale * k));
-        // Keep the point under the pointer where it is.
-        var px = e.clientX - (r.left + r.width / 2), py = e.clientY - (r.top + r.height / 2);
-        tx -= px * (next / scale - 1); ty -= py * (next / scale - 1);
-        scale = next; zoomed = scale > fit * 1.01;
-        if (!zoomed) { tx = ty = 0; }
-        apply();
-      }, { passive: false });
-      stage.addEventListener("pointerdown", function (e) {
-        if (e.target !== pic) return;
-        drag = { x: e.clientX, y: e.clientY, tx: tx, ty: ty, id: e.pointerId };
-        moved = false;
-      });
-      window.addEventListener("pointermove", function (e) {
-        if (!drag || drag.id !== e.pointerId) return;
-        var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
-        if (Math.abs(dx) + Math.abs(dy) > 6) moved = true;
-        if (zoomed) { tx = drag.tx + dx; ty = drag.ty + dy; apply(); }
-        else pic.style.transform = "translateX(" + dx + "px) scale(" + scale + ")";
-      });
-      window.addEventListener("pointerup", function (e) {
-        if (!drag || drag.id !== e.pointerId) return;
-        var dx = e.clientX - drag.x;
-        drag = null;
-        // A swipe at the fitted size goes to the next or previous image.
-        if (!zoomed && moved && Math.abs(dx) > 60 && list.length > 1) go(dx < 0 ? 1 : -1);
-        else apply();
-      });
-      // Keys work wherever the focus is while the viewer is open (a click on the picture moves it).
-      document.addEventListener("keydown", function (e) {
-        if (!box.classList.contains("open")) return;
-        if (e.key === "Escape") { e.preventDefault(); close(); }
-        else if (e.key === "ArrowRight") { e.preventDefault(); go(1); }
-        else if (e.key === "ArrowLeft") { e.preventDefault(); go(-1); }
-        else if (e.key === "+" || e.key === "=") zoomAt(null, true);
-        else if (e.key === "-" || e.key === "0") { zoomed = false; scale = fit; tx = ty = 0; apply(); }
-        else if (e.key === "Tab") {
-          // Focus stays in the viewer.
-          var f = box.querySelectorAll("button:not([hidden])");
-          var first = f[0], last = f[f.length - 1];
-          if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-          else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
-        }
-      });
-      window.addEventListener("resize", function () { if (box.classList.contains("open")) measure(); });
-    }
-    // The fitted scale: the whole picture on screen, never larger than its real pixels.
-    function measure() {
-      var w = pic.naturalWidth, h = pic.naturalHeight;
-      if (!w) return;
-      var room = stage.getBoundingClientRect();
-      // Shown at the size the page gives it in CSS pixels (its width attribute, which
-      // tools/website/screens.py keeps true): a 2x picture at half its pixels, a 1x one at its
-      // own. A help page's pictures have no width: their pixels are CSS pixels.
-      var css = +pic.getAttribute("data-w");
-      var real = css ? css / w : 1;
-      pic.style.width = w * real + "px";
-      pic.style.height = h * real + "px";
-      fit = Math.min(1, (room.width - 48) / (w * real), (room.height - 32) / (h * real));
-      if (!zoomed) { scale = fit; tx = ty = 0; }
-      apply();
-    }
-    function apply() {
-      pic.style.transform = "translate(" + tx + "px," + ty + "px) scale(" + scale + ")";
-      box.classList.toggle("zoomed", zoomed);
-    }
-    function zoomAt(e, keys) {
-      if (zoomed && !keys) { zoomed = false; scale = fit; tx = ty = 0; return apply(); }
-      var target = Math.max(1, fit * 2);
-      if (e) {
-        var r = pic.getBoundingClientRect();
-        var px = e.clientX - (r.left + r.width / 2), py = e.clientY - (r.top + r.height / 2);
-        tx = -px * (target / scale - 1); ty = -py * (target / scale - 1);
-      }
-      scale = target; zoomed = true;
-      apply();
-    }
-    function show() {
-      var img = list[at];
-      zoomed = false; tx = ty = 0;
-      box.classList.add("loading");
-      pic.onload = function () { box.classList.remove("loading"); measure(); };
-      pic.src = img.currentSrc || img.src;
-      pic.alt = img.alt || "";
-      pic.setAttribute("data-w", img.getAttribute("width") || "");
-      capEl.textContent = caption(img);
-      countEl.textContent = list.length > 1 ? (at + 1) + " / " + list.length : "";
-      prevB.hidden = nextB.hidden = list.length < 2;
-      if (pic.complete && pic.naturalWidth) { box.classList.remove("loading"); measure(); }
-    }
-    function go(d) {
-      if (list.length < 2) return;
-      at = (at + d + list.length) % list.length;
-      show();
-    }
-    function open(img) {
-      if (!box) build();
-      opener = img;
-      list = groupOf(img);
-      at = Math.max(0, list.indexOf(img));
-      document.documentElement.classList.add("lb-on");
-      box.classList.add("open");
-      show();
-      box.querySelector(".lb-close").focus();
-    }
-    function close() {
-      box.classList.remove("open", "zoomed");
-      document.documentElement.classList.remove("lb-on");
-      if (opener) opener.focus({ preventScroll: true });
-    }
-    // Every image that opens: clickable, focusable, announced as a button.
-    each("[data-lightbox] img, .prose img", function (img) {
-      if (img.closest(".lb-skip") || img.closest("a")) return;
-      img.classList.add("lb-zoomable");
-      img.setAttribute("tabindex", "0");
-      img.setAttribute("role", "button");
-      img.setAttribute("aria-label", (img.alt || "Screenshot") + " (open larger)");
-      img.addEventListener("click", function () { open(img); });
-      img.addEventListener("keydown", function (e) {
-        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(img); }
-      });
+  // Vitrine's (anefzaoui/vitrine, vendored in website/vitrine/). Pictures in [data-lightbox] groups and
+  // every screenshot in a help article open over the page, flying from where they are, at their
+  // real size (the width and height the page gives them, which tools/website/screens.py and
+  // build.py keep true) fitted to the screen, never larger. A click, a double tap or the wheel
+  // zooms (drag to look around), arrows, keys and swipes go through the group, Escape, Back or
+  // the backdrop close it. The day or night version shown on the page is the one opened. Moving
+  // through the tour's pictures moves the tour along, so closing lands on the one last seen.
+  if (window.Vitrine && Vitrine.lightbox) {
+    Vitrine.setStrings({
+      viewer: t("Image viewer"), close: t("Close"), prev: t("Previous image"), next: t("Next image"),
+      zoomIn: t("Zoom in"), zoomOut: t("Zoom out"), counter: t("{n} of {total}"),
+      hint: t("Click to zoom · drag to move")
     });
-  })();
+    Vitrine.lightbox.init({
+      auto: ".prose",
+      skip: ".lb-skip, [data-lightbox-skip]",
+      minWidth: 121,
+      size: function (img) {
+        var w = +img.getAttribute("width"), h = +img.getAttribute("height");
+        return w && h ? [w, h] : null;
+      },
+      // "Title · what it shows" when the caption leads with a bold title.
+      caption: function (img) {
+        var fig = img.closest("figure");
+        var cap = fig && fig.querySelector("figcaption");
+        if (!cap) return null;
+        var all = cap.textContent.replace(/\s+/g, " ").trim();
+        var b = cap.querySelector("b");
+        var head = b ? b.textContent.trim() : "";
+        return head && all.indexOf(head) === 0 && all.length > head.length ? head + " · " + all.slice(head.length).trim() : all;
+      },
+      onChange: function (img) {
+        var panel = img.closest(".tour-panel");
+        if (panel) panel.dispatchEvent(new CustomEvent("tour-show", { bubbles: true }));
+      }
+    });
+  }
 
   // ---- The tour: the app one window at a time -----------------------------------------------
   // A tablist of features beside a stage whose panels share one spot and crossfade. While it is
@@ -583,8 +435,13 @@
     tour.addEventListener("focusin", function () { inside = true; });
     tour.addEventListener("focusout", function (e) { inside = !!(e.relatedTarget && tour.contains(e.relatedTarget)); wake(); });
     document.addEventListener("visibilitychange", function () { last = 0; wake(); });
-    // A picture opened in the lightbox: the tour stays on it, so closing comes back to it.
+    // A picture opened in the lightbox: the tour stays on it, so closing comes back to it; going
+    // through the pictures there takes the tour along (main.js, the lightbox's onChange).
     stage.addEventListener("click", stop);
+    stage.addEventListener("tour-show", function (e) {
+      var k = panels.indexOf(e.target);
+      if (k >= 0 && k !== at) choose(k);
+    });
     stage.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") stop(); });
     // A sideways swipe on the stage goes to the next or previous feature (touch-action: pan-y
     // leaves the vertical one to the page).

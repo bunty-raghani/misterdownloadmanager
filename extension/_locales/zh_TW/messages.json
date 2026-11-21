@@ -92,9 +92,6 @@
       }
     }
   },
-  "popup_undo": {
-    "message": "復原"
-  },
   "popup_excluded": {
     "message": "來自 $site$ 的下載保留在瀏覽器中",
     "placeholders": {
@@ -148,6 +145,9 @@
   },
   "declined_integration_off": {
     "message": "「選項 → 一般」中的「使用進階瀏覽器整合」已關閉。"
+  },
+  "declined_torrents": {
+    "message": "這是 torrent 檔案，且「在 Torrent 設定中以 Mister Download Manager 開啟磁力連結和 .torrent 檔案」已關閉。"
   },
   "declined_site_access": {
     "message": "不允許擴充功能讀取此網站 (瀏覽器的網站存取)。"
@@ -328,5 +328,424 @@
   },
   "video_original": {
     "message": "原始"
+  },
+  "video_compatible": {
+    "message": "最相容"
+  },
+  "popup_video_hide_fullscreen": {
+    "message": "全螢幕時隱藏下載按鈕"
+  },
+  "popup_video_hide_fullscreen_title": {
+    "message": "當頁面處於全螢幕模式時，其影片不會顯示「下載影片」按鈕"
+  },
+  "popup_remote_forget": {
+    "message": "忘記"
+  },
+  "popup_gear": {
+    "message": "Mister Download Manager 中的選項"
+  },
+  "popup_tabs": {
+    "message": "快顯區段"
+  },
+  "popup_tab_downloads": {
+    "message": "下載"
+  },
+  "popup_tab_page": {
+    "message": "此頁面"
+  },
+  "popup_tab_settings": {
+    "message": "設定"
+  },
+  "popup_conn": {
+    "message": "已連線 · $version$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.5.2"
+      }
+    }
+  },
+  "popup_conn_plain": {
+    "message": "已連線"
+  },
+  "popup_conn_off": {
+    "message": "未連線"
+  },
+  "popup_conn_paused": {
+    "message": "已暫停"
+  },
+  "popup_conn_update": {
+    "message": "更新 Mister Download Manager"
+  },
+  "popup_conn_remote": {
+    "message": "傳送至 $server$",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_cancel": {
+    "message": "取消"
+  },
+  "popup_page_none": {
+    "message": "這不是網頁：這裡沒有任何動作可執行。"
+  },
+  "popup_exclude_by_rule": {
+    "message": "依「選項」中的規則交由瀏覽器處理"
+  },
+  "popup_dl_search": {
+    "message": "搜尋下載項目"
+  },
+  "popup_dl_filters": {
+    "message": "顯示"
+  },
+  "popup_dl_all": {
+    "message": "全部"
+  },
+  "popup_dl_running": {
+    "message": "執行中"
+  },
+  "popup_dl_done_filter": {
+    "message": "已完成"
+  },
+  "popup_dl_failed_filter": {
+    "message": "失敗"
+  },
+  "popup_dl_clear": {
+    "message": "清除已完成"
+  },
+  "popup_dl_running_count": {
+    "message": "目前正在下載 $count$ 個",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_remote": {
+    "message": "這些是 $server$ 上 Mister Download Manager 的下載項目。請在那裡開啟其檔案。",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_dl_more": {
+    "message": "最新的 $shown$ 個，共 $total$ 個。Mister Download Manager 會列出所有項目。",
+    "placeholders": {
+      "shown": {
+        "content": "$1",
+        "example": "60"
+      },
+      "total": {
+        "content": "$2",
+        "example": "245"
+      }
+    }
+  },
+  "popup_dl_of": {
+    "message": "$done$ / $size$",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "12.3 MB"
+      },
+      "size": {
+        "content": "$2",
+        "example": "48.7 MB"
+      }
+    }
+  },
+  "popup_dl_left": {
+    "message": "剩餘 $time$",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "0:42"
+      }
+    }
+  },
+  "popup_dl_starting": {
+    "message": "正在啟動..."
+  },
+  "popup_dl_paused": {
+    "message": "已暫停"
+  },
+  "popup_dl_waiting": {
+    "message": "等候中"
+  },
+  "popup_dl_done": {
+    "message": "已完成"
+  },
+  "popup_dl_just_now": {
+    "message": "剛才"
+  },
+  "popup_dl_failed": {
+    "message": "失敗"
+  },
+  "popup_dl_failed_why": {
+    "message": "失敗：$why$",
+    "placeholders": {
+      "why": {
+        "content": "$1",
+        "example": "the server refused the connection"
+      }
+    }
+  },
+  "popup_dl_gone": {
+    "message": "檔案已刪除或移動"
+  },
+  "popup_dl_loading": {
+    "message": "正在尋找下載項目..."
+  },
+  "popup_dl_none": {
+    "message": "尚無下載項目"
+  },
+  "popup_dl_none_text": {
+    "message": "您使用 Mister Download Manager 下載的內容會顯示在這裡。"
+  },
+  "popup_dl_no_match": {
+    "message": "無相符項目"
+  },
+  "popup_dl_no_match_text": {
+    "message": "沒有下載項目的名稱或位址包含「$words$」。",
+    "placeholders": {
+      "words": {
+        "content": "$1",
+        "example": "report"
+      }
+    }
+  },
+  "popup_dl_show_all": {
+    "message": "顯示所有下載項目"
+  },
+  "popup_list_off": {
+    "message": "Mister Download Manager 未執行"
+  },
+  "popup_list_off_text": {
+    "message": "啟動它以在此處查看您的下載項目。"
+  },
+  "popup_list_start": {
+    "message": "啟動 Mister Download Manager"
+  },
+  "popup_list_old": {
+    "message": "更新 Mister Download Manager"
+  },
+  "popup_list_old_text": {
+    "message": "此版本尚無法在此處列出其下載項目。"
+  },
+  "popup_list_busy": {
+    "message": "Mister Download Manager 忙碌中。正在重試..."
+  },
+  "popup_list_unreached": {
+    "message": "無法連線到 Mister Download Manager"
+  },
+  "popup_list_remote_unreachable": {
+    "message": "無法連線到 Mister Download Manager (位於 $server$)",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_list_remote_unreachable_text": {
+    "message": "請檢查它是否正在執行，以及此瀏覽器是否接受其憑證 (設定 → 傳送下載項目至 → 開啟)。",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_act_open": {
+    "message": "開啟"
+  },
+  "popup_act_open_named": {
+    "message": "開啟 $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_folder": {
+    "message": "在資料夾中顯示"
+  },
+  "popup_act_folder_named": {
+    "message": "在資料夾中顯示 $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_copy_file": {
+    "message": "複製檔案"
+  },
+  "popup_act_share": {
+    "message": "分享..."
+  },
+  "popup_act_copy_link": {
+    "message": "複製連結"
+  },
+  "popup_act_pause": {
+    "message": "暫停"
+  },
+  "popup_act_pause_named": {
+    "message": "暫停 $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_resume": {
+    "message": "繼續"
+  },
+  "popup_act_resume_named": {
+    "message": "繼續 $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_again": {
+    "message": "再次下載"
+  },
+  "popup_act_remove": {
+    "message": "從清單中移除"
+  },
+  "popup_act_delete": {
+    "message": "刪除檔案..."
+  },
+  "popup_act_more": {
+    "message": "更多動作"
+  },
+  "popup_act_more_named": {
+    "message": "$file$ 的更多動作",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_title": {
+    "message": "刪除檔案嗎？"
+  },
+  "popup_ask_delete": {
+    "message": "$file$ 將從您的電腦中刪除，並從清單中移除下載項目。此動作無法復原。",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_ok": {
+    "message": "刪除"
+  },
+  "popup_ask_clear_title": {
+    "message": "清除已完成的下載項目嗎？"
+  },
+  "popup_ask_clear": {
+    "message": "$count$ 個已完成的下載項目將從清單中移除。其檔案會保留在原處。",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "8"
+      }
+    }
+  },
+  "popup_ask_clear_ok": {
+    "message": "清除"
+  },
+  "popup_said_file": {
+    "message": "已複製 $file$。請將其貼到資料夾、聊天或訊息中。",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_link": {
+    "message": "連結已複製"
+  },
+  "popup_said_removed": {
+    "message": "已從清單中移除 $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_deleted": {
+    "message": "已刪除 $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_again": {
+    "message": "正在再次下載 $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_cleared": {
+    "message": "已清除已完成的下載項目"
+  },
+  "popup_act_gone": {
+    "message": "該下載項目已不在清單中。"
+  },
+  "popup_act_missing": {
+    "message": "其檔案已不在儲存位置 (已移動或刪除)。"
+  },
+  "popup_act_running": {
+    "message": "請先暫停。"
+  },
+  "popup_act_cant": {
+    "message": "目前無法對此下載項目執行此動作。"
+  },
+  "popup_act_unsupported": {
+    "message": "此系統無法執行該動作。"
+  },
+  "popup_act_off": {
+    "message": "Mister Download Manager 未執行。"
+  },
+  "popup_act_busy": {
+    "message": "Mister Download Manager 未及時回應。請再試一次。"
+  },
+  "popup_act_failed": {
+    "message": "失敗。請再試一次。"
+  },
+  "status_running": {
+    "message": "正在下載：$count$",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_open_remote": {
+    "message": "開啟其頁面"
   }
 }

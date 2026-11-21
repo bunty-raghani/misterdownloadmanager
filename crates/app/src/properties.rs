@@ -66,6 +66,14 @@ impl Properties {
         std::mem::take(&mut self.files_requested)
     }
 
+    /// `item` took a new address while this window was open (the browser's next download of
+    /// its file, after Refresh download address): the window shows it, and its Referer, so OK
+    /// keeps them rather than putting back what the window opened with.
+    pub fn readdressed(&mut self, item: &Item) {
+        self.address = item.file_address().to_string();
+        self.referer = item.context.referer.clone().unwrap_or_default();
+    }
+
     /// `item` is read every frame, so status and size stay live.
     pub fn show(
         &mut self,
@@ -248,7 +256,11 @@ impl Properties {
             &dest.display().to_string(),
         );
         // Moving: a finished file is moved; one that hasn't started gets a new destination.
-        let movable = !running && (complete || item.downloaded == 0);
+        let shared = item
+            .torrent
+            .as_ref()
+            .is_some_and(|t| t.shares_folder(&item.dest));
+        let movable = !shared && !running && (complete || item.downloaded == 0);
         let pick = winui::button_light(
             ui,
             r(o, 393.0, 141.0, 73.0, 21.0),
@@ -264,7 +276,10 @@ impl Properties {
         let pick = winui::why_disabled(
             pick,
             !movable,
-            if running {
+            if shared {
+                // i18n: shown when Move or Rename is refused: a torrent saved straight in Save to shares that folder with other files
+                crate::i18n::mark("This torrent shares its destination folder")
+            } else if running {
                 // i18n: tooltip of the greyed Move button in File Properties
                 crate::i18n::mark("Pause the download first")
             } else {
@@ -556,9 +571,11 @@ mod tests {
     fn a_torrents_properties_close_with_ok() {
         let mut torrent = item("magnet:?xt=urn:btih:0123456789abcdef0123456789abcdef01234567");
         torrent.torrent = Some(crate::torrents::TorrentSpec {
+            ownership: None,
             hash: "0123456789abcdef0123456789abcdef01234567".into(),
             files: None,
             folder: PathBuf::from("f"),
+            create_subfolder: true,
             uploaded: 0,
             seeded_secs: 0,
             peers: 0,

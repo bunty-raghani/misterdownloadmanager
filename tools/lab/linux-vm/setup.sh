@@ -114,8 +114,24 @@ fi
 command -v agent-desktop >/dev/null || sudo_ npm install -g agent-desktop
 
 # --- Rust (stable; rust-toolchain.toml picks the components).
+# rustup-init itself at a fixed version, checked against its SHA-256 before it runs. To move it
+# on: the version from https://static.rust-lang.org/rustup/release-stable.toml, the hashes from
+# https://static.rust-lang.org/rustup/archive/<version>/<target>/rustup-init.sha256.
 if [ ! -x "$HOME/.cargo/bin/rustup" ]; then
-  curl -fsSL https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable
+  rustup_version=1.29.3
+  case "$(uname -m)" in
+    x86_64) rustup_target=x86_64-unknown-linux-gnu
+      rustup_sha256=b1c8cb14e30889e7e2999e6b69e62d9e9b9ffc0f4df8180564d306d9680e6c55 ;;
+    aarch64) rustup_target=aarch64-unknown-linux-gnu
+      rustup_sha256=9f608c142e0e38a78957d0661ba1dfaf0b6fb37184cfaa4b9a0aa57af6184282 ;;
+    *) echo "no pinned rustup-init for $(uname -m)" >&2; exit 1 ;;
+  esac
+  tmp=$(mktemp -d)
+  curl -fsSL -o "$tmp/rustup-init"     "https://static.rust-lang.org/rustup/archive/$rustup_version/$rustup_target/rustup-init"
+  echo "$rustup_sha256  $tmp/rustup-init" | sha256sum -c --quiet -
+  chmod +x "$tmp/rustup-init"
+  "$tmp/rustup-init" -y --profile minimal --default-toolchain stable
+  rm -rf "$tmp"
 fi
 # shellcheck disable=SC1091
 . "$HOME/.cargo/env"

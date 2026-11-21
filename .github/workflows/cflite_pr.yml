@@ -1,0 +1,50 @@
+# Fuzzing (ClusterFuzzLite, fuzz/): a pull request that changes a crate the fuzz targets read
+# through, or the targets themselves, has each target run for about two minutes with
+# AddressSanitizer, starting from its seeds and the corpus the weekly run keeps. A crash fails the
+# run, with the input that caused it as an artifact.
+name: Fuzzing (pull request)
+
+on:
+  pull_request:
+    paths:
+      - "crates/cnl/**"
+      - "crates/engine/**"
+      - "crates/extract/**"
+      - "crates/ipc/**"
+      - "crates/tools/**"
+      - "crates/torrent/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "fuzz/**"
+      - ".clusterfuzzlite/**"
+      - ".github/workflows/cflite_pr.yml"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  fuzz:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    concurrency:
+      group: cflite-pr-${{ github.ref }}
+      cancel-in-progress: true
+    permissions:
+      contents: read
+      actions: read # the corpus the weekly run left as an artifact
+    steps:
+      - name: Build the fuzz targets
+        uses: google/clusterfuzzlite/actions/build_fuzzers@884713a6c30a92e5e8544c39945cd7cb630abcd1 # v1
+        with:
+          language: rust
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          sanitizer: address
+      - name: Run each target
+        uses: google/clusterfuzzlite/actions/run_fuzzers@884713a6c30a92e5e8544c39945cd7cb630abcd1 # v1
+        with:
+          language: rust
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          # Shared by the 8 targets: 2 minutes each.
+          fuzz-seconds: 960
+          mode: code-change
+          sanitizer: address

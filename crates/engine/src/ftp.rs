@@ -13,7 +13,13 @@
 //! The login comes from the address (`ftp://user:pass@host/…`), else from an
 //! `Authorization: Basic` header (the app's "Use authorization" and Sites Logins), else
 //! anonymous. The path is relative to the login folder (RFC 1738; `%2F` makes it absolute).
-//! TLS uses the system's certificate store, like HTTPS. FTP doesn't go through the HTTP proxy.
+//! TLS uses the system's certificate store, like HTTPS.
+//!
+//! FTP doesn't go through an HTTP proxy. A SOCKS proxy (Options → Proxy / Socks, or a proxy
+//! script's `SOCKS` answer, #1558) carries it: the control connection and, passive always (the
+//! proxy can't take the server's connections back), each data connection, to the address the
+//! control connection reached. With socks5h / socks4a the proxy looks the server's name up.
+//! Implicit TLS (`ftps://`) can't go through one yet (suppaftp opens that connection itself).
 
 use std::net::{IpAddr, SocketAddr};
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -93,6 +99,8 @@ pub(crate) struct Site {
     extra_roots: Vec<Vec<u8>>,
     /// The network adapter its connections go through (#35).
     route: crate::net::Route,
+    /// The SOCKS proxy its connections go through (#1558).
+    socks: Option<Socks>,
     tls: Option<tokio_rustls::TlsConnector>,
     /// The server offers `EPSV` (learned from `FEAT`): no address in the answer to get wrong
     /// behind NAT.
@@ -150,6 +158,7 @@ impl Site {
             dns: opts.dns.clone(),
             extra_roots: opts.extra_roots.clone(),
             route: opts.route.clone(),
+            socks: Socks::for_url(&opts.proxy, url),
             tls,
             epsv: AtomicBool::new(false),
             pool: Mutex::new(Vec::new()),
@@ -159,6 +168,11 @@ impl Site {
 
     /// A new session: connected, secured, logged in, binary.
     async fn connect(&self) -> Result<Session, Error> {
+        if let Some(socks) = &self.socks {
+            return tokio::time::timeout(self.connect_timeout, self.open_through(socks))
+                .await
+                .map_err(|_| net(NetKind::Timeout, ""))?;
+        }
         let mut last = net(NetKind::Connect, "the server's name has no address");
         let mut addrs = self.addresses().await?;
         // Only those the chosen adapter can reach (#35); else say why none.
@@ -220,11 +234,69 @@ impl Site {
             .collect())
     }
 
+    /// A new session through the SOCKS proxy (#1558): the server's name for the proxy to look
+    /// up (socks5h, socks4a), else its address looked up here, as without a proxy.
+    async fn open_through(&self, socks: &Socks) -> Result<Session, Error> {
+        if self.security == Security::Implicit {
+            return Err(net(
+                NetKind::Connect,
+                "ftps:// (TLS from the first byte) can't go through a SOCKS proxy yet: use ftpes:// (TLS after connecting) if the server offers it",
+            ));
+        }
+        let target = if socks.remote_dns {
+            Target::Name(self.host.clone(), self.port)
+        } else {
+            let addr = *self
+                .addresses()
+                .await?
+                .first()
+                .ok_or_else(|| net(NetKind::Connect, "the server's name has no address"))?;
+            Target::Addr(addr)
+        };
+        let stream = socks
+            .connect(&self.route, &self.dns, &self.extra_roots, &target)
+            .await
+            .map_err(|e| net(NetKind::Connect, &e.to_string()))?;
+        let s = Session::connect_with_stream(stream)
+            .await
+            .map_err(|e| failure(e, NetKind::Connect))?;
+        let s = self.secure_and_login(s).await?;
+        // Passive always: the data connections go through the proxy too, to the address the
+        // control connection reached (the port the server answered).
+        let mut s = s;
+        if self.epsv.load(Ordering::Relaxed) {
+            s.set_mode(Mode::ExtendedPassive);
+        } else {
+            s.set_mode(Mode::Passive);
+        }
+        let (socks, route, dns, roots) = (
+            Arc::new(socks.clone()),
+            Arc::new(self.route.clone()),
+            Arc::new(self.dns.clone()),
+            Arc::new(self.extra_roots.clone()),
+        );
+        Ok(s.passive_stream_builder(move |addr| {
+            let (socks, route, dns, roots) =
+                (socks.clone(), route.clone(), dns.clone(), roots.clone());
+            let data = target.with_port(addr.port());
+            // On a task of its own: suppaftp wants a future it can share between threads,
+            // which the proxy's handshake isn't; its handle is.
+            let connecting =
+                tokio::spawn(async move { socks.connect(&route, &dns, &roots, &data).await });
+            Box::pin(async move {
+                connecting
+                    .await
+                    .map_err(|e| FtpError::ConnectionError(std::io::Error::other(e)))?
+                    .map_err(FtpError::ConnectionError)
+            })
+        }))
+    }
+
     async fn open(&self, addr: SocketAddr) -> Result<Session, Error> {
         let connect = |e| failure(e, NetKind::Connect);
         let tls =
             || AsyncRustlsConnector::from(self.tls.clone().expect("TLS site has a connector"));
-        let mut s = match (&self.security, &self.route) {
+        let s = match (&self.security, &self.route) {
             (Security::Implicit, crate::net::Route::Any) => {
                 Session::connect_secure_implicit(addr, tls(), &self.host)
                     .await
@@ -249,6 +321,15 @@ impl Site {
                     .map_err(connect)?
             }
         };
+        let s = self.secure_and_login(s).await?;
+        Ok(self.data_mode(s))
+    }
+
+    /// TLS as the address asks, the login, binary transfers.
+    async fn secure_and_login(&self, mut s: Session) -> Result<Session, Error> {
+        let connect = |e| failure(e, NetKind::Connect);
+        let tls =
+            || AsyncRustlsConnector::from(self.tls.clone().expect("TLS site has a connector"));
         match self.security {
             Security::Explicit => s = s.into_secure(tls(), &self.host).await.map_err(connect)?,
             // Implicit TLS protects the data connections too; say so, as clients do (some
@@ -265,7 +346,7 @@ impl Site {
         }
         s.login(&self.user, &self.pass).await.map_err(connect)?;
         s.transfer_type(FileType::Binary).await.map_err(connect)?;
-        Ok(self.data_mode(s))
+        Ok(s)
     }
 
     fn data_mode(&self, mut s: Session) -> Session {
@@ -311,7 +392,7 @@ impl Site {
                     })
             })
         };
-        if has("EPSV", None) && self.passive {
+        if has("EPSV", None) && (self.passive || self.socks.is_some()) {
             self.epsv.store(true, Ordering::Relaxed);
             s.set_mode(Mode::ExtendedPassive);
         }
@@ -471,23 +552,19 @@ fn connector(extra: &[Vec<u8>]) -> Result<tokio_rustls::TlsConnector, Error> {
 }
 
 /// MDM's own TLS client configuration (FTPS, DNS over TLS and HTTPS): the system's verifier, as
-/// reqwest uses for HTTPS, with `extra` certificates also trusted (the tests' own CA). On a
-/// system without certificates, one that refuses every server, saying why (#264): the DNS
-/// setting that holds it may still use plain DNS, and FTP stays plain FTP.
+/// reqwest uses for HTTPS, with Mozilla's roots besides (`tls::mozilla_roots`, #1546) and
+/// `extra` certificates also trusted (the tests' own CA). On a system without certificates, one
+/// that refuses every server, saying why (#264): the DNS setting that holds it may still use
+/// plain DNS, and FTP stays plain FTP.
 pub(crate) fn client_config(extra: &[Vec<u8>]) -> Result<rustls::ClientConfig, rustls::Error> {
     use rustls_platform_verifier::Verifier;
     if extra.is_empty() && !crate::tls::system_has_roots() {
         return Ok(crate::tls::no_roots_config());
     }
     let provider = crate::tls::provider();
-    let verifier = if extra.is_empty() {
-        Verifier::new(provider.clone())
-    } else {
-        Verifier::new_with_extra_roots(
-            extra.iter().map(|c| CertificateDer::from(c.clone())),
-            provider.clone(),
-        )
-    }?;
+    let extra = extra.iter().map(|c| CertificateDer::from(c.clone()));
+    let verifier =
+        Verifier::new_with_extra_roots(crate::tls::mozilla_roots().chain(extra), provider.clone())?;
     Ok(rustls::ClientConfig::builder_with_provider(provider)
         .with_safe_default_protocol_versions()?
         .dangerous()
@@ -513,6 +590,147 @@ async fn within<T>(limit: Duration, f: impl Future<Output = Result<T, Error>>) -
     tokio::time::timeout(limit, f)
         .await
         .unwrap_or_else(|_| Err(net(NetKind::Timeout, "")))
+}
+
+/// Where a connection through the SOCKS proxy goes: the server's name (the proxy looks it up)
+/// or its address.
+#[derive(Clone, Debug, PartialEq, Eq)]
+enum Target {
+    Name(String, u16),
+    Addr(SocketAddr),
+}
+
+impl Target {
+    /// The same server on another port (a data connection's).
+    fn with_port(&self, port: u16) -> Target {
+        match self {
+            Target::Name(host, _) => Target::Name(host.clone(), port),
+            Target::Addr(a) => Target::Addr(SocketAddr::new(a.ip(), port)),
+        }
+    }
+}
+
+/// A SOCKS proxy for FTP (#1558).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct Socks {
+    host: String,
+    port: u16,
+    /// 5, or 4.
+    version: u8,
+    /// socks5h / socks4a: the proxy looks the server's name up.
+    remote_dns: bool,
+    login: Option<(String, String)>,
+}
+
+impl Socks {
+    /// The SOCKS proxy `proxy` gives the FTP address `url`: Manual's when it is a SOCKS one, a
+    /// proxy script's first answer when it is `SOCKS…`. An HTTP proxy (and the system's
+    /// settings, which name HTTP proxies) carries no FTP: None, straight to the server.
+    pub(crate) fn for_url(proxy: &crate::download::Proxy, url: &Url) -> Option<Socks> {
+        use crate::download::Proxy;
+        match proxy {
+            Proxy::Manual {
+                url: address,
+                login,
+                ..
+            } => Socks::parse(address, login.clone()),
+            Proxy::Pac { script } => match crate::pac::routes(script, url).ok()?.first()? {
+                crate::pac::Route::Proxy(p) => Socks::parse(p, None),
+                crate::pac::Route::Direct => None,
+            },
+            Proxy::None | Proxy::System => None,
+        }
+    }
+
+    /// `socks5h://user:pass@host:port` and the like; None for another scheme.
+    pub(crate) fn parse(address: &str, login: Option<(String, String)>) -> Option<Socks> {
+        let u = Url::parse(address.trim()).ok()?;
+        let (version, remote_dns) = match u.scheme() {
+            "socks5h" => (5, true),
+            "socks5" => (5, false),
+            "socks4a" => (4, true),
+            "socks4" => (4, false),
+            _ => return None,
+        };
+        let decode = |s: &str| percent_decode_str(s).decode_utf8_lossy().into_owned();
+        let login = login.or_else(|| {
+            (!u.username().is_empty())
+                .then(|| (decode(u.username()), decode(u.password().unwrap_or(""))))
+        });
+        Some(Socks {
+            host: u.host_str()?.trim_matches(['[', ']']).to_owned(),
+            port: u.port().unwrap_or(1080),
+            version,
+            remote_dns,
+            login: login.filter(|_| version == 5),
+        })
+    }
+
+    /// A connection to `target` through the proxy: to the proxy through `route` (a proxy on this
+    /// computer isn't bound), then the proxy's handshake.
+    async fn connect(
+        &self,
+        route: &crate::net::Route,
+        dns: &crate::dns::DnsChoice,
+        roots: &[Vec<u8>],
+        target: &Target,
+    ) -> std::io::Result<tokio::net::TcpStream> {
+        let other = |e: String| std::io::Error::other(e);
+        let at = match self.host.parse::<IpAddr>() {
+            Ok(ip) => SocketAddr::new(ip, self.port),
+            Err(_) if crate::net::is_this_computer(&self.host) => {
+                SocketAddr::new(IpAddr::V4(std::net::Ipv4Addr::LOCALHOST), self.port)
+            }
+            Err(_) => {
+                let ips = crate::dns::lookup(dns, &self.host, self.port, roots, route)
+                    .await
+                    .map_err(|e| other(e.to_string()))?;
+                SocketAddr::new(
+                    *ips.first()
+                        .ok_or_else(|| other(format!("the proxy {} has no address", self.host)))?,
+                    self.port,
+                )
+            }
+        };
+        let stream = crate::net::tcp_connect(route, at).await.map_err(|e| {
+            other(format!(
+                "the SOCKS proxy {}:{} can't be reached: {e}",
+                self.host, self.port
+            ))
+        })?;
+        let said = |e: tokio_socks::Error| {
+            other(format!(
+                "the SOCKS proxy {}:{} refused: {e}",
+                self.host, self.port
+            ))
+        };
+        let target: tokio_socks::TargetAddr<'_> = match target {
+            Target::Name(host, port) => {
+                tokio_socks::TargetAddr::Domain(host.as_str().into(), *port)
+            }
+            Target::Addr(a) => tokio_socks::TargetAddr::Ip(*a),
+        };
+        if self.version == 4 {
+            return Ok(
+                tokio_socks::tcp::Socks4Stream::connect_with_socket(stream, target)
+                    .await
+                    .map_err(said)?
+                    .into_inner(),
+            );
+        }
+        Ok(match &self.login {
+            Some((user, pass)) => tokio_socks::tcp::Socks5Stream::connect_with_password_and_socket(
+                stream, target, user, pass,
+            )
+            .await
+            .map_err(said)?
+            .into_inner(),
+            None => tokio_socks::tcp::Socks5Stream::connect_with_socket(stream, target)
+                .await
+                .map_err(said)?
+                .into_inner(),
+        })
+    }
 }
 
 fn net(kind: NetKind, cause: &str) -> Error {

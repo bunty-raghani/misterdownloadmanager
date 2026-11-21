@@ -6,6 +6,16 @@
 #. never shown for a single file
 #. {n} = a number (keep the braces as they are)
 @plural	Also delete the {n} file from disk|Also delete the {n} files from disk	Elimina anche {n} file dal disco|Elimina anche i {n} file dal disco
+#. count in cnl.rs
+#. Click'n'Load window: a page whose web site the browser doesn't name, so MDM can't tell which site it is
+#. {n} = a number (keep the braces as they are)
+#, machine
+@plural	An unknown site wants to send {n} link to Link grabber.|An unknown site wants to send {n} links to Link grabber.	Un sito sconosciuto vuole inviare {n} collegamento a Link grabber.|Un sito sconosciuto vuole inviare {n} collegamenti a Link grabber.
+#. count in torrent downloads
+#. number of additional files in a list of files
+#. {n} = a number (keep the braces as they are)
+#, machine
+@plural	And {n} other file.|And {n} other files.	E un altro file ({n}).|E altri {n} file.
 #. count in a dialog box
 #. never shown for a single download
 #. {n} = a number (keep the braces as they are)
@@ -89,10 +99,20 @@
 #. in a download's log, after extracting
 #. {n} = a number (keep the braces as they are)
 @plural	{n} file had the name of a file there already and was numbered|{n} files had the name of a file there already and were numbered	{n} file aveva lo stesso nome di un file già presente ed è stato numerato|{n} file avevano lo stesso nome di file già presenti e sono stati numerati
+#. count in the main window's messages (deleting downloads' files)
+#. the message's next line: how many more deleted files stayed on the disk
+#. {n} = a number (keep the braces as they are)
+#, machine
+@plural	{n} more file could not be deleted either.|{n} more files could not be deleted either.	Impossibile eliminare anche {n} altro file.|Impossibile eliminare anche {n} altri file.
 #. count in the Add torrent window
 #. a number of peers (computers sharing a torrent), after where they came from
 #. {n} = a number (keep the braces as they are)
 @plural	{n} peer|{n} peers	{n} peer|{n} peer
+#. count in the Options window
+#. Options → Archives: beside the Archive passwords button: how many are saved
+#. {n} = a number (keep the braces as they are)
+#, machine
+@plural	{n} saved|{n} saved	{n} salvato|{n} salvati
 #. count in the main window
 #. {n} = a number (keep the braces as they are)
 @plural	{n} selected|{n} selected	{n} selezionato|{n} selezionati
@@ -112,6 +132,11 @@
 #. where a magnet's peers came from: {n} = trackers asked; {peers} = "3 peers"
 #. {n} = a number (keep the braces as they are)
 @plural	{n} tracker: {peers}|{n} trackers: {peers}	{n} tracker: {peers}|{n} tracker: {peers}
+#. count in cnl.rs
+#. Click'n'Load window: {site} is a web site's name such as "example.com"
+#. {site} = a web site's name such as "example.com"; {n} = a number (keep the braces as they are)
+#, machine
+@plural	{site} wants to send {n} link to Link grabber.|{site} wants to send {n} links to Link grabber.	{site} vuole inviare {n} collegamento a Link grabber.|{site} vuole inviare {n} collegamenti a Link grabber.
 #. count in playlistdlg.rs
 #. in Download video: a playlist title then how many videos it has ({count})
 #. {count} = a number (keep the braces as they are)
@@ -126,7 +151,7 @@
 #. verb: save the changes
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 	&Apply	&Applica
-#. text in the Scheduler window
+#. text in the Scheduler window; button in standard windows
 #. verb: close the window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 	&Close	&Chiudi
@@ -144,6 +169,10 @@
 #. text in the Scheduler window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 	&Start now	Avvia &ora
+#. text in the Options window
+#. under Download panels site exclusions list
+#, machine
+	(separate by spaces; * matches anything)	(separare con spazi; * corrisponde a qualsiasi cosa)
 #. text in the Options window
 	(separate names by spaces)	(separare i nomi con spazi)
 #. text in rssdlg.rs
@@ -168,6 +197,10 @@
 #. Options → Archives: {path} is where 7-Zip's program is
 	7z and RAR archives are extracted by 7-Zip ({path}).	Gli archivi 7z e RAR vengono estratti da 7-Zip ({path}).
 #. text in the Options window
+#. Options → Archives, when Extract in place with HatchZip (a program's name) is on: {path} is where its program is
+#, machine
+	7z and RAR archives are extracted by HatchZip ({path}).	Gli archivi 7z e RAR vengono estratti da HatchZip ({path}).
+#. text in the Options window
 #. Options → Archives, when 7-Zip isn't installed
 	7z and RAR archives need 7-Zip (7-zip.org), which isn't installed.	Gli archivi 7z e RAR richiedono 7-Zip (7-zip.org), che non è installato.
 #. text in extracting archives (a download's log, the Archive password window)
@@ -185,6 +218,10 @@
 #. a torrent through a debrid service: one of its files has a name that would be written outside its folder; nothing was written. {name} the file's name as the service gave it
 #. {name} = a file name (keep the braces as they are)
 	A file of this torrent can't be saved safely: {name}	Impossibile salvare in modo sicuro un file di questo torrent: {name}
+#. text in a dialog box
+#. the question about a name typed in Save As, above the file's path; the choices are the duplicate question's (numbered name, overwrite)
+#, machine
+	A file with this name is already there:	Esiste già un file con questo nome:
 #. message or event log entry in the main window
 #. Link grabber added a magnet link whose torrent could not be found; {error} says why
 #. {error} = an error message (keep the braces as they are)
@@ -212,6 +249,10 @@
 #. tooltip on the disabled Rename box for a single-file torrent
 #, machine
 	A single-file torrent keeps its name	Un torrent a file singolo mantiene il proprio nome
+#. text in torrent_ownership.rs
+#. a torrent's folder is a link or junction leading outside its destination
+#, machine
+	A torrent file's folder points outside its destination	La cartella di un file torrent punta fuori dalla sua destinazione
 #. text in the Add torrent window
 #. Add trackers: MDM never contacts a tracker on this computer or the local network
 	A tracker on this computer or the local network is never contacted: {line}	Un tracker su questo computer o sulla rete locale non viene mai contattato: {line}
@@ -228,6 +269,10 @@
 #. {size} = a file size such as "4.2 MB" (keep the braces as they are)
 #, machine
 	about {size}	circa {size}
+#. text in the Options window
+#. Options → Archives → Link grabber check box: Click'n'Load, a link site's button that sends its links to a program on this computer (port 9666, as JDownloader)
+#, machine
+	Accept Click'n'Load from web pages (port 9666)	Accetta Click'n'Load dalle pagine web (porta 9666)
 #. checkbox in the Add torrent window
 #. Torrent settings: other peers may connect to this computer
 	Accept incoming connections	Accetta connessioni in ingresso
@@ -258,7 +303,7 @@
 #. text in the Options window
 #. the trailing ... means it is still going on: keep it
 	Add browser...	Aggiungi browser...
-#. text in categories.rs
+#. text in categories.rs; text in a dialog box
 	Add category	Aggiungi categoria
 #. button in rssdlg.rs
 #. RSS feeds window: button that subscribes to the feed whose address is typed
@@ -336,15 +381,16 @@
 #. window title in the Options window
 #. window title: the addresses whose downloads stay with the browser
 	Addresses left to the browser	Indirizzi lasciati al browser
-#. button in the Options window
-#. the trailing ... means it opens a window: keep it
-	Advanced / Socks...	Avanzate / Socks...
 #. text in extension.rs
 #. a check of Test browser integration (Options → General)
 	Advanced browser integration is on	L'integrazione avanzata del browser è attiva
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Afghanistan	Afghanistan
+#. text in the Options window
+#. Options → Add an account: a note under the user name and password fields (Mega-Debrid bans the address for some minutes after a few wrong passwords)
+#, machine
+	After a few wrong passwords the service blocks this connection for some minutes.	Dopo alcuni tentativi di password errati, il servizio blocca questa connessione per alcuni minuti.
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Aland Islands	Isole Åland
@@ -359,17 +405,25 @@
 	All	Tutti
 #. item in the Categories tree in the main window
 	All Downloads	Tutti i download
-#. message or event log entry in the main window
+#. message or event log entry in the main window; text in standard windows
 	All files	Tutti i file
 #. text in helpers.rs
 	All set: on a page with a video, use Tasks → Download video from a page.	Tutto pronto: in una pagina con un video, usa Attività → Scarica video da una pagina.
 #. text in the Download video window
 #. in the Subtitles list of Download video: every language the video's uploader gave
 	All the uploader's	Tutti quelli dell'autore
+#. text in cnl.rs
+#. button in the Click'n'Load window: let this site send links (remembered)
+#, machine
+	Allow	Consenti
 #. text in the Options window
 #. checkbox under the number of connections per download; {n} is 32
 #. {n} = a number (keep the braces as they are)
 	Allow more than {n} connections	Consenti più di {n} connessioni
+#. text in cnl.rs
+#. Click'n'Load window, under the question: nothing happens to the links before the user adds them in Link grabber
+#, machine
+	Allow only sites you use. Nothing is looked up or downloaded before you add it in Link grabber.	Consenti solo i siti che usi. Nulla viene cercato o scaricato prima di aggiungerlo in Link grabber.
 #. text in errors.rs
 	already being downloaded: {path}	già in download: {path}
 #. text in the Link grabber window
@@ -385,6 +439,10 @@
 	Also delete the file from disk	Elimina anche il file dal disco
 #. checkbox in the Options window
 	Also take files the browser would open (PDF, music, video)	Acquisisci anche i file che il browser aprirebbe (PDF, musica, video)
+#. text in the Link grabber window
+#. Link grabber, a link's status: the remedy from the failure's sentence, for a site whose bot check lets only browsers through. The sentence, with the same advice, is the cell's hover tip
+#, machine
+	Alt+click the link	Fai Alt+clic sul collegamento
 #. message or event log entry in the main window
 #. View menu: a check item; dark mode on, whatever the system's setting
 	Always dark	Sempre scuro
@@ -412,9 +470,21 @@
 #. Options → Connection → DNS: a DNS server the user types in
 #. the trailing ... means it is still going on: keep it
 	Another DNS...	Altro DNS...
+#. text in torrent downloads
+#. starting a torrent whose destination another listed download claims
+#, machine
+	Another download already claims this torrent's destination	Un altro download ha già richiesto la destinazione di questo torrent
+#. message or event log entry in the main window; text in the Add torrent window
+#. said when a torrent would write a file another download in the list already uses; {file} is its path
+#, machine
+	Another download already claims {file}. Choose a different destination.	Un altro download ha già rivendicato {file}. Scegli una destinazione diversa.
 #. text in unix.rs
 #. the Scheduler, under "Wake the computer to run this queue" (Linux): the computer's one wake alarm is already set by something else
 	Another program has set the computer's wake alarm	Un altro programma ha già impostato la sveglia di riattivazione del computer
+#. text in the Options window
+#. Options → Proxy / Socks: Test's answer; {ms} milliseconds; {ip} the internet address the site saw (the proxy's, or this computer's without one)
+#, machine
+	Answered in {ms} ms. The internet sees {ip}.	Risposta ricevuta in {ms} ms. Internet vede {ip}.
 #. text in the Options window
 #. Options → DNS settings: the test's answer; {ms} milliseconds, {ip} the address found
 	Answered in {ms} ms: {ip}	Risposta in {ms} ms: {ip}
@@ -433,6 +503,19 @@
 #. what a screen reader calls the Archive password window's box
 #. what a screen reader calls Link grabber's password box
 	Archive password	Password dell'archivio
+#. window title in the Options window
+#. window title: the passwords tried on encrypted archives
+#, machine
+	Archive passwords	Password degli archivi
+#. text in the settings
+#. the list of archive passwords in the system's keychain (Credential Manager, the keyring): its name there
+#, machine
+	archive passwords	password degli archivi
+#. button in the Options window
+#. Options → Archives: button: edit the list of passwords tried on encrypted archives
+#. the trailing ... means it opens a window: keep it
+#, machine
+	Archive passwords...	Password degli archivi...
 #. group box title in the Options window; text in the Options window
 #. Options → Archives: group box title
 #. tab title: extracting downloaded archives, and Link grabber
@@ -536,6 +619,10 @@
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Bhutan	Bhutan
+#. text in cnl.rs
+#. button in the Click'n'Load window: refuse this site's links (remembered)
+#, machine
+	Block	Blocca
 #. text in the Add torrent window
 #. Torrent settings: the address of an IP blocklist (empty: none)
 	Block the addresses in this list (P2P or eMule format):	Blocca gli indirizzi di questo elenco (formato P2P o eMule):
@@ -564,7 +651,7 @@
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	British Indian Ocean Territory	Territorio britannico dell'Oceano Indiano
-#. text in the Link grabber window; button in the Link grabber window; button in the Options window
+#. text in a dialog box; text in the Link grabber window; button in the Link grabber window; button in the Options window
 #. verb: choose a folder
 	Browse	Sfoglia
 #. button in categories.rs; button in the Options window
@@ -589,6 +676,10 @@
 #. text in the Link grabber window
 #. Link grabber, a link's status: the server asked to try later (429, 503)
 	Busy, try later	Occupato, riprova più tardi
+#. text in the Options window
+#. Options → Download panels: the size of the download button over videos, chosen after it (Full / Compact)
+#, machine
+	Button size:	Dimensione pulsante:
 #. message or event log entry in the main window
 	by batch download	tramite download in batch
 #. message or event log entry in the main window
@@ -602,6 +693,10 @@
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Cameroon	Camerun
+#. text in the Link grabber window
+#. Link grabber, a link's status: a server that can't send parts of a file, so the download can't resume; there is nothing to do here. The sentence is the cell's hover tip
+#, machine
+	Can't resume	Impossibile riprendere
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Canada	Canada
@@ -633,7 +728,7 @@
 #. text in a dialog box; text in the Options window; text in remote.rs
 #. remote control page (on a phone): label of the category choice for a new download
 	Category	Categoria
-#. text in categories.rs
+#. text in categories.rs; text in a dialog box
 #. title of the folder picker of the category dialog
 	Category folder	Cartella della categoria
 #. text in categories.rs
@@ -665,7 +760,8 @@
 #. text in rssdlg.rs
 #. RSS feeds window, at the bottom: "Check feeds every [30] minutes"
 	Check feeds every	Controlla i feed ogni
-#. window title in the Help menu's windows (About, updates, shortcuts, Tell a friend)
+#. window title in the Help menu's windows (About, updates, shortcuts, Tell a friend); text in helpers.rs
+#. Helpers: button: look for newer versions of MDM's own helpers now, and install them
 	Check for updates	Verifica aggiornamenti
 #. checkbox in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. check box in the update window: look for a new version every time MDM starts
@@ -681,13 +777,18 @@
 #. tooltip of the close-setting: checked keeps MDM running when the window closes, in the notification area when available or else the taskbar; downloads continue; unchecked closing quits
 #, machine
 	Checked, closing the window keeps MDM running: it hides in the notification area when available, or minimizes to the taskbar otherwise, and downloads continue; unchecked, closing quits MDM	Se selezionata, chiudendo la finestra MDM resta in esecuzione: si nasconde nell'area di notifica quando disponibile oppure si riduce a icona nella barra delle applicazioni, e i download continuano; se deselezionata, chiudendo la finestra MDM si chiude
+#. text in the Options window
+#. tooltip of "Keep private-window downloads in the list": checked, downloads from a browser's private (incognito) window are saved in the list and survive MDM closing or restarting; unchecked, they are kept in memory only and are gone when MDM closes. Their cookies are never saved.
+#, machine
+	Checked, downloads from a browser's private window are saved in the list and are still there when MDM restarts; unchecked, they are kept in memory only and are gone when MDM closes. Their cookies are never saved	Se selezionati, i download da una finestra privata del browser vengono salvati nell'elenco e restano presenti al riavvio di MDM; se deselezionati, vengono mantenuti solo in memoria e spariscono alla chiusura di MDM. I loro cookie non vengono mai salvati
 #. message or event log entry in the main window
 #. event log entry after Recheck: {have} and {total} are sizes ("1.2 GB of 4 GB there")
 	Checked: {have} of {total} there	Verifica completata: presenti {have} di {total}
 #. message or event log entry in the main window
 #. event log entry: a torrent's files are being read and checked again (Recheck)
 	Checking every piece again	Nuova verifica di tutte le parti
-#. text in the Help menu's windows (About, updates, shortcuts, Tell a friend)
+#. text in the Help menu's windows (About, updates, shortcuts, Tell a friend); text in helpers.rs
+#. Helpers: MDM is asking whether a newer version of a helper exists
 #. the trailing ... means it is still going on: keep it
 	Checking for updates...	Ricerca aggiornamenti...
 #. text in gallerydlg.rs
@@ -711,7 +812,9 @@
 #. the list's Status column while a torrent's files or a finished file are checked (against the torrent's hashes or a checksum); {percent} how much is checked, e.g. "42%". One short word: the column is narrow
 #, machine
 	Checking {percent}	Verifica {percent}
-#. text in the Checksum window; text in the Link grabber window
+#. text in the Checksum window; text in extension.rs; text in the Link grabber window; text in the Options window
+#. in the browser extension's window, while it reads whether the browsers can reach MDM (a moment, usually)
+#. Test browser integration, while it reads where browser integration stands (a moment, usually)
 #. the trailing ... means it is still going on: keep it
 	Checking...	Verifica in corso...
 #. text in countries.rs
@@ -736,9 +839,23 @@
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Christmas Island	Isola di Natale
-#. button in the download list
+#. button in the download list; button in the Options window
 #. verb: clears this filter
 	Clear	Cancella
+#. message or event log entry in the main window; window title in cnl.rs
+#. title of the notice when Click'n'Load couldn't start
+#. window title: a web page used Click'n'Load (a link site's button that sends its links to this program)
+#, machine
+	Click'n'Load	Click'n'Load
+#. text in cnl.rs
+#. notice: Click'n'Load couldn't start; {port} is 9666; JDownloader is another download manager that uses the same port
+#, machine
+	Click'n'Load can't start: another program (JDownloader?) is using port {port}. Close it, then turn Click'n'Load off and on again in Options.	Impossibile avviare Click'n'Load: un altro programma (JDownloader?) sta usando la porta {port}. Chiudilo, poi disattiva e riattiva Click'n'Load in Opzioni.
+#. text in cnl.rs
+#. notice: Click'n'Load couldn't start; {error} the system's reason
+#. {error} = an error message (keep the braces as they are)
+#, machine
+	Click'n'Load can't start: {error}	Impossibile avviare Click'n'Load: {error}
 #. text in a download's progress window
 #. column title: the peer's torrent program
 	Client	Client
@@ -773,6 +890,10 @@
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Comoros	Comore
+#. option (radio button) in the Options window
+#. Options → Download panels → Button size: only the round button (the logo, the arrow, the close mark) over every video
+#, machine
+	Compact	Compatto
 #. item in the Categories tree in the download list; value in a column's filter list in the download list; text in the download list (sizes, speeds, status); text in a download's progress window; text in remote.rs
 #. a download's status (state it is in, not a command)
 #. a download's status (state it is in, not a command): finished
@@ -794,6 +915,10 @@
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Congo	Congo
+#. text in the Add torrent window
+#. Torrent settings: uTP, BitTorrent over UDP, which many peers use (more peers, often faster)
+#, machine
+	Connect over uTP too (UDP)	Connetti anche tramite uTP (UDP)
 #. text in extension.rs
 #. in the browser extension's window, beside a browser whose extension reached MDM
 	Connected	Connesso
@@ -809,6 +934,9 @@
 	Connections and Limits	Connessioni e limiti
 #. text in the Options window
 	Connections:	Connessioni:
+#. link (opens a web page) in the Help menu's windows (About, updates, shortcuts, Tell a friend)
+#, machine
+	Contributors	Collaboratori
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Cook Islands	Isole Cook
@@ -846,10 +974,23 @@
 #. {host} = a server name such as "example.com" (keep the braces as they are)
 #, machine
 	could not reach {host} ({cause})	impossibile raggiungere {host} ({cause})
+#. text in helpers.rs
+#. Helpers: the last update check failed (no network...); MDM checks again later by itself
+#, machine
+	Couldn't check for updates: MDM tries again later	Impossibile cercare aggiornamenti: MDM riproverà più tardi
 #. text in extracting archives (a download's log, the Archive password window)
 #. in a download's log: {name} is the archive's file name, {why} the reason
 #. {name} = a file name (keep the braces as they are)
 	Couldn't extract {name}: {why}	Impossibile estrarre {name}: {why}
+#. message or event log entry in the main window
+#. a video's or gallery's log: MDM couldn't look for a newer yt-dlp (or gallery-dl); {name} = its name, {error} = why
+#. {name} = a file name; {error} = an error message (keep the braces as they are)
+#, machine
+	Couldn't look for a newer {name}: {error}	Impossibile cercare una versione più recente di {name}: {error}
+#. checkbox in the Add torrent window
+#. Add torrent: keep a multi-file torrent inside its own outer folder; untick to use Save to directly
+#, machine
+	Create a folder for this torrent	Crea una cartella per questo torrent
 #. window title in a dialog box
 	Create folder	Crea cartella
 #. text in countries.rs
@@ -905,7 +1046,7 @@
 	Default download settings	Impostazioni di download predefinite
 #. text in the Options window
 	Default max. conn. number	N. max connessioni predefinito
-#. message or event log entry in the main window; button in a dialog box; button in the Options window; button in rssdlg.rs
+#. text in the main window's messages (deleting downloads' files); button in a dialog box; button in the Options window; button in rssdlg.rs; text in torrent downloads
 #. button: deletes the category
 #. verb: delete the item
 	Delete	Elimina
@@ -1020,6 +1161,10 @@
 #. text in the Add torrent window
 #. Add torrent, a checkbox: download the files from their start, to watch a video while it downloads
 	Download in order	Scarica in sequenza
+#. text in the Link grabber window
+#. Link grabber, a link's status: the remedy from the failure's sentence, for a file whose checksum didn't match. The sentence is the cell's hover tip
+#, machine
+	Download it again	Scaricalo di nuovo
 #. button in a dialog box
 	Download Later	Scarica più tardi
 #. window title in a dialog box
@@ -1082,6 +1227,11 @@
 #. message or event log entry in the main window
 	Downloading again from the start	Nuovo download dall'inizio
 #. text in the Download video window
+#. in Download video: MDM downloads Deno (a program's name) and checks it against its published checksum
+#. the trailing ... means it is still going on: keep it
+#, machine
+	Downloading and verifying Deno (about 40 MB)...	Download e verifica di Deno (circa 40 MB) in corso...
+#. text in the Download video window
 #. the trailing ... means it is still going on: keep it
 	Downloading and verifying ffmpeg (about 80 MB)...	Download e verifica di ffmpeg (circa 80 MB)...
 #. text in gallerydlg.rs
@@ -1099,6 +1249,10 @@
 #. Check for updates, while Update now downloads; {percent} like "42%"
 	Downloading the update... {percent}	Download dell'aggiornamento... {percent}
 #. text in helpers.rs
+#. Helpers: a newer version of a helper is being downloaded; {percent} = how far, a number
+#, machine
+	Downloading the update... {percent}%	Download dell'aggiornamento in corso... {percent}%
+#. text in helpers.rs
 #. {name} = yt-dlp or ffmpeg; {n} of {total} = which helper of how many; {percent} = how far, e.g. 45%
 #. {name} = a file name; {n} = a number (keep the braces as they are)
 	Downloading {name} ({n} of {total})... {percent}	Download di {name} ({n} di {total})... {percent}
@@ -1109,6 +1263,10 @@
 #. title of the window that sums up downloads added together (a playlist, a batch) once all are done
 #, machine
 	Downloads complete	Download completati
+#. text in win32.rs
+#. Windows' Settings → Default apps: what Mister Download Manager is
+#, machine
+	Downloads files, videos and torrents	Scarica file, video e torrent
 #. text in the tray icon's menu
 #. tray menu: a submenu of the downloads now running; choosing one shows its progress window
 	Downloads in progress	Download in corso
@@ -1133,14 +1291,23 @@
 #, machine
 	Dragged out of Download complete and moved to {folder}	Trascinato fuori da Download completato e spostato in {folder}
 #. message or event log entry in the main window
+#. a download's note: its file was dragged out of the download list and moved somewhere MDM can't tell (a program took it, the Recycle Bin)
+#, machine
+	Dragged out of the list and moved to a place MDM couldn't learn	Trascinato fuori dall'elenco e spostato in un luogo che MDM non ha potuto conoscere
+#. message or event log entry in the main window
+#. a download's note: its file was dragged out of the download list and moved to that folder
+#, machine
+	Dragged out of the list and moved to {folder}	Trascinato fuori dall'elenco e spostato in {folder}
+#. message or event log entry in the main window
 #. in Import, where the addresses came from: dragged onto the window
 	Dropped links	Collegamenti trascinati
-#. window title in a dialog box
+#. text in a dialog box
+#. window title: the question asked when an address added is already in the list of downloads
 	Duplicate download link	Collegamento di download duplicato
 #. text in the Options window
 #. Options → Network adapter: what "Any" means
 	Each connection takes the system's route.	Ogni connessione segue il percorso del sistema.
-#. text in the Link grabber window
+#. text in the Batch download window; text in the Link grabber window
 #. Link grabber, in the empty "Save to" box: each file goes to its category's folder (Options → Save to)
 	Each file's category folder	Cartella della categoria di ogni file
 #. text in countries.rs
@@ -1264,6 +1431,14 @@
 #. checkbox in the Options window
 #. Options → Archives check box (a Link grabber package has its own "Extract when done")
 	Extract archives when their download completes	Estrai gli archivi al completamento del download
+#. text in the Options window
+#. Options → Archives check box, greyed: HatchZip (a program's name, hatchzip.dev its site) isn't installed
+#, machine
+	Extract in place with HatchZip (hatchzip.dev, not installed)	Estrai sul posto con HatchZip (hatchzip.dev, non installato)
+#. text in the Options window
+#. Options → Archives check box: HatchZip (a program's name) removes the archive while extracting it, so only the extracted files need disk space
+#, machine
+	Extract in place with HatchZip: only the files need room	Estrai sul posto con HatchZip: solo i file hanno bisogno di spazio
 #. text in the Link grabber window
 #. Link grabber check box: extract the package's archives once they are downloaded
 	Extract when done	Estrai al termine
@@ -1310,6 +1485,10 @@
 #. text in a download's progress window; text in a download's Properties window
 #. noun: a file of no known type
 	File	File
+#. text in a dialog box
+#. window title: the question asked when the name typed in Download File Info's Save As is a file already there
+#, machine
+	File already exists	Il file esiste già
 #. text in the Options window
 #. tooltip of "Mark downloaded files as coming from the internet" on Linux
 #, machine
@@ -1468,6 +1647,14 @@
 	From:	Da:
 #. checkbox in the Options window
 	ftp	ftp
+#. tooltip (why a control is greyed) in the Options window
+#. Options → Proxy / Socks: why the "ftp" box of an HTTP proxy is greyed
+#, machine
+	FTP downloads don't go through an HTTP proxy. Choose SOCKS5 or SOCKS4 to send them through the proxy.	I download FTP non passano attraverso un proxy HTTP. Scegli SOCKS5 o SOCKS4 per inviarli tramite il proxy.
+#. text in the Options window
+#. Options → Download panels → Button size: the button with its words ("Download video", the quality) where they fit (the default)
+#, machine
+	Full	Completo
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Gabon	Gabon
@@ -1516,6 +1703,11 @@
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Gibraltar	Gibilterra
+#. text in helpers.rs
+#. Helpers: button: use the previous version of a helper again (if the new one misbehaves); {version} = that version
+#. {version} = a version number (keep the braces as they are)
+#, machine
+	Go back to {version}	Torna alla versione {version}
 #. text in a download's progress window
 #. a torrent's sharing, when Torrent settings keep it on
 	Goes on after the download finishes	Continua dopo la fine del download
@@ -1557,6 +1749,10 @@
 	Haiti	Haiti
 #. checkbox in a download's progress window; checkbox in the Scheduler window
 	Hang up modem when done	Disconnetti il modem al termine
+#. text in extracting archives (a download's log, the Archive password window)
+#. in a download's log: HatchZip (a program's name) extracted the archive in place, removing it as it went
+#, machine
+	HatchZip extracted it in place: the archive was removed as its files came out	HatchZip lo ha estratto sul posto: l'archivio è stato rimosso man mano che i suoi file venivano estratti
 #. text in a download's progress window
 #. legend: pieces downloaded
 	Have	Scaricate
@@ -1631,6 +1827,10 @@
 #. text in the Options window
 #. Options → DNS settings: checkbox: when the chosen DNS can't be reached, use the system's instead
 	If it can't be reached, use the system's DNS	Se non è raggiungibile, usa il DNS di sistema
+#. text in extension.rs
+#. under "macOS keeps Mister Download Manager out of …'s folder" (Test browser integration, the browser extension's window): how to allow it. The quoted words and System Settings → Privacy & Security → Full Disk Access are macOS's own: use Apple's words in this language, or keep the English ones when unsure
+#, machine
+	If macOS asks whether it may access data from other apps, allow it. Or turn on Mister Download Manager in System Settings → Privacy & Security → Full Disk Access. Then press Set it up.	Se macOS chiede se può accedere ai dati di altre app, autorizza l'accesso. Oppure attiva Mister Download Manager in Impostazioni di Sistema → Privacy e Sicurezza → Accesso completo al disco. Poi premi &Configura.
 #. text in errors.rs
 #. what to do when a helper's server couldn't be reached; {proxy} = the Options tab Proxy / Socks; {name} = yt-dlp, ffmpeg or gallery-dl; {helpers} and {other} = the buttons Helpers and Use another program
 #. {name} = a file name (keep the braces as they are)
@@ -1651,6 +1851,15 @@
 #. text in the Options window
 #. Options → Accounts: the account's sign-in is in the system's keyring (Linux), which is locked now; MDM never unlocks it
 	in the locked keyring	nel portachiavi bloccato
+#. what a keyboard shortcut does in the Help menu's windows (About, updates, shortcuts, Tell a friend)
+#, machine
+	In the toolbar: open a button's menu	Nella barra degli strumenti: apri il menu di un pulsante
+#. what a keyboard shortcut does in the Help menu's windows (About, updates, shortcuts, Tell a friend)
+#, machine
+	In the toolbar: press the button	Nella barra degli strumenti: premi il pulsante
+#. what a keyboard shortcut does in the Help menu's windows (About, updates, shortcuts, Tell a friend)
+#, machine
+	In the toolbar: the previous / next button	Nella barra degli strumenti: il pulsante precedente / successivo
 #. text in standard windows
 #. a spin box's arrow, for screen readers: one more
 	Increase	Aumenta
@@ -1670,6 +1879,10 @@
 #. in the "7-Zip needed" window, under why
 	Install 7-Zip (free), then right-click the download and choose Extract.	Installa 7-Zip (gratuito), poi fai clic destro sul download e scegli Estrai.
 #. text in the Download video window
+#. button in Download video: download and install Deno, the JavaScript runtime YouTube needs (Deno is a program's name)
+#, machine
+	Install Deno	Installa Deno
+#. text in the Download video window
 #. button: download and install the ffmpeg program
 	Install ffmpeg	Installa ffmpeg
 #. button in gallerydlg.rs
@@ -1681,6 +1894,10 @@
 #. text in unix.rs
 #. Linux, after a missing library's name, on a distribution MDM doesn't know
 	Install what's missing from your distribution's packages.	Installa ciò che manca dai pacchetti della tua distribuzione.
+#. text in extracting archives (a download's log, the Archive password window)
+#. in the "7-Zip needed" window, under why (Linux: 7-Zip comes from the distribution's packages, named 7zip or p7zip)
+#, machine
+	Install your system's 7zip (or p7zip) package, then right-click the download and choose Extract.	Installa il pacchetto 7zip (o p7zip) del sistema, poi fai clic destro sul download e scegli Estrai.
 #. text in the Download video window
 #. button: download and install the yt-dlp program
 	Install yt-dlp	Installa yt-dlp
@@ -1727,6 +1944,10 @@
 #. text in extracting archives (a download's log, the Archive password window)
 #. why an archive wasn't extracted (after "Couldn't extract {name}: ")
 	it needs a password	richiede una password
+#. text in extracting archives (a download's log, the Archive password window)
+#. why an archive wasn't extracted in place (after "Couldn't extract {name}: "); {folder} holds the files extracted so far
+#, machine
+	it stopped partway. The files extracted so far are in {folder}, the rest is still in the archive: Extract continues	si è interrotto a metà. I file estratti finora sono in {folder}, il resto è ancora nell'archivio: l'estrazione continua
 #. text in the Add torrent window
 #. Torrent settings, under "Find peers on the local network"
 	It tells the computers on your network which torrents you have.	Comunica ai computer della tua rete quali torrent hai.
@@ -1743,6 +1964,11 @@
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Italy	Italia
+#. text in extracting archives (a download's log, the Archive password window)
+#. why an archive wasn't extracted in place (after "Couldn't extract {name}: "); HatchZip took its files out (the archive is gone), but moving them stopped: {to} holds those moved, {left} the others, {error} the system's reason
+#. {error} = an error message (keep the braces as they are)
+#, machine
+	its files came out, but moving them stopped ({error}). Those moved are in {to}, the others still in {left}; nothing was deleted	i suoi file sono stati estratti, ma lo spostamento si è interrotto ({error}). Quelli spostati sono in {to}, gli altri ancora in {left}; nulla è stato eliminato
 #. text in errors.rs
 #. {error} = an error message (keep the braces as they are)
 	its files could not be written: {error}	impossibile scrivere i suoi file: {error}
@@ -1766,6 +1992,10 @@
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Japan	Giappone
+#. text in helpers.rs
+#. Video helpers: the row of the JavaScript runtime yt-dlp needs for YouTube (Deno is a program's name)
+#, machine
+	JavaScript runtime (Deno)	Runtime JavaScript (Deno)
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Jersey	Jersey
@@ -1783,6 +2013,14 @@
 	Kazakhstan	Kazakistan
 #. text in a dialog box; text in a download's progress window; text in the Add torrent window
 	KBytes/sec	KB/sec
+#. text in helpers.rs
+#. Helpers: checkbox: MDM checks for and installs newer versions of its own yt-dlp, ffmpeg, gallery-dl and Deno by itself
+#, machine
+	Keep MDM's helpers up to date automatically	Mantieni aggiornati automaticamente i programmi di supporto di MDM
+#. text in the Options window
+#. checkbox: downloads started from a browser's private (incognito) window are saved in MDM's download list like any other, so they are still there after MDM restarts
+#, machine
+	Keep private-window downloads in the list	Mantieni nell'elenco i download da finestra privata
 #. text in the Options window
 #. checkbox: closing keeps MDM running, in the notification area when available or else the taskbar, instead of quitting
 #, machine
@@ -1853,6 +2091,10 @@
 #. checkbox in the Options window
 #. Options → Remote check box (off by default)
 	Let phones and computers on the local network control MDM	Consenti a telefoni e computer sulla rete locale di controllare MDM
+#. text in helpers.rs
+#. Video helpers: what the JavaScript runtime is for, after its name (yt-dlp is a program's name)
+#, machine
+	lets yt-dlp list all of YouTube's qualities	permette a yt-dlp di elencare tutte le qualità di YouTube
 #. option (radio button) in the Batch download window
 #. the * in the address runs through letters
 	Letters	Lettere
@@ -1924,6 +2166,10 @@
 	Look links up when they arrive (name, size, online)	Analizza i collegamenti all'arrivo (nome, dimensione, online)
 #. text in the Add torrent window; button in the Download video window
 	Look up	Cerca
+#. text in the Options window
+#. Options → Proxy / Socks → Manual, SOCKS: the proxy turns the sites' names into addresses (socks5h), so this computer's DNS never sees them
+#, machine
+	Look up site names through the proxy	Analizza i nomi dei siti tramite il proxy
 #. tooltip (why a control is greyed) in the Download video window
 #. why Download Now is greyed: the page address was changed after the look-up
 	Look up the new address first	Prima cerca il nuovo indirizzo
@@ -1951,6 +2197,14 @@
 #. tooltip of "Mark downloaded files as coming from the internet" on macOS
 #, machine
 	macOS checks the files marked this way: Gatekeeper before a program first opens. Unticked, no download is marked.	macOS verifica i file contrassegnati in questo modo: Gatekeeper prima che un programma si apra per la prima volta. Se deselezionato, nessun download viene contrassegnato.
+#. text in extension.rs
+#. a check of Test browser integration, and the browser extension's window (macOS): macOS refused to let MDM read or write a browser's folder (where the browser finds MDM's helper)
+#, machine
+	macOS keeps Mister Download Manager out of a browser's folder.	macOS impedisce a Mister Download Manager di accedere alla cartella di un browser.
+#. text in extension.rs
+#. a check of Test browser integration, and the browser extension's window (macOS): macOS refused to let MDM read or write {browser}'s folder (where the browser finds MDM's helper); {browser} is a browser's name
+#, machine
+	macOS keeps Mister Download Manager out of {browser}'s folder.	macOS impedisce a Mister Download Manager di accedere alla cartella di {browser}.
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Madagascar	Madagascar
@@ -1984,6 +2238,10 @@
 	Malta	Malta
 #. text in the Options window
 	Manual proxy/socks configuration	Configurazione manuale proxy/socks
+#. text in the Add torrent window
+#. Torrent settings: the hover text of "Connect over uTP too (UDP)"
+#, machine
+	Many peers take only uTP. Without it, MDM can't reach them.	Molti peer accettano solo uTP. Senza uTP, MDM non può raggiungerli.
 #. checkbox in the Add torrent window
 #. Torrent settings: ask the router (UPnP) to forward the port
 	Map the port on the router (UPnP)	Apri la porta sul router (UPnP)
@@ -2039,6 +2297,10 @@
 #. text in remote.rs
 #. remote control page (on a phone): an action failed
 	MDM could not do it.	MDM non è riuscito a farlo.
+#. text in torrent downloads
+#. question before starting/resuming a torrent that would modify files MDM did not create; Yes authorizes writes, No leaves files unchanged
+#, machine
+	MDM didn't create these files. Starting the torrent can resize them and replace their contents, including unticked files that share pieces. Use them for this torrent?	MDM non ha creato questi file. L'avvio del torrent può ridimensionarli e sostituirne il contenuto, inclusi i file deselezionati che condividono le parti. Vuoi usarli per questo torrent?
 #. text in remote.rs
 #. remote control page (on a phone): MDM can't be reached while pairing
 	MDM does not answer. Check that it is running and on the same network.	MDM non risponde. Controlla che sia in esecuzione e sulla stessa rete.
@@ -2046,6 +2308,14 @@
 #. remote control page (on a phone): MDM can't be reached now; the page keeps trying by itself
 #. the trailing ... means it is still going on: keep it
 	MDM does not answer. Trying again...	MDM non risponde. Nuovo tentativo...
+#. text in helpers.rs
+#. Video helpers: MDM can't download Deno on this system (32-bit Windows, an unusual processor); Deno and Node.js are program names
+#, machine
+	MDM has no copy for this system: install Deno or Node.js	MDM non ha una copia per questo sistema: installa Deno o Node.js
+#. text in helpers.rs
+#. Video helpers: MDM can't download this helper on this Windows (ffmpeg on 32-bit Windows); "Use another program" is the button below
+#, machine
+	MDM has no copy for this system: install it, or use another program	MDM non ha una copia per questo sistema: installala, oppure usa un altro programma
 #. text in remote.rs
 #. remote control page (on a phone): no pairing code is shown in MDM; "Pair a device" is MDM's button
 	MDM shows no code now. Click Pair a device there first.	MDM non mostra nessun codice al momento. Fai prima clic su Associa un dispositivo nel programma.
@@ -2096,9 +2366,13 @@
 	Mister Download Manager Configuration	Configurazione di Mister Download Manager
 #. text in crashui.rs
 	Mister Download Manager crash report	Rapporto di arresto anomalo di Mister Download Manager
-#. text in crashui.rs
+#. text in crashui.rs; text in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. crash report window heading: an internal error, MDM still running
 	Mister Download Manager hit an internal error	Mister Download Manager ha riscontrato un errore interno
+#. text in wake.rs
+#. why the computer isn't going to sleep, in the system's list of programs that keep it awake (Windows' power requests, Linux's inhibitors)
+#, machine
+	Mister Download Manager is downloading	Mister Download Manager è in download
 #. text in wake.rs
 #. why the computer isn't going to sleep, in the system's list of programs that keep it awake; {queue} = the queue's name
 #. {queue} = a queue name such as "Main queue" (keep the braces as they are)
@@ -2150,13 +2424,22 @@
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Morocco	Marocco
+#. text in playlistdlg.rs
+#. a quality in Download video for a whole playlist: each video's best H.264 video with AAC sound, an MP4 that every video editor, TV and phone plays; keep "(H.264 + AAC)" as it is
+#, machine
+	Most compatible (H.264 + AAC)	Più compatibile (H.264 + AAC)
+#. text in the Download video window
+#. a choice in the Download video window: the best H.264 video with AAC sound, an MP4 that every video editor, TV and phone plays; keep "(H.264 + AAC)" as it is; {height} is the resolution (1080p)
+#, machine
+	Most compatible (H.264 + AAC) · {height}	Più compatibile (H.264 + AAC) · {height}
 #. button in a download's Properties window
 #. verb: move the file to another folder
 	Move	Sposta
 #. what a keyboard shortcut does in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 	Move a page up / down	Scorri di una pagina su / giù
 #. what a keyboard shortcut does in the Help menu's windows (About, updates, shortcuts, Tell a friend)
-	Move between the categories and the download list	Passa tra le categorie e l'elenco dei download
+#, machine
+	Move between the toolbar, the categories and the download list	Spostati tra la barra degli strumenti, le categorie e l'elenco dei download
 #. text in the Scheduler window
 	Move down	Sposta giù
 #. text in a dialog box
@@ -2240,6 +2523,11 @@
 #. button in the Options window
 #. button: create a new item
 	New	Nuovo
+#. message or event log entry in the main window
+#. event log: the browser's new download of the same file gave a download that waited for a new address (its link had expired) its address, and it goes on from there; {host} = the new address's server
+#. {host} = a server name such as "example.com" (keep the braces as they are)
+#, machine
+	New address from the browser ({host}): going on from it	Nuovo indirizzo dal browser ({host}): continua da qui
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	New Caledonia	Nuova Caledonia
@@ -2273,6 +2561,10 @@
 	No	No
 #. text in a dialog box
 	No addresses yet	Ancora nessun indirizzo
+#. text in the Options window
+#. Options → Proxy / Socks: Test got no answer in time
+#, machine
+	No answer within 20 seconds.	Nessuna risposta entro 20 secondi.
 #. text in extension.rs
 #. a check of Test browser integration (Linux, macOS): MDM found no browser it can connect to (one installed as a Flatpak isn't found)
 	No browser MDM can connect to was found	Non è stato trovato nessun browser a cui MDM possa connettersi
@@ -2320,6 +2612,11 @@
 	No mail app opened.	Non si è aperta nessuna app di posta.
 #. text in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 	No mail app: the message is copied, paste it in your mail.	Nessuna app di posta: il messaggio è stato copiato, incollalo nella tua e-mail.
+#. message or event log entry in the main window
+#. a video's or gallery's log: MDM looked for a newer yt-dlp (or gallery-dl) and the one it has is the newest; {name} = its name
+#. {name} = a file name (keep the braces as they are)
+#, machine
+	No newer {name} than this one	Nessuna versione di {name} più recente di questa
 #. text in errors.rs
 	no peer sent the torrent's file list in time	nessun peer ha inviato in tempo l'elenco dei file del torrent
 #. text in the Add torrent window
@@ -2343,7 +2640,7 @@
 	No video this can download on that page	In quella pagina non c'è nessun video scaricabile
 #. message or event log entry in the main window
 	No web addresses were found in {file}.	Nessun indirizzo web trovato in {file}.
-#. text in the Download video window
+#. text in the Options window; text in the Download video window
 #. in the Subtitles list of Download video: download no subtitles
 	None	Nessuno
 #. text in the Download video window
@@ -2386,9 +2683,13 @@
 #. value in a column's filter list in the download list
 	Not in a queue	Non in coda
 #. text in helpers.rs
-#. Video helpers: no copy of this helper yet
 	Not installed yet	Non ancora installato
-#. button in helpers.rs
+#. text in the Link grabber window
+#. Link grabber, a link's status: a web page sent it (Click'n'Load), so it isn't looked up (name, size, online) before it is added
+#, machine
+	Not looked up	Non cercato
+#. text in cnl.rs; button in helpers.rs
+#. button in the Click'n'Load window: refuse these links, ask again next time
 	Not now	Non ora
 #. text in helpers.rs
 	Not now? Get them later from Tasks → Download video from a page.	Non ora? Puoi scaricarli più tardi da Attività → Scarica video da una pagina.
@@ -2419,11 +2720,19 @@
 	October	ottobre
 #. option (radio button) in the Options window
 	Off	Disattivato
+#. tooltip (why a control is greyed) in the Add torrent window
+#. why "Connect over uTP too" is greyed in Torrent settings: the proxy is on
+#, machine
+	Off with the proxy: uTP goes over UDP, which a SOCKS5 proxy doesn't carry	Disattivato con il proxy: uTP usa UDP, che un proxy SOCKS5 non supporta
 #. text in the Add torrent window
 	Off: a finished torrent stops, like any download.	Disattivato: un torrent completato si ferma, come qualsiasi download.
 #. text in the Options window
 #. Options → Remote → Status: the remote control is off
 	Off: nothing on the network can reach MDM.	Disattivato: nulla sulla rete può raggiungere MDM.
+#. text in rssdlg.rs
+#. RSS feeds window, Download rules: under the rule's feeds; the rule was turned off because every feed it watched was removed
+#, machine
+	Off: the feeds it watched were removed.	Disattivata: i feed monitorati sono stati rimossi.
 #. text in the Options window
 	Offer to download links copied to the clipboard	Proponi di scaricare i collegamenti copiati negli Appunti
 #. text in the Link grabber window
@@ -2460,6 +2769,10 @@
 	Once it is added, this window says so. Chrome may also ask by itself at its next start.	Quando sarà aggiunta, questa finestra lo indicherà. Chrome potrebbe anche chiederlo da solo al prossimo avvio.
 #. text in the Options window
 	One address per line; * stands for any text: example.com/private/*	Un indirizzo per riga; * indica qualsiasi testo: example.com/private/*
+#. text in the Options window
+#. Archive passwords window: how the list is used
+#, machine
+	One password per line, tried in this order on an encrypted archive before MDM asks. The one that fits moves to the top.	Una password per riga, che MDM prova in questo ordine su un archivio crittografato prima di chiedertela. Quella corretta si sposta in cima.
 #. option (radio button) in the Scheduler window
 	One-time downloading	Download una tantum
 #. text in the Link grabber window
@@ -2495,7 +2808,9 @@
 #. title of the message when the folder of a downloaded file can't be shown
 #. button that opens the torrent's containing folder in the file manager
 	Open folder	Apri cartella
-#. text in a download's progress window
+#. text in the Link grabber window; text in a download's progress window
+#. Link grabber, a link's status: the remedy from the failure's sentence, for a site link that is a web page, not the file (and a server that sent a web page instead of it). The sentence is the cell's hover tip
+#. Link grabber, a link's status: the remedy from the failure's sentence, for a server that sent a web page instead of the file. The sentence is the cell's hover tip
 #. button in a download's progress window when the site sent a web page (a waiting page, a captcha) instead of the file: opens the download's link in the web browser
 #, machine
 	Open in browser	Apri nel browser
@@ -2536,6 +2851,10 @@
 #. text in a download's progress window
 #. tab title: what happens when the download finishes
 	Options on completion	Opzioni al termine
+#. text in the Options window
+#. Options → Add an account: label before the field for an API key the user made at the service (Mega-Debrid: My Account → API Key; the other way to sign in)
+#, machine
+	Or paste an application's API key:	Oppure incolla la chiave API di un'applicazione:
 #. text in the Options window
 #. Options → Add an account: label before the field for the service's API token (the other way to sign in)
 	Or paste your API token:	Oppure incolla il tuo token API:
@@ -2585,6 +2904,7 @@
 	Password	Password
 #. text in the Link grabber window; text in the Options window
 #. Link grabber: the package's archives' password (a label before its box)
+#. Options → Add an account: label before the field for the password at the debrid service
 	Password:	Password:
 #. text in the Add torrent window
 	Paste a magnet link or choose a .torrent file, then Look up.	Incolla un link magnet o scegli un file .torrent, poi fai clic su Cerca.
@@ -2660,12 +2980,21 @@
 #. text in debrid.rs
 #. Options → Accounts: a debrid account's state; {days} the days of premium left
 	premium, {days} days left	premium, ancora {days} giorni
+#. text in the Options window
+#. Options → General: shown inside the shortcut recorder box while waiting for the user to press a 2-key or 3-key shortcut (#558)
+#. the trailing ... means it is still going on: keep it
+#, machine
+	Press keys...	Premi i tasti...
 #. button in a dialog box
 #. verb: open the part already downloaded
 	Preview	Anteprima
 #. text in a dialog box
 #. tooltip of the greyed Preview button in Download File Info
 	Preview isn't available yet	L'anteprima non è ancora disponibile
+#. text in the Download video window
+#. a private-window video's authentication failure: only cookies supplied by that private window may be used, even after restarting MDM
+#, machine
+	Private-window downloads do not use Cookies for video sites from Options. Open the page in a private window, sign in there, and use its Download video button again.	I download da una finestra privata non usano i cookie per i siti video delle Opzioni. Apri la pagina in una finestra privata, accedi lì e usa di nuovo il pulsante Scarica video.
 #. text in the Options window
 #. Options → Sites Logins → Cookies for video sites: label before the browser profile's name or folder (may stay empty)
 	Profile (optional):	Profilo (facoltativo):
@@ -2752,6 +3081,11 @@
 #. event log entry: Recheck failed, with the reason
 #. {error} = an error message (keep the braces as they are)
 	Recheck failed: {error}	Nuova verifica non riuscita: {error}
+#. text in a download's progress window
+#. a live stream's status: yt-dlp records it (it shows no progress, only the size so far)
+#. the trailing ... means it is still going on: keep it
+#, machine
+	Recording...	Registrazione in corso...
 #. message or event log entry in the main window
 #. window title, verb: download the file again from the start
 	Redownload	Scarica di nuovo
@@ -2760,12 +3094,20 @@
 #. button in rssdlg.rs
 #. RSS feeds window: fetch the selected feed again now
 	Refresh	Aggiorna
+#. text in the Link grabber window
+#. Link grabber, a link's status: the remedy from the failure's sentence, for a download link that expired. The sentence is the cell's hover tip
+#, machine
+	Refresh the address	Aggiorna l'indirizzo
 #. text in the Options window
 #. tab title: how dates and times are written (date order, 12- or 24-hour clock)
 	Regional	Formato internazionale
 #. text in rssdlg.rs
 #. RSS feeds window, Download rules: the two boxes above hold regular expressions
 	Regular expressions	Espressioni regolari
+#. text in extracting archives (a download's log, the Archive password window)
+#. in Archive password: check box: keep the password typed in Options → Archives → Archive passwords, to try it on the next encrypted archives
+#, machine
+	Remember it for other archives	Ricordala per altri archivi
 #. text in a download's progress window
 	Remember Speed Limiter settings for this file	Ricorda le impostazioni del limitatore di velocità per questo file
 #. text in a dialog box
@@ -2791,8 +3133,9 @@
 #. remote control page (on a phone): question before removing a download; {name} its file name
 #. {name} = a file name (keep the braces as they are)
 	Remove {name} from the list?	Rimuovere {name} dall'elenco?
-#. text in a download's progress window
+#. text in a download's progress window; text in torrent_rename.rs
 #. noun: label before the deferred new file or folder name in the progress window
+#. noun: label before the new file or folder name in Add torrent
 #, machine
 	Rename	Rinomina
 #. text in the Batch download window
@@ -2895,7 +3238,8 @@
 	Save To...	Salva in...
 #. text in a download's progress window; text in a download's Properties window
 	Save To:	Salva in:
-#. text in the Link grabber window; text in rssdlg.rs
+#. text in the Batch download window; text in the Link grabber window; text in rssdlg.rs
+#. Batch download: the folder every file goes to (a label before its box)
 #. Link grabber: the folder the package's files go to (a label before its box)
 #. RSS feeds window, Download rules: the folder the rule's torrents go to
 	Save to:	Salva in:
@@ -2907,6 +3251,11 @@
 #. label over the folder the downloads were saved in
 #. label before the folder the torrent is saved in
 	Saved in	Salvato in
+#. text in a download's progress window
+#. a live stream's status: stopped, and what was recorded being made into the video file kept
+#. the trailing ... means it is still going on: keep it
+#, machine
+	Saving...	Salvataggio in corso...
 #. tab in the Scheduler window
 #. noun: tab title; when the queue starts and stops
 	Schedule	Pianificazione
@@ -2918,9 +3267,6 @@
 	Search:	Cerca:
 #. text in the Batch download window
 	Second file:	Secondo file:
-#. text in a dialog box
-#. title of the folder picker
-	Select a folder	Seleziona una cartella
 #. button in playlistdlg.rs; button in the Add torrent window; text in torrentfiles.rs
 #. button in Download video for a playlist: tick every video
 	Select all	Seleziona tutto
@@ -2980,9 +3326,10 @@
 	Service	Servizio
 #. text in the Options window
 	Service:	Servizio:
-#. text in the Add torrent window
+#. tooltip (why a control is greyed) in the Add torrent window
 #. why "Use the proxy" is greyed in Torrent settings
-	Set a socks5:// proxy in Options → Proxy / Socks first	Prima imposta un proxy socks5:// in Opzioni → Proxy / Socks
+#, machine
+	Set a SOCKS5 proxy in Options → Proxy / Socks (Manual, Type SOCKS5) first	Prima imposta un proxy SOCKS5 in Opzioni → Proxy / Socks (Manuale, Tipo SOCKS5)
 #. checkbox in the Options window
 	Set file creation date as provided by the server	Imposta la data di creazione del file fornita dal server
 #. button in extension.rs; button in the Options window
@@ -3027,6 +3374,10 @@
 #. {error} = an error message (keep the braces as they are)
 #, machine
 	Sharing stopped: {error}	Condivisione interrotta: {error}
+#. text in the Options window
+#. Options → General: label for the global keyboard shortcut that shows or hides MDM's main window (#558)
+#, machine
+	Shortcut to show or hide window:	Scorciatoia per mostrare o nascondere la finestra:
 #. text in the download list
 	Show	Mostra
 #. message or event log entry in the main window
@@ -3072,6 +3423,10 @@
 #. a country's name (where a download's server is)
 	Sierra Leone	Sierra Leone
 #. button in the Options window
+#. button: sign in to the debrid service with the user name and password typed in
+#, machine
+	Sign in	Accedi
+#. button in the Options window
 #. button: sign in to the debrid service in the browser, by typing a code there
 	Sign in in the browser	Accedi nel browser
 #. text in the Options window
@@ -3084,11 +3439,35 @@
 #. Options → Accounts: where the debrid accounts' sign-ins and the other passwords are kept (Windows' own Credential Manager, in Control Panel)
 	Sign-ins and passwords are kept in Windows Credential Manager.	Gli accessi e le password sono conservati in Gestione credenziali di Windows.
 #. text in the Options window
+#. Options → Add an account: signed in, the service gives no account name; {state} premium or not
+#, machine
+	Signed in ({state})	Accesso eseguito ({state})
+#. text in the Options window
 #. Options → Add an account: signed in; {user} the account's name, {state} premium or not
 	Signed in as {user} ({state})	Accesso effettuato come {user} ({state})
 #. text in the Options window
 #. Options → Accounts: the account's sign-in can't be read (signed out, or the settings came from another computer)
 	signed out: sign in again	disconnesso: accedi di nuovo
+#. message or event log entry in the main window
+#. View → Draw with: a greyed note under why a graphics system doesn't draw MDM; {date}: the day that was found
+#, machine
+	Since {date}	Dal {date}
+#. message or event log entry in the main window
+#. View → Draw with: a greyed note under why a graphics system ("it": Direct3D, Vulkan, Metal or OpenGL) doesn't draw MDM; {date}: the day that was found; MDM tries it again once the graphics driver is updated
+#, machine
+	Since {date}: MDM tries it again after a driver update	Dal {date}: MDM riproverà dopo un aggiornamento del driver
+#. message or event log entry in the main window
+#. View → Draw with: a greyed note under why a graphics system ("it": Direct3D, Vulkan, Metal or OpenGL) doesn't draw MDM; {date}: the day that was found; MDM tries that graphics system again when it next starts
+#, machine
+	Since {date}: MDM tries it again at its next start	Dal {date}: MDM riproverà al prossimo avvio
+#. message or event log entry in the main window
+#. View → Draw with: a greyed note under why a graphics system ("it": Direct3D, Vulkan, Metal or OpenGL) doesn't draw MDM; {date}: the day that was found; {retry}: the day MDM tries it again
+#, machine
+	Since {date}: MDM tries it again on {retry}	Dal {date}: MDM riproverà il {retry}
+#. message or event log entry in the main window
+#. View → Draw with: a greyed note under why a graphics system ("it": Direct3D, Vulkan, Metal or OpenGL) doesn't draw MDM; {date}: the day that was found; {retry}: the day MDM tries it again, unless the graphics driver is updated before
+#, machine
+	Since {date}: MDM tries it again on {retry}, or after a driver update	Dal {date}: MDM riproverà il {retry}, o dopo un aggiornamento del driver
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Singapore	Singapore
@@ -3180,6 +3559,26 @@
 	Speed Limiter	Limitatore di velocità
 #. window title in a dialog box
 	Speed Limiter settings	Impostazioni del limitatore di velocità
+#. text in the download list (sizes, speeds, status)
+#. tip of a download's Transfer rate in the list: {limit} is the most this download may take ("512 KB/sec"), set with the Speed Limiter
+#, machine
+	Speed Limiter: at most {limit} for this download	Limitatore di velocità: al massimo {limit} per questo download
+#. text in the download list (sizes, speeds, status)
+#. the status bar and the tray icon's tip while the Speed Limiter's limit for all downloads together is on: {limit} is the most they may take together ("1024 KB/sec")
+#, machine
+	Speed Limiter: {limit} for all downloads	Limitatore di velocità: {limit} per tutti i download
+#. text in the download list (sizes, speeds, status)
+#. tip of a download's Transfer rate in the list: {limit} is the most all downloads together may take ("1024 KB/sec"), set in the Speed Limiter's settings
+#, machine
+	Speed Limiter: {limit} for all downloads together	Limitatore di velocità: {limit} per tutti i download insieme
+#. text in the download list (sizes, speeds, status)
+#. the status bar and the tray icon's tip while Downloads → Speed Limiter is turned on: {limit} is the most each download may take ("512 KB/sec")
+#, machine
+	Speed Limiter: {limit} per download	Limitatore di velocità: {limit} per download
+#. text in the download list (sizes, speeds, status)
+#. the status bar and the tray icon's tip while both Speed Limiter limits are on: {one} is the most each download may take ("512 KB/sec"), {all} the most all of them together may take ("1024 KB/sec")
+#, machine
+	Speed Limiter: {one} per download, {all} for all	Limitatore di velocità: {one} per download, {all} per tutti
 #. message or event log entry in the main window
 #. tooltip on the disabled Rename box when the file is one part of a split archive (.part1.rar, .7z.001…)
 #, machine
@@ -3243,6 +3642,10 @@
 #. text in remote.rs; text in the Add torrent window
 #. remote control page (on a phone): button: stop a queue
 	Stop	Interrompi
+#. text in a download's progress window
+#. button in a live stream's progress window: stop recording it and keep what was recorded as a video file
+#, machine
+	Stop and save	Interrompi e salva
 #. text in the Scheduler window; checkbox in the Scheduler window
 	Stop download at	Interrompi download alle
 #. text in playlistdlg.rs
@@ -3385,11 +3788,20 @@
 #. text in the Download video window
 	The best qualities, MP3, Opus and FLAC need ffmpeg (about 80 MB).	Le qualità migliori, MP3, Opus e FLAC richiedono ffmpeg (circa 80 MB).
 #. text in the Download video window
+#. in Download video, on 32-bit Windows (no button: no ffmpeg build MDM can check exists for it); Helpers... is the button below
+#. the trailing ... means it is still going on: keep it
+#, machine
+	The best qualities, MP3, Opus and FLAC need ffmpeg, which MDM has no copy of for 32-bit Windows: choose your own with Helpers...	Le qualità migliori, MP3, Opus e FLAC richiedono ffmpeg, di cui MDM non ha una copia per Windows a 32 bit: scegli tu quale usare con Programmi di supporto...
+#. text in the Download video window
 #. in Download video, on macOS and Linux (no button: the system installs it)
 	The best qualities, MP3, Opus and FLAC need ffmpeg: install it with your system's package manager (or Homebrew).	Le qualità migliori, MP3, Opus e FLAC richiedono ffmpeg: installalo con il gestore di pacchetti del sistema (o con Homebrew).
 #. text in the settings
 #. an error: the browser's VPN or proxy extension logs in to its proxy itself, and MDM can't; Options → Proxy / Socks → Network adapter is where an adapter can be chosen
 	the browser's proxy (a VPN or proxy extension) asks for a login only that extension has: use the VPN's own app, or choose its network adapter in Options → Proxy / Socks	il proxy del browser (una VPN o un'estensione proxy) richiede un accesso che ha solo quell'estensione: usa l'app della VPN oppure scegli la sua scheda di rete in Opzioni → Proxy / Socks
+#. text in extension.rs
+#. a check of Test browser integration: the browsers are pointed at a copy of MDM that was deleted (often one started from inside a zip); that copy's folder shows on the line under it
+#, machine
+	The browsers are set up for a copy that is gone:	I browser sono configurati per una copia che non esiste più:
 #. text in extension.rs
 #. a check of Test browser integration: the browsers find MDM's helper program
 	The browsers can find Mister Download Manager	I browser riescono a trovare Mister Download Manager
@@ -3436,6 +3848,10 @@
 	the connection to {host} was cut: a firewall, or a network that blocks it	la connessione a {host} è stata interrotta: un firewall o una rete la bloccano
 #. text in errors.rs
 	the connection was lost while receiving data	la connessione si è interrotta durante la ricezione dei dati
+#. text in torrent downloads
+#. files kept appearing while the user was confirming a torrent start; stop rather than repeat questions indefinitely
+#, machine
+	The destination keeps changing. Stop changes to its files and try starting the torrent again.	La destinazione continua a cambiare. Interrompi le modifiche ai suoi file e prova ad avviare di nuovo il torrent.
 #. text in the Add torrent window
 #. a magnet link's lookup, after 30 seconds: the DHT got no answer from anyone
 	The DHT reached no one. A firewall, a VPN or the network may be blocking UDP, which the DHT and most trackers use.	La DHT non ha raggiunto nessuno. Un firewall, una VPN o la rete potrebbero bloccare UDP, usato dalla DHT e dalla maggior parte dei tracker.
@@ -3468,6 +3884,10 @@
 	The downloads you add, or drop on this window, show here.	I download che aggiungi o trascini su questa finestra compaiono qui.
 #. text in errors.rs
 	the drive or network share is no longer available	l'unità o la condivisione di rete non è più disponibile
+#. text in extracting archives (a download's log, the Archive password window)
+#. in a download's log, after HatchZip (a program's name) extracted in place: the entries left out (links, unsafe names) were not deleted, they are still in {folder}
+#, machine
+	The entries left out are still in {folder}	Le voci escluse restano in {folder}
 #. text in extension.rs
 #, machine
 	The extension is already in this app. Apple hasn't notarized this build, so Safari needs these steps to allow it.	L'estensione è già in questa app. Apple non ha notarizzato questa build, quindi per consentirla in Safari servono questi passaggi.
@@ -3487,6 +3907,14 @@
 #. text in the Checksum window
 #. {algorithm} = a checksum algorithm such as "SHA-256" (keep the braces as they are)
 	The file matches ({algorithm})	Il file corrisponde ({algorithm})
+#. text in errors.rs
+#. why a download failed on Linux or macOS (#1102): the file name is longer than the system allows ({limit} bytes, 255; a letter can take several bytes), counting the temporary files saved beside the file while it downloads. {path} = the path
+#, machine
+	the file name is too long: at most {limit} bytes with the files saved while it downloads. Choose a shorter name ({path})	il nome del file è troppo lungo: al massimo {limit} byte, contando i file salvati durante il download. Scegli un nome più breve ({path})
+#. text in errors.rs
+#. why a download failed (#1102): the file name is longer than Windows allows ({limit} characters, 255), counting the temporary files saved beside the file while it downloads. {path} = the path
+#, machine
+	the file name is too long: at most {limit} characters with the files saved while it downloads. Choose a shorter name ({path})	il nome del file è troppo lungo: al massimo {limit} caratteri, contando i file salvati durante il download. Scegli un nome più breve ({path})
 #. text in a dialog box
 	The file saved as	Il file è stato salvato come
 #. text in the download list (sizes, speeds, status)
@@ -3500,6 +3928,10 @@
 #. message or event log entry in the main window
 #. {error} = an error message (keep the braces as they are)
 	The files could not be chosen: {error}	Impossibile scegliere i file: {error}
+#. text in torrent downloads
+#. error when deleting a torrent added by an older MDM that saved no record of its files: they stay on the disk
+#, machine
+	The files were kept because this older download has no ownership record	I file sono stati mantenuti perché questo download meno recente non ha un record di proprietà
 #. text in a dialog box
 #. {error} = an error message (keep the braces as they are)
 	The folder could not be created: {error}	Impossibile creare la cartella: {error}
@@ -3526,11 +3958,17 @@
 #. text in errors.rs; text in torrent downloads
 #. an error: the network adapter chosen in Options (a VPN's, usually) is off or gone; {adapter} its name
 	the network adapter {adapter} is not connected	la scheda di rete {adapter} non è connessa
+#. text in torrent_ownership.rs
+#. error when a torrent's output folder path cannot be used
+#, machine
+	The output folder is invalid	La cartella di output non è valida
 #. text in extracting archives (a download's log, the Archive password window)
 #. why an archive wasn't extracted (after "Couldn't extract {name}: ")
 	the password is wrong	la password è errata
 #. text in errors.rs
-	the path is too long for Windows: {path}	il percorso è troppo lungo per Windows: {path}
+#. why a download failed (#1102): the folder and file name together are longer than Windows allows ({limit} characters, 259), counting the temporary files saved beside the file while it downloads (their names are longer). {path} = the path
+#, machine
+	the path is too long for Windows: at most {limit} characters with the files saved while it downloads. Choose a shorter file name or folder ({path})	il percorso è troppo lungo per Windows: al massimo {limit} caratteri, contando i file salvati durante il download. Scegli un nome di file o una cartella più brevi ({path})
 #. text in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. why updates could not be checked: the newest release on the site has no number
 	the release has no version	la release non ha un numero di versione
@@ -3547,6 +3985,14 @@
 	The report is on your clipboard.	Il rapporto è stato copiato negli Appunti.
 #. text in crashui.rs
 	The report is on your clipboard: paste it in a comment on the issue.	Il rapporto è stato copiato negli Appunti: incollalo in un commento alla issue.
+#. text in torrent downloads
+#. error when deleting a torrent: the .torrent file MDM kept is another torrent's
+#, machine
+	The saved .torrent file does not match this download	Il file .torrent salvato non corrisponde a questo download
+#. text in torrent downloads
+#. starting an old torrent whose cached metadata was lost; re-adding can restore it without deleting data
+#, machine
+	The saved .torrent file is missing or unreadable. Add the torrent again to recover its metadata; keep its existing files.	Il file .torrent salvato manca o non è leggibile. Aggiungi di nuovo il torrent per recuperare i suoi metadati; mantieni i file esistenti.
 #. text in errors.rs
 #. an FTPS (or other TLS) connection could not be secured
 	the secure connection failed	impossibile stabilire la connessione protetta
@@ -3570,6 +4016,15 @@
 	the server is busy ({status}); try again later	il server è occupato ({status}); riprova più tardi
 #. text in errors.rs
 	the server sent an unexpected part of the file ({detail})	il server ha inviato una parte inattesa del file ({detail})
+#. text in errors.rs
+#. why a download failed (#1460): the browser's own download of the link was a file of {size} (such as 117.65 MB), but when MDM asked the server for it, it sent only {sent} (such as 4.65 KB): an error or a notice, not the file. Some links work only once, or only in the browser. Alt+click: the link clicked with the Alt key held, which leaves the download to the browser
+#. {size} = a file size such as "4.2 MB" (keep the braces as they are)
+#, machine
+	the server sent only {sent} where the browser's file is {size} (a link that works once, or only in the browser): Alt+click the link to let the browser download it	il server ha inviato solo {sent} mentre il file del browser è {size} (un collegamento che funziona una volta, o solo nel browser): fai clic con Alt sul collegamento per lasciare che il browser lo scarichi
+#. text in debrid.rs
+#. Options → Accounts: the service doesn't say whether the account is premium (Mega-Debrid, signed in with an API key); a free account's links are refused when downloading
+#, machine
+	the service doesn't say whether it is premium	il servizio non dice se l'account è premium
 #. text in errors.rs
 #. why a download failed (#701): a file host answered with its own web page (a countdown before the link, a captcha, a sign-in) where the file was expected. The browser gets past it; MDM's browser extension then hands the real file back to MDM
 #, machine
@@ -3596,6 +4051,34 @@
 #. the Download video window: the site's certificate is trusted neither by yt-dlp nor by the computer (asked again with the computer's certificates, #955); usually an antivirus or a proxy that reads secure (HTTPS) connections signs sites with a certificate of its own
 #, machine
 	The site's certificate isn't trusted, by yt-dlp nor by this computer: an antivirus's web filter or a proxy that reads HTTPS may be in the way. Turn its HTTPS scanning off, or add its certificate to the computer's, then look the page up again.	Il certificato del sito non è attendibile, né da yt-dlp né da questo computer: il filtro web di un antivirus o un proxy che legge HTTPS potrebbero essere d'intralcio. Disattiva la scansione HTTPS o aggiungi il suo certificato a quelli del computer, poi cerca di nuovo la pagina.
+#. text in errors.rs
+#. why a download failed: the site's security certificate (what proves a secure, HTTPS, site is the one it says) is past its end date. Browsers warn about the same site
+#, machine
+	the site's security certificate has expired, so MDM can't be sure it's the real site (your browser warns about it too)	il certificato di sicurezza del sito è scaduto, quindi MDM non può essere certo che sia il sito reale (anche il tuo browser lo segnala)
+#. text in errors.rs
+#. why a download failed: the site's security certificate was made for other site names than the one in the address
+#, machine
+	the site's security certificate is for another site name, so MDM can't be sure it's the real site (your browser warns about it too)	il certificato di sicurezza del sito è per un altro nome di sito, quindi MDM non può essere certo che sia il sito reale (anche il tuo browser lo segnala)
+#. text in errors.rs
+#. why a download failed: the site's security certificate is made for other uses than a website (its "extended key usage" leaves out web servers)
+#, machine
+	the site's security certificate isn't made for websites, so MDM can't be sure it's the real site	il certificato di sicurezza del sito non è fatto per i siti web, quindi MDM non può essere sicuro che sia il sito reale
+#. text in errors.rs
+#. why a download failed: the site's security certificate was signed by the site itself or by an issuer this computer doesn't trust. Browsers warn about the same site
+#, machine
+	the site's security certificate isn't trusted (it's self-signed or from an unknown issuer), so MDM can't be sure it's the real site (your browser warns about it too)	il certificato di sicurezza del sito non è attendibile (è autofirmato o proviene da un emittente sconosciuto), quindi MDM non può essere certo che sia il sito reale (anche il tuo browser lo segnala)
+#. text in errors.rs
+#. why a download failed: the site's security certificate's validity hasn't begun; usually this computer's date or time is wrong
+#, machine
+	the site's security certificate isn't valid yet: check this computer's date and time	il certificato di sicurezza del sito non è ancora valido: controlla la data e l'ora di questo computer
+#. text in errors.rs
+#. why a download failed: the site's security certificate was refused for another reason (a bad signature, a broken certificate)
+#, machine
+	the site's security certificate was refused, so MDM can't be sure it's the real site	il certificato di sicurezza del sito è stato rifiutato, quindi MDM non può essere certo che sia il sito reale
+#. text in errors.rs
+#. why a download failed: the issuer of the site's security certificate took it back
+#, machine
+	the site's security certificate was revoked by its issuer, so MDM won't trust it	il certificato di sicurezza del sito è stato revocato dal suo emittente, quindi MDM non si fiderà
 #. text in crashui.rs
 #. crash report window: the symbols couldn't be downloaded; the report still works
 	The symbols couldn't be fetched: some lines of the report show addresses instead of names (the developers can still read them).	Impossibile scaricare i simboli: alcune righe del rapporto mostrano indirizzi anziché nomi (gli sviluppatori possono comunque interpretarle).
@@ -3605,6 +4088,10 @@
 #. text in the Options window
 #. Options → Connection → DNS: the operating system's own DNS (the default)
 	The system's DNS	DNS di sistema
+#. text in the Options window
+#. Options → Proxy / Socks: Test's server answered without saying the address it saw
+#, machine
+	The test page didn't say the address it saw.	La pagina di prova non ha indicato l'indirizzo che ha visto.
 #. text in whereis.rs
 #. the tooltip of where a download's server is: how the time shown is measured
 	The time is a round trip, measured as this download's own connections opened.	Il tempo è quello di andata e ritorno, misurato all'apertura delle connessioni di questo download.
@@ -3614,6 +4101,23 @@
 #. text in torrent downloads
 #. an error: the torrent is gone from the torrent session
 	the torrent is no longer there	il torrent non è più presente
+#. text in torrent_ownership.rs
+#. unsafe path found in a saved torrent ownership record
+#. error when the saved record of a torrent's files holds a path that leaves its folder
+#, machine
+	The torrent ownership record contains an unsafe path	Il record di proprietà del torrent contiene un percorso non sicuro
+#. text in torrent_ownership.rs
+#. error when the saved record of a torrent's files differs from the .torrent file
+#, machine
+	The torrent ownership record does not match its file list	Il record di proprietà del torrent non corrisponde al suo elenco di file
+#. text in torrent_ownership.rs
+#. error when the saved record of a torrent's files cannot be read as one
+#, machine
+	The torrent ownership record is invalid	Il record di proprietà del torrent non è valido
+#. text in torrent downloads
+#. the user refused write permission for existing files when starting a torrent
+#, machine
+	The torrent was not started because permission to use existing files was declined.	Impossibile avviare il torrent perché è stata negata l'autorizzazione a usare i file esistenti.
 #. message or event log entry in the main window
 #. {error} = an error message (keep the braces as they are)
 	The trackers could not be added: {error}	Impossibile aggiungere i tracker: {error}
@@ -3638,6 +4142,10 @@
 #. text in the Scheduler window
 #. why OK is greyed when naming a new queue
 	There is already a queue with this name	Esiste già una coda con questo nome
+#. text in extracting archives (a download's log, the Archive password window)
+#. why an archive wasn't extracted (after "Couldn't extract {name}: "); HatchZip is a program's name
+#, machine
+	there isn't enough free space for its files, HatchZip says; nothing was changed	non c'è abbastanza spazio libero per i suoi file, dice HatchZip; nulla è stato modificato
 #. text in a download's progress window
 	These settings are unavailable when "Show download complete dialog" is turned on	Queste impostazioni non sono disponibili quando "Mostra la finestra di download completato" è attivo
 #. text in helpers.rs
@@ -3667,6 +4175,10 @@
 #. text in the Options window
 #. Options → Remote → Listen on: only programs on this computer can connect (127.0.0.1)
 	This computer only (127.0.0.1)	Solo questo computer (127.0.0.1)
+#. text in extension.rs
+#. a check of Test browser integration: MDM was started from inside a zip (or from the temporary folder), which is deleted after it quits, so it can't be connected to the browsers
+#, machine
+	This copy runs from a temporary folder that will be deleted	Questa copia viene eseguita da una cartella temporanea che verrà eliminata
 #. text in the Scheduler window
 #. tooltip on the Scheduler's date when it is in the past
 	This date has passed: the queue will not start	Questa data è già passata: la coda non partirà
@@ -3718,6 +4230,10 @@
 #. why "Embed chapters" is greyed: ffmpeg (a helper program) is not installed
 #. why "Put them into the video" is greyed: ffmpeg (a helper program) is not installed
 	This needs ffmpeg	Serve ffmpeg
+#. text in the Add torrent window
+#. tooltip of the greyed "Create a folder for this torrent" checkbox: debrid downloads cannot use it
+#, machine
+	This option is available for direct BitTorrent downloads	Questa opzione è disponibile per i download BitTorrent diretti
 #. text in the Options window
 #. Options → Accounts: a portable copy (it writes nothing outside its folder) keeps the sign-ins in its own settings, encrypted so that only this Windows account can read them
 	This portable copy keeps sign-ins and passwords in its own settings, encrypted for your Windows account.	Questa copia portatile conserva gli accessi e le password nelle proprie impostazioni, crittografate per il tuo account Windows.
@@ -3728,6 +4244,10 @@
 #. error: a program chosen as yt-dlp or ffmpeg didn't answer as one; {name} = yt-dlp or ffmpeg
 #. {name} = a file name (keep the braces as they are)
 	this program isn't {name}	questo programma non è {name}
+#. text in the Options window
+#. Options → General: shown when the chosen global shortcut is already registered by another program (#558)
+#, machine
+	This shortcut is already in use	Questa scorciatoia è già in uso
 #. text in errors.rs
 #. why a download failed: the site's bot check (Cloudflare) lets browsers through, not programs. Alt+click: the link clicked with the Alt key held, which leaves the download to the browser
 #, machine
@@ -3739,8 +4259,20 @@
 	this torrent has a file name that isn't safe to write, so it wasn't added: {name}	questo torrent contiene un nome di file non sicuro da scrivere, quindi non è stato aggiunto: {name}
 #. text in the Add torrent window
 	This torrent is already in the download list	Questo torrent è già nell'elenco dei download
+#. message or event log entry in the main window
+#. said when a torrent is added again while an action on the same torrent is still running
+#, machine
+	This torrent is busy. Wait for its current operation to finish before adding it again.	Questo torrent è occupato. Attendi il completamento dell'operazione in corso prima di aggiungerlo di nuovo.
 #. text in errors.rs
 	this torrent is not in the list	questo torrent non è nell'elenco
+#. text in torrent_ownership.rs
+#. torrent start needs explicit write permission; {file} is the first existing file without a matching grant
+#, machine
+	This torrent needs permission to use {file} before it can start.	Questo torrent richiede l'autorizzazione a usare {file} prima di poter essere avviato.
+#. message or event log entry in the main window; text in a download's Properties window
+#. shown when Move or Rename is refused: a torrent saved straight in Save to shares that folder with other files
+#, machine
+	This torrent shares its destination folder	Questo torrent condivide la sua cartella di destinazione
 #. text in the Download video window
 #. the Download video window: the page's video is copy-protected
 	This video is protected (DRM): no tool can save it.	Questo video è protetto (DRM): nessuno strumento può salvarlo.
@@ -3803,7 +4335,7 @@
 #. the kind of file the Open dialog lists
 #. title of the separate window listing a torrent's files
 	Torrent files	File torrent
-#. window title in the Add torrent window
+#. message or event log entry in the main window; window title in the Add torrent window
 	Torrent settings	Impostazioni torrent
 #. text in torrent downloads
 #. an error: Torrent settings ask for the proxy, and Options → Proxy / Socks has no SOCKS5 one
@@ -3841,6 +4373,10 @@
 #. {name} = a file name (keep the braces as they are)
 #, machine
 	Try again later, or download {name} yourself and choose it in {helpers} → {other}.	Riprova più tardi, oppure scarica {name} e scegli il file in {helpers} → {other}.
+#. text in extracting archives (a download's log, the Archive password window)
+#. the trailing ... means it is still going on: keep it
+#, machine
+	Trying the saved archive passwords...	Tentativo con le password dell'archivio salvate...
 #. text in the Scheduler window
 #. Tuesday, as short as a calendar's column head (two letters in English)
 	Tu	Ma
@@ -3892,6 +4428,10 @@
 	Tuvalu	Tuvalu
 #. text in helpers.rs
 	Two free helpers make it work. Get them now, and saving a video is one click away when you find one.	Servono due programmi di supporto gratuiti. Scaricali ora: quando troverai un video, basterà un clic per salvarlo.
+#. label in the Options window; text in the Options window
+#. Options → Proxy / Socks → Manual: label before the kind of proxy (HTTP, HTTPS, SOCKS5, SOCKS4)
+#, machine
+	Type	Tipo
 #. text in rssdlg.rs
 #. RSS feeds window: shown when there are no feeds yet
 	Type a feed's address above and click Add feed.	Digita l'indirizzo di un feed qui sopra e fai clic su Aggiungi feed.
@@ -3968,12 +4508,29 @@
 #. button in the Options window
 #. button (short): move the account up the list (accounts are asked in the list's order)
 	Up	Su
+#. text in helpers.rs
+#. Helpers: MDM's own copy of a helper is the newest version
+#, machine
+	Up to date	Aggiornato
 #. text in playlistdlg.rs
 #. a quality in Download video for a whole playlist: each video at this height or the nearest below; {height} is a number (1080)
 	Up to {height}p	Fino a {height}p
+#. text in helpers.rs
+#. Helpers: button: check for a newer version of this helper now and install it
+#, machine
+	Update	Aggiorna
 #. button in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. button: download and install the new version, then restart
 	Update now	Aggiorna ora
+#. text in helpers.rs
+#. Helpers: a program the person chose, or the system's copy: MDM doesn't update it, the person (or their package manager) does
+#, machine
+	Updated by you	Aggiornato da te
+#. text in helpers.rs
+#. Helpers: MDM updated its own copy of a helper lately; {version} = the new version
+#. {version} = a version number (keep the braces as they are)
+#, machine
+	Updated to {version}	Aggiornato alla versione {version}
 #. text in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. {error} = an error message (keep the braces as they are)
 	Updates could not be checked: {error}	Impossibile verificare gli aggiornamenti: {error}
@@ -3992,11 +4549,18 @@
 	Use authorization	Usa autorizzazione
 #. text in the Options window
 	Use automatic configuration script	Usa script di configurazione automatica
+#. text in torrent downloads
+#, machine
+	Use existing torrent files	Usa i file torrent esistenti
 #. checkbox in the Options window
 	Use FTP in PASV mode	Usa FTP in modalità PASV
 #. button in helpers.rs
 #. Video helpers: button: go back to the copy MDM downloads and checks itself
 	Use MDM's own copy	Usa la copia di MDM
+#. checkbox in the Options window
+#. Options → Sites Logins: checkbox under Cookies for video sites: yt-dlp also reads the person's own yt-dlp config file
+#, machine
+	Use my yt-dlp config file	Usa il mio file di configurazione yt-dlp
 #. text in the Batch download window
 #. why Batch download's OK is greyed
 	Use one * only	Usa un solo *
@@ -4015,8 +4579,6 @@
 	Use the token	Usa il token
 #. text in a dialog box
 	Use them for this torrent? What matches it is kept, the rest replaced.	Usarli per questo torrent? Le parti corrispondenti vengono mantenute, il resto viene sostituito.
-#. label in the Options window
-	Use this proxy for the following protocols:	Usa questo proxy per i seguenti protocolli:
 #. text in rssdlg.rs
 #. RSS feeds window, Download rules: the rule is on
 	Use this rule	Usa questa regola
@@ -4025,6 +4587,10 @@
 #. text in the Options window
 #. column title: the user name
 	User	Utente
+#. text in the Options window
+#. Options → Add an account: label before the field for the user name at the debrid service
+#, machine
+	User name:	Nome utente:
 #. page title in the Options window
 	User names and passwords for servers/sites	Nomi utente e password per server/siti
 #. text in the Options window
@@ -4033,6 +4599,10 @@
 	User:	Utente:
 #. label in the Options window
 	UserName	Nome utente
+#. tooltip (why a control is greyed) in the Add torrent window
+#. why "Connect over uTP too" is greyed in Torrent settings: incoming connections are off
+#, machine
+	uTP uses the port for incoming connections: turn on Accept incoming connections	uTP usa la porta per le connessioni in entrata: attiva Accetta connessioni in entrata
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Uzbekistan	Uzbekistan
@@ -4066,6 +4636,16 @@
 #. text in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. {version} = a version number (keep the braces as they are)
 	Version {version} ({commit})	Versione {version} ({commit})
+#. text in helpers.rs
+#. Helpers: a newer version of a helper exists ("Update" downloads it); {version} = its version
+#. {version} = a version number (keep the braces as they are)
+#, machine
+	Version {version} available	Versione {version} disponibile
+#. text in helpers.rs
+#. Helpers: a newer version is downloaded and checked, and is used as soon as the downloads using this helper end; {version} = its version
+#. {version} = a version number (keep the braces as they are)
+#, machine
+	Version {version} is ready: used once its downloads end	La versione {version} è pronta: verrà usata al termine dei suoi download
 #. text in the download list (sizes, speeds, status)
 #. category name: video files
 	Video	Video
@@ -4104,6 +4684,10 @@
 #. a download's status (state it is in, not a command): waiting in a queue for its turn
 #. a download's status (state it is in, not a command): waiting in a queue
 	Waiting	In attesa
+#. message or event log entry in the main window
+#. event log: after Refresh download address, the download waits for the browser's next download of the same file, whose address it takes
+#, machine
+	Waiting for a new address from the browser	In attesa di un nuovo indirizzo dal browser
 #. text in the Options window
 #. Options → Remote → Pair a device: how long the code stays valid; {time} = minutes:seconds ("9:58")
 #. {time} = a time of day (keep the braces as they are)
@@ -4147,6 +4731,10 @@
 #. the Scheduler, under "Wake the computer to run this queue" (Windows): "Allow wake timers" is on when plugged in, off on battery
 	Windows allows wake timers only while plugged in	Windows consente i timer di riattivazione solo con l'alimentazione collegata
 #. text in the Options window
+#. Options → General → Shortcut to show or hide window: shown in the disabled shortcut box on Linux (#558)
+#, machine
+	Windows and macOS	Windows e macOS
+#. text in the Options window
 #. tooltip of "Mark downloaded files as coming from the internet" on Windows
 #, machine
 	Windows checks the files marked this way: SmartScreen before a program first runs, Office's Protected View before a document opens. Unticked, or under Windows' policy "Do not preserve zone information in file attachments", no download is marked.	Windows verifica i file contrassegnati in questo modo: SmartScreen prima che un programma venga eseguito per la prima volta, Visualizzazione protetta di Office prima che un documento si apra. Se deselezionato, o in base ai criteri di Windows "Non conservare le informazioni sulla zona negli allegati", nessun download viene contrassegnato.
@@ -4156,6 +4744,10 @@
 #. text in a dialog box
 #. why the computer could not be put to sleep (fills {error})
 	Windows refused	Windows ha rifiutato l'operazione
+#. message or event log entry in the main window
+#. after ticking "Open magnet links and .torrent files with Mister Download Manager", when Windows' Default apps keeps another app; {apps}: their names. "MAGNET" as Windows' Default apps lists it
+#, machine
+	Windows still opens magnet links or .torrent files with {apps}, chosen in Windows' Default apps, where only you can change it. Settings opens there now: pick Mister Download Manager for MAGNET and .torrent.	Windows apre ancora i link magnet o i file .torrent con {apps}, scelti in App predefinite di Windows, dove solo tu puoi cambiarlo. Le impostazioni si aprono lì ora: scegli Mister Download Manager per MAGNET e .torrent.
 #. text in langpick.rs
 	Windows' language	Lingua di Windows
 #. text in langpick.rs
@@ -4232,12 +4824,20 @@
 #. {version} = a version number (keep the braces as they are)
 	Your own program: {path} ({version})	Il tuo programma: {path} ({version})
 #. text in helpers.rs
-#. Video helpers (macOS, Linux): {path} = the system's ffmpeg
+#. Video helpers: {path} = the computer's own JavaScript runtime (node.exe, deno.exe), used as it is: MDM needn't download one
+#, machine
+	Your system's, nothing to download: {path}	Quello del sistema, niente da scaricare: {path}
+#. text in helpers.rs
+#. Video helpers: {path} = the system's yt-dlp, ffmpeg or gallery-dl
 	Your system's: {path}	Quello del sistema: {path}
 #. text in the Download video window
 #. in Download video and the browser's video menu: yt-dlp had no JavaScript runtime, so YouTube listed only some qualities (often only the sound); Node.js and Deno are program names
 #, machine
 	YouTube needs a JavaScript runtime to list its video qualities: install Node.js or Deno, then look it up again	YouTube ha bisogno di un runtime JavaScript per elencare le sue qualità video: installa Node.js o Deno, poi cercalo di nuovo
+#. text in the Options window
+#. Options → Sites Logins → Use my yt-dlp config file: its tooltip
+#, machine
+	yt-dlp also reads its own config files (on Windows %APPDATA%\\yt-dlp\\config.txt, on Linux and macOS ~/.config/yt-dlp/config). Most of what MDM chooses, the folder, the name and the quality, still wins, but options there that skip or filter videos apply too.	yt-dlp legge anche i propri file di configurazione (su Windows %APPDATA%\\yt-dlp\\config.txt, su Linux e macOS ~/.config/yt-dlp/config). La maggior parte delle scelte di MDM, la cartella, il nome e la qualità, prevalgono comunque, ma si applicano anche le opzioni che ignorano o filtrano i video.
 #. text in the Download video window
 #. the Download video window: yt-dlp couldn't read the cookies of the browser chosen in Options (Chrome, Edge...), which holds them while it runs; {browser} = its name
 	yt-dlp can't read {browser}'s cookies while {browser} is open. Close {browser} and look the page up again, or choose Firefox in Options → Sites Logins.	yt-dlp non può leggere i cookie di {browser} mentre {browser} è aperto. Chiudi {browser} e cerca di nuovo la pagina, oppure scegli Firefox in Opzioni → Accessi ai siti.
@@ -4335,7 +4935,9 @@
 #. text in a download's Properties window
 #. a kind of file, by its extension: {ext} = "ZIP", "PDF"…
 	{ext} File	File {ext}
-#. message or event log entry in the main window
+#. text in the main window's messages (deleting downloads' files); text in torrent downloads
+#. a message: a deleted download's file stayed on the disk; {file} = its name
+#. error dialog when a torrent's files could not be deleted; {file} is the download's name, {error} why
 #. {error} = an error message (keep the braces as they are)
 	{file} could not be deleted from the disk: {error}	Impossibile eliminare {file} dal disco: {error}
 #. text in a dialog box
@@ -4352,13 +4954,17 @@
 	{file} is too large to be a list of addresses ({size}). Import reads text files, web pages and .ef2 exports of up to {limit}.	{file} è troppo grande per essere un elenco di indirizzi ({size}). L'importazione legge file di testo, pagine web ed esportazioni .ef2 fino a {limit}.
 #. text in a dialog box
 #, machine
-	{file} was moved elsewhere by dragging it out of Download complete, and MDM couldn't learn where. Look for it where you dropped it.	{file} è stato spostato altrove trascinandolo fuori da Download completato e MDM non è riuscito a rilevare la posizione. Cercalo dove lo hai rilasciato.
+	{file} was moved elsewhere by dragging it out of MDM, and MDM couldn't learn where. Look for it where you dropped it.	{file} è stato spostato altrove trascinandolo fuori da MDM, e MDM non ha potuto sapere dove. Cercalo dove lo hai rilasciato.
 #. text in the Checksum window
 #. {algorithm} = a checksum algorithm such as "SHA-256" (keep the braces as they are)
 	{file}: the file does NOT match its checksum ({algorithm})	{file}: il file NON corrisponde al suo checksum ({algorithm})
 #. text in the Checksum window
 #. {algorithm} = a checksum algorithm such as "SHA-256" (keep the braces as they are)
 	{file}: the file matches its checksum ({algorithm})	{file}: il file corrisponde al suo checksum ({algorithm})
+#. text in torrent downloads
+#. said after Delete with files when some files stayed on the disk; {file} is the download's name; the files' paths follow it
+#, machine
+	{file}: these files stayed on the disk, because MDM didn't create them or another download uses them:	{file}: questi file sono rimasti sul disco, perché MDM non li ha creati o un altro download li usa:
 #. text in a download's progress window
 #. {have} and {total} = numbers of pieces; {size} = one piece's size
 #. {size} = a file size such as "4.2 MB" (keep the braces as they are)
@@ -4426,6 +5032,11 @@
 #. in the "7-Zip needed" window: {name} is the archive's file name; 7-Zip is a program's name
 #. {name} = a file name (keep the braces as they are)
 	{name} is a 7z or RAR archive. MDM extracts those with 7-Zip, which isn't installed.	{name} è un archivio 7z o RAR. MDM estrae questi archivi con 7-Zip, che non è installato.
+#. text in errors.rs
+#. error: a helper (yt-dlp, ffmpeg, gallery-dl, Deno) is being downloaded already, by MDM's automatic update or another copy of MDM; {name} = its name
+#. {name} = a file name (keep the braces as they are)
+#, machine
+	{name} is being downloaded already: try again in a moment	{name} è già in download: riprova tra un momento
 #. text in extracting archives (a download's log, the Archive password window)
 #. in Archive password: {name} is the archive's file name
 #. {name} = a file name (keep the braces as they are)
@@ -4434,11 +5045,21 @@
 #. Options → DNS: this service can't be asked this way; {how} is e.g. "plain DNS"
 #. {name} = a file name (keep the braces as they are)
 	{name} isn't offered as {how}.	{name} non è disponibile come {how}.
+#. message or event log entry in the main window
+#. a video's or gallery's log: a newer yt-dlp (or gallery-dl) is in, and the download starts again with it; {name} = yt-dlp or gallery-dl, {version} = the new version
+#. {name} = a file name; {version} = a version number (keep the braces as they are)
+#, machine
+	{name} {version} is in: trying again with it	{name} {version} è disponibile: nuovo tentativo con questa versione
 #. text in errors.rs
 #. error: a program chosen as a helper is too old; {name} = gallery-dl, {version} = its version, {oldest} = the oldest one MDM can use
 #. {name} = a file name; {version} = a version number (keep the braces as they are)
 	{name} {version} is too old: MDM needs {oldest} or newer	{name} {version} è troppo vecchio: MDM richiede la versione {oldest} o successiva
-#. text in a dialog box
+#. message or event log entry in the main window
+#. a video's or gallery's log: it failed in a way that usually means yt-dlp (or gallery-dl) is out of date with the site; {name} = yt-dlp or gallery-dl, {version} = the version used
+#. {name} = a file name; {version} = a version number (keep the braces as they are)
+#, machine
+	{name} {version} may be out of date for this site: looking for a newer version	{name} {version} potrebbe essere obsoleto per questo sito: ricerca di una versione più recente in corso
+#. text in a dialog box; text in helpers.rs
 #. one failed download in the summary of a group of downloads: {name} its file name, {error} why it failed
 #. {name} = a file name; {error} = an error message (keep the braces as they are)
 #, machine
@@ -4463,6 +5084,16 @@
 #. why a helper couldn't be downloaded ({problem}), then what to do about it ({advice}, whole sentences)
 #, machine
 	{problem}. {advice}	{problem}. {advice}
+#. text in the download list (sizes, speeds, status)
+#. the progress window's Transfer rate row while the limit for all downloads together applies: {rate} is this download's speed now ("512.000 KB/sec"), {limit} the most all downloads together may take ("1024 KB/sec"). The row is narrow: keep it short
+#. {rate} = a speed such as "1.2 MB/sec" (keep the braces as they are)
+#, machine
+	{rate} (limit for all downloads: {limit})	{rate} (limite per tutti i download: {limit})
+#. text in the download list (sizes, speeds, status)
+#. the progress window's Transfer rate row while a speed limit applies: {rate} is the download's speed now ("512.000 KB/sec"), {limit} the most this download may take ("512 KB/sec"). The row is narrow: keep it short
+#. {rate} = a speed such as "1.2 MB/sec" (keep the braces as they are)
+#, machine
+	{rate} (limit: {limit})	{rate} (limite: {limit})
 #. text in errors.rs
 #. a debrid service's error: too many requests; MDM waits and retries
 	{service} asks to slow down; MDM will try again in a minute	{service} chiede di rallentare; MDM riproverà tra un minuto
@@ -4597,6 +5228,10 @@ extension	Added to MDM	Aggiunto a MDM
 #, machine
 extension	Added to the queue	Aggiunto alla coda
 #. text in the browser extension
+#. filter in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): every download; short
+#, machine
+extension	All	Tutti
+#. text in the browser extension
 #. command in the menu of the download button over a video: opens the app's Download video window, with every quality and the subtitles
 #. the trailing ... means it is still going on: keep it
 #, machine
@@ -4624,8 +5259,40 @@ extension	Button settings...	Impostazioni pulsante...
 #, machine
 extension	can't be saved	non può essere salvato
 #. text in the browser extension
+#. in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the browser can't reach the app (why is said below it); keep the name Mister Download Manager as it is
+#, machine
+extension	Can't reach Mister Download Manager	Impossibile raggiungere Mister Download Manager
+#. text in the browser extension
+#. in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the other Mister Download Manager (a server) doesn't answer; keep the name Mister Download Manager as it is
+#, machine
+extension	Can't reach the Mister Download Manager at {server}	Impossibile raggiungere Mister Download Manager su {server}
+#. text in the browser extension
 #. shown briefly on the download button when nothing on the page says which video the player is playing, so nothing was sent
 extension	Can't tell which video this is: open its own page and try there	Impossibile capire di quale video si tratta: apri la sua pagina e riprova da lì
+#. text in the browser extension
+#. button of a question in the toolbar button's popup: don't do it
+#, machine
+extension	Cancel	Annulla
+#. text in the browser extension
+#. in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the other Mister Download Manager (a server) doesn't answer; Settings, Send downloads to and Open it are the names of a tab, a section and a button of the popup
+#, machine
+extension	Check that it's running, and that this browser accepts its certificate (Settings → Send downloads to → Open it).	Verifica che sia in esecuzione e che questo browser accetti il suo certificato (Impostazioni → Invia download a → Apri).
+#. text in the browser extension
+#. button of the question in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): takes the finished downloads off the list; verb
+#, machine
+extension	Clear	Rimuovi
+#. text in the browser extension
+#. button in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): takes the finished downloads off the list (their files stay); short
+#, machine
+extension	Clear finished	Rimuovi i completati
+#. text in the browser extension
+#. title of the question in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) before the finished downloads are taken off the list
+#, machine
+extension	Clear finished downloads?	Vuoi davvero rimuovere i download completati?
+#. text in the browser extension
+#. under the extension's name in the toolbar button's popup: the browser reaches the app; short
+#, machine
+extension	Connected	Connesso
 #. text in the browser extension
 #. the toolbar button's status when the browser reaches the app; keep the name Mister Download Manager as it is
 extension	Connected to Mister Download Manager	Connesso a Mister Download Manager
@@ -4634,12 +5301,51 @@ extension	Connected to Mister Download Manager	Connesso a Mister Download Manage
 #. {version} = a version number (keep the braces as they are)
 extension	Connected to Mister Download Manager {version}	Connesso a Mister Download Manager {version}
 #. text in the browser extension
+#. under the extension's name in the toolbar button's popup: the browser reaches the app; its version follows; short
+#. {version} = a version number (keep the braces as they are)
+#, machine
+extension	Connected · {version}	Connesso · {version}
+#. text in the browser extension
+#. said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) after Copy file
+#, machine
+extension	Copied {file}. Paste it into a folder, a chat or a message.	Copiato {file}. Incollalo in una cartella, una chat o un messaggio.
+#. text in the browser extension
+#. command in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): puts the file itself on the clipboard, to paste it into a folder, a chat or a message
+#, machine
+extension	Copy file	Copia file
+#. text in the browser extension
+#. command in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): copies the download's address
+#, machine
+extension	Copy link	Copia collegamento
+#. text in the browser extension
 #. in the menu under the download button over a video: finding the video's qualities failed; the app's own explanation follows on the next line
 #, machine
 extension	Could not look it up	Impossibile eseguire la ricerca
 #. text in the browser extension
+#. button of the question in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): deletes the file; verb
+#, machine
+extension	Delete	Elimina
+#. text in the browser extension
+#. command in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): takes the download off the list and deletes its file from the disk (it asks first)
+#. the trailing ... means it is still going on: keep it
+#, machine
+extension	Delete file...	Elimina il file...
+#. text in the browser extension
+#. title of the question in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) before a download's file is deleted
+#, machine
+extension	Delete the file?	Vuoi davvero eliminare il file?
+#. text in the browser extension
+#. filter in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): the finished downloads; short
+#. a download's line in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): it has just finished; short
+#, machine
+extension	Done	Completati
+#. text in the browser extension
 #. button beside a video, sound or stream in the toolbar button's popup: download it with the app; verb; short
 extension	Download	Scarica
+#. text in the browser extension
+#. command in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): downloads the file again from the start
+#, machine
+extension	Download again	Scarica di nuovo
 #. text in the browser extension
 #. command in the browser's right-click menu on a page: download the links of the whole page; keep the name Mister Download Manager as it is
 extension	Download all links with Mister Download Manager	Scarica tutti i collegamenti con Mister Download Manager
@@ -4665,7 +5371,20 @@ extension	Download with Mister Download Manager	Scarica con Mister Download Mana
 #, machine
 extension	Download {what}	Scarica {what}
 #. text in the browser extension
-#. shown in the toolbar button's popup after the site was excluded
+#. said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) after Download again
+#, machine
+extension	Downloading {file} again	Download di {file} di nuovo in corso
+#. text in the browser extension
+#. second line of the toolbar button's tooltip while the app downloads: how many downloads are running
+#. {count} = a number (keep the braces as they are)
+#, machine
+extension	Downloading: {count}	Download in corso: {count}
+#. text in the browser extension
+#. tab in the toolbar button's popup: the list of Mister Download Manager's newest downloads; noun, short
+#, machine
+extension	Downloads	Download
+#. text in the browser extension
+#. shown under the switch Never take downloads from this site in the toolbar button's popup while it is on
 #. {site} = a web site's name such as "example.com" (keep the braces as they are)
 extension	Downloads from {site} stay with the browser	I download da {site} restano al browser
 #. text in the browser extension
@@ -4678,6 +5397,27 @@ extension	Drag the dots to move it along the edge	Trascina i puntini per spostar
 #. text in the browser extension
 #. the address typed isn't an https:// address
 extension	Enter its https:// address.	Inserisci il suo indirizzo https://.
+#. text in the browser extension
+#. filter in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): the downloads that failed; short
+#. a download's line in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): it failed; short
+#, machine
+extension	Failed	Non riusciti
+#. text in the browser extension
+#. a download's line in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): it failed, and why (the app's words)
+#, machine
+extension	Failed: {why}	Non riuscito: {why}
+#. text in the browser extension
+#. a finished download's line in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when its file is no longer where it was saved
+#, machine
+extension	File deleted or moved	File eliminato o spostato
+#. text in the browser extension
+#. said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) after Clear finished
+#, machine
+extension	Finished downloads cleared	Download completati rimossi
+#. text in the browser extension
+#. button: forget / unpair this server
+#, machine
+extension	Forget	Dimentica
 #. text in the browser extension
 #. button on the download button over a video when the app didn't answer: opens the app's download page; MDM is the app's short name, keep it; very short
 #, machine
@@ -4692,6 +5432,10 @@ extension	Help	Guida
 #. menu command of the download button over a video: hide the button on this video only
 extension	Hide on this video	Nascondi su questo video
 #. text in the browser extension
+#. Option in the toolbar button's popup: while a web page is in full screen, the Download video button over its videos stays hidden
+#, machine
+extension	Hide the download button in full screen	Nascondi il pulsante di download a schermo intero
+#. text in the browser extension
 #. hint in the toolbar button's popup; Alt is the keyboard key
 extension	Hold Alt while clicking a link to let the browser download it.	Tieni premuto Alt mentre fai clic su un collegamento per farlo scaricare al browser.
 #. text in the browser extension
@@ -4704,11 +5448,19 @@ extension	It didn't work. Try again.	Non ha funzionato. Riprova.
 #. pairing failed: the other MDM shows no pairing code; Pair a device is its button
 extension	It shows no code now: click Pair a device there first.	Al momento non mostra nessun codice: fai prima clic su Associa un dispositivo.
 #. text in the browser extension
+#. why a download stayed with the browser: it is a .torrent file and the app's Torrent settings don't open torrents with Mister Download Manager, so the browser keeps it for the user's own torrent program; keep the setting's name as the app shows it
+#, machine
+extension	It's a torrent, and Open magnet links and .torrent files with Mister Download Manager is off in Torrent settings.	È un torrent e l'opzione Apri i link magnet e i file .torrent con Mister Download Manager è disattivata nelle impostazioni Torrent.
+#. text in the browser extension
 #. why a download stayed with the browser: the file is smaller than the app's minimum size setting
 extension	It's smaller than the minimum size in Options → File types.	È più piccolo della dimensione minima in Opzioni → Tipi di file.
 #. text in the browser extension
 #. why a download stayed with the browser: its address matches the app's list of addresses not to take
 extension	Its address is in Options → File types, addresses left to the browser.	Il suo indirizzo è in Opzioni → Tipi di file, tra gli indirizzi lasciati al browser.
+#. text in the browser extension
+#. said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when a download's file can't be opened, copied or shared
+#, machine
+extension	Its file is no longer where it was saved (moved or deleted).	Il suo file non si trova più dove era stato salvato (spostato o eliminato).
 #. text in the browser extension
 #. why a download stayed with the browser: its web site is on the app's list of sites not to take downloads from
 extension	Its site is in Options → File types, sites left to the browser.	Il suo sito è in Opzioni → Tipi di file, tra i siti lasciati al browser.
@@ -4716,12 +5468,29 @@ extension	Its site is in Options → File types, sites left to the browser.	Il s
 #. why a download stayed with the browser: its file type isn't on the app's list; Options and File types are the app's window and its page, as the app names them
 extension	Its type isn't in Options → File types.	Il suo tipo non è in Opzioni → Tipi di file.
 #. text in the browser extension
+#. a finished download's line in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): it finished less than a minute ago; lower case where the language allows
+#, machine
+extension	just now	ora
+#. text in the browser extension
+#. in the This page tab in the toolbar button's popup, under the switch Never take downloads from this site, when a pattern in Mister Download Manager's Options excludes the site (the switch can't be turned off here)
+#, machine
+extension	Left to the browser by a rule in Options	Lasciato al browser da una regola nelle Opzioni
+#. text in the browser extension
 #. in the toolbar button's popup: the last download the extension let the browser keep instead of handing it to the app; followed by why (one of the declined_* texts)
 #. {name} = a file name (keep the braces as they are)
 extension	Left to the browser: {name}	Lasciato al browser: {name}
 #. text in the browser extension
+#. said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) after Copy link
+#, machine
+extension	Link copied	Collegamento copiato
+#. text in the browser extension
 #. beside a stream in the toolbar button's popup: it is a live broadcast (no fixed length); short
 extension	Live	In diretta
+#. text in the browser extension
+#. in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads), while it asks the app for them
+#. the trailing ... means it is still going on: keep it
+#, machine
+extension	Looking for downloads...	Ricerca download in corso...
 #. text in the browser extension
 #. in the menu that opens from the download button over a video, while the app finds which qualities (resolutions, formats) the video can be downloaded in
 #, machine
@@ -4741,6 +5510,10 @@ extension	Media on this page	Contenuti multimediali in questa pagina
 #. the extension's name in the browser's list of extensions and on its toolbar button; keep the name Mister Download Manager as it is
 extension	Mister Download Manager	Mister Download Manager
 #. text in the browser extension
+#. said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the app didn't answer in time; keep the name Mister Download Manager as it is
+#, machine
+extension	Mister Download Manager didn't answer in time. Try again.	Mister Download Manager non ha risposto in tempo. Riprova.
+#. text in the browser extension
 #. status when the app was started for a download but didn't answer in time; keep the name Mister Download Manager as it is
 extension	Mister Download Manager didn't start in time	Mister Download Manager non si è avviato in tempo
 #. text in the browser extension
@@ -4751,11 +5524,24 @@ extension	Mister Download Manager doesn't accept this copy of the extension	Mist
 #, machine
 extension	Mister Download Manager is busy with other videos	Mister Download Manager è occupato con altri video
 #. text in the browser extension
+#. in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the app didn't answer in time; keep the name Mister Download Manager as it is
+#. the trailing ... means it is still going on: keep it
+#, machine
+extension	Mister Download Manager is busy. Trying again...	Mister Download Manager è occupato. Riprovo...
+#. text in the browser extension
 #. shown briefly on the download button when the app could not be reached; keep the name Mister Download Manager as it is
 extension	Mister Download Manager isn't installed or didn't start	Mister Download Manager non è installato o non si è avviato
 #. text in the browser extension
 #. status when the browser can't find the app's connection; keep the name Mister Download Manager as it is
 extension	Mister Download Manager isn't installed, or its browser integration isn't set up	Mister Download Manager non è installato oppure la sua integrazione con i browser non è configurata
+#. text in the browser extension
+#. in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the app isn't running; keep the name Mister Download Manager as it is
+#, machine
+extension	Mister Download Manager isn't running	Mister Download Manager non è in esecuzione
+#. text in the browser extension
+#. said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the app isn't running; keep the name Mister Download Manager as it is
+#, machine
+extension	Mister Download Manager isn't running.	Mister Download Manager non è in esecuzione.
 #. text in the browser extension
 #. in the menu under the download button over a video: the app needs the yt-dlp tool (a program's name, keep it as it is) to find this video's qualities, and it isn't installed; keep the name Mister Download Manager as it is
 #, machine
@@ -4767,16 +5553,36 @@ extension	Mister Download Manager then downloads through the same proxy as this 
 #. tooltip of the switch Send downloads through this browser's proxy or VPN extension in Chrome, Edge and the other Chromium browsers (they ask for no permission at the switch); keep the name Mister Download Manager as it is
 extension	Mister Download Manager then downloads through the same proxy as this browser. While this is off, the extension doesn't read the browser's proxy.	Mister Download Manager scaricherà così tramite lo stesso proxy di questo browser. Quando l'opzione è disattivata, l'estensione non legge il proxy del browser.
 #. text in the browser extension
+#. tooltip of the ⋯ button of a download in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): opens its menu
+#, machine
+extension	More actions	Altre azioni
+#. text in the browser extension
+#. screen readers' name of the ⋯ button of a download in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads)
+#, machine
+extension	More actions for {file}	Altre azioni per {file}
+#. text in the browser extension
 #. the small arrow next to the Download video button that opens its menu (read aloud by screen readers)
 extension	More options	Altre opzioni
+#. text in the browser extension
+#. in the list under the download button over a video, after a quality's height (1080p): the H.264 video with AAC sound in an MP4, the file that plays in every video editor, TV and phone; short, about 20 characters at most
+#, machine
+extension	Most compatible	Più compatibile
 #. text in the browser extension
 #. menu command of the download button over a video: never show the button on this web site again
 #. {site} = a web site's name such as "example.com" (keep the braces as they are)
 extension	Never on {site}	Mai su {site}
 #. text in the browser extension
-#. button in the toolbar button's popup: leave this web site's downloads to the browser from now on
+#. switch in the This page tab in the toolbar button's popup: on, this web site's downloads are left to the browser from now on
 #. {site} = a web site's name such as "example.com" (keep the braces as they are)
 extension	Never take downloads from {site}	Non acquisire mai download da {site}
+#. text in the browser extension
+#. in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when no download matches the search; the words searched for follow
+#, machine
+extension	No download's name or address has “{words}”.	Nessun download ha "{words}" nel nome o nell'indirizzo.
+#. text in the browser extension
+#. in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the app has no downloads
+#, machine
+extension	No downloads yet	Ancora nessun download
 #. text in the browser extension
 #. shown in the toolbar button's popup when the current web page hasn't loaded any video, sound or stream yet
 extension	No video or sound found on this page yet. Play it, then open this again.	Nessun video o audio trovato ancora in questa pagina. Avvialo, poi riapri questo menu.
@@ -4785,18 +5591,34 @@ extension	No video or sound found on this page yet. Play it, then open this agai
 #, machine
 extension	No video to download here	Nessun video da scaricare qui
 #. text in the browser extension
+#. under the extension's name in the toolbar button's popup: the browser can't reach the app (why is said below it); short
+#, machine
+extension	Not connected	Non connesso
+#. text in the browser extension
 #. pairing failed: the other MDM didn't answer
 extension	Not reached. Open its address once in this browser and accept its certificate, then try again.	Non raggiungibile. Apri una volta il suo indirizzo in questo browser e accetta il suo certificato, poi riprova.
+#. text in the browser extension
+#. in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when no download matches the search or the filter
+#, machine
+extension	Nothing matches	Nessuna corrispondenza
 #. text in the browser extension
 #. on the download button over a video (grey) when the button is turned off on this web site; a 'Turn on' button follows it; short
 #, machine
 extension	Off on this site	Disattivato su questo sito
+#. text in the browser extension
+#. command in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): opens the downloaded file; verb
+#, machine
+extension	Open	Apri
 #. text in the browser extension
 #. button: open the other MDM's address in a tab (to accept its certificate once)
 extension	Open it	Aprilo
 #. text in the browser extension
 #. help under the pairing boxes; Options, Remote and Pair a device are the app's window, tab and button; keep misterdownloadmanager-cli pair as it is
 extension	Open its address once and accept its certificate, then enter a code from its Options, Remote, Pair a device (or misterdownloadmanager-cli pair).	Apri una volta il suo indirizzo e accetta il suo certificato, poi inserisci un codice da Opzioni → Remoto → Associa un dispositivo (o misterdownloadmanager-cli pair).
+#. text in the browser extension
+#. button at the foot of the Downloads tab in the toolbar button's popup when downloads go to another Mister Download Manager (a server): opens that server's own web page
+#, machine
+extension	Open its page	Apri la sua pagina
 #. text in the browser extension
 #. button in the toolbar button's popup; keep the name Mister Download Manager as it is
 extension	Open Mister Download Manager	Apri Mister Download Manager
@@ -4808,6 +5630,14 @@ extension	Open post	Apri post
 #. on the download button (amber) over a video in a feed (a social site's home page, a timeline) that can't be downloaded from there: the user should open the post the video belongs to; short
 #, machine
 extension	Open the post to download it	Apri il post per scaricarlo
+#. text in the browser extension
+#. screen readers' name of a finished download's name in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): clicking it opens the file
+#, machine
+extension	Open {file}	Apri {file}
+#. text in the browser extension
+#. the gear button at the top of in the toolbar button's popup: opens Mister Download Manager's Options window; keep the name Mister Download Manager as it is
+#, machine
+extension	Options in Mister Download Manager	Opzioni in Mister Download Manager
 #. text in the browser extension
 #. button in the toolbar button's popup: open the app's Options
 #. the trailing ... means it is still going on: keep it
@@ -4823,8 +5653,29 @@ extension	Pair	Associa
 #. placeholder of the box for the 8-digit code the other MDM shows
 extension	Pairing code	Codice di associazione
 #. text in the browser extension
+#. command in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): stops a running download, to resume it later; verb
+#, machine
+extension	Pause	Metti in pausa
+#. text in the browser extension
+#. said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when a running download can't be removed or downloaded again
+#, machine
+extension	Pause it first.	Prima mettilo in pausa.
+#. text in the browser extension
+#. screen readers' name of a running download's Pause button in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads)
+#, machine
+extension	Pause {file}	Metti in pausa {file}
+#. text in the browser extension
+#. under the extension's name in the toolbar button's popup: taking downloads from this browser is paused; short
+#. a download's line in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): stopped by the user, can be resumed; short
+#, machine
+extension	Paused	In pausa
+#. text in the browser extension
 #. status when the user switched off taking downloads in the toolbar button's popup
 extension	Paused: downloads stay with the browser	In pausa: i download restano al browser
+#. text in the browser extension
+#. name of the row of tabs in the toolbar button's popup, read by screen readers
+#, machine
+extension	Popup sections	Sezioni del popup
 #. text in the browser extension
 #. Option in the browser extension media list: put the page title before the original file name when downloading a detected media file
 #, machine
@@ -4837,9 +5688,29 @@ extension	Protected	Protetto
 #, machine
 extension	Protected video	Video protetto
 #. text in the browser extension
+#. command in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): takes the download off the list, its file stays
+#, machine
+extension	Remove from list	Rimuovi dall'elenco
+#. text in the browser extension
+#. command in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): goes on with a paused, waiting or failed download; verb
+#, machine
+extension	Resume	Riprendi
+#. text in the browser extension
+#. screen readers' name of a download's Resume button in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads)
+#, machine
+extension	Resume {file}	Riprendi {file}
+#. text in the browser extension
 #. button on the download button over a video when the app didn't answer: try again; verb; very short
 #, machine
 extension	Retry	Riprova
+#. text in the browser extension
+#. filter in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): the downloads downloading now; short
+#, machine
+extension	Running	In esecuzione
+#. text in the browser extension
+#. placeholder of the search box in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads); it finds downloads by their name or address
+#, machine
+extension	Search downloads	Cerca download
 #. text in the browser extension
 #. switch in the toolbar button's popup: on, the app downloads through the same proxy the browser uses (one a VPN or proxy extension sets); the browser then asks once to allow reading it
 extension	Send downloads through this browser's proxy or VPN extension	Invia i download tramite il proxy o l'estensione VPN di questo browser
@@ -4852,18 +5723,69 @@ extension	Send downloads to	Invia i download a
 #, machine
 extension	Sending to MDM...	Invio a MDM...
 #. text in the browser extension
+#. under the extension's name in the toolbar button's popup: downloads go to another Mister Download Manager, a server, at this address; short
+#, machine
+extension	Sending to {server}	Invio a {server}
+#. text in the browser extension
 #. shown briefly on the download button after it was clicked; keep the name Mister Download Manager as it is
 extension	Sent to Mister Download Manager	Inviato a Mister Download Manager
 #. text in the browser extension
+#. tab in the toolbar button's popup: the extension's settings; noun, short
+#, machine
+extension	Settings	Impostazioni
+#. text in the browser extension
+#. command in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): opens the system's share sheet for the file
+#. the trailing ... means it is still going on: keep it
+#, machine
+extension	Share...	Condividi...
+#. text in the browser extension
 #. button on the download button over a video after a download was added: shows that download in the app's window; verb; very short
+#. name of the row of filters in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) (All, Running, Done, Failed), read by screen readers; verb
 #, machine
 extension	Show	Mostra
+#. text in the browser extension
+#. button in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): clears the search and the filter
+#, machine
+extension	Show all downloads	Mostra tutti i download
+#. text in the browser extension
+#. command in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): opens the file's folder with the file selected
+#, machine
+extension	Show in folder	Mostra nella cartella
+#. text in the browser extension
+#. screen readers' name of a download's Show in folder button in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads)
+#, machine
+extension	Show {file} in folder	Mostra {file} nella cartella
+#. text in the browser extension
+#. in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the app isn't running
+#, machine
+extension	Start it to see your downloads here.	Avvialo per vedere qui i tuoi download.
+#. text in the browser extension
+#. button in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the app isn't running; keep the name Mister Download Manager as it is
+#, machine
+extension	Start Mister Download Manager	Avvia Mister Download Manager
+#. text in the browser extension
+#. a download's line in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when it has just started and nothing has come yet
+#. the trailing ... means it is still going on: keep it
+#, machine
+extension	Starting...	Avvio in corso...
 #. text in the browser extension
 #. link at the foot of the toolbar button's popup to the creator's GitHub Sponsors page (MDM is free; this is an optional donation)
 extension	Support MDM	Sostieni MDM
 #. text in the browser extension
 #. check box in the toolbar button's popup: on, downloads go to the app; off, the browser keeps them
 extension	Take downloads from this browser	Acquisisci i download da questo browser
+#. text in the browser extension
+#. said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when a button can't act on the download
+#, machine
+extension	That can't be done to this download now.	Impossibile eseguire questa operazione su questo download ora.
+#. text in the browser extension
+#. said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when a button's action failed
+#, machine
+extension	That didn't work. Try again.	L'operazione non è riuscita. Riprova.
+#. text in the browser extension
+#. said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when a button's download was removed meanwhile
+#, machine
+extension	That download is no longer in the list.	Il download non è più nell'elenco.
 #. text in the browser extension
 #. in the toolbar button's popup, on a site where the Chrome Web Store's copy of the extension shows no download button; Help is the link at the bottom of the popup
 extension	The Chrome Web Store's rules keep this copy of the add-on away from this site's videos. Help says what you can do.	Le regole del Chrome Web Store non consentono a questa copia dell'estensione di scaricare i video di questo sito. La Guida spiega cosa puoi fare.
@@ -4877,6 +5799,19 @@ extension	The extension isn't allowed to read this site (the browser's site acce
 #. in the toolbar button's popup when the last download the browser kept came from a private window (its name isn't kept); followed by why (one of the declined_* texts)
 extension	The last download was left to the browser.	L'ultimo download è stato lasciato al browser.
 #. text in the browser extension
+#. under the list in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when there are more downloads than it shows; keep the name Mister Download Manager as it is
+#, machine
+extension	The newest {shown} of {total}. Mister Download Manager lists them all.	I più recenti {shown} di {total}. Mister Download Manager li elenca tutti.
+#. text in the browser extension
+#. question in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) before the finished downloads are taken off the list
+#. {count} = a number (keep the braces as they are)
+#, machine
+extension	The {count} finished downloads go off the list. Their files stay where they are.	I {count} download completati verranno rimossi dall'elenco. I loro file restano dove sono.
+#. text in the browser extension
+#. note at the top of the list in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when downloads go to another Mister Download Manager (a server): the buttons that need the file on this computer are not offered; keep the name Mister Download Manager as it is
+#, machine
+extension	These are the downloads of the Mister Download Manager at {server}. Open their files there.	Questi sono i download di Mister Download Manager su {server}. Apri lì i loro file.
+#. text in the browser extension
 #. why a download stayed with the browser: the app's Options don't capture downloads from this browser (its box is unticked in the list of browsers)
 extension	This browser isn't ticked in Options → General.	Questo browser non è selezionato in Opzioni → Generale.
 #. text in the browser extension
@@ -4886,16 +5821,33 @@ extension	This computer	Questo computer
 #. status when a download carried too much data (very large cookies) to give to the app
 extension	This download's details were too large to hand over	I dati di questo download erano troppo grandi per essere trasferiti
 #. text in the browser extension
+#. in the This page tab in the toolbar button's popup when the browser's tab shows one of its own pages (settings, a new tab)
+#, machine
+extension	This isn't a web page: there's nothing to do here.	Questa non è una pagina web: non c'è nulla da fare qui.
+#. text in the browser extension
+#. tab in the toolbar button's popup: what can be done on the web page open in the browser (its videos, leaving its site to the browser); short
+#, machine
+extension	This page	Questa pagina
+#. text in the browser extension
 #. in the toolbar button's popup, when the page's player plays from a stream built in the page (a blob:): the list of the page's media has nothing to show; Download video is the name of the button over videos
 extension	This page's player streams its video in pieces, so there's no file to list. Point at the video and use its Download video button.	Il lettore di questa pagina trasmette il video a pezzi, quindi non c'è nessun file da elencare. Passa il puntatore sul video e usa il suo pulsante Scarica video.
+#. text in the browser extension
+#. said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the system has no way to do it
+#, machine
+extension	This system can't do that.	Il sistema non può farlo.
+#. text in the browser extension
+#. in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the app is too old to list its downloads here
+#, machine
+extension	This version can't list its downloads here yet.	Questa versione non può ancora elencare qui i suoi download.
 #. text in the browser extension
 #. button on the download button over a video when it is off on this web site: turns it on again here; verb; very short
 #, machine
 extension	Turn on	Attiva
 #. text in the browser extension
-#. link beside "Downloads from <site> stay with the browser" in the toolbar button's popup: take the site off the excluded sites again
+#. under the extension's name in the toolbar button's popup: the app is older than the extension; keep the name Mister Download Manager as it is; short
+#. in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the app is too old to list its downloads here; keep the name Mister Download Manager as it is
 #, machine
-extension	Undo	Annulla
+extension	Update Mister Download Manager	Aggiorna Mister Download Manager
 #. text in the browser extension
 #. status when the app is older than the extension; keep the name Mister Download Manager as it is
 extension	Update Mister Download Manager to use everything this extension offers	Aggiorna Mister Download Manager per usare tutte le funzioni di questa estensione
@@ -4910,8 +5862,47 @@ extension	Video	Video
 #. pairing failed: codes tried too fast
 extension	Wait a moment, then try again.	Attendi un momento, poi riprova.
 #. text in the browser extension
+#. a download's line in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): waiting in a queue, never started; short
+#, machine
+extension	Waiting	In attesa
+#. text in the browser extension
+#. in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the app has no downloads; keep the name Mister Download Manager as it is
+#, machine
+extension	What you download with Mister Download Manager shows up here.	Ciò che scarichi con Mister Download Manager viene visualizzato qui.
+#. text in the browser extension
+#. Tooltip of the Hide the download button in full screen option in the toolbar button's popup; Download video is the name of the button over videos
+#, machine
+extension	While the page is in full screen, its videos show no Download video button	Quando la pagina è a schermo intero, i suoi video non mostrano il pulsante Scarica video
+#. text in the browser extension
 #. pairing failed: the code was wrong
 extension	Wrong code.	Codice errato.
+#. text in the browser extension
+#. tooltip of the number on the Downloads tab in the toolbar button's popup: how many downloads are running
+#. {count} = a number (keep the braces as they are)
+#, machine
+extension	{count} downloading now	{count} in corso
+#. text in the browser extension
+#. a running download's line in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): how much has come of its size
+#. {size} = a file size such as "4.2 MB" (keep the braces as they are)
+#, machine
+extension	{done} of {size}	{done} di {size}
+#. text in the browser extension
+#. said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) after Delete file
+#, machine
+extension	{file} deleted	{file} eliminato
+#. text in the browser extension
+#. said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) after Remove from list
+#, machine
+extension	{file} removed from the list	{file} rimosso dall'elenco
+#. text in the browser extension
+#. question in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) before a download's file is deleted
+#, machine
+extension	{file} will be deleted from your computer, and the download taken off the list. This can't be undone.	{file} verrà eliminato dal computer e il download rimosso dall'elenco. Questa operazione non può essere annullata.
+#. text in the browser extension
+#. a running download's line in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): the time left, as a clock (minutes:seconds)
+#. {time} = a time of day (keep the braces as they are)
+#, machine
+extension	{time} left	{time} rimanenti
 #. key name or combination in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
 key	Alt+Enter	Alt+Invio
@@ -4951,10 +5942,18 @@ key	Ctrl+Up / Ctrl+Down	Ctrl+Su / Ctrl+Giù
 key	Delete	Canc
 #. key name or combination in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
+#, machine
+key	Down / Alt+Down	Giù / Alt+Giù
+#. key name or combination in the Help menu's windows (About, updates, shortcuts, Tell a friend)
+#. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
 key	Drag on blank space	Trascina su uno spazio vuoto
 #. key name or combination in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
 key	Enter	Invio
+#. key name or combination in the Help menu's windows (About, updates, shortcuts, Tell a friend)
+#. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
+#, machine
+key	Enter / Space	Invio / Spazio
 #. key name or combination in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
 key	Esc	Esc
@@ -4964,6 +5963,10 @@ key	F3	F3
 #. key name or combination in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
 key	Home / End	Home / Fine
+#. key name or combination in the Help menu's windows (About, updates, shortcuts, Tell a friend)
+#. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
+#, machine
+key	Left / Right	Sinistra / Destra
 #. key name or combination in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
 key	Page Up / Page Down	Pag su / Pag giù
@@ -4984,7 +5987,8 @@ key	Shift+F10 / Menu	Maiusc+F10 / Menu
 key	Shift+Up / Shift+Down	Maiusc+Su / Maiusc+Giù
 #. key name or combination in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
-key	Tab	Tab
+#, machine
+key	Tab / Shift+Tab	Tab / Maiusc+Tab
 #. key name or combination in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
 key	Type a name	Digita un nome
@@ -5467,7 +6471,7 @@ menu	To &IDM export file...	In file di esportazione &IDM...
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #. the trailing ... means it opens a window: keep it
 menu	To &text file...	In file di &testo...
-#. menu command in the main window
+#. menu command in the main window; menu command in the main window (menus, toolbar, Categories pane)
 #. noun: the toolbar (submenu of View with its settings)
 menu	Toolbar	Barra degli strumenti
 #. menu command in the main window

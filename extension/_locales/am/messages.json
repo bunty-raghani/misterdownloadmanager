@@ -92,9 +92,6 @@
       }
     }
   },
-  "popup_undo": {
-    "message": "ይቀልብሱ"
-  },
   "popup_excluded": {
     "message": "ከ$site$ የሚወርዱ ፋይሎች በአሳሹ ውስጥ ይቆያሉ",
     "placeholders": {
@@ -148,6 +145,9 @@
   },
   "declined_integration_off": {
     "message": "የላቀ የአሳሽ ውህደትን ተጠቀም በአማራጮች → አጠቃላይ ውስጥ ጠፍቷል።"
+  },
+  "declined_torrents": {
+    "message": "ቶረንት ነው፣ እና በቶረንት ቅንብሮች ውስጥ Open magnet links and .torrent files with Mister Download Manager ተሰናክሏል።"
   },
   "declined_site_access": {
     "message": "ቅጥያው ይህንን ጣቢያ ለማንበብ አልተፈቀደለትም (የአሳሹ የጣቢያ መዳረሻ)።"
@@ -328,5 +328,424 @@
   },
   "video_original": {
     "message": "ኦሪጅናል"
+  },
+  "video_compatible": {
+    "message": "በጣም ተኳሃኝ"
+  },
+  "popup_video_hide_fullscreen": {
+    "message": "የማውረጃ ቁልፉን በሙሉ ማያ ገጽ ላይ ደብቅ"
+  },
+  "popup_video_hide_fullscreen_title": {
+    "message": "ገጹ በሙሉ ማያ ገጽ ላይ እያለ፣ ቪዲዮዎቹ የቪዲዮ ማውረጃ ቁልፍ አያሳዩም።"
+  },
+  "popup_remote_forget": {
+    "message": "እርሳ"
+  },
+  "popup_gear": {
+    "message": "በMister Download Manager ውስጥ ያሉ አማራጮች"
+  },
+  "popup_tabs": {
+    "message": "ብቅ-ባይ ክፍሎች"
+  },
+  "popup_tab_downloads": {
+    "message": "ማውረዶች"
+  },
+  "popup_tab_page": {
+    "message": "ይህ ገጽ"
+  },
+  "popup_tab_settings": {
+    "message": "ቅንብሮች"
+  },
+  "popup_conn": {
+    "message": "ተገናኝቷል · $version$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.5.2"
+      }
+    }
+  },
+  "popup_conn_plain": {
+    "message": "ተገናኝቷል"
+  },
+  "popup_conn_off": {
+    "message": "አልተገናኘም"
+  },
+  "popup_conn_paused": {
+    "message": "ለአፍታ ቆሟል"
+  },
+  "popup_conn_update": {
+    "message": "Mister Download Manager ያዘምኑ"
+  },
+  "popup_conn_remote": {
+    "message": "ወደ $server$ በመላክ ላይ",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_cancel": {
+    "message": "ይቅር"
+  },
+  "popup_page_none": {
+    "message": "ይህ የድር ገጽ አይደለም፦ እዚህ የሚደረግ ነገር የለም።"
+  },
+  "popup_exclude_by_rule": {
+    "message": "በአማራጮች ውስጥ ባለው ደንብ ለአሳሹ ተትቷል"
+  },
+  "popup_dl_search": {
+    "message": "ውርዶችን ይፈልጉ"
+  },
+  "popup_dl_filters": {
+    "message": "አሳይ"
+  },
+  "popup_dl_all": {
+    "message": "ሁሉም"
+  },
+  "popup_dl_running": {
+    "message": "በሂደት ላይ"
+  },
+  "popup_dl_done_filter": {
+    "message": "ተጠናቋል"
+  },
+  "popup_dl_failed_filter": {
+    "message": "አልተሳካም"
+  },
+  "popup_dl_clear": {
+    "message": "የተጠናቀቁትን ያጽዱ"
+  },
+  "popup_dl_running_count": {
+    "message": "$count$ አሁን በማውረድ ላይ",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_remote": {
+    "message": "እነዚህ በ$server$ ላይ ያሉት የMister Download Manager ውርዶች ናቸው። ፋይሎቻቸውን እዚያ ይክፈቱ።",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_dl_more": {
+    "message": "ከ$total$ ውስጥ $shown$ አዳዲሶቹ። Mister Download Manager ሁሉንም ይዘረዝራል።",
+    "placeholders": {
+      "shown": {
+        "content": "$1",
+        "example": "60"
+      },
+      "total": {
+        "content": "$2",
+        "example": "245"
+      }
+    }
+  },
+  "popup_dl_of": {
+    "message": "ከ$size$ ውስጥ $done$",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "12.3 MB"
+      },
+      "size": {
+        "content": "$2",
+        "example": "48.7 MB"
+      }
+    }
+  },
+  "popup_dl_left": {
+    "message": "$time$ ቀርቷል",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "0:42"
+      }
+    }
+  },
+  "popup_dl_starting": {
+    "message": "በመጀመር ላይ..."
+  },
+  "popup_dl_paused": {
+    "message": "ለአፍታ ቆሟል"
+  },
+  "popup_dl_waiting": {
+    "message": "በመጠበቅ ላይ"
+  },
+  "popup_dl_done": {
+    "message": "ተጠናቋል"
+  },
+  "popup_dl_just_now": {
+    "message": "አሁን"
+  },
+  "popup_dl_failed": {
+    "message": "አልተሳካም"
+  },
+  "popup_dl_failed_why": {
+    "message": "አልተሳካም፦ $why$",
+    "placeholders": {
+      "why": {
+        "content": "$1",
+        "example": "the server refused the connection"
+      }
+    }
+  },
+  "popup_dl_gone": {
+    "message": "ፋይሉ ተሰርዟል ወይም ተንቀሳቅሷል"
+  },
+  "popup_dl_loading": {
+    "message": "ማውረዶችን በመፈለግ ላይ..."
+  },
+  "popup_dl_none": {
+    "message": "እስካሁን ምንም ማውረዶች የሉም"
+  },
+  "popup_dl_none_text": {
+    "message": "በMister Download Manager የሚያወርዱት እዚህ ይታያል።"
+  },
+  "popup_dl_no_match": {
+    "message": "ምንም አይዛመድም"
+  },
+  "popup_dl_no_match_text": {
+    "message": "ምንም ማውረድ “$words$” የሚል ስም ወይም አድራሻ የለውም።",
+    "placeholders": {
+      "words": {
+        "content": "$1",
+        "example": "report"
+      }
+    }
+  },
+  "popup_dl_show_all": {
+    "message": "ሁሉንም ውርዶች አሳይ"
+  },
+  "popup_list_off": {
+    "message": "Mister Download Manager እየሰራ አይደለም"
+  },
+  "popup_list_off_text": {
+    "message": "ውርዶችዎን እዚህ ለማየት ያስጀምሩት።"
+  },
+  "popup_list_start": {
+    "message": "Mister Download Manager ያስጀምሩ"
+  },
+  "popup_list_old": {
+    "message": "Mister Download Manager ያዘምኑ"
+  },
+  "popup_list_old_text": {
+    "message": "ይህ ስሪት ውርዶቹን እዚህ መዘርዘር አይችልም።"
+  },
+  "popup_list_busy": {
+    "message": "Mister Download Manager ስራ በዝቶበታል። እንደገና በመሞከር ላይ..."
+  },
+  "popup_list_unreached": {
+    "message": "Mister Download Managerን ማግኘት አልተቻለም"
+  },
+  "popup_list_remote_unreachable": {
+    "message": "Mister Download Managerን ከ$server$ ማግኘት አልተቻለም",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_list_remote_unreachable_text": {
+    "message": "እየሰራ መሆኑን እና ይህ አሳሽ ሰርተፍኬቱን እንደሚቀበል ያረጋግጡ (ቅንብሮች → ማውረዶችን ወደ → ይክፈቱት)።",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_act_open": {
+    "message": "ይክፈቱ"
+  },
+  "popup_act_open_named": {
+    "message": "$file$ ይክፈቱ",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_folder": {
+    "message": "በአቃፊ ውስጥ አሳይ"
+  },
+  "popup_act_folder_named": {
+    "message": "$file$ በአቃፊ ውስጥ አሳይ",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_copy_file": {
+    "message": "ፋይሉን ይቅዱ"
+  },
+  "popup_act_share": {
+    "message": "ያጋሩ..."
+  },
+  "popup_act_copy_link": {
+    "message": "አገናኙን ይቅዱ"
+  },
+  "popup_act_pause": {
+    "message": "ለአፍታ አቁም"
+  },
+  "popup_act_pause_named": {
+    "message": "$file$ ለአፍታ አቁም",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_resume": {
+    "message": "ይቀጥሉ"
+  },
+  "popup_act_resume_named": {
+    "message": "$file$ ይቀጥሉ",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_again": {
+    "message": "እንደገና ያውርዱ"
+  },
+  "popup_act_remove": {
+    "message": "ከዝርዝሩ ያስወግዱ"
+  },
+  "popup_act_delete": {
+    "message": "ፋይል ይሰርዙ..."
+  },
+  "popup_act_more": {
+    "message": "ተጨማሪ ድርጊቶች"
+  },
+  "popup_act_more_named": {
+    "message": "ለ$file$ ተጨማሪ ድርጊቶች",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_title": {
+    "message": "ፋይሉን መሰረዝ ይፈልጋሉ፧"
+  },
+  "popup_ask_delete": {
+    "message": "$file$ ከኮምፒውተርዎ ይሰረዛል፣ እና ማውረዱ ከዝርዝሩ ይወገዳል። ይህ ሊቀለበስ አይችልም።",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_ok": {
+    "message": "ይሰርዙ"
+  },
+  "popup_ask_clear_title": {
+    "message": "የተጠናቀቁ ማውረዶችን ማጽዳት ይፈልጋሉ፧"
+  },
+  "popup_ask_clear": {
+    "message": "$count$ የተጠናቀቁ ውርዶች ከዝርዝሩ ይወገዳሉ። ፋይሎቻቸው ባሉበት ይቆያሉ።",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "8"
+      }
+    }
+  },
+  "popup_ask_clear_ok": {
+    "message": "ያጽዱ"
+  },
+  "popup_said_file": {
+    "message": "$file$ ተቀድቷል። ወደ አቃፊ፣ ውይይት ወይም መልዕክት ይለጥፉት።",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_link": {
+    "message": "አገናኙ ተቀድቷል"
+  },
+  "popup_said_removed": {
+    "message": "$file$ ከዝርዝሩ ተወግዷል",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_deleted": {
+    "message": "$file$ ተሰርዟል",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_again": {
+    "message": "$file$ እንደገና በማውረድ ላይ",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_cleared": {
+    "message": "የተጠናቀቁ ማውረዶች ጸድተዋል"
+  },
+  "popup_act_gone": {
+    "message": "ይህ ማውረድ ከዝርዝሩ ውስጥ የለም።"
+  },
+  "popup_act_missing": {
+    "message": "ፋይሉ ከነበረበት ቦታ ተንቀሳቅሷል ወይም ተሰርዟል።"
+  },
+  "popup_act_running": {
+    "message": "መጀመሪያ ለአፍታ ያቁሙት።"
+  },
+  "popup_act_cant": {
+    "message": "ይህን ማውረድ አሁን ማድረግ አይቻልም።"
+  },
+  "popup_act_unsupported": {
+    "message": "ይህ ስርዓት ያንን ማድረግ አይችልም።"
+  },
+  "popup_act_off": {
+    "message": "Mister Download Manager እየሰራ አይደለም።"
+  },
+  "popup_act_busy": {
+    "message": "Mister Download Manager በጊዜው ምላሽ አልሰጠም። እንደገና ይሞክሩ።"
+  },
+  "popup_act_failed": {
+    "message": "ይህ አልሰራም። እንደገና ይሞክሩ።"
+  },
+  "status_running": {
+    "message": "በማውረድ ላይ፦ $count$",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_open_remote": {
+    "message": "ገጹን ይክፈቱ"
   }
 }

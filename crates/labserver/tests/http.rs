@@ -502,6 +502,27 @@ async fn one_time_links() {
     assert_eq!(log.iter().filter(|e| e.outcome == "fault:once").count(), 3);
 }
 
+/// `lasts_ms`: a link's time runs from its first request, however late that is, and every
+/// address with the same `link` expires with it; another `link` has its own time.
+#[tokio::test]
+async fn links_timed_from_their_first_request() {
+    let s = server("").await;
+    let c = reqwest::Client::new();
+    let status = |path: &str| {
+        let (c, url) = (c.clone(), s.url(path));
+        async move { c.get(&url).send().await.unwrap().status() }
+    };
+    // Asked late: still good, the first request starts its time.
+    tokio::time::sleep(Duration::from_millis(400)).await;
+    assert_eq!(status("/gen/1K/a?seed=1&lasts_ms=200&link=one").await, 200);
+    tokio::time::sleep(Duration::from_millis(400)).await;
+    // Its time is up, for its other addresses too; another link's starts now.
+    assert_eq!(status("/gen/1K/a?seed=1&lasts_ms=200&link=one").await, 403);
+    assert_eq!(status("/gen/1K/b?seed=2&lasts_ms=200&link=one").await, 403);
+    assert_eq!(status("/gen/1K/a?seed=1&lasts_ms=200&link=two").await, 200);
+    assert_eq!(status("/gen/1K/a?seed=1&lasts_ms=x").await, 400);
+}
+
 async fn text(s: &LabServer, path: &str) -> (reqwest::header::HeaderMap, String) {
     let r = reqwest::get(s.url(path)).await.unwrap();
     assert_eq!(r.status(), 200, "{path}");

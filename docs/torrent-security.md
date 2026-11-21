@@ -14,11 +14,11 @@ MDM's torrents don't use **encryption** (sometimes called "protocol encryption")
 
 ## What reaches your computer
 
-MDM starts its torrent engine the first time a torrent needs it. With **Stop the torrent engine when no torrent is running** on (the default), it stops again a minute after no torrent is running or sharing. While it runs, other peers can connect to MDM, and MDM asks your router to forward its port (UPnP). Windows may ask whether to allow MDM through the firewall: allow it on private networks only.
+MDM starts its torrent engine the first time a torrent needs it. With **Stop the torrent engine when no torrent is running** on (the default), it stops again a minute after no torrent is running or sharing. While it runs, other peers can connect to MDM, over TCP and over uTP (UDP) on the same port, and MDM asks your router to forward its port (UPnP). Windows may ask whether to allow MDM through the firewall: allow it on private networks only.
 
 This is the only part of MDM that waits for connections from outside. Downloads, MDM's DNS choice (Options → Connection → DNS), its updates and its helpers only connect out, so they never need a firewall exception; the browser extension and the automation API reach MDM on this computer only (127.0.0.1).
 
-In Torrent settings you can turn off **Accept incoming connections** and **Map the port on the router (UPnP)**, or the DHT. Downloads still work, sometimes more slowly. With the **Port** box empty, MDM picks a port the first time and keeps it (another one if a program has taken it since), so firewall and router rules keep working; a port typed there is always the one used. These changes apply the next time the engine starts, so when no torrent is running.
+In Torrent settings you can turn off **Accept incoming connections**, **Map the port on the router (UPnP)** and **Connect over uTP too (UDP)**, or the DHT. Downloads still work, sometimes more slowly. With the **Port** box empty, MDM picks a port the first time and keeps it (another one if a program has taken it since), so firewall and router rules keep working; a port typed there is always the one used. These changes apply the next time the engine starts, so when no torrent is running.
 
 The torrent engine is written in Rust, which rules out many memory bugs, and MDM checks every piece against the torrent's fingerprint, so a peer can't slip in altered data. MDM keeps the engine up to date with the fixes its authors publish.
 
@@ -27,6 +27,12 @@ The torrent engine is written in Rust, which rules out many memory bugs, and MDM
 A torrent names the trackers MDM asks for peers. MDM doesn't contact a tracker on your own computer or your local network (`127.0.0.1`, `192.168.…`, `localhost` and the like), so a torrent can't make MDM send requests into the network it sits in. **Add trackers...** follows the same rule: it refuses such an address and tells you why, rather than keeping one that would never be asked.
 
 A `.torrent` file fetched from a web address goes through the same checks as one opened from disk, and MDM reads at most 10 MB of it.
+
+## Peers
+
+Trackers, the DHT and other peers tell MDM where a torrent's peers are. MDM follows the same rule for them as for trackers: it only connects to a peer on the internet. An address on your own computer or your local network is left alone, whoever names it, so a list of peers can't point MDM at your router or another device at home.
+
+Peers on your local network are still found: with **Find peers on the local network** on, each one announces itself there, and MDM connects to those.
 
 ## Blocking addresses
 
@@ -41,13 +47,13 @@ A `.torrent` file fetched from a web address goes through the same checks as one
 
 ## Proxies
 
-MDM's Proxy / Socks settings are for web and FTP downloads. Torrents can use a SOCKS5 one too: set a `socks5://` proxy in **Options → Proxy / Socks** and turn on **Use the proxy** in Torrent settings. The proxy covers connections to peers and web trackers only, so with it MDM turns off the DHT, local peer discovery, incoming connections and UDP trackers; it opens no UDP socket toward the network at all. If the proxy is gone from Proxy / Socks while that switch is on, torrents don't start rather than go around it.
+MDM's Proxy / Socks settings are for web and FTP downloads. Torrents can use a SOCKS5 one too: choose **Manual proxy/socks configuration** with **Type** **SOCKS5** in **Options → Proxy / Socks** and turn on **Use the proxy** in Torrent settings. The proxy covers connections to peers and web trackers only, so with it MDM turns off the DHT, local peer discovery, incoming connections, uTP and UDP trackers; it opens no UDP socket toward the network at all. If the proxy is gone from Proxy / Socks while that switch is on, torrents don't start rather than go around it.
 
 To route *everything* through another network, use a VPN for the whole computer.
 
 ## A network adapter
 
-**Options → Proxy / Socks → Network adapter** holds MDM's connections to one adapter, usually a VPN's ([Options](options.md#proxy--socks)). The torrent engine binds every socket to it: peers (TCP, and through a SOCKS proxy), HTTP and UDP trackers, the DHT and the listening port. On Linux and macOS it binds the adapter itself. On Windows it binds the adapter's address (its IPv4 one when it has one), and Windows sends a packet only through the adapter that has its source address. UPnP and local peer discovery are turned off then, because they talk to the local network rather than through the adapter.
+**Options → Proxy / Socks → Network adapter** holds MDM's connections to one adapter, usually a VPN's ([Options](options.md#proxy--socks)). The torrent engine binds every socket to it: peers (TCP, uTP, and through a SOCKS proxy), HTTP and UDP trackers, the DHT and the listening port. On Linux and macOS it binds the adapter itself. On Windows it binds the adapter's address (its IPv4 one when it has one), and Windows sends a packet only through the adapter that has its source address. UPnP and local peer discovery are turned off then, because they talk to the local network rather than through the adapter.
 
 It works as a kill switch. When the adapter disconnects, running torrents stop with "… is not connected; it goes on when it is back", and they start again through the adapter when it is. Until MDM notices (within a second), the engine's sockets are still bound to an address that is gone, so nothing can leave another way. A torrent added while the adapter isn't connected doesn't start, and says why. Tracker names are still looked up by the system's DNS.
 

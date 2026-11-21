@@ -1,23 +1,42 @@
-//! yt-dlp on macOS (#330, #339): its folder build, unpacked once by MDM.
+//! yt-dlp's folder build on Windows and macOS, unpacked once by MDM.
 //!
-//! yt-dlp publishes two macOS programs. The one-file `yt-dlp_macos` unpacks its Python into a new
-//! temporary folder at every start. An app still marked as downloaded by the browser passes that
-//! mark to what it and its children create, so the Python just unpacked carries it, and macOS
-//! refuses to load the library ("Python.framework is damaged", PYI-…): every
-//! look-up failed. MDM has no hand in that temporary folder.
+//! yt-dlp publishes each of these systems' programs twice. The one-file builds (`yt-dlp.exe`,
+//! `yt-dlp_macos`) unpack their Python into a new temporary folder at every start:
+//! - on Windows that is most of each run's start (#1053): about 1.3 s before it answers
+//!   `--version`, against 0.5 s for the folder build, and as much more on every look-up of the
+//!   browser's video button;
+//! - on macOS (#330, #339), an app still marked as downloaded by the browser passes that mark to
+//!   what it and its children create, so the Python just unpacked carries it, and macOS refuses to
+//!   load the library ("Python.framework is damaged", PYI-…): every look-up failed. MDM has no
+//!   hand in that temporary folder.
 //!
-//! The folder build (`yt-dlp_macos.zip`) unpacks nothing when it runs: MDM unpacks it once, after
-//! checking the archive against yt-dlp's signed checksum list, into its own tools folder. The
-//! mark is taken off those files and no others: never the app, never a download (they are marked
-//! on purpose: `mark_downloaded`), never a program the person chose. Linux and Windows use the
-//! single-program builds and don't compile the install (`#[cfg]` below); the unpacking is
-//! portable and tested everywhere.
+//! The folder builds (`yt-dlp_win.zip`, `yt-dlp_macos.zip`) unpack nothing when they run: MDM
+//! unpacks one once, after checking the archive against yt-dlp's signed checksum list, into its
+//! own tools folder. On macOS the mark is taken off those files and no others: never the app,
+//! never a download (they are marked on purpose: `mark_downloaded`), never a program the person
+//! chose; on Windows the program is marked as downloaded, as the one-file build was. Linux keeps
+//! the single program for now (its start there wasn't measured for #1053, and a system's own
+//! yt-dlp, unpacked by its package manager, is used there when MDM has none) and doesn't compile
+//! the install (`#[cfg]` below); the unpacking is portable and tested everywhere.
 
 use std::path::{Component, Path};
 
-use crate::{Error, Installed, make_current};
+#[cfg(test)]
+use crate::make_current;
+use crate::{Error, Installed};
 
-/// The folder build's program, beside its `_internal` folder.
+/// Whether this system installs the folder build.
+pub(crate) const BUILD: bool = cfg!(any(windows, target_os = "macos"));
+/// The folder build's program, beside its `_internal` folder: each Windows archive names it for
+/// its processor (`yt-dlp_win_arm64.zip` holds `yt-dlp_arm64.exe`, `yt-dlp_win_x86.zip`
+/// `yt-dlp_x86.exe`; checked against yt-dlp 2026.10.26's archives).
+#[cfg(all(windows, target_arch = "x86_64"))]
+pub(crate) const PROGRAM: &str = "yt-dlp.exe";
+#[cfg(all(windows, target_arch = "aarch64"))]
+pub(crate) const PROGRAM: &str = "yt-dlp_arm64.exe";
+#[cfg(all(windows, target_arch = "x86"))]
+pub(crate) const PROGRAM: &str = "yt-dlp_x86.exe";
+#[cfg(not(windows))]
 pub(crate) const PROGRAM: &str = "yt-dlp_macos";
 /// What the folder build keeps beside its program; the one-file build has none.
 const INTERNAL: &str = "_internal";
@@ -27,16 +46,36 @@ fn bad(e: impl std::fmt::Display) -> Error {
 }
 
 /// Whether `exe` is the one-file build, which earlier versions of MDM installed: nothing beside
-/// it. It is treated as not installed, so MDM gets the folder build in its place.
+/// it. MDM gets the folder build in its place, the same release too (`install_latest`); on
+/// macOS, where it can't run, it is treated as not installed meanwhile.
 pub(crate) fn one_file_build(exe: &Path) -> bool {
     !exe.with_file_name(INTERNAL).is_dir()
 }
 
-/// Install the verified archive `zip` as `version` of yt-dlp (`dir/yt-dlp/<version>/`), the mark
-/// taken off the files just unpacked, and make it current. Unpacked to one side first, so a
-/// failure leaves what was installed.
-#[cfg_attr(not(target_os = "macos"), allow(dead_code))]
-pub(crate) fn put_folder(dir: &Path, version: &str, zip: &[u8]) -> Result<Installed, Error> {
+/// Install the verified archive `zip`, downloaded `from` there, as `version` of yt-dlp
+/// (`dir/yt-dlp/<version>/`; beside a folder of that name already there, the one-file build it
+/// replaces), macOS's mark taken off the files just unpacked, and make it current. Unpacked to
+/// one side first, so a failure leaves what was installed.
+#[cfg(test)]
+pub(crate) fn put_folder(
+    dir: &Path,
+    version: &str,
+    zip: &[u8],
+    from: &str,
+) -> Result<Installed, Error> {
+    let placed = place_folder(dir, version, zip, from)?;
+    make_current(&dir.join("yt-dlp"), placed)
+}
+
+/// [`put_folder`] without making it current: `autoupdate::settle` does, now or once the runs
+/// using yt-dlp end.
+#[cfg_attr(not(any(windows, target_os = "macos")), allow(dead_code))]
+pub(crate) fn place_folder(
+    dir: &Path,
+    version: &str,
+    zip: &[u8],
+    from: &str,
+) -> Result<Installed, Error> {
     if version.is_empty() || version.contains(['/', '\\', ':']) || version.starts_with('.') {
         return Err(Error::BadRelease(format!("version {version:?}")));
     }
@@ -56,11 +95,17 @@ pub(crate) fn put_folder(dir: &Path, version: &str, zip: &[u8]) -> Result<Instal
         })
         .and_then(|()| {
             clear_mark(&unpacking);
-            let folder = root.join(version);
-            // The same version again: the one-file build it replaces (`one_file_build`).
-            if folder.exists() {
-                std::fs::remove_dir_all(&folder)?;
-            }
+            crate::mark_downloaded(&unpacking.join(PROGRAM), from);
+            // The same version again: beside the one-file build it replaces (`one_file_build`),
+            // which may be running a look-up now (Windows can't remove a running program); it
+            // stays as the previous version, and goes with the next one (`make_current`).
+            let folder = (1..=20)
+                .map(|n| match n {
+                    1 => root.join(version),
+                    n => root.join(format!("{version}-{n}")),
+                })
+                .find(|f| !f.exists())
+                .ok_or_else(|| bad(format!("no free folder for {version}")))?;
             std::fs::rename(&unpacking, &folder)?;
             Ok(folder)
         });
@@ -71,13 +116,10 @@ pub(crate) fn put_folder(dir: &Path, version: &str, zip: &[u8]) -> Result<Instal
             return Err(e);
         }
     };
-    make_current(
-        &root,
-        Installed {
-            version: version.to_owned(),
-            exe: folder.join(PROGRAM),
-        },
-    )
+    Ok(Installed {
+        version: version.to_owned(),
+        exe: folder.join(PROGRAM),
+    })
 }
 
 /// Unpack `zip` into `dest`, keeping the files' permissions. An entry that would land outside
@@ -187,7 +229,7 @@ mod tests {
     #[test]
     fn the_folder_build_is_unpacked_as_one_and_made_current() {
         let dir = tempfile::tempdir().unwrap();
-        let now = put_folder(dir.path(), "2026.10.26", &good()).unwrap();
+        let now = put_folder(dir.path(), "2026.10.26", &good(), "https://x/").unwrap();
         assert_eq!(now.version, "2026.10.26");
         assert_eq!(
             now.exe,
@@ -230,17 +272,47 @@ mod tests {
         )
         .unwrap();
         assert!(one_file_build(&old.exe));
-        let now = put_folder(dir.path(), "2026.10.26", &good()).unwrap();
-        assert_eq!(now.exe, old.exe, "the same place");
+        let now = put_folder(dir.path(), "2026.10.26", &good(), "https://x/").unwrap();
+        // Beside it (Windows can't remove it while a look-up runs it), and current.
+        let root = dir.path().join("yt-dlp");
+        assert_eq!(now.exe, root.join("2026.10.26-2").join(PROGRAM));
+        assert_eq!(now.version, "2026.10.26");
         assert_eq!(std::fs::read(&now.exe).unwrap(), b"program");
         assert!(!one_file_build(&now.exe));
+        assert_eq!(crate::installed(dir.path()).unwrap(), now);
+        assert_eq!(
+            std::fs::read(&old.exe).unwrap(),
+            b"old one-file program",
+            "the one-file build stays as the previous version"
+        );
+        // The next release: in its own folder; the folder build stays as the previous one, and
+        // the one-file build goes.
+        let next = put_folder(dir.path(), "2026.11.02", &good(), "https://x/").unwrap();
+        assert_eq!(next.exe, root.join("2026.11.02").join(PROGRAM));
+        assert!(now.exe.is_file(), "the previous version stays");
+        assert!(!root.join("2026.10.26").exists(), "older ones go");
+    }
+
+    #[test]
+    fn an_install_s_folder_is_its_own_when_its_version_is_taken() {
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path().join("yt-dlp");
+        for taken in ["2026.10.26", "2026.10.26-2"] {
+            std::fs::create_dir_all(root.join(taken)).unwrap();
+            std::fs::write(root.join(taken).join("kept"), b"x").unwrap();
+        }
+        let now = put_folder(dir.path(), "2026.10.26", &good(), "https://x/").unwrap();
+        assert_eq!(now.exe, root.join("2026.10.26-3").join(PROGRAM));
+        // Neither the new nor a previous version: gone with the install.
+        assert!(!root.join("2026.10.26").exists());
+        assert!(!root.join("2026.10.26-2").exists());
     }
 
     #[test]
     fn an_archive_without_the_program_installs_nothing() {
         let dir = tempfile::tempdir().unwrap();
         let zip = archive(&[("_internal/Python", b"x", 0o644)], &[]);
-        assert!(put_folder(dir.path(), "2026.10.26", &zip).is_err());
+        assert!(put_folder(dir.path(), "2026.10.26", &zip, "https://x/").is_err());
         assert!(!dir.path().join("yt-dlp/current.json").exists());
         assert!(!dir.path().join("yt-dlp/2026.10.26").exists());
         assert!(!dir.path().join("yt-dlp/.unpacking-2026.10.26").exists());
@@ -257,10 +329,10 @@ mod tests {
             ],
             &[],
         );
-        assert!(put_folder(dir.path(), "2026.10.26", &zip).is_err());
+        assert!(put_folder(dir.path(), "2026.10.26", &zip, "https://x/").is_err());
         assert!(!dir.path().join("yt-dlp/escaped").exists());
         assert!(!dir.path().join("escaped").exists());
-        assert!(put_folder(dir.path(), "../evil", &good()).is_err());
+        assert!(put_folder(dir.path(), "../evil", &good(), "https://x/").is_err());
     }
 
     #[cfg(unix)]
@@ -274,7 +346,7 @@ mod tests {
             ],
             &[("_internal/Python", "Versions/1/Python")],
         );
-        let now = put_folder(dir.path(), "1", &inside).unwrap();
+        let now = put_folder(dir.path(), "1", &inside, "https://x/").unwrap();
         assert_eq!(
             std::fs::read(now.exe.with_file_name("_internal/Python")).unwrap(),
             b"lib"
@@ -285,7 +357,7 @@ mod tests {
                 &[("_internal/link", target)],
             );
             assert!(
-                put_folder(dir.path(), "2", &out).is_err(),
+                put_folder(dir.path(), "2", &out, "https://x/").is_err(),
                 "{target} was accepted"
             );
         }

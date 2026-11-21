@@ -2,66 +2,154 @@
 <html>
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
 <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-  <header>
-    <img src="icons/icon-32.png" width="20" height="20" alt="">
-    <span>Mister Download Manager</span>
-  </header>
-  <section id="status" class="status" role="status">
-    <span class="dot" aria-hidden="true"></span>
-    <span id="status-text"></span>
-  </section>
-  <a id="fix" class="link" hidden data-i18n="popup_fix" target="_blank" rel="noopener"></a>
-  <p id="declined" class="declined" hidden><span id="declined-what"></span><span id="declined-why"></span></p>
-  <label class="switch">
-    <input id="take" type="checkbox">
-    <span data-i18n="popup_take"></span>
-  </label>
-  <label class="switch" id="proxy-row" hidden>
-    <input id="proxy" type="checkbox">
-    <span data-i18n="popup_proxy"></span>
-  </label>
-  <section id="send" class="send">
-    <h2 data-i18n="popup_send_to"></h2>
-    <label class="choice"><input type="radio" name="to" id="to-here"> <span data-i18n="popup_send_here"></span></label>
-    <label class="choice"><input type="radio" name="to" id="to-remote"> <span data-i18n="popup_send_remote"></span></label>
-    <div id="remote-form" hidden>
-      <input id="remote-url" type="url" dir="ltr" placeholder="https://192.168.1.10:8463/" aria-labelledby="to-remote">
-      <input id="remote-code" inputmode="numeric" maxlength="9" dir="ltr" data-i18n-placeholder="popup_remote_code">
-      <div class="actions">
-        <button id="remote-open" data-i18n="popup_remote_open"></button>
-        <button id="remote-pair" class="accent" data-i18n="popup_remote_pair"></button>
+  <div class="shell" id="shell">
+    <header class="top">
+      <img class="logo" src="icons/icon-32.png" width="22" height="22" alt="">
+      <div class="ident">
+        <span class="name" data-i18n="name"></span>
+        <span id="status" class="conn" role="status"><span class="dot" aria-hidden="true"></span><span id="status-text"></span></span>
       </div>
-      <p class="note" data-i18n="popup_remote_help"></p>
-      <p id="remote-said" class="note bad" role="status" hidden></p>
+      <button id="gear" class="icon-btn" type="button" data-i18n-label="popup_gear" data-icon="gear"></button>
+    </header>
+    <div id="problem" class="problem" hidden>
+      <p id="problem-text"></p>
+      <a id="fix" class="link" data-i18n="popup_fix" target="_blank" rel="noopener"></a>
     </div>
-  </section>
-  <button id="exclude" class="row" hidden></button>
-  <p id="excluded" class="excluded" role="status" hidden><span id="excluded-text"></span><button id="undo" class="undo" data-i18n="popup_undo"></button></p>
-  <div class="actions">
-    <button id="open" class="accent" data-i18n="popup_open"></button>
-    <button id="options" data-i18n="popup_options"></button>
+
+    <nav class="tabs" role="tablist" data-i18n-label="popup_tabs">
+      <button id="tab-downloads" class="tab" role="tab" type="button" aria-controls="panel-downloads" aria-selected="true">
+        <span data-i18n="popup_tab_downloads"></span><span id="tab-running" class="pill" hidden></span>
+      </button>
+      <button id="tab-page" class="tab" role="tab" type="button" aria-controls="panel-page" aria-selected="false" tabindex="-1">
+        <span data-i18n="popup_tab_page"></span><span id="tab-media" class="pill quiet" hidden></span>
+      </button>
+      <button id="tab-settings" class="tab" role="tab" type="button" aria-controls="panel-settings" aria-selected="false" tabindex="-1">
+        <span data-i18n="popup_tab_settings"></span>
+      </button>
+    </nav>
+
+    <!-- Downloads: MDM's newest downloads, live (#1496). -->
+    <section id="panel-downloads" class="panel downloads" role="tabpanel" aria-labelledby="tab-downloads">
+      <div class="dl-tools">
+        <label class="search">
+          <span class="search-ico" data-icon="search"></span>
+          <input id="dl-search" type="search" autocomplete="off" spellcheck="false" data-i18n-placeholder="popup_dl_search" data-i18n-label="popup_dl_search">
+        </label>
+        <div id="dl-filters" class="chips" role="radiogroup" data-i18n-label="popup_dl_filters">
+          <button type="button" class="chip" role="radio" aria-checked="true" data-filter="all"><span data-i18n="popup_dl_all"></span><span class="n"></span></button>
+          <button type="button" class="chip" role="radio" aria-checked="false" tabindex="-1" data-filter="running"><span data-i18n="popup_dl_running"></span><span class="n"></span></button>
+          <button type="button" class="chip" role="radio" aria-checked="false" tabindex="-1" data-filter="done"><span data-i18n="popup_dl_done_filter"></span><span class="n"></span></button>
+          <button type="button" class="chip" role="radio" aria-checked="false" tabindex="-1" data-filter="failed"><span data-i18n="popup_dl_failed_filter"></span><span class="n"></span></button>
+        </div>
+      </div>
+      <p id="dl-remote" class="note-bar" hidden><span data-icon="server"></span><span id="dl-remote-text"></span></p>
+      <div class="dl-scroll" id="dl-scroll">
+        <ul id="dl-list" class="dl-list" data-i18n-label="popup_tab_downloads"></ul>
+        <div id="dl-empty" class="empty" hidden>
+          <span class="empty-ico" id="dl-empty-ico"></span>
+          <p class="empty-title" id="dl-empty-title"></p>
+          <p class="empty-text" id="dl-empty-text"></p>
+          <button id="dl-empty-act" type="button" class="btn" hidden></button>
+        </div>
+        <p id="dl-more" class="more-note" hidden></p>
+      </div>
+      <div class="foot">
+        <button id="dl-clear" type="button" class="btn subtle" data-i18n="popup_dl_clear"></button>
+        <button id="dl-open" type="button" class="btn accent" data-i18n="popup_open"></button>
+      </div>
+    </section>
+
+    <!-- This page: what the tab offers, and how MDM treats its site. -->
+    <section id="panel-page" class="panel page" role="tabpanel" aria-labelledby="tab-page" hidden>
+      <div class="scroll">
+        <p id="page-none" class="note" data-i18n="popup_page_none" hidden></p>
+        <div id="site-box" class="card" hidden>
+          <label class="toggle-row" id="exclude-row">
+            <span class="toggle-text"><span id="exclude-label"></span><span id="exclude-note" class="sub" hidden></span></span>
+            <input id="exclude" type="checkbox" class="toggle" role="switch">
+          </label>
+          <p id="excluded" class="said-inline" role="status" hidden><span id="excluded-text"></span></p>
+        </div>
+        <p id="declined" class="declined card" hidden><span id="declined-what"></span><span id="declined-why"></span></p>
+        <section id="media" class="media" hidden>
+          <h2 data-i18n="popup_media"></h2>
+          <label class="toggle-row">
+            <span class="toggle-text" data-i18n="popup_media_title_name"></span>
+            <input id="media-title-name" type="checkbox" class="toggle" role="switch">
+          </label>
+          <ul id="media-list"></ul>
+          <p id="media-none" class="note" data-i18n="popup_media_none" hidden></p>
+          <p id="media-said" class="note" role="status" hidden></p>
+        </section>
+        <p class="note tip" data-i18n="popup_alt"></p>
+      </div>
+    </section>
+
+    <!-- Settings: the extension's switches and where downloads go. -->
+    <section id="panel-settings" class="panel settings" role="tabpanel" aria-labelledby="tab-settings" hidden>
+      <div class="scroll">
+        <div class="card">
+          <label class="toggle-row">
+            <span class="toggle-text" data-i18n="popup_take"></span>
+            <input id="take" type="checkbox" class="toggle" role="switch">
+          </label>
+          <label class="toggle-row" id="proxy-row" hidden>
+            <span class="toggle-text" data-i18n="popup_proxy"></span>
+            <input id="proxy" type="checkbox" class="toggle" role="switch">
+          </label>
+          <label class="toggle-row" id="video-hide-fullscreen-row">
+            <span class="toggle-text" data-i18n="popup_video_hide_fullscreen"></span>
+            <input id="video-hide-fullscreen" type="checkbox" class="toggle" role="switch">
+          </label>
+        </div>
+        <section id="send" class="card send" aria-labelledby="send-title">
+          <h2 id="send-title" data-i18n="popup_send_to"></h2>
+          <label class="choice"><input type="radio" name="to" id="to-here"> <span data-i18n="popup_send_here"></span></label>
+          <div id="remotes-list"></div>
+          <label class="choice"><input type="radio" name="to" id="to-remote"> <span data-i18n="popup_send_remote"></span></label>
+          <div id="remote-form" class="remote-form" hidden>
+            <input id="remote-url" class="field" type="url" dir="ltr" placeholder="https://192.168.1.10:8463/" aria-labelledby="to-remote">
+            <input id="remote-code" class="field" inputmode="numeric" maxlength="9" dir="ltr" data-i18n-placeholder="popup_remote_code" data-i18n-label="popup_remote_code">
+            <div class="actions">
+              <button id="remote-open" type="button" class="btn" data-i18n="popup_remote_open"></button>
+              <button id="remote-pair" type="button" class="btn accent" data-i18n="popup_remote_pair"></button>
+            </div>
+            <p class="note" data-i18n="popup_remote_help"></p>
+            <p id="remote-said" class="note bad" role="status" hidden></p>
+          </div>
+        </section>
+        <div class="actions">
+          <button id="options" type="button" class="btn" data-i18n="popup_options"></button>
+          <button id="open" type="button" class="btn accent" data-i18n="popup_open"></button>
+        </div>
+        <footer class="about">
+          <span class="footer-links">
+            <a id="help" class="link" data-i18n="popup_help" target="_blank" rel="noopener"></a>
+            <a id="support" class="link" data-i18n="popup_support" target="_blank" rel="noopener"></a>
+          </span>
+          <span id="version"></span>
+        </footer>
+      </div>
+    </section>
+
+    <p id="said" class="said" role="status" aria-live="polite" hidden></p>
   </div>
-  <section id="media" class="media" hidden>
-    <h2 data-i18n="popup_media"></h2>
-    <label class="switch">
-      <input id="media-title-name" type="checkbox">
-      <span data-i18n="popup_media_title_name"></span>
-    </label>
-    <ul id="media-list"></ul>
-    <p id="media-none" class="note" data-i18n="popup_media_none" hidden></p>
-    <p id="media-said" class="note" role="status" hidden></p>
-  </section>
-  <p class="note" data-i18n="popup_alt"></p>
-  <footer>
-    <span class="footer-links">
-      <a id="help" class="link" data-i18n="popup_help" target="_blank" rel="noopener"></a>
-      <a id="support" class="link" data-i18n="popup_support" target="_blank" rel="noopener"></a>
-    </span>
-    <span id="version"></span>
-  </footer>
+
+  <dialog id="ask" class="ask" aria-labelledby="ask-title" aria-describedby="ask-text">
+    <h2 id="ask-title"></h2>
+    <p id="ask-text"></p>
+    <div class="actions">
+      <button id="ask-cancel" type="button" class="btn" data-i18n="popup_cancel"></button>
+      <button id="ask-ok" type="button" class="btn accent"></button>
+    </div>
+  </dialog>
+
+  <script src="popup-ui.js"></script>
+  <script src="popup-downloads.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

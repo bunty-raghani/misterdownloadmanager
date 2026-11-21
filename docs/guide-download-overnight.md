@@ -53,7 +53,7 @@ Back on the **Schedule** tab:
 
 1. Click **Apply**, then **Close**.
 2. Leave MDM running. Closing the main window is fine: MDM keeps going in the tray. Don't use **Tasks → Exit**.
-3. Make sure the computer doesn't go to sleep before the start time.
+3. Make sure the computer doesn't go to sleep before the start time. Once the downloads are running, MDM keeps the computer from going to sleep by itself until they're done; the screen still turns off as usual.
 
 At the start time the queue starts on its own. In the morning, the finished files are under **Finished** in the categories.
 

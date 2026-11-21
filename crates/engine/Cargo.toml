@@ -12,13 +12,15 @@ publish.workspace = true
 default = ["browser-connection"]
 # The browser-like connection for sites whose bot check refuses MDM's own (#668,
 # src/browserlike.rs). Without it a bot check's refusal stands (the browser takes the download).
-browser-connection = ["dep:wreq", "dep:wreq-util", "dep:rustls-native-certs", "dep:webpki-root-certs"]
+browser-connection = ["dep:wreq", "dep:wreq-util", "dep:rustls-native-certs"]
 
 [dependencies]
 wreq = { workspace = true, optional = true }
 wreq-util = { workspace = true, optional = true }
 rustls-native-certs = { workspace = true, optional = true }
-webpki-root-certs = { workspace = true, optional = true }
+webpki-root-certs.workspace = true
+# Mozilla's name constraints, which webpki-root-certs' plain certificates don't carry (tls.rs).
+webpki-roots.workspace = true
 bytes.workspace = true
 craft-atomic.workspace = true
 serde_json.workspace = true
@@ -41,6 +43,7 @@ hex.workspace = true
 # with it). Only the language: no module loader, no file or OS access.
 rquickjs = { version = "0.14.0", default-features = false, features = ["std"] }
 suppaftp.workspace = true
+tokio-socks.workspace = true
 hickory-resolver.workspace = true
 socket2.workspace = true
 network-interface.workspace = true
@@ -48,6 +51,8 @@ hyper-util.workspace = true
 # The client's connector timed, a layer around it (src/server.rs; already in the tree).
 tower-layer = "0.3.3"
 tower-service = "0.3.3"
+# A name shortened to fit a path is cut between characters as they show (#1102; already in the tree).
+unicode-segmentation = "1.13.3"
 # hyper-util's proxy matcher takes an http::Uri (already in the tree through reqwest).
 http = "1.5.0"
 rustls.workspace = true
@@ -57,6 +62,11 @@ tokio-rustls.workspace = true
 [target.'cfg(windows)'.dependencies]
 # Sparse part files (src/sparse.rs, D-008 amendment) and the free-space probe (src/disk.rs).
 windows-sys.workspace = true
+
+# 32-bit Windows: QuickJS's bindings don't come with it for that system, so they are made from
+# its C headers as it builds (libclang, as BoringSSL's are).
+[target.'cfg(all(windows, target_arch = "x86"))'.dependencies]
+rquickjs = { version = "0.14.0", default-features = false, features = ["std", "bindgen"] }
 
 [target.'cfg(unix)'.dependencies]
 # The free-space probe (src/disk.rs): statvfs and statfs, safely (already in the tree).
@@ -69,6 +79,9 @@ core-foundation = "0.10.1"
 core-foundation-sys = "0.8.7"
 
 [dev-dependencies]
+# Counts every allocation of the memory test (tests/memory.rs): what the connections hold for
+# the disk, as allocated.
+cap = { version = "0.1.2", features = ["stats"] }
 # The free-space probe's test compares it with the volume list it replaced (#224).
 sysinfo.workspace = true
 mdm-labserver.workspace = true

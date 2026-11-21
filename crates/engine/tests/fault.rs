@@ -40,10 +40,32 @@ async fn serve(answer: Option<&'static [u8]>) -> u16 {
     port
 }
 
-/// A port nothing listens on.
-async fn closed_port() -> u16 {
-    let l = TcpListener::bind("127.0.0.1:0").await.unwrap();
-    l.local_addr().unwrap().port()
+/// A port that refuses every connection, kept so until the test ends (drop it then).
+///
+/// A port bound and let go at once is free for anything to take before the request comes
+/// (another program's server, or the request's own connection, whose source port the system may
+/// pick), and the answer is then that one's. A socket bound to it but never listening keeps it,
+/// but macOS drops a connection to such a socket without answering (it times out); Linux and
+/// Windows refuse it. So the port is the local end of a connection made here instead: in use,
+/// so nothing can bind it or pick it as a source port, and connected elsewhere, so a connection
+/// to it matches no socket at all and every system refuses it (a reset).
+struct Closed {
+    port: u16,
+    _held: (
+        std::net::TcpListener,
+        std::net::TcpStream,
+        std::net::TcpStream,
+    ),
+}
+
+fn closed_port() -> Closed {
+    let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+    let near = std::net::TcpStream::connect(listener.local_addr().unwrap()).unwrap();
+    let (far, _) = listener.accept().unwrap();
+    Closed {
+        port: near.local_addr().unwrap().port(),
+        _held: (listener, near, far),
+    }
 }
 
 /// Windows answers a connection to a port nothing listens on after about 2 s of trying.
@@ -73,7 +95,8 @@ async fn fault_of(url: &str, opts: &Options) -> Fault {
 
 #[tokio::test]
 async fn refused() {
-    let port = closed_port().await;
+    let closed = closed_port();
+    let port = closed.port;
     let got = fault_of(&format!("http://127.0.0.1:{port}/"), &opts()).await;
     assert_eq!(got, Fault::Refused);
 }
@@ -154,8 +177,10 @@ async fn no_such_host() {
 #[tokio::test]
 async fn a_dns_that_never_answers_is_no_such_host() {
     let dns = silent_dns().await;
+    // The lookup has nine tenths of it, the rest is the margin between the two: 1 s left a
+    // busy runner 0.1 s, and now and then the DNS wasn't even asked in its 0.9 s.
     let opts = Options {
-        connect_timeout: Duration::from_secs(1),
+        connect_timeout: Duration::from_secs(5),
         ..opts()
     };
     let got = fault_of("http://no-such-host.test/", &asking(dns.addr, opts)).await;
@@ -170,7 +195,8 @@ async fn a_dns_that_never_answers_is_no_such_host() {
 /// connecting to it, without looking up the server's name (which doesn't exist).
 #[tokio::test]
 async fn through_the_proxy_set_in_options() {
-    let port = closed_port().await;
+    let closed = closed_port();
+    let port = closed.port;
     let opts = Options {
         proxy: Proxy::Manual {
             url: format!("http://127.0.0.1:{port}"),

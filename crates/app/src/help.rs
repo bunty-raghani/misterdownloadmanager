@@ -17,6 +17,9 @@ pub const REPO: &str = "https://github.com/anefzaoui/misterdownloadmanager";
 /// extension's popup and the repository's Sponsor button (.github/FUNDING.yml) point there too.
 pub const SPONSORS: &str = "https://github.com/sponsors/anefzaoui";
 const LATEST: &str = "https://api.github.com/repos/anefzaoui/misterdownloadmanager/releases/latest";
+/// The repository on GitHub (`owner/name`): its release pages when GitHub's API refuses for its
+/// rate limit (#1337).
+const REPO_PATH: &str = "anefzaoui/misterdownloadmanager";
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 pub const COMMIT: &str = env!("MDM_COMMIT");
 /// While MDM runs, the automatic check comes again this often (it also checks at every start).
@@ -64,6 +67,14 @@ pub fn page_url(doc: &str, lang: &str) -> String {
     };
     let folder = site_lang(lang).map(|l| format!("/{l}")).unwrap_or_default();
     format!("{SITE}{folder}{path}{anchor}")
+}
+
+/// The website's page that thanks everyone who sent a pull request, opened an issue or joined a
+/// conversation (About's **Contributors**), in the language `lang` when the site has it. Not a
+/// guide page: [`page_url`] would map it under `/help/`.
+fn contributors_page(lang: &str) -> String {
+    let folder = site_lang(lang).map(|l| format!("/{l}")).unwrap_or_default();
+    format!("{SITE}{folder}/contributors.html")
 }
 
 /// Open a page of the user guide on the website, in the interface language when the site has
@@ -128,10 +139,17 @@ fn report_fields() -> Vec<(&'static str, String)> {
     } else {
         "Other"
     };
+    // The processor of a Windows or Linux build other than x64's (Windows on ARM, 32-bit, Linux
+    // on ARM): a bug may be its build's alone. The Mac's is in "os" already.
+    let build = match mdm_tools::update::Arch::THIS {
+        Some(mdm_tools::update::Arch::Arm64) if !cfg!(target_os = "macos") => ", ARM64",
+        Some(mdm_tools::update::Arch::X86) => ", 32-bit",
+        _ => "",
+    };
     let mut fields = vec![
         ("os", os.to_owned()),
         ("os-version", os_version),
-        ("version", format!("{VERSION} ({COMMIT})")),
+        ("version", format!("{VERSION} ({COMMIT}{build})")),
         ("language", crate::i18n::code().to_owned()),
     ];
     fields.push((
@@ -164,58 +182,213 @@ pub enum Found {
 
 pub type Slot = Arc<Mutex<Option<Result<Found, String>>>>;
 
-/// Ask GitHub for the latest release in the background; the answer lands in the slot.
+/// Ask GitHub for the latest release in the background; the answer lands in the slot. Whatever
+/// goes wrong, even a panic in the check, lands there as a failed check (#1123): the slot never
+/// stays empty, which would leave Check for updates waiting for good.
 pub fn check(rt: &tokio::runtime::Handle, ctx: &egui::Context) -> Slot {
     let slot: Slot = Arc::new(Mutex::new(None));
     let (out, ctx) = (slot.clone(), ctx.clone());
+    let task = rt.spawn(latest());
     rt.spawn(async move {
-        let res = latest().await;
-        *out.lock().unwrap() = Some(res);
+        let res = settled(task.await);
+        *out.lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner) = Some(res);
         ctx.request_repaint();
     });
     slot
 }
 
+/// The check's task ended: its answer, or a failed check when it panicked (or was cancelled).
+fn settled(joined: Result<Result<Found, String>, tokio::task::JoinError>) -> Result<Found, String> {
+    joined.unwrap_or_else(|e| {
+        tracing::warn!("the update check stopped: {e}");
+        Err(crate::i18n::t("Mister Download Manager hit an internal error").to_owned())
+    })
+}
+
+/// Where the check reads: GitHub's API (`feed`), else, when it refuses for its rate limit
+/// (#1337), github.com's release pages (`web`) and the repository's files at the release's tag
+/// (`raw`).
+struct Sources {
+    feed: String,
+    web: String,
+    raw: String,
+}
+
 async fn latest() -> Result<Found, String> {
     // MDM_UPDATE_FEED: another address for the latest release (tests of Update now, as
-    // MDM_DATA_DIR is for a separate list).
-    let feed = std::env::var("MDM_UPDATE_FEED").unwrap_or_else(|_| LATEST.to_owned());
-    let net = crate::settings::own_net();
-    // The chosen DNS and network adapter, as downloads have them (#36, #35).
-    let client = mdm_engine::net::client_builder(&net.dns, &net.route, &feed)
-        .map_err(|e| e.to_string())?
-        .user_agent(concat!("MisterDownloadManager/", env!("CARGO_PKG_VERSION")))
-        .timeout(Duration::from_secs(20))
-        .build()
-        .map_err(|e| e.to_string())?;
-    let resp = client
-        .get(feed)
-        .header("Accept", "application/vnd.github+json")
-        .send()
+    // MDM_DATA_DIR is for a separate list); MDM_UPDATE_WEB and MDM_UPDATE_RAW: other addresses
+    // for GitHub's pages and files (tests of the way around the API's rate limit: the lab
+    // server's fake GitHub, `/gh/web` and `/gh/raw`).
+    let var = |name: &str, default: &str| std::env::var(name).unwrap_or_else(|_| default.into());
+    let sources = Sources {
+        feed: var("MDM_UPDATE_FEED", LATEST),
+        web: var("MDM_UPDATE_WEB", mdm_tools::github::WEB),
+        raw: var("MDM_UPDATE_RAW", mdm_tools::github::RAW),
+    };
+    // Options' proxy, DNS and network adapter, as MDM's own downloads have them (#36, #35,
+    // #1558: a SOCKS proxy too), within 20 s a step.
+    let net = mdm_engine::Options {
+        connect_timeout: Duration::from_secs(20),
+        read_timeout: Duration::from_secs(20),
+        ..crate::settings::own_net()
+    };
+    let client_for = |url: &str, follow: bool| -> Result<reqwest::Client, String> {
+        let url = url::Url::parse(url).map_err(|e| e.to_string())?;
+        if follow {
+            mdm_engine::http_client(&net, &url)
+        } else {
+            mdm_engine::hop_client(&net, &url)
+        }
+        .map_err(|e| e.to_string())
+    };
+    let client = client_for(&sources.feed, true)?;
+    // GitHub's pages are read without following their redirects: where `releases/latest` sends
+    // MDM is the answer (mdm_tools::github::latest_tag).
+    let pages = |url: &str| client_for(url, false);
+    let install = mdm_tools::update::Install::detect();
+    fetch(&client, &pages, &sources, VERSION, install).await
+}
+
+/// The latest release against the running `current` version: from GitHub's API at
+/// `sources.feed` (`client`), else, when it refuses for its rate limit, from its pages with
+/// `pages`' clients (one for each server, following no redirect), the files this copy updates
+/// from (`install`) as the release has them. When the pages fail too, the check fails as GitHub
+/// refusing too many requests from this network.
+async fn fetch(
+    client: &reqwest::Client,
+    pages: &(dyn Fn(&str) -> Result<reqwest::Client, String> + Sync),
+    sources: &Sources,
+    current: &str,
+    install: mdm_tools::update::Install,
+) -> Result<Found, String> {
+    use mdm_tools::github::Api;
+    let body = match mdm_tools::github::api_get(client, &sources.feed).await {
+        Ok(Api::Answer(body)) => body,
+        Ok(Api::RateLimited(refusal)) => {
+            return match from_pages(pages, sources, current, install).await {
+                Ok(found) => Ok(found),
+                Err(e) => {
+                    tracing::warn!("the update check on GitHub's pages failed too: {e}");
+                    // Worded as the helpers' downloads word it: "api.github.com refused the
+                    // request (403 Forbidden): too many requests from your network for now".
+                    Err(crate::errors::tools(&refusal))
+                }
+            };
+        }
+        // No release published yet: nothing newer than this.
+        Err(mdm_tools::Error::Http(e)) if e.status() == Some(reqwest::StatusCode::NOT_FOUND) => {
+            return Ok(Found::Latest);
+        }
+        Err(mdm_tools::Error::Http(e)) => return Err(e.to_string()),
+        Err(e) => return Err(e.to_string()),
+    };
+    parse_release(&String::from_utf8_lossy(&body), current)
+}
+
+/// The latest release from GitHub's pages, without its API (#1337): its tag from where
+/// `releases/latest` redirects, its date and notes from its section of CHANGELOG.md at that tag
+/// (release.yml's source for them; none when it can't be read), and of its files the signed
+/// checksum list and the ones this copy updates from (`install`), those the release has (asked
+/// without downloading them). Update now checks them as it checks the API's.
+async fn from_pages(
+    pages: &(dyn Fn(&str) -> Result<reqwest::Client, String> + Sync),
+    sources: &Sources,
+    current: &str,
+    install: mdm_tools::update::Install,
+) -> Result<Found, String> {
+    use mdm_tools::github;
+    let client = pages(&github::latest_page(&sources.web, REPO_PATH))?;
+    let tag = github::latest_tag(&client, &sources.web, REPO_PATH)
         .await
         .map_err(|e| e.to_string())?;
-    // No release published yet: nothing newer than this.
-    if resp.status() == reqwest::StatusCode::NOT_FOUND {
+    tracing::info!("the latest release is {tag}, from GitHub's pages");
+    let version = version_of(&tag)?;
+    if !newer(version, current) {
         return Ok(Found::Latest);
     }
-    let text = resp
-        .error_for_status()
+    let log = github::file_at(&sources.raw, REPO_PATH, &tag, "CHANGELOG.md");
+    let (date, notes) = match changelog(pages, &log).await {
+        Ok(text) => changelog_section(&text, version).unwrap_or_default(),
+        Err(e) => {
+            tracing::warn!("{log}: {e}");
+            Default::default()
+        }
+    };
+    let mut names = vec!["SHA256SUMS.txt".to_owned(), "SHA256SUMS.txt.sig".to_owned()];
+    names.extend(install.assets(version));
+    let mut assets = Vec::new();
+    for name in names {
+        let url = github::download_url(&sources.web, REPO_PATH, &tag, &name);
+        let there = client.head(&url).send().await.is_ok_and(|r| {
+            let s = r.status();
+            s.is_success() || s.is_redirection()
+        });
+        if there {
+            assets.push((name, url));
+        }
+    }
+    Ok(Found::Newer(Release {
+        version: version.to_owned(),
+        date,
+        notes,
+        page: github::release_page(&sources.web, REPO_PATH, &tag),
+        assets,
+    }))
+}
+
+/// The text at `url` (CHANGELOG.md at a tag).
+async fn changelog(
+    pages: &(dyn Fn(&str) -> Result<reqwest::Client, String> + Sync),
+    url: &str,
+) -> Result<String, String> {
+    pages(url)?
+        .get(url)
+        .send()
+        .await
+        .and_then(reqwest::Response::error_for_status)
         .map_err(|e| e.to_string())?
         .text()
         .await
-        .map_err(|e| e.to_string())?;
-    parse_release(&text, VERSION)
+        .map_err(|e| e.to_string())
+}
+
+/// `version`'s date and notes in CHANGELOG.md: its section (`## [X.Y.Z] - YYYY-MM-DD` up to the
+/// next `## `), as release.yml makes a release's notes from it.
+fn changelog_section(text: &str, version: &str) -> Option<(String, String)> {
+    let head = format!("## [{version}]");
+    let mut lines = text.lines();
+    let title = lines.by_ref().find(|l| l.starts_with(&head))?;
+    let date = title[head.len()..]
+        .trim_start_matches([' ', '-', '–'])
+        .chars()
+        .take(10)
+        .collect();
+    let notes: Vec<&str> = lines.take_while(|l| !l.starts_with("## ")).collect();
+    Some((date, notes.join("\n").trim().to_owned()))
+}
+
+/// The version a release's tag names (`v0.5.2` → `0.5.2`), or why there is none.
+fn version_of(tag: &str) -> Result<&str, String> {
+    let version = tag.trim().trim_start_matches(['v', 'V']);
+    // A number MDM can't read ("next", "1.x") would compare as 0 and pass for older: no answer
+    // is better than a wrong one.
+    let numeric = version
+        .split_once('-')
+        .map_or(version, |(main, _)| main)
+        .split('.')
+        .all(|p| p.parse::<u64>().is_ok());
+    if version.is_empty() || !numeric {
+        // i18n: why updates could not be checked: the newest release on the site has no number
+        return Err(crate::i18n::t("the release has no version").to_owned());
+    }
+    Ok(version)
 }
 
 /// GitHub's latest-release JSON against the running `current` version.
 fn parse_release(json: &str, current: &str) -> Result<Found, String> {
     let v: serde_json::Value = serde_json::from_str(json).map_err(|e| e.to_string())?;
-    let tag = v["tag_name"].as_str().unwrap_or("").trim();
-    let version = tag.trim_start_matches(['v', 'V']);
-    if version.is_empty() {
-        // i18n: why updates could not be checked: the newest release on the site has no number
-        return Err(crate::i18n::t("the release has no version").to_owned());
-    }
+    let version = version_of(v["tag_name"].as_str().unwrap_or(""))?;
     if !newer(version, current) {
         return Ok(Found::Latest);
     }
@@ -360,6 +533,12 @@ impl Updates {
                             crate::i18n::t("Checking for updates..."),
                             ink,
                         );
+                        spoken_line(
+                            ui,
+                            r(o, 11.0, 10.0, 418.0, 20.0),
+                            "update-line",
+                            crate::i18n::t("Checking for updates..."),
+                        );
                     }
                     Some(Ok(Found::Latest)) => {
                         let line = crate::i18n::fmt(
@@ -369,6 +548,7 @@ impl Updates {
                             &[("version", VERSION)],
                         );
                         winui::paragraph(&p, o.x + 11.0, o.y + 24.0, &line, ink, right, 13.0);
+                        spoken_line(ui, r(o, 11.0, 10.0, 418.0, 22.0), "update-line", &line);
                     }
                     Some(Err(e)) => {
                         let line = crate::i18n::fmt(
@@ -380,6 +560,7 @@ impl Updates {
                         if cut {
                             winui::full_on_hover(ui, rect, "update-error", &line);
                         }
+                        spoken_line(ui, r(o, 11.0, 10.0, 418.0, 22.0), "update-line", &line);
                     }
                     Some(Ok(Found::Newer(rel))) => {
                         let line = crate::i18n::fmt(
@@ -398,6 +579,7 @@ impl Updates {
                             right,
                             "update-line",
                         );
+                        spoken_line(ui, r(o, 11.0, 10.0, 418.0, 22.0), "update-line", &line);
                         // A package of another package manager (pacman, …): that one updates it.
                         let have = if install == mdm_tools::update::Install::System {
                             crate::i18n::fmt(
@@ -423,12 +605,19 @@ impl Updates {
                             right,
                             "update-have",
                         );
+                        spoken_line(ui, r(o, 11.0, 32.0, 418.0, 18.0), "update-have", &have);
                         winui::text(
                             &p,
                             o.x + 11.0,
                             o.y + 66.0,
                             crate::i18n::t("What's new:"),
                             ink,
+                        );
+                        spoken_line(
+                            ui,
+                            r(o, 11.0, 54.0, 418.0, 18.0),
+                            "update-whatsnew",
+                            crate::i18n::t("What's new:"),
                         );
                         let notes = egui::Rect::from_min_max(
                             pos2(o.x + 11.0, o.y + 74.0),
@@ -446,6 +635,14 @@ impl Updates {
                             ink,
                             13.0,
                             true,
+                        );
+                        // The notes as a read-only text of its own: a reader walks them line by
+                        // line instead of hearing one very long name (#1190).
+                        spoken_text(
+                            ui,
+                            winui::rect(notes),
+                            "update-notes",
+                            &plain_notes(&rel.notes),
                         );
                         download = Some(rel.clone());
                     }
@@ -725,6 +922,12 @@ impl About {
                     crate::i18n::t("Mister Download Manager"),
                     ink,
                 );
+                spoken_line(
+                    ui,
+                    r(o, 80.0, 14.0, 324.0, 18.0),
+                    "about-name",
+                    crate::i18n::t("Mister Download Manager"),
+                );
                 let version = crate::i18n::fmt(
                     crate::i18n::t("Version {version} ({commit})"),
                     &[("version", VERSION), ("commit", COMMIT)],
@@ -732,16 +935,22 @@ impl About {
                 // Copyable: bug reports ask for it.
                 let rect = winui::text(&p, o.x + 80.0, o.y + 46.0, &version, winui::MUTED());
                 winui::copyable(ui, rect, "about-version", &version, false);
-                let lines = winui::paragraph(
-                    &p,
-                    o.x + 80.0,
-                    o.y + 72.0,
-                    crate::i18n::t(
-                        "The download manager you already know, rebuilt to be faster. Free and open source under the GNU GPL, version 3 or later. Videos are found by yt-dlp; torrents run on librqbit.",
-                    ),
-                    ink,
-                    o.x + 404.0,
-                    13.0,
+                spoken_line(
+                    ui,
+                    r(o, 80.0, 32.0, 324.0, 18.0),
+                    "about-version-line",
+                    &version,
+                );
+                let about = crate::i18n::t(
+                    "The download manager you already know, rebuilt to be faster. Free and open source under the GNU GPL, version 3 or later. Videos are found by yt-dlp; torrents run on librqbit.",
+                );
+                let lines =
+                    winui::paragraph(&p, o.x + 80.0, o.y + 72.0, about, ink, o.x + 404.0, 13.0);
+                spoken_line(
+                    ui,
+                    r(o, 80.0, 60.0, 324.0, 13.0 * lines as f32 + 4.0),
+                    "about-text",
+                    about,
                 );
                 // The links in a row, 18 px apart; one that would pass the paragraph's right
                 // edge (a long translation) starts the next row.
@@ -755,9 +964,10 @@ impl About {
                     x += w + 18.0;
                     at
                 };
-                let (home, source, credits) = (
+                let (home, source, people, credits) = (
                     place("Home page"),
                     place("Source code"),
+                    place("Contributors"),
                     place("Licenses and credits"),
                 );
                 if winui::link(ui, &p, home.0, home.1, "Home page", "home") {
@@ -765,6 +975,13 @@ impl About {
                 }
                 if winui::link(ui, &p, source.0, source.1, "Source code", "source") {
                     crate::launch::open(REPO);
+                }
+                // Who sent the pull requests, opened the issues and joined the conversations: the
+                // website builds the list from GitHub at every build, so it is never stale.
+                if winui::link(ui, &p, people.0, people.1, "Contributors", "contributors")
+                    && !crate::offscreen()
+                {
+                    crate::launch::open(contributors_page(crate::i18n::code()));
                 }
                 if winui::link(
                     ui,
@@ -813,7 +1030,7 @@ impl About {
 // Keyboard shortcuts
 
 /// Every shortcut the main window answers (keep in step with `app.rs` and `list.rs`).
-const SHORTCUTS: [(&str, &str); 26] = [
+const SHORTCUTS: [(&str, &str); 29] = [
     ("Ctrl+N", "Add a download (Add URL)"),
     (
         "Ctrl+B",
@@ -850,7 +1067,14 @@ const SHORTCUTS: [(&str, &str); 26] = [
         "Jump to the download whose name starts with it",
     ),
     ("Shift+F10", "Open the selected download's menu"),
-    ("Tab", "Move between the categories and the download list"),
+    // #1190: the toolbar is one Tab stop, its buttons along the arrows.
+    (
+        "Tab / Shift+Tab",
+        "Move between the toolbar, the categories and the download list",
+    ),
+    ("Left / Right", "In the toolbar: the previous / next button"),
+    ("Enter / Space", "In the toolbar: press the button"),
+    ("Down / Alt+Down", "In the toolbar: open a button's menu"),
     (
         "Shift+F10 / Menu",
         "In the categories: the selected category's menu",
@@ -863,6 +1087,50 @@ const SHORTCUTS: [(&str, &str); 26] = [
     ),
     ("Ctrl+0", "Everything at its normal size (100%)"),
 ];
+
+/// A block of a help window for a screen reader: painted text is invisible to one on its own,
+/// and a reader reads what has the focus, so each block becomes a focusable label of its own —
+/// as the static text of a native dialog is (#1190).
+fn spoken_line(
+    ui: &egui::Ui,
+    rect: egui::Rect,
+    id: impl std::hash::Hash + std::fmt::Debug,
+    text: &str,
+) -> egui::Response {
+    let resp = ui.interact(
+        rect,
+        egui::Id::unique(id),
+        egui::Sense::focusable_noninteractive(),
+    );
+    winui::expose(&resp, egui::Role::Label, text, true, None);
+    // The first block of a window takes the focus when nothing else has it, so a reader hears
+    // what the window says as soon as it opens (later blocks leave the focus alone).
+    if resp.ctx.memory(|m| m.focused()).is_none() {
+        resp.request_focus();
+    }
+    resp
+}
+
+/// A long text shown in a scrolling box, for a screen reader: a read-only text it can walk line
+/// by line, rather than one very long name read out in a single breath.
+fn spoken_text(
+    ui: &egui::Ui,
+    rect: egui::Rect,
+    id: impl std::hash::Hash + std::fmt::Debug,
+    text: &str,
+) -> egui::Response {
+    let resp = ui.interact(
+        rect,
+        egui::Id::unique(id),
+        egui::Sense::focusable_noninteractive(),
+    );
+    winui::expose(&resp, egui::Role::MultilineTextInput, "", true, None);
+    resp.ctx.accesskit_node_builder(resp.id, |n| {
+        n.set_value(text);
+        n.set_read_only();
+    });
+    resp
+}
 
 pub struct Shortcuts;
 
@@ -903,6 +1171,15 @@ impl Shortcuts {
                         ink,
                         o.x + 504.0,
                         ("what", y as i32),
+                    );
+                    // The line for a screen reader: drawn text is invisible to one on its own and
+                    // a reader reads what has the focus, so each line is a focusable label of its
+                    // own, and Tab walks them (#1190).
+                    spoken_line(
+                        ui,
+                        r(o, 8.0, y - 15.0, 504.0, 17.0),
+                        ("shortcut", i),
+                        &format!("{keys}, {what}"),
                     );
                 }
                 let y = 24.0 + 18.0 * rows + 6.0;
@@ -972,6 +1249,12 @@ impl TellFriend {
                     crate::i18n::t("Send this to a friend:"),
                     ink,
                 );
+                spoken_line(
+                    ui,
+                    r(o, 11.0, 8.0, 398.0, 18.0),
+                    "tell-first",
+                    crate::i18n::t("Send this to a friend:"),
+                );
                 let rect = egui::Rect::from_min_max(
                     pos2(o.x + 11.0, o.y + 30.0),
                     pos2(o.x + 409.0, o.y + 106.0 + extra),
@@ -979,6 +1262,7 @@ impl TellFriend {
                 // English, as the paragraph is laid out; made where it is on screen.
                 // Read-only text: the read-only field's look (it drew a square box of its own).
                 winui::field_frame(&p, winui::rect(rect), winui::FieldLook::ReadOnly);
+                spoken_line(ui, winui::rect(rect), "tell-message", &message);
                 let lines = winui::paragraph(
                     &p,
                     rect.left() + 6.0,
@@ -1133,6 +1417,254 @@ mod tests {
         assert!(parse_release("{}", "0.1.0").is_err());
     }
 
+    // #1123: whatever GitHub (or a proxy, or a captive portal) answers, the check fails with a
+    // reason and never panics.
+    #[test]
+    fn a_bad_answer_is_a_failed_check() {
+        let bad = [
+            // Malformed or cut-off JSON, or not JSON at all.
+            r#"{"tag_name":"v0.6.0","assets":["#,
+            "",
+            "<html><body>Sign in to the Wi-Fi</body></html>",
+            // An empty release list, or no release at all.
+            "[]",
+            "null",
+            r#"{"tag_name":""}"#,
+            r#"{"tag_name":"v"}"#,
+            // Version strings that don't parse.
+            r#"{"tag_name":"next"}"#,
+            r#"{"tag_name":"v1.x"}"#,
+            r#"{"tag_name":"v١.٢"}"#,
+            r#"{"tag_name":"v0..6"}"#,
+            r#"{"tag_name":"v99999999999999999999999.0"}"#,
+            r#"{"tag_name":"v0.6.-rc"}"#,
+            r#"{"tag_name":42}"#,
+        ];
+        for json in bad {
+            assert!(parse_release(json, VERSION).is_err(), "{json:?} was taken");
+        }
+        // Odd but readable answers still work: a pre-release, missing fields, a short date,
+        // and text that isn't ASCII where the date is cut.
+        let odd = r#"{"tag_name":"V9.0.0-rc.1","published_at":"2026-ü","assets":{"x":1}}"#;
+        match parse_release(odd, "0.1.0").unwrap() {
+            Found::Newer(r) => {
+                assert_eq!(r.version, "9.0.0-rc.1");
+                assert_eq!(r.date, "2026-ü");
+                assert!(r.assets.is_empty() && r.notes.is_empty() && r.page.is_empty());
+            }
+            f => panic!("{f:?}"),
+        }
+    }
+
+    #[test]
+    fn a_check_that_panics_is_a_failed_check() {
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .build()
+            .unwrap();
+        let joined = rt.block_on(async {
+            tokio::spawn(async { panic!("a test panic in the update check") }).await
+        });
+        assert!(settled(joined).is_err());
+        let fine = rt.block_on(async { tokio::spawn(async { Ok(Found::Latest) }).await });
+        assert_eq!(settled(fine), Ok(Found::Latest));
+    }
+
+    /// A local server that answers every request with `status` and `body` (a fixture: the
+    /// tests never ask GitHub).
+    async fn feed(status: &'static str, body: &'static str) -> String {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let addr = listener.local_addr().unwrap();
+        tokio::spawn(async move {
+            while let Ok((mut s, _)) = listener.accept().await {
+                let mut buf = [0u8; 4096];
+                let _ = s.read(&mut buf).await;
+                let reply = format!(
+                    "HTTP/1.1 {status}\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+                    body.len()
+                );
+                let _ = s.write_all(reply.as_bytes()).await;
+                let _ = s.shutdown().await;
+            }
+        });
+        format!("http://{addr}/repos/x/y/releases/latest")
+    }
+
+    /// A client as the check's, without the system's proxy; for GitHub's pages, following no
+    /// redirect.
+    fn test_client(redirects: bool) -> reqwest::Client {
+        let policy = if redirects {
+            reqwest::redirect::Policy::default()
+        } else {
+            reqwest::redirect::Policy::none()
+        };
+        reqwest::Client::builder()
+            .no_proxy()
+            .redirect(policy)
+            .timeout(Duration::from_secs(10))
+            .build()
+            .unwrap()
+    }
+
+    fn pages(_: &str) -> Result<reqwest::Client, String> {
+        Ok(test_client(false))
+    }
+
+    /// The API at `feed`; GitHub's pages on a port nothing listens on.
+    fn api_only(feed: &str) -> Sources {
+        let closed = {
+            let l = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+            l.local_addr().unwrap()
+        };
+        Sources {
+            feed: feed.to_owned(),
+            web: format!("http://{closed}/web"),
+            raw: format!("http://{closed}/raw"),
+        }
+    }
+
+    #[test]
+    fn the_check_reads_the_feed_and_fails_softly() {
+        use mdm_tools::update::Install;
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        rt.block_on(async {
+            let client = test_client(true);
+            let check = |feed: String| {
+                let client = client.clone();
+                async move {
+                    fetch(&client, &pages, &api_only(&feed), "0.5.2", Install::Source).await
+                }
+            };
+            let newer = feed(
+                "200 OK",
+                r#"{"tag_name":"v9.0.0","published_at":"2026-12-01T00:00:00Z"}"#,
+            )
+            .await;
+            assert!(matches!(
+                check(newer).await,
+                Ok(Found::Newer(r)) if r.version == "9.0.0" && r.date == "2026-12-01"
+            ));
+            let none = feed("404 Not Found", r#"{"message":"Not Found"}"#).await;
+            assert_eq!(check(none).await, Ok(Found::Latest));
+            for (status, body) in [
+                // GitHub's rate limit, and its pages not answering either.
+                ("403 Forbidden", r#"{"message":"API rate limit exceeded"}"#),
+                ("403 Forbidden", r#"{"message":"Repository access blocked"}"#),
+                ("500 Internal Server Error", ""),
+                ("200 OK", r#"{"tag_name":"v9.0.0","#),
+                ("200 OK", "[]"),
+                ("200 OK", r#"{"tag_name":"latest"}"#),
+            ] {
+                let url = feed(status, body).await;
+                assert!(check(url).await.is_err(), "{status} {body}");
+            }
+            // Nothing listening: a network error.
+            let closed = {
+                let l = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+                l.local_addr().unwrap()
+            };
+            assert!(check(format!("http://{closed}/latest")).await.is_err());
+        });
+    }
+
+    /// #1337: GitHub's API refuses for its rate limit (the lab server's fake GitHub). The check
+    /// finds the latest release on the pages: its version from where `releases/latest`
+    /// redirects, its date and notes from CHANGELOG.md at its tag, and of its files the signed
+    /// list and this copy's, those the release has (for a Linux .tar.gz copy the plain name, not
+    /// the "-experimental" one it hasn't); Update now takes it. When the pages fail too, the
+    /// check says GitHub refused too many requests from this network.
+    #[test]
+    fn a_rate_limited_check_reads_the_release_pages() {
+        use mdm_tools::update::{Arch, Install};
+        let files = tempfile::tempdir().unwrap();
+        let repo = files.path().join("gh").join(REPO_PATH);
+        let release = repo.join("v9.9.9");
+        std::fs::create_dir_all(&release).unwrap();
+        std::fs::write(repo.join("LATEST"), "v9.9.9").unwrap();
+        let linux = Install::TarGz.assets_on(Arch::THIS, "9.9.9");
+        let mut published = vec!["SHA256SUMS.txt", "SHA256SUMS.txt.sig"];
+        published.extend(linux.first().map(String::as_str));
+        for name in &published {
+            std::fs::write(release.join(name), name).unwrap();
+        }
+        std::fs::write(
+            release.join("CHANGELOG.md"),
+            "# Changelog\n\n## [Unreleased]\n\n## [9.9.9] - 2026-12-24\n\n### Fixed\n\n- **Check for updates** works behind a shared address.\n\n## [9.9.8] - 2026-12-01\n\n- Older.\n",
+        )
+        .unwrap();
+        let rt = tokio::runtime::Builder::new_multi_thread()
+            .worker_threads(2)
+            .enable_all()
+            .build()
+            .unwrap();
+        rt.block_on(async {
+            let lab = mdm_labserver::LabServer::start(mdm_labserver::Config {
+                files: Some(files.path().to_owned()),
+                ..Default::default()
+            })
+            .await
+            .unwrap();
+            let client = test_client(true);
+            let sources = Sources {
+                feed: lab.url(&format!("/gh/api/repos/{REPO_PATH}/releases/latest")),
+                web: lab.url("/gh/web"),
+                raw: lab.url("/gh/raw"),
+            };
+            let web = sources.web.clone();
+            let found = fetch(&client, &pages, &sources, "0.5.2", Install::TarGz).await;
+            let Ok(Found::Newer(rel)) = found else {
+                panic!("{found:?}")
+            };
+            assert_eq!(rel.version, "9.9.9");
+            assert_eq!(rel.date, "2026-12-24");
+            assert_eq!(
+                plain_notes(&rel.notes),
+                "Fixed\n\n• Check for updates works behind a shared address."
+            );
+            assert_eq!(rel.page, format!("{web}/{REPO_PATH}/releases/tag/v9.9.9"));
+            let want: Vec<(String, String)> = published
+                .iter()
+                .map(|n| {
+                    (
+                        (*n).to_owned(),
+                        format!("{web}/{REPO_PATH}/releases/download/v9.9.9/{n}"),
+                    )
+                })
+                .collect();
+            assert_eq!(rel.assets, want);
+            assert_eq!(
+                crate::update::asset_for(Install::TarGz, &rel.version, &rel.assets),
+                linux.first().cloned()
+            );
+            // Not newer than this copy: the latest.
+            assert_eq!(
+                fetch(&client, &pages, &sources, "9.9.9", Install::TarGz).await,
+                Ok(Found::Latest)
+            );
+            // No CHANGELOG.md at the tag: no date nor notes, the files all the same.
+            std::fs::remove_file(release.join("CHANGELOG.md")).unwrap();
+            let found = fetch(&client, &pages, &sources, "0.5.2", Install::TarGz).await;
+            assert!(
+                matches!(&found, Ok(Found::Newer(r)) if r.notes.is_empty() && r.assets == want),
+                "{found:?}"
+            );
+            // No release on the pages either: GitHub refused too many requests.
+            std::fs::remove_file(repo.join("LATEST")).unwrap();
+            let err = fetch(&client, &pages, &sources, "0.5.2", Install::TarGz)
+                .await
+                .unwrap_err();
+            assert!(
+                err.contains("127.0.0.1")
+                    && err.contains("403")
+                    && err.contains("too many requests"),
+                "{err}"
+            );
+        });
+    }
+
     #[test]
     fn notes_become_plain_lines() {
         assert_eq!(
@@ -1257,6 +1789,30 @@ mod tests {
             .filter_map(|l| l.trim().strip_prefix("(\"")?.split('"').next())
             .collect();
         assert_eq!(codes, SITE_LANGS);
+    }
+
+    #[test]
+    fn the_contributors_page_is_the_websites_in_every_language() {
+        // English is at the root (SITE_LANGS leaves it out); the others get their folder, as
+        // page_url's pages do.
+        assert_eq!(
+            contributors_page("en"),
+            "https://misterdownloadmanager.com/contributors.html"
+        );
+        assert_eq!(
+            contributors_page("de"),
+            "https://misterdownloadmanager.com/de/contributors.html"
+        );
+        // A regional code reads its base language.
+        assert_eq!(
+            contributors_page("es-mx"),
+            "https://misterdownloadmanager.com/es/contributors.html"
+        );
+        // The site has Simplified Chinese only.
+        assert_eq!(
+            contributors_page("zh-hant"),
+            "https://misterdownloadmanager.com/contributors.html"
+        );
     }
 
     /// Every user guide page the program links to (`doc` as page_url takes it): the literal

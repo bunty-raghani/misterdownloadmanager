@@ -222,8 +222,48 @@ pub fn bar(
             px(&p, q.x, q.y, ink.gamma_multiply(a));
         }
     };
+    // Windows XP's: the arrows and the thumb on buttons of their own.
+    let look = crate::theme::current().controls.scroll;
+    if look == crate::palette::ScrollLook::Luna {
+        // The part from `u0` to `u1` along, the bar's whole width across, on screen.
+        let tile = |u0: f32, u1: f32| {
+            let (a, b) = (at(u0, 0.0), at(u1, THICK - 1.0));
+            Rect::from_min_max(
+                pos2(a.x.min(b.x), a.y.min(b.y)),
+                pos2(a.x.max(b.x) + 1.0, a.y.max(b.y) + 1.0),
+            )
+        };
+        luna_button(&p, tile(0.0, THICK - 1.0), ink_of(Part::First));
+        luna_button(&p, tile(len - THICK, len - 1.0), ink_of(Part::Second));
+        let glyph = crate::theme::colors().scroll_glyph;
+        // Each arrow's tip 6 in from the bar's end.
+        for (k, across) in CHEVRON.iter().enumerate() {
+            for d in *across {
+                for u in [6.0 + k as f32, len - 7.0 - k as f32] {
+                    let q = at(u, 8.0 + d);
+                    px(&p, q.x, q.y, glyph);
+                }
+            }
+        }
+        if thumb > 0.0 {
+            let face = ink_of(Part::Thumb);
+            luna_button(&p, tile(s, e), face);
+            // The grip: four short lines across its middle, each with a light one after it.
+            if thumb >= 20.0 {
+                let mid = ((s + e) / 2.0).floor();
+                let light = crate::derive::mix(face, crate::theme::colors().gloss, 0.7);
+                let dark = crate::derive::mix(face, glyph, 0.45);
+                for i in 0..4 {
+                    let u = mid - 4.0 + 2.0 * i as f32;
+                    span(at(u, 5.0), at(u, THICK - 7.0), dark);
+                    span(at(u + 1.0, 5.0), at(u + 1.0, THICK - 7.0), light);
+                }
+            }
+        }
+        return *pos != before;
+    }
     // Windows 8's and the classic bars: arrows always shown, a square thumb the bar's width.
-    let classic = crate::theme::current().controls.scroll == crate::palette::ScrollLook::Classic;
+    let classic = look == crate::palette::ScrollLook::Classic;
     let expanded = classic || resp.hovered() || resp.dragged();
     if thumb > 0.0 {
         if expanded {
@@ -264,6 +304,45 @@ pub fn bar(
         }
     }
     *pos != before
+}
+
+/// Windows XP's arrow, row by row from its tip: the pixels across, from the bar's middle (a
+/// chevron 9 pixels across, 5 along, its arms 2 thick).
+const CHEVRON: [&[f32]; 5] = [
+    &[0.0],
+    &[-1.0, 0.0, 1.0],
+    &[-2.0, -1.0, 1.0, 2.0],
+    &[-3.0, -2.0, 2.0, 3.0],
+    &[-4.0, -3.0, 3.0, 4.0],
+];
+
+/// One of Windows XP's scroll bar buttons (an arrow's or the thumb) in `rc`, on screen: its
+/// `face` lighter toward its top, a light line inside its edge, the edge in `scroll.edge`.
+fn luna_button(p: &egui::Painter, rc: Rect, face: Color32) {
+    use crate::derive::mix;
+    let c = crate::theme::colors();
+    crate::winui::fill_shaded(
+        p,
+        rc,
+        2.0,
+        &[
+            (0.0, mix(face, c.gloss, 0.45)),
+            (0.5, mix(face, c.gloss, 0.15)),
+            (1.0, face),
+        ],
+    );
+    p.rect_stroke(
+        rc.shrink(1.0),
+        1.0,
+        egui::Stroke::new(1.0, mix(face, c.gloss, 0.6)),
+        egui::StrokeKind::Inside,
+    );
+    p.rect_stroke(
+        rc,
+        2.0,
+        egui::Stroke::new(1.0, c.scroll_edge),
+        egui::StrokeKind::Inside,
+    );
 }
 
 /// The 17 × 17 square where a vertical and a horizontal bar meet, its top-left at English

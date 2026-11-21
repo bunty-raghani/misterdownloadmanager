@@ -322,6 +322,9 @@ Stamp Ink caps at width 70%, 900 weight, a 2.5px rule plus a 1.5px outline offse
 ### Language Dialog
 A Lift sheet, 12px corners, with an ink title band; a grid of flag, native name (isolated with `bdi`) and English name; the current language ringed in ink on Paper Grey. It slides up 14px over .28s on a navy backdrop.
 
+### Screenshot Viewer (lightbox)
+A screenshot opened big (the home page's window and tour, every help picture): Vitrine's lightbox ([anefzaoui/vitrine](https://github.com/anefzaoui/vitrine), vendored in `website/vitrine/`, themed in `styles.css` by its `--vitrine-` properties). The navy depot behind it in both themes (Board Deep Dark at 94% over a 20px blur of the page, 98.5% and no blur with reduced motion or transparency), so the page falls away and day and night screenshots both read; on-board white for the count (650 weight, tabular figures), the caption and the round 44px controls (10% white, 20% on hover), the focus ring in Link Blue Dark; the picture with its 8px screenshot corners, at its real size and never larger. It flies out of its place and back in 280ms on the label's curve; reduced motion fades it. The Language Dialog is a Vitrine modal ([anefzaoui/vitrine-modal](https://github.com/anefzaoui/vitrine-modal)).
+
 ### Coming Sticker (in transit)
 What is in the source but not in a download yet: a paper sticker, ink text, a 1.5px **dashed** ink rule just inside its edge (in transit, like the race's dashed lane before the file moves), a clock icon, "Coming with version 0.5" and a fine line naming the current release. Three sizes from one builder (`build.py coming_banner`): on a page (Sheet shadow, on the board), on a section (Paper Grey, inside prose), on a tile (a 12px tag). Never green: nothing is delivered yet. One setting (`UPCOMING`) shows or removes them all.
 
@@ -339,6 +342,12 @@ The people who make MDM possible, from GitHub's public record (`tools/contributo
 - **In the hero (the owner's choice: a "liked by" line):** on the board under the window's caption, beside the label (after the label and the caption under 980px). The title "Made possible by these amazing humans" in board text, 800 weight at width 78%; then one row of 44px photos that overlap by 8px, each ringed 2.5px in on-board so it reads on the blue board and the navy depot; then "+N", an on-board disc in board-coloured figures, which opens `/contributors.html`. The row shows 7, 11 or 15 photos by width (`PILE_TIERS`). Hover lifts a photo 3px; reduced motion keeps it still.
 - **On `/contributors.html`:** one labelled sheet per group (pull requests, issues, comments), its people in a ruled roster of 1px hairlines: a 48px photo ringed 1.5px in ink, the login at 750 weight, the counts in ink-2 with their numbers in tabular ink.
 - **At the end of each release on the News page:** "Thanks to", then 40px photos ringed in ink, row under row, and a fine line naming the release before.
+
+### Proof of Delivery (what others say)
+The home page's "Signed for" section (`build.py signed_sheet`), between the tracking race and the delivery options: one labelled sheet, "Proof of delivery" in its band with the date the figures were checked. First the figures as fields (four across from 981px, two, then one under 720px): the source as the field name, the figure at 19px/750 as an underlined link to where it was read, its fine print under it. Then the quotes in a ruled grid like the packing list (1px hairlines, a 1.5px ink rule above): each quote in its own language at 19px/600 with that language's own quotation marks (`quotes: auto`), our translation under it in ink-2 behind a 1px hairline, headed "Translated from …" as a field name and hidden where the page is in the quote's language; then a 1.5px ink rule and who said it, where (a link), and when in tabular figures. Real figures and exact quotes only (`website/content/quotes.tsv`); no stars, no portraits, no logos.
+
+### Press and Mentions
+`/press.html` (`build.py build_press`): the figures' sheet, then one labelled sheet each for articles and videos, grouped by language in the packing list's grammar (the language as the group's field name, each piece a ruled cell: its title in its own language and direction, the outlet and date under it, the arrow). The fair criticism sits on a reading sheet, its title as a citation. "Available on" lists the official places first, then the community's packages under their own group with a fine-print note that volunteers make them.
 
 ## Do's and Don'ts
 

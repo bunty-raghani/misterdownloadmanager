@@ -1,5 +1,9 @@
 # Build, lint and test main and every pull request: Windows and Linux, which must pass, and the
-# experimental macOS build (its failures are reported but don't fail the run).
+# experimental macOS build (its failures are reported but don't fail the run). The other processors
+# MDM is published for (Windows on ARM and Linux on ARM on GitHub's ARM runners; 32-bit Windows on
+# the x64 runner, whose 64-bit Windows runs its tests too) on main and when run by hand only: on
+# every pull request they would add about an hour of runners, and their caches would push x64's
+# out of the repository's 10 GB. A pull request never saves their caches, as it never runs them.
 name: CI
 
 # Pushes to main only: a pull request's branch is tested once as the pull request (a bare push:
@@ -22,6 +26,8 @@ on:
       - "i18n/site/**"
       - "docs/**"
       - "**/*.md"
+  # Actions -> CI -> Run workflow: every processor, on any branch.
+  workflow_dispatch:
 
 # A newer commit on a pull request makes its older run moot: cancel it (main runs to the end).
 concurrency:
@@ -36,72 +42,108 @@ env:
 
 jobs:
   rust:
-    name: ${{ matrix.os }}
+    name: ${{ matrix.name || matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - os: windows-latest
-          - os: ubuntu-latest
-          - os: macos-latest
-            experimental: true
+        # x64 on pull requests; with Windows on ARM, Linux on ARM and 32-bit Windows on main and
+        # by hand.
+        include: ${{ fromJSON(github.event_name == 'pull_request' && '[{"os":"windows-latest"},{"os":"ubuntu-latest"},{"os":"macos-latest","experimental":true}]' || '[{"os":"windows-latest"},{"os":"ubuntu-latest"},{"os":"macos-latest","experimental":true},{"os":"windows-11-arm","name":"windows-arm64"},{"os":"ubuntu-24.04-arm","name":"linux-arm64"},{"os":"windows-latest","name":"windows-x86","target":"i686-pc-windows-msvc"}]') }}
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.experimental == true }}
     # A cold build takes about 10 minutes; a hung runner (apt-get once hung for hours) is cut off
     # instead of running to GitHub's 6 hours.
-    timeout-minutes: 45
+    timeout-minutes: 60
+    env:
+      # 32-bit Windows: built for its target on the x64 runner (empty: the runner's own).
+      TARGET_ARGS: ${{ matrix.target && format('--target {0}', matrix.target) || '' }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
 
-      # rust-toolchain.toml picks stable with rustfmt and clippy.
+      # rust-toolchain.toml picks stable with rustfmt and clippy. Windows on ARM's runner may
+      # come without rustup: it is installed there (rustup's own installer for the machine).
+      - name: rustup
+        if: runner.os == 'Windows' && runner.arch == 'ARM64'
+        shell: pwsh
+        run: |
+          if (Get-Command rustup -ErrorAction SilentlyContinue) { exit 0 }
+          $url = "https://static.rust-lang.org/rustup/dist/aarch64-pc-windows-msvc/rustup-init.exe"
+          $exe = "$env:RUNNER_TEMP\rustup-init.exe"
+          Invoke-WebRequest $url -OutFile $exe
+          $want = (Invoke-WebRequest "$url.sha256").Content.Split()[0]
+          if ((Get-FileHash $exe -Algorithm SHA256).Hash -ne $want) { throw "rustup-init's checksum doesn't match" }
+          & $exe -y --default-toolchain none --profile minimal
+          if ($LASTEXITCODE) { throw "rustup-init failed" }
+          "$env:USERPROFILE\.cargo\bin" >> $env:GITHUB_PATH
+
       - name: Toolchain
         run: rustup show active-toolchain || rustup toolchain install
 
-      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      - name: Target
+        if: matrix.target
+        run: rustup target add ${{ matrix.target }}
+
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
             target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-cargo-
+          key: ${{ runner.os }}-${{ runner.arch }}${{ matrix.target }}-cargo-${{ hashFiles('Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-${{ runner.arch }}${{ matrix.target }}-cargo-
 
-      # BoringSSL, under the browser-like connection (#668, crates/engine/src/browserlike.rs), is
-      # built with NASM on Windows; the runner has CMake and LLVM's libclang already.
+      # BoringSSL, under the browser-like connection (#668, crates/engine/src/browserlike.rs),
+      # and AWS-LC are built with NASM on x64 and 32-bit Windows; the runner has CMake and LLVM's
+      # libclang already. Windows on ARM needs no NASM: its assembly is built by clang.
       - name: NASM
-        if: runner.os == 'Windows'
+        if: runner.os == 'Windows' && runner.arch != 'ARM64'
         shell: pwsh
         run: |
           choco install nasm --version 2.16.3 --no-progress -y
           "C:\Program Files\NASM" >> $env:GITHUB_PATH
 
+      # Windows on ARM: LLVM (clang and libclang) for BoringSSL's and AWS-LC's assembly and
+      # bindings, where the runner hasn't it.
+      - name: LLVM
+        if: runner.os == 'Windows' && runner.arch == 'ARM64'
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "C:\Program Files\LLVM\bin\clang-cl.exe")) {
+            choco install llvm --no-progress -y
+          }
+          "C:\Program Files\LLVM\bin" >> $env:GITHUB_PATH
+          "LIBCLANG_PATH=C:\Program Files\LLVM\bin" >> $env:GITHUB_ENV
+
       - name: Linux libraries
         if: runner.os == 'Linux'
-        timeout-minutes: 10
+        # A slow mirror once took over 10 minutes three times in a row (#1429): each download is
+        # retried and given its own time, and the step as a whole still ends.
+        timeout-minutes: 20
         run: |
+          echo 'Acquire::Retries "3"; Acquire::http::Timeout "30"; Acquire::https::Timeout "30";' | sudo tee /etc/apt/apt.conf.d/80-mdm-ci >/dev/null
           sudo apt-get update
           sudo apt-get install -y libgtk-3-dev libxkbcommon-dev libwayland-dev libgl1-mesa-dev \
             libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev cmake libclang-dev
 
       - name: Format
-        if: runner.os == 'Windows'
+        if: matrix.os == 'windows-latest' && !matrix.target
         run: cargo fmt --all --check
 
       # A text added to the code without running tools/i18n/extract.py fails here; missing
       # translations don't (they show in English until tools/i18n/translate.py runs).
       - name: English catalog matches the code
-        if: runner.os == 'Windows'
+        if: matrix.os == 'windows-latest' && !matrix.target
         run: |
           python tools/i18n/extract.py
           git diff --exit-code -- i18n/en.tsv
 
       - name: Clippy
-        run: cargo clippy --workspace --all-targets -- -D warnings
+        run: cargo clippy --workspace --all-targets ${{ env.TARGET_ARGS }} -- -D warnings
 
       - name: Tests
-        run: cargo test --workspace
+        run: cargo test --workspace ${{ env.TARGET_ARGS }}
 
       # Safari's extension (macOS): its native half relays to the helper from inside the
       # sandbox Safari makes it run in. Safari itself isn't needed.
@@ -132,11 +174,19 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
       - name: Logic against fake Firefox and Chrome APIs
         run: node tools/extension/test.mjs
+
+      # The committed locale files are the catalogs' output: a text added to English's
+      # messages.json without translate.py, or a catalog fix not regenerated, shows here,
+      # like "English catalog matches the code" does for i18n/en.tsv.
+      - name: Locale files match the catalogs
+        run: |
+          python3 tools/extension/locales.py
+          git diff --exit-code -- extension/_locales
 
       # Chrome, Edge, Brave, Opera, Vivaldi (mdm-chromium.zip), Firefox (mdm-firefox.xpi) and
       # the Chrome Web Store's copy (mdm-chrome-store.zip).
@@ -147,7 +197,7 @@ jobs:
       - name: Check the packages
         run: node tools/extension/check-pack.mjs
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: extension
           path: |

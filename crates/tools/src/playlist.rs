@@ -7,7 +7,6 @@
 //! Bounded on purpose: at most [`MAX_ENTRIES`] entries are kept, a line longer than
 //! [`MAX_LINE`] is skipped, and nothing here recurses.
 
-use std::io::{BufRead, BufReader, Read};
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 
@@ -158,7 +157,12 @@ impl Listing {
             let (shared, child) = (shared.clone(), child.clone());
             std::thread::spawn(move || {
                 let _cookies = cookies;
-                read(stdout, &shared, from);
+                // To yt-dlp's end (#1521: not to that of whatever it started).
+                let mut output = proc::Output::read(stdout, MAX_LINE);
+                read(|| output.next_line(|| proc::ended(&child)), &shared, from);
+                if output.held_open() {
+                    proc::note_held_open("yt-dlp");
+                }
                 // yt-dlp's end: its own failure (a wrong address, a site that stopped answering).
                 let capped = shared
                     .lock()
@@ -231,23 +235,14 @@ impl Drop for Listing {
 }
 
 /// Read yt-dlp's lines into `shared` until it ends, the list is capped, or it's stopped.
-fn read(stdout: impl Read, shared: &Mutex<Shared>, from: u64) {
-    let mut reader = BufReader::new(stdout);
-    let mut buf = Vec::new();
+fn read(mut next: impl FnMut() -> Option<Vec<u8>>, shared: &Mutex<Shared>, from: u64) {
     let mut next_index = from;
-    loop {
-        buf.clear();
-        // A line read up to MAX_LINE; the rest of a longer one is skipped.
-        let n = match (&mut reader)
-            .take(MAX_LINE as u64)
-            .read_until(b'\n', &mut buf)
-        {
-            Ok(0) | Err(_) => return,
-            Ok(n) => n,
-        };
-        if n == MAX_LINE && buf.last() != Some(&b'\n') {
-            let mut skip = Vec::new();
-            let _ = reader.read_until(b'\n', &mut skip);
+    // The rest of a line longer than MAX_LINE (it comes MAX_LINE bytes at a time): skipped.
+    let mut skipping = false;
+    while let Some(buf) = next() {
+        let whole = buf.last() == Some(&b'\n');
+        if skipping || (buf.len() >= MAX_LINE && !whole) {
+            skipping = !whole;
             continue;
         }
         let Some((entry, total, title)) = parse_line(&buf, next_index) else {
@@ -307,6 +302,12 @@ mod tests {
         assert!(parse_line(br#"{"url": "file:///etc/passwd", "title": "x"}"#, 1).is_none());
     }
 
+    /// `text` read as yt-dlp's output is ([`proc::Output`]).
+    fn read_text(text: String, shared: &Mutex<Shared>) {
+        let mut output = proc::Output::read(std::io::Cursor::new(text.into_bytes()), MAX_LINE);
+        read(|| output.next_line(|| false), shared, 1);
+    }
+
     /// Thousands of lines, a giant one among them, and garbage: read in order, the giant one
     /// skipped, the list capped at MAX_ENTRIES, and quickly (no quadratic step).
     #[test]
@@ -330,7 +331,7 @@ mod tests {
         };
         let text = lines(MAX_ENTRIES + 500, true);
         let shared = Mutex::new(Shared::default());
-        read(text.as_bytes(), &shared, 1);
+        read_text(text, &shared);
         let sh = shared.lock().unwrap();
         assert_eq!(sh.entries.len(), MAX_ENTRIES);
         assert!(sh.progress.capped);
@@ -338,11 +339,12 @@ mod tests {
             sh.entries[3].title, "Video 4",
             "the giant line skipped, order kept"
         );
-        // 8 times the lines cost about 8 times as long (not 64), on any machine.
+        // A list 16 times as long costs about as much as 16 short lists (a square: 16 times as
+        // much), on any machine; the long one under the cap, read to its end.
         mdm_labserver::growth::assert_linear(
-            MAX_ENTRIES / 10,
+            (MAX_ENTRIES - 1) / mdm_labserver::growth::SCALE,
             |n| (lines(n, false), Mutex::new(Shared::default())),
-            |(text, shared)| read(text.as_bytes(), &shared, 1),
+            |(text, shared)| read_text(text, &shared),
         );
     }
 }

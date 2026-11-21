@@ -24,8 +24,8 @@ foreach ($kind in "chromium", "firefox", "safari") {
   if (Test-Path $dir) { Remove-Item -LiteralPath $dir -Recurse -Force }
   New-Item -ItemType Directory -Force $dir | Out-Null
   # The background part; the download button over videos and the Alt-click watcher (content
-  # scripts in every page); the toolbar button's popup.
-  foreach ($f in "background.js", "video.js", "page.js", "popup.html", "popup.css", "popup.js") {
+  # scripts in every page); the toolbar button's popup (its shared pieces, its Downloads tab).
+  foreach ($f in "background.js", "video.js", "page.js", "popup.html", "popup.css", "popup.js", "popup-ui.js", "popup-downloads.js") {
     Copy-Item (Join-Path $src $f) $dir
   }
   Copy-Item (Join-Path $src "icons") (Join-Path $dir "icons") -Recurse

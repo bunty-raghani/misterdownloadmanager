@@ -66,6 +66,14 @@ pub fn lang() -> Lang {
     if let Some(l) = *CURRENT.read().unwrap() {
         return l;
     }
+    // A test asserts the texts it reads: the interface language must not depend on the machine
+    // the tests run on (Windows' display language is Chinese on many contributors' PCs, where
+    // every English assertion failed). Tests that want another language set one.
+    #[cfg(test)]
+    let l = i18n()
+        .from_code("en")
+        .unwrap_or_else(|| i18n().system_lang());
+    #[cfg(not(test))]
     let l = i18n().system_lang();
     use_lang(l);
     l

@@ -698,7 +698,23 @@ impl RssWindow {
                 rule.feeds.push(id);
             }
         }
-        if rule.feeds.is_empty() {
+        // Turned off when its feeds were removed: said until a feed is ticked or it is on again.
+        if rule.enabled || !rule.feeds.is_empty() {
+            rule.feeds_gone = false;
+        }
+        if rule.feeds_gone {
+            winui::fit(
+                ui,
+                &p,
+                o.x + 380.0,
+                o.y + 356.0,
+                // i18n: RSS feeds window, Download rules: under the rule's feeds; the rule was turned off because every feed it watched was removed
+                crate::i18n::t("Off: the feeds it watched were removed."),
+                winui::MUTED(),
+                o.x + 740.0,
+                ("rss", 4),
+            );
+        } else if rule.feeds.is_empty() {
             winui::text(
                 &p,
                 o.x + 380.0,

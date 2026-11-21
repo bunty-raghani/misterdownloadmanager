@@ -9,7 +9,11 @@ Everything can be done from the keyboard, and MDM works with screen readers (suc
 Narrator and NVDA on Windows): its windows, dialogs and menus tell them what each control is
 and its state, and the download list reads each download's name, status and size. The
 **Categories** pane reads as a tree (each category with its count, open or shut, selected or
-not), and the menu bar and every right-click menu as menus whose items can be run from there.
+not), the toolbar as a toolbar of buttons, the strip under the list as a status bar (NVDA reads
+it with **NVDA+End**), and the menu bar and every right-click menu as menus whose items can be
+run from there. **Tab** goes round the toolbar, the **Categories** tree and the download list;
+in each, the screen reader says the button, category or download the keys are on, and follows
+them as the arrows move.
 On Linux, screen readers (Orca) don't read MDM's windows yet; the keyboard works there as
 everywhere.
 
@@ -31,8 +35,8 @@ everywhere.
 | **Alt+Enter** | **Properties** of the selected download |
 | **Ctrl+M** or **F2** | Move or rename the selected download |
 | **Shift+F10** or the **Menu** key | Open the selected download's menu |
-| **Delete** | Delete the selected downloads (asks first) |
-| **Shift+Delete** | Delete the selected downloads and their files (asks first) |
+| **Delete** | Delete the selected downloads from the list (asks first, unless you turned the question off; their files stay unless you tick the box) |
+| **Shift+Delete** | Delete the selected downloads and their files (always asks first) |
 
 ## Selecting
 
@@ -48,10 +52,21 @@ everywhere.
 | **Ctrl+Space** | Select or unselect the download with the dotted outline |
 | **Page Up** / **Page Down** | Move a page up / down |
 | **Home** / **End** | Select the first / last download |
-| **Tab** / **Shift+Tab** | Move between the download list and the Categories tree |
+| **Tab** / **Shift+Tab** | Move between the toolbar, the Categories tree and the download list |
 
 In the **Categories** tree, **Up** / **Down** choose a node, **Left** / **Right** close and open
 a branch, and **Home** / **End** go to the first / last node.
+
+## The toolbar
+
+**Tab** reaches the toolbar from the download list (**Shift+Tab** from the **Categories** tree).
+
+| Keys | What they do |
+|---|---|
+| **Left** / **Right** | The previous / next button (greyed ones too: a screen reader says they are unavailable) |
+| **Home** / **End** | The first / last button |
+| **Enter** or **Space** | Press the button |
+| **Down**, **Alt+Down** or **F4** | Open the button's menu (**Add Torrent**, **Start Queue**, **Stop Queue**) |
 
 ## Menus and windows
 
@@ -65,7 +80,7 @@ a branch, and **Home** / **End** go to the first / last node.
 | **Enter**, or an item's underlined letter | Run the highlighted item |
 | **Esc** | Close a menu or dialog (an open drop-down list first) |
 | **Enter** | In **Download File Info**: **Start Download** |
-| **Tab** | Move between the **Categories** pane and the download list |
+| **Tab** | Move between the toolbar, the **Categories** pane and the download list |
 | **Up** / **Down**, **Left** / **Right** | In the **Categories** pane: the next category; close or open a branch |
 | **Shift+F10** or the **Menu** key | In the **Categories** pane: the selected category's menu (**Properties**, **Add category**, **Delete**) |
 | **Ctrl++** / **Ctrl+−** | Make everything larger / smaller, in every window (**View → Interface size**, 100 % to 200 %) |

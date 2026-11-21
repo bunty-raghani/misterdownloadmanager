@@ -14,6 +14,143 @@ pub enum WindowSystemPick {
     Wayland,
 }
 
+/// Options → Proxy / Socks → Manual → Type (#1558): what the proxy speaks.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ProxyKind {
+    /// An HTTP proxy (`http://`): web addresses only, for the ticked schemes.
+    #[default]
+    Http,
+    /// An HTTP proxy reached over TLS (`https://`).
+    Https,
+    /// SOCKS5 (`socks5://`, `socks5h://` with the names looked up through it), with a login.
+    Socks5,
+    /// SOCKS4 (`socks4://`, `socks4a://` with the names looked up through it), no login.
+    Socks4,
+}
+
+impl ProxyKind {
+    /// In Type's order.
+    pub const ALL: [ProxyKind; 4] = [
+        ProxyKind::Http,
+        ProxyKind::Https,
+        ProxyKind::Socks5,
+        ProxyKind::Socks4,
+    ];
+
+    /// Its name in Type (a protocol's name: the same in every language).
+    pub fn label(self) -> &'static str {
+        match self {
+            ProxyKind::Http => "HTTP",
+            ProxyKind::Https => "HTTPS",
+            ProxyKind::Socks5 => "SOCKS5",
+            ProxyKind::Socks4 => "SOCKS4",
+        }
+    }
+
+    /// A SOCKS proxy carries every connection (web, FTP, torrents), not only web addresses.
+    pub fn is_socks(self) -> bool {
+        matches!(self, ProxyKind::Socks5 | ProxyKind::Socks4)
+    }
+
+    /// Whether it takes a user name and password (SOCKS4 has none).
+    pub fn has_login(self) -> bool {
+        self != ProxyKind::Socks4
+    }
+
+    /// The address's scheme; `remote_dns`: the proxy looks the site's name up (socks5h,
+    /// socks4a), so this computer's DNS never sees it.
+    pub fn scheme(self, remote_dns: bool) -> &'static str {
+        match (self, remote_dns) {
+            (ProxyKind::Http, _) => "http",
+            (ProxyKind::Https, _) => "https",
+            (ProxyKind::Socks5, true) => "socks5h",
+            (ProxyKind::Socks5, false) => "socks5",
+            (ProxyKind::Socks4, true) => "socks4a",
+            (ProxyKind::Socks4, false) => "socks4",
+        }
+    }
+
+    /// The kind (and whether names go through it) an address's scheme names: `socks5://host`,
+    /// typed before Type existed, reads as SOCKS5 with the names looked up here, as it worked
+    /// then. None: a scheme that isn't a proxy's.
+    pub fn from_scheme(scheme: &str) -> Option<(ProxyKind, bool)> {
+        Some(match scheme.to_ascii_lowercase().as_str() {
+            "http" => (ProxyKind::Http, true),
+            "https" => (ProxyKind::Https, true),
+            "socks5h" => (ProxyKind::Socks5, true),
+            "socks5" | "socks" => (ProxyKind::Socks5, false),
+            "socks4a" => (ProxyKind::Socks4, true),
+            "socks4" => (ProxyKind::Socks4, false),
+            _ => return None,
+        })
+    }
+}
+
+/// What Get System fills Manual with (#1558): the type, address, port and the http / https
+/// boxes.
+#[derive(Clone, Debug, PartialEq, Eq)]
+#[cfg_attr(not(windows), allow(dead_code))]
+pub struct SystemProxy {
+    pub kind: ProxyKind,
+    pub host: String,
+    pub port: String,
+    pub http: bool,
+    pub https: bool,
+}
+
+/// Windows' `ProxyServer` value (`host:port`, or `http=host:port;https=…;socks=…`) as Get System
+/// reads it: the HTTP proxy when there is one (a lone `host:port` serves every scheme), else the
+/// SOCKS one. Windows doesn't say which SOCKS version its `socks=` speaks: SOCKS5 is taken (what
+/// Tor, `ssh -D` and proxy programs speak); Type can say SOCKS4.
+// Get System reads Windows' settings only (options.rs); the parser is tested on every system.
+#[cfg_attr(not(windows), allow(dead_code))]
+pub fn parse_system_proxy(server: &str) -> Option<SystemProxy> {
+    let entries: Vec<&str> = server
+        .split(';')
+        .map(str::trim)
+        .filter(|e| !e.is_empty())
+        .collect();
+    let named = |key: &str| {
+        entries.iter().find_map(|e| {
+            let (k, v) = e.split_once('=')?;
+            k.trim().eq_ignore_ascii_case(key).then(|| v.trim())
+        })
+    };
+    let split = |at: &str| -> Option<(String, String)> {
+        // `http://host:port` is read too (some programs write the scheme).
+        let at = at.split_once("://").map_or(at, |(_, rest)| rest);
+        let (host, port) = at.trim_end_matches('/').rsplit_once(':')?;
+        Some((host.to_owned(), port.to_owned()))
+    };
+    let http_proxy = |host, port, http, https| SystemProxy {
+        kind: ProxyKind::Http,
+        host,
+        port,
+        http,
+        https,
+    };
+    if let Some(plain) = entries.iter().find(|e| !e.contains('=')) {
+        let (host, port) = split(plain)?;
+        return Some(http_proxy(host, port, true, true));
+    }
+    let (http, https) = (named("http"), named("https"));
+    if let Some(at) = http.or(https) {
+        let (host, port) = split(at)?;
+        // Only the schemes whose proxy is this one are ticked.
+        let same = |o: Option<&str>| o.is_some_and(|o| split(o) == split(at));
+        return Some(http_proxy(host, port, same(http), same(https)));
+    }
+    let (host, port) = split(named("socks")?)?;
+    Some(SystemProxy {
+        kind: ProxyKind::Socks5,
+        host,
+        port,
+        http: true,
+        https: true,
+    })
+}
+
 /// A debrid service account (#44), as Options → Accounts keeps it.
 #[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(default)]
@@ -95,11 +232,14 @@ pub struct Settings {
     pub complete_snoozed_until: Option<i64>,
     /// List right-click → On Double click: Open (true) or Properties (IDM default).
     pub double_click_open: bool,
-    /// Ask before deleting downloads ("Don't show this dialog again" clears it).
+    /// Ask before deleting downloads ("Don't show this dialog again" clears it). Off, Delete only
+    /// takes downloads off the list: deleting files from the disk always asks (#1563).
+    ///
+    /// Its "Also delete the files from disk" is never remembered: it starts unticked, or ticked
+    /// for one Shift+Delete. Lists before #1563 saved the last answer as `delete_files_too`,
+    /// which made every later delete (and, with this off, one never asked) take the finished
+    /// files too; that key is no longer read, and goes with the next save.
     pub confirm_delete: bool,
-    /// The confirmation's "Also delete the files from disk", as last answered (IDM keeps it):
-    /// its first state next time, and what happens when it no longer asks.
-    pub delete_files_too: bool,
     /// Categories pane frame width (IDM: 143, frame x 6..149); dragged with the splitter.
     pub categories_width: u32,
     /// The main window as last left: position and size (x, y, width, height, in points at 100 %
@@ -168,6 +308,10 @@ pub struct Settings {
     /// closing quits). On by default, for existing lists too, in every copy. Only where a tray
     /// shows MDM's icon.
     pub close_to_tray: bool,
+    /// General: a private (incognito) window's downloads are written to the saved list like any
+    /// other, so they survive MDM closing or restarting (their cookies stay in memory, as every
+    /// download's do). Off by default: they live in memory only, as the browser keeps them.
+    pub keep_private_downloads: bool,
     /// General (#558): global keyboard shortcut to show or hide the main window (e.g. `Cmd+U`,
     /// `Shift+Cmd+M`, `Ctrl+Alt+D`); empty when none is set.
     #[serde(default)]
@@ -185,6 +329,10 @@ pub struct Settings {
     /// sites it stays off (space separated; the native host reads both, mdm_ipc::capture).
     pub video_panel: bool,
     pub video_panel_sites: String,
+    /// General → Download panels → Button size (#1278): Compact shows the button as its round
+    /// form (the logo, the arrow, the ✕) over every video; Full (false, the default) shows its
+    /// words where they fit and the round form only on a small video. The host reads it too.
+    pub video_panel_compact: bool,
     /// General: also take the listed types the browser would open itself (a PDF in its viewer,
     /// an MP3 in its player); holding Alt while clicking leaves one to the browser.
     pub capture_opened: bool,
@@ -234,9 +382,19 @@ pub struct Settings {
     /// Sealed on disk like Sites Logins' passwords (`sealed`); a plain one from before still reads.
     #[serde(with = "sealed")]
     pub proxy_pass: String,
+    /// Options → Archives → Archive passwords (#37): tried in this order on an encrypted archive
+    /// before its password is asked, one a line. Kept in the keychain as the other passwords.
+    #[serde(with = "sealed")]
+    pub archive_passwords: String,
     pub proxy_http: bool,
     pub proxy_https: bool,
     pub proxy_ftp: bool,
+    /// Manual → Type (#1558). An address typed with its scheme (`socks5://host`, before Type
+    /// existed) says it instead ([`Settings::manual_proxy`]).
+    pub proxy_kind: ProxyKind,
+    /// Manual → "Look up site names through the proxy" (SOCKS: socks5h, socks4a), on by
+    /// default: this computer's DNS never sees the sites' names.
+    pub proxy_remote_dns: bool,
     /// Connection → DNS (#36): 0 the system's, 1 plain DNS, 2 DNS over TLS, 3 DNS over HTTPS.
     pub dns_mode: u8,
     /// A service of `mdm_engine::dns::PRESETS` by id, or "custom".
@@ -287,14 +445,29 @@ pub struct Settings {
     /// Torrents keep sharing after they finish (D-018: off; a finished torrent stops, like any
     /// download).
     pub torrent_keep_sharing: bool,
-    /// Windows opens magnet links and .torrent files with MDM (D-018: opt-in, current user).
-    pub torrent_associations: bool,
+    /// Torrent settings' "Open magnet links and .torrent files with Mister Download Manager":
+    /// the system opens them with MDM (D-018: opt-in, current user), and the browser hands a
+    /// .torrent download over (#1058: off, it stays with the browser for the user's own torrent
+    /// client). None: never decided, settled once at the first start (`settle_torrent_handler`)
+    /// and saved. Saved as `torrent_handler`, which mdm_ipc::capture::CaptureRules reads (None
+    /// there: taken, as before): every list before #1058 saved `torrent_associations: false`,
+    /// unticked and never looked at alike.
+    #[serde(rename = "torrent_handler")]
+    pub torrent_associations: Option<bool>,
+    /// The switch as lists before #1058 saved it, read only: true was the user's tick; false
+    /// says nothing (`settle_torrent_handler`).
+    #[serde(rename = "torrent_associations", skip_serializing)]
+    pub torrent_associations_before: bool,
     /// Torrent settings → Network (#40, `torrent_config`): accept incoming connections, map
     /// the port with the router's UPnP, a fixed port (0: any, picked at each start), the DHT,
     /// finding peers on the local network.
     pub torrent_incoming: bool,
     pub torrent_upnp: bool,
     pub torrent_port: u16,
+    /// Torrent settings → "Connect over uTP too" (#1384): BitTorrent over UDP beside TCP, on by
+    /// default (a list saved before it has none: on too). It needs the listening port (librqbit's
+    /// uTP socket is the listener's), and a proxy turns it off (SOCKS5 carries TCP only).
+    pub torrent_utp: bool,
     pub torrent_dht: bool,
     pub torrent_lsd: bool,
     /// Torrents go through Proxy / Socks' SOCKS5 proxy (a manual `socks5://` one only).
@@ -339,6 +512,10 @@ pub struct Settings {
     /// browser's last used). A settings file from before has neither: off.
     pub video_cookies: String,
     pub video_cookies_profile: String,
+    /// Options → Sites Logins → Use my yt-dlp config file: yt-dlp also reads its own config
+    /// file, and MDM's arguments still win over it. Off; a settings file from before has none:
+    /// off.
+    pub ytdlp_config: bool,
     /// Options → Archives (#37): extract an archive when its download completes (a Link grabber
     /// package says so itself). Off, as a browser leaves archives alone.
     pub extract_auto: bool,
@@ -347,6 +524,10 @@ pub struct Settings {
     /// Extract in place with HatchZip when it is installed: the archive is removed while its
     /// files come out, so only they need room (large downloads on a nearly full disk). Off.
     pub extract_in_place: bool,
+    /// Options → Archives → Use another program... (#1525): the 7-Zip command line program
+    /// chosen for 7z and RAR archives (PeaZip's own, a portable copy); empty: the one MDM
+    /// finds (`extractq::seven_zip_for`).
+    pub seven_zip_path: String,
     /// Into a folder named after the archive: 0 when it holds several things at its top (smart),
     /// 1 always, 2 never.
     pub extract_subfolder: u8,
@@ -408,7 +589,6 @@ impl Default for Settings {
             complete_snoozed_until: None,
             double_click_open: false,
             confirm_delete: true,
-            delete_files_too: false,
             categories_width: 143,
             window: None,
             window_maximized: false,
@@ -434,6 +614,7 @@ impl Default for Settings {
             clipboard_autostart: true,
             minimize_to_tray: true,
             close_to_tray: true,
+            keep_private_downloads: false,
             show_hide_hotkey: String::new(),
             mv2_extensions: true,
             advanced_integration: true,
@@ -443,6 +624,7 @@ impl Default for Settings {
             excluded_addresses: Vec::new(),
             video_panel: true,
             video_panel_sites: String::new(),
+            video_panel_compact: false,
             capture_opened: true,
             capture_min_kb: 0,
             regional: crate::regional::Regional::default(),
@@ -469,9 +651,12 @@ impl Default for Settings {
             proxy_port: String::new(),
             proxy_user: String::new(),
             proxy_pass: String::new(),
+            archive_passwords: String::new(),
             proxy_http: false,
             proxy_https: false,
             proxy_ftp: false,
+            proxy_kind: ProxyKind::Http,
+            proxy_remote_dns: true,
             dns_mode: 0,
             dns_provider: "cloudflare".into(),
             dns_servers: String::new(),
@@ -491,10 +676,12 @@ impl Default for Settings {
             remote_port: mdm_remote::PORT,
             remote_listen: String::new(),
             torrent_keep_sharing: false,
-            torrent_associations: false,
+            torrent_associations: None,
+            torrent_associations_before: false,
             torrent_incoming: true,
             torrent_upnp: true,
             torrent_port: 0,
+            torrent_utp: true,
             torrent_dht: true,
             torrent_lsd: true,
             torrent_proxy: false,
@@ -516,9 +703,11 @@ impl Default for Settings {
             video_chapters: true,
             video_cookies: String::new(),
             video_cookies_profile: String::new(),
+            ytdlp_config: false,
             extract_auto: false,
             extract_delete: false,
             extract_in_place: false,
+            seven_zip_path: String::new(),
             extract_subfolder: 0,
             grabber_check: true,
             grabber_hide_pages: true,
@@ -529,6 +718,26 @@ impl Default for Settings {
 }
 
 impl Settings {
+    /// #1058: Torrent settings' switch as the user chose it, for a list that never decided it
+    /// (None): ticked in an earlier version (a saved true was the user's), else what the
+    /// installer's task left (`installer`: ticked or not; None for a portable copy or no
+    /// installer), else whether this program is what the system opens .torrent files with now
+    /// (`registered`, asked only then). Once decided, the box and the browser's hand-off follow
+    /// the saved value only: a later look at the system would tick it again after the user
+    /// unticked it while everyone's association (HKLM) stays. True when it changed (to save).
+    pub fn settle_torrent_handler(
+        &mut self,
+        installer: Option<bool>,
+        registered: impl FnOnce() -> bool,
+    ) -> bool {
+        if self.torrent_associations.is_some() {
+            return false;
+        }
+        let on = self.torrent_associations_before || installer.unwrap_or_else(registered);
+        self.torrent_associations = Some(on);
+        true
+    }
+
     /// The settings as the list file writes them (#44, secrets.rs): each secret's field holds
     /// its keychain reference once the keychain holds it, else the secret sealed as before
     /// (and the keychain is asked to take it). Serialized inside `secrets::prepared`, where these
@@ -563,6 +772,17 @@ impl Settings {
             },
             &self.proxy_pass,
         );
+        disk.archive_passwords = kept(
+            "archives/passwords".into(),
+            &|| {
+                format!(
+                    "Mister Download Manager: {}",
+                    // i18n: the list of archive passwords in the system's keychain (Credential Manager, the keyring): its name there
+                    crate::i18n::t("archive passwords")
+                )
+            },
+            &self.archive_passwords,
+        );
         for (a, d) in self.debrid_accounts.iter().zip(&mut disk.debrid_accounts) {
             d.secret = kept(
                 format!("debrid/{}", a.id),
@@ -587,6 +807,23 @@ impl Settings {
         disk
     }
 
+    /// Options → Archives' passwords, in the order they are tried.
+    pub fn archive_password_list(&self) -> Vec<String> {
+        password_lines(&self.archive_passwords)
+    }
+
+    /// `password` first in that list (added, or moved up): it opened an archive, or the user
+    /// asked to remember it.
+    pub fn remember_archive_password(&mut self, password: &str) {
+        if password.is_empty() || password.contains(['\n', '\r']) {
+            return;
+        }
+        let mut list = self.archive_password_list();
+        list.retain(|p| p != password);
+        list.insert(0, password.to_owned());
+        self.archive_passwords = list.join("\n");
+    }
+
     /// Options → Archives' folder choice, for mdm-extract.
     pub fn extract_into(&self) -> mdm_extract::Subfolder {
         match self.extract_subfolder {
@@ -595,6 +832,17 @@ impl Settings {
             _ => mdm_extract::Subfolder::Smart,
         }
     }
+}
+
+/// The passwords of a list typed one a line: blank lines out, each once, spaces kept (a password
+/// may have them).
+pub fn password_lines(text: &str) -> Vec<String> {
+    let mut seen = std::collections::HashSet::new();
+    text.lines()
+        .filter(|l| !l.trim().is_empty())
+        .filter(|l| seen.insert(l.to_string()))
+        .map(str::to_owned)
+        .collect()
 }
 
 /// FNV-1a: a stable hash (std's may change between builds), for keychain keys.
@@ -666,22 +914,43 @@ impl Settings {
         crate::model::category_folder(cat, downloads, &self.category_dirs)
     }
 
-    /// Options → Proxy / Socks for the engine. An automatic configuration script (PAC) is run
-    /// once it has been fetched (pacfetch.rs); until then, the system's settings.
-    /// The SOCKS5 proxy torrents may use: Proxy / Socks' manual one when its address is a
-    /// `socks5://` (or `socks5h://`) one, with its login; librqbit takes no other kind.
-    pub fn socks5_proxy(&self) -> Option<String> {
-        let host = self.proxy_host.trim();
-        let (scheme, rest) = host.split_once("://")?;
-        if self.proxy_mode != 3
-            || !matches!(scheme.to_ascii_lowercase().as_str(), "socks5" | "socks5h")
-        {
+    /// Manual proxy/socks configuration as it is set (#1558): its type, whether names are looked
+    /// up through it, and its address without a scheme (`host` or `host:port`). An address
+    /// typed with a proxy's scheme (`socks5://host`, as the docs said before Type) says the type
+    /// itself. None when no address is typed.
+    pub fn manual_proxy(&self) -> Option<(ProxyKind, bool, String)> {
+        let host = self.proxy_host.trim().trim_end_matches('/');
+        if host.is_empty() {
             return None;
         }
-        let mut url = url::Url::parse(&format!("{}://{rest}", scheme.to_ascii_lowercase())).ok()?;
-        if let Ok(port) = self.proxy_port.trim().parse::<u16>() {
-            let _ = url.set_port(Some(port));
+        let typed = host
+            .split_once("://")
+            .and_then(|(scheme, rest)| Some((ProxyKind::from_scheme(scheme)?, rest)));
+        let (kind, remote, host) = match typed {
+            Some(((kind, remote), rest)) => (kind, remote, rest),
+            None => (self.proxy_kind, self.proxy_remote_dns, host),
+        };
+        let at = match self.proxy_port.trim() {
+            "" => host.to_owned(),
+            port => format!("{host}:{port}"),
+        };
+        Some((kind, remote, at))
+    }
+
+    /// The manual proxy's address with its scheme (and the port), as the engine and the
+    /// helpers take it: `socks5h://127.0.0.1:1080`. None when no address is typed.
+    pub fn manual_proxy_url(&self) -> Option<String> {
+        let (kind, remote, at) = self.manual_proxy()?;
+        Some(format!("{}://{at}", kind.scheme(remote)))
+    }
+
+    /// The SOCKS5 proxy torrents may use: Proxy / Socks' manual one when it is a SOCKS5 one,
+    /// with its login; librqbit takes no other kind.
+    pub fn socks5_proxy(&self) -> Option<String> {
+        if self.proxy_mode != 3 || self.manual_proxy()?.0 != ProxyKind::Socks5 {
+            return None;
         }
+        let mut url = url::Url::parse(&self.manual_proxy_url()?).ok()?;
         if !self.proxy_user.is_empty() {
             let _ = url.set_username(&self.proxy_user);
             let _ = url.set_password(Some(&self.proxy_pass));
@@ -704,6 +973,7 @@ impl Settings {
             listen: self.torrent_incoming,
             upnp: self.torrent_upnp,
             port: (self.torrent_port != 0).then_some(self.torrent_port),
+            utp: self.torrent_utp,
             dht: self.torrent_dht,
             lsd: self.torrent_lsd,
             proxy,
@@ -714,35 +984,47 @@ impl Settings {
         })
     }
 
+    /// Options → Proxy / Socks for the engine. An automatic configuration script (PAC) is run
+    /// once it has been fetched (pacfetch.rs); until then, the system's settings.
     pub fn proxy(&self) -> mdm_engine::Proxy {
         use mdm_engine::Proxy;
+        // The system's settings, with its automatic configuration script when one is on and
+        // has been fetched (#1448: a proxy program's PAC mode, `pacfetch::watch_system`).
+        let system = || {
+            crate::pacfetch::system_script().map_or(Proxy::System, |script| Proxy::Pac { script })
+        };
+        let manual = self.manual_proxy().map(|(kind, _, _)| kind);
         match self.proxy_mode {
-            1 => Proxy::System,
+            1 => system(),
             2 => crate::pacfetch::script(&self.proxy_script)
                 .map_or(Proxy::System, |script| Proxy::Pac { script }),
-            3 if !self.proxy_host.trim().is_empty() => {
-                let host = self.proxy_host.trim();
-                let url = if host.contains("://") {
-                    host.to_owned()
-                } else {
-                    format!("http://{host}")
-                };
-                let url = match self.proxy_port.trim() {
-                    "" => url,
-                    port => format!("{url}:{port}"),
-                };
+            3 if manual.is_some() => {
+                let kind = manual.unwrap_or_default();
                 Proxy::Manual {
-                    url,
-                    login: (!self.proxy_user.is_empty())
+                    url: self.manual_proxy_url().unwrap_or_default(),
+                    login: (kind.has_login() && !self.proxy_user.is_empty())
                         .then(|| (self.proxy_user.clone(), self.proxy_pass.clone())),
-                    http: self.proxy_http,
-                    https: self.proxy_https,
+                    // A SOCKS proxy carries every connection: the http / https boxes are an HTTP
+                    // proxy's (#1558).
+                    http: kind.is_socks() || self.proxy_http,
+                    https: kind.is_socks() || self.proxy_https,
                 }
             }
             // "Use proxy/socks from a browser's request": browsers use Windows' proxy settings,
             // so with no proxy of our own so do we (none set there: direct, as before).
-            _ if self.proxy_from_browser => Proxy::System,
+            _ if self.proxy_from_browser => system(),
             _ => Proxy::None,
+        }
+    }
+
+    /// Whether [`Self::proxy`] is the system's settings ("Use system settings", or the
+    /// browser's proxy with no proxy of MDM's own): the system's script is then watched for.
+    pub fn follows_system(&self) -> bool {
+        match self.proxy_mode {
+            1 => true,
+            2 => false,
+            3 if self.manual_proxy().is_some() => false,
+            _ => self.proxy_from_browser,
         }
     }
 
@@ -1066,16 +1348,53 @@ impl Settings {
     }
 }
 
-/// Keep every yt-dlp run on Options' cookies for video sites (cheap when they didn't change),
-/// and every video started on Embed chapters (#827).
+/// Keep every yt-dlp run on Options' cookies for video sites (cheap when they didn't change)
+/// and on Use my yt-dlp config file, and every video started on Embed chapters (#827).
 pub fn share_video_settings(s: &Settings) {
     mdm_tools::proc::set_browser_cookies(s.video_cookies());
+    mdm_tools::proc::set_user_config(s.ytdlp_config);
     mdm_tools::video::set_chapters(s.video_chapters);
 }
 
 /// The network adapter MDM's connections go through now (#35).
 pub fn own_route() -> mdm_engine::Route {
     OWN_ROUTE.read().unwrap().clone()
+}
+
+/// The command line's network (#1556): Options → Proxy / Socks (the proxy and the network
+/// adapter), Connection → DNS and Torrent settings' proxy, read from the settings as a command
+/// starts (the defaults when there are none yet: the system's proxy). An automatic configuration
+/// script, Options' or the system's for "Use system settings", is fetched first: the app has it
+/// fetched by the time it downloads, and a command downloads at once.
+pub fn cli_net() -> mdm_cli::Net {
+    let s = crate::store::settings_only().unwrap_or_default();
+    // The script is fetched through the chosen adapter, as the app fetches it.
+    share_route(mdm_engine::net::route_for(
+        &s.net_adapter,
+        &mdm_engine::net::adapters(),
+    ));
+    if s.proxy_mode == 2 {
+        crate::pacfetch::fetch_now(&s.proxy_script);
+    } else if s.follows_system() {
+        crate::pacfetch::system_now();
+    }
+    s.cli_net()
+}
+
+impl Settings {
+    /// [`cli_net`] from these settings, the scripts already fetched.
+    pub fn cli_net(&self) -> mdm_cli::Net {
+        mdm_cli::Net {
+            proxy: self.proxy(),
+            dns: self.dns(),
+            adapter: self.net_adapter.trim().to_owned(),
+            torrent_proxy: match (self.torrent_proxy, self.socks5_proxy()) {
+                (false, _) => mdm_cli::TorrentProxy::Off,
+                (true, Some(p)) => mdm_cli::TorrentProxy::Through(p),
+                (true, None) => mdm_cli::TorrentProxy::Missing,
+            },
+        }
+    }
 }
 
 /// How MDM downloads its own files: its engine, as itself, through the user's proxy, DNS and
@@ -1150,6 +1469,45 @@ mod tests {
         assert!(!s.keep_category_dir(Category::Video, chosen, downloads));
     }
 
+    /// #1563: a list from 0.5.2 that remembered "Also delete the files from disk" ticked (and
+    /// the question turned off) loads as before otherwise, and its next save drops the tick.
+    #[test]
+    fn a_remembered_files_tick_is_dropped() {
+        let old: super::Settings = serde_json::from_value(serde_json::json!({
+            "confirm_delete": false,
+            "delete_files_too": true,
+            "max_connections": 3,
+        }))
+        .unwrap();
+        assert!(!old.confirm_delete);
+        assert_eq!(old.max_connections, 3, "the rest is read as before");
+        let saved = serde_json::to_value(&old).unwrap();
+        assert!(saved.get("delete_files_too").is_none(), "{saved}");
+        assert!(saved.get("confirm_delete").is_some());
+    }
+
+    /// #1278: the video button's size is Full unless Compact was chosen, kept across a save,
+    /// and read by the native host under the same name (mdm_ipc::capture::CaptureRules).
+    #[test]
+    fn the_video_buttons_size_is_saved_and_read_by_the_host() {
+        use super::Settings;
+        assert!(!Settings::default().video_panel_compact, "Full by default");
+        let old: Settings = serde_json::from_value(serde_json::json!({})).unwrap();
+        assert!(!old.video_panel_compact, "settings saved before it: Full");
+        let s = Settings {
+            video_panel_compact: true,
+            ..Settings::default()
+        };
+        let saved = serde_json::to_value(&s).unwrap();
+        let again: Settings = serde_json::from_value(saved.clone()).unwrap();
+        assert!(again.video_panel_compact);
+        let rules: mdm_ipc::capture::CaptureRules = serde_json::from_value(saved).unwrap();
+        assert!(rules.video_panel_compact);
+        let rules: mdm_ipc::capture::CaptureRules =
+            serde_json::from_value(serde_json::to_value(Settings::default()).unwrap()).unwrap();
+        assert!(!rules.video_panel_compact);
+    }
+
     #[test]
     fn a_dialog_keeps_what_changed_elsewhere_meanwhile() {
         let from = super::Settings::default();
@@ -1190,6 +1548,16 @@ mod tests {
         assert!(s.torrent_config(dir.clone()).unwrap().proxy.is_some());
         s.proxy_host = "http://127.0.0.1".into();
         assert_eq!(s.socks5_proxy(), None, "an HTTP proxy isn't for torrents");
+        // #1558: Type SOCKS5 with the address alone; socks5h unless names are looked up here.
+        s.proxy_host = "127.0.0.1".into();
+        s.proxy_kind = ProxyKind::Socks5;
+        assert_eq!(
+            s.socks5_proxy().as_deref(),
+            Some("socks5h://ann:p%40ss@127.0.0.1:1080")
+        );
+        s.proxy_kind = ProxyKind::Socks4;
+        assert_eq!(s.socks5_proxy(), None, "librqbit takes SOCKS5 only");
+        s.proxy_host = "http://127.0.0.1".into();
         assert!(
             s.torrent_config(dir.clone()).is_none(),
             "asked, none there: not started"
@@ -1201,6 +1569,87 @@ mod tests {
             (c.port, c.listen, c.dht, c.lsd),
             (Some(51413), true, true, true)
         );
+    }
+
+    /// #1058: the browser integration (the native host, mdm_ipc::capture::CaptureRules) reads
+    /// the capture settings from the saved list by the app's own names: Torrent settings' switch
+    /// too, as settled; not decided yet, it takes torrents, as before.
+    #[test]
+    fn the_host_reads_the_capture_settings_as_saved() {
+        use mdm_ipc::capture::CaptureRules;
+        let read = |s: &Settings| -> CaptureRules {
+            serde_json::from_value(serde_json::to_value(s).unwrap()).unwrap()
+        };
+        let d = Settings::default();
+        let r = read(&d);
+        assert_eq!((d.torrent_associations, r.torrent_handler), (None, None));
+        assert!(r.takes_torrents());
+        assert_eq!(r.auto_types, d.auto_types);
+        assert_eq!(r.capture_min_kb, d.capture_min_kb);
+        for on in [false, true] {
+            let s = Settings {
+                torrent_associations: Some(on),
+                capture_min_kb: 7,
+                ..Settings::default()
+            };
+            let r = read(&s);
+            assert_eq!(r.torrent_handler, Some(on));
+            assert_eq!(r.takes_torrents(), on);
+            assert_eq!(r.capture_min_kb, 7);
+        }
+    }
+
+    /// #1058: Torrent settings' switch is settled once, as the user chose it.
+    #[test]
+    fn the_torrent_switch_is_settled_once_as_chosen() {
+        let undecided = Settings::default;
+        let settle = |mut s: Settings, installer: Option<bool>, registered: bool| {
+            let changed = s.settle_torrent_handler(installer, || registered);
+            (s.torrent_associations, changed)
+        };
+        // Never decided: MDM opens .torrent files now (the installer's task, an earlier tick,
+        // an all-users association) → on; it doesn't → off.
+        assert_eq!(settle(undecided(), None, true), (Some(true), true));
+        assert_eq!(settle(undecided(), None, false), (Some(false), true));
+        // The installer's value wins over what the system says.
+        assert_eq!(settle(undecided(), Some(false), true), (Some(false), true));
+        assert_eq!(settle(undecided(), Some(true), false), (Some(true), true));
+        // An earlier version's tick stays.
+        let ticked = Settings {
+            torrent_associations_before: true,
+            ..Settings::default()
+        };
+        assert_eq!(settle(ticked, Some(false), false), (Some(true), true));
+        // Decided: kept, whatever the system says (an everyone's association, HKLM, that
+        // unticking couldn't remove), and the system isn't asked.
+        for on in [false, true] {
+            let mut s = Settings {
+                torrent_associations: Some(on),
+                ..Settings::default()
+            };
+            assert!(!s.settle_torrent_handler(Some(!on), || panic!("asked")));
+            assert_eq!(s.torrent_associations, Some(on));
+        }
+        // A list saved before #1058: its false is undecided, its true ticked.
+        let old: Settings = serde_json::from_str(r#"{"torrent_associations":false}"#).unwrap();
+        assert_eq!(
+            (old.torrent_associations, old.torrent_associations_before),
+            (None, false)
+        );
+        let old: Settings = serde_json::from_str(r#"{"torrent_associations":true}"#).unwrap();
+        assert_eq!(
+            (old.torrent_associations, old.torrent_associations_before),
+            (None, true)
+        );
+        // Settled and saved, it reads back decided: no second settling.
+        let mut s = old;
+        s.settle_torrent_handler(None, || false);
+        let json = serde_json::to_value(&s).unwrap();
+        assert_eq!(json["torrent_handler"], serde_json::json!(true));
+        assert!(json.get("torrent_associations").is_none(), "{json}");
+        let mut back: Settings = serde_json::from_value(json).unwrap();
+        assert!(!back.settle_torrent_handler(Some(false), || false));
+        assert_eq!(back.torrent_associations, Some(true));
     }
 
     /// #41: a list saved before Zen was known gets it, captured; a choice made is kept.
@@ -1265,6 +1714,169 @@ mod tests {
     }
 
     #[test]
+    fn the_persons_ytdlp_config_is_off_until_chosen() {
+        let old: Settings = serde_json::from_str(r#"{"video_chapters":true}"#).unwrap();
+        assert!(!old.ytdlp_config);
+        assert!(!Settings::default().ytdlp_config);
+    }
+
+    /// #1556: the command line gets the app's proxy, DNS, adapter and torrent proxy, as the
+    /// settings give them to the app's downloads.
+    #[test]
+    fn the_command_line_gets_the_apps_network() {
+        let mut s = Settings {
+            proxy_from_browser: false,
+            proxy_mode: 3,
+            proxy_host: "socks5://127.0.0.1".into(),
+            proxy_port: "1080".into(),
+            net_adapter: " wg0 ".into(),
+            dns_mode: 2,
+            dns_provider: "quad9".into(),
+            ..Settings::default()
+        };
+        let net = s.cli_net();
+        assert_eq!(net.proxy, s.proxy());
+        assert_eq!(net.dns, s.dns());
+        assert_eq!(net.adapter, "wg0");
+        assert_eq!(net.torrent_proxy, mdm_cli::TorrentProxy::Off);
+        s.torrent_proxy = true;
+        assert_eq!(
+            s.cli_net().torrent_proxy,
+            mdm_cli::TorrentProxy::Through("socks5://127.0.0.1:1080".into())
+        );
+        s.proxy_host = "http://127.0.0.1".into();
+        assert_eq!(s.cli_net().torrent_proxy, mdm_cli::TorrentProxy::Missing);
+        // No settings yet: the system's proxy, as the app has it.
+        assert_eq!(
+            Settings::default().cli_net().proxy,
+            mdm_engine::Proxy::System
+        );
+    }
+
+    /// #1558: Manual's Type gives the address its scheme; a SOCKS proxy carries http and https
+    /// whatever the boxes say, SOCKS4 has no login; an address typed the old way
+    /// (`socks5://host`) still says SOCKS5, with the names looked up here as then.
+    #[test]
+    fn a_manual_proxy_of_each_type() {
+        let mut s = Settings {
+            proxy_from_browser: false,
+            proxy_mode: 3,
+            proxy_host: "127.0.0.1".into(),
+            proxy_port: "1080".into(),
+            proxy_user: "ann".into(),
+            proxy_pass: "pw".into(),
+            proxy_kind: ProxyKind::Socks5,
+            ..Settings::default()
+        };
+        assert!(s.proxy_remote_dns, "on by default");
+        let manual = |s: &Settings| match s.proxy() {
+            mdm_engine::Proxy::Manual {
+                url,
+                login,
+                http,
+                https,
+            } => (url, login.is_some(), http, https),
+            other => panic!("{other:?}"),
+        };
+        assert_eq!(
+            manual(&s),
+            ("socks5h://127.0.0.1:1080".into(), true, true, true)
+        );
+        s.proxy_remote_dns = false;
+        assert_eq!(manual(&s).0, "socks5://127.0.0.1:1080");
+        s.proxy_kind = ProxyKind::Socks4;
+        assert_eq!(
+            manual(&s),
+            ("socks4://127.0.0.1:1080".into(), false, true, true)
+        );
+        s.proxy_remote_dns = true;
+        assert_eq!(manual(&s).0, "socks4a://127.0.0.1:1080");
+        s.proxy_kind = ProxyKind::Https;
+        s.proxy_https = true;
+        assert_eq!(
+            manual(&s),
+            ("https://127.0.0.1:1080".into(), true, false, true)
+        );
+        s.proxy_kind = ProxyKind::Http;
+        assert_eq!(manual(&s).0, "http://127.0.0.1:1080");
+        // The old way: the scheme in the address wins over Type.
+        s.proxy_host = "socks5://10.0.0.2".into();
+        assert_eq!(
+            s.manual_proxy(),
+            Some((ProxyKind::Socks5, false, "10.0.0.2:1080".into()))
+        );
+        assert_eq!(
+            manual(&s),
+            ("socks5://10.0.0.2:1080".into(), true, true, true)
+        );
+        s.proxy_host = "SOCKS5H://10.0.0.2/".into();
+        assert_eq!(manual(&s).0, "socks5h://10.0.0.2:1080");
+        // A settings file from before Type: HTTP, names through the proxy.
+        let old: Settings =
+            serde_json::from_str(r#"{"proxy_mode": 3, "proxy_host": "10.0.0.1"}"#).unwrap();
+        assert_eq!(
+            (old.proxy_kind, old.proxy_remote_dns),
+            (ProxyKind::Http, true)
+        );
+        // Saved and read back.
+        let back: Settings = serde_json::from_str(
+            &serde_json::to_string(&Settings {
+                proxy_kind: ProxyKind::Socks4,
+                ..Settings::default()
+            })
+            .unwrap(),
+        )
+        .unwrap();
+        assert_eq!(back.proxy_kind, ProxyKind::Socks4);
+        // No address: no manual proxy, the browser's or none.
+        s.proxy_host = " ".into();
+        assert_eq!(s.proxy(), mdm_engine::Proxy::None);
+    }
+
+    /// #1558: Get System reads Windows' `ProxyServer`: one proxy for everything, per-scheme
+    /// ones (the HTTP one, ticked for the schemes it serves), or only a SOCKS one.
+    #[test]
+    fn get_system_reads_windows_proxy_server() {
+        let got =
+            |v: &str| parse_system_proxy(v).map(|p| (p.kind, p.host, p.port, p.http, p.https));
+        let http = |h: &str, p: &str, a, b| Some((ProxyKind::Http, h.into(), p.into(), a, b));
+        assert_eq!(got("127.0.0.1:7890"), http("127.0.0.1", "7890", true, true));
+        assert_eq!(
+            got("http=proxy.corp:8080;https=proxy.corp:8080;socks=s.corp:1080"),
+            http("proxy.corp", "8080", true, true)
+        );
+        assert_eq!(
+            got("http=a:1;https=b:2"),
+            http("a", "1", true, false),
+            "only the schemes this proxy serves"
+        );
+        assert_eq!(got("https=b:2"), http("b", "2", false, true));
+        assert_eq!(
+            got("socks=127.0.0.1:1080"),
+            Some((
+                ProxyKind::Socks5,
+                "127.0.0.1".into(),
+                "1080".into(),
+                true,
+                true
+            ))
+        );
+        assert_eq!(
+            got(" SOCKS=localhost:9050 ; ftp=f:21"),
+            Some((
+                ProxyKind::Socks5,
+                "localhost".into(),
+                "9050".into(),
+                true,
+                true
+            ))
+        );
+        assert_eq!(got("http=http://p:3128/"), http("p", "3128", true, false));
+        assert_eq!(got("ftp=f:21"), None);
+        assert_eq!(got(""), None);
+    }
+
+    #[test]
     fn connection_exceptions_and_proxy() {
         let mut s = Settings {
             conn_exceptions: vec![("ftp.slow.org".into(), 1)],
@@ -1291,8 +1903,15 @@ mod tests {
         // IDM's default: no proxy, but "use the browser's proxy" ticked — the browser's is
         // Windows' (none set there: direct).
         assert_eq!(s.proxy(), mdm_engine::Proxy::System);
+        // #1448: the system's settings are followed, its automatic configuration script too.
+        assert!(s.follows_system());
         s.proxy_from_browser = false;
         assert_eq!(s.proxy(), mdm_engine::Proxy::None);
+        assert!(!s.follows_system());
+        s.proxy_mode = 1;
+        assert!(s.follows_system());
+        s.proxy_mode = 2;
+        assert!(!s.follows_system());
         s.proxy_mode = 3;
         s.proxy_host = "10.0.0.1".into();
         s.proxy_port = "3128".into();
@@ -1302,6 +1921,7 @@ mod tests {
             mdm_engine::Proxy::Manual { ref url, https: true, http: false, .. }
                 if url == "http://10.0.0.1:3128"
         ));
+        assert!(!s.follows_system());
     }
 }
 
@@ -1418,6 +2038,7 @@ pub(crate) mod sealed {
         fn the_proxy_password_and_debrid_secrets_are_sealed_on_disk() {
             let s = crate::settings::Settings {
                 proxy_pass: "proxy-s3cret".into(),
+                archive_passwords: "zip-s3cret\nother".into(),
                 debrid_accounts: vec![crate::settings::DebridAccount {
                     id: 1,
                     user: "me".into(),
@@ -1428,10 +2049,15 @@ pub(crate) mod sealed {
             };
             let json = serde_json::to_string(&s).unwrap();
             if cfg!(windows) {
-                assert!(!json.contains("proxy-s3cret") && !json.contains("rd-s3cret"));
+                assert!(
+                    !json.contains("proxy-s3cret")
+                        && !json.contains("rd-s3cret")
+                        && !json.contains("zip-s3cret")
+                );
             }
             let back: crate::settings::Settings = serde_json::from_str(&json).unwrap();
             assert_eq!(back.proxy_pass, "proxy-s3cret");
+            assert_eq!(back.archive_password_list(), vec!["zip-s3cret", "other"]);
             assert!(back.debrid_accounts[0].account().is_some());
             // Never in a debug dump either.
             assert!(!format!("{:?}", back.debrid_accounts).contains("rd-s3cret"));

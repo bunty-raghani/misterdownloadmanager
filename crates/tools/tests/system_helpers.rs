@@ -2,7 +2,84 @@
 
 #[cfg(windows)]
 fn main() {
-    println!("system_helpers: Unix-only system discovery");
+    use std::path::Path;
+    use std::process::Command;
+
+    const ROOT: &str = "MDM_TEST_SYSTEM_HELPERS";
+    if let Some(root) = std::env::var_os(ROOT) {
+        check_windows(Path::new(&root));
+        println!("system_helpers: ok (windows)");
+        return;
+    }
+
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    for name in ["empty", "bin"] {
+        std::fs::create_dir(root.join(name)).unwrap();
+    }
+    for name in ["yt-dlp.exe", "ffmpeg.exe", "gallery-dl.exe"] {
+        std::fs::write(root.join("bin").join(name), b"fake executable").unwrap();
+    }
+    let path = std::env::join_paths(["empty", "bin"].map(|n| root.join(n))).unwrap();
+    let status = Command::new(std::env::current_exe().unwrap())
+        .env(ROOT, root)
+        .env("PATH", path)
+        .status()
+        .unwrap();
+    assert!(status.success(), "system-helper checks failed on Windows");
+}
+
+#[cfg(windows)]
+fn check_windows(root: &std::path::Path) {
+    use mdm_tools::Installed;
+
+    let dir = root.join("data");
+    let system = Installed {
+        version: "system".into(),
+        exe: root.join("bin/yt-dlp.exe"),
+    };
+    assert_eq!(
+        mdm_tools::installed(&dir),
+        Some(system.clone()),
+        "find the executable on PATH"
+    );
+    assert_eq!(
+        mdm_tools::ffmpeg::installed(&dir).unwrap().exe,
+        root.join("bin/ffmpeg.exe")
+    );
+    assert_eq!(
+        mdm_tools::gallery::installed(&dir).unwrap().exe,
+        root.join("bin/gallery-dl.exe")
+    );
+
+    let _rt = tokio::runtime::Runtime::new().unwrap();
+    let _net = mdm_engine::Options {
+        route: mdm_engine::Route::Down {
+            label: "Offline test".into(),
+        },
+        ..Default::default()
+    };
+    assert!(!mdm_tools::refreshable(&dir), "system copy not refreshed");
+    assert!(!dir.join("yt-dlp").exists(), "system helper left unmanaged");
+
+    // A managed copy still wins over the system copy.
+    let own = Installed {
+        version: "2026.01.01".into(),
+        exe: root.join("managed-yt-dlp.exe"),
+    };
+    std::fs::write(&own.exe, b"managed").unwrap();
+    std::fs::create_dir_all(dir.join("yt-dlp")).unwrap();
+    std::fs::write(
+        dir.join("yt-dlp/current.json"),
+        serde_json::to_vec(&own).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(mdm_tools::installed(&dir), Some(own.clone()));
+    assert!(mdm_tools::refreshable(&dir), "a managed copy is refreshed");
+
+    // Once managed copy is removed, falls back to system copy.
+    std::fs::remove_file(&own.exe).unwrap();
+    assert_eq!(mdm_tools::installed(&dir), Some(system));
 }
 
 #[cfg(unix)]

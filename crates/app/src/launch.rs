@@ -161,6 +161,27 @@ where
         }
     }
 
+    /// [`Asked::get`] for a window that shows what it read last until the new answer comes
+    /// (#1218): the answer for `key`, else the last one, whichever key it was for. Only the call
+    /// that asks the very first time waits, at most `first_wait`; the others never wait.
+    pub fn get_or_last(
+        &self,
+        key: &K,
+        every: Duration,
+        first_wait: Duration,
+        repaint: Option<&egui::Context>,
+        ask: impl FnOnce(&K) -> T + Send + 'static,
+    ) -> Option<T> {
+        let lock = || self.shared.0.lock().unwrap_or_else(|e| e.into_inner());
+        let last = || lock().answer.as_ref().map(|(_, v, _)| v.clone());
+        let first = {
+            let s = lock();
+            s.answer.is_none() && !s.asking
+        };
+        let wait = if first { first_wait } else { Duration::ZERO };
+        self.get(key, every, wait, repaint, ask).or_else(last)
+    }
+
     /// The answer for `key` if it came; never asks, never waits (a window that asked once, with
     /// [`Asked::get`], and looks for its answer each frame after).
     pub fn answer(&self, key: &K) -> Option<T> {
@@ -278,45 +299,87 @@ mod tests {
         d
     }
 
+    /// Long enough for anything a test waits for to come on the slowest runner: a deadlock
+    /// breaker, never a time any check is about.
+    const STUCK: Duration = Duration::from_secs(30);
+
     #[test]
     fn a_hanging_program_never_holds_the_caller_and_falls_back() {
+        use std::sync::mpsc::{TryRecvError, channel};
         let dir = temp("hang");
-        let hang = script(&dir, "hang", "exec sleep 30");
-        let (tx, rx) = std::sync::mpsc::channel();
+        // A program that runs until the test lets it end (a minute at most), then fails: the
+        // call can only be back before it ended if it didn't wait for it.
+        let go = dir.join("go");
+        let held = script(
+            &dir,
+            "held",
+            &format!(
+                "i=0; while [ ! -e '{}' ] && [ $i -lt 1200 ]; do sleep 0.05; i=$((i+1)); done; exit 3",
+                go.display()
+            ),
+        );
+        let (tx, fell_back) = channel();
+        let (back, came_back) = channel();
+        std::thread::spawn(move || {
+            run_detached_with_fallback(sh(&held), Duration::from_secs(3600), move || {
+                let _ = tx.send(());
+            });
+            let _ = back.send(());
+        });
+        came_back
+            .recv_timeout(STUCK)
+            .expect("the caller waited for the program");
+        assert_eq!(
+            fell_back.try_recv(),
+            Err(TryRecvError::Empty),
+            "ended early"
+        );
+        std::fs::write(&go, "").unwrap();
+        fell_back
+            .recv_timeout(STUCK)
+            .expect("no fallback once it failed");
+        // A program that never ends: ended at its limit, not after its hour, and the fallback runs.
+        let hang = script(&dir, "hang", "exec sleep 3600");
+        let limit = Duration::from_millis(500);
+        let (tx, fell_back) = channel();
         let start = Instant::now();
-        run_detached_with_fallback(sh(&hang), Duration::from_millis(500), move || {
+        run_detached_with_fallback(sh(&hang), limit, move || {
             let _ = tx.send(Instant::now());
         });
-        assert!(
-            start.elapsed() < Duration::from_millis(200),
-            "the caller waited"
-        );
-        let fell_back = rx
-            .recv_timeout(Duration::from_secs(5))
-            .expect("no fallback");
-        // Ended at its limit, not after its 30 s.
-        assert!(fell_back - start < Duration::from_secs(3));
+        let at = fell_back
+            .recv_timeout(STUCK)
+            .expect("not ended at its limit");
+        assert!(at - start >= limit, "ended before its limit");
         let _ = std::fs::remove_dir_all(dir);
+    }
+
+    /// Whether `cmd` fell back, once its run was over: the fallback holds the sender, so a run
+    /// that ends without it drops the sender (`Disconnected`), however long it took. A fixed
+    /// wait said "no fallback" for a run still under way on a busy machine.
+    fn falls_back(cmd: Command) -> bool {
+        use std::sync::mpsc::{RecvTimeoutError, channel};
+        let (tx, rx) = channel();
+        run_detached_with_fallback(cmd, STUCK, move || {
+            let _ = tx.send(());
+        });
+        match rx.recv_timeout(STUCK) {
+            Ok(()) => true,
+            Err(RecvTimeoutError::Disconnected) => false,
+            Err(RecvTimeoutError::Timeout) => panic!("the run never ended"),
+        }
     }
 
     #[test]
     fn a_program_that_succeeds_has_no_fallback_and_one_that_fails_has_one() {
         let dir = temp("exit");
-        for (body, falls_back) in [("exit 0", false), ("exit 3", true)] {
+        for (body, expected) in [("exit 0", false), ("exit 3", true)] {
             let prog = script(&dir, "prog", body);
-            let (tx, rx) = std::sync::mpsc::channel();
-            run_detached_with_fallback(sh(&prog), Duration::from_secs(5), move || {
-                let _ = tx.send(());
-            });
-            let got = rx.recv_timeout(Duration::from_secs(3)).is_ok();
-            assert_eq!(got, falls_back, "{body}");
+            assert_eq!(falls_back(sh(&prog)), expected, "{body}");
         }
-        let missing = dir.join("no-such-program");
-        let (tx, rx) = std::sync::mpsc::channel();
-        run_detached_with_fallback(Command::new(missing), Duration::from_secs(5), move || {
-            let _ = tx.send(());
-        });
-        assert!(rx.recv_timeout(Duration::from_secs(3)).is_ok(), "missing");
+        assert!(
+            falls_back(Command::new(dir.join("no-such-program"))),
+            "missing"
+        );
         let _ = std::fs::remove_dir_all(dir);
     }
 
@@ -327,10 +390,12 @@ mod tests {
         let out = output_within(&mut sh(&say), Duration::from_secs(5)).unwrap();
         assert!(out.status.success());
         assert_eq!(String::from_utf8_lossy(&out.stdout).trim(), "blue");
-        let hang = script(&dir, "hang", "exec sleep 30");
+        // A program that runs for an hour: given up on (ended) long before. Any bound far under
+        // the hour proves it; 3 s was passed now and then on a busy machine.
+        let hang = script(&dir, "hang", "exec sleep 3600");
         let start = Instant::now();
         assert!(output_within(&mut sh(&hang), Duration::from_millis(300)).is_none());
-        assert!(start.elapsed() < Duration::from_secs(3));
+        assert!(start.elapsed() < STUCK, "{:?}", start.elapsed());
         let _ = std::fs::remove_dir_all(dir);
     }
 }
@@ -342,43 +407,127 @@ mod asked_tests {
 
     const NO_WAIT: Duration = Duration::ZERO;
 
+    /// Long enough for anything a test waits for to come on the slowest runner, and the most a
+    /// hanging call hangs: a deadlock breaker, never a time any check is about.
+    const STUCK: Duration = Duration::from_secs(30);
+
+    /// An answer kept this long is fresh for the whole test.
+    const FRESH: Duration = Duration::from_secs(3600);
+
+    /// Counts the calls [`Asked::get`] didn't make, as they are dropped: one it doesn't ask is
+    /// dropped before it is back, on the caller's thread; one it asks goes to the thread that
+    /// asks it, which forgets it. So a call asked again shows at once, not once its thread runs.
+    struct NotAsked(Arc<AtomicU32>);
+
+    impl Drop for NotAsked {
+        fn drop(&mut self) {
+            self.0.fetch_add(1, Ordering::SeqCst);
+        }
+    }
+
     #[test]
     fn a_call_that_hangs_never_holds_the_window_and_is_asked_once() {
         let asked = Asked::<(), bool>::default();
-        let calls = Arc::new(AtomicU32::new(0));
-        let ask = |calls: &Arc<AtomicU32>| {
-            let calls = calls.clone();
+        let not_asked = Arc::new(AtomicU32::new(0));
+        // The call hangs until the test lets it go: a window that waited for it would get its
+        // answer, which can't come before then.
+        let (go, gate) = std::sync::mpsc::channel::<()>();
+        let gate = Arc::new(Mutex::new(gate));
+        let ask = || {
+            let (unasked, gate) = (NotAsked(not_asked.clone()), gate.clone());
             move |_: &()| {
-                calls.fetch_add(1, Ordering::SeqCst);
-                std::thread::sleep(Duration::from_secs(3));
+                std::mem::forget(unasked);
+                let _ = gate.lock().unwrap().recv_timeout(STUCK);
                 true
             }
         };
+        let wait = Duration::from_millis(100);
         let start = Instant::now();
-        let first = asked.get(
-            &(),
-            Duration::ZERO,
-            Duration::from_millis(100),
-            None,
-            ask(&calls),
-        );
-        assert_eq!(first, None);
+        let first = asked.get(&(), Duration::ZERO, wait, None, ask());
         // Waited what it said, not for the call.
-        assert!(
-            start.elapsed() < Duration::from_millis(600),
-            "{:?}",
-            start.elapsed()
-        );
-        // The next frames: at once, and the hanging call isn't asked again meanwhile.
+        assert_eq!(first, None);
+        assert!(start.elapsed() >= wait, "{:?}", start.elapsed());
+        assert_eq!(not_asked.load(Ordering::SeqCst), 0, "not asked");
+        // The next frames: no answer and no wait, and the hanging call isn't asked again
+        // meanwhile.
         for _ in 0..50 {
-            let t = Instant::now();
-            assert_eq!(
-                asked.get(&(), Duration::ZERO, NO_WAIT, None, ask(&calls)),
-                None
-            );
-            assert!(t.elapsed() < Duration::from_millis(50));
+            assert_eq!(asked.get(&(), Duration::ZERO, NO_WAIT, None, ask()), None);
         }
-        assert_eq!(calls.load(Ordering::SeqCst), 1);
+        assert_eq!(not_asked.load(Ordering::SeqCst), 50, "asked again");
+        // Let go, its answer comes, from that one call.
+        go.send(()).unwrap();
+        assert_eq!(asked.get(&(), FRESH, STUCK, None, ask()), Some(true));
+        assert_eq!(not_asked.load(Ordering::SeqCst), 51, "asked again");
+    }
+
+    /// #1218: a window that shows what it read last. A slow read never holds it (only the very
+    /// first is waited for, as long as it says), the last answer stays shown while a new key's
+    /// read is under way, and a read under way is never asked twice.
+    #[test]
+    fn the_last_answer_shows_while_a_slow_read_is_under_way() {
+        let asked = Asked::<u64, &'static str>::default();
+        let reads = Arc::new(AtomicU32::new(0));
+        let (go, gate) = std::sync::mpsc::channel::<()>();
+        let gate = Arc::new(Mutex::new(gate));
+        let read = |answer: &'static str| {
+            let (reads, gate) = (reads.clone(), gate.clone());
+            move |_: &u64| {
+                reads.fetch_add(1, Ordering::SeqCst);
+                let _ = gate.lock().unwrap().recv_timeout(STUCK);
+                answer
+            }
+        };
+        let first_wait = Duration::from_millis(50);
+        // Nothing read yet: waited `first_wait`, not for the read ("Checking...").
+        let start = Instant::now();
+        assert_eq!(
+            asked.get_or_last(&0, FRESH, first_wait, None, read("a")),
+            None
+        );
+        let took = start.elapsed();
+        assert!(took >= first_wait && took < STUCK / 2, "{took:?}");
+        // The next frames don't wait at all, and the read isn't asked again: offered a wait as
+        // long as STUCK, a frame that took it would show (a busy machine takes some time for
+        // any call; a wait as short as the first one was found in that time now and then).
+        for _ in 0..20 {
+            let start = Instant::now();
+            assert_eq!(asked.get_or_last(&0, FRESH, STUCK, None, read("a")), None);
+            assert!(start.elapsed() < STUCK / 2, "{:?}", start.elapsed());
+        }
+        go.send(()).unwrap();
+        let start = Instant::now();
+        while asked.get_or_last(&0, FRESH, NO_WAIT, None, read("a")) != Some("a") {
+            assert!(start.elapsed() < STUCK, "never came");
+            std::thread::sleep(Duration::from_millis(5));
+        }
+        // A new key (Set it up finished): the last answer at once, while its read hangs (offered
+        // a wait it must never take, as above).
+        for _ in 0..20 {
+            let start = Instant::now();
+            assert_eq!(
+                asked.get_or_last(&1, FRESH, STUCK, None, read("b")),
+                Some("a")
+            );
+            assert!(start.elapsed() < STUCK / 2, "{:?}", start.elapsed());
+        }
+        // Its read started (on its own thread, a moment later), and only it.
+        let start = Instant::now();
+        while reads.load(Ordering::SeqCst) < 2 {
+            assert!(start.elapsed() < STUCK, "never asked");
+            std::thread::sleep(Duration::from_millis(5));
+        }
+        for _ in 0..20 {
+            asked.get_or_last(&1, FRESH, first_wait, None, read("b"));
+        }
+        std::thread::sleep(Duration::from_millis(50));
+        assert_eq!(reads.load(Ordering::SeqCst), 2, "one read at a time");
+        go.send(()).unwrap();
+        let start = Instant::now();
+        while asked.get_or_last(&1, FRESH, NO_WAIT, None, read("b")) != Some("b") {
+            assert!(start.elapsed() < STUCK, "never came");
+            std::thread::sleep(Duration::from_millis(5));
+        }
+        assert_eq!(reads.load(Ordering::SeqCst), 2);
     }
 
     #[test]
@@ -390,31 +539,29 @@ mod asked_tests {
             move |_: &()| n.fetch_add(1, Ordering::SeqCst) + 1
         };
         // A quick answer is waited for.
-        let every = Duration::from_millis(200);
-        let wait = Duration::from_secs(2);
-        assert_eq!(asked.get(&(), every, wait, None, ask(&n)), Some(1));
-        // Fresh: kept, not asked again.
-        assert_eq!(asked.get(&(), every, NO_WAIT, None, ask(&n)), Some(1));
+        assert_eq!(asked.get(&(), FRESH, STUCK, None, ask(&n)), Some(1));
+        // Fresh (younger than `every`): kept, not asked again.
+        assert_eq!(asked.get(&(), FRESH, NO_WAIT, None, ask(&n)), Some(1));
         assert_eq!(n.load(Ordering::SeqCst), 1);
-        std::thread::sleep(Duration::from_millis(250));
-        // Stale: the last answer at once, a new one asked meanwhile.
-        assert_eq!(asked.get(&(), every, NO_WAIT, None, ask(&n)), Some(1));
+        // Stale (older than `every`, which any answer is than zero): the last answer at once, a
+        // new one asked meanwhile.
+        assert_eq!(
+            asked.get(&(), Duration::ZERO, NO_WAIT, None, ask(&n)),
+            Some(1)
+        );
         let start = Instant::now();
-        while asked.get(&(), every, NO_WAIT, None, ask(&n)) != Some(2) {
-            assert!(
-                start.elapsed() < Duration::from_secs(2),
-                "never asked again"
-            );
+        while asked.get(&(), FRESH, NO_WAIT, None, ask(&n)) != Some(2) {
+            assert!(start.elapsed() < STUCK, "never asked again");
             std::thread::sleep(Duration::from_millis(5));
         }
+        assert_eq!(n.load(Ordering::SeqCst), 2);
     }
 
     #[test]
     fn another_key_has_no_answer_until_its_own() {
         let asked = Asked::<String, usize>::default();
         let len = |k: &String| k.len();
-        let wait = Duration::from_secs(2);
-        let long = Duration::from_secs(60);
+        let (wait, long) = (STUCK, FRESH);
         assert_eq!(asked.get(&"ab".into(), long, wait, None, len), Some(2));
         assert_eq!(asked.get(&"abcd".into(), long, wait, None, len), Some(4));
         // An answer that is slow for the new key: none for it (never the old key's).
@@ -425,7 +572,7 @@ mod asked_tests {
         assert_eq!(asked.get(&"x".into(), long, NO_WAIT, None, slow), None);
         let start = Instant::now();
         while asked.get(&"x".into(), long, NO_WAIT, None, slow).is_none() {
-            assert!(start.elapsed() < Duration::from_secs(3));
+            assert!(start.elapsed() < STUCK);
             std::thread::sleep(Duration::from_millis(10));
         }
         assert_eq!(asked.get(&"x".into(), long, NO_WAIT, None, slow), Some(1));

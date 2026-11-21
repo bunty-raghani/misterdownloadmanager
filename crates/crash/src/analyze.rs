@@ -5,10 +5,14 @@
 //! release's symbols, made in CI and fetched on demand: `symbols.rs`), and the native debug info
 //! beside the program (a build from source: its PDB, DWARF or dSYM).
 
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 use minidump::Module;
-use minidump_unwind::{MultiSymbolProvider, Symbolizer, simple_symbol_supplier};
+use minidump_unwind::{
+    FileError, FileKind, LocateSymbolsResult, MultiSymbolProvider, SymbolError, SymbolFile,
+    SymbolSupplier, Symbolizer, simple_symbol_supplier,
+};
 use serde::{Deserialize, Serialize};
 
 /// One frame of a stack.
@@ -91,11 +95,22 @@ pub fn analyze(dump: &Path, symbols: &[PathBuf]) -> Result<Analysis, String> {
         let mut provider = MultiSymbolProvider::new();
         let dirs: Vec<PathBuf> = symbols.iter().filter(|d| d.is_dir()).cloned().collect();
         if !dirs.is_empty() {
+            let by_id = ById::new(&dirs);
             provider.add(Box::new(Symbolizer::new(simple_symbol_supplier(dirs))));
+            provider.add(Box::new(Symbolizer::new(by_id)));
         }
-        provider.add(Box::new(
-            minidump_unwind::debuginfo::DebugInfoSymbolProvider::new(&system_info, &modules).await,
-        ));
+        // The modules' own debug info unwinds x86-64 and ARM64 programs only (it panics on any
+        // other, such as a 32-bit Windows one): those are read with the .sym files alone, which
+        // carry their unwinding too.
+        if matches!(
+            system_info.cpu,
+            minidump::system_info::Cpu::X86_64 | minidump::system_info::Cpu::Arm64
+        ) {
+            provider.add(Box::new(
+                minidump_unwind::debuginfo::DebugInfoSymbolProvider::new(&system_info, &modules)
+                    .await,
+            ));
+        }
         let state = minidump_processor::process_minidump(&dump, &provider)
             .await
             .map_err(|e| e.to_string())?;
@@ -197,8 +212,108 @@ fn file_name(p: &str) -> String {
     p.rsplit(['/', '\\']).next().unwrap_or(p).to_owned()
 }
 
+/// The .sym files of symbol folders (`<debug file>/<id>/<name>.sym`) by their debug id alone,
+/// for the modules the lookup by name can't find. A macOS dump can leave the program's own
+/// module without its path, which the monitor couldn't read from the frozen process: it is then
+/// named "<Unknown>" (#1515), and its symbols, under the program's name, are still the ones with
+/// its id (a UUID: no other program has it).
+struct ById(HashMap<String, PathBuf>);
+
+impl ById {
+    fn new(dirs: &[PathBuf]) -> ById {
+        fn entries(dir: &Path) -> impl Iterator<Item = PathBuf> + use<> {
+            std::fs::read_dir(dir)
+                .into_iter()
+                .flatten()
+                .flatten()
+                .map(|e| e.path())
+        }
+        let mut by_id = HashMap::new();
+        for dir in dirs {
+            for id_dir in entries(dir)
+                .filter(|d| d.is_dir())
+                .flat_map(|d| entries(&d))
+                .filter(|d| d.is_dir())
+            {
+                let Some(id) = id_dir.file_name().and_then(|n| n.to_str()) else {
+                    continue;
+                };
+                if let Some(sym) = entries(&id_dir)
+                    .find(|f| f.is_file() && f.extension().is_some_and(|x| x == "sym"))
+                {
+                    by_id.entry(id.to_ascii_uppercase()).or_insert(sym);
+                }
+            }
+        }
+        ById(by_id)
+    }
+}
+
+#[async_trait::async_trait]
+impl SymbolSupplier for ById {
+    async fn locate_symbols(
+        &self,
+        module: &(dyn Module + Sync),
+    ) -> Result<LocateSymbolsResult, SymbolError> {
+        let path = self
+            .locate_file(module, FileKind::BreakpadSym)
+            .await
+            .map_err(|_| SymbolError::NotFound)?;
+        Ok(LocateSymbolsResult {
+            symbols: SymbolFile::from_file(&path)?,
+            extra_debug_info: None,
+        })
+    }
+
+    async fn locate_file(
+        &self,
+        module: &(dyn Module + Sync),
+        file_kind: FileKind,
+    ) -> Result<PathBuf, FileError> {
+        let id = module
+            .debug_identifier()
+            .filter(|_| file_kind == FileKind::BreakpadSym)
+            .ok_or(FileError::NotFound)?;
+        self.0
+            .get(&id.breakpad().to_string().to_ascii_uppercase())
+            .cloned()
+            .ok_or(FileError::NotFound)
+    }
+}
+
 #[cfg(test)]
 mod tests {
+    use super::*;
+
+    /// #1515: the program's own module in a macOS dump, named "<Unknown>": its symbols are found
+    /// by its id, under the program's name; another id finds nothing.
+    #[test]
+    fn a_module_without_its_name_finds_its_symbols_by_id() {
+        let store = tempfile::tempdir().unwrap();
+        let id = "DE257B5D861C3C3788B9A77E9E4B137A0";
+        let dir = store.path().join("misterdownloadmanager").join(id);
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(
+            dir.join("misterdownloadmanager.sym"),
+            format!("MODULE Mac arm64 {id} misterdownloadmanager\nFUNC 24220 6c 0 torrent_tick\n"),
+        )
+        .unwrap();
+        let module = breakpad_symbols::SimpleModule::new("<Unknown>", id.parse().unwrap());
+        let by_id = ById::new(&[store.path().to_path_buf()]);
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .build()
+            .unwrap();
+        let found = rt
+            .block_on(by_id.locate_symbols(&module))
+            .expect("found by id");
+        assert_eq!(found.symbols.module_id, id);
+        let other = breakpad_symbols::SimpleModule::new(
+            "<Unknown>",
+            "0E257B5D861C3C3788B9A77E9E4B137A0".parse().unwrap(),
+        );
+        assert!(rt.block_on(by_id.locate_symbols(&other)).is_err());
+    }
+
     #[test]
     fn file_names_from_either_kind_of_path() {
         assert_eq!(super::file_name(r"C:\Program Files\MDM\mdm.exe"), "mdm.exe");

@@ -92,9 +92,6 @@
       }
     }
   },
-  "popup_undo": {
-    "message": "실행 취소"
-  },
   "popup_excluded": {
     "message": "$site$에서 다운로드한 파일은 브라우저에 남아 있습니다.",
     "placeholders": {
@@ -148,6 +145,9 @@
   },
   "declined_integration_off": {
     "message": "옵션 → 일반에서 고급 브라우저 통합 사용이 꺼져 있습니다."
+  },
+  "declined_torrents": {
+    "message": "토렌트이며, 토렌트 설정에서 Mister Download Manager으로 마그넷 링크 및 .torrent 파일 열기가 꺼져 있습니다."
   },
   "declined_site_access": {
     "message": "확장 프로그램이 이 사이트를 읽을 수 없습니다(브라우저의 사이트 액세스)."
@@ -328,5 +328,424 @@
   },
   "video_original": {
     "message": "원본"
+  },
+  "video_compatible": {
+    "message": "최대 호환"
+  },
+  "popup_video_hide_fullscreen": {
+    "message": "전체 화면에서 다운로드 버튼 숨기기"
+  },
+  "popup_video_hide_fullscreen_title": {
+    "message": "페이지가 전체 화면일 때 동영상에 다운로드 버튼이 표시되지 않습니다."
+  },
+  "popup_remote_forget": {
+    "message": "삭제"
+  },
+  "popup_gear": {
+    "message": "Mister Download Manager 옵션"
+  },
+  "popup_tabs": {
+    "message": "팝업 섹션"
+  },
+  "popup_tab_downloads": {
+    "message": "다운로드"
+  },
+  "popup_tab_page": {
+    "message": "이 페이지"
+  },
+  "popup_tab_settings": {
+    "message": "설정"
+  },
+  "popup_conn": {
+    "message": "연결됨 · $version$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.5.2"
+      }
+    }
+  },
+  "popup_conn_plain": {
+    "message": "연결됨"
+  },
+  "popup_conn_off": {
+    "message": "연결되지 않음"
+  },
+  "popup_conn_paused": {
+    "message": "일시 중지됨"
+  },
+  "popup_conn_update": {
+    "message": "Mister Download Manager 업데이트"
+  },
+  "popup_conn_remote": {
+    "message": "$server$(으)로 전송 중",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_cancel": {
+    "message": "취소"
+  },
+  "popup_page_none": {
+    "message": "웹 페이지가 아닙니다. 여기서는 할 일이 없습니다."
+  },
+  "popup_exclude_by_rule": {
+    "message": "옵션의 규칙에 따라 브라우저에 남겨짐"
+  },
+  "popup_dl_search": {
+    "message": "다운로드 검색"
+  },
+  "popup_dl_filters": {
+    "message": "표시"
+  },
+  "popup_dl_all": {
+    "message": "모두"
+  },
+  "popup_dl_running": {
+    "message": "실행 중"
+  },
+  "popup_dl_done_filter": {
+    "message": "완료됨"
+  },
+  "popup_dl_failed_filter": {
+    "message": "실패함"
+  },
+  "popup_dl_clear": {
+    "message": "완료된 항목 지우기"
+  },
+  "popup_dl_running_count": {
+    "message": "$count$개 다운로드 중",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_remote": {
+    "message": "이것은 $server$에 있는 Mister Download Manager의 다운로드입니다. 거기에서 파일을 여세요.",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_dl_more": {
+    "message": "$total$개 중 최신 $shown$개입니다. Mister Download Manager에 모두 나열됩니다.",
+    "placeholders": {
+      "shown": {
+        "content": "$1",
+        "example": "60"
+      },
+      "total": {
+        "content": "$2",
+        "example": "245"
+      }
+    }
+  },
+  "popup_dl_of": {
+    "message": "$size$ 중 $done$",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "12.3 MB"
+      },
+      "size": {
+        "content": "$2",
+        "example": "48.7 MB"
+      }
+    }
+  },
+  "popup_dl_left": {
+    "message": "$time$ 남음",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "0:42"
+      }
+    }
+  },
+  "popup_dl_starting": {
+    "message": "시작 중..."
+  },
+  "popup_dl_paused": {
+    "message": "일시 중지됨"
+  },
+  "popup_dl_waiting": {
+    "message": "대기 중"
+  },
+  "popup_dl_done": {
+    "message": "완료됨"
+  },
+  "popup_dl_just_now": {
+    "message": "방금"
+  },
+  "popup_dl_failed": {
+    "message": "실패함"
+  },
+  "popup_dl_failed_why": {
+    "message": "실패함: $why$",
+    "placeholders": {
+      "why": {
+        "content": "$1",
+        "example": "the server refused the connection"
+      }
+    }
+  },
+  "popup_dl_gone": {
+    "message": "파일이 삭제되었거나 이동됨"
+  },
+  "popup_dl_loading": {
+    "message": "다운로드 찾는 중..."
+  },
+  "popup_dl_none": {
+    "message": "아직 다운로드 없음"
+  },
+  "popup_dl_none_text": {
+    "message": "Mister Download Manager으로 다운로드한 항목이 여기에 표시됩니다."
+  },
+  "popup_dl_no_match": {
+    "message": "일치하는 항목 없음"
+  },
+  "popup_dl_no_match_text": {
+    "message": "다운로드 이름이나 주소에 “$words$”이(가) 없습니다.",
+    "placeholders": {
+      "words": {
+        "content": "$1",
+        "example": "report"
+      }
+    }
+  },
+  "popup_dl_show_all": {
+    "message": "모든 다운로드 표시"
+  },
+  "popup_list_off": {
+    "message": "Mister Download Manager이(가) 실행 중이 아님"
+  },
+  "popup_list_off_text": {
+    "message": "여기에서 다운로드를 보려면 시작하세요."
+  },
+  "popup_list_start": {
+    "message": "Mister Download Manager 시작"
+  },
+  "popup_list_old": {
+    "message": "Mister Download Manager 업데이트"
+  },
+  "popup_list_old_text": {
+    "message": "이 버전은 아직 여기에서 다운로드를 나열할 수 없습니다."
+  },
+  "popup_list_busy": {
+    "message": "Mister Download Manager이(가) 사용 중입니다. 다시 시도하는 중..."
+  },
+  "popup_list_unreached": {
+    "message": "Mister Download Manager에 연결할 수 없음"
+  },
+  "popup_list_remote_unreachable": {
+    "message": "$server$의 Mister Download Manager에 연결할 수 없음",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_list_remote_unreachable_text": {
+    "message": "실행 중인지, 그리고 이 브라우저가 해당 인증서를 신뢰하는지 확인하세요(설정 → 다운로드 전송 → 열기).",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_act_open": {
+    "message": "열기"
+  },
+  "popup_act_open_named": {
+    "message": "$file$ 열기",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_folder": {
+    "message": "폴더에 표시"
+  },
+  "popup_act_folder_named": {
+    "message": "폴더에 $file$ 표시",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_copy_file": {
+    "message": "파일 복사"
+  },
+  "popup_act_share": {
+    "message": "공유..."
+  },
+  "popup_act_copy_link": {
+    "message": "링크 복사"
+  },
+  "popup_act_pause": {
+    "message": "일시 중지"
+  },
+  "popup_act_pause_named": {
+    "message": "$file$ 일시 중지",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_resume": {
+    "message": "다시 시작"
+  },
+  "popup_act_resume_named": {
+    "message": "$file$ 다시 시작",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_again": {
+    "message": "다시 다운로드"
+  },
+  "popup_act_remove": {
+    "message": "목록에서 제거"
+  },
+  "popup_act_delete": {
+    "message": "파일 삭제..."
+  },
+  "popup_act_more": {
+    "message": "추가 작업"
+  },
+  "popup_act_more_named": {
+    "message": "$file$에 대한 추가 작업",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_title": {
+    "message": "파일을 삭제하시겠습니까?"
+  },
+  "popup_ask_delete": {
+    "message": "$file$이(가) 컴퓨터에서 삭제되고 다운로드가 목록에서 제거됩니다. 이 작업은 취소할 수 없습니다.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_ok": {
+    "message": "삭제"
+  },
+  "popup_ask_clear_title": {
+    "message": "완료된 다운로드를 지우시겠습니까?"
+  },
+  "popup_ask_clear": {
+    "message": "완료된 다운로드 $count$개를 목록에서 제거하시겠습니까? 파일은 그대로 유지됩니다.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "8"
+      }
+    }
+  },
+  "popup_ask_clear_ok": {
+    "message": "지우기"
+  },
+  "popup_said_file": {
+    "message": "$file$을(를) 복사했습니다. 폴더, 채팅 또는 메시지에 붙여넣으세요.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_link": {
+    "message": "링크 복사됨"
+  },
+  "popup_said_removed": {
+    "message": "$file$이(가) 목록에서 제거됨",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_deleted": {
+    "message": "$file$ 삭제됨",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_again": {
+    "message": "$file$을(를) 다시 다운로드 중",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_cleared": {
+    "message": "완료된 다운로드 지움"
+  },
+  "popup_act_gone": {
+    "message": "해당 다운로드가 더 이상 목록에 없습니다."
+  },
+  "popup_act_missing": {
+    "message": "파일이 저장된 위치에 더 이상 없습니다(이동되었거나 삭제됨)."
+  },
+  "popup_act_running": {
+    "message": "먼저 일시 중지하세요."
+  },
+  "popup_act_cant": {
+    "message": "이 다운로드에는 지금 이 작업을 수행할 수 없습니다."
+  },
+  "popup_act_unsupported": {
+    "message": "이 시스템에서는 이 작업을 수행할 수 없습니다."
+  },
+  "popup_act_off": {
+    "message": "Mister Download Manager이(가) 실행 중이 아닙니다."
+  },
+  "popup_act_busy": {
+    "message": "Mister Download Manager이(가) 제때 응답하지 않았습니다. 다시 시도하세요."
+  },
+  "popup_act_failed": {
+    "message": "작업이 실패했습니다. 다시 시도하세요."
+  },
+  "status_running": {
+    "message": "다운로드 중: $count$개",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_open_remote": {
+    "message": "페이지 열기"
   }
 }

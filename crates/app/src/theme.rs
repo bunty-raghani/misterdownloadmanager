@@ -396,13 +396,14 @@ fn symbol_fonts() -> Vec<Vec<u8>> {
         .collect();
 }
 
-/// Whether egui can draw with `bytes`: a TrueType or OpenType font, or a collection of them (its
-/// first face), as the parser egui reads fonts with reads it. A bitmap font (PCF or BDF, gzipped
-/// or not), a Type 1 font, a file cut short or anything else is not one, and egui stops on a font
-/// it was given and can't read (#931: fontconfig named a gzipped PCF font for Japanese).
-fn loadable_font(bytes: &[u8]) -> bool {
+/// Whether egui can draw with `bytes`' face `index`: a TrueType or OpenType font, or a face of a
+/// collection of them, as the parser egui reads fonts with (skrifa) reads it. A bitmap font (PCF or
+/// BDF, gzipped or not), a Type 1 font, a file cut short, a face the collection doesn't have or
+/// anything else is not one, and egui stops on a font it was given and can't read (#931:
+/// fontconfig named a gzipped PCF font for Japanese; #1412: a BDF font for the symbols).
+fn loadable_font(bytes: &[u8], index: u32) -> bool {
     use skrifa::raw::TableProvider as _;
-    let Ok(font) = skrifa::FontRef::from_index(bytes, 0) else {
+    let Ok(font) = skrifa::FontRef::from_index(bytes, index) else {
         return false;
     };
     // A font whose list of tables is whole but whose tables are cut short (a copy that stopped)
@@ -417,14 +418,120 @@ fn loadable_font(bytes: &[u8]) -> bool {
         && font.cmap().is_ok()
 }
 
-/// A font file's bytes, when egui can draw with them ([`loadable_font`]). Any other file is
-/// passed over, and the log says so (once a run: the fonts are loaded again with each change of
-/// language): the next font in line is used instead.
+/// The face of `bytes` the interface draws with (#1483). A single font has one, face 0. A
+/// collection (.ttc) holds a family's faces in the order its maker chose, and its first can be a
+/// display weight: macOS's Songti.ttc starts with Songti SC Black, which made Chinese text heavy
+/// and bold. So face 0 is kept when it reads as regular text ([`regular_face`]: upright, normal
+/// width, from Light to Medium, as the files the tables name on purpose are: Yu Gothic Medium,
+/// Hiragino's W3), and otherwise the collection's face closest to Regular (400) is taken, the
+/// first of equals. A collection with no such face (a Bold-only file) keeps face 0.
+pub(crate) fn text_face(bytes: &[u8]) -> u32 {
+    use skrifa::raw::FileRef;
+    let Ok(FileRef::Collection(collection)) = FileRef::new(bytes) else {
+        return 0;
+    };
+    if regular_face(bytes, 0).is_some() {
+        return 0;
+    }
+    let mut best: Option<(u32, f32)> = None;
+    for index in 1..collection.len() {
+        if let Some(off) = regular_face(bytes, index)
+            && best.is_none_or(|(_, b)| off < b)
+        {
+            best = Some((index, off));
+        }
+    }
+    best.map_or(0, |(index, _)| index)
+}
+
+/// How far face `index` of `bytes` is from Regular (its weight's distance from 400), when it is
+/// a face egui can draw with ([`loadable_font`]) that reads as regular text: upright, normal
+/// width, weight 300–500 (Light, W3, Regular, Book, Medium), and a subfamily name that doesn't
+/// call it a display face (a collection whose weights all say 400 still names its Black one).
+fn regular_face(bytes: &[u8], index: u32) -> Option<f32> {
+    use skrifa::attribute::{Stretch, Style};
+    use skrifa::{MetadataProvider as _, string::StringId};
+    if !loadable_font(bytes, index) {
+        return None;
+    }
+    let font = skrifa::FontRef::from_index(bytes, index).ok()?;
+    let attributes = font.attributes();
+    let weight = attributes.weight.value();
+    if attributes.style != Style::Normal
+        || attributes.stretch != Stretch::NORMAL
+        || !(300.0..=500.0).contains(&weight)
+    {
+        return None;
+    }
+    const DISPLAY: &[&str] = &[
+        "black",
+        "heavy",
+        "bold",
+        "thin",
+        "hairline",
+        "ultra",
+        "extra",
+        "italic",
+        "oblique",
+        "condensed",
+        "expanded",
+    ];
+    for id in [
+        StringId::TYPOGRAPHIC_SUBFAMILY_NAME,
+        StringId::SUBFAMILY_NAME,
+    ] {
+        if let Some(name) = font.localized_strings(id).english_or_first() {
+            let name = name.to_string().to_ascii_lowercase();
+            if DISPLAY.iter().any(|word| name.contains(word)) {
+                return None;
+            }
+        }
+    }
+    Some((weight - 400.0).abs())
+}
+
+/// `bytes` as egui draws with them: at the face the interface uses ([`text_face`]).
+pub(crate) fn font_data(bytes: Vec<u8>) -> egui::FontData {
+    let index = text_face(&bytes);
+    let mut data = egui::FontData::from_owned(bytes);
+    data.index = index;
+    data
+}
+
+/// The faces [`read_font`] chose, by file: Windows' DirectWrite draws CJK text with the same
+/// face egui has ([`font_face_index`]).
+static FACES: std::sync::Mutex<Option<std::collections::HashMap<std::path::PathBuf, u32>>> =
+    std::sync::Mutex::new(None);
+
+/// The face of the font file at `path` the interface draws with ([`text_face`]): the one egui
+/// was given, read again only for a file egui wasn't given.
+#[cfg_attr(not(windows), allow(dead_code))]
+pub(crate) fn font_face_index(path: &std::path::Path) -> u32 {
+    let known = FACES
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .as_ref()
+        .and_then(|faces| faces.get(path).copied());
+    known
+        .or_else(|| read_font(path).map(|bytes| text_face(&bytes)))
+        .unwrap_or(0)
+}
+
+/// A font file's bytes, when egui can draw with them ([`loadable_font`], at the face
+/// [`text_face`] chooses). Any other file is passed over, and the log says so (once a run: the
+/// fonts are loaded again with each change of language): the next font in line is used instead.
 pub(crate) fn read_font(path: &std::path::Path) -> Option<Vec<u8>> {
     static SAID: std::sync::Mutex<Option<std::collections::HashSet<std::path::PathBuf>>> =
         std::sync::Mutex::new(None);
     let bytes = std::fs::read(path).ok()?;
-    if loadable_font(&bytes) {
+    // Given to egui by `font_data`, at the same face.
+    let face = text_face(&bytes);
+    if loadable_font(&bytes, face) {
+        FACES
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .get_or_insert_with(Default::default)
+            .insert(path.to_owned(), face);
         return Some(bytes);
     }
     let mut said = SAID.lock().unwrap_or_else(|e| e.into_inner());
@@ -438,6 +545,26 @@ pub(crate) fn read_font(path: &std::path::Path) -> Option<Vec<u8>> {
         );
     }
     None
+}
+
+/// The last look at the fonts before egui gets them: each one egui can read ([`loadable_font`], at
+/// the face it names) stays, any other is left out of the fonts and of every family that names it,
+/// and the log says so. Every system font MDM adds came through [`read_font`] already; this keeps
+/// a font from any other path (or a face of a collection egui can't find) from stopping MDM as it
+/// starts, which egui does with a font it was given and can't parse (#1412).
+fn only_loadable_fonts(defs: &mut egui::FontDefinitions) {
+    defs.font_data.retain(|name, data| {
+        let loadable = loadable_font(data.bytes(), data.index);
+        if !loadable {
+            tracing::warn!(
+                "fonts: {name} is not a TrueType or OpenType font egui can read, left out"
+            );
+        }
+        loadable
+    });
+    for list in defs.families.values_mut() {
+        list.retain(|name| defs.font_data.contains_key(name));
+    }
 }
 
 /// The folder the font tables name files in.
@@ -616,6 +743,19 @@ const MACOS_FALLBACK_FONTS: &[FallbackFont] = &[
         ranges: &[(0x1200, 0x139F), (0x2D80, 0x2DDF), (0xAB00, 0xAB2F)],
         files: &["Supplemental/Kefa.ttc", "Kefa.ttc"],
     },
+    // Sinhala by name, not left to the system's cascade ([`SystemFallback`]): that is asked with
+    // a sample of the script, whose first letter (U+0D81) macOS's Sinhala fonts lack. On a Mac
+    // that has a font with it (November India, one macOS downloads on demand) the cascade names
+    // that font, which isn't among the installed ones it is then looked up in, and Sinhala names
+    // were boxes (#1592).
+    FallbackFont {
+        key: "sinhala",
+        ranges: &[(0x0D80, 0x0DFF)],
+        files: &[
+            "Supplemental/Sinhala Sangam MN.ttc",
+            "Supplemental/Sinhala MN.ttc",
+        ],
+    },
     // Armenian, Hebrew and the Arabic script (Persian, Urdu: #533) too: the system font (SF)
     // has none of them, and Windows' Segoe UI, which has them, isn't there. The same font an
     // Arabic or Persian interface loads ([`SCRIPT_FONTS`]).
@@ -753,22 +893,28 @@ fn fallback_font(c: char) -> Option<(String, egui::FontData)> {
         .entry(key.clone())
         .or_insert_with(|| {
             let bytes = files.iter().find_map(|f| read_font(f))?;
-            let mut tweak = egui::FontTweak::default();
-            tweak.set_baseline_fallback(true);
-            #[cfg(windows)]
-            {
-                tweak.hinting_target =
-                    egui::epaint::text::HintingTarget::Smooth(egui::epaint::text::SmoothHinting {
-                        light: false,
-                        symmetric_rendering: false,
-                        preserve_linear_metrics: false,
-                    });
-                tweak.subpixel_binning = Some(false);
-            }
-            Some(egui::FontData::from_owned(bytes).tweak(tweak))
+            Some(font_data(bytes).tweak(on_demand_tweak()))
         })
         .clone()?;
     Some((key, font))
+}
+
+/// How a font found on demand draws: on the baseline of the family's first font (as the script
+/// fonts loaded up front, [`fonts`]), and on Windows hinted as [`sharp_text`] hints those.
+fn on_demand_tweak() -> egui::FontTweak {
+    let mut tweak = egui::FontTweak::default();
+    tweak.set_baseline_fallback(true);
+    #[cfg(windows)]
+    {
+        tweak.hinting_target =
+            egui::epaint::text::HintingTarget::Smooth(egui::epaint::text::SmoothHinting {
+                light: false,
+                symmetric_rendering: false,
+                preserve_linear_metrics: false,
+            });
+        tweak.subpixel_binning = Some(false);
+    }
+    tweak
 }
 
 /// `fc-match` for one pattern, asked right now (Linux, a character no loaded font has): the font
@@ -841,10 +987,63 @@ impl egui::FontProvider for ScriptFallback {
     }
 }
 
+/// Windows and macOS: the system's own font for a letter neither the interface's fonts nor
+/// [`ScriptFallback`]'s lists have (#1125): a script the lists don't name (Syriac, Thaana,
+/// Mongolian, N'Ko, Tifinagh...), or a letter the font they name lacks (Myanmar isn't in
+/// macOS's Arial Unicode). The system chooses as it does for its own apps
+/// (DirectWrite's font fallback, CoreText's cascade), among every font installed, through
+/// fontique; the font's file is mapped, not read into memory. Asked last, so the lists keep
+/// their faces (a Chinese interface's Chinese glyphs). Made the first time a letter needs it:
+/// listing the system's fonts takes a moment, which a start whose text the lists cover never
+/// spends. Linux has no need: fontconfig is asked for any letter ([`fallback_font`]).
+#[cfg(any(windows, target_os = "macos"))]
+#[derive(Default)]
+struct SystemFallback(std::sync::OnceLock<egui_system_font_provider::SystemFontProvider>);
+
+#[cfg(any(windows, target_os = "macos"))]
+impl egui::FontProvider for SystemFallback {
+    fn font_for(&self, request: &egui::FallbackRequest<'_>) -> Option<egui::FontInsert> {
+        let c = request.cluster.chars().next()?;
+        let started = std::time::Instant::now();
+        let system = self.0.get_or_init(|| {
+            // The interface language picks among a script's fonts (Chinese or Japanese faces).
+            egui_system_font_provider::SystemFontProvider::new()
+                .with_locale(Some(crate::i18n::code()))
+        });
+        let found = system.font_for(request);
+        let ms = started.elapsed().as_millis();
+        match &found {
+            Some(font) => tracing::info!(
+                "fonts: U+{:04X} from the system's {} ({ms} ms)",
+                c as u32,
+                font.name
+            ),
+            None => tracing::info!("fonts: no font on this system has U+{:04X}", c as u32),
+        }
+        let mut font = found?;
+        font.data.tweak = on_demand_tweak();
+        Some(font)
+    }
+}
+
+/// The fonts for text outside the interface language, in the order they are asked: MDM's lists
+/// ([`ScriptFallback`]), then the system's choice ([`SystemFallback`]).
+fn on_demand_fonts() -> Vec<std::sync::Arc<dyn egui::FontProvider>> {
+    vec![
+        std::sync::Arc::new(ScriptFallback),
+        #[cfg(any(windows, target_os = "macos"))]
+        std::sync::Arc::new(SystemFallback::default()),
+    ]
+}
+
 /// Tell the text system where the scripts outside the interface language come from, once.
 fn add_script_fallback(ctx: &egui::Context) {
     static ADDED: std::sync::Once = std::sync::Once::new();
-    ADDED.call_once(|| ctx.add_font_provider(std::sync::Arc::new(ScriptFallback)));
+    ADDED.call_once(|| {
+        for provider in on_demand_fonts() {
+            ctx.add_font_provider(provider);
+        }
+    });
 }
 
 /// The interface font: Segoe UI as IDM has it on Windows, the system's own elsewhere.
@@ -868,7 +1067,7 @@ fn script_fonts(code: &str, all: bool) -> Vec<(String, Vec<u8>)> {
             .iter()
             .filter(|(_, _, langs)| all || langs.contains(&code))
             // The first file there is used (older systems name some differently); a .ttc's
-            // first face is the regular one.
+            // regular face is the one drawn with ([`text_face`], #1483).
             .filter_map(|(key, files, _)| {
                 let bytes = files.iter().find_map(|f| read_font(&font_path(&dir, f)))?;
                 Some(((*key).to_owned(), bytes))
@@ -1004,7 +1203,7 @@ fn fonts(ctx: &egui::Context, code: &str, all: bool) {
     if let Some(bytes) = &ui {
         defs.font_data.insert(
             "segoe-ui".into(),
-            std::sync::Arc::new(egui::FontData::from_owned(bytes.clone())),
+            std::sync::Arc::new(font_data(bytes.clone())),
         );
         for fam in [egui::FontFamily::Proportional, egui::FontFamily::Monospace] {
             defs.families
@@ -1022,7 +1221,7 @@ fn fonts(ctx: &egui::Context, code: &str, all: bool) {
     let on_baseline = |bytes: Vec<u8>| {
         let mut tweak = egui::FontTweak::default();
         tweak.set_baseline_fallback(true);
-        std::sync::Arc::new(egui::FontData::from_owned(bytes).tweak(tweak))
+        std::sync::Arc::new(font_data(bytes).tweak(tweak))
     };
     let mut fallbacks: Vec<String> = Vec::new();
     if let Some(bytes) = ui {
@@ -1052,6 +1251,7 @@ fn fonts(ctx: &egui::Context, code: &str, all: bool) {
     }
     #[cfg(windows)]
     sharp_text(&mut defs);
+    only_loadable_fonts(&mut defs);
     ctx.set_fonts(defs);
     text_styles(ctx);
 }
@@ -1296,8 +1496,8 @@ mod font_file_tests {
     #[test]
     fn only_fonts_egui_can_read_are_taken() {
         let ttf = real_ttf("Ubuntu-Light");
-        assert!(loadable_font(&ttf), "a real TrueType font");
-        assert!(loadable_font(&real_ttf("Hack")), "another");
+        assert!(loadable_font(&ttf, 0), "a real TrueType font");
+        assert!(loadable_font(&real_ttf("Hack"), 0), "another");
 
         // The start of 12x13ja.pcf.gz: gzip's magic, read as the sfnt version 0x1F8B0800.
         let mut pcf_gz = vec![0x1f, 0x8b, 0x08, 0x00, 0, 0, 0, 0, 0x02, 0x03];
@@ -1309,16 +1509,7 @@ mod font_file_tests {
             b"STARTFONT 2.1\nFONT -misc-fixed-medium-r-normal--13-120-75-75-c-120-iso10646-1\n";
         let mut pfb = vec![0x80, 0x01, 0x10, 0x00, 0x00, 0x00];
         pfb.extend(b"%!PS-AdobeFont-1.0: Test 001.000\n");
-        // Random bytes (a fixed xorshift, so the test is the same every run).
-        let mut x = 0x9e37_79b9u32;
-        let random: Vec<u8> = (0..8192)
-            .map(|_| {
-                x ^= x << 13;
-                x ^= x >> 17;
-                x ^= x << 5;
-                x as u8
-            })
-            .collect();
+        let random = random_bytes();
         for (what, bytes) in [
             ("a gzipped PCF font", pcf_gz.as_slice()),
             ("a PCF font", &pcf),
@@ -1332,7 +1523,7 @@ mod font_file_tests {
                 &ttf[..ttf.len().min(400)],
             ),
         ] {
-            assert!(!loadable_font(bytes), "{what} was taken");
+            assert!(!loadable_font(bytes, 0), "{what} was taken");
         }
     }
 
@@ -1384,6 +1575,302 @@ mod font_file_tests {
         assert!(read_font(&bdf).is_none());
         assert!(read_font(&ubuntu).is_some());
     }
+
+    /// Random bytes (a fixed xorshift, so the tests are the same every run).
+    fn random_bytes() -> Vec<u8> {
+        let mut x = 0x9e37_79b9u32;
+        (0..8192)
+            .map(|_| {
+                x ^= x << 13;
+                x ^= x >> 17;
+                x ^= x << 5;
+                x as u8
+            })
+            .collect()
+    }
+
+    /// The start of a BDF bitmap font: read as an sfnt version, "STAR" (0x53544152), #1412's.
+    const BDF: &[u8] = b"STARTFONT 2.1\nFONT -misc-fixed-medium-r-normal--13-120-75-75-c-120-iso10646-1\nSIZE 13 75 75\n";
+
+    /// #1412: fontconfig's answer for the symbols, a BDF font first (as on CachyOS), then an
+    /// empty file and random bytes named as fonts: only the TrueType font after them is taken.
+    #[test]
+    fn a_bdf_an_empty_and_a_random_file_are_passed_over_for_the_truetype_font() {
+        let dir = tempfile::tempdir().unwrap();
+        let file = |name: &str, bytes: &[u8]| {
+            let path = dir.path().join(name);
+            std::fs::write(&path, bytes).unwrap();
+            path
+        };
+        let candidates = [
+            file("symbols.bdf", BDF),
+            file("empty.ttf", &[]),
+            file("random.otf", &random_bytes()),
+            file("Ubuntu-Light.ttf", &real_ttf("Ubuntu-Light")),
+        ];
+        let mut looked = HashMap::new();
+        let (picked, bytes) = pick_font(&candidates, &mut looked).expect("a font");
+        assert_eq!(picked, candidates[3]);
+        assert_eq!(bytes, real_ttf("Ubuntu-Light"));
+        for refused in &candidates[..3] {
+            assert_eq!(looked.get(refused), Some(&false), "{}", refused.display());
+            assert!(read_font(refused).is_none(), "{}", refused.display());
+        }
+    }
+
+    /// #1412: the fonts egui gets are each one it can read, whatever path added them: a BDF font,
+    /// an empty file, random bytes and a TrueType font named at a face it doesn't have are left
+    /// out (of the fonts and of the families), the TrueType font stays, and egui lays text out.
+    /// Without that last look egui stops on the first of them, as MDM 0.5.2 did as it started.
+    #[test]
+    fn a_font_egui_cant_read_never_reaches_it() {
+        use egui::epaint::text::{Fonts, TextOptions};
+        use egui::{FontData, FontFamily, FontId};
+        use std::sync::Arc;
+
+        let mut defs = egui::FontDefinitions::default();
+        let mut missing_face = FontData::from_owned(real_ttf("Ubuntu-Light"));
+        missing_face.index = 3;
+        let added = [
+            ("symbols-0", FontData::from_owned(BDF.to_vec())),
+            ("empty", FontData::from_owned(Vec::new())),
+            ("random", FontData::from_owned(random_bytes())),
+            ("missing-face", missing_face),
+            ("valid", FontData::from_owned(real_ttf("Ubuntu-Light"))),
+        ];
+        for (name, data) in added {
+            defs.font_data.insert(name.into(), Arc::new(data));
+            for family in [FontFamily::Proportional, FontFamily::Monospace] {
+                defs.families
+                    .entry(family)
+                    .or_default()
+                    .insert(0, name.into());
+            }
+        }
+
+        // What egui does with them as given: it stops (the panic MDM 0.5.2 started with).
+        let unchecked = defs.clone();
+        let stopped = std::panic::catch_unwind(std::panic::AssertUnwindSafe(move || {
+            let mut fonts = Fonts::new(TextOptions::default(), unchecked);
+            fonts.has_glyphs(&FontId::proportional(13.0), "a")
+        }));
+        let why = stopped.expect_err("egui took a font it can't read");
+        let why = why
+            .downcast_ref::<String>()
+            .map(String::as_str)
+            .or_else(|| why.downcast_ref::<&str>().copied())
+            .unwrap_or_default();
+        assert!(why.contains("TTF/OTF font file"), "{why}");
+
+        super::only_loadable_fonts(&mut defs);
+        for name in ["symbols-0", "empty", "random", "missing-face"] {
+            assert!(!defs.font_data.contains_key(name), "{name} reached egui");
+            for list in defs.families.values() {
+                assert!(!list.iter().any(|n| n == name), "a family names {name}");
+            }
+        }
+        assert!(defs.font_data.contains_key("valid"));
+        for family in [FontFamily::Proportional, FontFamily::Monospace] {
+            assert_eq!(
+                defs.families[&family].first().map(String::as_str),
+                Some("valid")
+            );
+        }
+        // egui's own fonts are all still there.
+        for name in egui::FontDefinitions::default().font_data.keys() {
+            assert!(defs.font_data.contains_key(name), "{name} was left out");
+        }
+
+        let mut fonts = Fonts::new(TextOptions::default(), defs);
+        assert!(fonts.has_glyphs(&FontId::proportional(13.0), "Mister Download Manager"));
+        assert!(fonts.has_glyphs(&FontId::monospace(13.0), "0123456789"));
+    }
+
+    /// A font file's tables (sfnt): tag and bytes, as its table list names them.
+    fn sfnt_tables(font: &[u8]) -> Vec<([u8; 4], Vec<u8>)> {
+        let be32 = |at: usize| u32::from_be_bytes(font[at..at + 4].try_into().unwrap()) as usize;
+        let count = u16::from_be_bytes([font[4], font[5]]) as usize;
+        (0..count)
+            .map(|i| {
+                let record = 12 + 16 * i;
+                let (at, len) = (be32(record + 8), be32(record + 12));
+                (
+                    font[record..record + 4].try_into().unwrap(),
+                    font[at..at + len].to_vec(),
+                )
+            })
+            .collect()
+    }
+
+    /// A font collection (.ttc) of `faces`, in order, laid out as font tools write one: the
+    /// header, each face's table list, then the tables.
+    fn collection(faces: &[Vec<u8>]) -> Vec<u8> {
+        let faces: Vec<_> = faces.iter().map(|f| (&f[..4], sfnt_tables(f))).collect();
+        let header = 12 + 4 * faces.len();
+        let lists: usize = faces.iter().map(|(_, t)| 12 + 16 * t.len()).sum();
+        let mut out = b"ttcf".to_vec();
+        out.extend(0x0001_0000u32.to_be_bytes());
+        out.extend((faces.len() as u32).to_be_bytes());
+        let mut list_at = header;
+        for (_, tables) in &faces {
+            out.extend((list_at as u32).to_be_bytes());
+            list_at += 12 + 16 * tables.len();
+        }
+        let mut data = Vec::new();
+        for (version, tables) in &faces {
+            out.extend(*version);
+            out.extend((tables.len() as u16).to_be_bytes());
+            out.extend([0u8; 6]);
+            for (tag, bytes) in tables {
+                out.extend(tag);
+                out.extend(0u32.to_be_bytes());
+                out.extend(((header + lists + data.len()) as u32).to_be_bytes());
+                out.extend((bytes.len() as u32).to_be_bytes());
+                data.extend(bytes);
+                data.resize(data.len().next_multiple_of(4), 0);
+            }
+        }
+        assert_eq!(out.len(), header + lists);
+        out.extend(data);
+        out
+    }
+
+    /// `font` made into another face of its family: its weight (OS/2 usWeightClass), italic or
+    /// upright (fsSelection), and, given one, the subfamily its name table says.
+    fn face(font: &[u8], weight: u16, italic: bool, subfamily: Option<&str>) -> Vec<u8> {
+        let mut font = font.to_vec();
+        let be16 = |f: &[u8], at: usize| u16::from_be_bytes([f[at], f[at + 1]]) as usize;
+        let table = |f: &[u8], tag: &[u8; 4]| {
+            (0..be16(f, 4))
+                .map(|i| 12 + 16 * i)
+                .find(|&r| &f[r..r + 4] == tag)
+                .map(|r| u32::from_be_bytes(f[r + 8..r + 12].try_into().unwrap()) as usize)
+                .expect("the table")
+        };
+        let os2 = table(&font, b"OS/2");
+        font[os2 + 4..os2 + 6].copy_from_slice(&weight.to_be_bytes());
+        // fsSelection: italic (bit 0), oblique (bit 9), regular (bit 6).
+        let mut selection = be16(&font, os2 + 62) as u16 & !0x0241;
+        selection |= if italic { 0x0001 } else { 0x0040 };
+        font[os2 + 62..os2 + 64].copy_from_slice(&selection.to_be_bytes());
+        if let Some(subfamily) = subfamily {
+            let name = table(&font, b"name");
+            let strings = name + be16(&font, name + 4);
+            for i in 0..be16(&font, name + 2) {
+                let record = name + 6 + 12 * i;
+                if ![2, 17].contains(&be16(&font, record + 6)) {
+                    continue;
+                }
+                let text: Vec<u8> = if be16(&font, record) == 1 {
+                    subfamily.bytes().collect()
+                } else {
+                    subfamily
+                        .encode_utf16()
+                        .flat_map(u16::to_be_bytes)
+                        .collect()
+                };
+                assert!(text.len() <= be16(&font, record + 8), "fits in place");
+                let at = strings + be16(&font, record + 10);
+                font[at..at + text.len()].copy_from_slice(&text);
+                font[record + 8..record + 10].copy_from_slice(&(text.len() as u16).to_be_bytes());
+            }
+        }
+        font
+    }
+
+    /// #1483: a collection whose first face isn't its regular one (macOS's Songti.ttc starts with
+    /// Songti SC Black) is drawn with its face closest to Regular: upright, normal weight, not
+    /// named as a display face. A first face that reads as regular text (Yu Gothic Medium,
+    /// Hiragino W3) stays, and a collection with no such face keeps its first.
+    #[test]
+    fn a_collection_is_drawn_with_its_regular_face() {
+        use super::{font_data, font_face_index, text_face};
+        let hack = real_ttf("Hack");
+        let ubuntu = real_ttf("Ubuntu-Light");
+        let w = |weight| face(&hack, weight, false, None);
+
+        // As Songti.ttc: Black, Bold, Light, Regular (twice: SC and TC).
+        let songti = collection(&[
+            w(900),
+            w(700),
+            face(&ubuntu, 300, false, None),
+            w(400),
+            w(400),
+        ]);
+        assert_eq!(text_face(&songti), 3);
+        // Italic, and a face whose name says Bold though its weight says 400, are passed over.
+        let named = collection(&[
+            w(900),
+            face(&hack, 400, true, None),
+            face(&hack, 400, false, Some("Bold")),
+            face(&hack, 400, false, Some("Black")),
+            w(400),
+        ]);
+        assert_eq!(text_face(&named), 4);
+        // The closest to Regular; of two as close (Light 300, Medium 500), the first.
+        assert_eq!(text_face(&collection(&[w(900), w(300), w(400)])), 2);
+        assert_eq!(text_face(&collection(&[w(900), w(300), w(500)])), 1);
+        // As YuGothM.ttc (Yu Gothic Medium, then Yu Gothic UI Regular) and Hiragino's W3, W6.
+        assert_eq!(text_face(&collection(&[w(500), w(400)])), 0);
+        assert_eq!(text_face(&collection(&[w(300), w(600)])), 0);
+        // Bold faces only (msyhbd.ttc): the first.
+        assert_eq!(text_face(&collection(&[w(700), w(900)])), 0);
+        // One font, not a collection, and anything else: face 0.
+        assert_eq!(text_face(&w(900)), 0);
+        assert_eq!(text_face(&hack), 0);
+        assert_eq!(text_face(BDF), 0);
+        assert_eq!(text_face(&[]), 0);
+
+        // Read from its file: the face egui is given, the face DirectWrite is told, and egui draws
+        // with it.
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("Songti.ttc");
+        std::fs::write(&path, &songti).unwrap();
+        let bytes = read_font(&path).expect("a collection egui can read");
+        assert_eq!(font_face_index(&path), 3);
+        let data = font_data(bytes);
+        assert_eq!(data.index, 3);
+        let mut defs = egui::FontDefinitions::default();
+        defs.font_data
+            .insert("songti".into(), std::sync::Arc::new(data));
+        defs.families
+            .get_mut(&egui::FontFamily::Proportional)
+            .unwrap()
+            .insert(0, "songti".into());
+        super::only_loadable_fonts(&mut defs);
+        assert!(defs.font_data.contains_key("songti"));
+        let mut fonts = egui::epaint::text::Fonts::new(Default::default(), defs);
+        assert!(fonts.has_glyphs(&egui::FontId::proportional(13.0), "Regular"));
+    }
+
+    /// The system's collections MDM names on Windows keep the face they had: each one's first
+    /// face is its regular one already (Yu Gothic Medium is YuGothM.ttc's), or the file has no
+    /// regular face (the Bold and Light ones). The faces are printed: the PR's proof (#1483).
+    #[cfg(windows)]
+    #[test]
+    fn windows_collections_keep_their_first_face() {
+        let dir = super::font_dir();
+        for file in [
+            "msyh.ttc",
+            "msjh.ttc",
+            "YuGothM.ttc",
+            "meiryo.ttc",
+            "msgothic.ttc",
+            "Nirmala.ttc",
+            "simsun.ttc",
+            "YuGothR.ttc",
+            "YuGothB.ttc",
+            "msyhbd.ttc",
+            "msyhl.ttc",
+        ] {
+            let Some(bytes) = read_font(&dir.join(file)) else {
+                continue;
+            };
+            let face = super::text_face(&bytes);
+            println!("{file}: face {face}");
+            assert_eq!(face, 0, "{file}");
+        }
+    }
 }
 
 /// Every mark a window draws (punctuation, arrows, ✔, quotation marks…: what isn't a letter or a
@@ -1400,7 +1887,7 @@ mod glyph_tests {
         use egui::epaint::text::{Fonts, TextOptions};
         use egui::{FontFamily, FontId};
         let mut fonts = Fonts::new(TextOptions::default(), egui::FontDefinitions::default())
-            .with_font_providers(vec![std::sync::Arc::new(super::ScriptFallback)]);
+            .with_font_providers(super::on_demand_fonts());
         let id = FontId::new(13.0, FontFamily::Proportional);
         for text in [
             "\u{09AC}\u{09BE}\u{0982}\u{09B2}\u{09BE}", // Bangla
@@ -1411,6 +1898,129 @@ mod glyph_tests {
         ] {
             assert!(fonts.has_glyphs(&id, text), "no font for {text}");
         }
+    }
+
+    /// #1125: file names in the scripts the report and the lists name, under an English
+    /// interface, and in scripts MDM's lists don't name, which only the system's own fallback
+    /// finds: before, those stayed boxes. egui's fonts alone have none of them (no Segoe UI here,
+    /// so even Arabic and Hebrew must come from a fallback).
+    /// (Linux asks fontconfig, whose answer depends on the fonts a distribution installs.)
+    #[cfg(any(windows, target_os = "macos"))]
+    const NAMES: [(&str, &str); 10] = [
+        (
+            "Arabic",
+            "\u{062A}\u{0642}\u{0631}\u{064A}\u{0631} \u{0627}\u{0644}\u{0645}\u{0628}\u{064A}\u{0639}\u{0627}\u{062A}",
+        ),
+        (
+            "Hebrew",
+            "\u{05E1}\u{05D9}\u{05DB}\u{05D5}\u{05DD} \u{05D4}\u{05E4}\u{05D2}\u{05D9}\u{05E9}\u{05D4}",
+        ),
+        ("Chinese", "\u{5E74}\u{5EA6}\u{62A5}\u{544A}"),
+        (
+            "Hindi",
+            "\u{0939}\u{093F}\u{0902}\u{0926}\u{0940} \u{0917}\u{093E}\u{0928}\u{0947}",
+        ),
+        ("Thaana", "\u{078B}\u{07A8}\u{0788}\u{07AC}\u{0780}\u{07A8}"),
+        (
+            "Mongolian",
+            "\u{182E}\u{1823}\u{1829}\u{182D}\u{1823}\u{182F}",
+        ),
+        ("N'Ko", "\u{07D2}\u{07DE}\u{07CF}"),
+        (
+            "Tifinagh",
+            "\u{2D5C}\u{2D49}\u{2D3C}\u{2D49}\u{2D4F}\u{2D30}\u{2D56}",
+        ),
+        (
+            "Canadian syllabics",
+            "\u{14C0}\u{1426}\u{1403}\u{152D}\u{140D}\u{140F}\u{1423}",
+        ),
+        ("Yi", "\u{A188}\u{A320}\u{A071}\u{A0B7}"),
+    ];
+
+    #[cfg(windows)]
+    #[test]
+    fn every_script_the_system_has_a_font_for_shows_its_letters() {
+        use egui::epaint::text::{Fonts, TextOptions};
+        use egui::{FontFamily, FontId};
+        let mut fonts = Fonts::new(TextOptions::default(), egui::FontDefinitions::default())
+            .with_font_providers(super::on_demand_fonts());
+        for family in [FontFamily::Proportional, FontFamily::Monospace] {
+            let id = FontId::new(13.0, family);
+            for (script, text) in NAMES {
+                assert!(fonts.has_glyphs(&id, text), "no font for {script}: {text}");
+            }
+        }
+    }
+
+    /// The fallback's choice (#1125): MDM's lists first (Nirmala UI for Hindi, the face the
+    /// classic text and the interface languages that use the script have), the system only for
+    /// what the lists don't name (Thaana), and the system's font never replaces a list's.
+    #[cfg(windows)]
+    #[test]
+    fn the_lists_choose_first_and_the_system_after() {
+        use egui::epaint::text::{Fonts, TextOptions};
+        use egui::{FontFamily, FontId};
+        let mut fonts = Fonts::new(TextOptions::default(), egui::FontDefinitions::default())
+            .with_font_providers(super::on_demand_fonts());
+        let id = FontId::new(13.0, FontFamily::Proportional);
+        let found = |fonts: &Fonts| -> Vec<String> {
+            fonts
+                .discovered_fonts()
+                .iter()
+                .map(|f| f.name.clone())
+                .collect()
+        };
+        assert!(fonts.has_glyphs(&id, NAMES[3].1), "Hindi");
+        assert_eq!(found(&fonts), ["fallback:indic"]);
+        assert!(fonts.has_glyphs(&id, NAMES[4].1), "Thaana");
+        let names = found(&fonts);
+        assert_eq!(names.len(), 2, "{names:?}");
+        assert!(names[1].starts_with("system:"), "{names:?}");
+        // Hindi again, and Bangla (the same list's font): nothing new is looked for.
+        assert!(fonts.has_glyphs(&id, "\u{0915}\u{09AC}"));
+        assert_eq!(found(&fonts).len(), 2);
+    }
+
+    /// macOS (#1125): what Arial Unicode, the list's font for its blocks, lacks comes from the
+    /// system's cascade (Myanmar), as does a script no list names (Mongolian, Yi). Sinhala has a
+    /// font for every letter too: from the list ([`sinhala_names_get_a_font_on_macos`]).
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn macos_finds_what_arial_unicode_lacks() {
+        use egui::epaint::text::{Fonts, TextOptions};
+        use egui::{FontFamily, FontId};
+        let mut fonts = Fonts::new(TextOptions::default(), egui::FontDefinitions::default())
+            .with_font_providers(super::on_demand_fonts());
+        let id = FontId::new(13.0, FontFamily::Proportional);
+        for (script, text) in [
+            (
+                "Myanmar",
+                "\u{1019}\u{103C}\u{1014}\u{103A}\u{1019}\u{102C}",
+            ),
+            ("Sinhala", "\u{0DC3}\u{0DD2}\u{0D82}\u{0DC4}\u{0DBD}"),
+            NAMES[0],
+            NAMES[1],
+            NAMES[2],
+            NAMES[3],
+        ] {
+            // Which fonts were found says where a failure comes from: the list's
+            // (`fallback:…`) or the system's (`system:<family>…`).
+            assert!(
+                fonts.has_glyphs(&id, text),
+                "no font for {script}: {text}; found {:?}",
+                font_names(&fonts)
+            );
+        }
+    }
+
+    /// The fonts found on demand so far, by name, in the order they were found.
+    #[cfg(target_os = "macos")]
+    fn font_names(fonts: &egui::epaint::text::Fonts) -> Vec<String> {
+        fonts
+            .discovered_fonts()
+            .iter()
+            .map(|f| f.name.clone())
+            .collect()
     }
 
     /// Names in the Arabic script (a Persian file name, #533), Hebrew and Armenian, under an
@@ -1441,6 +2051,43 @@ mod glyph_tests {
                 );
             }
         }
+    }
+
+    /// A Sinhala file name on macOS: the list names macOS's Sinhala font for every letter of the
+    /// block, before Arial Unicode (which has none of them). Left to the system's cascade, they
+    /// were boxes on a Mac with a downloaded font that has U+0D81 (`MACOS_FALLBACK_FONTS` says
+    /// why). Checked on every system (the table is data); the font itself in the macOS test below.
+    const SINHALA: &str = "\u{0DC3}\u{0DD2}\u{0D82}\u{0DC4}\u{0DBD}";
+
+    #[test]
+    fn macos_names_its_sinhala_font() {
+        for c in ('\u{0D80}'..='\u{0DFF}').chain(SINHALA.chars()) {
+            let font = super::fallback_entry(super::MACOS_FALLBACK_FONTS, c)
+                .unwrap_or_else(|| panic!("no macOS font for U+{:04X}", c as u32));
+            assert_eq!(font.key, "sinhala", "U+{:04X}", c as u32);
+        }
+        // Its neighbours keep theirs: Malayalam before it, Thai after.
+        for c in ['\u{0D7F}', '\u{0E01}'] {
+            let key = super::fallback_entry(super::MACOS_FALLBACK_FONTS, c).map(|f| f.key);
+            assert_ne!(key, Some("sinhala"), "U+{:04X}", c as u32);
+        }
+    }
+
+    /// Drawn with the list's font alone, the system's cascade not asked.
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn sinhala_names_get_a_font_on_macos() {
+        use egui::epaint::text::{Fonts, TextOptions};
+        use egui::{FontFamily, FontId};
+        let mut fonts = Fonts::new(TextOptions::default(), egui::FontDefinitions::default())
+            .with_font_providers(vec![std::sync::Arc::new(super::ScriptFallback)]);
+        let id = FontId::new(13.0, FontFamily::Proportional);
+        assert!(
+            fonts.has_glyphs(&id, SINHALA),
+            "no font for {SINHALA}; found {:?}",
+            font_names(&fonts)
+        );
+        assert_eq!(font_names(&fonts), ["fallback:sinhala"]);
     }
 
     /// The same names drawn with macOS's own fonts: the fallback finds a file that is there and

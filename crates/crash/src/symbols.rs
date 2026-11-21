@@ -7,17 +7,22 @@ use std::path::{Path, PathBuf};
 
 use crate::github::REPO;
 
-/// This build's system in the zip's name.
+/// This build's system and processor in the zip's name: one zip per download that has programs
+/// of its own (release.yml, the platform tools/installer/symbols.py is given).
 pub fn platform() -> &'static str {
+    let arm = cfg!(target_arch = "aarch64");
     if cfg!(windows) {
-        "windows-x64"
-    } else if cfg!(target_os = "macos") {
-        // One zip per processor, as the .dmg (tools/installer/build-macos.sh).
-        if cfg!(target_arch = "aarch64") {
-            "macos-arm64"
+        if arm {
+            "windows-arm64"
+        } else if cfg!(target_arch = "x86") {
+            "windows-x86"
         } else {
-            "macos-x86_64"
+            "windows-x64"
         }
+    } else if cfg!(target_os = "macos") {
+        if arm { "macos-arm64" } else { "macos-x86_64" }
+    } else if arm {
+        "linux-arm64"
     } else {
         "linux-x86_64"
     }

@@ -44,6 +44,7 @@ pub fn of_engine(e: &crate::Error) -> Option<Fault> {
             NetKind::Lost => Fault::CutShort,
             NetKind::Tls => Fault::Secure,
         },
+        E::Certificate(_) => Fault::Secure,
         _ => return None,
     })
 }

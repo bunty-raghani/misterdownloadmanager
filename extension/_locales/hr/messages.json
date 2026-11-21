@@ -92,9 +92,6 @@
       }
     }
   },
-  "popup_undo": {
-    "message": "Poništi"
-  },
   "popup_excluded": {
     "message": "Preuzimanja s $site$ ostaju u pregledniku",
     "placeholders": {
@@ -148,6 +145,9 @@
   },
   "declined_integration_off": {
     "message": "Opcija „Koristi naprednu integraciju preglednika” isključena je u Mogućnosti → Općenito."
+  },
+  "declined_torrents": {
+    "message": "To je torrent, a opcija Otvori magnetne veze i .torrent datoteke s Mister Download Manager isključena je u postavkama torrenta."
   },
   "declined_site_access": {
     "message": "Proširenje ne smije čitati ovu stranicu (pristup stranici preglednika)."
@@ -328,5 +328,424 @@
   },
   "video_original": {
     "message": "izvorno"
+  },
+  "video_compatible": {
+    "message": "Najkompatibilnije"
+  },
+  "popup_video_hide_fullscreen": {
+    "message": "Sakrij gumb za preuzimanje u načinu cijelog zaslona"
+  },
+  "popup_video_hide_fullscreen_title": {
+    "message": "Dok je stranica u načinu cijelog zaslona, njezini videozapisi ne prikazuju gumb Preuzmi videozapis"
+  },
+  "popup_remote_forget": {
+    "message": "Zaboravi"
+  },
+  "popup_gear": {
+    "message": "Mogućnosti u aplikaciji Mister Download Manager"
+  },
+  "popup_tabs": {
+    "message": "Odjeljci skočnog prozora"
+  },
+  "popup_tab_downloads": {
+    "message": "Preuzimanja"
+  },
+  "popup_tab_page": {
+    "message": "Ova stranica"
+  },
+  "popup_tab_settings": {
+    "message": "Postavke"
+  },
+  "popup_conn": {
+    "message": "Povezano · $version$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.5.2"
+      }
+    }
+  },
+  "popup_conn_plain": {
+    "message": "Povezano"
+  },
+  "popup_conn_off": {
+    "message": "Nije povezano"
+  },
+  "popup_conn_paused": {
+    "message": "Pauzirano"
+  },
+  "popup_conn_update": {
+    "message": "Ažuriraj Mister Download Manager"
+  },
+  "popup_conn_remote": {
+    "message": "Šalje se na $server$",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_cancel": {
+    "message": "Odustani"
+  },
+  "popup_page_none": {
+    "message": "Ovo nije web-stranica: ovdje nema ništa za raditi."
+  },
+  "popup_exclude_by_rule": {
+    "message": "Pregledniku prepušteno zbog pravila u Postavkama"
+  },
+  "popup_dl_search": {
+    "message": "Pretraži preuzimanja"
+  },
+  "popup_dl_filters": {
+    "message": "Prikaži"
+  },
+  "popup_dl_all": {
+    "message": "Sve"
+  },
+  "popup_dl_running": {
+    "message": "U tijeku"
+  },
+  "popup_dl_done_filter": {
+    "message": "Dovršeno"
+  },
+  "popup_dl_failed_filter": {
+    "message": "Neuspjelo"
+  },
+  "popup_dl_clear": {
+    "message": "Ukloni dovršena preuzimanja"
+  },
+  "popup_dl_running_count": {
+    "message": "$count$ preuzimanja u tijeku",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_remote": {
+    "message": "Ovo su preuzimanja aplikacije Mister Download Manager na poslužitelju $server$. Otvorite njihove datoteke tamo.",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_dl_more": {
+    "message": "Najnovijih $shown$ od $total$. Mister Download Manager ih sve navodi.",
+    "placeholders": {
+      "shown": {
+        "content": "$1",
+        "example": "60"
+      },
+      "total": {
+        "content": "$2",
+        "example": "245"
+      }
+    }
+  },
+  "popup_dl_of": {
+    "message": "$done$ od $size$",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "12.3 MB"
+      },
+      "size": {
+        "content": "$2",
+        "example": "48.7 MB"
+      }
+    }
+  },
+  "popup_dl_left": {
+    "message": "Preostalo $time$",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "0:42"
+      }
+    }
+  },
+  "popup_dl_starting": {
+    "message": "Pokretanje..."
+  },
+  "popup_dl_paused": {
+    "message": "Pauzirano"
+  },
+  "popup_dl_waiting": {
+    "message": "Čeka"
+  },
+  "popup_dl_done": {
+    "message": "Dovršeno"
+  },
+  "popup_dl_just_now": {
+    "message": "upravo sada"
+  },
+  "popup_dl_failed": {
+    "message": "Neuspjelo"
+  },
+  "popup_dl_failed_why": {
+    "message": "Preuzimanje nije uspjelo: $why$",
+    "placeholders": {
+      "why": {
+        "content": "$1",
+        "example": "the server refused the connection"
+      }
+    }
+  },
+  "popup_dl_gone": {
+    "message": "Datoteka izbrisana ili premještena"
+  },
+  "popup_dl_loading": {
+    "message": "Traženje preuzimanja..."
+  },
+  "popup_dl_none": {
+    "message": "Još nema preuzimanja"
+  },
+  "popup_dl_none_text": {
+    "message": "Ovdje se prikazuje ono što preuzimate pomoću aplikacije Mister Download Manager."
+  },
+  "popup_dl_no_match": {
+    "message": "Nema podudaranja"
+  },
+  "popup_dl_no_match_text": {
+    "message": "Nijedno preuzimanje nema „$words$” u nazivu ili adresi.",
+    "placeholders": {
+      "words": {
+        "content": "$1",
+        "example": "report"
+      }
+    }
+  },
+  "popup_dl_show_all": {
+    "message": "Prikaži sva preuzimanja"
+  },
+  "popup_list_off": {
+    "message": "Mister Download Manager nije pokrenut"
+  },
+  "popup_list_off_text": {
+    "message": "Pokrenite ga da biste ovdje vidjeli svoja preuzimanja."
+  },
+  "popup_list_start": {
+    "message": "Pokreni Mister Download Manager"
+  },
+  "popup_list_old": {
+    "message": "Ažuriraj Mister Download Manager"
+  },
+  "popup_list_old_text": {
+    "message": "Ova verzija još ne može ovdje navesti svoja preuzimanja."
+  },
+  "popup_list_busy": {
+    "message": "Mister Download Manager je zauzet. Ponovni pokušaj..."
+  },
+  "popup_list_unreached": {
+    "message": "Nije moguće doći do Mister Download Manager"
+  },
+  "popup_list_remote_unreachable": {
+    "message": "Nije moguće doći do Mister Download Manager na $server$",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_list_remote_unreachable_text": {
+    "message": "Provjerite je li pokrenut i prihvaća li ovaj preglednik njegov certifikat (Postavke → Slanje preuzimanja u → Otvori ga).",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_act_open": {
+    "message": "Otvori"
+  },
+  "popup_act_open_named": {
+    "message": "Otvori $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_folder": {
+    "message": "Prikaži u mapi"
+  },
+  "popup_act_folder_named": {
+    "message": "Prikaži $file$ u mapi",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_copy_file": {
+    "message": "Kopiraj datoteku"
+  },
+  "popup_act_share": {
+    "message": "Dijeli..."
+  },
+  "popup_act_copy_link": {
+    "message": "Kopiraj vezu"
+  },
+  "popup_act_pause": {
+    "message": "Pauziraj"
+  },
+  "popup_act_pause_named": {
+    "message": "Pauziraj $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_resume": {
+    "message": "Nastavi"
+  },
+  "popup_act_resume_named": {
+    "message": "Nastavi $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_again": {
+    "message": "Preuzmi ponovno"
+  },
+  "popup_act_remove": {
+    "message": "Ukloni s popisa"
+  },
+  "popup_act_delete": {
+    "message": "Izbriši datoteku..."
+  },
+  "popup_act_more": {
+    "message": "Više radnji"
+  },
+  "popup_act_more_named": {
+    "message": "Više radnji za $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_title": {
+    "message": "Želite li izbrisati datoteku?"
+  },
+  "popup_ask_delete": {
+    "message": "Datoteka $file$ bit će izbrisana s vašeg računala, a preuzimanje uklonjeno s popisa. To se ne može poništiti.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_ok": {
+    "message": "Izbriši"
+  },
+  "popup_ask_clear_title": {
+    "message": "Želite li ukloniti dovršena preuzimanja?"
+  },
+  "popup_ask_clear": {
+    "message": "$count$ dovršenih preuzimanja uklanja se s popisa. Njihove datoteke ostaju gdje jesu.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "8"
+      }
+    }
+  },
+  "popup_ask_clear_ok": {
+    "message": "Očisti"
+  },
+  "popup_said_file": {
+    "message": "Kopirano $file$. Zalijepite u mapu, chat ili poruku.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_link": {
+    "message": "Veza kopirana"
+  },
+  "popup_said_removed": {
+    "message": "$file$ uklonjena s popisa",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_deleted": {
+    "message": "$file$ je izbrisana",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_again": {
+    "message": "Ponovno preuzimanje datoteke $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_cleared": {
+    "message": "Dovršena preuzimanja uklonjena"
+  },
+  "popup_act_gone": {
+    "message": "To preuzimanje više nije na popisu."
+  },
+  "popup_act_missing": {
+    "message": "Datoteka više nije na mjestu spremanja (premještena je ili izbrisana)."
+  },
+  "popup_act_running": {
+    "message": "Prvo pauzirajte."
+  },
+  "popup_act_cant": {
+    "message": "To se sada ne može učiniti s ovim preuzimanjem."
+  },
+  "popup_act_unsupported": {
+    "message": "Ovaj sustav to ne može učiniti."
+  },
+  "popup_act_off": {
+    "message": "Mister Download Manager nije pokrenut."
+  },
+  "popup_act_busy": {
+    "message": "Mister Download Manager nije odgovorio na vrijeme. Pokušajte ponovno."
+  },
+  "popup_act_failed": {
+    "message": "To nije uspjelo. Pokušajte ponovno."
+  },
+  "status_running": {
+    "message": "Preuzimanje: $count$",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_open_remote": {
+    "message": "Otvori njegovu stranicu"
   }
 }

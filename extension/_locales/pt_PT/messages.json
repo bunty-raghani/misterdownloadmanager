@@ -92,9 +92,6 @@
       }
     }
   },
-  "popup_undo": {
-    "message": "Anular"
-  },
   "popup_excluded": {
     "message": "Os downloads de $site$ ficam com o navegador",
     "placeholders": {
@@ -148,6 +145,9 @@
   },
   "declined_integration_off": {
     "message": "A opção \"Utilizar integração avançada do navegador\" está desativada em Opções → Geral."
+  },
+  "declined_torrents": {
+    "message": "É um torrent, e a opção «Abrir ligações magnet e ficheiros .torrent com Mister Download Manager» está desativada nas definições de Torrent."
   },
   "declined_site_access": {
     "message": "A extensão não tem permissão para ler este site (acesso ao site do navegador)."
@@ -328,5 +328,424 @@
   },
   "video_original": {
     "message": "original"
+  },
+  "video_compatible": {
+    "message": "Mais compatível"
+  },
+  "popup_video_hide_fullscreen": {
+    "message": "Ocultar o botão de transferência em ecrã inteiro"
+  },
+  "popup_video_hide_fullscreen_title": {
+    "message": "Enquanto a página estiver em ecrã inteiro, os vídeos não mostram o botão Transferir vídeo"
+  },
+  "popup_remote_forget": {
+    "message": "Esquecer"
+  },
+  "popup_gear": {
+    "message": "Opções em Mister Download Manager"
+  },
+  "popup_tabs": {
+    "message": "Secções do pop-up"
+  },
+  "popup_tab_downloads": {
+    "message": "Transferências"
+  },
+  "popup_tab_page": {
+    "message": "Esta página"
+  },
+  "popup_tab_settings": {
+    "message": "Definições"
+  },
+  "popup_conn": {
+    "message": "Ligado · $version$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.5.2"
+      }
+    }
+  },
+  "popup_conn_plain": {
+    "message": "Ligado"
+  },
+  "popup_conn_off": {
+    "message": "Não ligado"
+  },
+  "popup_conn_paused": {
+    "message": "Em pausa"
+  },
+  "popup_conn_update": {
+    "message": "Atualizar Mister Download Manager"
+  },
+  "popup_conn_remote": {
+    "message": "A enviar para $server$",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_cancel": {
+    "message": "Cancelar"
+  },
+  "popup_page_none": {
+    "message": "Isto não é uma página Web: não há nada a fazer aqui."
+  },
+  "popup_exclude_by_rule": {
+    "message": "Deixado para o navegador por uma regra nas Opções"
+  },
+  "popup_dl_search": {
+    "message": "Procurar transferências"
+  },
+  "popup_dl_filters": {
+    "message": "Mostrar"
+  },
+  "popup_dl_all": {
+    "message": "Todas"
+  },
+  "popup_dl_running": {
+    "message": "A decorrer"
+  },
+  "popup_dl_done_filter": {
+    "message": "Concluída"
+  },
+  "popup_dl_failed_filter": {
+    "message": "Falhou"
+  },
+  "popup_dl_clear": {
+    "message": "Limpar concluídas"
+  },
+  "popup_dl_running_count": {
+    "message": "$count$ a transferir agora",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_remote": {
+    "message": "Estas são as transferências do Mister Download Manager em $server$. Abra os ficheiros lá.",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_dl_more": {
+    "message": "As $shown$ mais recentes de $total$. O Mister Download Manager lista-as todas.",
+    "placeholders": {
+      "shown": {
+        "content": "$1",
+        "example": "60"
+      },
+      "total": {
+        "content": "$2",
+        "example": "245"
+      }
+    }
+  },
+  "popup_dl_of": {
+    "message": "$done$ de $size$",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "12.3 MB"
+      },
+      "size": {
+        "content": "$2",
+        "example": "48.7 MB"
+      }
+    }
+  },
+  "popup_dl_left": {
+    "message": "$time$ restantes",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "0:42"
+      }
+    }
+  },
+  "popup_dl_starting": {
+    "message": "A iniciar..."
+  },
+  "popup_dl_paused": {
+    "message": "Em pausa"
+  },
+  "popup_dl_waiting": {
+    "message": "Em espera"
+  },
+  "popup_dl_done": {
+    "message": "Concluída"
+  },
+  "popup_dl_just_now": {
+    "message": "agora mesmo"
+  },
+  "popup_dl_failed": {
+    "message": "Falhou"
+  },
+  "popup_dl_failed_why": {
+    "message": "Falhou: $why$",
+    "placeholders": {
+      "why": {
+        "content": "$1",
+        "example": "the server refused the connection"
+      }
+    }
+  },
+  "popup_dl_gone": {
+    "message": "Ficheiro eliminado ou movido"
+  },
+  "popup_dl_loading": {
+    "message": "A procurar transferências..."
+  },
+  "popup_dl_none": {
+    "message": "Ainda não há transferências"
+  },
+  "popup_dl_none_text": {
+    "message": "O que transferir com Mister Download Manager aparece aqui."
+  },
+  "popup_dl_no_match": {
+    "message": "Nada corresponde"
+  },
+  "popup_dl_no_match_text": {
+    "message": "Nenhuma transferência tem «$words$» no nome ou endereço.",
+    "placeholders": {
+      "words": {
+        "content": "$1",
+        "example": "report"
+      }
+    }
+  },
+  "popup_dl_show_all": {
+    "message": "Mostrar todas as transferências"
+  },
+  "popup_list_off": {
+    "message": "Mister Download Manager não está em execução"
+  },
+  "popup_list_off_text": {
+    "message": "Inicie-o para ver as suas transferências aqui."
+  },
+  "popup_list_start": {
+    "message": "Iniciar Mister Download Manager"
+  },
+  "popup_list_old": {
+    "message": "Atualizar Mister Download Manager"
+  },
+  "popup_list_old_text": {
+    "message": "Esta versão ainda não consegue listar as transferências aqui."
+  },
+  "popup_list_busy": {
+    "message": "Mister Download Manager está ocupado. A tentar novamente..."
+  },
+  "popup_list_unreached": {
+    "message": "Não é possível aceder a Mister Download Manager"
+  },
+  "popup_list_remote_unreachable": {
+    "message": "Não é possível aceder a Mister Download Manager em $server$",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_list_remote_unreachable_text": {
+    "message": "Verifique se está em execução e se este navegador aceita o seu certificado (Definições → Enviar transferências para → Abrir).",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_act_open": {
+    "message": "Abrir"
+  },
+  "popup_act_open_named": {
+    "message": "Abrir $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_folder": {
+    "message": "Mostrar na pasta"
+  },
+  "popup_act_folder_named": {
+    "message": "Mostrar $file$ na pasta",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_copy_file": {
+    "message": "Copiar ficheiro"
+  },
+  "popup_act_share": {
+    "message": "Partilhar..."
+  },
+  "popup_act_copy_link": {
+    "message": "Copiar ligação"
+  },
+  "popup_act_pause": {
+    "message": "Pausar"
+  },
+  "popup_act_pause_named": {
+    "message": "Pausar $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_resume": {
+    "message": "Retomar"
+  },
+  "popup_act_resume_named": {
+    "message": "Retomar $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_again": {
+    "message": "Transferir novamente"
+  },
+  "popup_act_remove": {
+    "message": "Remover da lista"
+  },
+  "popup_act_delete": {
+    "message": "Eliminar ficheiro..."
+  },
+  "popup_act_more": {
+    "message": "Mais ações"
+  },
+  "popup_act_more_named": {
+    "message": "Mais ações para $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_title": {
+    "message": "Eliminar o ficheiro?"
+  },
+  "popup_ask_delete": {
+    "message": "$file$ será eliminado do seu computador e a transferência removida da lista. Esta ação não pode ser anulada.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_ok": {
+    "message": "Eliminar"
+  },
+  "popup_ask_clear_title": {
+    "message": "Limpar transferências concluídas?"
+  },
+  "popup_ask_clear": {
+    "message": "As $count$ transferências concluídas serão removidas da lista. Os ficheiros permanecem onde estão.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "8"
+      }
+    }
+  },
+  "popup_ask_clear_ok": {
+    "message": "Limpar"
+  },
+  "popup_said_file": {
+    "message": "Ficheiro «$file$» copiado. Cole-o numa pasta, num chat ou numa mensagem.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_link": {
+    "message": "Ligação copiada"
+  },
+  "popup_said_removed": {
+    "message": "$file$ removido da lista",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_deleted": {
+    "message": "$file$ eliminado",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_again": {
+    "message": "A transferir novamente «$file$»",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_cleared": {
+    "message": "Transferências concluídas removidas"
+  },
+  "popup_act_gone": {
+    "message": "Essa transferência já não está na lista."
+  },
+  "popup_act_missing": {
+    "message": "O ficheiro já não está onde foi guardado (movido ou eliminado)."
+  },
+  "popup_act_running": {
+    "message": "Pause primeiro."
+  },
+  "popup_act_cant": {
+    "message": "Não é possível fazer isso a esta transferência agora."
+  },
+  "popup_act_unsupported": {
+    "message": "Este sistema não consegue fazer isso."
+  },
+  "popup_act_off": {
+    "message": "Mister Download Manager não está em execução."
+  },
+  "popup_act_busy": {
+    "message": "Mister Download Manager não respondeu a tempo. Tente novamente."
+  },
+  "popup_act_failed": {
+    "message": "Não funcionou. Tente novamente."
+  },
+  "status_running": {
+    "message": "A transferir: $count$",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_open_remote": {
+    "message": "Abrir a respetiva página"
   }
 }

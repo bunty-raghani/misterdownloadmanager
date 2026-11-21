@@ -92,9 +92,6 @@
       }
     }
   },
-  "popup_undo": {
-    "message": "రద్దు చేయి"
-  },
   "popup_excluded": {
     "message": "$site$ నుండి డౌన్‌లోడ్‌లు బ్రౌజర్‌తో ఉంటాయి",
     "placeholders": {
@@ -148,6 +145,9 @@
   },
   "declined_integration_off": {
     "message": "ఎంపికలు → సాధారణలో అధునాతన బ్రౌజర్ ఇంటిగ్రేషన్‌ను ఉపయోగించు అనేది ఆఫ్ చేయబడింది."
+  },
+  "declined_torrents": {
+    "message": "ఇది టొరెంట్, మరియు టొరెంట్ సెట్టింగ్‌లలో Mister Download Managerతో మాగ్నెట్ లింక్‌లు మరియు .torrent ఫైల్‌లను తెరవండి ఆఫ్ చేయబడింది."
   },
   "declined_site_access": {
     "message": "ఈ సైట్‌ను చదవడానికి పొడిగింపుకు అనుమతి లేదు (బ్రౌజర్ సైట్ యాక్సెస్)."
@@ -328,5 +328,424 @@
   },
   "video_original": {
     "message": "అసలైనది"
+  },
+  "video_compatible": {
+    "message": "అత్యంత అనుకూలమైనది"
+  },
+  "popup_video_hide_fullscreen": {
+    "message": "పూర్తి స్క్రీన్‌లో డౌన్‌లోడ్ బటన్‌ను దాచండి"
+  },
+  "popup_video_hide_fullscreen_title": {
+    "message": "పేజీ పూర్తి స్క్రీన్‌లో ఉన్నప్పుడు, దాని వీడియోలపై డౌన్‌లోడ్ వీడియో బటన్ కనిపించదు"
+  },
+  "popup_remote_forget": {
+    "message": "మర్చిపో"
+  },
+  "popup_gear": {
+    "message": "Mister Download Managerలో ఎంపికలు"
+  },
+  "popup_tabs": {
+    "message": "పాప్-అప్ విభాగాలు"
+  },
+  "popup_tab_downloads": {
+    "message": "డౌన్‌లోడ్‌లు"
+  },
+  "popup_tab_page": {
+    "message": "ఈ పేజీ"
+  },
+  "popup_tab_settings": {
+    "message": "సెట్టింగ్‌లు"
+  },
+  "popup_conn": {
+    "message": "కనెక్ట్ అయింది · $version$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.5.2"
+      }
+    }
+  },
+  "popup_conn_plain": {
+    "message": "కనెక్ట్ అయింది"
+  },
+  "popup_conn_off": {
+    "message": "కనెక్ట్ చేయబడలేదు"
+  },
+  "popup_conn_paused": {
+    "message": "పాజ్ చేయబడింది"
+  },
+  "popup_conn_update": {
+    "message": "Mister Download Managerను అప్‌డేట్ చేయండి"
+  },
+  "popup_conn_remote": {
+    "message": "$server$కు పంపుతోంది",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_cancel": {
+    "message": "రద్దు చేయి"
+  },
+  "popup_page_none": {
+    "message": "ఇది వెబ్ పేజీ కాదు: ఇక్కడ చేయడానికి ఏమీ లేదు."
+  },
+  "popup_exclude_by_rule": {
+    "message": "ఎంపికలలోని నియమం ద్వారా బ్రౌజర్‌కు వదిలివేయబడింది"
+  },
+  "popup_dl_search": {
+    "message": "డౌన్‌లోడ్‌లను శోధించండి"
+  },
+  "popup_dl_filters": {
+    "message": "చూపించు"
+  },
+  "popup_dl_all": {
+    "message": "అన్నీ"
+  },
+  "popup_dl_running": {
+    "message": "నడుస్తోంది"
+  },
+  "popup_dl_done_filter": {
+    "message": "పూర్తయింది"
+  },
+  "popup_dl_failed_filter": {
+    "message": "విఫలమైంది"
+  },
+  "popup_dl_clear": {
+    "message": "పూర్తయిన వాటిని క్లియర్ చేయండి"
+  },
+  "popup_dl_running_count": {
+    "message": "$count$ డౌన్‌లోడ్‌లు ఇప్పుడు జరుగుతున్నాయి",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_remote": {
+    "message": "ఇవి $server$లోని Mister Download Manager డౌన్‌లోడ్‌లు. వాటి ఫైల్‌లను అక్కడ తెరవండి.",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_dl_more": {
+    "message": "$total$లోని సరికొత్త $shown$ డౌన్‌లోడ్‌లు. Mister Download Manager వాటన్నింటినీ జాబితా చేస్తుంది.",
+    "placeholders": {
+      "shown": {
+        "content": "$1",
+        "example": "60"
+      },
+      "total": {
+        "content": "$2",
+        "example": "245"
+      }
+    }
+  },
+  "popup_dl_of": {
+    "message": "$size$లో $done$",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "12.3 MB"
+      },
+      "size": {
+        "content": "$2",
+        "example": "48.7 MB"
+      }
+    }
+  },
+  "popup_dl_left": {
+    "message": "$time$ మిగిలి ఉంది",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "0:42"
+      }
+    }
+  },
+  "popup_dl_starting": {
+    "message": "ప్రారంభిస్తోంది..."
+  },
+  "popup_dl_paused": {
+    "message": "పాజ్ చేయబడింది"
+  },
+  "popup_dl_waiting": {
+    "message": "వేచి ఉంది"
+  },
+  "popup_dl_done": {
+    "message": "పూర్తయింది"
+  },
+  "popup_dl_just_now": {
+    "message": "ఇప్పుడే"
+  },
+  "popup_dl_failed": {
+    "message": "విఫలమైంది"
+  },
+  "popup_dl_failed_why": {
+    "message": "విఫలమైంది: $why$",
+    "placeholders": {
+      "why": {
+        "content": "$1",
+        "example": "the server refused the connection"
+      }
+    }
+  },
+  "popup_dl_gone": {
+    "message": "ఫైల్ తొలగించబడింది లేదా తరలించబడింది"
+  },
+  "popup_dl_loading": {
+    "message": "డౌన్‌లోడ్‌ల కోసం వెతుకుతోంది..."
+  },
+  "popup_dl_none": {
+    "message": "ఇంకా డౌన్‌లోడ్‌లు లేవు"
+  },
+  "popup_dl_none_text": {
+    "message": "Mister Download Managerతో మీరు డౌన్‌లోడ్ చేసేది ఇక్కడ కనిపిస్తుంది."
+  },
+  "popup_dl_no_match": {
+    "message": "ఏదీ సరిపోలడం లేదు"
+  },
+  "popup_dl_no_match_text": {
+    "message": "ఏ డౌన్‌లోడ్ పేరు లేదా చిరునామాలోనూ “$words$” లేదు.",
+    "placeholders": {
+      "words": {
+        "content": "$1",
+        "example": "report"
+      }
+    }
+  },
+  "popup_dl_show_all": {
+    "message": "అన్ని డౌన్‌లోడ్‌లను చూపండి"
+  },
+  "popup_list_off": {
+    "message": "Mister Download Manager రన్ అవ్వడం లేదు"
+  },
+  "popup_list_off_text": {
+    "message": "మీ డౌన్‌లోడ్‌లను ఇక్కడ చూడటానికి దీన్ని ప్రారంభించండి."
+  },
+  "popup_list_start": {
+    "message": "Mister Download Managerను ప్రారంభించండి"
+  },
+  "popup_list_old": {
+    "message": "Mister Download Managerను అప్‌డేట్ చేయండి"
+  },
+  "popup_list_old_text": {
+    "message": "ఈ వెర్షన్‌లో ఇంకా డౌన్‌లోడ్‌లను ఇక్కడ జాబితా చేయలేరు."
+  },
+  "popup_list_busy": {
+    "message": "Mister Download Manager బిజీగా ఉంది. మళ్ళీ ప్రయత్నిస్తోంది..."
+  },
+  "popup_list_unreached": {
+    "message": "Mister Download Managerని చేరుకోలేకపోయింది"
+  },
+  "popup_list_remote_unreachable": {
+    "message": "$server$ వద్ద ఉన్న Mister Download Managerని చేరుకోలేము",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_list_remote_unreachable_text": {
+    "message": "ఇది నడుస్తోందని, ఈ బ్రౌజర్ దాని సర్టిఫికేట్‌ను అంగీకరిస్తోందని తనిఖీ చేయండి (సెట్టింగ్‌లు → డౌన్‌లోడ్‌లను దీనికి పంపండి → దీన్ని తెరవండి).",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_act_open": {
+    "message": "తెరవండి"
+  },
+  "popup_act_open_named": {
+    "message": "$file$ను తెరవండి",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_folder": {
+    "message": "ఫోల్డర్‌లో చూపండి"
+  },
+  "popup_act_folder_named": {
+    "message": "$file$ను ఫోల్డర్‌లో చూపండి",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_copy_file": {
+    "message": "ఫైల్‌ను కాపీ చేయండి"
+  },
+  "popup_act_share": {
+    "message": "షేర్ చేయండి..."
+  },
+  "popup_act_copy_link": {
+    "message": "లింక్‌ను కాపీ చేయండి"
+  },
+  "popup_act_pause": {
+    "message": "పాజ్ చేయండి"
+  },
+  "popup_act_pause_named": {
+    "message": "$file$ను పాజ్ చేయండి",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_resume": {
+    "message": "పునఃప్రారంభించండి"
+  },
+  "popup_act_resume_named": {
+    "message": "$file$ను పునఃప్రారంభించండి",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_again": {
+    "message": "మళ్ళీ డౌన్‌లోడ్ చేయండి"
+  },
+  "popup_act_remove": {
+    "message": "జాబితా నుండి తీసివేయండి"
+  },
+  "popup_act_delete": {
+    "message": "ఫైల్‌ను తొలగించు..."
+  },
+  "popup_act_more": {
+    "message": "మరిన్ని చర్యలు"
+  },
+  "popup_act_more_named": {
+    "message": "$file$ కోసం మరిన్ని చర్యలు",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_title": {
+    "message": "ఫైల్‌ను తొలగించాలా?"
+  },
+  "popup_ask_delete": {
+    "message": "$file$ మీ కంప్యూటర్ నుండి తొలగించబడుతుంది, అలాగే డౌన్‌లోడ్ జాబితా నుండి తీసివేయబడుతుంది. దీన్ని తిరిగి మార్చలేరు. తొలగించాలా?",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_ok": {
+    "message": "తొలగించండి"
+  },
+  "popup_ask_clear_title": {
+    "message": "పూర్తయిన డౌన్‌లోడ్‌లను క్లియర్ చేయాలా?"
+  },
+  "popup_ask_clear": {
+    "message": "$count$ పూర్తయిన డౌన్‌లోడ్‌లను జాబితా నుండి తీసివేయాలా? వాటి ఫైల్‌లు ఉన్న చోటే ఉంటాయి.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "8"
+      }
+    }
+  },
+  "popup_ask_clear_ok": {
+    "message": "క్లియర్ చేయండి"
+  },
+  "popup_said_file": {
+    "message": "$file$ కాపీ చేయబడింది. దీన్ని ఫోల్డర్‌లో, చాట్‌లో లేదా సందేశంలో పేస్ట్ చేయండి.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_link": {
+    "message": "లింక్ కాపీ చేయబడింది"
+  },
+  "popup_said_removed": {
+    "message": "$file$ జాబితా నుండి తీసివేయబడింది",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_deleted": {
+    "message": "$file$ తొలగించబడింది",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_again": {
+    "message": "$file$ మళ్ళీ డౌన్‌లోడ్ అవుతోంది",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_cleared": {
+    "message": "పూర్తయిన డౌన్‌లోడ్‌లు క్లియర్ చేయబడ్డాయి"
+  },
+  "popup_act_gone": {
+    "message": "ఆ డౌన్‌లోడ్ ఇక జాబితాలో లేదు."
+  },
+  "popup_act_missing": {
+    "message": "దాని ఫైల్ సేవ్ చేయబడిన చోట లేదు (తరలించబడింది లేదా తొలగించబడింది)."
+  },
+  "popup_act_running": {
+    "message": "ముందుగా పాజ్ చేయండి."
+  },
+  "popup_act_cant": {
+    "message": "ఈ డౌన్‌లోడ్‌పై ఇప్పుడు ఆ చర్య చేయలేరు."
+  },
+  "popup_act_unsupported": {
+    "message": "ఈ సిస్టమ్‌లో అది సాధ్యం కాదు."
+  },
+  "popup_act_off": {
+    "message": "Mister Download Manager రన్ అవ్వడం లేదు."
+  },
+  "popup_act_busy": {
+    "message": "Mister Download Manager సమయానికి స్పందించలేదు. మళ్ళీ ప్రయత్నించండి."
+  },
+  "popup_act_failed": {
+    "message": "అది పని చేయలేదు. మళ్లీ ప్రయత్నించండి."
+  },
+  "status_running": {
+    "message": "డౌన్‌లోడ్ అవుతోంది: $count$",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_open_remote": {
+    "message": "దాని పేజీని తెరవండి"
   }
 }

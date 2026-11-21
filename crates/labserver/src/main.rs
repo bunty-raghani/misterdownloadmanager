@@ -42,12 +42,36 @@ struct Args {
     /// printed) instead of HTTP: `browser_only` then looks at the TLS handshake too.
     #[arg(long)]
     tls: bool,
+    /// With --tls, a faulty certificate: "expired", "self-signed" or "wrong-name" (the
+    /// certificate errors' tests); "test-ca" (the default) is the good one.
+    #[arg(long, requires = "tls", default_value = "test-ca")]
+    tls_cert: String,
+    /// With --tls, offer HTTP/2 too (ALPN h2), as most sites do.
+    #[arg(long, requires = "tls")]
+    http2: bool,
+    /// Also be a SOCKS5 / SOCKS4(a) proxy on this address, printing where each connection
+    /// asked to go (a name: socks5h, socks4a; an address: socks5, socks4) as a JSON line.
+    #[arg(long)]
+    socks: Option<SocketAddr>,
+    /// The login SOCKS5 clients must give, "user:password" (SOCKS4 is then refused).
+    #[arg(long, requires = "socks")]
+    socks_login: Option<String>,
+    /// A name the SOCKS proxy knows the address of, "name=ip" (repeatable): a name nothing
+    /// else can look up shows a socks5h client handed it over.
+    #[arg(long, requires = "socks")]
+    socks_name: Vec<String>,
 }
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let args = Args::parse();
     let faults = Faults::parse(&args.faults).context("--faults")?;
+    let cert = mdm_labserver::Cert::parse(&args.tls_cert).with_context(|| {
+        format!(
+            "--tls-cert: {:?} (test-ca, expired, self-signed or wrong-name)",
+            args.tls_cert
+        )
+    })?;
     let file = match &args.log_file {
         Some(p) => Some(Mutex::new(
             std::fs::OpenOptions::new()
@@ -71,6 +95,8 @@ async fn main() -> anyhow::Result<()> {
         files: args.files.clone(),
         rss_dir: args.rss_dir,
         tls: args.tls,
+        http2: args.http2,
+        cert,
     })
     .await?;
     eprintln!(
@@ -116,6 +142,43 @@ async fn main() -> anyhow::Result<()> {
             .await?;
             eprintln!("labserver FTP on {}", ftp.url("/gen/8M/a.bin"));
             Some(ftp)
+        }
+        None => None,
+    };
+    let _socks = match args.socks {
+        Some(bind) => {
+            use mdm_labserver::socks::{SocksConfig, SocksServer};
+            let login = match args.socks_login.as_deref() {
+                Some(l) => Some(
+                    l.split_once(':')
+                        .map(|(u, p)| (u.to_owned(), p.to_owned()))
+                        .context("--socks-login: user:password")?,
+                ),
+                None => None,
+            };
+            let names = args
+                .socks_name
+                .iter()
+                .map(|n| {
+                    n.split_once('=')
+                        .and_then(|(name, ip)| Some((name.to_owned(), ip.parse().ok()?)))
+                        .context("--socks-name: name=ip")
+                })
+                .collect::<anyhow::Result<Vec<_>>>()?;
+            let socks = SocksServer::start(
+                bind,
+                SocksConfig {
+                    login,
+                    names,
+                    on_request: Some(Arc::new(|r| {
+                        let line = serde_json::json!({ "socks": r });
+                        println!("{line}");
+                    })),
+                },
+            )
+            .await?;
+            eprintln!("labserver SOCKS proxy on {}", socks.addr());
+            Some(socks)
         }
         None => None,
     };

@@ -92,9 +92,6 @@
       }
     }
   },
-  "popup_undo": {
-    "message": "元に戻す"
-  },
   "popup_excluded": {
     "message": "$site$ からのダウンロードはブラウザーに残ります",
     "placeholders": {
@@ -148,6 +145,9 @@
   },
   "declined_integration_off": {
     "message": "オプション → 全般で「高度なブラウザー統合を使用する」がオフになっています。"
+  },
+  "declined_torrents": {
+    "message": "これはトレントであり、トレント設定で「マグネット リンクと .torrent ファイルを Mister Download Manager で開く」がオフになっています。"
   },
   "declined_site_access": {
     "message": "このサイトの読み取りは拡張機能に許可されていません (ブラウザーのサイト アクセス)。"
@@ -328,5 +328,424 @@
   },
   "video_original": {
     "message": "オリジナル"
+  },
+  "video_compatible": {
+    "message": "最も互換性あり"
+  },
+  "popup_video_hide_fullscreen": {
+    "message": "全画面表示時にダウンロード ボタンを非表示にする"
+  },
+  "popup_video_hide_fullscreen_title": {
+    "message": "ページが全画面表示されている間、動画にダウンロード ボタンは表示されません"
+  },
+  "popup_remote_forget": {
+    "message": "削除"
+  },
+  "popup_gear": {
+    "message": "Mister Download Manager のオプション"
+  },
+  "popup_tabs": {
+    "message": "ポップアップ セクション"
+  },
+  "popup_tab_downloads": {
+    "message": "ダウンロード"
+  },
+  "popup_tab_page": {
+    "message": "このページ"
+  },
+  "popup_tab_settings": {
+    "message": "設定"
+  },
+  "popup_conn": {
+    "message": "接続済み · $version$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.5.2"
+      }
+    }
+  },
+  "popup_conn_plain": {
+    "message": "接続済み"
+  },
+  "popup_conn_off": {
+    "message": "未接続"
+  },
+  "popup_conn_paused": {
+    "message": "一時停止"
+  },
+  "popup_conn_update": {
+    "message": "Mister Download Manager を更新"
+  },
+  "popup_conn_remote": {
+    "message": "$server$ に送信中",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_cancel": {
+    "message": "キャンセル"
+  },
+  "popup_page_none": {
+    "message": "これは Web ページではありません。ここには何もありません。"
+  },
+  "popup_exclude_by_rule": {
+    "message": "オプションのルールによりブラウザーに任されています"
+  },
+  "popup_dl_search": {
+    "message": "ダウンロードを検索"
+  },
+  "popup_dl_filters": {
+    "message": "表示"
+  },
+  "popup_dl_all": {
+    "message": "すべて"
+  },
+  "popup_dl_running": {
+    "message": "実行中"
+  },
+  "popup_dl_done_filter": {
+    "message": "完了"
+  },
+  "popup_dl_failed_filter": {
+    "message": "失敗"
+  },
+  "popup_dl_clear": {
+    "message": "完了したものをクリア"
+  },
+  "popup_dl_running_count": {
+    "message": "$count$ 件をダウンロード中",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_remote": {
+    "message": "これらは $server$ にある Mister Download Manager のダウンロードです。ファイルはそちらで開いてください。",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_dl_more": {
+    "message": "$total$ 件中 $shown$ 件の最新のダウンロード。すべて Mister Download Manager に一覧表示されます。",
+    "placeholders": {
+      "shown": {
+        "content": "$1",
+        "example": "60"
+      },
+      "total": {
+        "content": "$2",
+        "example": "245"
+      }
+    }
+  },
+  "popup_dl_of": {
+    "message": "$size$ 中 $done$",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "12.3 MB"
+      },
+      "size": {
+        "content": "$2",
+        "example": "48.7 MB"
+      }
+    }
+  },
+  "popup_dl_left": {
+    "message": "残り $time$",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "0:42"
+      }
+    }
+  },
+  "popup_dl_starting": {
+    "message": "開始中..."
+  },
+  "popup_dl_paused": {
+    "message": "一時停止"
+  },
+  "popup_dl_waiting": {
+    "message": "待機中"
+  },
+  "popup_dl_done": {
+    "message": "完了"
+  },
+  "popup_dl_just_now": {
+    "message": "たった今"
+  },
+  "popup_dl_failed": {
+    "message": "失敗"
+  },
+  "popup_dl_failed_why": {
+    "message": "失敗: $why$",
+    "placeholders": {
+      "why": {
+        "content": "$1",
+        "example": "the server refused the connection"
+      }
+    }
+  },
+  "popup_dl_gone": {
+    "message": "ファイルが削除または移動されました"
+  },
+  "popup_dl_loading": {
+    "message": "ダウンロードを検索しています..."
+  },
+  "popup_dl_none": {
+    "message": "まだダウンロードはありません"
+  },
+  "popup_dl_none_text": {
+    "message": "Mister Download Manager でダウンロードしたものがここに表示されます。"
+  },
+  "popup_dl_no_match": {
+    "message": "一致するものはありません"
+  },
+  "popup_dl_no_match_text": {
+    "message": "ダウンロードの名前またはアドレスに「$words$」と一致するものはありません。",
+    "placeholders": {
+      "words": {
+        "content": "$1",
+        "example": "report"
+      }
+    }
+  },
+  "popup_dl_show_all": {
+    "message": "すべてのダウンロードを表示"
+  },
+  "popup_list_off": {
+    "message": "Mister Download Manager は実行されていません"
+  },
+  "popup_list_off_text": {
+    "message": "ここでダウンロードを確認するには、アプリを起動してください。"
+  },
+  "popup_list_start": {
+    "message": "Mister Download Manager を起動"
+  },
+  "popup_list_old": {
+    "message": "Mister Download Manager を更新"
+  },
+  "popup_list_old_text": {
+    "message": "このバージョンでは、まだダウンロードをここに一覧表示できません。"
+  },
+  "popup_list_busy": {
+    "message": "Mister Download Manager は応答していません。再試行しています..."
+  },
+  "popup_list_unreached": {
+    "message": "Mister Download Manager に到達できません"
+  },
+  "popup_list_remote_unreachable": {
+    "message": "$server$ の Mister Download Manager に到達できません",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_list_remote_unreachable_text": {
+    "message": "実行中であること、およびこのブラウザーがその証明書を受け入れていることを確認してください (設定 → ダウンロードの送信先 → 開く)。",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_act_open": {
+    "message": "開く"
+  },
+  "popup_act_open_named": {
+    "message": "$file$ を開く",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_folder": {
+    "message": "フォルダーに表示"
+  },
+  "popup_act_folder_named": {
+    "message": "$file$ をフォルダーに表示",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_copy_file": {
+    "message": "ファイルをコピー"
+  },
+  "popup_act_share": {
+    "message": "共有..."
+  },
+  "popup_act_copy_link": {
+    "message": "リンクをコピー"
+  },
+  "popup_act_pause": {
+    "message": "一時停止"
+  },
+  "popup_act_pause_named": {
+    "message": "$file$ を一時停止",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_resume": {
+    "message": "再開"
+  },
+  "popup_act_resume_named": {
+    "message": "$file$ を再開",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_again": {
+    "message": "もう一度ダウンロード"
+  },
+  "popup_act_remove": {
+    "message": "リストから削除"
+  },
+  "popup_act_delete": {
+    "message": "ファイルを削除..."
+  },
+  "popup_act_more": {
+    "message": "その他のアクション"
+  },
+  "popup_act_more_named": {
+    "message": "$file$ のその他のアクション",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_title": {
+    "message": "ファイルを削除しますか?"
+  },
+  "popup_ask_delete": {
+    "message": "$file$ はコンピューターから削除され、ダウンロードはリストから削除されます。この操作は元に戻せません。",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_ok": {
+    "message": "削除"
+  },
+  "popup_ask_clear_title": {
+    "message": "完了したダウンロードをクリアしますか?"
+  },
+  "popup_ask_clear": {
+    "message": "$count$ 件の完了したダウンロードがリストから削除されます。ファイルは元の場所に残ります。",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "8"
+      }
+    }
+  },
+  "popup_ask_clear_ok": {
+    "message": "クリア"
+  },
+  "popup_said_file": {
+    "message": "$file$ をコピーしました。フォルダー、チャット、またはメッセージに貼り付けてください。",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_link": {
+    "message": "リンクをコピーしました"
+  },
+  "popup_said_removed": {
+    "message": "$file$ をリストから削除しました",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_deleted": {
+    "message": "$file$ を削除しました",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_again": {
+    "message": "$file$ をもう一度ダウンロードしています",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_cleared": {
+    "message": "完了したダウンロードをクリアしました"
+  },
+  "popup_act_gone": {
+    "message": "このダウンロードはリストにありません。"
+  },
+  "popup_act_missing": {
+    "message": "ファイルが保存先から移動または削除されたため、見つかりません。"
+  },
+  "popup_act_running": {
+    "message": "まず一時停止してください。"
+  },
+  "popup_act_cant": {
+    "message": "このダウンロードには現在この操作を実行できません。"
+  },
+  "popup_act_unsupported": {
+    "message": "このシステムでは実行できません。"
+  },
+  "popup_act_off": {
+    "message": "Mister Download Manager は実行されていません。"
+  },
+  "popup_act_busy": {
+    "message": "Mister Download Manager から時間内に応答がありませんでした。もう一度お試しください。"
+  },
+  "popup_act_failed": {
+    "message": "失敗しました。もう一度お試しください。"
+  },
+  "status_running": {
+    "message": "ダウンロード中: $count$",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_open_remote": {
+    "message": "そのページを開く"
   }
 }

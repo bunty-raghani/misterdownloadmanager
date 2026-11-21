@@ -8,3 +8,17 @@ rustflags = ["-C", "target-feature=+crt-static"]
 
 [target.aarch64-pc-windows-msvc]
 rustflags = ["-C", "target-feature=+crt-static"]
+
+[target.i686-pc-windows-msvc]
+rustflags = ["-C", "target-feature=+crt-static"]
+
+[env]
+# Windows on ARM: BoringSSL's build there (windows-arm64.cmake says why).
+CMAKE_TOOLCHAIN_FILE_aarch64_pc_windows_msvc = { value = ".cargo/windows-arm64.cmake", relative = true }
+# Every system: the TLS library (AWS-LC, through rustls) seeds its random numbers from the
+# system's own generator alone, not also from CPU timing jitter. On some PCs and virtual
+# machines the jitter source fails its start-up checks, and AWS-LC then ends the whole program
+# (abort) at the first secure connection, which is usually the update check at start (#1123;
+# upstream: aws/aws-lc-rs#1072). The system's generator is what BoringSSL itself uses.
+# Read by aws-lc-sys's build script, for every build in this workspace (release builds too).
+AWS_LC_SYS_NO_JITTER_ENTROPY = "1"

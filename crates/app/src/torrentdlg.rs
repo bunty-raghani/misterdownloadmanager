@@ -31,9 +31,12 @@ crate::theme::themed! {
 
 /// What Download Now / Later adds.
 pub struct TorrentAdd {
+    /// Paths present when the existing-file question was answered.
+    pub existing: Vec<crate::torrent_ownership::Consent>,
     pub meta: Meta,
-    /// The folder chosen; a torrent of several files gets its own folder inside.
+    /// The selected parent folder; `create_subfolder` chooses the outer layout.
     pub dir: PathBuf,
+    pub create_subfolder: bool,
     /// Chosen files (indexes into `meta.files`); None: all.
     pub files: Option<Vec<usize>>,
     pub category: Category,
@@ -52,6 +55,7 @@ pub struct TorrentDialog {
     source: String,
     folder: String,
     folder_edited: bool,
+    create_subfolder: bool,
     downloads: PathBuf,
     category_dirs: Vec<(String, String)>,
     /// The torrents the list already has (and the session must keep).
@@ -81,6 +85,7 @@ pub struct TorrentDialog {
     asking: crate::dialogs::FolderGate<()>,
     /// Asking whether to use files of the torrent's names already in the folder (#40).
     asking_files: crate::dialogs::FilesGate<()>,
+    scanned: Arc<Mutex<DestinationScan>>,
     /// A .torrent on the web (#39, Add URL or the browser): the request it is fetched with
     /// (the browser's cookies). One typed in the box goes as MDM's own downloads do.
     remote: Option<crate::torrents::Remote>,
@@ -88,6 +93,12 @@ pub struct TorrentDialog {
     rename: crate::torrent_rename::TorrentRenamePlugin,
     /// The clipboard's magnet link, read off the window's thread (#661).
     clip: crate::clipboard::Prefill,
+}
+
+#[derive(Default)]
+struct DestinationScan {
+    consent: Vec<crate::torrent_ownership::Consent>,
+    claimed: Vec<PathBuf>,
 }
 
 /// The category of a torrent: its largest file's.
@@ -233,6 +244,7 @@ impl TorrentDialog {
             source,
             folder: folder.display().to_string(),
             folder_edited: false,
+            create_subfolder: true,
             downloads,
             category_dirs,
             known,
@@ -253,6 +265,7 @@ impl TorrentDialog {
             in_order: false,
             asking: Default::default(),
             asking_files: Default::default(),
+            scanned: Default::default(),
             remote,
             rename: Default::default(),
             clip,
@@ -359,7 +372,15 @@ impl TorrentDialog {
         &mut self,
         ctx: &egui::Context,
         rt: &tokio::runtime::Handle,
+        allow_subfolder_choice: bool,
+        claims: impl FnOnce() -> Vec<PathBuf>,
     ) -> Outcome<TorrentAdd> {
+        // Debrid downloads have a separate HTTP file layout. Keep their existing
+        // behavior explicit rather than offering an option they cannot honor.
+        if !allow_subfolder_choice && !self.create_subfolder {
+            self.create_subfolder = true;
+            self.layout_changed();
+        }
         if let Some(clip) = self.clip.take()
             && self.fill_from_clipboard(&clip)
         {
@@ -377,7 +398,7 @@ impl TorrentDialog {
                 Ok(meta) => {
                     self.chosen = meta.files.iter().map(|f| !f.padding).collect();
                     self.rename.on_meta_loaded(&meta);
-                    self.tree = build_tree(&meta);
+                    self.tree = build_tree(&meta, self.create_subfolder);
                     // Open the first two levels; deeper folders start closed.
                     self.open = self.tree.iter().map(|n| n.depth < 2).collect();
                     if !self.folder_edited {
@@ -397,25 +418,64 @@ impl TorrentDialog {
             ctx,
             "add-torrent",
             "Add torrent",
-            [600.0, 488.0],
+            [600.0, 512.0],
             false,
             winui::BG(),
-            |ui, o| self.body(ui, o, rt),
+            |ui, o| self.body(ui, o, rt, allow_subfolder_choice),
         );
         let folder = crate::dialogs::resolve_path(&self.folder);
         let out = crate::dialogs::ensure_folder(ctx, &mut self.asking, out, &folder);
         // Then: files of the torrent's names already there would be written into (#40).
         // Looked for off the window's thread (#743), with what the torrent holds as it is now.
         let meta = &self.meta;
+        let create_subfolder = self.create_subfolder;
+        let output = meta.as_ref().map_or_else(
+            || folder.clone(),
+            |m| m.folder_in_with_subfolder(&folder, create_subfolder),
+        );
         let out =
-            crate::dialogs::ensure_files_free(ctx, &mut self.asking_files, out, &folder, || {
-                let (meta, there) = (meta.clone(), folder.clone());
-                move || meta.map_or_else(Vec::new, |m| m.existing_in(&there))
+            crate::dialogs::ensure_files_free(ctx, &mut self.asking_files, out, &output, || {
+                let (meta, there, claims, scanned) =
+                    (meta.clone(), folder.clone(), claims(), self.scanned.clone());
+                move || {
+                    let Some(m) = meta else { return Vec::new() };
+                    let existing = m.existing_in_with_subfolder(&there, create_subfolder);
+                    let owner = crate::torrent_ownership::Ownership::new(&m);
+                    let root = m.folder_in_with_subfolder(&there, create_subfolder);
+                    let dest = crate::torrents::dest_for(&m, &there, None, create_subfolder);
+                    let claimed = crate::torrent_ownership::conflicts(
+                        &owner.paths(&root, &dest),
+                        &claims,
+                        true,
+                    );
+                    let found = if claimed.is_empty() {
+                        existing.clone()
+                    } else {
+                        Vec::new()
+                    };
+                    let consent = crate::torrent_ownership::consent_for(&existing);
+                    *scanned.lock().unwrap() = DestinationScan { consent, claimed };
+                    found
+                }
             });
         match out {
             Outcome::Open => Outcome::Open,
             Outcome::Closed => Outcome::Closed,
             Outcome::Done(()) => {
+                let scan = self.scanned.lock().unwrap();
+                if let Some(path) = scan.claimed.first() {
+                    self.error = Some(crate::i18n::fmt(
+                        crate::i18n::t(
+                            // i18n: said when a torrent would write a file another download in the list already uses; {file} is its path
+                            "Another download already claims {file}. Choose a different destination.",
+                        ),
+                        &[("file", &crate::i18n::isolate(&path.display().to_string()))],
+                    ));
+                    ctx.request_repaint();
+                    return Outcome::Open;
+                }
+                let existing = scan.consent.clone();
+                drop(scan);
                 let Some(meta) = self.meta.take() else {
                     return Outcome::Closed;
                 };
@@ -433,9 +493,11 @@ impl TorrentDialog {
                         .collect()
                 });
                 Outcome::Done(TorrentAdd {
+                    existing,
                     category: category_of(&meta),
                     meta,
                     dir: crate::dialogs::resolve_path(&self.folder),
+                    create_subfolder: self.create_subfolder,
                     files,
                     start_now: self.start_now.unwrap_or(true),
                     from_magnet: self.from_magnet,
@@ -447,7 +509,29 @@ impl TorrentDialog {
         }
     }
 
-    fn body(&mut self, ui: &mut Ui, o: Pos2, rt: &tokio::runtime::Handle) -> Outcome<()> {
+    fn layout_changed(&mut self) {
+        // A pending Start/consent belonged to the previous layout. Require Start
+        // again and inspect the new paths, including unselected overlapping files.
+        self.asking = Default::default();
+        self.asking_files = Default::default();
+        self.scanned = Default::default();
+        self.rows = Default::default();
+        if let Some(meta) = &self.meta {
+            self.tree = build_tree(meta, self.create_subfolder);
+        }
+    }
+
+    fn can_rename(&self) -> bool {
+        self.create_subfolder || !self.rename.is_dir
+    }
+
+    fn body(
+        &mut self,
+        ui: &mut Ui,
+        o: Pos2,
+        rt: &tokio::runtime::Handle,
+        allow_subfolder_choice: bool,
+    ) -> Outcome<()> {
         let p = ui.painter().clone();
         let busy = self.lookup.is_some();
         let kind = |on: bool, default: bool| match (on, default) {
@@ -529,7 +613,11 @@ impl TorrentDialog {
         }
 
         // Status: looking up (with a spinner and the seconds) / name and size / what went wrong.
-        let rename_err = self.rename.candidate_error();
+        let rename_err = if self.can_rename() {
+            self.rename.candidate_error()
+        } else {
+            None
+        };
         let shown_err = self.error.as_deref().or(rename_err.as_deref());
         let line = o.y + 50.0;
         if busy {
@@ -668,24 +756,56 @@ impl TorrentDialog {
             self.folder = d.display().to_string();
             self.folder_edited = true;
         }
+        let mut create_subfolder = self.create_subfolder && self.rename.is_dir;
+        let create = winui::checkbox_until(
+            ui,
+            pos2(o.x + fx, o.y + 389.0),
+            &mut create_subfolder,
+            // i18n: Add torrent: keep a multi-file torrent inside its own outer folder; untick to use Save to directly
+            "Create a folder for this torrent",
+            has && self.rename.is_dir && !busy && allow_subfolder_choice,
+            Some(o.x + 589.0),
+        );
+        let create = winui::why_disabled(
+            create,
+            !allow_subfolder_choice,
+            // i18n: tooltip of the greyed "Create a folder for this torrent" checkbox: debrid downloads cannot use it
+            crate::i18n::mark("This option is available for direct BitTorrent downloads"),
+        );
+        if create.clicked() {
+            self.create_subfolder = create_subfolder;
+            self.layout_changed();
+        }
+        // A multi-file torrent without an outer folder has no folder name to edit.
+        let can_rename = self.can_rename();
         // Rename row (`Rename`: main name + extension) below `Save to` (#517).
-        if self
-            .rename
-            .draw(ui, &p, o, fx, 389.0, has, busy, &mut self.meta)
-            && let Some(m) = &self.meta
+        if self.rename.draw(
+            ui,
+            &p,
+            o,
+            fx,
+            417.0,
+            has && can_rename,
+            busy,
+            &mut self.meta,
+        ) && let Some(m) = &self.meta
         {
-            self.tree = build_tree(m);
+            self.tree = build_tree(m, self.create_subfolder);
         }
         if let Some(m) = &self.meta {
-            let goes =
-                crate::torrents::dest_for(m, &crate::dialogs::resolve_path(&self.folder), None);
+            let goes = crate::torrents::dest_for(
+                m,
+                &crate::dialogs::resolve_path(&self.folder),
+                None,
+                self.create_subfolder,
+            );
             let s = crate::i18n::fmt(
                 // i18n: {folder} = the folder the torrent's files are saved in
                 crate::i18n::t("Files go to: {folder}"),
                 &[("folder", &crate::i18n::ltr(&goes.display().to_string()))],
             );
             let (rect, cut) =
-                winui::text_fit(&p, o.x + fx, o.y + 430.0, &s, winui::MUTED(), o.x + 589.0);
+                winui::text_fit(&p, o.x + fx, o.y + 454.0, &s, winui::MUTED(), o.x + 589.0);
             if cut {
                 winui::full_on_hover(ui, rect, "torrent-goes", &s);
             }
@@ -705,7 +825,7 @@ impl TorrentDialog {
         // its right-click menu). Its caption stops before the buttons.
         winui::checkbox_until(
             ui,
-            pos2(o.x + 14.0, o.y + 460.0),
+            pos2(o.x + 14.0, o.y + 484.0),
             &mut self.in_order,
             // i18n: Add torrent, a checkbox: download the files from their start, to watch a video while it downloads
             "Download in order",
@@ -716,10 +836,10 @@ impl TorrentDialog {
             && count > 0
             && !self.folder.trim().is_empty()
             && !busy
-            && self.rename.candidate_error().is_none();
+            && (!self.can_rename() || self.rename.candidate_error().is_none());
         let now = winui::button(
             ui,
-            r(o, now_at.0, 456.0, now_at.1, 21.0),
+            r(o, now_at.0, 480.0, now_at.1, 21.0),
             "Download Now",
             kind(ready, true),
             false,
@@ -729,7 +849,7 @@ impl TorrentDialog {
             || (ready && winui::enter_pressed(ui));
         let later = winui::button(
             ui,
-            r(o, later_at.0, 456.0, later_at.1, 21.0),
+            r(o, later_at.0, 480.0, later_at.1, 21.0),
             // i18n: button: add it now, start downloading later
             "Later",
             kind(ready, false),
@@ -739,7 +859,7 @@ impl TorrentDialog {
         .clicked();
         let cancel = winui::button(
             ui,
-            r(o, cancel_at.0, 456.0, cancel_at.1, 21.0),
+            r(o, cancel_at.0, 480.0, cancel_at.1, 21.0),
             "Cancel",
             ButtonKind::Normal,
             false,
@@ -855,7 +975,11 @@ impl TorrentDialog {
             );
             return;
         }
-        let rows = visible_rows(&self.tree, &self.open);
+        let rows = visible_rows(
+            &self.tree,
+            &self.open,
+            self.create_subfolder || !self.rename.is_dir,
+        );
         // What a screen reader calls the tree (its rows carry each file's name).
         self.rows.name = crate::i18n::t("Files");
         // The shared row list over the body (its frame on the list's): a click selects, the
@@ -1021,6 +1145,7 @@ pub struct Net {
     pub incoming: bool,
     pub upnp: bool,
     pub port: u16,
+    pub utp: bool,
     pub dht: bool,
     pub lsd: bool,
     pub proxy: bool,
@@ -1034,6 +1159,7 @@ impl Net {
             incoming: s.torrent_incoming,
             upnp: s.torrent_upnp,
             port: s.torrent_port,
+            utp: s.torrent_utp,
             dht: s.torrent_dht,
             lsd: s.torrent_lsd,
             proxy: s.torrent_proxy,
@@ -1046,6 +1172,7 @@ impl Net {
         s.torrent_incoming = self.incoming;
         s.torrent_upnp = self.upnp;
         s.torrent_port = self.port;
+        s.torrent_utp = self.utp;
         s.torrent_dht = self.dht;
         s.torrent_lsd = self.lsd;
         s.torrent_proxy = self.proxy;
@@ -1068,7 +1195,7 @@ impl TorrentSettings {
         let net = Net::of(s);
         TorrentSettings {
             share: s.torrent_keep_sharing,
-            assoc: s.torrent_associations,
+            assoc: s.torrent_associations == Some(true),
             port: if net.port == 0 {
                 String::new()
             } else {
@@ -1090,7 +1217,7 @@ impl TorrentSettings {
             ctx,
             "torrent-settings",
             "Torrent settings",
-            [470.0, 492.0],
+            [470.0, 516.0],
             false,
             winui::BG(),
             |ui, o| {
@@ -1227,9 +1354,43 @@ impl TorrentSettings {
                     "Map the port on the router (UPnP)",
                     n.incoming,
                 );
+                // uTP rides on the listening port: librqbit's uTP socket is the listener's, so
+                // with incoming connections off there is none, and a SOCKS5 proxy carries TCP
+                // only (with it the session doesn't listen either). Greyed, it shows what the
+                // engine does then (off), and the choice is kept for when it can apply again.
+                let can_utp = n.incoming && !n.proxy;
+                let mut off = false;
+                let utp = winui::checkbox(
+                    ui,
+                    pos2(o.x + 32.0, o.y + 208.0),
+                    if can_utp { &mut n.utp } else { &mut off },
+                    // i18n: Torrent settings: uTP, BitTorrent over UDP, which many peers use (more peers, often faster)
+                    "Connect over uTP too (UDP)",
+                    can_utp,
+                );
+                if n.proxy {
+                    winui::why_disabled(
+                        utp,
+                        true,
+                        // i18n: why "Connect over uTP too" is greyed in Torrent settings: the proxy is on
+                        "Off with the proxy: uTP goes over UDP, which a SOCKS5 proxy doesn't carry",
+                    );
+                } else if !n.incoming {
+                    winui::why_disabled(
+                        utp,
+                        true,
+                        // i18n: why "Connect over uTP too" is greyed in Torrent settings: incoming connections are off
+                        "uTP uses the port for incoming connections: turn on Accept incoming connections",
+                    );
+                } else {
+                    utp.on_hover_text(crate::i18n::t(
+                        // i18n: Torrent settings: the hover text of "Connect over uTP too (UDP)"
+                        "Many peers take only uTP. Without it, MDM can't reach them.",
+                    ));
+                }
                 winui::checkbox(
                     ui,
-                    pos2(o.x + 14.0, o.y + 208.0),
+                    pos2(o.x + 14.0, o.y + 232.0),
                     &mut n.dht,
                     // i18n: Torrent settings: the DHT, the network peers use to find each other
                     "Find peers through the DHT",
@@ -1237,7 +1398,7 @@ impl TorrentSettings {
                 );
                 winui::checkbox(
                     ui,
-                    pos2(o.x + 14.0, o.y + 232.0),
+                    pos2(o.x + 14.0, o.y + 256.0),
                     &mut n.lsd,
                     // i18n: Torrent settings: local peer discovery
                     "Find peers on the local network",
@@ -1247,7 +1408,7 @@ impl TorrentSettings {
                     ui,
                     &p,
                     o.x + 32.0,
-                    o.y + 260.0,
+                    o.y + 284.0,
                     // i18n: Torrent settings, under "Find peers on the local network"
                     crate::i18n::t(
                         "It tells the computers on your network which torrents you have.",
@@ -1261,7 +1422,7 @@ impl TorrentSettings {
                 let can_proxy = self.socks || n.proxy;
                 let proxy = winui::checkbox(
                     ui,
-                    pos2(o.x + 14.0, o.y + 274.0),
+                    pos2(o.x + 14.0, o.y + 298.0),
                     &mut n.proxy,
                     // i18n: Torrent settings: use the SOCKS5 proxy set in Options → Proxy / Socks
                     "Use the proxy (Options → Proxy / Socks, SOCKS5)",
@@ -1271,13 +1432,13 @@ impl TorrentSettings {
                     proxy,
                     !can_proxy,
                     // i18n: why "Use the proxy" is greyed in Torrent settings
-                    "Set a socks5:// proxy in Options → Proxy / Socks first",
+                    "Set a SOCKS5 proxy in Options → Proxy / Socks (Manual, Type SOCKS5) first",
                 );
                 winui::fit(
                     ui,
                     &p,
                     o.x + 32.0,
-                    o.y + 302.0,
+                    o.y + 326.0,
                     // i18n: Torrent settings, under "Use the proxy"
                     crate::i18n::t(
                         "With it, incoming connections, the DHT and local peers are off.",
@@ -1288,7 +1449,7 @@ impl TorrentSettings {
                 );
                 winui::checkbox(
                     ui,
-                    pos2(o.x + 14.0, o.y + 316.0),
+                    pos2(o.x + 14.0, o.y + 340.0),
                     &mut n.stop_idle,
                     // i18n: Torrent settings: stop listening when nothing needs the torrent engine
                     "Stop the torrent engine when no torrent is running",
@@ -1296,7 +1457,7 @@ impl TorrentSettings {
                 );
                 winui::checkbox_until(
                     ui,
-                    pos2(o.x + 14.0, o.y + 340.0),
+                    pos2(o.x + 14.0, o.y + 364.0),
                     &mut self.upload_on,
                     // i18n: Torrent settings: an upload speed limit for all torrents together, followed by a box with the speed and "KBytes/sec"
                     "Limit uploading for all torrents to",
@@ -1305,7 +1466,7 @@ impl TorrentSettings {
                 );
                 winui::edit_right(
                     ui,
-                    r(o, 330.0, 337.0, 60.0, 22.0),
+                    r(o, 330.0, 361.0, 60.0, 22.0),
                     &mut self.upload_kb,
                     self.upload_on,
                 );
@@ -1315,7 +1476,7 @@ impl TorrentSettings {
                     ui,
                     &p,
                     o.x + 396.0,
-                    o.y + 352.0,
+                    o.y + 376.0,
                     crate::i18n::t("KBytes/sec"),
                     if self.upload_on {
                         winui::TEXT()
@@ -1329,7 +1490,7 @@ impl TorrentSettings {
                     ui,
                     &p,
                     o.x + 14.0,
-                    o.y + 378.0,
+                    o.y + 402.0,
                     // i18n: Torrent settings: the address of an IP blocklist (empty: none)
                     crate::i18n::t("Block the addresses in this list (P2P or eMule format):"),
                     winui::TEXT(),
@@ -1338,7 +1499,7 @@ impl TorrentSettings {
                 );
                 winui::edit(
                     ui,
-                    r(o, 14.0, 384.0, 442.0, 22.0),
+                    r(o, 14.0, 408.0, 442.0, 22.0),
                     &mut n.blocklist,
                     true,
                     false,
@@ -1347,7 +1508,7 @@ impl TorrentSettings {
                     ui,
                     &p,
                     o.x + 14.0,
-                    o.y + 424.0,
+                    o.y + 448.0,
                     // i18n: Torrent settings, at the bottom
                     crate::i18n::t(
                         "Fetched again every 7 days. Changes apply when no torrent is running.",
@@ -1358,7 +1519,7 @@ impl TorrentSettings {
                 );
                 let ok = winui::button(
                     ui,
-                    r(o, 298.0, 460.0, 77.0, 21.0),
+                    r(o, 298.0, 484.0, 77.0, 21.0),
                     "OK",
                     ButtonKind::Default,
                     false,
@@ -1367,7 +1528,7 @@ impl TorrentSettings {
                 .clicked();
                 let cancel = winui::button(
                     ui,
-                    r(o, 381.0, 460.0, 77.0, 21.0),
+                    r(o, 381.0, 484.0, 77.0, 21.0),
                     "Cancel",
                     ButtonKind::Normal,
                     false,
@@ -1573,8 +1734,8 @@ fn tri_state(node: &Node, chosen: &[bool]) -> Tri {
 }
 
 /// The tree of a torrent's files: folders first, then files, each by name. A torrent of several
-/// files has its own folder (named after it) at the top, as on disk (`Meta::folder_in`).
-fn build_tree(meta: &Meta) -> Vec<Node> {
+/// files has its own folder at the top only when that layout is selected.
+fn build_tree(meta: &Meta, create_subfolder: bool) -> Vec<Node> {
     let multi = meta.files.iter().filter(|f| !f.padding).count() > 1;
     let mut nodes = vec![Node {
         name: meta.name.clone(),
@@ -1633,6 +1794,12 @@ fn build_tree(meta: &Meta) -> Vec<Node> {
         });
         nodes[n].children = kids;
     }
+    if multi && !create_subfolder {
+        // Keep a virtual root for selection bookkeeping, but hide it in visible_rows.
+        for node in nodes.iter_mut().skip(1) {
+            node.depth -= 1;
+        }
+    }
     if !multi {
         // One file: just its row, no folder above it.
         let only = nodes[0].children.first().copied();
@@ -1647,13 +1814,17 @@ fn build_tree(meta: &Meta) -> Vec<Node> {
     nodes
 }
 
-/// The rows shown: the root, and the children of every open folder, depth first.
-fn visible_rows(tree: &[Node], open: &[bool]) -> Vec<usize> {
+/// The rows shown, depth first; the virtual outer root is skipped for the direct layout.
+fn visible_rows(tree: &[Node], open: &[bool], show_root: bool) -> Vec<usize> {
     let mut out = Vec::new();
     if tree.is_empty() {
         return out;
     }
-    let mut stack = vec![0usize];
+    let mut stack = if show_root {
+        vec![0usize]
+    } else {
+        tree[0].children.iter().rev().copied().collect()
+    };
     while let Some(n) = stack.pop() {
         out.push(n);
         if open[n] {
@@ -1800,6 +1971,107 @@ mod tests {
     }
 
     #[test]
+    fn direct_layout_checkbox_click_survives_the_next_frame() {
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let ctx = egui::Context::default();
+        let mut dialog = TorrentDialog::new(
+            Some(String::new()),
+            None,
+            Host::new(),
+            HashSet::new(),
+            std::env::temp_dir(),
+            Vec::new(),
+            rt.handle(),
+            &ctx,
+        );
+        let m = meta(&[("a.bin", 1), ("sub/b.bin", 2)]);
+        dialog.rename.on_meta_loaded(&m);
+        dialog.chosen = vec![true; m.files.len()];
+        dialog.tree = build_tree(&m, true);
+        dialog.open = vec![true; dialog.tree.len()];
+        dialog.meta = Some(m);
+        let mut frame = |events| {
+            let mut out = ctx.run_ui(
+                egui::RawInput {
+                    screen_rect: Some(Rect::from_min_size(Pos2::ZERO, vec2(640.0, 560.0))),
+                    events,
+                    ..Default::default()
+                },
+                |ui| {
+                    let _ = dialog.body(ui, Pos2::ZERO, rt.handle(), true);
+                },
+            );
+            out.textures_delta.clear();
+            dialog.create_subfolder
+        };
+        assert!(frame(Vec::new()));
+        let pos = pos2(80.0, 395.0);
+        for expected in [false, true] {
+            frame(vec![
+                egui::Event::PointerMoved(pos),
+                egui::Event::PointerButton {
+                    pos,
+                    button: egui::PointerButton::Primary,
+                    pressed: true,
+                    modifiers: Default::default(),
+                },
+            ]);
+            assert_eq!(
+                frame(vec![egui::Event::PointerButton {
+                    pos,
+                    button: egui::PointerButton::Primary,
+                    pressed: false,
+                    modifiers: Default::default(),
+                }]),
+                expected
+            );
+            assert_eq!(frame(Vec::new()), expected);
+        }
+        assert!(dialog.can_rename());
+    }
+
+    #[test]
+    fn direct_layout_keeps_internal_paths_and_checks_every_existing_file() {
+        let dir = tempfile::tempdir().unwrap();
+        let m = meta(&[("a.bin", 1), ("sub/b.bin", 2)]);
+        std::fs::create_dir_all(dir.path().join("sub")).unwrap();
+        std::fs::write(dir.path().join("sub/b.bin"), b"existing").unwrap();
+        assert_eq!(m.folder_in_with_subfolder(dir.path(), false), dir.path());
+        assert_eq!(m.folder_in(dir.path()), dir.path().join("Set"));
+        assert_eq!(
+            m.existing_in_with_subfolder(dir.path(), false),
+            vec![dir.path().join("sub/b.bin")]
+        );
+        assert!(m.existing_in(dir.path()).is_empty());
+        // Selecting only a.bin must not hide the unselected file from the collision prompt.
+        assert_eq!(
+            crate::torrents::dest_for(&m, dir.path(), Some(&[0]), false),
+            dir.path()
+        );
+        assert_eq!(
+            crate::torrents::dest_for(&m, dir.path(), Some(&[0]), true),
+            dir.path().join("Set")
+        );
+        let tree = build_tree(&m, false);
+        let rows = visible_rows(&tree, &vec![true; tree.len()], false);
+        let names: Vec<_> = rows
+            .iter()
+            .map(|&i| (tree[i].depth, tree[i].name.as_str()))
+            .collect();
+        assert_eq!(names, vec![(0, "sub"), (1, "b.bin"), (0, "a.bin")]);
+        let single = meta(&[("sub/one.bin", 1)]);
+        for create in [false, true] {
+            assert_eq!(
+                crate::torrents::dest_for(&single, dir.path(), None, create),
+                dir.path().join("sub/one.bin")
+            );
+        }
+    }
+
+    #[test]
     fn folders_first_with_sizes_and_mixed_state() {
         let m = meta(&[
             ("readme.txt", 1),
@@ -1807,9 +2079,9 @@ mod tests {
             ("disc 1/a.iso", 10),
             ("disc 1/extras/c.txt", 3),
         ]);
-        let t = build_tree(&m);
+        let t = build_tree(&m, true);
         let open = vec![true; t.len()];
-        let names: Vec<(usize, &str)> = visible_rows(&t, &open)
+        let names: Vec<(usize, &str)> = visible_rows(&t, &open, true)
             .into_iter()
             .map(|n| (t[n].depth, t[n].name.as_str()))
             .collect();
@@ -1837,14 +2109,14 @@ mod tests {
         // A closed folder hides what is inside.
         let mut open = open;
         open[disc1] = false;
-        assert_eq!(visible_rows(&t, &open).len(), 5);
+        assert_eq!(visible_rows(&t, &open, true).len(), 5);
     }
 
     #[test]
     fn one_file_is_one_row() {
-        let t = build_tree(&meta(&[("debian.iso", 5)]));
+        let t = build_tree(&meta(&[("debian.iso", 5)]), true);
         let open = vec![true; t.len()];
-        let rows = visible_rows(&t, &open);
+        let rows = visible_rows(&t, &open, true);
         assert_eq!(rows.len(), 1);
         assert_eq!(t[rows[0]].name, "debian.iso");
         assert_eq!(t[rows[0]].files, [0]);

@@ -63,28 +63,23 @@ param(
 $ErrorActionPreference = 'Stop'
 $vbox = Join-Path $env:ProgramFiles 'Oracle\VirtualBox\VBoxManage.exe'
 $vm = if ($env:MDM_VM) { $env:MDM_VM } else { 'mdm-ubuntu' }
-$user = if ($env:MDM_VM_USER) { $env:MDM_VM_USER } else { 'mdm' }
-$pass = $env:MDM_VM_PASSWORD
-# Or the developer key folder's vm-account.txt ("user: <name>" and "password: <word>" lines).
-$keys = Join-Path $env:USERPROFILE '.mdm-dev\vm-account.txt'
-if (-not $pass -and (Test-Path $keys)) {
-    foreach ($line in Get-Content $keys) {
-        if (-not $env:MDM_VM_USER -and $line -match '^\s*user:\s*(\S+)') { $user = $Matches[1] }
-        if ($line -match '^\s*password:\s*(\S+)') { $pass = $Matches[1] }
-    }
-}
-if (-not $pass) { throw "no VM account: set MDM_VM_USER and MDM_VM_PASSWORD" }
-$auth = @('--username', $user, '--password', $pass)
+# The account, its password only ever in files (account.ps1): never on a command line.
+. (Join-Path $PSScriptRoot 'account.ps1')
+$account = Open-VmAccount
+$user = $account.User
+$auth = $account.Auth
 
 function Invoke-Guest([string] $Command, [string] $On = $vm) {
     # The desktop session's display and bus, so GUI programs and gsettings reach it.
     $session = 'export DISPLAY=:0 XDG_RUNTIME_DIR=/run/user/$(id -u) DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus; ' +
         'export XAUTHORITY=$(ls /run/user/$(id -u)/gdm/Xauthority 2>/dev/null || echo $HOME/.Xauthority); ' +
-        "export MDM_SUDO_PASSWORD='$pass'; [ -f ~/.cargo/env ] && . ~/.cargo/env; "
+        $VmSudoEnv + '[ -f ~/.cargo/env ] && . ~/.cargo/env; '
+    Install-VmSudo $account $On $vbox
     & $vbox guestcontrol $On run --exe /bin/bash @auth --wait-stdout --wait-stderr -- -c ($session + $Command)
     if ($LASTEXITCODE) { throw "guest command failed ($LASTEXITCODE)" }
 }
 
+try {
 switch ($Action) {
     'configure' {
         # Settings only change on a powered-off machine: an ACPI shutdown first, as a person would.
@@ -151,8 +146,9 @@ switch ($Action) {
             Start-Sleep 2
         }
         Start-Sleep 10
+        Install-VmSudo $account $name $vbox
         & $vbox guestcontrol $name run --exe /bin/bash @auth --wait-stdout --wait-stderr -- -c `
-            "echo '$pass' | sudo -S -p '' hostnamectl set-hostname $name && echo '$pass' | sudo -S -p '' sed -i 's/$vm/$name/g' /etc/hosts && hostname"
+            "sudo -S -p '' hostnamectl set-hostname $name < ~/.config/mdm-lab/sudo && sudo -S -p '' sed -i 's/\b$vm\b/$name/g' /etc/hosts < ~/.config/mdm-lab/sudo && hostname"
     }
     'deploy' {
         # The programs of one build, from the VM that built them to one that only tests (a clone
@@ -186,4 +182,7 @@ switch ($Action) {
     'shot' { & $vbox controlvm $vm screenshotpng ([IO.Path]::GetFullPath($Arg1)) }
     'get' { & $vbox guestcontrol $vm copyfrom @auth --target-directory $Arg2 $Arg1 }
     'put' { & $vbox guestcontrol $vm copyto @auth --target-directory $Arg2 $Arg1 }
+}
+} finally {
+    Close-VmAccount $account
 }

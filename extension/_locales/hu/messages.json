@@ -92,9 +92,6 @@
       }
     }
   },
-  "popup_undo": {
-    "message": "Visszavonás"
-  },
   "popup_excluded": {
     "message": "A(z) $site$ webhelyről származó letöltések a böngészőben maradnak",
     "placeholders": {
@@ -148,6 +145,9 @@
   },
   "declined_integration_off": {
     "message": "A Speciális böngészőintegráció használata ki van kapcsolva a Beállítások → Általános menüpontban."
+  },
+  "declined_torrents": {
+    "message": "Ez egy torrent, és a „Mágneshivatkozások és .torrent fájlok megnyitása a(z) Mister Download Manager alkalmazással” beállítás ki van kapcsolva a Torrent-beállításokban."
   },
   "declined_site_access": {
     "message": "A bővítmény nem olvashatja ezt a webhelyet (a böngésző webhely-hozzáférése)."
@@ -328,5 +328,424 @@
   },
   "video_original": {
     "message": "eredeti"
+  },
+  "video_compatible": {
+    "message": "Leginkább kompatibilis"
+  },
+  "popup_video_hide_fullscreen": {
+    "message": "A letöltés gomb elrejtése teljes képernyős módban"
+  },
+  "popup_video_hide_fullscreen_title": {
+    "message": "Amíg az oldal teljes képernyős módban van, a videókon nem jelenik meg a Letöltés videó gomb"
+  },
+  "popup_remote_forget": {
+    "message": "Elfelejtés"
+  },
+  "popup_gear": {
+    "message": "Beállítások – Mister Download Manager"
+  },
+  "popup_tabs": {
+    "message": "Előugró ablak szakaszai"
+  },
+  "popup_tab_downloads": {
+    "message": "Letöltések"
+  },
+  "popup_tab_page": {
+    "message": "Ez az oldal"
+  },
+  "popup_tab_settings": {
+    "message": "Beállítások"
+  },
+  "popup_conn": {
+    "message": "Csatlakoztatva · $version$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.5.2"
+      }
+    }
+  },
+  "popup_conn_plain": {
+    "message": "Csatlakoztatva"
+  },
+  "popup_conn_off": {
+    "message": "Nincs kapcsolat"
+  },
+  "popup_conn_paused": {
+    "message": "Szünetel"
+  },
+  "popup_conn_update": {
+    "message": "Mister Download Manager frissítése"
+  },
+  "popup_conn_remote": {
+    "message": "Küldés a(z) $server$ szerverre",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_cancel": {
+    "message": "Mégse"
+  },
+  "popup_page_none": {
+    "message": "Ez nem weboldal: itt nincs semmi tennivaló."
+  },
+  "popup_exclude_by_rule": {
+    "message": "A beállításokban lévő szabály miatt a böngészőre hagyva"
+  },
+  "popup_dl_search": {
+    "message": "Letöltések keresése"
+  },
+  "popup_dl_filters": {
+    "message": "Megjelenítés"
+  },
+  "popup_dl_all": {
+    "message": "Összes"
+  },
+  "popup_dl_running": {
+    "message": "Folyamatban"
+  },
+  "popup_dl_done_filter": {
+    "message": "Kész"
+  },
+  "popup_dl_failed_filter": {
+    "message": "Sikertelen"
+  },
+  "popup_dl_clear": {
+    "message": "Kész letöltések törlése"
+  },
+  "popup_dl_running_count": {
+    "message": "$count$ letöltés folyamatban",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_remote": {
+    "message": "Ezek a(z) Mister Download Manager letöltései a(z) $server$ szerveren. Nyissa meg a fájlokat ott.",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_dl_more": {
+    "message": "A(z) $total$ letöltésből a(z) $shown$ legújabb. A(z) Mister Download Manager az összeset listázza.",
+    "placeholders": {
+      "shown": {
+        "content": "$1",
+        "example": "60"
+      },
+      "total": {
+        "content": "$2",
+        "example": "245"
+      }
+    }
+  },
+  "popup_dl_of": {
+    "message": "$done$ / $size$",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "12.3 MB"
+      },
+      "size": {
+        "content": "$2",
+        "example": "48.7 MB"
+      }
+    }
+  },
+  "popup_dl_left": {
+    "message": "$time$ van hátra",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "0:42"
+      }
+    }
+  },
+  "popup_dl_starting": {
+    "message": "Indítás..."
+  },
+  "popup_dl_paused": {
+    "message": "Szünetel"
+  },
+  "popup_dl_waiting": {
+    "message": "Várakozás"
+  },
+  "popup_dl_done": {
+    "message": "Kész"
+  },
+  "popup_dl_just_now": {
+    "message": "épp most"
+  },
+  "popup_dl_failed": {
+    "message": "Sikertelen"
+  },
+  "popup_dl_failed_why": {
+    "message": "Sikertelen: $why$",
+    "placeholders": {
+      "why": {
+        "content": "$1",
+        "example": "the server refused the connection"
+      }
+    }
+  },
+  "popup_dl_gone": {
+    "message": "A fájl törölve vagy áthelyezve"
+  },
+  "popup_dl_loading": {
+    "message": "Letöltések keresése..."
+  },
+  "popup_dl_none": {
+    "message": "Még nincsenek letöltések"
+  },
+  "popup_dl_none_text": {
+    "message": "A(z) Mister Download Manager alkalmazással letöltött fájlok itt jelennek meg."
+  },
+  "popup_dl_no_match": {
+    "message": "Nincs egyezés"
+  },
+  "popup_dl_no_match_text": {
+    "message": "Egyetlen letöltés neve vagy címe sem tartalmazza a(z) „$words$” kifejezést.",
+    "placeholders": {
+      "words": {
+        "content": "$1",
+        "example": "report"
+      }
+    }
+  },
+  "popup_dl_show_all": {
+    "message": "Összes letöltés megjelenítése"
+  },
+  "popup_list_off": {
+    "message": "A(z) Mister Download Manager nem fut"
+  },
+  "popup_list_off_text": {
+    "message": "Indítsa el, hogy itt láthassa a letöltéseket."
+  },
+  "popup_list_start": {
+    "message": "Mister Download Manager indítása"
+  },
+  "popup_list_old": {
+    "message": "Mister Download Manager frissítése"
+  },
+  "popup_list_old_text": {
+    "message": "Ez a verzió még nem tudja listázni a letöltéseit."
+  },
+  "popup_list_busy": {
+    "message": "A(z) Mister Download Manager foglalt. Újrapróbálkozás..."
+  },
+  "popup_list_unreached": {
+    "message": "A(z) Mister Download Manager nem érhető el"
+  },
+  "popup_list_remote_unreachable": {
+    "message": "A(z) Mister Download Manager nem érhető el a(z) $server$ címen",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_list_remote_unreachable_text": {
+    "message": "Ellenőrizze, hogy fut-e, és hogy ez a böngésző elfogadja-e a tanúsítványát (Beállítások → Letöltések küldése ide → Megnyitás).",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_act_open": {
+    "message": "Megnyitás"
+  },
+  "popup_act_open_named": {
+    "message": "Megnyitás: $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_folder": {
+    "message": "Megjelenítés mappában"
+  },
+  "popup_act_folder_named": {
+    "message": "Megjelenítés mappában: $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_copy_file": {
+    "message": "Fájl másolása"
+  },
+  "popup_act_share": {
+    "message": "Megosztás..."
+  },
+  "popup_act_copy_link": {
+    "message": "Hivatkozás másolása"
+  },
+  "popup_act_pause": {
+    "message": "Szüneteltetés"
+  },
+  "popup_act_pause_named": {
+    "message": "Szüneteltetés: $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_resume": {
+    "message": "Folytatás"
+  },
+  "popup_act_resume_named": {
+    "message": "Folytatás: $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_again": {
+    "message": "Újra letöltés"
+  },
+  "popup_act_remove": {
+    "message": "Eltávolítás a listáról"
+  },
+  "popup_act_delete": {
+    "message": "Fájl törlése..."
+  },
+  "popup_act_more": {
+    "message": "További műveletek"
+  },
+  "popup_act_more_named": {
+    "message": "További műveletek a(z) $file$ fájlhoz",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_title": {
+    "message": "Biztosan törli a fájlt?"
+  },
+  "popup_ask_delete": {
+    "message": "A(z) $file$ törlődik a számítógépről, és a letöltés lekerül a listáról. Ez nem vonható vissza.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_ok": {
+    "message": "Törlés"
+  },
+  "popup_ask_clear_title": {
+    "message": "Biztosan törli a befejezett letöltéseket?"
+  },
+  "popup_ask_clear": {
+    "message": "A(z) $count$ befejezett letöltés lekerül a listáról. A fájlok a helyükön maradnak.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "8"
+      }
+    }
+  },
+  "popup_ask_clear_ok": {
+    "message": "Törlés"
+  },
+  "popup_said_file": {
+    "message": "A(z) $file$ másolva. Illessze be egy mappába, csevegésbe vagy üzenetbe.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_link": {
+    "message": "Hivatkozás másolva"
+  },
+  "popup_said_removed": {
+    "message": "$file$ eltávolítva a listáról",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_deleted": {
+    "message": "$file$ törölve",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_again": {
+    "message": "A(z) $file$ újra letöltése folyamatban",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_cleared": {
+    "message": "A kész letöltések törölve"
+  },
+  "popup_act_gone": {
+    "message": "Ez a letöltés már nincs a listán."
+  },
+  "popup_act_missing": {
+    "message": "A fájl már nincs ott, ahová mentve lett (áthelyezve vagy törölve)."
+  },
+  "popup_act_running": {
+    "message": "Először szüneteltesse."
+  },
+  "popup_act_cant": {
+    "message": "Ez a letöltés most nem hajtható végre."
+  },
+  "popup_act_unsupported": {
+    "message": "Ez a rendszer nem tudja ezt megtenni."
+  },
+  "popup_act_off": {
+    "message": "A(z) Mister Download Manager nem fut."
+  },
+  "popup_act_busy": {
+    "message": "A(z) Mister Download Manager nem válaszolt időben. Próbálja újra."
+  },
+  "popup_act_failed": {
+    "message": "Nem sikerült. Próbálja újra."
+  },
+  "status_running": {
+    "message": "Letöltések: $count$",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_open_remote": {
+    "message": "Oldal megnyitása"
   }
 }

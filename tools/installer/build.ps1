@@ -1,19 +1,29 @@
-# Builds the Windows release into target/dist/:
-#   MisterDownloadManager-<version>-setup.exe     the installer (tools/installer/mdm.iss)
-#   MisterDownloadManager-<version>-portable.zip  the same programs with a `data` folder (portable
-#                                                 mode: settings beside the exe, no registry)
-#   MisterDownloadManager-<version>-x64.zip       the same programs, data in %APPDATA% as installed
+# Builds the Windows release for one processor into target/dist/ (-Arch x64, the default; arm64;
+# x86). The x64 files keep the names they had before there were others, so every copy installed
+# before finds its update (crates/tools/src/update.rs Install::assets_on):
+#   MisterDownloadManager-<version>-setup.exe        the installer (tools/installer/mdm.iss)
+#   MisterDownloadManager-<version>-portable.zip     the same programs with a `data` folder (portable
+#                                                    mode: settings beside the exe, no registry)
+#   MisterDownloadManager-<version>-x64.zip          the same programs, data in %APPDATA% as installed
+#   ...-setup-arm64.exe, ...-portable-arm64.zip, ...-arm64.zip   Windows on ARM (-Arch arm64)
+#   ...-setup-x86.exe, ...-portable-x86.zip, ...-x86.zip         32-bit Windows (-Arch x86)
 #   SHA256SUMS.txt
-# Needs Inno Setup 6 (ISCC.exe on PATH, in $env:ISCC, or in its default folders).
+# Needs Inno Setup 6.3 or later (ISCC.exe on PATH, in $env:ISCC, or in its default folders), and
+# Rust's target for the processor (rustup target add aarch64-pc-windows-msvc / i686-pc-windows-msvc).
+# The programs are built in target/<Rust's target>/release.
 # Code signing: set $env:MDM_SIGN_COMMAND to a signtool command line with $f for the file, e.g.
 #   signtool sign /fd sha256 /tr http://timestamp.digicert.com /td sha256 /a $f
 # Inno Setup then signs the programs (in place, so the zip carries them signed too), the
 # installer and its uninstaller.
-param([switch]$NoBuild, [string]$SignCommand = $env:MDM_SIGN_COMMAND)
+param([switch]$NoBuild, [string]$SignCommand = $env:MDM_SIGN_COMMAND,
+  [ValidateSet("x64", "arm64", "x86")][string]$Arch = "x64")
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $dist = Join-Path $root "target\dist"
-$bin = Join-Path $root "target\release"
+$target = @{ x64 = "x86_64-pc-windows-msvc"; arm64 = "aarch64-pc-windows-msvc"; x86 = "i686-pc-windows-msvc" }[$Arch]
+$bin = Join-Path $root "target\$target\release"
+# The files' names: x64's as before, the others with their processor.
+$suffix = if ($Arch -eq "x64") { "" } else { "-$Arch" }
 
 $cargo = Get-Content (Join-Path $root "Cargo.toml") -Raw
 $version = [regex]::Match($cargo, '(?m)^version\s*=\s*"([^"]+)"').Groups[1].Value
@@ -27,7 +37,7 @@ if (-not $NoBuild) {
   $cargoHome = if ($env:CARGO_HOME) { $env:CARGO_HOME } else { Join-Path $env:USERPROFILE ".cargo" }
   $env:CARGO_ENCODED_RUSTFLAGS = "--remap-path-prefix=$cargoHome=cargo" + [char]0x1f + "--remap-path-prefix=$root=mdm" + [char]0x1f + "-Ctarget-feature=+crt-static"
   try {
-    & cargo build --release -p mdm-app -p mdm-nmhost -p mdm-cli -p mdm-mcp
+    & cargo build --release --target $target -p mdm-app -p mdm-nmhost -p mdm-cli -p mdm-mcp
     if ($LASTEXITCODE) { throw "cargo build failed" }
   } finally {
     Remove-Item Env:CARGO_ENCODED_RUSTFLAGS
@@ -45,7 +55,7 @@ $iscc = @($env:ISCC, (Get-Command ISCC.exe -ErrorAction SilentlyContinue).Source
 if (-not $iscc) { throw "Inno Setup 6 (ISCC.exe) not found" }
 
 New-Item -ItemType Directory -Force $dist | Out-Null
-$isccArgs = @("/Qp", "/DAppVersion=$version")
+$isccArgs = @("/Qp", "/DAppVersion=$version", "/DArch=$Arch", "/DBin=$bin")
 if ($SignCommand) { $isccArgs += @("/DSign", "/Smdmsign=$SignCommand") }
 & $iscc @isccArgs (Join-Path $PSScriptRoot "mdm.iss")
 if ($LASTEXITCODE) { throw "ISCC failed" }
@@ -97,8 +107,8 @@ use the profile instead. Browser integration needs the installer.
   }
 }
 Add-Type -AssemblyName System.IO.Compression, System.IO.Compression.FileSystem
-New-Zip "MisterDownloadManager-$version-portable" $true
-New-Zip "MisterDownloadManager-$version-x64" $false
+New-Zip "MisterDownloadManager-$version-portable$suffix" $true
+New-Zip "MisterDownloadManager-$version-$Arch" $false
 Remove-Item -LiteralPath (Join-Path $dist "stage") -Recurse -Force
 
 $files = Get-ChildItem $dist -File | Where-Object { $_.Name -like "MisterDownloadManager-$version-*" }

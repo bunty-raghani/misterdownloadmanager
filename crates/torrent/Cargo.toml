@@ -12,6 +12,9 @@ publish.workspace = true
 anyhow.workspace = true
 # 9.1.0 and later: upstream's robustness fixes for what peers send.
 librqbit = { version = "9.1.0", default-features = false, features = ["rust-tls"] }
+# Binding as librqbit's listener does, to find a port free for TCP and uTP alike (lib.rs,
+# `port_for_both`); already in the tree through librqbit.
+librqbit-dualstack-sockets = "0.7.0"
 # The TLS setup of the session's HTTP clients (trackers, UPnP), MDM's own: a system without CA
 # certificates still starts a session (mdm_engine::tls).
 mdm-engine.workspace = true

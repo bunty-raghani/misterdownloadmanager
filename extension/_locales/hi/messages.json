@@ -92,9 +92,6 @@
       }
     }
   },
-  "popup_undo": {
-    "message": "पूर्ववत करें"
-  },
   "popup_excluded": {
     "message": "$site$ से डाउनलोड ब्राउज़र के साथ रहते हैं",
     "placeholders": {
@@ -148,6 +145,9 @@
   },
   "declined_integration_off": {
     "message": "विकल्प → सामान्य में उन्नत ब्राउज़र एकीकरण का उपयोग करें बंद है।"
+  },
+  "declined_torrents": {
+    "message": "यह एक टॉरेंट है, और टॉरेंट सेटिंग्स में Mister Download Manager के साथ मैग्नेट लिंक और .torrent फ़ाइलें खोलें बंद है।"
   },
   "declined_site_access": {
     "message": "एक्सटेंशन को इस साइट को पढ़ने की अनुमति नहीं है (ब्राउज़र की साइट एक्सेस)।"
@@ -328,5 +328,424 @@
   },
   "video_original": {
     "message": "मूल"
+  },
+  "video_compatible": {
+    "message": "सबसे संगत"
+  },
+  "popup_video_hide_fullscreen": {
+    "message": "पूर्ण स्क्रीन में डाउनलोड बटन छिपाएँ"
+  },
+  "popup_video_hide_fullscreen_title": {
+    "message": "जब पेज पूर्ण स्क्रीन में हो, तो उसके वीडियो कोई डाउनलोड वीडियो बटन नहीं दिखाते हैं"
+  },
+  "popup_remote_forget": {
+    "message": "भूलें"
+  },
+  "popup_gear": {
+    "message": "Mister Download Manager के विकल्प"
+  },
+  "popup_tabs": {
+    "message": "पॉपअप अनुभाग"
+  },
+  "popup_tab_downloads": {
+    "message": "डाउनलोड"
+  },
+  "popup_tab_page": {
+    "message": "यह पेज"
+  },
+  "popup_tab_settings": {
+    "message": "सेटिंग्स"
+  },
+  "popup_conn": {
+    "message": "कनेक्ट किया गया · $version$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.5.2"
+      }
+    }
+  },
+  "popup_conn_plain": {
+    "message": "कनेक्ट किया गया"
+  },
+  "popup_conn_off": {
+    "message": "कनेक्ट नहीं किया गया"
+  },
+  "popup_conn_paused": {
+    "message": "रोका गया"
+  },
+  "popup_conn_update": {
+    "message": "Mister Download Manager अपडेट करें"
+  },
+  "popup_conn_remote": {
+    "message": "$server$ पर भेजा जा रहा है",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_cancel": {
+    "message": "रद्द करें"
+  },
+  "popup_page_none": {
+    "message": "यह वेब पेज नहीं है: यहाँ कुछ भी करने को नहीं है।"
+  },
+  "popup_exclude_by_rule": {
+    "message": "विकल्पों में एक नियम द्वारा ब्राउज़र के लिए छोड़ा गया"
+  },
+  "popup_dl_search": {
+    "message": "डाउनलोड खोजें"
+  },
+  "popup_dl_filters": {
+    "message": "दिखाएँ"
+  },
+  "popup_dl_all": {
+    "message": "सभी"
+  },
+  "popup_dl_running": {
+    "message": "चल रहा है"
+  },
+  "popup_dl_done_filter": {
+    "message": "पूरा हुआ"
+  },
+  "popup_dl_failed_filter": {
+    "message": "असफल"
+  },
+  "popup_dl_clear": {
+    "message": "पूरे हुए डाउनलोड साफ़ करें"
+  },
+  "popup_dl_running_count": {
+    "message": "अभी $count$ डाउनलोड हो रहे हैं",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_remote": {
+    "message": "ये $server$ पर मौजूद Mister Download Manager के डाउनलोड हैं। उनकी फ़ाइलें वहीं खोलें।",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_dl_more": {
+    "message": "$total$ में से सबसे नए $shown$। Mister Download Manager उन सभी को सूचीबद्ध करता है।",
+    "placeholders": {
+      "shown": {
+        "content": "$1",
+        "example": "60"
+      },
+      "total": {
+        "content": "$2",
+        "example": "245"
+      }
+    }
+  },
+  "popup_dl_of": {
+    "message": "$size$ में से $done$",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "12.3 MB"
+      },
+      "size": {
+        "content": "$2",
+        "example": "48.7 MB"
+      }
+    }
+  },
+  "popup_dl_left": {
+    "message": "$time$ शेष",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "0:42"
+      }
+    }
+  },
+  "popup_dl_starting": {
+    "message": "शुरू हो रहा है..."
+  },
+  "popup_dl_paused": {
+    "message": "रोका गया"
+  },
+  "popup_dl_waiting": {
+    "message": "प्रतीक्षा कर रहा है"
+  },
+  "popup_dl_done": {
+    "message": "पूरा हुआ"
+  },
+  "popup_dl_just_now": {
+    "message": "अभी"
+  },
+  "popup_dl_failed": {
+    "message": "असफल"
+  },
+  "popup_dl_failed_why": {
+    "message": "असफल: $why$",
+    "placeholders": {
+      "why": {
+        "content": "$1",
+        "example": "the server refused the connection"
+      }
+    }
+  },
+  "popup_dl_gone": {
+    "message": "फ़ाइल हटाई गई या स्थानांतरित की गई"
+  },
+  "popup_dl_loading": {
+    "message": "डाउनलोड खोज रहा है..."
+  },
+  "popup_dl_none": {
+    "message": "अभी तक कोई डाउनलोड नहीं"
+  },
+  "popup_dl_none_text": {
+    "message": "आप Mister Download Manager के साथ जो डाउनलोड करते हैं वह यहाँ दिखाई देता है।"
+  },
+  "popup_dl_no_match": {
+    "message": "कुछ भी मेल नहीं खाता"
+  },
+  "popup_dl_no_match_text": {
+    "message": "किसी भी डाउनलोड के नाम या पते में “$words$” नहीं है।",
+    "placeholders": {
+      "words": {
+        "content": "$1",
+        "example": "report"
+      }
+    }
+  },
+  "popup_dl_show_all": {
+    "message": "सभी डाउनलोड दिखाएँ"
+  },
+  "popup_list_off": {
+    "message": "Mister Download Manager नहीं चल रहा है"
+  },
+  "popup_list_off_text": {
+    "message": "अपने डाउनलोड यहाँ देखने के लिए इसे प्रारंभ करें।"
+  },
+  "popup_list_start": {
+    "message": "Mister Download Manager प्रारंभ करें"
+  },
+  "popup_list_old": {
+    "message": "Mister Download Manager अपडेट करें"
+  },
+  "popup_list_old_text": {
+    "message": "यह संस्करण अभी तक अपने डाउनलोड यहाँ सूचीबद्ध नहीं कर सकता।"
+  },
+  "popup_list_busy": {
+    "message": "Mister Download Manager व्यस्त है। पुनः प्रयास कर रहा है..."
+  },
+  "popup_list_unreached": {
+    "message": "Mister Download Manager तक नहीं पहुँच सकते"
+  },
+  "popup_list_remote_unreachable": {
+    "message": "$server$ पर Mister Download Manager तक नहीं पहुँच सकते",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_list_remote_unreachable_text": {
+    "message": "जाँचें कि यह चल रहा है, और यह ब्राउज़र इसके प्रमाणपत्र को स्वीकार करता है (सेटिंग्स → डाउनलोड भेजें → इसे खोलें)।",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_act_open": {
+    "message": "खोलें"
+  },
+  "popup_act_open_named": {
+    "message": "$file$ खोलें",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_folder": {
+    "message": "फ़ोल्डर में दिखाएँ"
+  },
+  "popup_act_folder_named": {
+    "message": "$file$ को फ़ोल्डर में दिखाएँ",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_copy_file": {
+    "message": "फ़ाइल कॉपी करें"
+  },
+  "popup_act_share": {
+    "message": "साझा करें..."
+  },
+  "popup_act_copy_link": {
+    "message": "लिंक कॉपी करें"
+  },
+  "popup_act_pause": {
+    "message": "रोकें"
+  },
+  "popup_act_pause_named": {
+    "message": "$file$ रोकें",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_resume": {
+    "message": "फिर से शुरू करें"
+  },
+  "popup_act_resume_named": {
+    "message": "$file$ फिर से शुरू करें",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_again": {
+    "message": "फिर से डाउनलोड करें"
+  },
+  "popup_act_remove": {
+    "message": "सूची से हटाएँ"
+  },
+  "popup_act_delete": {
+    "message": "फ़ाइल हटाएँ..."
+  },
+  "popup_act_more": {
+    "message": "अधिक क्रियाएँ"
+  },
+  "popup_act_more_named": {
+    "message": "$file$ के लिए अधिक क्रियाएँ",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_title": {
+    "message": "क्या आप फ़ाइल हटाना चाहते हैं?"
+  },
+  "popup_ask_delete": {
+    "message": "$file$ आपके कंप्यूटर से हटा दिया जाएगा, और डाउनलोड सूची से हटा दिया जाएगा। इसे पूर्ववत नहीं किया जा सकता।",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_ok": {
+    "message": "हटाएँ"
+  },
+  "popup_ask_clear_title": {
+    "message": "क्या आप पूरे हुए डाउनलोड साफ़ करना चाहते हैं?"
+  },
+  "popup_ask_clear": {
+    "message": "क्या आप $count$ पूरे हो चुके डाउनलोड सूची से हटाना चाहते हैं? उनकी फ़ाइलें वहीं रहेंगी जहाँ वे हैं।",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "8"
+      }
+    }
+  },
+  "popup_ask_clear_ok": {
+    "message": "साफ़ करें"
+  },
+  "popup_said_file": {
+    "message": "$file$ कॉपी किया गया। इसे किसी फ़ोल्डर, चैट या संदेश में पेस्ट करें।",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_link": {
+    "message": "लिंक कॉपी किया गया"
+  },
+  "popup_said_removed": {
+    "message": "$file$ को सूची से हटा दिया गया",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_deleted": {
+    "message": "$file$ हटा दिया गया",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_again": {
+    "message": "$file$ फिर से डाउनलोड हो रहा है",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_cleared": {
+    "message": "पूरे हुए डाउनलोड साफ़ किए गए"
+  },
+  "popup_act_gone": {
+    "message": "वह डाउनलोड अब सूची में नहीं है।"
+  },
+  "popup_act_missing": {
+    "message": "इसकी फ़ाइल अब उस स्थान पर नहीं है जहाँ इसे सहेजा गया था (स्थानांतरित या हटाई गई)।"
+  },
+  "popup_act_running": {
+    "message": "पहले इसे रोकें।"
+  },
+  "popup_act_cant": {
+    "message": "यह इस डाउनलोड पर अभी नहीं किया जा सकता।"
+  },
+  "popup_act_unsupported": {
+    "message": "यह सिस्टम ऐसा नहीं कर सकता।"
+  },
+  "popup_act_off": {
+    "message": "Mister Download Manager नहीं चल रहा है।"
+  },
+  "popup_act_busy": {
+    "message": "Mister Download Manager ने समय पर जवाब नहीं दिया। फिर से कोशिश करें।"
+  },
+  "popup_act_failed": {
+    "message": "यह काम नहीं हुआ। फिर से प्रयास करें।"
+  },
+  "status_running": {
+    "message": "डाउनलोड हो रहे हैं: $count$",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_open_remote": {
+    "message": "इसका पृष्ठ खोलें"
   }
 }

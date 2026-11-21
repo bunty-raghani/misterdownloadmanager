@@ -9,14 +9,26 @@
 //! machine, Remote Desktop), the next is tried, and the reason is logged. A start with the
 //! system's API that ends before its first frame (a crash or a kill inside the driver) is
 //! remembered, and so is one whose first frame doesn't come within [`FIRST_FRAME_WITHIN`] (MDM
-//! starts again, the next way): the next starts pass over it until that API is chosen again,
-//! and View → Draw with says why. A graphics card lost while MDM runs (a driver update or reset)
-//! starts MDM again; a second loss soon after counts as the API failing. The same code does all
-//! of this on every system: only [`GPU`] and the backend in `gpu::options` differ.
+//! starts again, the next way): the next starts pass over it, and View → Draw with says why,
+//! since when and when MDM tries it again. A graphics card lost while MDM runs (a driver update
+//! or reset) starts MDM again; a second loss soon after counts as the API failing. OpenGL's too:
+//! a paint that fails (eframe couldn't make the context current on a window, #1448) is skipped
+//! and tried again, and a window whose paints keep failing is a lost device ([`gl_lost`]). The
+//! same code does all of this on every system: only [`GPU`] and the backend in `gpu::options`
+//! differ.
+//!
+//! A failure isn't remembered for good (#1205: one slow start just after Windows started kept a
+//! laptop on OpenGL from then on). Its file keeps when it happened, on which adapter and driver,
+//! and this computer's graphics drivers then ([`drivers`]); the way is tried again after a driver
+//! update or another card (the usual fix), after a while that depends on the reason ([`wait`]),
+//! or when chosen again in View → Draw with. A try again that fails is remembered again, and
+//! waits twice as long, so a way that fails every time (#847's cards) costs a bad start rarely. A
+//! first frame late in the first minutes of a start with the session is the busy login's more
+//! likely than the API's: it is tried again at the next start ([`verdict`]).
 //!
 //! Windows: a card without Direct3D 12 draws with OpenGL, and with Direct3D 12 on Microsoft's
-//! software renderer (WARP) once OpenGL fails here (#847), remembered (`opengl-unfit.txt`) until
-//! OpenGL is chosen again: it can't start, it is too old to draw MDM ([`gl_unfit`], #835), its
+//! software renderer (WARP) once OpenGL fails here (#847), remembered (`opengl-unfit.txt`, tried
+//! again as above): it can't start, it is too old to draw MDM ([`gl_unfit`], #835), its
 //! first frame doesn't come within [`FIRST_FRAME_WITHIN`], its last start ended before its first
 //! frame, or the window froze inside its driver ([`gl_driver_frame`]: the crash report's window
 //! reads that from the freeze's stack; the cards of #847 froze or crashed there while showing a
@@ -33,7 +45,8 @@
 //! Another system's name is ignored. Off-screen test copies also take `MDM_TEST_GL_VERSION=2.1`:
 //! the version OpenGL says it is, as an old card's driver does; `MDM_TEST_NO_HARDWARE=1` (no
 //! card's driver), `MDM_TEST_NO_SOFTWARE=1` (no software renderer either),
-//! `MDM_TEST_NO_FIRST_FRAME=opengl` (only OpenGL's first frame never comes) and
+//! `MDM_TEST_NO_FIRST_FRAME=opengl` (only OpenGL's first frame never comes; `direct3d`,
+//! `vulkan`, `metal`: only that API's, on any adapter) and
 //! `MDM_TEST_GL_STALL=1` (the window stalls once while OpenGL draws, as in a driver's present).
 
 use std::path::PathBuf;
@@ -92,7 +105,10 @@ pub const GPU: Option<Api> = if !cfg!(gpu) {
 
 /// What draws when the user chose nothing (the settings' `renderer: None`): Direct3D on Windows
 /// (#89), OpenGL elsewhere (#206: Vulkan and Metal are choices until real cards have tried them).
-pub const DEFAULT: Api = if cfg!(windows) {
+/// 32-bit Windows draws with OpenGL too: there wgpu's Direct3D 12 can't make egui's pipeline
+/// ("The parameter is incorrect", tried on an NVIDIA card), and the windows MDM opened after
+/// falling back stayed blank.
+pub const DEFAULT: Api = if cfg!(all(windows, not(target_arch = "x86"))) {
     Api::Direct3D
 } else {
     Api::OpenGl
@@ -198,12 +214,13 @@ pub struct Known {
 
 impl Known {
     /// Read as the app starts: a start that left its marker behind ended before its first frame,
-    /// and is remembered as that.
+    /// and is remembered as that; a failure whose time to be passed over is up, or from before a
+    /// driver update, isn't counted: that way is tried again ([`verdict`], #1205).
     pub fn read() -> Known {
         Known {
-            card_failed: failed_before(Way::Card).is_some(),
-            software_failed: failed_before(Way::Software).is_some(),
-            gl_failed: failed_before(Way::OpenGl).is_some(),
+            card_failed: failed_before(Way::Card),
+            software_failed: failed_before(Way::Software),
+            gl_failed: failed_before(Way::OpenGl),
         }
     }
 
@@ -265,21 +282,22 @@ pub enum Because {
 }
 
 impl Because {
-    /// Its words after "Drawing with: …" (`api`: the system's API's name).
+    /// Its words after "Drawing with: …" (`api`: the system's API's name): a failure's say when,
+    /// and when it is tried again (#1205).
     fn words(self, api: &str) -> String {
-        let details = |d: &Mutex<Option<String>>| d.lock().ok().and_then(|d| d.clone());
+        let said = |w: Way| {
+            w.record()
+                .lock()
+                .ok()
+                .and_then(|r| r.as_ref().map(|f| f.said(unix_now())))
+                .unwrap_or_default()
+        };
         match self {
             Because::Chosen => "chosen in View → Draw with".into(),
             Because::Default => "the default here".into(),
             Because::Override => "the testing override (/renderer, MDM_RENDERER)".into(),
-            Because::OpenGlUnfit => format!(
-                "OpenGL can't draw MDM here: {}",
-                details(&GL_DETAILS).unwrap_or_default()
-            ),
-            Because::FailedBefore => format!(
-                "{api} failed here before: {}",
-                details(&FAILED_DETAILS).unwrap_or_default()
-            ),
+            Because::OpenGlUnfit => format!("OpenGL can't draw MDM here: {}", said(Way::OpenGl)),
+            Because::FailedBefore => format!("{api} failed here before: {}", said(Way::Card)),
         }
     }
 }
@@ -478,12 +496,20 @@ impl Way {
         }
     }
 
-    /// The details of its failure, as known in this process.
-    fn details(self) -> &'static Mutex<Option<String>> {
+    /// Its failure, as known in this process (remembered, or found in this start).
+    fn record(self) -> &'static Mutex<Option<Failure>> {
         match self {
-            Way::Card => &FAILED_DETAILS,
-            Way::Software => &SOFTWARE_DETAILS,
-            Way::OpenGl => &GL_DETAILS,
+            Way::Card => &CARD_RECORD,
+            Way::Software => &SOFTWARE_RECORD,
+            Way::OpenGl => &GL_RECORD,
+        }
+    }
+
+    fn index(self) -> usize {
+        match self {
+            Way::Card => 0,
+            Way::Software => 1,
+            Way::OpenGl => 2,
         }
     }
 }
@@ -551,14 +577,14 @@ static GPU_FAILED: Mutex<Option<Why>> = Mutex::new(None);
 /// why.
 static GL_FAILED_WHY: Mutex<Option<Why>> = Mutex::new(None);
 
-/// The details of each way's failure, as its file has them (for the log and the crash reports).
-static FAILED_DETAILS: Mutex<Option<String>> = Mutex::new(None);
-static SOFTWARE_DETAILS: Mutex<Option<String>> = Mutex::new(None);
-static GL_DETAILS: Mutex<Option<String>> = Mutex::new(None);
+/// Each way's failure, as its file has it (for the log, the crash reports and View → Draw with).
+static CARD_RECORD: Mutex<Option<Failure>> = Mutex::new(None);
+static SOFTWARE_RECORD: Mutex<Option<Failure>> = Mutex::new(None);
+static GL_RECORD: Mutex<Option<Failure>> = Mutex::new(None);
 
 /// A way's failure, known in this process: the system API's first one is kept (the card's, the
 /// one View → Draw with explains), OpenGL's as it comes.
-fn set_failed(way: Option<Way>, why: Why, details: Option<&str>) {
+fn set_failed(way: Option<Way>, why: Why, record: Option<Failure>) {
     match way {
         Some(Way::OpenGl) => {
             if let Ok(mut f) = GL_FAILED_WHY.lock() {
@@ -571,10 +597,10 @@ fn set_failed(way: Option<Way>, why: Why, details: Option<&str>) {
             }
         }
     }
-    if let (Some(way), Some(details)) = (way, details)
-        && let Ok(mut d) = way.details().lock()
+    if let (Some(way), Some(record)) = (way, record)
+        && let Ok(mut r) = way.record().lock()
     {
-        *d = Some(details.to_owned());
+        *r = Some(record);
     }
 }
 
@@ -597,37 +623,128 @@ fn file(name: &str) -> Option<PathBuf> {
     mdm_ipc::data_dir().map(|d| d.join(format!("{key}-{name}")))
 }
 
-/// Why this way failed here before, if it did. A start that left its marker behind ended before
-/// its first frame: that becomes the reason.
-fn failed_before(way: Way) -> Option<String> {
-    let (starting, failed) = way.files()?;
+/// Is this way passed over this start? It failed here before, and isn't tried again yet
+/// ([`verdict`]). A start that left its marker behind ended before its first frame: that becomes
+/// its failure.
+fn failed_before(way: Way) -> bool {
+    let Some((starting, failed)) = way.files() else {
+        return false;
+    };
     let name = way.name();
     if starting.exists() {
         let why = format!("the last start with {name} ended before its first frame");
-        tracing::warn!("{name}: {why}; passed over until it is chosen again");
-        remember_failure(way, Why::EndedEarly, &why);
+        tracing::warn!("{name}: {why}; passed over");
+        // What the marker knew of that start: when, on which adapter and driver.
+        let mut f = Failure::new(Why::EndedEarly, &why);
+        f.adapter = None;
+        f.driver = None;
+        f.when = modified(&starting).unwrap_or(f.when);
+        f.at_login = false;
+        if let Ok(text) = std::fs::read_to_string(&starting) {
+            f.fields(&text);
+        }
+        remember(way, f);
         let _ = std::fs::remove_file(&starting);
     }
-    let text = std::fs::read_to_string(&failed).ok()?;
+    let Some(f) = read_failure(way, &failed) else {
+        return false;
+    };
+    let now = unix_now();
+    // Tried again, drew, and failed no more for a month: forgotten.
+    if f.drew.is_some_and(|d| now.saturating_sub(d) >= FINE_FOR) {
+        tracing::info!("{name} drew without failing for 30 days: its failure is forgotten");
+        forget(&[way]);
+        return false;
+    }
+    let drivers = f.drivers.as_ref().and(drivers(way));
+    let said = f.said(now);
+    match verdict(&f, now, drivers.as_deref()) {
+        Verdict::Pass(_) => {
+            tracing::info!("{name} failed here before ({:?}: {said})", f.why);
+            set_failed(Some(way), f.why, Some(f));
+            true
+        }
+        Verdict::Retry(again) => {
+            let because = match again {
+                Retry::Drivers => format!(
+                    "the graphics drivers changed: {} then, {} now",
+                    f.drivers.as_deref().unwrap_or("?"),
+                    drivers.as_deref().unwrap_or("?")
+                ),
+                Retry::Time => "its time to be passed over is up".into(),
+                Retry::Login => "that start was a busy login's".into(),
+                Retry::Drawing => "it drew when tried again".into(),
+            };
+            tracing::info!(
+                "{name} failed here before ({:?}: {}), tried again: {because}",
+                f.why,
+                f.details
+            );
+            if let Ok(mut r) = RETRIED.lock() {
+                r[way.index()] = true;
+            }
+            false
+        }
+    }
+}
+
+/// When a file was last written (seconds since 1970).
+fn modified(path: &std::path::Path) -> Option<u64> {
+    let t = std::fs::metadata(path).ok()?.modified().ok()?;
+    t.duration_since(std::time::UNIX_EPOCH)
+        .ok()
+        .map(|d| d.as_secs())
+}
+
+/// The clock, in seconds since 1970.
+fn unix_now() -> u64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |d| d.as_secs())
+}
+
+/// This way's failure file, read (an older file's time is when it was written).
+fn read_failure(way: Way, failed: &std::path::Path) -> Option<Failure> {
+    let text = std::fs::read_to_string(failed).ok()?;
     let older = if way == Way::OpenGl {
         Why::TooOld
     } else {
         Why::Other
     };
-    let (why, details) = Why::read(&text, older);
-    tracing::info!("{name} failed here before ({why:?}: {details})");
-    set_failed(Some(way), why, Some(details));
-    Some(details.to_owned())
+    Some(Failure::read(
+        &text,
+        older,
+        modified(failed).unwrap_or_else(unix_now),
+    ))
 }
 
 /// This way couldn't draw here: remembered with its reason, in the data folder and in this
 /// process (View → Draw with's notes).
 fn remember_failure(way: Way, why: Why, details: &str) {
-    if let Some((_, f)) = way.files() {
-        let _ = std::fs::write(f, format!("{}\n{details}", why.key()));
+    remember(way, Failure::new(why, details));
+}
+
+/// A failure remembered: a way tried again that failed again counts one more time in a row
+/// (and waits twice as long), unless the drivers changed since (a new start of the count).
+fn remember(way: Way, mut f: Failure) {
+    let before = way
+        .files()
+        .and_then(|(_, failed)| read_failure(way, &failed));
+    if f.drivers.is_none() {
+        f.drivers = drivers(way);
+    }
+    f.tries = match &before {
+        Some(b) if b.drivers.is_some() && f.drivers.is_some() && b.drivers != f.drivers => 1,
+        Some(b) => b.tries.saturating_add(1),
+        None => 1,
+    };
+    if let Some((_, file)) = way.files() {
+        let _ = std::fs::write(file, f.text());
     }
     if way == Way::OpenGl {
-        set_failed(Some(way), why, Some(details));
+        set_failed(Some(way), f.why, Some(f));
+    } else if let Ok(mut r) = way.record().lock() {
+        *r = Some(f);
     }
 }
 
@@ -642,9 +759,451 @@ pub fn forget_failure() {
 }
 
 fn forget(ways: &[Way]) {
-    for (starting, failed) in ways.iter().filter_map(|w| w.files()) {
-        let _ = std::fs::remove_file(starting);
-        let _ = std::fs::remove_file(failed);
+    for &way in ways {
+        if let Some((starting, failed)) = way.files() {
+            let _ = std::fs::remove_file(starting);
+            let _ = std::fs::remove_file(failed);
+        }
+        if let Ok(mut r) = way.record().lock() {
+            *r = None;
+        }
+    }
+}
+
+/// The ways tried again this start though they failed here before ([`failed_before`]), by
+/// [`Way::index`]: one that draws its first frame is forgotten ([`frame_done`]).
+static RETRIED: Mutex<[bool; 3]> = Mutex::new([false; 3]);
+
+/// The watched way this try draws with (see [`run`]), for its marker and its first frame.
+static TRYING: Mutex<Option<Way>> = Mutex::new(None);
+
+/// The adapter this start draws on, and its driver, once known ([`started`]): a failure in this
+/// start is remembered with them.
+static ADAPTER: Mutex<Option<(String, Option<String>)>> = Mutex::new(None);
+
+/// MDM started with the session (#226): set by main before the plan.
+static AT_LOGIN: AtomicBool = AtomicBool::new(false);
+
+/// MDM was started with the session (its startup entry): the first minutes of such a start are
+/// the computer's ([`crate::crash::LOGIN_GRACE`], #1126, #1154).
+pub fn started_with_session(at_login: bool) {
+    AT_LOGIN.store(at_login, Ordering::Relaxed);
+}
+
+/// This start is one with the session, in its first minutes: a busy computer's (#1205).
+fn in_login_rush() -> bool {
+    AT_LOGIN.load(Ordering::Relaxed) && since_start() < crate::crash::LOGIN_GRACE.as_millis()
+}
+
+/// The way that drew its first frame: tried again after it failed here, it is forgotten; one
+/// whose failure comes after the first frame (a freeze inside OpenGL's driver, the card lost
+/// twice) is kept as drawing again until it has drawn for [`FINE_FOR`] without failing.
+fn drew_again() {
+    let Some(way) = TRYING.lock().ok().and_then(|t| *t) else {
+        return;
+    };
+    let retried = RETRIED.lock().is_ok_and(|r| r[way.index()]);
+    let Some((_, failed)) = way.files().filter(|_| retried) else {
+        return;
+    };
+    let Some(mut f) = read_failure(way, &failed) else {
+        return;
+    };
+    let name = way.name();
+    if matches!(f.why, Why::FrozeInDriver | Why::LostTwice) {
+        if f.drew.is_none() {
+            f.drew = Some(unix_now());
+            let _ = std::fs::write(&failed, f.text());
+            tracing::info!(
+                "{name} drew its first frame again: its failure ({:?}) is forgotten after 30 days without another",
+                f.why
+            );
+        }
+    } else {
+        tracing::info!(
+            "{name} drew its first frame again: its failure ({:?}) is forgotten",
+            f.why
+        );
+        forget(&[way]);
+    }
+}
+
+/// A watched start's marker learns this start's adapter and driver, and whether the session
+/// started it, so a start that ends before its first frame is remembered with them.
+fn mark_adapter(adapter: &str, driver: Option<&str>) {
+    if let Ok(mut a) = ADAPTER.lock() {
+        *a = Some((adapter.to_owned(), driver.map(str::to_owned)));
+    }
+    let Some(way) = TRYING.lock().ok().and_then(|t| *t) else {
+        return;
+    };
+    let Some((starting, _)) = way.files().filter(|(s, _)| s.exists()) else {
+        return;
+    };
+    let mut f = Failure::new(Why::EndedEarly, "");
+    f.drivers = DRIVERS.get().and_then(|_| drivers(way));
+    let text = f.text();
+    // Only its fields (the marker's own time is when the start began).
+    let fields = text.lines().skip(2).filter(|l| !l.starts_with("when="));
+    let _ = std::fs::write(starting, fields.collect::<Vec<_>>().join("\n"));
+}
+
+// ---- When a way that failed is tried again (#1205) ------------------------------------------
+
+/// A day, in seconds.
+const DAY: u64 = 86_400;
+
+/// A way tried again that drew, and failed no more for this long, is forgotten (for a failure
+/// after the first frame: a freeze inside OpenGL's driver, the card lost twice).
+const FINE_FOR: u64 = 30 * DAY;
+
+/// A way's failure, as its file remembers it: its reason's key, its details, then a field a
+/// line (`when=`, `tries=`, `login=1`, `adapter=`, `driver=`, `drivers=`, `drew=`). An older
+/// file has the first two only (or one line of details); its time is when it was written.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Failure {
+    pub why: Why,
+    /// For the log and the crash reports.
+    pub details: String,
+    /// When (seconds since 1970).
+    pub when: u64,
+    /// How many starts in a row it failed: each try again that fails adds one.
+    pub tries: u32,
+    /// It came in the first minutes of a start with the session (a busy login, #1154).
+    pub at_login: bool,
+    /// The adapter it failed on, and its driver, when known ("NVIDIA GeForce RTX 4060 Laptop
+    /// GPU", "32.0.15.6224"; OpenGL's GL_RENDERER and GL_VERSION).
+    pub adapter: Option<String>,
+    pub driver: Option<String>,
+    /// This computer's graphics drivers then ([`drivers`]): another list now is a driver update
+    /// or another card, and the way is tried again.
+    pub drivers: Option<String>,
+    /// Tried again, it drew its first frame then (a failure that comes after it: see
+    /// [`drew_again`]).
+    pub drew: Option<u64>,
+}
+
+impl Failure {
+    /// A failure now, in this start.
+    fn new(why: Why, details: &str) -> Failure {
+        let (adapter, driver) = ADAPTER
+            .lock()
+            .ok()
+            .and_then(|a| a.clone())
+            .map_or((None, None), |(a, d)| (Some(a), d));
+        Failure {
+            why,
+            details: details.to_owned(),
+            when: unix_now(),
+            tries: 1,
+            at_login: in_login_rush(),
+            adapter,
+            driver,
+            drivers: None,
+            drew: None,
+        }
+    }
+
+    /// A failure file's text; `older`: the reason of a file from before reasons were written,
+    /// `modified`: when it was written.
+    fn read(text: &str, older: Why, modified: u64) -> Failure {
+        let (why, rest) = Why::read(text, older);
+        let mut f = Failure {
+            why,
+            details: String::new(),
+            when: modified,
+            tries: 1,
+            at_login: false,
+            adapter: None,
+            driver: None,
+            drivers: None,
+            drew: None,
+        };
+        f.details = f.fields(rest).join(" ");
+        f
+    }
+
+    /// Takes the fields of `text`'s lines; the other lines are returned (the details).
+    fn fields<'a>(&mut self, text: &'a str) -> Vec<&'a str> {
+        let mut rest = Vec::new();
+        for line in text.lines().map(str::trim).filter(|l| !l.is_empty()) {
+            let value = |v: &str| Some(v.trim().to_owned()).filter(|v| !v.is_empty());
+            match line.split_once('=') {
+                Some(("when", v)) => self.when = v.trim().parse().unwrap_or(self.when),
+                Some(("tries", v)) => self.tries = v.trim().parse().unwrap_or(1).max(1),
+                Some(("login", v)) => self.at_login = v.trim() == "1",
+                Some(("adapter", v)) => self.adapter = value(v),
+                Some(("driver", v)) => self.driver = value(v),
+                Some(("drivers", v)) => self.drivers = value(v),
+                Some(("drew", v)) => self.drew = v.trim().parse().ok(),
+                _ => rest.push(line),
+            }
+        }
+        rest
+    }
+
+    /// Its file's text (an older MDM reads its first two lines as before).
+    fn text(&self) -> String {
+        let one_line = |s: &str| s.replace(['\r', '\n'], " ");
+        let mut s = format!(
+            "{}\n{}\nwhen={}\ntries={}",
+            self.why.key(),
+            one_line(&self.details),
+            self.when,
+            self.tries
+        );
+        if self.at_login {
+            s.push_str("\nlogin=1");
+        }
+        for (key, value) in [
+            ("adapter", &self.adapter),
+            ("driver", &self.driver),
+            ("drivers", &self.drivers),
+        ] {
+            if let Some(v) = value {
+                s.push_str(&format!("\n{key}={}", one_line(v)));
+            }
+        }
+        if let Some(d) = self.drew {
+            s.push_str(&format!("\ndrew={d}"));
+        }
+        s
+    }
+
+    /// Its words for the log and the crash reports: the details, when, on what, and when it is
+    /// tried again ("… (on 2026-11-13, NVIDIA GeForce RTX 4060 Laptop GPU, driver 32.0.15.6224;
+    /// tried again from 2026-11-20, or after a driver update)").
+    fn said(&self, now: u64) -> String {
+        let mut on = vec![format!("on {}", day(self.when))];
+        if let Some(a) = &self.adapter {
+            on.push(match &self.driver {
+                Some(d) => format!("{a}, driver {d}"),
+                None => a.clone(),
+            });
+        }
+        if self.at_login {
+            on.push("just after the session started".into());
+        }
+        if self.tries > 1 {
+            on.push(format!("{} starts in a row", self.tries));
+        }
+        let again = match verdict(self, now, None) {
+            Verdict::Pass(a) if a.next_start => "tried again at the next start".into(),
+            Verdict::Pass(Again {
+                at: Some(at),
+                on_update,
+                ..
+            }) => format!(
+                "tried again from {}{}",
+                day(at),
+                if on_update {
+                    ", or after a driver update"
+                } else {
+                    ""
+                }
+            ),
+            Verdict::Pass(Again {
+                on_update: true, ..
+            }) => "tried again after a driver update".into(),
+            Verdict::Pass(_) => "tried again when chosen in View → Draw with".into(),
+            Verdict::Retry(_) => "tried again at the next start".into(),
+        };
+        format!("{} ({}; {again})", self.details, on.join(", "))
+    }
+}
+
+/// A date for the log and the crash reports (UTC): `2026-11-13`.
+fn day(secs: u64) -> String {
+    chrono::DateTime::from_timestamp(secs.min(i64::MAX as u64) as i64, 0)
+        .map_or_else(|| secs.to_string(), |d| d.format("%Y-%m-%d").to_string())
+}
+
+/// How long a way that failed for this reason is passed over, at its `tries`th failure in a row:
+/// twice as long at each try again that fails, up to a limit. None: until a driver update (or
+/// another card), or until it is chosen again.
+///
+/// - No first frame in time, a start that ended before it, the card lost twice: a week, up to
+///   three months. These can be passing (a busy computer, #1205; a shutdown or a kill while MDM
+///   started; a driver reset), and a try again costs one slow or failed start: once a week at
+///   most, then rarer.
+/// - Can't start (no adapter, another error) and a freeze inside OpenGL's driver: a month, up to
+///   half a year. A start that can't start costs nothing (the next way starts at once, in the
+///   same start), but its cause rarely goes without a driver change; a freeze inside the driver
+///   (#847's cards) costs a frozen window and its report each time.
+/// - Too old (OpenGL older than 3.0, #835): never by time. The version a driver says doesn't
+///   change without a driver change, which tries it again.
+pub fn wait(why: Why, tries: u32) -> Option<u64> {
+    let (first, most) = match why {
+        Why::NoFirstFrame | Why::EndedEarly | Why::LostTwice => (7 * DAY, 90 * DAY),
+        Why::NoAdapter | Why::Other | Why::FrozeInDriver => (30 * DAY, 180 * DAY),
+        Why::TooOld => return None,
+    };
+    let doubled = first.saturating_mul(1u64 << tries.saturating_sub(1).min(16));
+    Some(doubled.min(most))
+}
+
+/// When a way passed over is tried again (View → Draw with's note, the crash reports).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Again {
+    /// Remembered since (seconds since 1970).
+    pub since: u64,
+    /// Tried again from then (seconds since 1970); None: not by time ([`wait`]).
+    pub at: Option<u64>,
+    /// ... or after a driver update (the drivers then are known).
+    pub on_update: bool,
+    /// At the next start (a busy login's first frame, or its time is up).
+    pub next_start: bool,
+}
+
+/// Why a way that failed here is tried again.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Retry {
+    /// The graphics drivers changed since (an update, another card).
+    Drivers,
+    /// Its time to be passed over is up ([`wait`]).
+    Time,
+    /// Its first frame was late in the first minutes of a start with the session, once: the busy
+    /// login's, more likely than the API's.
+    Login,
+    /// Tried again, it drew its first frame; its failure comes after that ([`drew_again`]).
+    Drawing,
+}
+
+/// What a start does with a way that failed here.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Verdict {
+    /// Passed over, until then.
+    Pass(Again),
+    /// Tried again.
+    Retry(Retry),
+}
+
+/// What a start does with failure `f` at `now` (seconds since 1970), with this computer's
+/// graphics drivers `drivers` ([`drivers`], None when unknown): tried again after a driver
+/// update or another card, once it has waited ([`wait`]), or, for a first frame late in the
+/// first minutes of a start with the session, at the next start a few minutes later (the
+/// start again that follows at once still passes over it). A failure remembered more than a day
+/// ahead of the clock (the clock was wrong then, or was set back since) has waited.
+pub fn verdict(f: &Failure, now: u64, drivers: Option<&str>) -> Verdict {
+    if f.drew.is_some() {
+        return Verdict::Retry(Retry::Drawing);
+    }
+    if let (Some(then), Some(now_drivers)) = (f.drivers.as_deref(), drivers)
+        && then != now_drivers
+    {
+        return Verdict::Retry(Retry::Drivers);
+    }
+    let login = f.why == Why::NoFirstFrame && f.at_login && f.tries <= 1;
+    let at = if login {
+        Some(f.when.saturating_add(crate::crash::LOGIN_GRACE.as_secs()))
+    } else {
+        wait(f.why, f.tries).map(|w| f.when.saturating_add(w))
+    };
+    if let Some(at) = at
+        && (now >= at || f.when > now.saturating_add(DAY))
+    {
+        return Verdict::Retry(if login { Retry::Login } else { Retry::Time });
+    }
+    Verdict::Pass(Again {
+        since: f.when,
+        at,
+        on_update: f.drivers.is_some(),
+        next_start: login,
+    })
+}
+
+/// For View → Draw with's note: when the system's API's failure (the card's, else its software
+/// renderer's) is tried again.
+#[cfg(gpu)]
+pub fn gpu_again() -> Option<Again> {
+    again(Way::Card).or_else(|| again(Way::Software))
+}
+
+/// For View → Draw with's note: when OpenGL's failure is tried again.
+#[cfg(gpu)]
+pub fn gl_again() -> Option<Again> {
+    again(Way::OpenGl)
+}
+
+#[cfg(gpu)]
+fn again(way: Way) -> Option<Again> {
+    let f = way.record().lock().ok()?.clone()?;
+    Some(match verdict(&f, unix_now(), None) {
+        Verdict::Pass(a) => a,
+        // Its time came while MDM runs.
+        Verdict::Retry(_) => Again {
+            since: f.when,
+            at: None,
+            on_update: f.drivers.is_some(),
+            next_start: true,
+        },
+    })
+}
+
+// ---- This computer's graphics drivers ---------------------------------------------------------
+
+/// The graphics drivers (name, version, software), read once on a thread of its own.
+static DRIVERS: OnceLock<Option<Vec<(String, String, bool)>>> = OnceLock::new();
+static PROBING: AtomicBool = AtomicBool::new(false);
+
+/// This computer's graphics drivers are read on a thread of their own, for a failure to be
+/// remembered with (a watched start's, [`run`]).
+fn read_drivers_soon() {
+    if PROBING.swap(true, Ordering::Relaxed) {
+        return;
+    }
+    let spawned = std::thread::Builder::new()
+        .name("graphics drivers".into())
+        .spawn(|| {
+            let _ = DRIVERS.set(system_drivers());
+        });
+    if spawned.is_err() {
+        let _ = DRIVERS.set(None);
+    }
+}
+
+/// This computer's graphics drivers for `way`, as one line ("NVIDIA GeForce RTX 4060 Laptop GPU
+/// 32.0.15.6224; Intel(R) UHD Graphics 32.0.101.6078"): the cards' for the card and for OpenGL
+/// (a card's driver brings its OpenGL), the software renderers' for the software renderer. Waits
+/// 2 s at most for them (a driver stuck elsewhere doesn't hold MDM here); None when unknown.
+fn drivers(way: Way) -> Option<String> {
+    read_drivers_soon();
+    let until = std::time::Instant::now() + std::time::Duration::from_secs(2);
+    let all = loop {
+        if let Some(d) = DRIVERS.get() {
+            break d.as_ref()?;
+        }
+        if std::time::Instant::now() >= until {
+            return None;
+        }
+        std::thread::sleep(std::time::Duration::from_millis(10));
+    };
+    let software = way == Way::Software;
+    let mut list: Vec<String> = all
+        .iter()
+        .filter(|(_, _, s)| *s == software)
+        .map(|(name, version, _)| format!("{name} {version}").trim().to_owned())
+        .collect();
+    list.sort();
+    list.dedup();
+    (!list.is_empty()).then(|| list.join("; "))
+}
+
+/// The system's graphics drivers: Windows' adapters and their drivers' versions (DXGI, as
+/// Direct3D 12 sees them); Linux's Vulkan drivers (their manifests, which a driver's update
+/// writes anew) and NVIDIA's version; macOS's own build (Metal's drivers come with macOS).
+fn system_drivers() -> Option<Vec<(String, String, bool)>> {
+    #[cfg(windows)]
+    {
+        crate::win32::graphics_drivers()
+    }
+    #[cfg(unix)]
+    {
+        crate::unix::graphics_drivers()
+    }
+    #[cfg(not(any(windows, unix)))]
+    {
+        None
     }
 }
 
@@ -795,7 +1354,7 @@ fn check_gl(gl: &eframe::glow::Context, checked: bool, driver: &str) {
         let _ = std::fs::remove_file(starting);
     }
     #[cfg(gpu)]
-    gpu::start_again(&format!("OpenGL can't draw MDM here: {details}"));
+    start_again(&format!("OpenGL can't draw MDM here: {details}"));
 }
 
 /// A test's failure asked for (`name`=1), honoured only by off-screen test copies.
@@ -818,16 +1377,19 @@ pub fn test_slow_start() {
 
 /// The start of every main-window pass: the system's API's device checked (see `gpu::poll`).
 /// The pass itself is MDM's own work, not the API's (see [`FirstFrameClock`]).
-pub fn frame_begin() {
-    pace();
+pub fn frame_begin(ctx: &egui::Context) {
+    pace(ctx);
     own_work_begin();
     #[cfg(gpu)]
     gpu::poll();
     stall_test();
 }
 
-/// The frames are paced by MDM, not by the screen's refresh (see [`unpaced_swaps`]).
+/// wgpu presents without waiting for the refresh, and MDM paces its frames (see [`Swaps`]).
 static PACED: AtomicBool = AtomicBool::new(false);
+
+/// OpenGL's windows swap as [`swap_waits`] says, through [`GlHooks`] (see [`Swaps`]).
+static GL_HOOKED: AtomicBool = AtomicBool::new(false);
 
 /// wgpu presents without waiting for the refresh once MDM paces the frames: its surface takes
 /// the present mode from the app's frame, which the first pass has (none while the app is made).
@@ -847,40 +1409,199 @@ pub fn present_unpaced(frame: &mut eframe::Frame) {
 /// The shortest time between two frames when MDM paces them: 60 a second, as the screen would.
 const FRAME_PACE: std::time::Duration = std::time::Duration::from_micros(16_667);
 
-/// Linux under XWayland (MDM's default in a Wayland session) with NVIDIA's own driver: a swap
-/// that waits for the screen's refresh waited about a second for each window XWayland's
-/// compositor wasn't showing at that moment (the main window behind a dialog, a dialog behind
-/// another), and every window of MDM draws in one pass, so a key typed in Download video's File
-/// name showed 1 to 2 seconds later, and every click the same. Its windows swap at once there,
-/// and MDM spaces its frames itself ([`pace`]). Other drivers under XWayland (Mesa: Intel, AMD,
-/// nouveau) keep the refresh's pacing. `vendor`: the driver's vendor, as it names itself.
-fn unpaced_swaps(xwayland: bool, vendor: &str) -> bool {
-    xwayland && vendor.to_ascii_lowercase().contains("nvidia")
+/// Which of MDM's windows wait for the screen's refresh when they swap (vsync).
+///
+/// Every window of MDM (the main window, its dialogs, progress windows, menus) draws in one pass
+/// of the main window, each ending with its own swap. Linux on X11 and XWayland, with Mesa
+/// (Intel, AMD, llvmpipe, VMware) as with NVIDIA: with vsync on every window, each swap could
+/// wait for a refresh of its own, so a pass with a dialog and a menu open could take three
+/// refreshes, and a swap to a window the compositor wasn't showing (minimized, covered, behind a
+/// dialog) waited for the compositor's slow timer instead, about a second under XWayland. Under
+/// XWayland with NVIDIA a key typed showed 1 to 2 seconds later (#1025); with Mesa the main
+/// window lagged as it was moved and the download dialog didn't answer clicks, and Mesa's
+/// `vblank_mode=0` (no window waits) made it rare (#347).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Swaps {
+    /// The graphics API's own choice: Windows, macOS, and Wayland (where winit paces the frames
+    /// by the compositor's frame callbacks and eframe never waits in a swap).
+    Own,
+    /// X11 (Xorg): only the main window waits, while it is shown (it doesn't tear, and a pass
+    /// waits one refresh at most); every other window swaps at once. MDM paces the frames
+    /// itself while the main window doesn't wait ([`pace`]).
+    MainOnly,
+    /// XWayland: no window waits, since the compositor may not be showing any one of them (MDM
+    /// can't tell a covered window there), and MDM paces the frames itself. The compositor draws
+    /// every window there, so they don't tear.
+    NoneWait,
 }
 
-/// MDM's windows are X11's in a Wayland session (XWayland).
-fn on_xwayland() -> bool {
+/// How MDM's windows swap on this system (see [`Swaps`]).
+fn swaps() -> Swaps {
+    // Linux: X11 and XWayland. Wayland, Windows and macOS keep the graphics API's own choice.
     #[cfg(target_os = "linux")]
-    return crate::unix::on_xwayland();
-    #[cfg(not(target_os = "linux"))]
-    false
+    if !crate::unix::on_wayland() {
+        return if crate::unix::on_xwayland() {
+            Swaps::NoneWait
+        } else {
+            Swaps::MainOnly
+        };
+    }
+    Swaps::Own
 }
 
-/// OpenGL's swap interval is chosen as its first window is made, before the app knows the
-/// driver: under XWayland, the GLX vendor of the display is asked first (`unix::glx_vendor`).
-fn gl_vendor_before_windows() -> Option<String> {
-    #[cfg(target_os = "linux")]
-    return on_xwayland().then(crate::unix::glx_vendor).flatten();
-    #[cfg(not(target_os = "linux"))]
-    None
+/// Whether a window's next swap waits for the screen's refresh (OpenGL: eframe asks before each
+/// swap, [`GlHooks`]). `main`: the main window; `shown`: neither minimized nor covered, as far
+/// as the system says; `vsync`: what eframe gave every window.
+fn swap_waits(swaps: Swaps, main: bool, shown: bool, vsync: bool) -> bool {
+    match swaps {
+        Swaps::Own => vsync,
+        Swaps::MainOnly => vsync && main && shown,
+        Swaps::NoneWait => false,
+    }
+}
+
+/// A window is shown unless the system says it's minimized or covered.
+fn shown(info: &egui::ViewportInfo) -> bool {
+    info.visible() != Some(false)
+}
+
+/// OpenGL's hooks in eframe: each window's swap interval, chosen before each of its swaps
+/// ([`swap_waits`]), and the paints that failed ([`gl_paint_failed`]).
+struct GlHooks(Swaps);
+
+impl eframe::ViewportHooks for GlHooks {
+    fn swap_waits_for_vsync(
+        &self,
+        viewport: egui::ViewportId,
+        info: &egui::ViewportInfo,
+        vsync: bool,
+    ) -> bool {
+        swap_waits(
+            self.0,
+            viewport == egui::ViewportId::ROOT,
+            shown(info),
+            vsync,
+        )
+    }
+
+    fn gl_paint_failed(
+        &self,
+        viewport: egui::ViewportId,
+        error: &str,
+        in_a_row: u32,
+        failing_for: std::time::Duration,
+    ) {
+        gl_paint_failed(
+            viewport == egui::ViewportId::ROOT,
+            error,
+            in_a_row,
+            failing_for,
+        );
+    }
+}
+
+// ---- An OpenGL that stops drawing (#1448) ---------------------------------------------------
+
+/// When a graphics device (Direct3D's, Vulkan's, Metal's; OpenGL's context) is lost twice this
+/// close together, its way counts as failing.
+const LOST_AGAIN_WITHIN: std::time::Duration = std::time::Duration::from_secs(600);
+
+/// Is a loss now (`now`, seconds since 1970) the second within [`LOST_AGAIN_WITHIN`], the last one
+/// at `last`?
+fn lost_again(last: Option<u64>, now: u64) -> bool {
+    last.is_some_and(|t| now.saturating_sub(t) < LOST_AGAIN_WITHIN.as_secs())
+}
+
+/// When OpenGL last stopped drawing (its time inside), in the data folder.
+const GL_LOST: &str = "opengl-lost";
+
+/// Has a window's OpenGL stopped drawing for good? A paint that fails now and then is passing
+/// (#1448's Intel driver failed `wglMakeCurrent` as a window closed: eframe skips that paint and
+/// paints again 100 ms later); one that keeps failing is a lost device (a driver reset or update),
+/// which OpenGL doesn't come back from. The main window sooner (nothing of MDM draws without
+/// it), a dialog later (one being closed or hidden can fail a few times).
+fn gl_lost(main: bool, in_a_row: u32, failing_for: std::time::Duration) -> bool {
+    let (times, secs) = if main { (5, 2) } else { (10, 5) };
+    in_a_row >= times && failing_for >= std::time::Duration::from_secs(secs)
+}
+
+/// eframe couldn't paint a window with OpenGL (its context couldn't be made current on it, it
+/// has no surface, or its frame couldn't be shown): logged by eframe; once it is lost
+/// ([`gl_lost`]), MDM starts again, as after a lost graphics card; a second loss within 10
+/// minutes is remembered (Windows, [`WATCH_GL`]: the next starts draw with Direct3D 12 on the
+/// card or on WARP), and elsewhere, or where OpenGL already draws as the last way, MDM goes on as
+/// it can rather than start again and again.
+fn gl_paint_failed(main: bool, error: &str, in_a_row: u32, failing_for: std::time::Duration) {
+    static LOST: AtomicBool = AtomicBool::new(false);
+    if !gl_lost(main, in_a_row, failing_for) || LOST.swap(true, Ordering::Relaxed) {
+        return;
+    }
+    let window = if main { "the main window" } else { "a window" };
+    let why = format!(
+        "OpenGL couldn't draw {window} for {} s ({in_a_row} paints in a row: {error})",
+        failing_for.as_secs()
+    );
+    let now = unix_now();
+    let file = mdm_ipc::data_dir().map(|d| d.join(GL_LOST));
+    let last = file
+        .as_ref()
+        .and_then(|f| std::fs::read_to_string(f).ok())
+        .and_then(|t| t.trim().parse::<u64>().ok());
+    if lost_again(last, now) {
+        let details = format!("{why}, twice within 10 minutes");
+        // Elsewhere OpenGL stays the next start's way; and OpenGL that already draws as the last
+        // way (known to fail here, nothing else started) would draw again: no start again.
+        let known = GL_FAILED_WHY.lock().is_ok_and(|u| u.is_some());
+        if !WATCH_GL || known {
+            tracing::error!("{details}: not started again (it would draw with OpenGL again)");
+            return;
+        }
+        tracing::warn!("OpenGL can't draw MDM here: {details}; passed over from the next start");
+        remember_failure(Way::OpenGl, Why::LostTwice, &details);
+    } else if let Some(f) = &file {
+        let _ = std::fs::write(f, now.to_string());
+    }
+    start_again(&why);
+}
+
+/// End this copy and start MDM again: the new one waits for this one to be gone (as after
+/// an update), and draws as the failure markers now say.
+fn start_again(why: &str) {
+    tracing::warn!("{why}: starting MDM again");
+    // The AppImage file itself on Linux (this program sits in its temporary mount).
+    #[cfg(windows)]
+    let program = std::env::current_exe().ok();
+    #[cfg(unix)]
+    let program = crate::unix::program();
+    let started = program.and_then(|exe| {
+        std::process::Command::new(exe)
+            .arg(crate::update::UPDATED)
+            // An override would bring the same failure back.
+            .env_remove("MDM_RENDERER")
+            .spawn()
+            .ok()
+    });
+    if started.is_none() {
+        tracing::error!("MDM couldn't start again");
+    }
+    crate::crash::clean_exit();
+    // The window thread may be stuck in the driver: end at once, without unwinding.
+    #[cfg(windows)]
+    crate::win32::end_process(std::process::id());
+    #[cfg(unix)]
+    crate::unix::end_process(std::process::id());
+    std::process::exit(1);
 }
 
 /// Once the app is made and its driver is known: whether MDM paces the frames, and the log says
-/// so. OpenGL's windows were made unpaced only if [`configure`] took the GLX vendor for NVIDIA's;
-/// wgpu's adapter says its vendor now, and its present mode follows at the first pass
+/// so. OpenGL's windows swap through [`GlHooks`] (installed by [`configure`]); wgpu's present
+/// mode is one for every window, so none waits on X11 and XWayland, from the first pass
 /// ([`present_unpaced`]).
-fn pacing_known(cc: &eframe::CreationContext<'_>, swapped_at_once: bool) {
-    let xwayland = on_xwayland();
+fn pacing_known(cc: &eframe::CreationContext<'_>) {
+    let swaps = swaps();
+    if swaps == Swaps::Own {
+        return;
+    }
     #[cfg(target_os = "linux")]
     let gl_vendor = cc.gl.as_deref().map(crate::unix::gl_vendor);
     #[cfg(not(target_os = "linux"))]
@@ -893,42 +1614,38 @@ fn pacing_known(cc: &eframe::CreationContext<'_>, swapped_at_once: bool) {
     #[cfg(not(gpu))]
     let gpu_vendor: Option<String> = None;
     let vendor = gl_vendor.or(gpu_vendor).unwrap_or_default();
-    let unpaced = unpaced_swaps(xwayland, &vendor);
-    if cc.gl.is_some() && unpaced != swapped_at_once {
-        // The GLX vendor and the context's disagree (an offloading setup): the windows keep the
-        // swap they were made with, and MDM paces only when they don't wait for the refresh.
-        tracing::warn!(
-            "OpenGL's vendor is {vendor}, but its windows were made {}",
-            if swapped_at_once {
-                "without waiting for the screen's refresh"
-            } else {
-                "waiting for the screen's refresh"
-            }
-        );
-    }
-    let paced = if cc.gl.is_some() {
-        swapped_at_once
+    let gl = cc.gl.is_some();
+    PACED.store(!gl, Ordering::Relaxed);
+    let at_most = (1.0 / FRAME_PACE.as_secs_f64()).round();
+    let system = if swaps == Swaps::NoneWait {
+        "XWayland"
     } else {
-        unpaced
+        "X11"
     };
-    PACED.store(paced, Ordering::Relaxed);
-    if paced {
+    if gl && swaps == Swaps::MainOnly {
         tracing::info!(
-            "frame pacing: {vendor} under XWayland, so frames don't wait for the screen's refresh; MDM spaces them itself, {} a second at most",
-            (1.0 / FRAME_PACE.as_secs_f64()).round()
+            "frame pacing ({vendor}, {system}): only the main window waits for the screen's refresh, while it's shown; while it isn't, MDM spaces the frames itself, {at_most} a second at most"
+        );
+    } else {
+        tracing::info!(
+            "frame pacing ({vendor}, {system}): frames don't wait for the screen's refresh; MDM spaces them itself, {at_most} a second at most"
         );
     }
 }
 
-/// When MDM paces the frames: the next waits until [`FRAME_PACE`] has passed since the last
+/// While MDM paces the frames: the next waits until [`FRAME_PACE`] has passed since the last
 /// began (a pass only runs when there is something to draw: an idle window waits as before).
-fn pace() {
+/// With OpenGL, that is while the main window's swap doesn't wait for the refresh.
+fn pace(ctx: &egui::Context) {
     use std::cell::Cell;
     use std::time::Instant;
     thread_local! {
         static LAST: Cell<Option<Instant>> = const { Cell::new(None) };
     }
-    if !PACED.load(Ordering::Relaxed) {
+    let paced = PACED.load(Ordering::Relaxed)
+        || GL_HOOKED.load(Ordering::Relaxed)
+            && !swap_waits(swaps(), true, ctx.input(|i| shown(i.viewport())), true);
+    if !paced {
         return;
     }
     LAST.with(|last| {
@@ -951,12 +1668,12 @@ pub fn frame_done(ctx: &egui::Context) {
         return;
     }
     // MDM_TEST_NO_FIRST_FRAME=1 (off-screen test copies): a first frame that never comes (the
-    // watchdog's check); `opengl`: only when OpenGL draws.
+    // watchdog's check); `opengl`, `direct3d`, `vulkan`, `metal`: only when that API draws.
     let never = std::env::var("MDM_TEST_NO_FIRST_FRAME")
         .ok()
         .filter(|_| crate::offscreen());
     if never.as_deref() == Some("1")
-        || (never.as_deref() == Some("opengl") && ACTIVE.get() == Some(&Api::OpenGl))
+        || never.is_some_and(|n| ACTIVE.get().is_some_and(|a| a.key() == n.trim()))
     {
         return;
     }
@@ -971,6 +1688,8 @@ pub fn frame_done(ctx: &egui::Context) {
     {
         let _ = std::fs::remove_file(starting);
     }
+    // A way tried again after it failed here, which drew (#1205).
+    drew_again();
 }
 
 // ---- The first frame's clock ----------------------------------------------------------------
@@ -1115,6 +1834,11 @@ pub fn run<A: eframe::App + 'static>(
         let watched = Way::of(attempt).filter(|_| plan.watch.contains(&attempt));
         if let Some((starting, _)) = watched.and_then(Way::files) {
             let _ = std::fs::write(starting, "");
+            // Its failure would be remembered with this computer's drivers (#1205).
+            read_drivers_soon();
+        }
+        if let Ok(mut t) = TRYING.lock() {
+            *t = watched;
         }
         #[cfg(gpu)]
         {
@@ -1132,7 +1856,6 @@ pub fn run<A: eframe::App + 'static>(
         tracing::info!("drawing with {}", attempt.name());
         let make = creator.clone();
         let gl_checked = plan.gl_checked;
-        let swapped_at_once = attempt == Attempt::OpenGl && !opts.glow_options.vsync;
         // Why this way: the plan's reason for its first, the last one's failure for another.
         let why_not = match &instead {
             Some(w) => w.clone(),
@@ -1144,7 +1867,7 @@ pub fn run<A: eframe::App + 'static>(
             Box::new(move |cc| {
                 let make = make.borrow_mut().take().ok_or("the app was already made")?;
                 started(cc, attempt, why_not, gl_checked);
-                pacing_known(cc, swapped_at_once);
+                pacing_known(cc);
                 // Making the app is MDM's own work, not the API's: off the first frame's clock.
                 own_work_begin();
                 let app = make(cc);
@@ -1197,9 +1920,13 @@ fn configure(opts: &mut eframe::NativeOptions, attempt: Attempt) {
         Attempt::Gpu(_) => opts.renderer = eframe::Renderer::Glow,
     }
     PACED.store(false, Ordering::Relaxed);
+    let swaps = swaps();
+    let hooked = attempt == Attempt::OpenGl && swaps != Swaps::Own;
+    GL_HOOKED.store(hooked, Ordering::Relaxed);
+    // Every OpenGL start: its paints that fail are watched (#1448); with Swaps::Own, the swaps
+    // are eframe's own (swap_waits gives back what eframe gives).
     if attempt == Attempt::OpenGl {
-        let vendor = gl_vendor_before_windows().unwrap_or_default();
-        opts.glow_options.vsync = !unpaced_swaps(on_xwayland(), &vendor);
+        opts.viewport_hooks = Some(std::sync::Arc::new(GlHooks(swaps)));
     }
 }
 
@@ -1208,10 +1935,17 @@ fn configure(opts: &mut eframe::NativeOptions, attempt: Attempt) {
 /// `gl_checked`: the plan's (an OpenGL that can't draw MDM starts MDM again without it).
 fn started(cc: &eframe::CreationContext<'_>, attempt: Attempt, why: String, gl_checked: bool) {
     #[cfg(gpu)]
-    let gpu = cc
-        .wgpu_render_state
-        .as_ref()
-        .map(|rs| gpu::describe(&rs.adapter.get_info()));
+    let gpu = cc.wgpu_render_state.as_ref().map(|rs| {
+        let info = rs.adapter.get_info();
+        let driver = [&info.driver, &info.driver_info]
+            .into_iter()
+            .filter(|d| !d.is_empty())
+            .map(String::as_str)
+            .collect::<Vec<_>>()
+            .join(", ");
+        mark_adapter(&info.name, Some(driver.as_str()).filter(|d| !d.is_empty()));
+        gpu::describe(&info)
+    });
     #[cfg(not(gpu))]
     let gpu: Option<String> = None;
     // OpenGL names its card and driver too (#280: a freeze inside Intel's OpenGL driver came
@@ -1222,9 +1956,16 @@ fn started(cc: &eframe::CreationContext<'_>, attempt: Attempt, why: String, gl_c
     use crate::win32::gl_driver;
     let detail = gpu
         .or_else(|| {
-            cc.gl
-                .as_ref()
-                .map(|gl| format!("{} on {}", attempt.name(), gl_driver(gl)))
+            cc.gl.as_ref().map(|gl| {
+                // "NVIDIA GeForce RTX 4060 Laptop GPU/PCIe/SSE2 (3.3.0 NVIDIA 621.24)": its
+                // GL_RENDERER and its GL_VERSION.
+                let driver = gl_driver(gl);
+                match driver.strip_suffix(')').and_then(|d| d.rsplit_once(" (")) {
+                    Some((renderer, version)) => mark_adapter(renderer, Some(version)),
+                    None => mark_adapter(&driver, None),
+                }
+                format!("{} on {driver}", attempt.name())
+            })
         })
         .unwrap_or_else(|| attempt.name().to_owned());
     tracing::info!(
@@ -1264,7 +2005,7 @@ pub fn test_device_lost() {
 mod gpu {
     use super::{
         Adapters, DRAWN, FIRST_FRAME_WITHIN, GPU, Way, Why, clock_counted, file, remember_failure,
-        testing,
+        start_again, testing,
     };
     use eframe::egui_wgpu::{WgpuConfiguration, WgpuSetup, WgpuSetupCreateNew};
     use eframe::wgpu;
@@ -1321,8 +2062,6 @@ mod gpu {
             });
     }
 
-    /// When the graphics card is lost twice this close together, the API counts as failing.
-    const LOST_AGAIN_WITHIN: Duration = Duration::from_secs(600);
     /// When the card was last lost (its time inside).
     const LOST: &str = "lost";
 
@@ -1346,7 +2085,7 @@ mod gpu {
             let last = file(LOST)
                 .and_then(|f| std::fs::read_to_string(f).ok())
                 .and_then(|t| t.trim().parse::<u64>().ok());
-            if last.is_some_and(|t| now.saturating_sub(t) < LOST_AGAIN_WITHIN.as_secs()) {
+            if super::lost_again(last, now) {
                 // The card's, or its software renderer's when that is what drew.
                 let way = if super::software() {
                     Way::Software
@@ -1381,35 +2120,6 @@ mod gpu {
             d.destroy();
             poll();
         }
-    }
-
-    /// End this copy and start MDM again: the new one waits for this one to be gone (as after
-    /// an update), and draws as the failure markers now say.
-    pub(super) fn start_again(why: &str) {
-        tracing::warn!("{why}: starting MDM again");
-        // The AppImage file itself on Linux (this program sits in its temporary mount).
-        #[cfg(windows)]
-        let program = std::env::current_exe().ok();
-        #[cfg(unix)]
-        let program = crate::unix::program();
-        let started = program.and_then(|exe| {
-            std::process::Command::new(exe)
-                .arg(crate::update::UPDATED)
-                // An override would bring the same failure back.
-                .env_remove("MDM_RENDERER")
-                .spawn()
-                .ok()
-        });
-        if started.is_none() {
-            tracing::error!("MDM couldn't start again");
-        }
-        crate::crash::clean_exit();
-        // The window thread may be stuck in the driver: end at once, without unwinding.
-        #[cfg(windows)]
-        crate::win32::end_process(std::process::id());
-        #[cfg(unix)]
-        crate::unix::end_process(std::process::id());
-        std::process::exit(1);
     }
 
     pub fn options(adapters: Adapters) -> WgpuConfiguration {
@@ -1495,7 +2205,7 @@ mod gpu {
     }
 
     /// The adapter's vendor and driver as words ("NVIDIA", "radv", "Intel open-source Mesa
-    /// driver"), for [`super::unpaced_swaps`]: NVIDIA's PCI vendor id said by name too.
+    /// driver"), for the log ([`super::pacing_known`]): NVIDIA's PCI vendor id said by name too.
     pub fn vendor_name(info: &wgpu::AdapterInfo) -> String {
         const NVIDIA: u32 = 0x10de;
         let said = format!("{} {}", info.driver, info.driver_info);
@@ -1567,27 +2277,114 @@ fn choose(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::time::Duration;
 
-    /// Only NVIDIA's own driver under XWayland swaps at once (its vsynced swap waits about a
-    /// second for a window the compositor isn't showing); Mesa's drivers keep the refresh's
-    /// pacing, and so does every driver outside XWayland.
+    /// X11: only the main window waits for the refresh, and only while it's shown; XWayland:
+    /// none (#347, #1025); elsewhere every window keeps what eframe gave it.
     #[test]
-    fn only_nvidia_under_xwayland_swaps_at_once() {
-        for nvidia in ["NVIDIA Corporation", "NVIDIA 595.99.02", "nvidia"] {
-            assert!(unpaced_swaps(true, nvidia), "{nvidia}");
-            assert!(!unpaced_swaps(false, nvidia), "{nvidia} outside XWayland");
-        }
-        for other in [
-            "Mesa Project and SGI",
-            "Mesa",
-            "Intel",
-            "AMD",
-            "radv Mesa 25.2.8",
-            "Intel open-source Mesa driver Mesa 25.2.8",
-            "",
+    fn one_window_at_most_waits_for_the_refresh() {
+        for (main, shown, waits) in [
+            (true, true, true),
+            (true, false, false),
+            (false, true, false),
+            (false, false, false),
         ] {
-            assert!(!unpaced_swaps(true, other), "{other}");
+            assert_eq!(swap_waits(Swaps::MainOnly, main, shown, true), waits);
+            assert!(!swap_waits(Swaps::MainOnly, main, shown, false));
+            assert!(!swap_waits(Swaps::NoneWait, main, shown, true));
+            assert!(swap_waits(Swaps::Own, main, shown, true));
+            assert!(!swap_waits(Swaps::Own, main, shown, false));
         }
+    }
+
+    /// A window is shown unless the system says it's minimized or covered.
+    #[test]
+    fn a_window_is_shown_unless_minimized_or_covered() {
+        let info = |minimized, occluded| egui::ViewportInfo {
+            minimized,
+            occluded,
+            ..Default::default()
+        };
+        assert!(shown(&info(None, None)));
+        assert!(shown(&info(Some(false), None)));
+        assert!(shown(&info(Some(false), Some(false))));
+        assert!(!shown(&info(Some(true), None)));
+        assert!(!shown(&info(None, Some(true))));
+        assert!(!shown(&info(Some(false), Some(true))));
+    }
+
+    /// The hooks eframe asks: the main window is the root viewport.
+    #[test]
+    fn the_hooks_ask_for_the_main_window_by_its_viewport() {
+        use eframe::ViewportHooks as _;
+        let hooks = GlHooks(Swaps::MainOnly);
+        let info = egui::ViewportInfo::default();
+        assert!(hooks.swap_waits_for_vsync(egui::ViewportId::ROOT, &info, true));
+        let dialog = egui::ViewportId::from_hash_of("dialog");
+        assert!(!hooks.swap_waits_for_vsync(dialog, &info, true));
+        let minimized = egui::ViewportInfo {
+            minimized: Some(true),
+            ..Default::default()
+        };
+        assert!(!hooks.swap_waits_for_vsync(egui::ViewportId::ROOT, &minimized, true));
+    }
+
+    /// Every OpenGL start has the hooks (the paints that fail are watched, #1448), and they
+    /// leave the swaps as eframe gives them where the system's own choice is kept.
+    #[test]
+    fn every_opengl_start_has_the_hooks() {
+        use eframe::ViewportHooks as _;
+        let mut opts = eframe::NativeOptions::default();
+        configure(&mut opts, Attempt::OpenGl);
+        assert!(opts.viewport_hooks.is_some());
+        let hooks = GlHooks(Swaps::Own);
+        let info = egui::ViewportInfo::default();
+        let dialog = egui::ViewportId::from_hash_of("dialog");
+        for vsync in [true, false] {
+            assert_eq!(hooks.swap_waits_for_vsync(dialog, &info, vsync), vsync);
+        }
+        // A failure eframe tells of, short of a lost device, is only logged (no start again:
+        // this test would end).
+        hooks.gl_paint_failed(egui::ViewportId::ROOT, "test", 1, Duration::ZERO);
+        hooks.gl_paint_failed(dialog, "test", 9, Duration::from_secs(60));
+        #[cfg(gpu)]
+        {
+            let mut opts = eframe::NativeOptions::default();
+            configure(&mut opts, Attempt::Gpu(Adapters::Hardware));
+            assert!(opts.viewport_hooks.is_none());
+        }
+    }
+
+    /// A paint that fails now and then is passing; one that keeps failing is OpenGL lost, the
+    /// main window's sooner than a dialog's (#1448: Intel's wglMakeCurrent as a dialog closed).
+    #[test]
+    fn opengl_is_lost_when_its_paints_keep_failing() {
+        let s = Duration::from_secs;
+        // Once, or a few times quickly (a dialog closing): passing.
+        assert!(!gl_lost(true, 1, Duration::ZERO));
+        assert!(!gl_lost(false, 3, Duration::from_millis(300)));
+        // Many times, but not for long: passing still.
+        assert!(!gl_lost(true, 20, Duration::from_millis(1900)));
+        // For long, but only a few paints (the window is painted rarely): not yet.
+        assert!(!gl_lost(true, 4, s(60)));
+        // The main window: 5 paints over 2 s; another: 10 over 5 s.
+        assert!(gl_lost(true, 5, s(2)));
+        assert!(!gl_lost(false, 5, s(2)));
+        assert!(!gl_lost(false, 10, s(4)));
+        assert!(gl_lost(false, 10, s(5)));
+    }
+
+    /// A device lost twice within 10 minutes (Direct3D's, or OpenGL's context): its way fails.
+    #[test]
+    fn a_second_loss_within_ten_minutes_counts() {
+        let now = 1_800_000_000;
+        assert!(!lost_again(None, now));
+        assert!(lost_again(Some(now - 60), now));
+        assert!(lost_again(Some(now - 599), now));
+        assert!(!lost_again(Some(now - 600), now));
+        assert!(!lost_again(Some(now - 86_400), now));
+        // A clock set back since: as just now.
+        assert!(lost_again(Some(now + 30), now));
     }
 
     #[test]
@@ -1616,9 +2413,10 @@ mod tests {
         let p = plan(Some(api), None, k(true, false, false));
         assert_eq!(p.attempts, [Attempt::OpenGl, any]);
         assert_eq!(p.watched(), WATCH_GL);
-        // Nothing chosen: Direct3D on Windows (#89), OpenGL on Linux and macOS (#206).
+        // Nothing chosen: Direct3D on Windows (#89), OpenGL on Linux, macOS (#206) and 32-bit
+        // Windows.
         let p = plan(None, None, NONE);
-        if cfg!(windows) {
+        if DEFAULT == Api::Direct3D {
             assert_eq!(p.attempts, [gpu, Attempt::OpenGl, soft]);
             assert!(p.watched());
             assert_eq!(
@@ -1627,7 +2425,8 @@ mod tests {
             );
         } else {
             assert_eq!(p.attempts, [Attempt::OpenGl, any]);
-            assert!(!p.watched());
+            // Watched on Windows (32-bit), as OpenGL chosen is.
+            assert_eq!(p.watched(), WATCH_GL);
         }
         // The card's start is watched, and OpenGL's where its failure would send the next start
         // to the software renderer (Windows).
@@ -1709,7 +2508,11 @@ mod tests {
             Attempt::OpenGl,
             Attempt::Gpu(Adapters::Any),
         );
-        for setting in [None, Some(Api::Direct3D)] {
+        // Nothing chosen means Direct3D where it is the default (not on 32-bit Windows).
+        for setting in [Some(Api::Direct3D)]
+            .into_iter()
+            .chain((DEFAULT == Api::Direct3D).then_some(None))
+        {
             // A card with Direct3D 12: as before; OpenGL's start after it is watched too.
             let p = plan(setting, None, NONE);
             assert_eq!(p.attempts, [d3d, gl, warp]);
@@ -1833,7 +2636,11 @@ mod tests {
         let any = Attempt::Gpu(Adapters::Any);
         let warp = Attempt::Gpu(Adapters::Software);
         let gl = Attempt::OpenGl;
-        for setting in [None, Some(Api::Direct3D)] {
+        // Nothing chosen means Direct3D where it is the default (not on 32-bit Windows).
+        for setting in [Some(Api::Direct3D)]
+            .into_iter()
+            .chain((DEFAULT == Api::Direct3D).then_some(None))
+        {
             assert_eq!(plan(setting, None, NONE).attempts, [d3d, gl, warp]);
             assert_eq!(
                 plan(setting, None, k(true, false, false)).attempts,
@@ -1846,7 +2653,9 @@ mod tests {
             [d3d, gl]
         );
         assert_eq!(plan(None, Some("warp"), NONE).attempts, [warp, gl]);
-        assert_eq!(plan(None, Some("vulkan"), NONE).attempts[0], d3d);
+        // Another system's API asked for: the default (OpenGL on 32-bit Windows).
+        let default = if DEFAULT == Api::Direct3D { d3d } else { gl };
+        assert_eq!(plan(None, Some("vulkan"), NONE).attempts[0], default);
         // Its files keep their names.
         if let Some(f) = file(FAILED) {
             assert!(f.ends_with("direct3d-failed.txt"));
@@ -1974,6 +2783,269 @@ mod tests {
         // #835's opengl-unfit.txt: one line, the only reason it knew.
         let unfit = "OpenGL 2.1 is older than 3.0 (Intel HD Graphics)";
         assert_eq!(Why::read(unfit, Why::TooOld), (Why::TooOld, unfit));
+    }
+
+    /// A failure file, as this version writes it and as older ones did (#1205).
+    #[test]
+    fn failure_files_old_and_new() {
+        // 0.5.2's, the reporter's (#1205): a reason, one line of details; its time is the file's.
+        let old = "no-first-frame\nDirect3D 12 drew no first frame within 10 s (11 s after start)";
+        let f = Failure::read(old, Why::Other, 1_000);
+        assert_eq!(f.why, Why::NoFirstFrame);
+        assert_eq!(
+            f.details,
+            "Direct3D 12 drew no first frame within 10 s (11 s after start)"
+        );
+        assert_eq!((f.when, f.tries, f.at_login), (1_000, 1, false));
+        assert_eq!((f.adapter, f.drivers, f.drew), (None, None, None));
+        // Test builds before 0.5.0 and #835's: one line, the older reason.
+        let unfit = Failure::read("OpenGL 2.1 is older than 3.0 (Intel)", Why::TooOld, 5);
+        assert_eq!(unfit.why, Why::TooOld);
+        assert_eq!(unfit.details, "OpenGL 2.1 is older than 3.0 (Intel)");
+        // This version's: every field, read back as written.
+        let f = Failure {
+            why: Why::NoFirstFrame,
+            details: "Direct3D 12 drew no first frame\nwithin 10 s".into(),
+            when: 1_763_000_000,
+            tries: 3,
+            at_login: true,
+            adapter: Some("NVIDIA GeForce RTX 4060 Laptop GPU".into()),
+            driver: Some("32.0.15.6224".into()),
+            drivers: Some("NVIDIA GeForce RTX 4060 Laptop GPU 32.0.15.6224".into()),
+            drew: Some(1_763_000_100),
+        };
+        let text = f.text();
+        // An older MDM reads its first two lines as before.
+        assert_eq!(Why::read(&text, Why::Other).0, Why::NoFirstFrame, "{text}");
+        assert!(text.lines().nth(1).unwrap().starts_with("Direct3D 12 drew"));
+        let back = Failure::read(&text, Why::Other, 0);
+        assert_eq!(
+            back,
+            Failure {
+                details: "Direct3D 12 drew no first frame within 10 s".into(),
+                ..f
+            }
+        );
+        // Fields it doesn't know, or can't read, are details or left as they were.
+        let odd = Failure::read("ended-early\nsome=thing\ntries=x\nwhen=", Why::Other, 7);
+        assert_eq!(
+            (odd.details.as_str(), odd.tries, odd.when),
+            ("some=thing", 1, 7)
+        );
+    }
+
+    /// A failure's file, made for the rules' tests.
+    fn failed(why: Why, when: u64, tries: u32) -> Failure {
+        Failure {
+            why,
+            details: String::new(),
+            when,
+            tries,
+            at_login: false,
+            adapter: None,
+            driver: None,
+            drivers: Some("Card 1.0".into()),
+            drew: None,
+        }
+    }
+
+    /// When a way that failed here is tried again (#1205): after a driver update, after a while
+    /// that depends on the reason (twice as long at each try again that failed), at the next
+    /// start for a busy login's late first frame; never by time for an OpenGL too old.
+    #[test]
+    fn a_failure_is_tried_again_after_a_driver_update_or_a_while() {
+        let t0 = 1_763_000_000;
+        let pass = |v: Verdict| matches!(v, Verdict::Pass(_));
+        // A driver update (or another card) tries it again at once, whatever the reason.
+        for why in Why::ALL {
+            let f = failed(why, t0, 1);
+            assert!(pass(verdict(&f, t0 + 60, Some("Card 1.0"))), "{why:?}");
+            assert_eq!(
+                verdict(&f, t0 + 60, Some("Card 1.1")),
+                Verdict::Retry(Retry::Drivers),
+                "{why:?}"
+            );
+            // Drivers unknown, now or then: no change seen.
+            assert!(pass(verdict(&f, t0 + 60, None)));
+            let older = Failure {
+                drivers: None,
+                ..f.clone()
+            };
+            assert!(pass(verdict(&older, t0 + 60, Some("Card 1.1"))));
+        }
+        // By time: a week for what can pass, a month for what rarely does, never for too old.
+        let week = 7 * DAY;
+        for (why, first) in [
+            (Why::NoFirstFrame, Some(week)),
+            (Why::EndedEarly, Some(week)),
+            (Why::LostTwice, Some(week)),
+            (Why::NoAdapter, Some(30 * DAY)),
+            (Why::Other, Some(30 * DAY)),
+            (Why::FrozeInDriver, Some(30 * DAY)),
+            (Why::TooOld, None),
+        ] {
+            assert_eq!(wait(why, 1), first, "{why:?}");
+            let f = failed(why, t0, 1);
+            match first {
+                Some(w) => {
+                    assert_eq!(
+                        verdict(&f, t0 + w - 1, None),
+                        Verdict::Pass(Again {
+                            since: t0,
+                            at: Some(t0 + w),
+                            on_update: true,
+                            next_start: false
+                        })
+                    );
+                    assert_eq!(verdict(&f, t0 + w, None), Verdict::Retry(Retry::Time));
+                }
+                None => assert!(pass(verdict(&f, t0 + 3650 * DAY, None))),
+            }
+        }
+        // A try again that failed again waits twice as long, up to a limit: a way that fails
+        // every time (#847) costs a bad start once a week, then two, four... three months.
+        let waits: Vec<u64> = (1..=8)
+            .map(|n| wait(Why::EndedEarly, n).unwrap() / DAY)
+            .collect();
+        assert_eq!(waits, [7, 14, 28, 56, 90, 90, 90, 90]);
+        assert_eq!(wait(Why::FrozeInDriver, 3), Some(120 * DAY));
+        assert_eq!(wait(Why::FrozeInDriver, 9), Some(180 * DAY));
+        assert_eq!(wait(Why::NoFirstFrame, u32::MAX), Some(90 * DAY));
+        let twice = failed(Why::NoFirstFrame, t0, 2);
+        assert!(pass(verdict(&twice, t0 + 13 * DAY, None)));
+        assert_eq!(
+            verdict(&twice, t0 + 14 * DAY, None),
+            Verdict::Retry(Retry::Time)
+        );
+        // The clock: set back, still passed over; a failure remembered more than a day ahead of
+        // it (the clock was wrong then) has waited.
+        let f = failed(Why::NoFirstFrame, t0, 1);
+        assert!(pass(verdict(&f, t0 - 3600, None)));
+        assert_eq!(verdict(&f, t0 - 2 * DAY, None), Verdict::Retry(Retry::Time));
+        // ... but an OpenGL too old waits for a driver update still.
+        assert!(pass(verdict(
+            &failed(Why::TooOld, t0, 1),
+            t0 - 2 * DAY,
+            None
+        )));
+        // Tried again, it drew (its failure comes later): tried again until it fails again.
+        let drew = Failure {
+            drew: Some(t0 + DAY),
+            ..failed(Why::FrozeInDriver, t0, 1)
+        };
+        assert_eq!(
+            verdict(&drew, t0 + DAY, None),
+            Verdict::Retry(Retry::Drawing)
+        );
+    }
+
+    /// #1205: Direct3D 12's first frame late in the first minutes of a start with the session.
+    /// MDM starts again at once with OpenGL (which still passes it over), and tries Direct3D 12
+    /// again at the next start a few minutes on; late there again, it counts as any failure.
+    #[test]
+    fn a_busy_login_is_tried_again_at_the_next_start() {
+        let t0 = 1_763_000_000;
+        let grace = crate::crash::LOGIN_GRACE.as_secs();
+        let login = Failure {
+            at_login: true,
+            ..failed(Why::NoFirstFrame, t0, 1)
+        };
+        assert_eq!(
+            verdict(&login, t0 + 5, None),
+            Verdict::Pass(Again {
+                since: t0,
+                at: Some(t0 + grace),
+                on_update: true,
+                next_start: true
+            })
+        );
+        assert_eq!(
+            verdict(&login, t0 + grace, None),
+            Verdict::Retry(Retry::Login)
+        );
+        // Twice in a row: a week, as any late first frame.
+        let again = Failure {
+            tries: 2,
+            ..login.clone()
+        };
+        assert!(matches!(
+            verdict(&again, t0 + grace, None),
+            Verdict::Pass(_)
+        ));
+        assert_eq!(
+            verdict(&again, t0 + 14 * DAY, None),
+            Verdict::Retry(Retry::Time)
+        );
+        // Only a late first frame: a start that ended before it, at login too, waits a week.
+        let ended = Failure {
+            at_login: true,
+            ..failed(Why::EndedEarly, t0, 1)
+        };
+        assert!(matches!(
+            verdict(&ended, t0 + grace, None),
+            Verdict::Pass(_)
+        ));
+        // The plans: the start again passes Direct3D 12 over; the next one tries it first.
+        let Some(api) = GPU else {
+            return;
+        };
+        let known = |now| {
+            k(
+                matches!(verdict(&login, now, None), Verdict::Pass(_)),
+                false,
+                false,
+            )
+        };
+        assert_eq!(
+            plan(Some(api), None, known(t0 + 5)).attempts,
+            [Attempt::OpenGl, Attempt::Gpu(Adapters::Any)]
+        );
+        assert_eq!(
+            plan(Some(api), None, known(t0 + grace)).attempts,
+            [
+                Attempt::Gpu(Adapters::Hardware),
+                Attempt::OpenGl,
+                Attempt::Gpu(Adapters::Software)
+            ]
+        );
+    }
+
+    /// The crash report's words for a failure: when, on what, and when it is tried again.
+    #[test]
+    fn a_failure_says_when_and_when_again() {
+        // 2025-11-14 00:00 UTC.
+        let t0 = 1_763_078_400;
+        let f = Failure {
+            details: "Direct3D 12 drew no first frame within 10 s (11 s after start)".into(),
+            adapter: Some("NVIDIA GeForce RTX 4060 Laptop GPU".into()),
+            driver: Some("32.0.15.6224".into()),
+            ..failed(Why::NoFirstFrame, t0, 1)
+        };
+        assert_eq!(
+            f.said(t0 + 60),
+            "Direct3D 12 drew no first frame within 10 s (11 s after start) (on 2025-11-14, \
+             NVIDIA GeForce RTX 4060 Laptop GPU, driver 32.0.15.6224; tried again from \
+             2025-11-21, or after a driver update)"
+        );
+        let login = Failure {
+            at_login: true,
+            drivers: None,
+            adapter: None,
+            ..f.clone()
+        };
+        assert!(login.said(t0 + 60).ends_with(
+            "(on 2025-11-14, just after the session started; tried again at the next start)"
+        ));
+        let old = Failure {
+            why: Why::TooOld,
+            drivers: None,
+            adapter: None,
+            tries: 2,
+            ..f
+        };
+        assert!(old.said(t0).ends_with(
+            "(on 2025-11-14, 2 starts in a row; tried again when chosen in View → Draw with)"
+        ));
     }
 
     #[cfg(gpu)]

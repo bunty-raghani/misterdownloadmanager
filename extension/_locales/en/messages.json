@@ -109,7 +109,7 @@
   },
   "popup_exclude_site": {
     "message": "Never take downloads from $site$",
-    "description": "button in the toolbar button's popup: leave this web site's downloads to the browser from now on",
+    "description": "switch in the This page tab in the toolbar button's popup: on, this web site's downloads are left to the browser from now on",
     "placeholders": {
       "site": {
         "content": "$1",
@@ -117,13 +117,9 @@
       }
     }
   },
-  "popup_undo": {
-    "message": "Undo",
-    "description": "link beside \"Downloads from <site> stay with the browser\" in the toolbar button's popup: take the site off the excluded sites again"
-  },
   "popup_excluded": {
     "message": "Downloads from $site$ stay with the browser",
-    "description": "shown in the toolbar button's popup after the site was excluded",
+    "description": "shown under the switch Never take downloads from this site in the toolbar button's popup while it is on",
     "placeholders": {
       "site": {
         "content": "$1",
@@ -188,6 +184,10 @@
   "declined_integration_off": {
     "message": "Use advanced browser integration is off in Options → General.",
     "description": "why a download stayed with the browser: the app's setting 'Use advanced browser integration' is off; keep the setting's name as the app shows it"
+  },
+  "declined_torrents": {
+    "message": "It's a torrent, and Open magnet links and .torrent files with Mister Download Manager is off in Torrent settings.",
+    "description": "why a download stayed with the browser: it is a .torrent file and the app's Torrent settings don't open torrents with Mister Download Manager, so the browser keeps it for the user's own torrent program; keep the setting's name as the app shows it"
   },
   "declined_site_access": {
     "message": "The extension isn't allowed to read this site (the browser's site access).",
@@ -424,5 +424,515 @@
   "video_original": {
     "message": "original",
     "description": "in the list under the download button over a video, after a sound-only line's bitrate: the sound as the site sends it, not converted (e.g. '128 kbps · original'); lower case; one word"
+  },
+  "video_compatible": {
+    "message": "Most compatible",
+    "description": "in the list under the download button over a video, after a quality's height (1080p): the H.264 video with AAC sound in an MP4, the file that plays in every video editor, TV and phone; short, about 20 characters at most"
+  },
+  "popup_video_hide_fullscreen": {
+    "message": "Hide the download button in full screen",
+    "description": "Option in the toolbar button's popup: while a web page is in full screen, the Download video button over its videos stays hidden"
+  },
+  "popup_video_hide_fullscreen_title": {
+    "message": "While the page is in full screen, its videos show no Download video button",
+    "description": "Tooltip of the Hide the download button in full screen option in the toolbar button's popup; Download video is the name of the button over videos"
+  },
+  "popup_remote_forget": {
+    "message": "Forget",
+    "description": "button: forget / unpair this server"
+  },
+  "popup_gear": {
+    "message": "Options in Mister Download Manager",
+    "description": "the gear button at the top of in the toolbar button's popup: opens Mister Download Manager's Options window; keep the name Mister Download Manager as it is"
+  },
+  "popup_tabs": {
+    "message": "Popup sections",
+    "description": "name of the row of tabs in the toolbar button's popup, read by screen readers"
+  },
+  "popup_tab_downloads": {
+    "message": "Downloads",
+    "description": "tab in the toolbar button's popup: the list of Mister Download Manager's newest downloads; noun, short"
+  },
+  "popup_tab_page": {
+    "message": "This page",
+    "description": "tab in the toolbar button's popup: what can be done on the web page open in the browser (its videos, leaving its site to the browser); short"
+  },
+  "popup_tab_settings": {
+    "message": "Settings",
+    "description": "tab in the toolbar button's popup: the extension's settings; noun, short"
+  },
+  "popup_conn": {
+    "message": "Connected · $version$",
+    "description": "under the extension's name in the toolbar button's popup: the browser reaches the app; its version follows; short",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.5.2"
+      }
+    }
+  },
+  "popup_conn_plain": {
+    "message": "Connected",
+    "description": "under the extension's name in the toolbar button's popup: the browser reaches the app; short"
+  },
+  "popup_conn_off": {
+    "message": "Not connected",
+    "description": "under the extension's name in the toolbar button's popup: the browser can't reach the app (why is said below it); short"
+  },
+  "popup_conn_paused": {
+    "message": "Paused",
+    "description": "under the extension's name in the toolbar button's popup: taking downloads from this browser is paused; short"
+  },
+  "popup_conn_update": {
+    "message": "Update Mister Download Manager",
+    "description": "under the extension's name in the toolbar button's popup: the app is older than the extension; keep the name Mister Download Manager as it is; short"
+  },
+  "popup_conn_remote": {
+    "message": "Sending to $server$",
+    "description": "under the extension's name in the toolbar button's popup: downloads go to another Mister Download Manager, a server, at this address; short",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_cancel": {
+    "message": "Cancel",
+    "description": "button of a question in the toolbar button's popup: don't do it"
+  },
+  "popup_page_none": {
+    "message": "This isn't a web page: there's nothing to do here.",
+    "description": "in the This page tab in the toolbar button's popup when the browser's tab shows one of its own pages (settings, a new tab)"
+  },
+  "popup_exclude_by_rule": {
+    "message": "Left to the browser by a rule in Options",
+    "description": "in the This page tab in the toolbar button's popup, under the switch Never take downloads from this site, when a pattern in Mister Download Manager's Options excludes the site (the switch can't be turned off here)"
+  },
+  "popup_dl_search": {
+    "message": "Search downloads",
+    "description": "placeholder of the search box in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads); it finds downloads by their name or address"
+  },
+  "popup_dl_filters": {
+    "message": "Show",
+    "description": "name of the row of filters in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) (All, Running, Done, Failed), read by screen readers; verb"
+  },
+  "popup_dl_all": {
+    "message": "All",
+    "description": "filter in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): every download; short"
+  },
+  "popup_dl_running": {
+    "message": "Running",
+    "description": "filter in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): the downloads downloading now; short"
+  },
+  "popup_dl_done_filter": {
+    "message": "Done",
+    "description": "filter in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): the finished downloads; short"
+  },
+  "popup_dl_failed_filter": {
+    "message": "Failed",
+    "description": "filter in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): the downloads that failed; short"
+  },
+  "popup_dl_clear": {
+    "message": "Clear finished",
+    "description": "button in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): takes the finished downloads off the list (their files stay); short"
+  },
+  "popup_dl_running_count": {
+    "message": "$count$ downloading now",
+    "description": "tooltip of the number on the Downloads tab in the toolbar button's popup: how many downloads are running",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_remote": {
+    "message": "These are the downloads of the Mister Download Manager at $server$. Open their files there.",
+    "description": "note at the top of the list in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when downloads go to another Mister Download Manager (a server): the buttons that need the file on this computer are not offered; keep the name Mister Download Manager as it is",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_dl_more": {
+    "message": "The newest $shown$ of $total$. Mister Download Manager lists them all.",
+    "description": "under the list in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when there are more downloads than it shows; keep the name Mister Download Manager as it is",
+    "placeholders": {
+      "shown": {
+        "content": "$1",
+        "example": "60"
+      },
+      "total": {
+        "content": "$2",
+        "example": "245"
+      }
+    }
+  },
+  "popup_dl_of": {
+    "message": "$done$ of $size$",
+    "description": "a running download's line in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): how much has come of its size",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "12.3 MB"
+      },
+      "size": {
+        "content": "$2",
+        "example": "48.7 MB"
+      }
+    }
+  },
+  "popup_dl_left": {
+    "message": "$time$ left",
+    "description": "a running download's line in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): the time left, as a clock (minutes:seconds)",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "0:42"
+      }
+    }
+  },
+  "popup_dl_starting": {
+    "message": "Starting...",
+    "description": "a download's line in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when it has just started and nothing has come yet"
+  },
+  "popup_dl_paused": {
+    "message": "Paused",
+    "description": "a download's line in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): stopped by the user, can be resumed; short"
+  },
+  "popup_dl_waiting": {
+    "message": "Waiting",
+    "description": "a download's line in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): waiting in a queue, never started; short"
+  },
+  "popup_dl_done": {
+    "message": "Done",
+    "description": "a download's line in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): it has just finished; short"
+  },
+  "popup_dl_just_now": {
+    "message": "just now",
+    "description": "a finished download's line in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): it finished less than a minute ago; lower case where the language allows"
+  },
+  "popup_dl_failed": {
+    "message": "Failed",
+    "description": "a download's line in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): it failed; short"
+  },
+  "popup_dl_failed_why": {
+    "message": "Failed: $why$",
+    "description": "a download's line in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): it failed, and why (the app's words)",
+    "placeholders": {
+      "why": {
+        "content": "$1",
+        "example": "the server refused the connection"
+      }
+    }
+  },
+  "popup_dl_gone": {
+    "message": "File deleted or moved",
+    "description": "a finished download's line in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when its file is no longer where it was saved"
+  },
+  "popup_dl_loading": {
+    "message": "Looking for downloads...",
+    "description": "in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads), while it asks the app for them"
+  },
+  "popup_dl_none": {
+    "message": "No downloads yet",
+    "description": "in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the app has no downloads"
+  },
+  "popup_dl_none_text": {
+    "message": "What you download with Mister Download Manager shows up here.",
+    "description": "in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the app has no downloads; keep the name Mister Download Manager as it is"
+  },
+  "popup_dl_no_match": {
+    "message": "Nothing matches",
+    "description": "in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when no download matches the search or the filter"
+  },
+  "popup_dl_no_match_text": {
+    "message": "No download's name or address has “$words$”.",
+    "description": "in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when no download matches the search; the words searched for follow",
+    "placeholders": {
+      "words": {
+        "content": "$1",
+        "example": "report"
+      }
+    }
+  },
+  "popup_dl_show_all": {
+    "message": "Show all downloads",
+    "description": "button in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): clears the search and the filter"
+  },
+  "popup_list_off": {
+    "message": "Mister Download Manager isn't running",
+    "description": "in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the app isn't running; keep the name Mister Download Manager as it is"
+  },
+  "popup_list_off_text": {
+    "message": "Start it to see your downloads here.",
+    "description": "in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the app isn't running"
+  },
+  "popup_list_start": {
+    "message": "Start Mister Download Manager",
+    "description": "button in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the app isn't running; keep the name Mister Download Manager as it is"
+  },
+  "popup_list_old": {
+    "message": "Update Mister Download Manager",
+    "description": "in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the app is too old to list its downloads here; keep the name Mister Download Manager as it is"
+  },
+  "popup_list_old_text": {
+    "message": "This version can't list its downloads here yet.",
+    "description": "in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the app is too old to list its downloads here"
+  },
+  "popup_list_busy": {
+    "message": "Mister Download Manager is busy. Trying again...",
+    "description": "in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the app didn't answer in time; keep the name Mister Download Manager as it is"
+  },
+  "popup_list_unreached": {
+    "message": "Can't reach Mister Download Manager",
+    "description": "in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the browser can't reach the app (why is said below it); keep the name Mister Download Manager as it is"
+  },
+  "popup_list_remote_unreachable": {
+    "message": "Can't reach the Mister Download Manager at $server$",
+    "description": "in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the other Mister Download Manager (a server) doesn't answer; keep the name Mister Download Manager as it is",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_list_remote_unreachable_text": {
+    "message": "Check that it's running, and that this browser accepts its certificate (Settings → Send downloads to → Open it).",
+    "description": "in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the other Mister Download Manager (a server) doesn't answer; Settings, Send downloads to and Open it are the names of a tab, a section and a button of the popup",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_act_open": {
+    "message": "Open",
+    "description": "command in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): opens the downloaded file; verb"
+  },
+  "popup_act_open_named": {
+    "message": "Open $file$",
+    "description": "screen readers' name of a finished download's name in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): clicking it opens the file",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_folder": {
+    "message": "Show in folder",
+    "description": "command in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): opens the file's folder with the file selected"
+  },
+  "popup_act_folder_named": {
+    "message": "Show $file$ in folder",
+    "description": "screen readers' name of a download's Show in folder button in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads)",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_copy_file": {
+    "message": "Copy file",
+    "description": "command in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): puts the file itself on the clipboard, to paste it into a folder, a chat or a message"
+  },
+  "popup_act_share": {
+    "message": "Share...",
+    "description": "command in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): opens the system's share sheet for the file"
+  },
+  "popup_act_copy_link": {
+    "message": "Copy link",
+    "description": "command in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): copies the download's address"
+  },
+  "popup_act_pause": {
+    "message": "Pause",
+    "description": "command in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): stops a running download, to resume it later; verb"
+  },
+  "popup_act_pause_named": {
+    "message": "Pause $file$",
+    "description": "screen readers' name of a running download's Pause button in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads)",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_resume": {
+    "message": "Resume",
+    "description": "command in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): goes on with a paused, waiting or failed download; verb"
+  },
+  "popup_act_resume_named": {
+    "message": "Resume $file$",
+    "description": "screen readers' name of a download's Resume button in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads)",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_again": {
+    "message": "Download again",
+    "description": "command in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): downloads the file again from the start"
+  },
+  "popup_act_remove": {
+    "message": "Remove from list",
+    "description": "command in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): takes the download off the list, its file stays"
+  },
+  "popup_act_delete": {
+    "message": "Delete file...",
+    "description": "command in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): takes the download off the list and deletes its file from the disk (it asks first)"
+  },
+  "popup_act_more": {
+    "message": "More actions",
+    "description": "tooltip of the ⋯ button of a download in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): opens its menu"
+  },
+  "popup_act_more_named": {
+    "message": "More actions for $file$",
+    "description": "screen readers' name of the ⋯ button of a download in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads)",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_title": {
+    "message": "Delete the file?",
+    "description": "title of the question in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) before a download's file is deleted"
+  },
+  "popup_ask_delete": {
+    "message": "$file$ will be deleted from your computer, and the download taken off the list. This can't be undone.",
+    "description": "question in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) before a download's file is deleted",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_ok": {
+    "message": "Delete",
+    "description": "button of the question in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): deletes the file; verb"
+  },
+  "popup_ask_clear_title": {
+    "message": "Clear finished downloads?",
+    "description": "title of the question in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) before the finished downloads are taken off the list"
+  },
+  "popup_ask_clear": {
+    "message": "The $count$ finished downloads go off the list. Their files stay where they are.",
+    "description": "question in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) before the finished downloads are taken off the list",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "8"
+      }
+    }
+  },
+  "popup_ask_clear_ok": {
+    "message": "Clear",
+    "description": "button of the question in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): takes the finished downloads off the list; verb"
+  },
+  "popup_said_file": {
+    "message": "Copied $file$. Paste it into a folder, a chat or a message.",
+    "description": "said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) after Copy file",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_link": {
+    "message": "Link copied",
+    "description": "said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) after Copy link"
+  },
+  "popup_said_removed": {
+    "message": "$file$ removed from the list",
+    "description": "said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) after Remove from list",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_deleted": {
+    "message": "$file$ deleted",
+    "description": "said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) after Delete file",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_again": {
+    "message": "Downloading $file$ again",
+    "description": "said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) after Download again",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_cleared": {
+    "message": "Finished downloads cleared",
+    "description": "said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) after Clear finished"
+  },
+  "popup_act_gone": {
+    "message": "That download is no longer in the list.",
+    "description": "said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when a button's download was removed meanwhile"
+  },
+  "popup_act_missing": {
+    "message": "Its file is no longer where it was saved (moved or deleted).",
+    "description": "said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when a download's file can't be opened, copied or shared"
+  },
+  "popup_act_running": {
+    "message": "Pause it first.",
+    "description": "said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when a running download can't be removed or downloaded again"
+  },
+  "popup_act_cant": {
+    "message": "That can't be done to this download now.",
+    "description": "said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when a button can't act on the download"
+  },
+  "popup_act_unsupported": {
+    "message": "This system can't do that.",
+    "description": "said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the system has no way to do it"
+  },
+  "popup_act_off": {
+    "message": "Mister Download Manager isn't running.",
+    "description": "said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the app isn't running; keep the name Mister Download Manager as it is"
+  },
+  "popup_act_busy": {
+    "message": "Mister Download Manager didn't answer in time. Try again.",
+    "description": "said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the app didn't answer in time; keep the name Mister Download Manager as it is"
+  },
+  "popup_act_failed": {
+    "message": "That didn't work. Try again.",
+    "description": "said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when a button's action failed"
+  },
+  "status_running": {
+    "message": "Downloading: $count$",
+    "description": "second line of the toolbar button's tooltip while the app downloads: how many downloads are running",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_open_remote": {
+    "message": "Open its page",
+    "description": "button at the foot of the Downloads tab in the toolbar button's popup when downloads go to another Mister Download Manager (a server): opens that server's own web page"
   }
 }

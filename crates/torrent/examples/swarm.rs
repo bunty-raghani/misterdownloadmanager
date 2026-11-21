@@ -64,6 +64,7 @@ async fn main() {
             upnp: false,
             lsd,
             offline: !lsd,
+            require_authorization: false,
             ..Config::new(out.join(format!("seeder{n}")))
         })
         .await

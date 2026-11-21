@@ -92,9 +92,6 @@
       }
     }
   },
-  "popup_undo": {
-    "message": "I-undo"
-  },
   "popup_excluded": {
     "message": "Mananatili sa browser ang mga download mula sa $site$",
     "placeholders": {
@@ -148,6 +145,9 @@
   },
   "declined_integration_off": {
     "message": "Naka-off ang Gumamit ng advanced na integrasyon ng browser sa Mga Opsyon → Pangkalahatan."
+  },
+  "declined_torrents": {
+    "message": "Ito ay isang torrent, at naka-off ang Buksan ang mga magnet link at .torrent file gamit ang Mister Download Manager sa mga setting ng Torrent."
   },
   "declined_site_access": {
     "message": "Hindi pinapayagan ang extension na basahin ang site na ito (pag-access ng site ng browser)."
@@ -328,5 +328,424 @@
   },
   "video_original": {
     "message": "orihinal"
+  },
+  "video_compatible": {
+    "message": "Pinaka-compatible"
+  },
+  "popup_video_hide_fullscreen": {
+    "message": "Itago ang download button sa full screen"
+  },
+  "popup_video_hide_fullscreen_title": {
+    "message": "Habang nasa full screen ang page, walang Download video button na ipinapakita ang mga video nito"
+  },
+  "popup_remote_forget": {
+    "message": "Kalimutan"
+  },
+  "popup_gear": {
+    "message": "Mga Opsyon sa Mister Download Manager"
+  },
+  "popup_tabs": {
+    "message": "Mga seksyon ng popup"
+  },
+  "popup_tab_downloads": {
+    "message": "Mga download"
+  },
+  "popup_tab_page": {
+    "message": "Ang pahinang ito"
+  },
+  "popup_tab_settings": {
+    "message": "Mga Setting"
+  },
+  "popup_conn": {
+    "message": "Nakakonekta · $version$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.5.2"
+      }
+    }
+  },
+  "popup_conn_plain": {
+    "message": "Nakakonekta"
+  },
+  "popup_conn_off": {
+    "message": "Hindi nakakonekta"
+  },
+  "popup_conn_paused": {
+    "message": "Naka-pause"
+  },
+  "popup_conn_update": {
+    "message": "I-update ang Mister Download Manager"
+  },
+  "popup_conn_remote": {
+    "message": "Ipinapadala sa $server$",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_cancel": {
+    "message": "Kanselahin"
+  },
+  "popup_page_none": {
+    "message": "Hindi ito web page: walang magagawa rito."
+  },
+  "popup_exclude_by_rule": {
+    "message": "Iniwan sa browser dahil sa panuntunan sa Mga opsyon"
+  },
+  "popup_dl_search": {
+    "message": "Maghanap ng mga download"
+  },
+  "popup_dl_filters": {
+    "message": "Ipakita"
+  },
+  "popup_dl_all": {
+    "message": "Lahat"
+  },
+  "popup_dl_running": {
+    "message": "Kasalukuyang dina-download"
+  },
+  "popup_dl_done_filter": {
+    "message": "Tapos na"
+  },
+  "popup_dl_failed_filter": {
+    "message": "Nabigo"
+  },
+  "popup_dl_clear": {
+    "message": "I-clear ang mga natapos"
+  },
+  "popup_dl_running_count": {
+    "message": "$count$ dina-download ngayon",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_remote": {
+    "message": "Ito ang mga download ng Mister Download Manager sa $server$. Buksan ang kanilang mga file doon.",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_dl_more": {
+    "message": "Ang pinakabagong $shown$ sa $total$. Inililista ng Mister Download Manager ang lahat ng ito.",
+    "placeholders": {
+      "shown": {
+        "content": "$1",
+        "example": "60"
+      },
+      "total": {
+        "content": "$2",
+        "example": "245"
+      }
+    }
+  },
+  "popup_dl_of": {
+    "message": "$done$ sa $size$",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "12.3 MB"
+      },
+      "size": {
+        "content": "$2",
+        "example": "48.7 MB"
+      }
+    }
+  },
+  "popup_dl_left": {
+    "message": "May natitira pang $time$",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "0:42"
+      }
+    }
+  },
+  "popup_dl_starting": {
+    "message": "Sinisimulan..."
+  },
+  "popup_dl_paused": {
+    "message": "Naka-pause"
+  },
+  "popup_dl_waiting": {
+    "message": "Naghihintay"
+  },
+  "popup_dl_done": {
+    "message": "Tapos na"
+  },
+  "popup_dl_just_now": {
+    "message": "ngayon lang"
+  },
+  "popup_dl_failed": {
+    "message": "Nabigo"
+  },
+  "popup_dl_failed_why": {
+    "message": "Nabigo: $why$",
+    "placeholders": {
+      "why": {
+        "content": "$1",
+        "example": "the server refused the connection"
+      }
+    }
+  },
+  "popup_dl_gone": {
+    "message": "Na-delete o nailipat ang file"
+  },
+  "popup_dl_loading": {
+    "message": "Naghahanap ng mga download..."
+  },
+  "popup_dl_none": {
+    "message": "Wala pang download"
+  },
+  "popup_dl_none_text": {
+    "message": "Ang dina-download mo gamit ang Mister Download Manager ay lalabas dito."
+  },
+  "popup_dl_no_match": {
+    "message": "Walang tumutugma"
+  },
+  "popup_dl_no_match_text": {
+    "message": "Walang pangalan o address ng download na naglalaman ng “$words$”.",
+    "placeholders": {
+      "words": {
+        "content": "$1",
+        "example": "report"
+      }
+    }
+  },
+  "popup_dl_show_all": {
+    "message": "Ipakita ang lahat ng download"
+  },
+  "popup_list_off": {
+    "message": "Hindi tumatakbo ang Mister Download Manager"
+  },
+  "popup_list_off_text": {
+    "message": "Simulan ito para makita rito ang mga download."
+  },
+  "popup_list_start": {
+    "message": "Simulan ang Mister Download Manager"
+  },
+  "popup_list_old": {
+    "message": "I-update ang Mister Download Manager"
+  },
+  "popup_list_old_text": {
+    "message": "Hindi pa maililista rito ng bersyong ito ang mga download nito."
+  },
+  "popup_list_busy": {
+    "message": "Abala ang Mister Download Manager. Sinusubukan muli..."
+  },
+  "popup_list_unreached": {
+    "message": "Hindi maabot ang Mister Download Manager"
+  },
+  "popup_list_remote_unreachable": {
+    "message": "Hindi maabot ang Mister Download Manager sa $server$",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_list_remote_unreachable_text": {
+    "message": "Tiyaking tumatakbo ito at tinatanggap ng browser na ito ang certificate nito (Mga setting → Ipadala ang mga download sa → Buksan ito).",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_act_open": {
+    "message": "Buksan"
+  },
+  "popup_act_open_named": {
+    "message": "Buksan ang $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_folder": {
+    "message": "Buksan sa folder"
+  },
+  "popup_act_folder_named": {
+    "message": "Buksan ang folder ng $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_copy_file": {
+    "message": "Kopyahin ang file"
+  },
+  "popup_act_share": {
+    "message": "Ibahagi..."
+  },
+  "popup_act_copy_link": {
+    "message": "Kopyahin ang link"
+  },
+  "popup_act_pause": {
+    "message": "I-pause"
+  },
+  "popup_act_pause_named": {
+    "message": "I-pause ang $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_resume": {
+    "message": "Ipagpatuloy"
+  },
+  "popup_act_resume_named": {
+    "message": "Ipagpatuloy ang $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_again": {
+    "message": "I-download muli"
+  },
+  "popup_act_remove": {
+    "message": "Alisin sa listahan"
+  },
+  "popup_act_delete": {
+    "message": "I-delete ang file..."
+  },
+  "popup_act_more": {
+    "message": "Higit pang aksiyon"
+  },
+  "popup_act_more_named": {
+    "message": "Higit pang aksiyon para sa $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_title": {
+    "message": "I-delete ang file?"
+  },
+  "popup_ask_delete": {
+    "message": "Ide-delete ang $file$ mula sa iyong computer, at aalisin ang download sa listahan. Hindi ito mababawi.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_ok": {
+    "message": "I-delete"
+  },
+  "popup_ask_clear_title": {
+    "message": "I-clear ang mga natapos na download?"
+  },
+  "popup_ask_clear": {
+    "message": "Aalis sa listahan ang $count$ nakumpletong download. Mananatili sa kinalalagyan ng mga ito ang mga file.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "8"
+      }
+    }
+  },
+  "popup_ask_clear_ok": {
+    "message": "I-clear"
+  },
+  "popup_said_file": {
+    "message": "Nakopya ang $file$. Idikit ito sa isang folder, chat, o mensahe.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_link": {
+    "message": "Nakopya ang link"
+  },
+  "popup_said_removed": {
+    "message": "Inalis ang $file$ sa listahan",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_deleted": {
+    "message": "Na-delete ang $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_again": {
+    "message": "Dina-download muli ang $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_cleared": {
+    "message": "Na-clear ang mga natapos na download"
+  },
+  "popup_act_gone": {
+    "message": "Wala na sa listahan ang download na iyon."
+  },
+  "popup_act_missing": {
+    "message": "Wala na ang file nito sa pinag-save-han (nailipat o na-delete)."
+  },
+  "popup_act_running": {
+    "message": "I-pause muna ito."
+  },
+  "popup_act_cant": {
+    "message": "Hindi ito magagawa sa download na ito ngayon."
+  },
+  "popup_act_unsupported": {
+    "message": "Hindi ito kayang gawin ng system na ito."
+  },
+  "popup_act_off": {
+    "message": "Hindi tumatakbo ang Mister Download Manager."
+  },
+  "popup_act_busy": {
+    "message": "Hindi sumagot ang Mister Download Manager sa oras. Subukan muli."
+  },
+  "popup_act_failed": {
+    "message": "Hindi ito gumana. Subukang muli."
+  },
+  "status_running": {
+    "message": "Nagda-download: $count$",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_open_remote": {
+    "message": "Buksan ang page nito"
   }
 }

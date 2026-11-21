@@ -5,6 +5,15 @@ use std::fs::File;
 use std::io::{self, Read, Seek, SeekFrom};
 use std::path::{Path, PathBuf};
 
+/// `name` without the ASCII suffix that starts at `at` in `lower` (`name`'s lowercase): the
+/// suffix ends `name` the same number of bytes from its end. Indexing `name` with an offset
+/// measured in `lower` is wrong wherever lowercasing changes a character's byte length (`İ` is
+/// 2 bytes, its lowercase `i̇` is 3): it slices into the wrong place or panics.
+fn without_lower_suffix<'a>(name: &'a str, lower: &str, at: usize) -> &'a str {
+    let suffix = lower.len() - at;
+    name.get(..name.len() - suffix).unwrap_or(name)
+}
+
 /// How an archive is split.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum VolumeKind {
@@ -45,15 +54,15 @@ pub fn volume_key(name: &str) -> Option<Volume> {
         && digits(&stem[i + 5..])
     {
         return Some(Volume {
-            base: name[..i].to_owned(),
+            base: without_lower_suffix(name, &lower, i).to_owned(),
             kind: VolumeKind::RarPart,
             index: stem[i + 5..].parse().ok()?,
         });
     }
     // x.rar, x.r00 → 1, 2
-    if let Some(stem) = lower.strip_suffix(".rar") {
+    if lower.ends_with(".rar") {
         return Some(Volume {
-            base: name[..stem.len()].to_owned(),
+            base: without_lower_suffix(name, &lower, lower.len() - 4).to_owned(),
             kind: VolumeKind::RarOld,
             index: 1,
         });
@@ -63,7 +72,7 @@ pub fn volume_key(name: &str) -> Option<Volume> {
         && digits(&lower[i + 2..])
     {
         return Some(Volume {
-            base: name[..i].to_owned(),
+            base: without_lower_suffix(name, &lower, i).to_owned(),
             kind: VolumeKind::RarOld,
             index: lower[i + 2..].parse::<u32>().ok()? + 2,
         });
@@ -74,7 +83,7 @@ pub fn volume_key(name: &str) -> Option<Volume> {
             let num = &lower[i + ext.len()..];
             if num.len() == 3 && digits(num) {
                 return Some(Volume {
-                    base: name[..i].to_owned(),
+                    base: without_lower_suffix(name, &lower, i).to_owned(),
                     kind: VolumeKind::Split,
                     index: num.parse().ok()?,
                 });

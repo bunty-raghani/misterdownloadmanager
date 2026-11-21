@@ -142,9 +142,31 @@
             "null"
           ]
         },
+        "exists": {
+          "description": "`Complete`: whether its file (a torrent's folder) is still at `path`: false once it was\nmoved or deleted. Null while not looked at yet, and for the other statuses.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
         "file": {
           "description": "The file's name.",
           "type": "string"
+        },
+        "finished": {
+          "description": "`Complete`: when it finished, in seconds since 1970 (null when the list doesn't know).",
+          "format": "int64",
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "icon": {
+          "description": "The browser popup's list (#1496): its file type icon, a key of [`RecentAnswer::icons`].",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "id": {
           "description": "What the actions take (`ids`); never reused.",
@@ -152,9 +174,29 @@
           "minimum": 0,
           "type": "integer"
         },
+        "kind": {
+          "description": "What downloads it when it isn't a plain file: `video` (from a page, by yt-dlp),\n`torrent`, `gallery` (by gallery-dl). Null: a file.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "left": {
+          "description": "Seconds left at the speed it goes now, while it downloads with a known size.",
+          "format": "uint64",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
         "path": {
           "description": "Where it is saved: the file, or a torrent's folder.",
           "type": "string"
+        },
+        "redownload": {
+          "description": "It can be downloaded again from the start (Redownload): a file that isn't running.",
+          "type": "boolean"
         },
         "size": {
           "description": "Its size in bytes; null while unknown.",
@@ -209,6 +251,31 @@
       "required": [
         "error"
       ],
+      "type": "object"
+    },
+    "LinksPart": {
+      "description": "One part of a page's links ([`Command::links_part`]): the browser's extension sends a list\nlonger than the native host takes at once ([`MAX_MESSAGE`]) in parts, each with the page's\nreferrer and cookies, and the app puts them back together into one list.",
+      "properties": {
+        "batch": {
+          "default": "",
+          "description": "The same in every part of one list, and in no other list's (random, made by the\nextension): letters, digits and `-`, at most 64.",
+          "type": "string"
+        },
+        "count": {
+          "default": 0,
+          "description": "How many parts the list came in (at most [`MAX_LINK_PARTS`]).",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "index": {
+          "default": 0,
+          "description": "This part's place in the list, from 0.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
       "type": "object"
     },
     "ListAnswer": {
@@ -319,6 +386,160 @@
       ],
       "type": "object"
     },
+    "RecentAct": {
+      "description": "One of the browser popup's buttons on a download ([`Command::recent_act`], #1496).",
+      "properties": {
+        "act": {
+          "default": "",
+          "description": "One of [`RECENT_ACTS`].",
+          "type": "string"
+        },
+        "id": {
+          "default": 0,
+          "description": "The download (its `id` in the list); none for `clear-done`.",
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "RecentActAnswer": {
+      "description": "[`crate::Command::recent_act`]'s answer: done, or why not.",
+      "properties": {
+        "done": {
+          "default": false,
+          "type": "boolean"
+        },
+        "why": {
+          "description": "Why not: one of [`recent_why`]'s.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "RecentAnswer": {
+      "description": "The browser popup's list of downloads (#1496), [`crate::Command::recent`]'s answer: the\nnewest that match its search and filter, how many match each filter, and the file type icons\nit lacked. Within [`RECENT_BUDGET`] bytes, so the native host's message to the browser stays\nunder its 1 MB limit.",
+      "properties": {
+        "counts": {
+          "$ref": "#/$defs/RecentCounts",
+          "default": {
+            "all": 0,
+            "done": 0,
+            "failed": 0,
+            "running": 0
+          },
+          "description": "How many match the search under each filter (all of them, not only those answered)."
+        },
+        "downloads": {
+          "default": [],
+          "description": "Newest first, at most the `limit` asked for.",
+          "items": {
+            "$ref": "#/$defs/DownloadInfo"
+          },
+          "type": "array"
+        },
+        "icons": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {},
+          "description": "The icons the popup lacked, by key: `data:` addresses of PNG pictures (an SVG one for a\nLinux desktop's scalable icon theme), the system's own for each type.",
+          "type": "object"
+        },
+        "running": {
+          "default": 0,
+          "description": "Downloads running now, whatever the search (the toolbar button's count).",
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "share": {
+          "default": false,
+          "description": "MDM can open this system's share sheet for a file (Windows, macOS: Linux has none).",
+          "type": "boolean"
+        },
+        "speed": {
+          "default": 0,
+          "description": "The total download speed, bytes per second.",
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "RecentAsk": {
+      "description": "The browser popup's list of downloads ([`Command::recent`], #1496): which ones, and the file\ntype icons it lacks.",
+      "properties": {
+        "filter": {
+          "default": "",
+          "description": "One of [`RECENT_FILTERS`]: every download, those running, complete, or failed.",
+          "type": "string"
+        },
+        "have": {
+          "default": [],
+          "description": "The file type icons the popup has already (their keys): not sent again.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "limit": {
+          "default": 0,
+          "description": "The most downloads answered, newest first (at most [`RECENT_MAX`]); 0: none, only the\ncounts (the toolbar button's count of running downloads).",
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "px": {
+          "default": 0,
+          "description": "The icons' side in pixels (the popup's size for them at the screen's scale), 16 to 64.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "search": {
+          "default": "",
+          "description": "Words to find in the file's name or its address (case doesn't matter); empty: all.",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "RecentCounts": {
+      "description": "How many downloads match the popup's search under each of its filters.",
+      "properties": {
+        "all": {
+          "default": 0,
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "done": {
+          "default": 0,
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "failed": {
+          "default": 0,
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "running": {
+          "default": 0,
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
     "Request": {
       "description": "One request line: the token from ipc.json and the command's fields.",
       "properties": {
@@ -341,6 +562,13 @@
         "category": {
           "default": null,
           "description": "A category for `url` (its `key` in the list's `categories`); none: by the file's type.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "checksum": {
+          "description": "The checksum the finished file must have, as the command line takes it (`sha256:…`, a\nbare hex value, …): `mdm_engine::verify::Hash` reads it.",
           "type": [
             "string",
             "null"
@@ -389,6 +617,11 @@
             "null"
           ]
         },
+        "hidden": {
+          "default": false,
+          "description": "`/fromhost` (beyond IDM, #1333): started by the browser native messaging host:\nstarts hidden without marking an OS session login.",
+          "type": "boolean"
+        },
         "ids": {
           "default": [],
           "items": {
@@ -418,6 +651,17 @@
           },
           "type": "array"
         },
+        "links_part": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LinksPart"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "With `links`: which part of a page's list they are, when the list was too long for one\nmessage from the browser ([`MAX_MESSAGE`]); the app adds the list once all its parts are\nin. None: the whole list (an older extension's, or a short one)."
+        },
         "mime": {
           "default": null,
           "type": [
@@ -434,6 +678,13 @@
         },
         "origin": {
           "description": "From the browser (#900): the `Origin` its page's player sent with a video's stream or\nfile (`video_page`, `video_lookup`), sent again with it, its playlists and each of its\npieces, as a site's video server may serve its own pages' players only.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "page_url": {
+          "description": "From the browser (#607): the web page the download was started from, whole (its tab's\naddress; a link's opened in a tab of its own, the tab that opened it), where the Referer\nis often cut to the site's address by the page's referrer policy. Kept with the download:\nRefresh download address opens it.",
           "type": [
             "string",
             "null"
@@ -477,7 +728,7 @@
         },
         "private": {
           "default": false,
-          "description": "From a private (incognito) window: the download is never written to the saved list.",
+          "description": "From a private (incognito) window: the download is not written to the saved list, unless\nthe app's Options → General → \"Keep private-window downloads in the list\" is on.",
           "type": "boolean"
         },
         "proxy": {
@@ -515,6 +766,28 @@
             "string",
             "null"
           ]
+        },
+        "recent": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RecentAsk"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "From the browser's toolbar button (#1496, its native host asks): the newest downloads its\npopup lists, answered with an [`api::RecentAnswer`] whatever the automation API's switch,\nnever for a paired device."
+        },
+        "recent_act": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RecentAct"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "That list's buttons: act on one download (open it, show it in its folder, copy its file,\nshare it, pause, resume…), answered with an [`api::RecentActAnswer`]."
         },
         "referer": {
           "default": null,
@@ -631,7 +904,7 @@
         },
         "video_title": {
           "default": null,
-          "description": "The title of the page the button was clicked on: a video yt-dlp knows only by its address\nis named by it.",
+          "description": "The title of the page the button was clicked on (the tab's, for a player in a frame of\nit), without the site's name (`Film | Site` is `Film`: the extension's `withoutSiteName`):\na video yt-dlp knows only by its address is named by it.",
           "type": [
             "string",
             "null"
@@ -679,6 +952,10 @@
             "string",
             "null"
           ]
+        },
+        "compatible": {
+          "description": "The most compatible choice (#1439): an H.264 picture with AAC sound in an MP4, which\nevery video editor, TV and phone plays; the menu says so beside its height. False from\nan app older than the field.",
+          "type": "boolean"
         },
         "ext": {
           "default": "",
@@ -759,7 +1036,7 @@
         },
         "title": {
           "default": null,
-          "description": "The title of the page the button was clicked on: a video yt-dlp knows only by its address\nis named by it (as [`Command::video_title`]).",
+          "description": "The title of the page the button was clicked on, as [`Command::video_title`] has it: a\nvideo yt-dlp knows only by its address is named by it.",
           "type": [
             "string",
             "null"
@@ -876,6 +1153,6 @@
   "$id": "https://misterdownloadmanager.com/automation-api.schema.json",
   "$ref": "#/$defs/Request",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "description": "One JSON line to the port in ipc.json (on 127.0.0.1), one line back. A request is `Request`. A command (an address to add, start_queue) is answered `ok`; a question is answered with the JSON object for it (`ListAnswer`, `ActAnswer`, `ApiAnswer`) or an `ErrorAnswer`. A wrong token is answered `denied`, an app that doesn't answer within 2 seconds `timeout`. The browser's quality menu (`video_lookup`, `video_poll`, `video_pick`, sent by its native host) is answered with a `VideoLookupAnswer`. Guide: https://misterdownloadmanager.com/help/command-line.html#the-automation-api",
+  "description": "One JSON line to the port in ipc.json (on 127.0.0.1), one line back. A request is `Request`. A command (an address to add, start_queue) is answered `ok`; a question is answered with the JSON object for it (`ListAnswer`, `ActAnswer`, `ApiAnswer`) or an `ErrorAnswer`. A wrong token is answered `denied`, an app that doesn't answer within 2 seconds `timeout`. The browser's quality menu (`video_lookup`, `video_poll`, `video_pick`, sent by its native host) is answered with a `VideoLookupAnswer`; the browser popup's list (`recent`, `recent_act`, sent by its native host too, #1496) with a `RecentAnswer` or a `RecentActAnswer`. Guide: https://misterdownloadmanager.com/help/command-line.html#the-automation-api",
   "title": "Mister Download Manager automation API"
 }

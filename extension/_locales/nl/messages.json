@@ -92,9 +92,6 @@
       }
     }
   },
-  "popup_undo": {
-    "message": "Ongedaan maken"
-  },
   "popup_excluded": {
     "message": "Downloads van $site$ blijven bij de browser",
     "placeholders": {
@@ -148,6 +145,9 @@
   },
   "declined_integration_off": {
     "message": "Geavanceerde browserintegratie gebruiken is uitgeschakeld in Opties → Algemeen."
+  },
+  "declined_torrents": {
+    "message": "Het is een torrent, en 'Magnetlinks en .torrent-bestanden openen met Mister Download Manager' is uitgeschakeld in de Torrent-instellingen."
   },
   "declined_site_access": {
     "message": "De extensie mag deze site niet lezen (site-toegang van de browser)."
@@ -328,5 +328,424 @@
   },
   "video_original": {
     "message": "origineel"
+  },
+  "video_compatible": {
+    "message": "Meest compatibel"
+  },
+  "popup_video_hide_fullscreen": {
+    "message": "Downloadknop verbergen in volledig scherm"
+  },
+  "popup_video_hide_fullscreen_title": {
+    "message": "Terwijl de pagina in volledig scherm is, tonen de video's geen downloadknop"
+  },
+  "popup_remote_forget": {
+    "message": "Vergeten"
+  },
+  "popup_gear": {
+    "message": "Opties in Mister Download Manager"
+  },
+  "popup_tabs": {
+    "message": "Pop-upsecties"
+  },
+  "popup_tab_downloads": {
+    "message": "Downloads"
+  },
+  "popup_tab_page": {
+    "message": "Deze pagina"
+  },
+  "popup_tab_settings": {
+    "message": "Instellingen"
+  },
+  "popup_conn": {
+    "message": "Verbonden · $version$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.5.2"
+      }
+    }
+  },
+  "popup_conn_plain": {
+    "message": "Verbonden"
+  },
+  "popup_conn_off": {
+    "message": "Niet verbonden"
+  },
+  "popup_conn_paused": {
+    "message": "Gepauzeerd"
+  },
+  "popup_conn_update": {
+    "message": "Update Mister Download Manager"
+  },
+  "popup_conn_remote": {
+    "message": "Verzenden naar $server$",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_cancel": {
+    "message": "Annuleren"
+  },
+  "popup_page_none": {
+    "message": "Dit is geen webpagina: hier is niets te doen."
+  },
+  "popup_exclude_by_rule": {
+    "message": "Overgelaten aan de browser door een regel in Opties"
+  },
+  "popup_dl_search": {
+    "message": "Downloads zoeken"
+  },
+  "popup_dl_filters": {
+    "message": "Weergeven"
+  },
+  "popup_dl_all": {
+    "message": "Alles"
+  },
+  "popup_dl_running": {
+    "message": "Actief"
+  },
+  "popup_dl_done_filter": {
+    "message": "Voltooid"
+  },
+  "popup_dl_failed_filter": {
+    "message": "Mislukt"
+  },
+  "popup_dl_clear": {
+    "message": "Voltooide wissen"
+  },
+  "popup_dl_running_count": {
+    "message": "$count$ downloads nu bezig",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_remote": {
+    "message": "Dit zijn de downloads van de Mister Download Manager op $server$. Open de bestanden daar.",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_dl_more": {
+    "message": "De nieuwste $shown$ van $total$. Mister Download Manager toont ze allemaal.",
+    "placeholders": {
+      "shown": {
+        "content": "$1",
+        "example": "60"
+      },
+      "total": {
+        "content": "$2",
+        "example": "245"
+      }
+    }
+  },
+  "popup_dl_of": {
+    "message": "$done$ van $size$",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "12.3 MB"
+      },
+      "size": {
+        "content": "$2",
+        "example": "48.7 MB"
+      }
+    }
+  },
+  "popup_dl_left": {
+    "message": "Nog $time$",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "0:42"
+      }
+    }
+  },
+  "popup_dl_starting": {
+    "message": "Starten..."
+  },
+  "popup_dl_paused": {
+    "message": "Gepauzeerd"
+  },
+  "popup_dl_waiting": {
+    "message": "Wachten"
+  },
+  "popup_dl_done": {
+    "message": "Voltooid"
+  },
+  "popup_dl_just_now": {
+    "message": "zojuist"
+  },
+  "popup_dl_failed": {
+    "message": "Mislukt"
+  },
+  "popup_dl_failed_why": {
+    "message": "Mislukt: $why$",
+    "placeholders": {
+      "why": {
+        "content": "$1",
+        "example": "the server refused the connection"
+      }
+    }
+  },
+  "popup_dl_gone": {
+    "message": "Bestand verwijderd of verplaatst"
+  },
+  "popup_dl_loading": {
+    "message": "Downloads zoeken..."
+  },
+  "popup_dl_none": {
+    "message": "Nog geen downloads"
+  },
+  "popup_dl_none_text": {
+    "message": "Wat u downloadt met Mister Download Manager wordt hier weergegeven."
+  },
+  "popup_dl_no_match": {
+    "message": "Niets komt overeen"
+  },
+  "popup_dl_no_match_text": {
+    "message": "Geen downloadnaam of -adres bevat ‘$words$’.",
+    "placeholders": {
+      "words": {
+        "content": "$1",
+        "example": "report"
+      }
+    }
+  },
+  "popup_dl_show_all": {
+    "message": "Alle downloads weergeven"
+  },
+  "popup_list_off": {
+    "message": "Mister Download Manager is niet actief"
+  },
+  "popup_list_off_text": {
+    "message": "Start de app om hier uw downloads te zien."
+  },
+  "popup_list_start": {
+    "message": "Start Mister Download Manager"
+  },
+  "popup_list_old": {
+    "message": "Update Mister Download Manager"
+  },
+  "popup_list_old_text": {
+    "message": "Deze versie kan de downloads hier nog niet weergeven."
+  },
+  "popup_list_busy": {
+    "message": "Mister Download Manager is bezig. Opnieuw proberen..."
+  },
+  "popup_list_unreached": {
+    "message": "Kan Mister Download Manager niet bereiken"
+  },
+  "popup_list_remote_unreachable": {
+    "message": "Kan de Mister Download Manager op $server$ niet bereiken",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_list_remote_unreachable_text": {
+    "message": "Controleer of het actief is en of deze browser het certificaat accepteert (Instellingen → Downloads verzenden naar → Openen).",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_act_open": {
+    "message": "Openen"
+  },
+  "popup_act_open_named": {
+    "message": "$file$ openen",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_folder": {
+    "message": "Weergeven in map"
+  },
+  "popup_act_folder_named": {
+    "message": "Toon $file$ in map",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_copy_file": {
+    "message": "Bestand kopiëren"
+  },
+  "popup_act_share": {
+    "message": "Delen..."
+  },
+  "popup_act_copy_link": {
+    "message": "Koppeling kopiëren"
+  },
+  "popup_act_pause": {
+    "message": "Pauzeren"
+  },
+  "popup_act_pause_named": {
+    "message": "Pauzeer $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_resume": {
+    "message": "Hervatten"
+  },
+  "popup_act_resume_named": {
+    "message": "Hervat $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_again": {
+    "message": "Opnieuw downloaden"
+  },
+  "popup_act_remove": {
+    "message": "Verwijderen uit lijst"
+  },
+  "popup_act_delete": {
+    "message": "Bestand verwijderen..."
+  },
+  "popup_act_more": {
+    "message": "Meer acties"
+  },
+  "popup_act_more_named": {
+    "message": "Meer acties voor $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_title": {
+    "message": "Bestand verwijderen?"
+  },
+  "popup_ask_delete": {
+    "message": "$file$ wordt van uw computer verwijderd en de download uit de lijst gehaald. Dit kan niet ongedaan worden gemaakt.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_ok": {
+    "message": "Verwijderen"
+  },
+  "popup_ask_clear_title": {
+    "message": "Voltooide downloads wissen?"
+  },
+  "popup_ask_clear": {
+    "message": "De $count$ voltooide downloads worden uit de lijst verwijderd. De bestanden blijven staan.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "8"
+      }
+    }
+  },
+  "popup_ask_clear_ok": {
+    "message": "Wissen"
+  },
+  "popup_said_file": {
+    "message": "$file$ gekopieerd. Plak het in een map, chat of bericht.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_link": {
+    "message": "Koppeling gekopieerd"
+  },
+  "popup_said_removed": {
+    "message": "$file$ verwijderd uit de lijst",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_deleted": {
+    "message": "$file$ verwijderd",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_again": {
+    "message": "$file$ opnieuw downloaden",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_cleared": {
+    "message": "Voltooide downloads gewist"
+  },
+  "popup_act_gone": {
+    "message": "Die download staat niet meer in de lijst."
+  },
+  "popup_act_missing": {
+    "message": "Het bestand bevindt zich niet meer op de opgeslagen locatie (verplaatst of verwijderd)."
+  },
+  "popup_act_running": {
+    "message": "Eerst pauzeren."
+  },
+  "popup_act_cant": {
+    "message": "Dit kan nu niet met deze download worden gedaan."
+  },
+  "popup_act_unsupported": {
+    "message": "Dit systeem kan dat niet doen."
+  },
+  "popup_act_off": {
+    "message": "Mister Download Manager is niet actief."
+  },
+  "popup_act_busy": {
+    "message": "Mister Download Manager heeft niet op tijd geantwoord. Probeer het opnieuw."
+  },
+  "popup_act_failed": {
+    "message": "Dat is mislukt. Probeer het opnieuw."
+  },
+  "status_running": {
+    "message": "Downloaden: $count$",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_open_remote": {
+    "message": "De pagina openen"
   }
 }

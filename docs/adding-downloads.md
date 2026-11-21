@@ -29,9 +29,15 @@ same progress window.
 - `ftps://` — implicit FTPS, port 990 unless the address gives another.
 
 The server's certificate is checked against Windows' (or the system's) trusted certificates, as
-for `https://`. A Linux system without them (a minimal install without the `ca-certificates`
+for `https://`, and against Mozilla's, the ones Firefox carries, where the system lacks the root
+a server's certificate comes from (an older Windows that hasn't fetched it yet). A Linux system without them (a minimal install without the `ca-certificates`
 package) still downloads over plain HTTP and FTP; each secure download then fails at once, saying
 to install that package.
+
+An `https://` site whose certificate is refused (expired, self-signed or from an issuer the system doesn't
+trust, made for another site name) isn't downloaded from: Download File Info, the progress window
+and the list say which of these it is, as a browser warns about the same site. MDM has no way
+around it.
 
 **Logging in.** Write the login in the address (`ftp://user:password@server/folder/file.iso`),
 tick **Use authorization**, or save it in **Options → Sites Logins**. Without one, MDM logs in as
@@ -45,8 +51,9 @@ password is not written to the resume file next to the download: MDM gives it ag
 resumes.
 
 **Connections.** Passive mode is used by default. **Options → Proxy / Socks → Use FTP in PASV
-mode** switches it off for servers that only take active connections. FTP connects to the
-server directly, not through the HTTP proxy.
+mode** switches it off for servers that only take active connections. FTP goes through a SOCKS
+proxy set in **Options → Proxy / Socks** (passive then, always; `ftps://` can't go through one
+yet), and connects to the server directly when the proxy is an HTTP one.
 
 Browsers no longer download `ftp://` links themselves. Right-click one and choose **Download with
 Mister Download Manager**, or copy it and use **Add URL**.
@@ -92,7 +99,7 @@ MDM asks the server for the file's name and size, and shows them in **Download F
 
 - **URL** — the address.
 - **Category** — chosen from the file's type (Compressed, Documents, Music, Programs, Video or General). Each category has its own folder. **+** beside it makes a new category.
-- **Save As** — the folder and file name. You can type another, pick one of the last 20 folders you saved to from the arrow at its end, or choose a folder with **...**.
+- **Save As** — the folder and file name. You can type another, pick one of the last 20 folders you saved to from the arrow at its end, or choose the folder and the file name in the system's Save dialog with **...** (a name typed there without an extension keeps the download's). If you choose a file that is already there and answer **Yes** when the dialog asks whether to replace it, the download replaces it once it is complete; until then the old file stays as it was, so it is kept if the download fails or you cancel it. A name of a file that is already there that you type in **Save As** itself is asked about as you press **Start Download** or **Download Later**: **Add the duplicate with a numbered file name** takes the next free name, such as `name (1).zip`; **Add the duplicate and overwrite the existing file** replaces it once the download is complete, as above; **Cancel** goes back to the dialog. A name MDM gave that is taken by the time the download starts is numbered without asking.
 - **Remember this path for "…" category** — tick it to make the folder you typed the category's folder from now on.
 - **Description** — a note of your own. It shows in the list's **Description** column and Find can search it.
 - **Server** — where the server is: its country's flag and name, and how long a round trip to it takes. See [Where the server is](connections-and-speed.md#where-the-server-is). It stays blank when the browser handed the download over with its name and size, since MDM didn't need to ask the server.
@@ -140,11 +147,12 @@ For files whose names differ only by a number or a letter, such as `photo001.jpg
 3. Under **Replace asterisk to**, choose **Numbers** or **Letters**, then **From** and **To**.
 4. For numbers, set **Wildcard size** to the number of digits. With 3, the files are `photo001.jpg`, `photo002.jpg` and so on.
 5. If the server needs a login, tick **Use authorization**.
-6. Check **First file**, **Second file** and **Last file**, then click **OK**.
+6. Check **First file**, **Second file** and **Last file**.
+7. Left empty, **Save to** puts each file in its category's folder (**Options → Save to**). To put every file of the batch in one folder, type it there or choose it with **...**. Then click **OK**.
 
 The downloads go to a queue. As with Download Later, MDM asks which queue unless you turn off **Options → Downloads → Show queue selection panel on closing batch download dialogs**.
 
-![Batch download: an address with an asterisk, what replaces it, and the first, second and last file](images/help/batch.webp)
+![Batch download: an address with an asterisk, what replaces it, the first, second and last file, and the folder they go to](images/help/batch.webp)
 *One asterisk in the address, then numbers or letters from–to.*
 
 ## A list of links

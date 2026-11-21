@@ -88,6 +88,11 @@ fn crashy_is_found_in_each_layout() {
 /// Run crashy in `mode` and wait (up to 90 s: reading the dump's symbols takes a while in a
 /// debug build) for its report.
 fn report(mode: &str) -> String {
+    report_with(mode, None)
+}
+
+/// [`report`], its monitor listening `late` after it starts when given.
+fn report_with(mode: &str, late: Option<Duration>) -> String {
     let data = tempfile::tempdir().unwrap();
     /// The program, ended and reaped however the test leaves (a failed assert too).
     struct Running(std::process::Child);
@@ -97,11 +102,13 @@ fn report(mode: &str) -> String {
             let _ = self.0.wait();
         }
     }
+    let mut cmd = Command::new(crashy());
+    cmd.arg(mode).arg(data.path());
+    if let Some(late) = late {
+        cmd.env("CRASHY_MONITOR_LATE_MS", late.as_millis().to_string());
+    }
     let _child = Running(
-        Command::new(crashy())
-            .arg(mode)
-            .arg(data.path())
-            .spawn()
+        cmd.spawn()
             .expect("examples/crashy is built with the tests"),
     );
     let crashes = data.path().join("crashes");
@@ -124,13 +131,28 @@ fn report(mode: &str) -> String {
     }
 }
 
+/// The report names the functions from the program's own debug info where that is read: x86-64
+/// and ARM64 (analyze.rs). A 32-bit program's report has their addresses until the release's
+/// symbols are fetched; it is still written, with its signature.
+const NAMED: bool = cfg!(any(target_arch = "x86_64", target_arch = "aarch64"));
+
+/// The signature `want` where functions are named, else one of the same kind.
+fn signed(r: &str, want: &str) -> bool {
+    if NAMED {
+        r.contains(want)
+    } else {
+        // "Signature: freeze …": the kind, wherever the addresses lead.
+        r.contains(want.split(" in ").next().unwrap_or(want))
+    }
+}
+
 #[test]
 fn a_freeze_reports_the_frozen_function() {
     let r = report("freeze");
     assert!(r.contains("The window stopped responding"), "{r}");
-    assert!(r.contains("crashy_frozen_here"), "{r}");
+    assert!(!NAMED || r.contains("crashy_frozen_here"), "{r}");
     assert!(
-        r.contains("Signature: freeze in crashy::crashy_frozen_here"),
+        signed(&r, "Signature: freeze in crashy::crashy_frozen_here"),
         "{r}"
     );
 }
@@ -140,7 +162,7 @@ fn a_panic_reports_its_message_and_function() {
     let r = report("panic");
     assert!(r.contains("crashy: a test panic"), "{r}");
     assert!(
-        r.contains("Signature: panic in crashy::crashy_panics_here"),
+        signed(&r, "Signature: panic in crashy::crashy_panics_here"),
         "{r}"
     );
 }
@@ -150,7 +172,32 @@ fn a_native_crash_reports_where_it_crashed() {
     let r = report("crash");
     assert!(r.contains("Description: MDM crashed"), "{r}");
     assert!(
-        r.contains("Signature: crash in crashy::crashy_crashes_here"),
+        signed(&r, "Signature: crash in crashy::crashy_crashes_here"),
+        "{r}"
+    );
+}
+
+/// A crash on another thread than the main one is reported too: each thread has an alternate
+/// signal stack of its own (#1239).
+#[test]
+fn a_native_crash_on_a_thread_reports_where_it_crashed() {
+    let r = report("thread-crash");
+    assert!(r.contains("Description: MDM crashed"), "{r}");
+    assert!(
+        signed(&r, "Signature: crash in crashy::crashy_crashes_here"),
+        "{r}"
+    );
+}
+
+/// A monitor that listens only after the window thread's first try (half a second) is still
+/// connected to, from beside the window, and the panic is reported. (The first try's end gave
+/// the monitor up, and the session went without crash reports.)
+#[test]
+fn a_panic_is_reported_when_the_monitor_is_slow_to_start() {
+    let r = report_with("panic", Some(Duration::from_millis(1500)));
+    assert!(r.contains("crashy: a test panic"), "{r}");
+    assert!(
+        signed(&r, "Signature: panic in crashy::crashy_panics_here"),
         "{r}"
     );
 }

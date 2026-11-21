@@ -394,3 +394,119 @@ fn a_host_inside_an_appimage_mount_is_not_registered() {
     );
     let _ = std::fs::remove_dir_all(&home);
 }
+
+/// Chrome's folder in `home`, and where it reads native messaging hosts for this user.
+#[cfg(not(windows))]
+fn chrome_dirs(home: &std::path::Path) -> (PathBuf, PathBuf) {
+    let chrome = if cfg!(target_os = "macos") {
+        home.join("Library/Application Support/Google/Chrome")
+    } else {
+        home.join(".config/google-chrome")
+    };
+    let hosts = chrome.join("NativeMessagingHosts");
+    (chrome, hosts)
+}
+
+/// #818: a copy run from a temporary folder (an archive run without extracting it first, whose
+/// tool deletes the folder afterwards) refuses to register itself: the browsers would be left
+/// with a helper that is gone, and look for no other.
+#[cfg(not(windows))]
+#[test]
+fn a_host_in_a_temporary_folder_is_not_registered() {
+    use std::os::unix::fs::PermissionsExt;
+    let home = data_dir("temporary", serde_json::json!({}));
+    let (chrome, hosts) = chrome_dirs(&home);
+    std::fs::create_dir_all(&chrome).unwrap();
+    let extracted = home.join("Rar$EXa34720.17029.rartemp/MisterDownloadManager");
+    std::fs::create_dir_all(&extracted).unwrap();
+    let copy = extracted.join("misterdownloadmanager-nmhost");
+    std::fs::copy(HOST, &copy).unwrap();
+    std::fs::set_permissions(&copy, std::fs::Permissions::from_mode(0o755)).unwrap();
+    for arg in ["--register", "--repair"] {
+        // A program just written can't be run while another test's child, forked before the
+        // copy was closed, still holds it open (ETXTBSY): tried again until that child execs.
+        let mut tries = 0;
+        let out = loop {
+            let run = Command::new(&copy)
+                .arg(arg)
+                .env("HOME", &home)
+                .env_remove("XDG_CONFIG_HOME")
+                .env_remove("APPDIR")
+                .env("MDM_DATA_DIR", &home)
+                .output();
+            match run {
+                Err(e) if e.kind() == std::io::ErrorKind::ExecutableFileBusy && tries < 50 => {
+                    tries += 1;
+                    std::thread::sleep(Duration::from_millis(20));
+                }
+                run => break run.unwrap(),
+            }
+        };
+        assert!(!out.status.success(), "{arg}: {out:?}");
+        assert!(
+            String::from_utf8_lossy(&out.stderr).contains("temporary folder"),
+            "{arg}: {out:?}"
+        );
+        assert!(!hosts.exists(), "{arg}");
+    }
+    let _ = std::fs::remove_dir_all(&home);
+}
+
+/// #818: at the app's start (`--repair`) a manifest that works naming another copy of MDM stays
+/// (two copies are both legitimate); one naming a helper that is gone is taken over, and Set it
+/// up (`--register`) takes the browsers from any copy.
+#[cfg(not(windows))]
+#[test]
+fn a_start_takes_only_a_registration_that_leads_nowhere() {
+    use std::os::unix::fs::PermissionsExt;
+    let home = data_dir("repair", serde_json::json!({}));
+    let (_, hosts) = chrome_dirs(&home);
+    std::fs::create_dir_all(&hosts).unwrap();
+    let file = hosts.join("com.misterdownloadmanager.host.json");
+    let other = home.join("other-copy/misterdownloadmanager-nmhost");
+    std::fs::create_dir_all(other.parent().unwrap()).unwrap();
+    std::fs::write(&other, b"#!/bin/sh\n").unwrap();
+    std::fs::set_permissions(&other, std::fs::Permissions::from_mode(0o755)).unwrap();
+    let theirs = serde_json::json!({
+        "name": "com.misterdownloadmanager.host",
+        "path": other,
+        "type": "stdio",
+        "allowed_origins": [],
+    });
+    std::fs::write(&file, theirs.to_string()).unwrap();
+    let host = |arg: &str| {
+        let out = Command::new(HOST)
+            .arg(arg)
+            .env("HOME", &home)
+            .env_remove("XDG_CONFIG_HOME")
+            .env_remove("APPDIR")
+            .env("MDM_DATA_DIR", &home)
+            .output()
+            .unwrap();
+        assert!(out.status.success(), "{arg}: {out:?}");
+    };
+    let named = || {
+        let manifest: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(&file).unwrap()).unwrap();
+        PathBuf::from(manifest["path"].as_str().unwrap())
+    };
+    host("--repair");
+    assert_eq!(named(), other, "another copy's that works stays");
+    std::fs::remove_file(&other).unwrap();
+    host("--repair");
+    assert_eq!(
+        std::fs::canonicalize(named()).unwrap(),
+        std::fs::canonicalize(HOST).unwrap(),
+        "one naming a helper that is gone is taken over"
+    );
+    std::fs::write(&other, b"#!/bin/sh\n").unwrap();
+    std::fs::set_permissions(&other, std::fs::Permissions::from_mode(0o755)).unwrap();
+    std::fs::write(&file, theirs.to_string()).unwrap();
+    host("--register");
+    assert_eq!(
+        std::fs::canonicalize(named()).unwrap(),
+        std::fs::canonicalize(HOST).unwrap(),
+        "Set it up takes it from any copy"
+    );
+    let _ = std::fs::remove_dir_all(&home);
+}

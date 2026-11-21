@@ -7,6 +7,16 @@
 #. {n} = a number (keep the braces as they are)
 #, machine
 @plural	Also delete the {n} file from disk|Also delete the {n} files from disk	Ջնջել նաև {n} ֆայլը սկավառակից|Ջնջել նաև {n} ֆայլը սկավառակից
+#. count in cnl.rs
+#. Click'n'Load window: a page whose web site the browser doesn't name, so MDM can't tell which site it is
+#. {n} = a number (keep the braces as they are)
+#, machine
+@plural	An unknown site wants to send {n} link to Link grabber.|An unknown site wants to send {n} links to Link grabber.	Անհայտ կայքը ցանկանում է {n} հղում ուղարկել Հղումների որսորդին։|Անհայտ կայքը ցանկանում է {n} հղում ուղարկել Հղումների որսորդին։
+#. count in torrent downloads
+#. number of additional files in a list of files
+#. {n} = a number (keep the braces as they are)
+#, machine
+@plural	And {n} other file.|And {n} other files.	Եվ ևս {n} ֆայլ։|Եվ ևս {n} ֆայլ։
 #. count in a dialog box
 #. never shown for a single download
 #. {n} = a number (keep the braces as they are)
@@ -106,11 +116,21 @@
 #. {n} = a number (keep the braces as they are)
 #, machine
 @plural	{n} file had the name of a file there already and was numbered|{n} files had the name of a file there already and were numbered	{n} ֆայլ արդեն գոյություն ուներ այդ անունով և համարակալվել է|{n} ֆայլ արդեն գոյություն ուներ այդ անունով և համարակալվել է
+#. count in the main window's messages (deleting downloads' files)
+#. the message's next line: how many more deleted files stayed on the disk
+#. {n} = a number (keep the braces as they are)
+#, machine
+@plural	{n} more file could not be deleted either.|{n} more files could not be deleted either.	{n} ֆայլ ևս հնարավոր չեղավ ջնջել։|{n} ֆայլ ևս հնարավոր չեղավ ջնջել։
 #. count in the Add torrent window
 #. a number of peers (computers sharing a torrent), after where they came from
 #. {n} = a number (keep the braces as they are)
 #, machine
 @plural	{n} peer|{n} peers	{n} փիր|{n} փիրեր
+#. count in the Options window
+#. Options → Archives: beside the Archive passwords button: how many are saved
+#. {n} = a number (keep the braces as they are)
+#, machine
+@plural	{n} saved|{n} saved	{n} պահպանված|{n} պահպանված
 #. count in the main window
 #. {n} = a number (keep the braces as they are)
 #, machine
@@ -133,6 +153,11 @@
 #. {n} = a number (keep the braces as they are)
 #, machine
 @plural	{n} tracker: {peers}|{n} trackers: {peers}	{n} թրեքեր՝ {peers}|{n} թրեքերներ՝ {peers}
+#. count in cnl.rs
+#. Click'n'Load window: {site} is a web site's name such as "example.com"
+#. {site} = a web site's name such as "example.com"; {n} = a number (keep the braces as they are)
+#, machine
+@plural	{site} wants to send {n} link to Link grabber.|{site} wants to send {n} links to Link grabber.	{site}-ը ցանկանում է {n} հղում ուղարկել Հղումների որսորդին։|{site}-ը ցանկանում է {n} հղում ուղարկել Հղումների որսորդին։
 #. count in playlistdlg.rs
 #. in Download video: a playlist title then how many videos it has ({count})
 #. {count} = a number (keep the braces as they are)
@@ -151,7 +176,7 @@
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
 	&Apply	&Կիրառել
-#. text in the Scheduler window
+#. text in the Scheduler window; button in standard windows
 #. verb: close the window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
@@ -174,6 +199,10 @@
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
 	&Start now	&Սկսել հիմա
+#. text in the Options window
+#. under Download panels site exclusions list
+#, machine
+	(separate by spaces; * matches anything)	(բաժանել բացատներով; *-ը համընկնում է ամեն ինչի հետ)
 #. text in the Options window
 #, machine
 	(separate names by spaces)	(անունները բաժանել բացատներով)
@@ -205,6 +234,10 @@
 #, machine
 	7z and RAR archives are extracted by 7-Zip ({path}).	7z և RAR արխիվները արխիվացվում են 7-Zip-ի միջոցով ({path})։
 #. text in the Options window
+#. Options → Archives, when Extract in place with HatchZip (a program's name) is on: {path} is where its program is
+#, machine
+	7z and RAR archives are extracted by HatchZip ({path}).	7z և RAR արխիվները հանվում են HatchZip-ի միջոցով ({path})։
+#. text in the Options window
 #. Options → Archives, when 7-Zip isn't installed
 #, machine
 	7z and RAR archives need 7-Zip (7-zip.org), which isn't installed.	7z և RAR արխիվներին անհրաժեշտ է 7-Zip (7-zip.org), որը տեղադրված չէ։
@@ -227,6 +260,10 @@
 #. {name} = a file name (keep the braces as they are)
 #, machine
 	A file of this torrent can't be saved safely: {name}	Այս տորենտի ֆայլը հնարավոր չէ անվտանգ պահել՝ {name}
+#. text in a dialog box
+#. the question about a name typed in Save As, above the file's path; the choices are the duplicate question's (numbered name, overwrite)
+#, machine
+	A file with this name is already there:	Այս անունով ֆայլն արդեն գոյություն ունի:
 #. message or event log entry in the main window
 #. Link grabber added a magnet link whose torrent could not be found; {error} says why
 #. {error} = an error message (keep the braces as they are)
@@ -260,6 +297,10 @@
 #. tooltip on the disabled Rename box for a single-file torrent
 #, machine
 	A single-file torrent keeps its name	Մեկ ֆայլով torrent-ը պահպանում է իր անունը
+#. text in torrent_ownership.rs
+#. a torrent's folder is a link or junction leading outside its destination
+#, machine
+	A torrent file's folder points outside its destination	Տորենտ ֆայլի պանակը մատնանշում է իր նպատակակետից դուրս
 #. text in the Add torrent window
 #. Add trackers: MDM never contacts a tracker on this computer or the local network
 #, machine
@@ -280,6 +321,10 @@
 #. {size} = a file size such as "4.2 MB" (keep the braces as they are)
 #, machine
 	about {size}	մոտ {size}
+#. text in the Options window
+#. Options → Archives → Link grabber check box: Click'n'Load, a link site's button that sends its links to a program on this computer (port 9666, as JDownloader)
+#, machine
+	Accept Click'n'Load from web pages (port 9666)	Ընդունել Click'n'Load-ը վեբ էջերից (պորտ 9666)
 #. checkbox in the Add torrent window
 #. Torrent settings: other peers may connect to this computer
 #, machine
@@ -319,7 +364,7 @@
 #. the trailing ... means it is still going on: keep it
 #, machine
 	Add browser...	Ավելացնել դիտարկիչ...
-#. text in categories.rs
+#. text in categories.rs; text in a dialog box
 #, machine
 	Add category	Ավելացնել կատեգորիա
 #. button in rssdlg.rs
@@ -423,10 +468,6 @@
 #. window title: the addresses whose downloads stay with the browser
 #, machine
 	Addresses left to the browser	Զննարկչին թողնված հասցեներ
-#. button in the Options window
-#. the trailing ... means it opens a window: keep it
-#, machine
-	Advanced / Socks...	Ընդլայնված / Socks...
 #. text in extension.rs
 #. a check of Test browser integration (Options → General)
 #, machine
@@ -435,6 +476,10 @@
 #. a country's name (where a download's server is)
 #, machine
 	Afghanistan	Աֆղանստան
+#. text in the Options window
+#. Options → Add an account: a note under the user name and password fields (Mega-Debrid bans the address for some minutes after a few wrong passwords)
+#, machine
+	After a few wrong passwords the service blocks this connection for some minutes.	Մի քանի սխալ գաղտնաբառերից հետո ծառայությունը մի քանի րոպեով արգելափակում է այս կապը։
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -454,7 +499,7 @@
 #. item in the Categories tree in the main window
 #, machine
 	All Downloads	Բոլոր ներբեռնումները
-#. message or event log entry in the main window
+#. message or event log entry in the main window; text in standard windows
 #, machine
 	All files	Բոլոր ֆայլերը
 #. text in helpers.rs
@@ -464,11 +509,19 @@
 #. in the Subtitles list of Download video: every language the video's uploader gave
 #, machine
 	All the uploader's	Բոլոր վերբեռնողի
+#. text in cnl.rs
+#. button in the Click'n'Load window: let this site send links (remembered)
+#, machine
+	Allow	Թույլատրել
 #. text in the Options window
 #. checkbox under the number of connections per download; {n} is 32
 #. {n} = a number (keep the braces as they are)
 #, machine
 	Allow more than {n} connections	Թույլատրել ավելի քան {n} կապ
+#. text in cnl.rs
+#. Click'n'Load window, under the question: nothing happens to the links before the user adds them in Link grabber
+#, machine
+	Allow only sites you use. Nothing is looked up or downloaded before you add it in Link grabber.	Թույլատրել միայն այն կայքերը, որոնք Դուք օգտագործում եք։ Ոչինչ չի փնտրվում կամ ներբեռնվում, մինչև Դուք այն չավելացնեք Հղումների որսորդում։
 #. text in errors.rs
 #, machine
 	already being downloaded: {path}	արդեն ներբեռնվում է՝ {path}
@@ -490,6 +543,10 @@
 #. checkbox in the Options window
 #, machine
 	Also take files the browser would open (PDF, music, video)	Նաև ներբեռնել այն ֆայլերը, որոնք զննարկիչը կբացեր (PDF, երաժշտություն, տեսանյութ)
+#. text in the Link grabber window
+#. Link grabber, a link's status: the remedy from the failure's sentence, for a site whose bot check lets only browsers through. The sentence, with the same advice, is the cell's hover tip
+#, machine
+	Alt+click the link	Սեղմեք հղումը Alt ստեղնով
 #. message or event log entry in the main window
 #. View menu: a check item; dark mode on, whatever the system's setting
 #, machine
@@ -526,10 +583,22 @@
 #. the trailing ... means it is still going on: keep it
 #, machine
 	Another DNS...	Այլ DNS...
+#. text in torrent downloads
+#. starting a torrent whose destination another listed download claims
+#, machine
+	Another download already claims this torrent's destination	Մեկ այլ ներբեռնում արդեն պահանջում է այս տորենտի նպատակակետը
+#. message or event log entry in the main window; text in the Add torrent window
+#. said when a torrent would write a file another download in the list already uses; {file} is its path
+#, machine
+	Another download already claims {file}. Choose a different destination.	Մեկ այլ ներբեռնում արդեն պահանջում է {file}։ Ընտրեք այլ նպատակակետ։
 #. text in unix.rs
 #. the Scheduler, under "Wake the computer to run this queue" (Linux): the computer's one wake alarm is already set by something else
 #, machine
 	Another program has set the computer's wake alarm	Մեկ այլ ծրագիր արդեն սահմանել է համակարգչի արթնացման ազդանշանը
+#. text in the Options window
+#. Options → Proxy / Socks: Test's answer; {ms} milliseconds; {ip} the internet address the site saw (the proxy's, or this computer's without one)
+#, machine
+	Answered in {ms} ms. The internet sees {ip}.	Պատասխանը ստացվել է {ms} մվ-ում։ Ինտերնետում երևում է {ip} հասցեն։
 #. text in the Options window
 #. Options → DNS settings: the test's answer; {ms} milliseconds, {ip} the address found
 #, machine
@@ -554,6 +623,19 @@
 #. what a screen reader calls Link grabber's password box
 #, machine
 	Archive password	Արխիվի գաղտնաբառ
+#. window title in the Options window
+#. window title: the passwords tried on encrypted archives
+#, machine
+	Archive passwords	Արխիվի գաղտնաբառեր
+#. text in the settings
+#. the list of archive passwords in the system's keychain (Credential Manager, the keyring): its name there
+#, machine
+	archive passwords	արխիվի գաղտնաբառեր
+#. button in the Options window
+#. Options → Archives: button: edit the list of passwords tried on encrypted archives
+#. the trailing ... means it opens a window: keep it
+#, machine
+	Archive passwords...	Արխիվի գաղտնաբառեր...
 #. group box title in the Options window; text in the Options window
 #. Options → Archives: group box title
 #. tab title: extracting downloaded archives, and Link grabber
@@ -691,6 +773,10 @@
 #. a country's name (where a download's server is)
 #, machine
 	Bhutan	Բութան
+#. text in cnl.rs
+#. button in the Click'n'Load window: refuse this site's links (remembered)
+#, machine
+	Block	Արգելափակել
 #. text in the Add torrent window
 #. Torrent settings: the address of an IP blocklist (empty: none)
 #, machine
@@ -729,7 +815,7 @@
 #. a country's name (where a download's server is)
 #, machine
 	British Indian Ocean Territory	Բրիտանական Հնդկական օվկիանոսի տարածք
-#. text in the Link grabber window; button in the Link grabber window; button in the Options window
+#. text in a dialog box; text in the Link grabber window; button in the Link grabber window; button in the Options window
 #. verb: choose a folder
 #, machine
 	Browse	Զննել
@@ -763,6 +849,10 @@
 #. Link grabber, a link's status: the server asked to try later (429, 503)
 #, machine
 	Busy, try later	Ծանրաբեռնված է, փորձեք ավելի ուշ
+#. text in the Options window
+#. Options → Download panels: the size of the download button over videos, chosen after it (Full / Compact)
+#, machine
+	Button size:	Կոճակի չափը:
 #. message or event log entry in the main window
 #, machine
 	by batch download	ըստ խմբաքանակային ներբեռնման
@@ -781,6 +871,10 @@
 #. a country's name (where a download's server is)
 #, machine
 	Cameroon	Կամերուն
+#. text in the Link grabber window
+#. Link grabber, a link's status: a server that can't send parts of a file, so the download can't resume; there is nothing to do here. The sentence is the cell's hover tip
+#, machine
+	Can't resume	Հնարավոր չէ վերսկսել
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -824,7 +918,7 @@
 #. remote control page (on a phone): label of the category choice for a new download
 #, machine
 	Category	Կատեգորիա
-#. text in categories.rs
+#. text in categories.rs; text in a dialog box
 #. title of the folder picker of the category dialog
 #, machine
 	Category folder	Կատեգորիայի թղթապանակ
@@ -867,7 +961,8 @@
 #. RSS feeds window, at the bottom: "Check feeds every [30] minutes"
 #, machine
 	Check feeds every	Ստուգել հոսքերը յուրաքանչյուր
-#. window title in the Help menu's windows (About, updates, shortcuts, Tell a friend)
+#. window title in the Help menu's windows (About, updates, shortcuts, Tell a friend); text in helpers.rs
+#. Helpers: button: look for newer versions of MDM's own helpers now, and install them
 #, machine
 	Check for updates	Ստուգել թարմացումները
 #. checkbox in the Help menu's windows (About, updates, shortcuts, Tell a friend)
@@ -886,6 +981,10 @@
 #. tooltip of the close-setting: checked keeps MDM running when the window closes, in the notification area when available or else the taskbar; downloads continue; unchecked closing quits
 #, machine
 	Checked, closing the window keeps MDM running: it hides in the notification area when available, or minimizes to the taskbar otherwise, and downloads continue; unchecked, closing quits MDM	Նշվածի դեպքում պատուհանը փակելիս MDM-ը շարունակում է աշխատել՝ թաքնվելով ծանուցումների տարածքում, եթե հասանելի է, կամ հակառակ դեպքում փոքրանում է առաջադրանքների տողում, և ներբեռնումները շարունակվում են։ Չնշվածի դեպքում փակելիս MDM-ը դուրս է գալիս։
+#. text in the Options window
+#. tooltip of "Keep private-window downloads in the list": checked, downloads from a browser's private (incognito) window are saved in the list and survive MDM closing or restarting; unchecked, they are kept in memory only and are gone when MDM closes. Their cookies are never saved.
+#, machine
+	Checked, downloads from a browser's private window are saved in the list and are still there when MDM restarts; unchecked, they are kept in memory only and are gone when MDM closes. Their cookies are never saved	Նշված լինելու դեպքում զննարկչի անձնական պատուհանից ներբեռնումները պահվում են ցուցակում և մնում են այնտեղ MDM-ի վերագործարկումից հետո։ Չնշված լինելու դեպքում դրանք պահվում են միայն հիշողության մեջ և կորչում են MDM-ը փակելիս։ Դրանց քուքիները երբեք չեն պահվում։
 #. message or event log entry in the main window
 #. event log entry after Recheck: {have} and {total} are sizes ("1.2 GB of 4 GB there")
 #, machine
@@ -894,7 +993,8 @@
 #. event log entry: a torrent's files are being read and checked again (Recheck)
 #, machine
 	Checking every piece again	Յուրաքանչյուր հատված կրկին ստուգվում է
-#. text in the Help menu's windows (About, updates, shortcuts, Tell a friend)
+#. text in the Help menu's windows (About, updates, shortcuts, Tell a friend); text in helpers.rs
+#. Helpers: MDM is asking whether a newer version of a helper exists
 #. the trailing ... means it is still going on: keep it
 #, machine
 	Checking for updates...	Ստուգվում են թարմացումները...
@@ -923,7 +1023,9 @@
 #. the list's Status column while a torrent's files or a finished file are checked (against the torrent's hashes or a checksum); {percent} how much is checked, e.g. "42%". One short word: the column is narrow
 #, machine
 	Checking {percent}	Ստուգվում է {percent}
-#. text in the Checksum window; text in the Link grabber window
+#. text in the Checksum window; text in extension.rs; text in the Link grabber window; text in the Options window
+#. in the browser extension's window, while it reads whether the browsers can reach MDM (a moment, usually)
+#. Test browser integration, while it reads where browser integration stands (a moment, usually)
 #. the trailing ... means it is still going on: keep it
 #, machine
 	Checking...	Ստուգվում է...
@@ -957,10 +1059,19 @@
 #. a country's name (where a download's server is)
 #, machine
 	Christmas Island	Սուրբ Ծննդյան կղզի
-#. button in the download list
+#. button in the download list; button in the Options window
 #. verb: clears this filter
 #, machine
 	Clear	Մաքրել
+#. text in cnl.rs
+#. notice: Click'n'Load couldn't start; {port} is 9666; JDownloader is another download manager that uses the same port
+#, machine
+	Click'n'Load can't start: another program (JDownloader?) is using port {port}. Close it, then turn Click'n'Load off and on again in Options.	Click'n'Load-ը չի կարողանում սկսել. մեկ այլ ծրագիր (JDownloader?) օգտագործում է {port} պորտը։ Փակեք այն, ապա անջատեք և նորից միացրեք Click'n'Load-ը Ընտրանքներում։
+#. text in cnl.rs
+#. notice: Click'n'Load couldn't start; {error} the system's reason
+#. {error} = an error message (keep the braces as they are)
+#, machine
+	Click'n'Load can't start: {error}	Click'n'Load-ը չի կարողանում սկսել՝ {error}
 #. text in a download's progress window
 #. column title: the peer's torrent program
 #, machine
@@ -1004,6 +1115,10 @@
 #. a country's name (where a download's server is)
 #, machine
 	Comoros	Կոմորներ
+#. option (radio button) in the Options window
+#. Options → Download panels → Button size: only the round button (the logo, the arrow, the close mark) over every video
+#, machine
+	Compact	Կոմպակտ
 #. item in the Categories tree in the download list; value in a column's filter list in the download list; text in the download list (sizes, speeds, status); text in a download's progress window; text in remote.rs
 #. a download's status (state it is in, not a command)
 #. a download's status (state it is in, not a command): finished
@@ -1031,6 +1146,10 @@
 #. a country's name (where a download's server is)
 #, machine
 	Congo	Կոնգո
+#. text in the Add torrent window
+#. Torrent settings: uTP, BitTorrent over UDP, which many peers use (more peers, often faster)
+#, machine
+	Connect over uTP too (UDP)	Միանալ նաև uTP-ի միջոցով (UDP)
 #. text in extension.rs
 #. in the browser extension's window, beside a browser whose extension reached MDM
 #, machine
@@ -1052,6 +1171,9 @@
 #. text in the Options window
 #, machine
 	Connections:	Միացումներ:
+#. link (opens a web page) in the Help menu's windows (About, updates, shortcuts, Tell a friend)
+#, machine
+	Contributors	Ներդրողներ
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -1097,11 +1219,24 @@
 #. {host} = a server name such as "example.com" (keep the braces as they are)
 #, machine
 	could not reach {host} ({cause})	Չհաջողվեց հասնել {host} ({cause})
+#. text in helpers.rs
+#. Helpers: the last update check failed (no network...); MDM checks again later by itself
+#, machine
+	Couldn't check for updates: MDM tries again later	Չհաջողվեց ստուգել թարմացումները. MDM-ը կրկին կփորձի ավելի ուշ
 #. text in extracting archives (a download's log, the Archive password window)
 #. in a download's log: {name} is the archive's file name, {why} the reason
 #. {name} = a file name (keep the braces as they are)
 #, machine
 	Couldn't extract {name}: {why}	Հնարավոր չէր հանել {name} արխիվը. {why}
+#. message or event log entry in the main window
+#. a video's or gallery's log: MDM couldn't look for a newer yt-dlp (or gallery-dl); {name} = its name, {error} = why
+#. {name} = a file name; {error} = an error message (keep the braces as they are)
+#, machine
+	Couldn't look for a newer {name}: {error}	Չհաջողվեց փնտրել ավելի նոր {name}. {error}
+#. checkbox in the Add torrent window
+#. Add torrent: keep a multi-file torrent inside its own outer folder; untick to use Save to directly
+#, machine
+	Create a folder for this torrent	Ստեղծել պանակ այս տորենտի համար
 #. window title in a dialog box
 #, machine
 	Create folder	Ստեղծել թղթապանակ
@@ -1179,7 +1314,7 @@
 #. text in the Options window
 #, machine
 	Default max. conn. number	Միացումների լռելյայն առավելագույն քանակ
-#. message or event log entry in the main window; button in a dialog box; button in the Options window; button in rssdlg.rs
+#. text in the main window's messages (deleting downloads' files); button in a dialog box; button in the Options window; button in rssdlg.rs; text in torrent downloads
 #. button: deletes the category
 #. verb: delete the item
 #, machine
@@ -1335,6 +1470,10 @@
 #. Add torrent, a checkbox: download the files from their start, to watch a video while it downloads
 #, machine
 	Download in order	Ներբեռնել հերթականությամբ
+#. text in the Link grabber window
+#. Link grabber, a link's status: the remedy from the failure's sentence, for a file whose checksum didn't match. The sentence is the cell's hover tip
+#, machine
+	Download it again	Նորից ներբեռնել
 #. button in a dialog box
 #, machine
 	Download Later	Ներբեռնել ավելի ուշ
@@ -1416,6 +1555,11 @@
 #, machine
 	Downloading again from the start	Նորից ներբեռնվում է սկզբից
 #. text in the Download video window
+#. in Download video: MDM downloads Deno (a program's name) and checks it against its published checksum
+#. the trailing ... means it is still going on: keep it
+#, machine
+	Downloading and verifying Deno (about 40 MB)...	Ներբեռնվում և ստուգվում է Deno-ն (մոտ 40 ՄԲ)...
+#. text in the Download video window
 #. the trailing ... means it is still going on: keep it
 #, machine
 	Downloading and verifying ffmpeg (about 80 MB)...	Ներբեռնվում և ստուգվում է ffmpeg-ը (մոտ 80 ՄԲ)...
@@ -1449,6 +1593,10 @@
 #. title of the window that sums up downloads added together (a playlist, a batch) once all are done
 #, machine
 	Downloads complete	Ներբեռնումներն ավարտված են
+#. text in win32.rs
+#. Windows' Settings → Default apps: what Mister Download Manager is
+#, machine
+	Downloads files, videos and torrents	Ներբեռնում է ֆայլեր, տեսանյութեր և թորենթներ
 #. text in the tray icon's menu
 #. tray menu: a submenu of the downloads now running; choosing one shows its progress window
 #, machine
@@ -1479,17 +1627,26 @@
 #, machine
 	Dragged out of Download complete and moved to {folder}	«Ներբեռնումն ավարտված է» բաժնից քաշվել և տեղափոխվել է {folder}։
 #. message or event log entry in the main window
+#. a download's note: its file was dragged out of the download list and moved somewhere MDM can't tell (a program took it, the Recycle Bin)
+#, machine
+	Dragged out of the list and moved to a place MDM couldn't learn	Ցուցակից դուրս է բերվել և տեղափոխվել մի վայր, որը MDM-ը չկարողացավ պարզել
+#. message or event log entry in the main window
+#. a download's note: its file was dragged out of the download list and moved to that folder
+#, machine
+	Dragged out of the list and moved to {folder}	Ցուցակից դուրս է բերվել և տեղափոխվել {folder} պանակ
+#. message or event log entry in the main window
 #. in Import, where the addresses came from: dragged onto the window
 #, machine
 	Dropped links	Քաշված հղումներ
-#. window title in a dialog box
+#. text in a dialog box
+#. window title: the question asked when an address added is already in the list of downloads
 #, machine
 	Duplicate download link	Կրկնօրինակ ներբեռնման հղում
 #. text in the Options window
 #. Options → Network adapter: what "Any" means
 #, machine
 	Each connection takes the system's route.	Յուրաքանչյուր կապ օգտագործում է համակարգի երթուղին։
-#. text in the Link grabber window
+#. text in the Batch download window; text in the Link grabber window
 #. Link grabber, in the empty "Save to" box: each file goes to its category's folder (Options → Save to)
 #, machine
 	Each file's category folder	Յուրաքանչյուր ֆայլի կատեգորիայի թղթապանակ
@@ -1655,6 +1812,14 @@
 #. Options → Archives check box (a Link grabber package has its own "Extract when done")
 #, machine
 	Extract archives when their download completes	Հանել արխիվները, երբ դրանց ներբեռնումն ավարտվի
+#. text in the Options window
+#. Options → Archives check box, greyed: HatchZip (a program's name, hatchzip.dev its site) isn't installed
+#, machine
+	Extract in place with HatchZip (hatchzip.dev, not installed)	Հանել տեղում HatchZip-ով (hatchzip.dev, տեղադրված չէ)
+#. text in the Options window
+#. Options → Archives check box: HatchZip (a program's name) removes the archive while extracting it, so only the extracted files need disk space
+#, machine
+	Extract in place with HatchZip: only the files need room	Հանել տեղում HatchZip-ով. միայն ֆայլերին է տարածք անհրաժեշտ
 #. text in the Link grabber window
 #. Link grabber check box: extract the package's archives once they are downloaded
 #, machine
@@ -1715,6 +1880,10 @@
 #. noun: a file of no known type
 #, machine
 	File	Ֆայլ
+#. text in a dialog box
+#. window title: the question asked when the name typed in Download File Info's Save As is a file already there
+#, machine
+	File already exists	Ֆայլն արդեն գոյություն ունի
 #. text in the Options window
 #. tooltip of "Mark downloaded files as coming from the internet" on Linux
 #, machine
@@ -1925,6 +2094,14 @@
 #. checkbox in the Options window
 #, machine
 	ftp	FTP
+#. tooltip (why a control is greyed) in the Options window
+#. Options → Proxy / Socks: why the "ftp" box of an HTTP proxy is greyed
+#, machine
+	FTP downloads don't go through an HTTP proxy. Choose SOCKS5 or SOCKS4 to send them through the proxy.	FTP ներբեռնումները չեն անցնում HTTP պրոքսիի միջով։ Դրանք պրոքսիի միջով ուղարկելու համար ընտրեք SOCKS5 կամ SOCKS4։
+#. text in the Options window
+#. Options → Download panels → Button size: the button with its words ("Download video", the quality) where they fit (the default)
+#, machine
+	Full	Ամբողջական
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -1989,6 +2166,11 @@
 #. a country's name (where a download's server is)
 #, machine
 	Gibraltar	Ջիբրալթար
+#. text in helpers.rs
+#. Helpers: button: use the previous version of a helper again (if the new one misbehaves); {version} = that version
+#. {version} = a version number (keep the braces as they are)
+#, machine
+	Go back to {version}	Վերադառնալ {version} տարբերակին
 #. text in a download's progress window
 #. a torrent's sharing, when Torrent settings keep it on
 #, machine
@@ -2044,6 +2226,10 @@
 #. checkbox in a download's progress window; checkbox in the Scheduler window
 #, machine
 	Hang up modem when done	Անջատել մոդեմը ավարտելիս
+#. text in extracting archives (a download's log, the Archive password window)
+#. in a download's log: HatchZip (a program's name) extracted the archive in place, removing it as it went
+#, machine
+	HatchZip extracted it in place: the archive was removed as its files came out	HatchZip-ը հանեց այն տեղում. արխիվը հեռացվեց, երբ դուրս եկան դրա ֆայլերը
 #. text in a download's progress window
 #. legend: pieces downloaded
 #, machine
@@ -2142,6 +2328,10 @@
 #. Options → DNS settings: checkbox: when the chosen DNS can't be reached, use the system's instead
 #, machine
 	If it can't be reached, use the system's DNS	Եթե այն անհասանելի է, օգտագործել համակարգի DNS-ը
+#. text in extension.rs
+#. under "macOS keeps Mister Download Manager out of …'s folder" (Test browser integration, the browser extension's window): how to allow it. The quoted words and System Settings → Privacy & Security → Full Disk Access are macOS's own: use Apple's words in this language, or keep the English ones when unsure
+#, machine
+	If macOS asks whether it may access data from other apps, allow it. Or turn on Mister Download Manager in System Settings → Privacy & Security → Full Disk Access. Then press Set it up.	Եթե macOS-ը հարցնի, թե արդյոք կարող է մուտք գործել այլ հավելվածների տվյալներ, թույլ տվեք։ Կամ միացրեք Mister Download Manager-ը Համակարգի կարգավորումներ → Գաղտնիություն և անվտանգություն → Սկավառակի ամբողջական մուտք բաժնում։ Այնուհետև սեղմեք &Կարգավորել։
 #. text in errors.rs
 #. what to do when a helper's server couldn't be reached; {proxy} = the Options tab Proxy / Socks; {name} = yt-dlp, ffmpeg or gallery-dl; {helpers} and {other} = the buttons Helpers and Use another program
 #. {name} = a file name (keep the braces as they are)
@@ -2167,6 +2357,15 @@
 #. Options → Accounts: the account's sign-in is in the system's keyring (Linux), which is locked now; MDM never unlocks it
 #, machine
 	in the locked keyring	կողպված բանալիների պահոցում
+#. what a keyboard shortcut does in the Help menu's windows (About, updates, shortcuts, Tell a friend)
+#, machine
+	In the toolbar: open a button's menu	Գործիքագոտում. բացել կոճակի մենյուն
+#. what a keyboard shortcut does in the Help menu's windows (About, updates, shortcuts, Tell a friend)
+#, machine
+	In the toolbar: press the button	Գործիքագոտում. սեղմել կոճակը
+#. what a keyboard shortcut does in the Help menu's windows (About, updates, shortcuts, Tell a friend)
+#, machine
+	In the toolbar: the previous / next button	Գործիքագոտում. նախորդ / հաջորդ կոճակը
 #. text in standard windows
 #. a spin box's arrow, for screen readers: one more
 #, machine
@@ -2192,6 +2391,10 @@
 #, machine
 	Install 7-Zip (free), then right-click the download and choose Extract.	Տեղադրեք 7-Zip-ը (անվճար), այնուհետև աջ սեղմեք ներբեռնման վրա և ընտրեք «Արտածել»։
 #. text in the Download video window
+#. button in Download video: download and install Deno, the JavaScript runtime YouTube needs (Deno is a program's name)
+#, machine
+	Install Deno	Տեղադրել Deno
+#. text in the Download video window
 #. button: download and install the ffmpeg program
 #, machine
 	Install ffmpeg	Տեղադրել ffmpeg
@@ -2207,6 +2410,10 @@
 #. Linux, after a missing library's name, on a distribution MDM doesn't know
 #, machine
 	Install what's missing from your distribution's packages.	Տեղադրեք բացակայողը ձեր բաշխման փաթեթներից։
+#. text in extracting archives (a download's log, the Archive password window)
+#. in the "7-Zip needed" window, under why (Linux: 7-Zip comes from the distribution's packages, named 7zip or p7zip)
+#, machine
+	Install your system's 7zip (or p7zip) package, then right-click the download and choose Extract.	Տեղադրեք Ձեր համակարգի 7zip (կամ p7zip) փաթեթը, ապա աջ սեղմակով սեղմեք ներբեռնման վրա և ընտրեք Հանել։
 #. text in the Download video window
 #. button: download and install the yt-dlp program
 #, machine
@@ -2268,6 +2475,10 @@
 #. why an archive wasn't extracted (after "Couldn't extract {name}: ")
 #, machine
 	it needs a password	այն գաղտնաբառ է պահանջում
+#. text in extracting archives (a download's log, the Archive password window)
+#. why an archive wasn't extracted in place (after "Couldn't extract {name}: "); {folder} holds the files extracted so far
+#, machine
+	it stopped partway. The files extracted so far are in {folder}, the rest is still in the archive: Extract continues	այն կանգ առավ կիսատ։ Մինչ այժմ հանված ֆայլերը գտնվում են {folder}-ում, մնացածը դեռ արխիվում է. Հանումը շարունակվում է
 #. text in the Add torrent window
 #. Torrent settings, under "Find peers on the local network"
 #, machine
@@ -2289,6 +2500,11 @@
 #. a country's name (where a download's server is)
 #, machine
 	Italy	Իտալիա
+#. text in extracting archives (a download's log, the Archive password window)
+#. why an archive wasn't extracted in place (after "Couldn't extract {name}: "); HatchZip took its files out (the archive is gone), but moving them stopped: {to} holds those moved, {left} the others, {error} the system's reason
+#. {error} = an error message (keep the braces as they are)
+#, machine
+	its files came out, but moving them stopped ({error}). Those moved are in {to}, the others still in {left}; nothing was deleted	դրա ֆայլերը դուրս եկան, բայց դրանք տեղափոխելը կանգ առավ ({error})։ Տեղափոխվածները գտնվում են {to}-ում, մյուսները դեռ {left}-ում են. ոչինչ չի ջնջվել
 #. text in errors.rs
 #. {error} = an error message (keep the braces as they are)
 #, machine
@@ -2317,6 +2533,10 @@
 #. a country's name (where a download's server is)
 #, machine
 	Japan	Ճապոնիա
+#. text in helpers.rs
+#. Video helpers: the row of the JavaScript runtime yt-dlp needs for YouTube (Deno is a program's name)
+#, machine
+	JavaScript runtime (Deno)	JavaScript ռանթայմ (Deno)
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -2341,6 +2561,14 @@
 #. text in a dialog box; text in a download's progress window; text in the Add torrent window
 #, machine
 	KBytes/sec	ԿԲ/վրկ
+#. text in helpers.rs
+#. Helpers: checkbox: MDM checks for and installs newer versions of its own yt-dlp, ffmpeg, gallery-dl and Deno by itself
+#, machine
+	Keep MDM's helpers up to date automatically	Ավտոմատ թարմացնել MDM-ի օգնականները
+#. text in the Options window
+#. checkbox: downloads started from a browser's private (incognito) window are saved in MDM's download list like any other, so they are still there after MDM restarts
+#, machine
+	Keep private-window downloads in the list	Պահել անձնական պատուհանի ներբեռնումները ցուցակում
 #. text in the Options window
 #. checkbox: closing keeps MDM running, in the notification area when available or else the taskbar, instead of quitting
 #, machine
@@ -2434,6 +2662,10 @@
 #. Options → Remote check box (off by default)
 #, machine
 	Let phones and computers on the local network control MDM	Թույլ տալ տեղական ցանցի հեռախոսներին և համակարգիչներին կառավարել MDM-ը
+#. text in helpers.rs
+#. Video helpers: what the JavaScript runtime is for, after its name (yt-dlp is a program's name)
+#, machine
+	lets yt-dlp list all of YouTube's qualities	թույլ է տալիս yt-dlp-ին ցուցակագրել YouTube-ի բոլոր որակները
 #. option (radio button) in the Batch download window
 #. the * in the address runs through letters
 #, machine
@@ -2528,6 +2760,10 @@
 #. text in the Add torrent window; button in the Download video window
 #, machine
 	Look up	Փնտրել
+#. text in the Options window
+#. Options → Proxy / Socks → Manual, SOCKS: the proxy turns the sites' names into addresses (socks5h), so this computer's DNS never sees them
+#, machine
+	Look up site names through the proxy	Կայքի անունները փնտրել պրոքսիի միջոցով
 #. tooltip (why a control is greyed) in the Download video window
 #. why Download Now is greyed: the page address was changed after the look-up
 #, machine
@@ -2561,6 +2797,14 @@
 #. tooltip of "Mark downloaded files as coming from the internet" on macOS
 #, machine
 	macOS checks the files marked this way: Gatekeeper before a program first opens. Unticked, no download is marked.	macOS-ը ստուգում է այս կերպ նշված ֆայլերը. Gatekeeper-ը՝ մինչև ծրագրի առաջին բացումը։ Առանց նշելու՝ ոչ մի ներբեռնում չի նշվում։
+#. text in extension.rs
+#. a check of Test browser integration, and the browser extension's window (macOS): macOS refused to let MDM read or write a browser's folder (where the browser finds MDM's helper)
+#, machine
+	macOS keeps Mister Download Manager out of a browser's folder.	macOS-ը Mister Download Manager-ին թույլ չի տալիս մուտք գործել բրաուզերի պանակ։
+#. text in extension.rs
+#. a check of Test browser integration, and the browser extension's window (macOS): macOS refused to let MDM read or write {browser}'s folder (where the browser finds MDM's helper); {browser} is a browser's name
+#, machine
+	macOS keeps Mister Download Manager out of {browser}'s folder.	macOS-ը Mister Download Manager-ին թույլ չի տալիս մուտք գործել {browser}-ի պանակ։
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -2605,6 +2849,10 @@
 #. text in the Options window
 #, machine
 	Manual proxy/socks configuration	Ձեռքով պրոքսի/SOCKS կարգավորում
+#. text in the Add torrent window
+#. Torrent settings: the hover text of "Connect over uTP too (UDP)"
+#, machine
+	Many peers take only uTP. Without it, MDM can't reach them.	Շատ պիրեր օգտագործում են միայն uTP։ Առանց դրա MDM-ը չի կարող կապ հաստատել նրանց հետ։
 #. checkbox in the Add torrent window
 #. Torrent settings: ask the router (UPnP) to forward the port
 #, machine
@@ -2679,6 +2927,10 @@
 #. remote control page (on a phone): an action failed
 #, machine
 	MDM could not do it.	MDM-ը չկարողացավ անել դա։
+#. text in torrent downloads
+#. question before starting/resuming a torrent that would modify files MDM did not create; Yes authorizes writes, No leaves files unchanged
+#, machine
+	MDM didn't create these files. Starting the torrent can resize them and replace their contents, including unticked files that share pieces. Use them for this torrent?	MDM-ը չի ստեղծել այս ֆայլերը։ Տորենտը սկսելը կարող է փոխել դրանց չափերը և փոխարինել դրանց բովանդակությունը, այդ թվում՝ այն չնշված ֆայլերի, որոնք մասեր են կիսում։ Օգտագործե՞լ դրանք այս տորենտի համար։
 #. text in remote.rs
 #. remote control page (on a phone): MDM can't be reached while pairing
 #, machine
@@ -2688,6 +2940,14 @@
 #. the trailing ... means it is still going on: keep it
 #, machine
 	MDM does not answer. Trying again...	MDM-ը չի պատասխանում։ Նորից փորձում է...
+#. text in helpers.rs
+#. Video helpers: MDM can't download Deno on this system (32-bit Windows, an unusual processor); Deno and Node.js are program names
+#, machine
+	MDM has no copy for this system: install Deno or Node.js	MDM-ը չունի պատճեն այս համակարգի համար. տեղադրեք Deno կամ Node.js
+#. text in helpers.rs
+#. Video helpers: MDM can't download this helper on this Windows (ffmpeg on 32-bit Windows); "Use another program" is the button below
+#, machine
+	MDM has no copy for this system: install it, or use another program	MDM-ը այս համակարգի համար պատճեն չունի. տեղադրեք այն, կամ օգտագործեք այլ ծրագիր
 #. text in remote.rs
 #. remote control page (on a phone): no pairing code is shown in MDM; "Pair a device" is MDM's button
 #, machine
@@ -2751,10 +3011,14 @@
 #. text in crashui.rs
 #, machine
 	Mister Download Manager crash report	Mister Download Manager-ի վթարի հաշվետվություն
-#. text in crashui.rs
+#. text in crashui.rs; text in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. crash report window heading: an internal error, MDM still running
 #, machine
 	Mister Download Manager hit an internal error	Mister Download Manager-ում ներքին սխալ է տեղի ունեցել
+#. text in wake.rs
+#. why the computer isn't going to sleep, in the system's list of programs that keep it awake (Windows' power requests, Linux's inhibitors)
+#, machine
+	Mister Download Manager is downloading	Mister Download Manager-ը ներբեռնում է
 #. text in wake.rs
 #. why the computer isn't going to sleep, in the system's list of programs that keep it awake; {queue} = the queue's name
 #. {queue} = a queue name such as "Main queue" (keep the braces as they are)
@@ -2823,6 +3087,14 @@
 #. a country's name (where a download's server is)
 #, machine
 	Morocco	Մարոկկո
+#. text in playlistdlg.rs
+#. a quality in Download video for a whole playlist: each video's best H.264 video with AAC sound, an MP4 that every video editor, TV and phone plays; keep "(H.264 + AAC)" as it is
+#, machine
+	Most compatible (H.264 + AAC)	Ամենահամատեղելի (H.264 + AAC)
+#. text in the Download video window
+#. a choice in the Download video window: the best H.264 video with AAC sound, an MP4 that every video editor, TV and phone plays; keep "(H.264 + AAC)" as it is; {height} is the resolution (1080p)
+#, machine
+	Most compatible (H.264 + AAC) · {height}	Ամենահամատեղելի (H.264 + AAC) · {height}
 #. button in a download's Properties window
 #. verb: move the file to another folder
 #, machine
@@ -2832,7 +3104,7 @@
 	Move a page up / down	Մի էջ վեր/վար տեղափոխել
 #. what a keyboard shortcut does in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #, machine
-	Move between the categories and the download list	Տեղաշարժվել կատեգորիաների և ներբեռնումների ցանկի միջև
+	Move between the toolbar, the categories and the download list	Անցնել գործիքագոտու, կատեգորիաների և ներբեռնումների ցանկի միջև
 #. text in the Scheduler window
 #, machine
 	Move down	Տեղափոխել ներքև
@@ -2946,6 +3218,11 @@
 #. button: create a new item
 #, machine
 	New	Նոր
+#. message or event log entry in the main window
+#. event log: the browser's new download of the same file gave a download that waited for a new address (its link had expired) its address, and it goes on from there; {host} = the new address's server
+#. {host} = a server name such as "example.com" (keep the braces as they are)
+#, machine
+	New address from the browser ({host}): going on from it	Նոր հասցե զննարկիչից ({host})՝ շարունակվում է դրանից
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -2991,6 +3268,10 @@
 #. text in a dialog box
 #, machine
 	No addresses yet	Դեռևս հասցեներ չկան
+#. text in the Options window
+#. Options → Proxy / Socks: Test got no answer in time
+#, machine
+	No answer within 20 seconds.	20 վայրկյանի ընթացքում պատասխան չկա։
 #. text in extension.rs
 #. a check of Test browser integration (Linux, macOS): MDM found no browser it can connect to (one installed as a Flatpak isn't found)
 #, machine
@@ -3054,6 +3335,11 @@
 #. text in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #, machine
 	No mail app: the message is copied, paste it in your mail.	Փոստային հավելված չկա. հաղորդագրությունը պատճենված է, տեղադրեք այն ձեր փոստում։
+#. message or event log entry in the main window
+#. a video's or gallery's log: MDM looked for a newer yt-dlp (or gallery-dl) and the one it has is the newest; {name} = its name
+#. {name} = a file name (keep the braces as they are)
+#, machine
+	No newer {name} than this one	Ավելի նոր {name} չկա
 #. text in errors.rs
 #, machine
 	no peer sent the torrent's file list in time	ոչ մի փիր չի ուղարկել տորենտի ֆայլերի ցանկը ժամանակին
@@ -3086,7 +3372,7 @@
 #. message or event log entry in the main window
 #, machine
 	No web addresses were found in {file}.	{file}-ում վեբ հասցեներ չեն գտնվել։
-#. text in the Download video window
+#. text in the Options window; text in the Download video window
 #. in the Subtitles list of Download video: download no subtitles
 #, machine
 	None	Ոչ մեկը
@@ -3144,10 +3430,14 @@
 #, machine
 	Not in a queue	Հերթում չէ
 #. text in helpers.rs
-#. Video helpers: no copy of this helper yet
 #, machine
 	Not installed yet	Դեռևս տեղադրված չէ
-#. button in helpers.rs
+#. text in the Link grabber window
+#. Link grabber, a link's status: a web page sent it (Click'n'Load), so it isn't looked up (name, size, online) before it is added
+#, machine
+	Not looked up	Չի փնտրվել
+#. text in cnl.rs; button in helpers.rs
+#. button in the Click'n'Load window: refuse these links, ask again next time
 #, machine
 	Not now	Ոչ հիմա
 #. text in helpers.rs
@@ -3192,6 +3482,10 @@
 #. option (radio button) in the Options window
 #, machine
 	Off	Անջատված
+#. tooltip (why a control is greyed) in the Add torrent window
+#. why "Connect over uTP too" is greyed in Torrent settings: the proxy is on
+#, machine
+	Off with the proxy: uTP goes over UDP, which a SOCKS5 proxy doesn't carry	Անջատված է պրոքսիով. uTP-ն անցնում է UDP-ի միջոցով, որը SOCKS5 պրոքսին չի փոխանցում
 #. text in the Add torrent window
 #, machine
 	Off: a finished torrent stops, like any download.	Անջատված է. ավարտված տորենտը կանգ է առնում, ինչպես ցանկացած ներբեռնում։
@@ -3199,6 +3493,10 @@
 #. Options → Remote → Status: the remote control is off
 #, machine
 	Off: nothing on the network can reach MDM.	Անջատված է․ ցանցում ոչինչ չի կարող հասնել MDM-ին։
+#. text in rssdlg.rs
+#. RSS feeds window, Download rules: under the rule's feeds; the rule was turned off because every feed it watched was removed
+#, machine
+	Off: the feeds it watched were removed.	Անջատված է. դիտարկվող հոսքերը հեռացվել են։
 #. text in the Options window
 #, machine
 	Offer to download links copied to the clipboard	Առաջարկել ներբեռնել սեղմատախտակից պատճենված հղումները
@@ -3249,6 +3547,10 @@
 #. text in the Options window
 #, machine
 	One address per line; * stands for any text: example.com/private/*	Մեկ հասցե մեկ տողում; * նշանակում է ցանկացած տեքստ՝ example.com/private/*
+#. text in the Options window
+#. Archive passwords window: how the list is used
+#, machine
+	One password per line, tried in this order on an encrypted archive before MDM asks. The one that fits moves to the top.	Մեկ գաղտնաբառ մեկ տողում, փորձարկվում է այս հերթականությամբ կոդավորված արխիվի վրա, մինչև MDM-ը հարցնի։ Համապատասխանողը տեղափոխվում է վերև։
 #. option (radio button) in the Scheduler window
 #, machine
 	One-time downloading	Միանվագ ներբեռնում
@@ -3295,7 +3597,9 @@
 #. button that opens the torrent's containing folder in the file manager
 #, machine
 	Open folder	Բացել թղթապանակը
-#. text in a download's progress window
+#. text in the Link grabber window; text in a download's progress window
+#. Link grabber, a link's status: the remedy from the failure's sentence, for a site link that is a web page, not the file (and a server that sent a web page instead of it). The sentence is the cell's hover tip
+#. Link grabber, a link's status: the remedy from the failure's sentence, for a server that sent a web page instead of the file. The sentence is the cell's hover tip
 #. button in a download's progress window when the site sent a web page (a waiting page, a captcha) instead of the file: opens the download's link in the web browser
 #, machine
 	Open in browser	Բացել դիտարկիչում
@@ -3348,6 +3652,10 @@
 #. tab title: what happens when the download finishes
 #, machine
 	Options on completion	Ընտրանքներ ավարտելուց հետո
+#. text in the Options window
+#. Options → Add an account: label before the field for an API key the user made at the service (Mega-Debrid: My Account → API Key; the other way to sign in)
+#, machine
+	Or paste an application's API key:	Կամ տեղադրեք հավելվածի API բանալին:
 #. text in the Options window
 #. Options → Add an account: label before the field for the service's API token (the other way to sign in)
 #, machine
@@ -3413,6 +3721,7 @@
 	Password	Գաղտնաբառ
 #. text in the Link grabber window; text in the Options window
 #. Link grabber: the package's archives' password (a label before its box)
+#. Options → Add an account: label before the field for the password at the debrid service
 #, machine
 	Password:	Գաղտնաբառ:
 #. text in the Add torrent window
@@ -3514,6 +3823,11 @@
 #. Options → Accounts: a debrid account's state; {days} the days of premium left
 #, machine
 	premium, {days} days left	պրեմիում, մնացել է {days} օր
+#. text in the Options window
+#. Options → General: shown inside the shortcut recorder box while waiting for the user to press a 2-key or 3-key shortcut (#558)
+#. the trailing ... means it is still going on: keep it
+#, machine
+	Press keys...	Սեղմեք ստեղները...
 #. button in a dialog box
 #. verb: open the part already downloaded
 #, machine
@@ -3522,6 +3836,10 @@
 #. tooltip of the greyed Preview button in Download File Info
 #, machine
 	Preview isn't available yet	Նախադիտումը դեռ հասանելի չէ
+#. text in the Download video window
+#. a private-window video's authentication failure: only cookies supplied by that private window may be used, even after restarting MDM
+#, machine
+	Private-window downloads do not use Cookies for video sites from Options. Open the page in a private window, sign in there, and use its Download video button again.	Անձնական պատուհանից ներբեռնումները տեսանյութերի կայքերի համար չեն օգտագործում «Ընտրանքներ»-ում նշված քուքիները։ Բացեք էջը անձնական պատուհանում, մուտք գործեք այնտեղ և կրկին սեղմեք դրա «Ներբեռնել տեսանյութը» կոճակը։
 #. text in the Options window
 #. Options → Sites Logins → Cookies for video sites: label before the browser profile's name or folder (may stay empty)
 #, machine
@@ -3636,6 +3954,11 @@
 #. {error} = an error message (keep the braces as they are)
 #, machine
 	Recheck failed: {error}	Կրկնակի ստուգումը ձախողվեց՝ {error}
+#. text in a download's progress window
+#. a live stream's status: yt-dlp records it (it shows no progress, only the size so far)
+#. the trailing ... means it is still going on: keep it
+#, machine
+	Recording...	Ձայնագրվում է...
 #. message or event log entry in the main window
 #. window title, verb: download the file again from the start
 #, machine
@@ -3647,6 +3970,10 @@
 #. RSS feeds window: fetch the selected feed again now
 #, machine
 	Refresh	Թարմացնել
+#. text in the Link grabber window
+#. Link grabber, a link's status: the remedy from the failure's sentence, for a download link that expired. The sentence is the cell's hover tip
+#, machine
+	Refresh the address	Թարմացնել հասցեն
 #. text in the Options window
 #. tab title: how dates and times are written (date order, 12- or 24-hour clock)
 #, machine
@@ -3655,6 +3982,10 @@
 #. RSS feeds window, Download rules: the two boxes above hold regular expressions
 #, machine
 	Regular expressions	Կանոնավոր արտահայտություններ
+#. text in extracting archives (a download's log, the Archive password window)
+#. in Archive password: check box: keep the password typed in Options → Archives → Archive passwords, to try it on the next encrypted archives
+#, machine
+	Remember it for other archives	Հիշել այն այլ արխիվների համար
 #. text in a download's progress window
 #, machine
 	Remember Speed Limiter settings for this file	Հիշել Արագության սահմանափակիչի կարգավորումները այս ֆայլի համար
@@ -3688,8 +4019,9 @@
 #. {name} = a file name (keep the braces as they are)
 #, machine
 	Remove {name} from the list?	Հեռացնե՞լ {name}-ը ցուցակից։
-#. text in a download's progress window
+#. text in a download's progress window; text in torrent_rename.rs
 #. noun: label before the deferred new file or folder name in the progress window
+#. noun: label before the new file or folder name in Add torrent
 #, machine
 	Rename	Անվանափոխել
 #. text in the Batch download window
@@ -3824,7 +4156,8 @@
 #. text in a download's progress window; text in a download's Properties window
 #, machine
 	Save To:	Պահպանել այստեղ:
-#. text in the Link grabber window; text in rssdlg.rs
+#. text in the Batch download window; text in the Link grabber window; text in rssdlg.rs
+#. Batch download: the folder every file goes to (a label before its box)
 #. Link grabber: the folder the package's files go to (a label before its box)
 #. RSS feeds window, Download rules: the folder the rule's torrents go to
 #, machine
@@ -3838,6 +4171,11 @@
 #. label before the folder the torrent is saved in
 #, machine
 	Saved in	Պահպանված է
+#. text in a download's progress window
+#. a live stream's status: stopped, and what was recorded being made into the video file kept
+#. the trailing ... means it is still going on: keep it
+#, machine
+	Saving...	Պահպանվում է...
 #. tab in the Scheduler window
 #. noun: tab title; when the queue starts and stops
 #, machine
@@ -3853,10 +4191,6 @@
 #. text in the Batch download window
 #, machine
 	Second file:	Երկրորդ ֆայլը:
-#. text in a dialog box
-#. title of the folder picker
-#, machine
-	Select a folder	Ընտրեք թղթապանակ
 #. button in playlistdlg.rs; button in the Add torrent window; text in torrentfiles.rs
 #. button in Download video for a playlist: tick every video
 #, machine
@@ -3939,10 +4273,10 @@
 #. text in the Options window
 #, machine
 	Service:	Ծառայություն:
-#. text in the Add torrent window
+#. tooltip (why a control is greyed) in the Add torrent window
 #. why "Use the proxy" is greyed in Torrent settings
 #, machine
-	Set a socks5:// proxy in Options → Proxy / Socks first	Նախ սահմանեք socks5:// պրոքսի Ընտրանքներ → Պրոքսի / Socks բաժնում
+	Set a SOCKS5 proxy in Options → Proxy / Socks (Manual, Type SOCKS5) first	Նախ սահմանեք SOCKS5 պրոքսի Ընտրանքներ → Պրոքսի / SOCKS (Ձեռքով, Տիպը SOCKS5) բաժնում։
 #. checkbox in the Options window
 #, machine
 	Set file creation date as provided by the server	Սահմանել ֆայլի ստեղծման ամսաթիվը, ինչպես տրամադրված է սերվերի կողմից
@@ -3999,6 +4333,10 @@
 #. {error} = an error message (keep the braces as they are)
 #, machine
 	Sharing stopped: {error}	Համօգտագործումը դադարեցվեց. {error}
+#. text in the Options window
+#. Options → General: label for the global keyboard shortcut that shows or hides MDM's main window (#558)
+#, machine
+	Shortcut to show or hide window:	Դյուրանցում պատուհանը ցուցադրելու կամ թաքցնելու համար:
 #. text in the download list
 #, machine
 	Show	Ցուցադրել
@@ -4060,6 +4398,10 @@
 #, machine
 	Sierra Leone	Սիերա Լեոնե
 #. button in the Options window
+#. button: sign in to the debrid service with the user name and password typed in
+#, machine
+	Sign in	Մուտք գործել
+#. button in the Options window
 #. button: sign in to the debrid service in the browser, by typing a code there
 #, machine
 	Sign in in the browser	Մուտք գործել զննարկիչում
@@ -4076,6 +4418,10 @@
 #, machine
 	Sign-ins and passwords are kept in Windows Credential Manager.	Մուտքանուններն ու գաղտնաբառերը պահվում են Windows-ի հավատարմագրերի կառավարիչում։
 #. text in the Options window
+#. Options → Add an account: signed in, the service gives no account name; {state} premium or not
+#, machine
+	Signed in ({state})	Մուտք գործված է ({state})
+#. text in the Options window
 #. Options → Add an account: signed in; {user} the account's name, {state} premium or not
 #, machine
 	Signed in as {user} ({state})	Մուտք է գործվել որպես {user} ({state})
@@ -4083,6 +4429,26 @@
 #. Options → Accounts: the account's sign-in can't be read (signed out, or the settings came from another computer)
 #, machine
 	signed out: sign in again	դուրս է եկել. նորից մուտք գործել
+#. message or event log entry in the main window
+#. View → Draw with: a greyed note under why a graphics system doesn't draw MDM; {date}: the day that was found
+#, machine
+	Since {date}	Սկսած {date}-ից
+#. message or event log entry in the main window
+#. View → Draw with: a greyed note under why a graphics system ("it": Direct3D, Vulkan, Metal or OpenGL) doesn't draw MDM; {date}: the day that was found; MDM tries it again once the graphics driver is updated
+#, machine
+	Since {date}: MDM tries it again after a driver update	Սկսած {date}-ից. MDM-ը նորից կփորձի դրայվերի թարմացումից հետո
+#. message or event log entry in the main window
+#. View → Draw with: a greyed note under why a graphics system ("it": Direct3D, Vulkan, Metal or OpenGL) doesn't draw MDM; {date}: the day that was found; MDM tries that graphics system again when it next starts
+#, machine
+	Since {date}: MDM tries it again at its next start	Սկսած {date}-ից. MDM-ը նորից կփորձի հաջորդ գործարկման ժամանակ
+#. message or event log entry in the main window
+#. View → Draw with: a greyed note under why a graphics system ("it": Direct3D, Vulkan, Metal or OpenGL) doesn't draw MDM; {date}: the day that was found; {retry}: the day MDM tries it again
+#, machine
+	Since {date}: MDM tries it again on {retry}	Սկսած {date}-ից. MDM-ը նորից կփորձի {retry}-ին
+#. message or event log entry in the main window
+#. View → Draw with: a greyed note under why a graphics system ("it": Direct3D, Vulkan, Metal or OpenGL) doesn't draw MDM; {date}: the day that was found; {retry}: the day MDM tries it again, unless the graphics driver is updated before
+#, machine
+	Since {date}: MDM tries it again on {retry}, or after a driver update	Սկսած {date}-ից. MDM-ը նորից կփորձի {retry}-ին կամ դրայվերի թարմացումից հետո
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -4205,6 +4571,26 @@
 #. window title in a dialog box
 #, machine
 	Speed Limiter settings	Արագության սահմանափակիչի կարգավորումներ
+#. text in the download list (sizes, speeds, status)
+#. tip of a download's Transfer rate in the list: {limit} is the most this download may take ("512 KB/sec"), set with the Speed Limiter
+#, machine
+	Speed Limiter: at most {limit} for this download	Արագության սահմանափակիչ՝ առավելագույնը {limit} այս ներբեռնման համար
+#. text in the download list (sizes, speeds, status)
+#. the status bar and the tray icon's tip while the Speed Limiter's limit for all downloads together is on: {limit} is the most they may take together ("1024 KB/sec")
+#, machine
+	Speed Limiter: {limit} for all downloads	Արագության սահմանափակիչ՝ {limit} բոլոր ներբեռնումների համար
+#. text in the download list (sizes, speeds, status)
+#. tip of a download's Transfer rate in the list: {limit} is the most all downloads together may take ("1024 KB/sec"), set in the Speed Limiter's settings
+#, machine
+	Speed Limiter: {limit} for all downloads together	Արագության սահմանափակիչ՝ առավելագույնը {limit} բոլոր ներբեռնումների համար միասին
+#. text in the download list (sizes, speeds, status)
+#. the status bar and the tray icon's tip while Downloads → Speed Limiter is turned on: {limit} is the most each download may take ("512 KB/sec")
+#, machine
+	Speed Limiter: {limit} per download	Արագության սահմանափակիչ՝ {limit} յուրաքանչյուր ներբեռնման համար
+#. text in the download list (sizes, speeds, status)
+#. the status bar and the tray icon's tip while both Speed Limiter limits are on: {one} is the most each download may take ("512 KB/sec"), {all} the most all of them together may take ("1024 KB/sec")
+#, machine
+	Speed Limiter: {one} per download, {all} for all	Արագության սահմանափակիչ՝ {one} յուրաքանչյուր ներբեռնման համար, {all} բոլորի համար
 #. message or event log entry in the main window
 #. tooltip on the disabled Rename box when the file is one part of a split archive (.part1.rar, .7z.001…)
 #, machine
@@ -4289,6 +4675,10 @@
 #. remote control page (on a phone): button: stop a queue
 #, machine
 	Stop	Դադարեցնել
+#. text in a download's progress window
+#. button in a live stream's progress window: stop recording it and keep what was recorded as a video file
+#, machine
+	Stop and save	Դադարեցնել և պահպանել
 #. text in the Scheduler window; checkbox in the Scheduler window
 #, machine
 	Stop download at	Դադարեցնել ներբեռնումը
@@ -4476,6 +4866,11 @@
 #, machine
 	The best qualities, MP3, Opus and FLAC need ffmpeg (about 80 MB).	Լավագույն որակների՝ MP3, Opus և FLAC համար անհրաժեշտ է ffmpeg (մոտ 80 ՄԲ)։
 #. text in the Download video window
+#. in Download video, on 32-bit Windows (no button: no ffmpeg build MDM can check exists for it); Helpers... is the button below
+#. the trailing ... means it is still going on: keep it
+#, machine
+	The best qualities, MP3, Opus and FLAC need ffmpeg, which MDM has no copy of for 32-bit Windows: choose your own with Helpers...	Լավագույն որակի, MP3-ի, Opus-ի և FLAC-ի համար անհրաժեշտ է ffmpeg, որի պատճենը MDM-ը չունի 32-բիթանոց Windows-ի համար. ընտրեք ձերը «Օգնականներ...» բաժնում...
+#. text in the Download video window
 #. in Download video, on macOS and Linux (no button: the system installs it)
 #, machine
 	The best qualities, MP3, Opus and FLAC need ffmpeg: install it with your system's package manager (or Homebrew).	Լավագույն որակների՝ MP3, Opus և FLAC համար անհրաժեշտ է ffmpeg. տեղադրեք այն ձեր համակարգի փաթեթների կառավարչի (կամ Homebrew-ի) միջոցով։
@@ -4483,6 +4878,10 @@
 #. an error: the browser's VPN or proxy extension logs in to its proxy itself, and MDM can't; Options → Proxy / Socks → Network adapter is where an adapter can be chosen
 #, machine
 	the browser's proxy (a VPN or proxy extension) asks for a login only that extension has: use the VPN's own app, or choose its network adapter in Options → Proxy / Socks	Դիտարկիչի պրոքսին (VPN կամ պրոքսի ընդլայնում) մուտքանուն է պահանջում, որն ունի միայն այդ ընդլայնումը. օգտագործեք VPN-ի սեփական հավելվածը կամ ընտրեք դրա ցանցային ադապտերը Ընտրանքներ → Պրոքսի/Socks բաժնում:
+#. text in extension.rs
+#. a check of Test browser integration: the browsers are pointed at a copy of MDM that was deleted (often one started from inside a zip); that copy's folder shows on the line under it
+#, machine
+	The browsers are set up for a copy that is gone:	Բրաուզերները կարգավորված են անհետացած պատճենի համար:
 #. text in extension.rs
 #. a check of Test browser integration: the browsers find MDM's helper program
 #, machine
@@ -4542,6 +4941,10 @@
 #. text in errors.rs
 #, machine
 	the connection was lost while receiving data	տվյալներ ստանալիս կապն ընդհատվեց
+#. text in torrent downloads
+#. files kept appearing while the user was confirming a torrent start; stop rather than repeat questions indefinitely
+#, machine
+	The destination keeps changing. Stop changes to its files and try starting the torrent again.	Նպատակակետը շարունակում է փոխվել։ Դադարեցրեք դրա ֆայլերի փոփոխումը և կրկին փորձեք սկսել տորենտը։
 #. text in the Add torrent window
 #. a magnet link's lookup, after 30 seconds: the DHT got no answer from anyone
 #, machine
@@ -4585,6 +4988,10 @@
 #. text in errors.rs
 #, machine
 	the drive or network share is no longer available	սկավառակը կամ ցանցային ընդհանուր թղթապանակն այլևս հասանելի չէ
+#. text in extracting archives (a download's log, the Archive password window)
+#. in a download's log, after HatchZip (a program's name) extracted in place: the entries left out (links, unsafe names) were not deleted, they are still in {folder}
+#, machine
+	The entries left out are still in {folder}	Բաց թողնված մուտքերը դեռևս գտնվում են {folder} պանակում
 #. text in extension.rs
 #, machine
 	The extension is already in this app. Apple hasn't notarized this build, so Safari needs these steps to allow it.	Ընդլայնումն արդեն այս հավելվածում է։ Apple-ը այս տարբերակը նոտարական վավերացում չի անցկացրել, ուստի Safari-ին թույլատրելու համար անհրաժեշտ են այս քայլերը։
@@ -4610,6 +5017,14 @@
 #. {algorithm} = a checksum algorithm such as "SHA-256" (keep the braces as they are)
 #, machine
 	The file matches ({algorithm})	Ֆայլը համընկնում է ({algorithm})
+#. text in errors.rs
+#. why a download failed on Linux or macOS (#1102): the file name is longer than the system allows ({limit} bytes, 255; a letter can take several bytes), counting the temporary files saved beside the file while it downloads. {path} = the path
+#, machine
+	the file name is too long: at most {limit} bytes with the files saved while it downloads. Choose a shorter name ({path})	ֆայլի անունը չափազանց երկար է. առավելագույնը {limit} բայթ՝ ներբեռնման ընթացքում պահպանված ֆայլերի հետ միասին։ Ընտրեք ավելի կարճ անուն ({path})
+#. text in errors.rs
+#. why a download failed (#1102): the file name is longer than Windows allows ({limit} characters, 255), counting the temporary files saved beside the file while it downloads. {path} = the path
+#, machine
+	the file name is too long: at most {limit} characters with the files saved while it downloads. Choose a shorter name ({path})	ֆայլի անունը չափազանց երկար է. առավելագույնը {limit} նիշ՝ ներբեռնման ընթացքում պահպանված ֆայլերի հետ միասին։ Ընտրեք ավելի կարճ անուն ({path})
 #. text in a dialog box
 #, machine
 	The file saved as	Ֆայլը պահպանվել է որպես
@@ -4628,6 +5043,10 @@
 #. {error} = an error message (keep the braces as they are)
 #, machine
 	The files could not be chosen: {error}	Ֆայլերը հնարավոր չէր ընտրել՝ {error}
+#. text in torrent downloads
+#. error when deleting a torrent added by an older MDM that saved no record of its files: they stay on the disk
+#, machine
+	The files were kept because this older download has no ownership record	Ֆայլերը պահպանվեցին, քանի որ այս հին ներբեռնումը չունի սեփականության գրառում
 #. text in a dialog box
 #. {error} = an error message (keep the braces as they are)
 #, machine
@@ -4662,13 +5081,18 @@
 #. an error: the network adapter chosen in Options (a VPN's, usually) is off or gone; {adapter} its name
 #, machine
 	the network adapter {adapter} is not connected	ցանցային ադապտեր {adapter}-ը միացված չէ
+#. text in torrent_ownership.rs
+#. error when a torrent's output folder path cannot be used
+#, machine
+	The output folder is invalid	Ելքային պանակն անվավեր է
 #. text in extracting archives (a download's log, the Archive password window)
 #. why an archive wasn't extracted (after "Couldn't extract {name}: ")
 #, machine
 	the password is wrong	գաղտնաբառը սխալ է
 #. text in errors.rs
+#. why a download failed (#1102): the folder and file name together are longer than Windows allows ({limit} characters, 259), counting the temporary files saved beside the file while it downloads (their names are longer). {path} = the path
 #, machine
-	the path is too long for Windows: {path}	ուղին չափազանց երկար է Windows-ի համար՝ {path}
+	the path is too long for Windows: at most {limit} characters with the files saved while it downloads. Choose a shorter file name or folder ({path})	ճանապարհը չափազանց երկար է Windows-ի համար. առավելագույնը {limit} նիշ՝ ներբեռնման ընթացքում պահպանված ֆայլերի հետ միասին։ Ընտրեք ավելի կարճ ֆայլի անուն կամ պանակ ({path})
 #. text in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. why updates could not be checked: the newest release on the site has no number
 #, machine
@@ -4691,6 +5115,14 @@
 #. text in crashui.rs
 #, machine
 	The report is on your clipboard: paste it in a comment on the issue.	Հաշվետվությունը ձեր սեղմատախտակում է. տեղադրեք այն խնդրի մեկնաբանության մեջ։
+#. text in torrent downloads
+#. error when deleting a torrent: the .torrent file MDM kept is another torrent's
+#, machine
+	The saved .torrent file does not match this download	Պահպանված .torrent ֆայլը չի համապատասխանում այս ներբեռնմանը
+#. text in torrent downloads
+#. starting an old torrent whose cached metadata was lost; re-adding can restore it without deleting data
+#, machine
+	The saved .torrent file is missing or unreadable. Add the torrent again to recover its metadata; keep its existing files.	Պահպանված .torrent ֆայլը բացակայում է կամ անընթեռնելի է։ Կրկին ավելացրեք տորենտը՝ դրա մետատվյալները վերականգնելու համար․ պահպանեք դրա առկա ֆայլերը։
 #. text in errors.rs
 #. an FTPS (or other TLS) connection could not be secured
 #, machine
@@ -4723,6 +5155,15 @@
 #, machine
 	the server sent an unexpected part of the file ({detail})	սերվերը ֆայլի անսպասելի մաս ուղարկեց ({detail})
 #. text in errors.rs
+#. why a download failed (#1460): the browser's own download of the link was a file of {size} (such as 117.65 MB), but when MDM asked the server for it, it sent only {sent} (such as 4.65 KB): an error or a notice, not the file. Some links work only once, or only in the browser. Alt+click: the link clicked with the Alt key held, which leaves the download to the browser
+#. {size} = a file size such as "4.2 MB" (keep the braces as they are)
+#, machine
+	the server sent only {sent} where the browser's file is {size} (a link that works once, or only in the browser): Alt+click the link to let the browser download it	սերվերն ուղարկել է ընդամենը {sent}, մինչդեռ դիտարկիչի ֆայլը {size} է (մի հղում, որն աշխատում է մեկ անգամ կամ միայն դիտարկիչում). Alt+սեղմեք հղումը՝ թույլ տալու դիտարկիչին ներբեռնել այն
+#. text in debrid.rs
+#. Options → Accounts: the service doesn't say whether the account is premium (Mega-Debrid, signed in with an API key); a free account's links are refused when downloading
+#, machine
+	the service doesn't say whether it is premium	ծառայությունը չի նշում՝ արդյոք այն պրեմիում է
+#. text in errors.rs
 #. why a download failed (#701): a file host answered with its own web page (a countdown before the link, a captcha, a sign-in) where the file was expected. The browser gets past it; MDM's browser extension then hands the real file back to MDM
 #, machine
 	the site sent a web page instead of the file (a waiting page, a captcha or a sign-in): open the link in your browser, finish there, and the download comes back to MDM	կայքը ֆայլի փոխարեն ուղարկել է վեբ էջ (սպասման էջ, captcha կամ մուտքի էջ). բացեք հղումը ձեր դիտարկիչում, ավարտեք այնտեղ, և ներբեռնումը կվերադառնա MDM
@@ -4750,6 +5191,34 @@
 #. the Download video window: the site's certificate is trusted neither by yt-dlp nor by the computer (asked again with the computer's certificates, #955); usually an antivirus or a proxy that reads secure (HTTPS) connections signs sites with a certificate of its own
 #, machine
 	The site's certificate isn't trusted, by yt-dlp nor by this computer: an antivirus's web filter or a proxy that reads HTTPS may be in the way. Turn its HTTPS scanning off, or add its certificate to the computer's, then look the page up again.	Կայքի վկայագիրը վստահելի չէ ո՛չ yt-dlp-ի, ո՛չ էլ այս համակարգչի կողմից․ հակավիրուսի վեբ զտիչը կամ HTTPS կարդացող պրոքսին կարող է խոչընդոտել։ Անջատեք դրա HTTPS սկանավորումը կամ ավելացրեք դրա վկայագիրը համակարգչի մեջ, ապա նորից փնտրեք էջը։
+#. text in errors.rs
+#. why a download failed: the site's security certificate (what proves a secure, HTTPS, site is the one it says) is past its end date. Browsers warn about the same site
+#, machine
+	the site's security certificate has expired, so MDM can't be sure it's the real site (your browser warns about it too)	կայքի անվտանգության վկայագիրը ժամկետանց է, ուստի MDM-ը չի կարող վստահ լինել, որ դա իրական կայքն է (Ձեր բրաուզերը նույնպես զգուշացնում է դրա մասին)
+#. text in errors.rs
+#. why a download failed: the site's security certificate was made for other site names than the one in the address
+#, machine
+	the site's security certificate is for another site name, so MDM can't be sure it's the real site (your browser warns about it too)	կայքի անվտանգության վկայագիրը նախատեսված է այլ կայքերի անունների համար, ուստի MDM-ը չի կարող վստահ լինել, որ դա իրական կայքն է (Ձեր բրաուզերը նույնպես զգուշացնում է դրա մասին)
+#. text in errors.rs
+#. why a download failed: the site's security certificate is made for other uses than a website (its "extended key usage" leaves out web servers)
+#, machine
+	the site's security certificate isn't made for websites, so MDM can't be sure it's the real site	կայքի անվտանգության վկայականը նախատեսված չէ կայքերի համար, ուստի MDM-ը չի կարող վստահ լինել, որ դա իրական կայքն է
+#. text in errors.rs
+#. why a download failed: the site's security certificate was signed by the site itself or by an issuer this computer doesn't trust. Browsers warn about the same site
+#, machine
+	the site's security certificate isn't trusted (it's self-signed or from an unknown issuer), so MDM can't be sure it's the real site (your browser warns about it too)	կայքի անվտանգության վկայագիրը վստահելի չէ (այն ինքնաստորագրված է կամ անհայտ թողարկողից է), ուստի MDM-ը չի կարող վստահ լինել, որ դա իրական կայքն է (Ձեր բրաուզերը նույնպես զգուշացնում է դրա մասին)
+#. text in errors.rs
+#. why a download failed: the site's security certificate's validity hasn't begun; usually this computer's date or time is wrong
+#, machine
+	the site's security certificate isn't valid yet: check this computer's date and time	կայքի անվտանգության վկայագրի վավերականությունը դեռ չի սկսվել. ստուգեք այս համակարգչի ամսաթիվը և ժամը
+#. text in errors.rs
+#. why a download failed: the site's security certificate was refused for another reason (a bad signature, a broken certificate)
+#, machine
+	the site's security certificate was refused, so MDM can't be sure it's the real site	կայքի անվտանգության վկայագիրը մերժվել է, ուստի MDM-ը չի կարող վստահ լինել, որ դա իրական կայքն է
+#. text in errors.rs
+#. why a download failed: the issuer of the site's security certificate took it back
+#, machine
+	the site's security certificate was revoked by its issuer, so MDM won't trust it	կայքի անվտանգության վկայագիրը չեղարկվել է դրա թողարկողի կողմից, ուստի MDM-ը չի վստահի դրան
 #. text in crashui.rs
 #. crash report window: the symbols couldn't be downloaded; the report still works
 #, machine
@@ -4762,6 +5231,10 @@
 #. Options → Connection → DNS: the operating system's own DNS (the default)
 #, machine
 	The system's DNS	Համակարգի DNS-ը
+#. text in the Options window
+#. Options → Proxy / Socks: Test's server answered without saying the address it saw
+#, machine
+	The test page didn't say the address it saw.	Փորձնական էջը չի նշել իր տեսած հասցեն։
 #. text in whereis.rs
 #. the tooltip of where a download's server is: how the time shown is measured
 #, machine
@@ -4774,6 +5247,23 @@
 #. an error: the torrent is gone from the torrent session
 #, machine
 	the torrent is no longer there	տորենտն այլևս չկա
+#. text in torrent_ownership.rs
+#. unsafe path found in a saved torrent ownership record
+#. error when the saved record of a torrent's files holds a path that leaves its folder
+#, machine
+	The torrent ownership record contains an unsafe path	Տորենտի սեփականության գրառումը պարունակում է անվտանգ չհանդիսացող ուղի
+#. text in torrent_ownership.rs
+#. error when the saved record of a torrent's files differs from the .torrent file
+#, machine
+	The torrent ownership record does not match its file list	Տորենտի սեփականության գրառումը չի համապատասխանում դրա ֆայլերի ցուցակին
+#. text in torrent_ownership.rs
+#. error when the saved record of a torrent's files cannot be read as one
+#, machine
+	The torrent ownership record is invalid	Տորենտի սեփականության գրառումը անվավեր է
+#. text in torrent downloads
+#. the user refused write permission for existing files when starting a torrent
+#, machine
+	The torrent was not started because permission to use existing files was declined.	Տորենտը չսկսվեց, քանի որ առկա ֆայլերն օգտագործելու թույլտվությունը մերժվեց։
 #. message or event log entry in the main window
 #. {error} = an error message (keep the braces as they are)
 #, machine
@@ -4807,6 +5297,10 @@
 #. why OK is greyed when naming a new queue
 #, machine
 	There is already a queue with this name	Այս անունով հերթ արդեն կա
+#. text in extracting archives (a download's log, the Archive password window)
+#. why an archive wasn't extracted (after "Couldn't extract {name}: "); HatchZip is a program's name
+#, machine
+	there isn't enough free space for its files, HatchZip says; nothing was changed	բավարար ազատ տարածք չկա դրա ֆայլերի համար, ասում է HatchZip-ը. ոչինչ չի փոխվել
 #. text in a download's progress window
 #, machine
 	These settings are unavailable when "Show download complete dialog" is turned on	Այս կարգավորումները հասանելի չեն, երբ միացված է «Ցուցադրել ներբեռնման ավարտի երկխոսությունը» տարբերակը։
@@ -4846,6 +5340,10 @@
 #. Options → Remote → Listen on: only programs on this computer can connect (127.0.0.1)
 #, machine
 	This computer only (127.0.0.1)	Միայն այս համակարգիչը (127.0.0.1)
+#. text in extension.rs
+#. a check of Test browser integration: MDM was started from inside a zip (or from the temporary folder), which is deleted after it quits, so it can't be connected to the browsers
+#, machine
+	This copy runs from a temporary folder that will be deleted	Այս պատճենը գործարկվում է ժամանակավոր պանակից, որը կջնջվի
 #. text in the Scheduler window
 #. tooltip on the Scheduler's date when it is in the past
 #, machine
@@ -4910,6 +5408,10 @@
 #. why "Put them into the video" is greyed: ffmpeg (a helper program) is not installed
 #, machine
 	This needs ffmpeg	Սա պահանջում է ffmpeg
+#. text in the Add torrent window
+#. tooltip of the greyed "Create a folder for this torrent" checkbox: debrid downloads cannot use it
+#, machine
+	This option is available for direct BitTorrent downloads	Այս տարբերակը հասանելի է BitTorrent-ի ուղղակի ներբեռնումների համար
 #. text in the Options window
 #. Options → Accounts: a portable copy (it writes nothing outside its folder) keeps the sign-ins in its own settings, encrypted so that only this Windows account can read them
 #, machine
@@ -4923,6 +5425,10 @@
 #. {name} = a file name (keep the braces as they are)
 #, machine
 	this program isn't {name}	այս ծրագիրը {name}-ը չէ
+#. text in the Options window
+#. Options → General: shown when the chosen global shortcut is already registered by another program (#558)
+#, machine
+	This shortcut is already in use	Այս դյուրանցումն արդեն օգտագործվում է
 #. text in errors.rs
 #. why a download failed: the site's bot check (Cloudflare) lets browsers through, not programs. Alt+click: the link clicked with the Alt key held, which leaves the download to the browser
 #, machine
@@ -4937,9 +5443,21 @@
 #. text in the Add torrent window
 #, machine
 	This torrent is already in the download list	Այս տորենտն արդեն կա ներբեռնումների ցուցակում
+#. message or event log entry in the main window
+#. said when a torrent is added again while an action on the same torrent is still running
+#, machine
+	This torrent is busy. Wait for its current operation to finish before adding it again.	Այս տորենտը զբաղված է։ Սպասեք, մինչև դրա ընթացիկ գործողությունն ավարտվի, և նորից ավելացրեք այն։
 #. text in errors.rs
 #, machine
 	this torrent is not in the list	այս տորենտը ցուցակում չկա
+#. text in torrent_ownership.rs
+#. torrent start needs explicit write permission; {file} is the first existing file without a matching grant
+#, machine
+	This torrent needs permission to use {file} before it can start.	Այս տորենտին թույլտվություն է անհրաժեշտ {file} օգտագործելու համար, նախքան այն կարող է սկսվել։
+#. message or event log entry in the main window; text in a download's Properties window
+#. shown when Move or Rename is refused: a torrent saved straight in Save to shares that folder with other files
+#, machine
+	This torrent shares its destination folder	Այս տորենտը կիսում է իր նպատակակետի պանակը
 #. text in the Download video window
 #. the Download video window: the page's video is copy-protected
 #, machine
@@ -5022,7 +5540,7 @@
 #. title of the separate window listing a torrent's files
 #, machine
 	Torrent files	Տորենտի ֆայլեր
-#. window title in the Add torrent window
+#. message or event log entry in the main window; window title in the Add torrent window
 #, machine
 	Torrent settings	Տորենտի կարգավորումներ
 #. text in torrent downloads
@@ -5070,6 +5588,10 @@
 #. {name} = a file name (keep the braces as they are)
 #, machine
 	Try again later, or download {name} yourself and choose it in {helpers} → {other}.	Փորձեք ավելի ուշ, կամ ներբեռնեք {name}-ը ինքներդ և ընտրեք այն {helpers} → {other} բաժնում։
+#. text in extracting archives (a download's log, the Archive password window)
+#. the trailing ... means it is still going on: keep it
+#, machine
+	Trying the saved archive passwords...	Փորձարկվում են պահպանված արխիվի գաղտնաբառերը...
 #. text in the Scheduler window
 #. Tuesday, as short as a calendar's column head (two letters in English)
 #, machine
@@ -5134,6 +5656,10 @@
 #. text in helpers.rs
 #, machine
 	Two free helpers make it work. Get them now, and saving a video is one click away when you find one.	Երկու անվճար օգնականներ ապահովում են դրա աշխատանքը։ Ստացեք դրանք հիմա, և տեսանյութը պահպանելը մեկ սեղմումով հասանելի կլինի, երբ գտնեք այն։
+#. label in the Options window; text in the Options window
+#. Options → Proxy / Socks → Manual: label before the kind of proxy (HTTP, HTTPS, SOCKS5, SOCKS4)
+#, machine
+	Type	Տիպ
 #. text in rssdlg.rs
 #. RSS feeds window: shown when there are no feeds yet
 #, machine
@@ -5233,14 +5759,31 @@
 #. button (short): move the account up the list (accounts are asked in the list's order)
 #, machine
 	Up	Վերև
+#. text in helpers.rs
+#. Helpers: MDM's own copy of a helper is the newest version
+#, machine
+	Up to date	Թարմացված է
 #. text in playlistdlg.rs
 #. a quality in Download video for a whole playlist: each video at this height or the nearest below; {height} is a number (1080)
 #, machine
 	Up to {height}p	Մինչև {height}p
+#. text in helpers.rs
+#. Helpers: button: check for a newer version of this helper now and install it
+#, machine
+	Update	Թարմացնել
 #. button in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. button: download and install the new version, then restart
 #, machine
 	Update now	Թարմացնել հիմա
+#. text in helpers.rs
+#. Helpers: a program the person chose, or the system's copy: MDM doesn't update it, the person (or their package manager) does
+#, machine
+	Updated by you	Թարմացվել է Ձեր կողմից
+#. text in helpers.rs
+#. Helpers: MDM updated its own copy of a helper lately; {version} = the new version
+#. {version} = a version number (keep the braces as they are)
+#, machine
+	Updated to {version}	Թարմացվել է մինչև {version}
 #. text in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. {error} = an error message (keep the braces as they are)
 #, machine
@@ -5266,6 +5809,9 @@
 #. text in the Options window
 #, machine
 	Use automatic configuration script	Օգտագործել ավտոմատ կազմաձևման սկրիպտ
+#. text in torrent downloads
+#, machine
+	Use existing torrent files	Օգտագործել առկա տորենտի ֆայլերը
 #. checkbox in the Options window
 #, machine
 	Use FTP in PASV mode	Օգտագործել FTP-ն PASV ռեժիմում
@@ -5273,6 +5819,10 @@
 #. Video helpers: button: go back to the copy MDM downloads and checks itself
 #, machine
 	Use MDM's own copy	Օգտագործել MDM-ի սեփական պատճենը
+#. checkbox in the Options window
+#. Options → Sites Logins: checkbox under Cookies for video sites: yt-dlp also reads the person's own yt-dlp config file
+#, machine
+	Use my yt-dlp config file	Օգտագործել իմ yt-dlp-ի կազմաձևման ֆայլը
 #. text in the Batch download window
 #. why Batch download's OK is greyed
 #, machine
@@ -5298,9 +5848,6 @@
 #. text in a dialog box
 #, machine
 	Use them for this torrent? What matches it is kept, the rest replaced.	Օգտագործե՞լ դրանք այս տորենտի համար։ Այն, ինչ համընկնում է, պահպանվում է, մնացածը փոխարինվում է։
-#. label in the Options window
-#, machine
-	Use this proxy for the following protocols:	Օգտագործել այս պրոքսին հետևյալ արձանագրությունների համար:
 #. text in rssdlg.rs
 #. RSS feeds window, Download rules: the rule is on
 #, machine
@@ -5312,6 +5859,10 @@
 #. column title: the user name
 #, machine
 	User	Օգտվող
+#. text in the Options window
+#. Options → Add an account: label before the field for the user name at the debrid service
+#, machine
+	User name:	Օգտվողի անունը:
 #. page title in the Options window
 #, machine
 	User names and passwords for servers/sites	Օգտվողի անուններ և գաղտնաբառեր սերվերների/կայքերի համար
@@ -5324,6 +5875,10 @@
 #. label in the Options window
 #, machine
 	UserName	Օգտվողի անուն
+#. tooltip (why a control is greyed) in the Add torrent window
+#. why "Connect over uTP too" is greyed in Torrent settings: incoming connections are off
+#, machine
+	uTP uses the port for incoming connections: turn on Accept incoming connections	uTP-ն օգտագործում է մուտքային կապերի համար նախատեսված պորտը․ միացրեք «Ընդունել մուտքային կապերը» տարբերակը
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -5367,6 +5922,16 @@
 #. {version} = a version number (keep the braces as they are)
 #, machine
 	Version {version} ({commit})	Տարբերակ {version} ({commit})
+#. text in helpers.rs
+#. Helpers: a newer version of a helper exists ("Update" downloads it); {version} = its version
+#. {version} = a version number (keep the braces as they are)
+#, machine
+	Version {version} available	{version} տարբերակը հասանելի է
+#. text in helpers.rs
+#. Helpers: a newer version is downloaded and checked, and is used as soon as the downloads using this helper end; {version} = its version
+#. {version} = a version number (keep the braces as they are)
+#, machine
+	Version {version} is ready: used once its downloads end	{version} տարբերակը պատրաստ է. կօգտագործվի, երբ դրա ներբեռնումներն ավարտվեն
 #. text in the download list (sizes, speeds, status)
 #. category name: video files
 #, machine
@@ -5417,6 +5982,10 @@
 #. a download's status (state it is in, not a command): waiting in a queue
 #, machine
 	Waiting	Հերթի մեջ է
+#. message or event log entry in the main window
+#. event log: after Refresh download address, the download waits for the browser's next download of the same file, whose address it takes
+#, machine
+	Waiting for a new address from the browser	Սպասվում է նոր հասցե զննարկիչից
 #. text in the Options window
 #. Options → Remote → Pair a device: how long the code stays valid; {time} = minutes:seconds ("9:58")
 #. {time} = a time of day (keep the braces as they are)
@@ -5474,6 +6043,10 @@
 #, machine
 	Windows allows wake timers only while plugged in	Windows-ը թույլ է տալիս արթնացման ժամաչափեր միայն միացված վիճակում
 #. text in the Options window
+#. Options → General → Shortcut to show or hide window: shown in the disabled shortcut box on Linux (#558)
+#, machine
+	Windows and macOS	Windows և macOS
+#. text in the Options window
 #. tooltip of "Mark downloaded files as coming from the internet" on Windows
 #, machine
 	Windows checks the files marked this way: SmartScreen before a program first runs, Office's Protected View before a document opens. Unticked, or under Windows' policy "Do not preserve zone information in file attachments", no download is marked.	Windows-ը ստուգում է այս կերպ նշված ֆայլերը. SmartScreen-ը՝ մինչև ծրագրի առաջին գործարկումը, Office-ի պաշտպանված դիտումը՝ մինչև փաստաթղթի բացումը։ Առանց նշելու կամ Windows-ի «Մի պահպանել գոտու տեղեկատվությունը ֆայլային կցորդներում» քաղաքականության դեպքում ոչ մի ներբեռնում չի նշվում։
@@ -5485,6 +6058,10 @@
 #. why the computer could not be put to sleep (fills {error})
 #, machine
 	Windows refused	Windows-ը մերժեց
+#. message or event log entry in the main window
+#. after ticking "Open magnet links and .torrent files with Mister Download Manager", when Windows' Default apps keeps another app; {apps}: their names. "MAGNET" as Windows' Default apps lists it
+#, machine
+	Windows still opens magnet links or .torrent files with {apps}, chosen in Windows' Default apps, where only you can change it. Settings opens there now: pick Mister Download Manager for MAGNET and .torrent.	Windows-ը դեռ բացում է մագնիսական հղումները կամ .torrent ֆայլերը {apps}-ով, որոնք ընտրված են Windows-ի լռելյայն հավելվածներում, որտեղ միայն դուք կարող եք փոխել դա։ Կարգավորումները հիմա բացվում են այնտեղ. ընտրեք Mister Download Manager MAGNET-ի և .torrent-ի համար։
 #. text in langpick.rs
 #, machine
 	Windows' language	Windows-ի լեզուն
@@ -5584,13 +6161,21 @@
 #, machine
 	Your own program: {path} ({version})	Ձեր սեփական ծրագիրը՝ {path} ({version})
 #. text in helpers.rs
-#. Video helpers (macOS, Linux): {path} = the system's ffmpeg
+#. Video helpers: {path} = the computer's own JavaScript runtime (node.exe, deno.exe), used as it is: MDM needn't download one
+#, machine
+	Your system's, nothing to download: {path}	Ձեր համակարգի, ներբեռնելու կարիք չկա՝ {path}
+#. text in helpers.rs
+#. Video helpers: {path} = the system's yt-dlp, ffmpeg or gallery-dl
 #, machine
 	Your system's: {path}	Ձեր համակարգի՝ {path}
 #. text in the Download video window
 #. in Download video and the browser's video menu: yt-dlp had no JavaScript runtime, so YouTube listed only some qualities (often only the sound); Node.js and Deno are program names
 #, machine
 	YouTube needs a JavaScript runtime to list its video qualities: install Node.js or Deno, then look it up again	YouTube-ին անհրաժեշտ է JavaScript runtime՝ իր տեսանյութերի որակները ցուցակագրելու համար. տեղադրեք Node.js կամ Deno, ապա նորից փնտրեք այն
+#. text in the Options window
+#. Options → Sites Logins → Use my yt-dlp config file: its tooltip
+#, machine
+	yt-dlp also reads its own config files (on Windows %APPDATA%\\yt-dlp\\config.txt, on Linux and macOS ~/.config/yt-dlp/config). Most of what MDM chooses, the folder, the name and the quality, still wins, but options there that skip or filter videos apply too.	yt-dlp-ն նաև կարդում է իր կազմաձևման ֆայլերը (Windows-ում՝ %APPDATA%\\yt-dlp\\config.txt, Linux-ում և macOS-ում՝ ~/.config/yt-dlp/config)։ MDM-ի ընտրած կարգավորումների մեծ մասը՝ պանակը, անունը և որակը, դեռևս գերակայում է, բայց այնտեղ նշված՝ տեսանյութերը բաց թողնող կամ զտող տարբերակները նույնպես կիրառվում են։
 #. text in the Download video window
 #. the Download video window: yt-dlp couldn't read the cookies of the browser chosen in Options (Chrome, Edge...), which holds them while it runs; {browser} = its name
 #, machine
@@ -5711,7 +6296,9 @@
 #. a kind of file, by its extension: {ext} = "ZIP", "PDF"…
 #, machine
 	{ext} File	{ext} ֆայլ
-#. message or event log entry in the main window
+#. text in the main window's messages (deleting downloads' files); text in torrent downloads
+#. a message: a deleted download's file stayed on the disk; {file} = its name
+#. error dialog when a torrent's files could not be deleted; {file} is the download's name, {error} why
 #. {error} = an error message (keep the braces as they are)
 #, machine
 	{file} could not be deleted from the disk: {error}	Չհաջողվեց {file}-ը ջնջել սկավառակից՝ {error}
@@ -5732,7 +6319,7 @@
 	{file} is too large to be a list of addresses ({size}). Import reads text files, web pages and .ef2 exports of up to {limit}.	{file}-ը չափազանց մեծ է հասցեների ցուցակ լինելու համար ({size})։ Ներմուծումը կարդում է տեքստային ֆայլեր, վեբ էջեր և .ef2 արտահանումներ մինչև {limit} չափի։
 #. text in a dialog box
 #, machine
-	{file} was moved elsewhere by dragging it out of Download complete, and MDM couldn't learn where. Look for it where you dropped it.	{file}-ը տեղափոխվել է այլ տեղ՝ այն քաշելով «Ներբեռնումն ավարտված է»-ից, և MDM-ը չկարողացավ իմանալ, թե ուր։ Փնտրեք այն այնտեղ, ուր դուք այն գցել եք։
+	{file} was moved elsewhere by dragging it out of MDM, and MDM couldn't learn where. Look for it where you dropped it.	{file}-ը տեղափոխվել է այլ տեղ՝ MDM-ից դուրս քաշելով, և MDM-ը չկարողացավ իմանալ, թե որտեղ։ Փնտրեք այն այնտեղ, որտեղ դուք այն գցել եք։
 #. text in the Checksum window
 #. {algorithm} = a checksum algorithm such as "SHA-256" (keep the braces as they are)
 #, machine
@@ -5741,6 +6328,10 @@
 #. {algorithm} = a checksum algorithm such as "SHA-256" (keep the braces as they are)
 #, machine
 	{file}: the file matches its checksum ({algorithm})	{file}․ ֆայլը համապատասխանում է իր ստուգիչ գումարին ({algorithm})
+#. text in torrent downloads
+#. said after Delete with files when some files stayed on the disk; {file} is the download's name; the files' paths follow it
+#, machine
+	{file}: these files stayed on the disk, because MDM didn't create them or another download uses them:	{file}. Այս ֆայլերը մնացել են սկավառակի վրա, քանի որ MDM-ը դրանք չի ստեղծել կամ դրանք օգտագործվում են այլ ներբեռնման կողմից:
 #. text in a download's progress window
 #. {have} and {total} = numbers of pieces; {size} = one piece's size
 #. {size} = a file size such as "4.2 MB" (keep the braces as they are)
@@ -5819,6 +6410,11 @@
 #. {name} = a file name (keep the braces as they are)
 #, machine
 	{name} is a 7z or RAR archive. MDM extracts those with 7-Zip, which isn't installed.	{name}-ը 7z կամ RAR արխիվ է։ MDM-ն այդ արխիվները հանում է 7-Zip-ի միջոցով, որը տեղադրված չէ։
+#. text in errors.rs
+#. error: a helper (yt-dlp, ffmpeg, gallery-dl, Deno) is being downloaded already, by MDM's automatic update or another copy of MDM; {name} = its name
+#. {name} = a file name (keep the braces as they are)
+#, machine
+	{name} is being downloaded already: try again in a moment	{name}-ն արդեն ներբեռնվում է. մի պահից նորից փորձեք
 #. text in extracting archives (a download's log, the Archive password window)
 #. in Archive password: {name} is the archive's file name
 #. {name} = a file name (keep the braces as they are)
@@ -5829,12 +6425,22 @@
 #. {name} = a file name (keep the braces as they are)
 #, machine
 	{name} isn't offered as {how}.	{name}-ը հասանելի չէ {how}-ի տեսքով։
+#. message or event log entry in the main window
+#. a video's or gallery's log: a newer yt-dlp (or gallery-dl) is in, and the download starts again with it; {name} = yt-dlp or gallery-dl, {version} = the new version
+#. {name} = a file name; {version} = a version number (keep the braces as they are)
+#, machine
+	{name} {version} is in: trying again with it	{name} {version}-ը տեղադրված է. նորից փորձվում է դրանով
 #. text in errors.rs
 #. error: a program chosen as a helper is too old; {name} = gallery-dl, {version} = its version, {oldest} = the oldest one MDM can use
 #. {name} = a file name; {version} = a version number (keep the braces as they are)
 #, machine
 	{name} {version} is too old: MDM needs {oldest} or newer	{name} {version}-ը չափազանց հին է. MDM-ին անհրաժեշտ է {oldest} կամ ավելի նոր տարբերակ
-#. text in a dialog box
+#. message or event log entry in the main window
+#. a video's or gallery's log: it failed in a way that usually means yt-dlp (or gallery-dl) is out of date with the site; {name} = yt-dlp or gallery-dl, {version} = the version used
+#. {name} = a file name; {version} = a version number (keep the braces as they are)
+#, machine
+	{name} {version} may be out of date for this site: looking for a newer version	{name} {version}-ը կարող է հնացած լինել այս կայքի համար. փնտրվում է ավելի նոր տարբերակ
+#. text in a dialog box; text in helpers.rs
 #. one failed download in the summary of a group of downloads: {name} its file name, {error} why it failed
 #. {name} = a file name; {error} = an error message (keep the braces as they are)
 #, machine
@@ -5864,6 +6470,16 @@
 #. why a helper couldn't be downloaded ({problem}), then what to do about it ({advice}, whole sentences)
 #, machine
 	{problem}. {advice}	{problem}. {advice}
+#. text in the download list (sizes, speeds, status)
+#. the progress window's Transfer rate row while the limit for all downloads together applies: {rate} is this download's speed now ("512.000 KB/sec"), {limit} the most all downloads together may take ("1024 KB/sec"). The row is narrow: keep it short
+#. {rate} = a speed such as "1.2 MB/sec" (keep the braces as they are)
+#, machine
+	{rate} (limit for all downloads: {limit})	{rate} (սահմանափակում բոլոր ներբեռնումների համար՝ {limit})
+#. text in the download list (sizes, speeds, status)
+#. the progress window's Transfer rate row while a speed limit applies: {rate} is the download's speed now ("512.000 KB/sec"), {limit} the most this download may take ("512 KB/sec"). The row is narrow: keep it short
+#. {rate} = a speed such as "1.2 MB/sec" (keep the braces as they are)
+#, machine
+	{rate} (limit: {limit})	{rate} (սահմանափակում՝ {limit})
 #. text in errors.rs
 #. a debrid service's error: too many requests; MDM waits and retries
 #, machine
@@ -6034,6 +6650,10 @@ extension	Added to MDM	Ավելացված է MDM-ին
 #, machine
 extension	Added to the queue	Ավելացվել է հերթում
 #. text in the browser extension
+#. filter in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): every download; short
+#, machine
+extension	All	Բոլորը
+#. text in the browser extension
 #. command in the menu of the download button over a video: opens the app's Download video window, with every quality and the subtitles
 #. the trailing ... means it is still going on: keep it
 #, machine
@@ -6064,9 +6684,41 @@ extension	Button settings...	Կոճակի կարգավորումներ...
 #, machine
 extension	can't be saved	չի կարող պահպանվել
 #. text in the browser extension
+#. in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the browser can't reach the app (why is said below it); keep the name Mister Download Manager as it is
+#, machine
+extension	Can't reach Mister Download Manager	Չի հաջողվում կապ հաստատել Mister Download Manager-ի հետ
+#. text in the browser extension
+#. in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the other Mister Download Manager (a server) doesn't answer; keep the name Mister Download Manager as it is
+#, machine
+extension	Can't reach the Mister Download Manager at {server}	Չհաջողվեց կապ հաստատել {server}-ում գտնվող Mister Download Manager-ի հետ
+#. text in the browser extension
 #. shown briefly on the download button when nothing on the page says which video the player is playing, so nothing was sent
 #, machine
 extension	Can't tell which video this is: open its own page and try there	Հնարավոր չէ որոշել, թե որ տեսանյութն է. բացեք դրա սեփական էջը և փորձեք այնտեղ
+#. text in the browser extension
+#. button of a question in the toolbar button's popup: don't do it
+#, machine
+extension	Cancel	Չեղարկել
+#. text in the browser extension
+#. in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the other Mister Download Manager (a server) doesn't answer; Settings, Send downloads to and Open it are the names of a tab, a section and a button of the popup
+#, machine
+extension	Check that it's running, and that this browser accepts its certificate (Settings → Send downloads to → Open it).	Ստուգեք, որ այն աշխատում է, և որ այս բրաուզերը ընդունում է դրա վկայականը (Կարգավորումներ → Ուղարկել ներբեռնումները → Բացել այն)։
+#. text in the browser extension
+#. button of the question in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): takes the finished downloads off the list; verb
+#, machine
+extension	Clear	Մաքրել
+#. text in the browser extension
+#. button in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): takes the finished downloads off the list (their files stay); short
+#, machine
+extension	Clear finished	Մաքրել ավարտվածները
+#. text in the browser extension
+#. title of the question in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) before the finished downloads are taken off the list
+#, machine
+extension	Clear finished downloads?	Մաքրե՞լ ավարտված ներբեռնումները։
+#. text in the browser extension
+#. under the extension's name in the toolbar button's popup: the browser reaches the app; short
+#, machine
+extension	Connected	Միացված է
 #. text in the browser extension
 #. the toolbar button's status when the browser reaches the app; keep the name Mister Download Manager as it is
 #, machine
@@ -6077,13 +6729,52 @@ extension	Connected to Mister Download Manager	Միացված է Mister Download
 #, machine
 extension	Connected to Mister Download Manager {version}	Միացված է Mister Download Manager {version}-ին
 #. text in the browser extension
+#. under the extension's name in the toolbar button's popup: the browser reaches the app; its version follows; short
+#. {version} = a version number (keep the braces as they are)
+#, machine
+extension	Connected · {version}	Միացված է · {version}
+#. text in the browser extension
+#. said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) after Copy file
+#, machine
+extension	Copied {file}. Paste it into a folder, a chat or a message.	Պատճենվեց {file}-ը։ Տեղադրեք այն պանակում, չաթում կամ հաղորդագրությունում։
+#. text in the browser extension
+#. command in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): puts the file itself on the clipboard, to paste it into a folder, a chat or a message
+#, machine
+extension	Copy file	Պատճենել ֆայլը
+#. text in the browser extension
+#. command in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): copies the download's address
+#, machine
+extension	Copy link	Պատճենել հղումը
+#. text in the browser extension
 #. in the menu under the download button over a video: finding the video's qualities failed; the app's own explanation follows on the next line
 #, machine
 extension	Could not look it up	Չհաջողվեց գտնել
 #. text in the browser extension
+#. button of the question in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): deletes the file; verb
+#, machine
+extension	Delete	Ջնջել
+#. text in the browser extension
+#. command in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): takes the download off the list and deletes its file from the disk (it asks first)
+#. the trailing ... means it is still going on: keep it
+#, machine
+extension	Delete file...	Ջնջել ֆայլը...
+#. text in the browser extension
+#. title of the question in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) before a download's file is deleted
+#, machine
+extension	Delete the file?	Ջնջե՞լ ֆայլը։
+#. text in the browser extension
+#. filter in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): the finished downloads; short
+#. a download's line in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): it has just finished; short
+#, machine
+extension	Done	Ավարտված է
+#. text in the browser extension
 #. button beside a video, sound or stream in the toolbar button's popup: download it with the app; verb; short
 #, machine
 extension	Download	Ներբեռնել
+#. text in the browser extension
+#. command in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): downloads the file again from the start
+#, machine
+extension	Download again	Ներբեռնել նորից
 #. text in the browser extension
 #. command in the browser's right-click menu on a page: download the links of the whole page; keep the name Mister Download Manager as it is
 #, machine
@@ -6113,7 +6804,20 @@ extension	Download with Mister Download Manager	Ներբեռնել Mister Downlo
 #, machine
 extension	Download {what}	Ներբեռնել {what}
 #. text in the browser extension
-#. shown in the toolbar button's popup after the site was excluded
+#. said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) after Download again
+#, machine
+extension	Downloading {file} again	Նորից ներբեռնվում է {file}-ը
+#. text in the browser extension
+#. second line of the toolbar button's tooltip while the app downloads: how many downloads are running
+#. {count} = a number (keep the braces as they are)
+#, machine
+extension	Downloading: {count}	Ներբեռնվում է՝ {count}
+#. text in the browser extension
+#. tab in the toolbar button's popup: the list of Mister Download Manager's newest downloads; noun, short
+#, machine
+extension	Downloads	Ներբեռնումներ
+#. text in the browser extension
+#. shown under the switch Never take downloads from this site in the toolbar button's popup while it is on
 #. {site} = a web site's name such as "example.com" (keep the braces as they are)
 #, machine
 extension	Downloads from {site} stay with the browser	{site}-ից ներբեռնումները մնում են զննարկչի մոտ
@@ -6129,6 +6833,27 @@ extension	Drag the dots to move it along the edge	Քաշեք կետերը՝ այ
 #. the address typed isn't an https:// address
 #, machine
 extension	Enter its https:// address.	Մուտքագրեք դրա https:// հասցեն։
+#. text in the browser extension
+#. filter in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): the downloads that failed; short
+#. a download's line in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): it failed; short
+#, machine
+extension	Failed	Ձախողված է
+#. text in the browser extension
+#. a download's line in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): it failed, and why (the app's words)
+#, machine
+extension	Failed: {why}	Չհաջողվեց՝ {why}
+#. text in the browser extension
+#. a finished download's line in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when its file is no longer where it was saved
+#, machine
+extension	File deleted or moved	Ֆայլը ջնջվել կամ տեղափոխվել է
+#. text in the browser extension
+#. said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) after Clear finished
+#, machine
+extension	Finished downloads cleared	Ավարտված ներբեռնումները հեռացվեցին ցանկից
+#. text in the browser extension
+#. button: forget / unpair this server
+#, machine
+extension	Forget	Մոռանալ
 #. text in the browser extension
 #. button on the download button over a video when the app didn't answer: opens the app's download page; MDM is the app's short name, keep it; very short
 #, machine
@@ -6146,6 +6871,10 @@ extension	Help	Օգնություն
 #, machine
 extension	Hide on this video	Թաքցնել այս տեսանյութի վրա
 #. text in the browser extension
+#. Option in the toolbar button's popup: while a web page is in full screen, the Download video button over its videos stays hidden
+#, machine
+extension	Hide the download button in full screen	Թաքցնել ներբեռնման կոճակը ամբողջ էկրանով դիտելիս
+#. text in the browser extension
 #. hint in the toolbar button's popup; Alt is the keyboard key
 #, machine
 extension	Hold Alt while clicking a link to let the browser download it.	Սեղմած պահեք Alt-ը հղման վրա սեղմելիս, որպեսզի զննարկիչը ներբեռնի այն։
@@ -6162,6 +6891,10 @@ extension	It didn't work. Try again.	Չստացվեց։ Կրկին փորձեք�
 #, machine
 extension	It shows no code now: click Pair a device there first.	Այն հիմա կոդ չի ցուցադրում. նախ այնտեղ սեղմեք «Զուգակցել սարքը»։
 #. text in the browser extension
+#. why a download stayed with the browser: it is a .torrent file and the app's Torrent settings don't open torrents with Mister Download Manager, so the browser keeps it for the user's own torrent program; keep the setting's name as the app shows it
+#, machine
+extension	It's a torrent, and Open magnet links and .torrent files with Mister Download Manager is off in Torrent settings.	Դա տորենտ է, և «Բացել մագնիսական հղումները և .torrent ֆայլերը Mister Download Manager-ով» տարբերակն անջատված է «Տորենտի կարգավորումներ»-ում։
+#. text in the browser extension
 #. why a download stayed with the browser: the file is smaller than the app's minimum size setting
 #, machine
 extension	It's smaller than the minimum size in Options → File types.	Այն ավելի փոքր է, քան նվազագույն չափը Ընտրանքներ → Ֆայլի տեսակներ բաժնում։
@@ -6169,6 +6902,10 @@ extension	It's smaller than the minimum size in Options → File types.	Այն �
 #. why a download stayed with the browser: its address matches the app's list of addresses not to take
 #, machine
 extension	Its address is in Options → File types, addresses left to the browser.	Դրա հասցեն Ընտրանքներ → Ֆայլի տեսակներ բաժնում է՝ զննարկչին թողնված հասցեներում։
+#. text in the browser extension
+#. said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when a download's file can't be opened, copied or shared
+#, machine
+extension	Its file is no longer where it was saved (moved or deleted).	Դրա ֆայլն այլևս այնտեղ չէ, որտեղ պահպանվել էր (տեղափոխվել կամ ջնջվել է)։
 #. text in the browser extension
 #. why a download stayed with the browser: its web site is on the app's list of sites not to take downloads from
 #, machine
@@ -6178,14 +6915,31 @@ extension	Its site is in Options → File types, sites left to the browser.	Դր
 #, machine
 extension	Its type isn't in Options → File types.	Դրա տեսակը Ընտրանքներ → Ֆայլի տեսակներ բաժնում չէ։
 #. text in the browser extension
+#. a finished download's line in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): it finished less than a minute ago; lower case where the language allows
+#, machine
+extension	just now	հենց հիմա
+#. text in the browser extension
+#. in the This page tab in the toolbar button's popup, under the switch Never take downloads from this site, when a pattern in Mister Download Manager's Options excludes the site (the switch can't be turned off here)
+#, machine
+extension	Left to the browser by a rule in Options	Ընտրանքներում սահմանված կանոնի համաձայն՝ ներբեռնումները փոխանցվում են բրաուզերին
+#. text in the browser extension
 #. in the toolbar button's popup: the last download the extension let the browser keep instead of handing it to the app; followed by why (one of the declined_* texts)
 #. {name} = a file name (keep the braces as they are)
 #, machine
 extension	Left to the browser: {name}	Թողնվել է զննարկչին՝ {name}
 #. text in the browser extension
+#. said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) after Copy link
+#, machine
+extension	Link copied	Հղումը պատճենվեց
+#. text in the browser extension
 #. beside a stream in the toolbar button's popup: it is a live broadcast (no fixed length); short
 #, machine
 extension	Live	Ուղիղ
+#. text in the browser extension
+#. in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads), while it asks the app for them
+#. the trailing ... means it is still going on: keep it
+#, machine
+extension	Looking for downloads...	Փնտրվում են ներբեռնումներ...
 #. text in the browser extension
 #. in the menu that opens from the download button over a video, while the app finds which qualities (resolutions, formats) the video can be downloaded in
 #, machine
@@ -6207,6 +6961,10 @@ extension	Media on this page	Մեդիա այս էջում
 #, machine
 extension	Mister Download Manager	Mister Download Manager
 #. text in the browser extension
+#. said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the app didn't answer in time; keep the name Mister Download Manager as it is
+#, machine
+extension	Mister Download Manager didn't answer in time. Try again.	Mister Download Manager-ը ժամանակին չպատասխանեց։ Փորձեք նորից։
+#. text in the browser extension
 #. status when the app was started for a download but didn't answer in time; keep the name Mister Download Manager as it is
 #, machine
 extension	Mister Download Manager didn't start in time	Mister Download Manager-ը ժամանակին չսկսվեց
@@ -6219,6 +6977,11 @@ extension	Mister Download Manager doesn't accept this copy of the extension	Mist
 #, machine
 extension	Mister Download Manager is busy with other videos	Mister Download Manager-ը զբաղված է այլ տեսանյութերով
 #. text in the browser extension
+#. in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the app didn't answer in time; keep the name Mister Download Manager as it is
+#. the trailing ... means it is still going on: keep it
+#, machine
+extension	Mister Download Manager is busy. Trying again...	Mister Download Manager-ը զբաղված է։ Կրկին փորձվում է...
+#. text in the browser extension
 #. shown briefly on the download button when the app could not be reached; keep the name Mister Download Manager as it is
 #, machine
 extension	Mister Download Manager isn't installed or didn't start	Mister Download Manager-ը տեղադրված չէ կամ չի գործարկվել
@@ -6226,6 +6989,14 @@ extension	Mister Download Manager isn't installed or didn't start	Mister Downloa
 #. status when the browser can't find the app's connection; keep the name Mister Download Manager as it is
 #, machine
 extension	Mister Download Manager isn't installed, or its browser integration isn't set up	Mister Download Manager-ը տեղադրված չէ կամ դրա դիտարկիչի ինտեգրումը կարգավորված չէ
+#. text in the browser extension
+#. in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the app isn't running; keep the name Mister Download Manager as it is
+#, machine
+extension	Mister Download Manager isn't running	Mister Download Manager-ը չի աշխատում
+#. text in the browser extension
+#. said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the app isn't running; keep the name Mister Download Manager as it is
+#, machine
+extension	Mister Download Manager isn't running.	Mister Download Manager-ը չի աշխատում։
 #. text in the browser extension
 #. in the menu under the download button over a video: the app needs the yt-dlp tool (a program's name, keep it as it is) to find this video's qualities, and it isn't installed; keep the name Mister Download Manager as it is
 #, machine
@@ -6239,19 +7010,39 @@ extension	Mister Download Manager then downloads through the same proxy as this 
 #, machine
 extension	Mister Download Manager then downloads through the same proxy as this browser. While this is off, the extension doesn't read the browser's proxy.	Mister Download Manager-ն այնուհետև ներբեռնում է այս դիտարկիչի նույն պրոքսիի միջոցով։ Մինչ սա անջատված է, ընդլայնումը չի կարդում դիտարկիչի պրոքսին։
 #. text in the browser extension
+#. tooltip of the ⋯ button of a download in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): opens its menu
+#, machine
+extension	More actions	Ավելի շատ գործողություններ
+#. text in the browser extension
+#. screen readers' name of the ⋯ button of a download in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads)
+#, machine
+extension	More actions for {file}	Ավելի շատ գործողություններ {file}-ի համար
+#. text in the browser extension
 #. the small arrow next to the Download video button that opens its menu (read aloud by screen readers)
 #, machine
 extension	More options	Ավելի շատ ընտրանքներ
+#. text in the browser extension
+#. in the list under the download button over a video, after a quality's height (1080p): the H.264 video with AAC sound in an MP4, the file that plays in every video editor, TV and phone; short, about 20 characters at most
+#, machine
+extension	Most compatible	Ամենահամատեղելին
 #. text in the browser extension
 #. menu command of the download button over a video: never show the button on this web site again
 #. {site} = a web site's name such as "example.com" (keep the braces as they are)
 #, machine
 extension	Never on {site}	Երբեք {site}-ում
 #. text in the browser extension
-#. button in the toolbar button's popup: leave this web site's downloads to the browser from now on
+#. switch in the This page tab in the toolbar button's popup: on, this web site's downloads are left to the browser from now on
 #. {site} = a web site's name such as "example.com" (keep the braces as they are)
 #, machine
 extension	Never take downloads from {site}	Երբեք մի՛ վերցրեք ներբեռնումներ {site}-ից
+#. text in the browser extension
+#. in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when no download matches the search; the words searched for follow
+#, machine
+extension	No download's name or address has “{words}”.	Ոչ մի ներբեռնման անուն կամ հասցե չի պարունակում «{words}»։
+#. text in the browser extension
+#. in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the app has no downloads
+#, machine
+extension	No downloads yet	Դեռ ներբեռնումներ չկան
 #. text in the browser extension
 #. shown in the toolbar button's popup when the current web page hasn't loaded any video, sound or stream yet
 #, machine
@@ -6261,13 +7052,25 @@ extension	No video or sound found on this page yet. Play it, then open this agai
 #, machine
 extension	No video to download here	Այստեղ ներբեռնելու տեսանյութ չկա
 #. text in the browser extension
+#. under the extension's name in the toolbar button's popup: the browser can't reach the app (why is said below it); short
+#, machine
+extension	Not connected	Միացված չէ
+#. text in the browser extension
 #. pairing failed: the other MDM didn't answer
 #, machine
 extension	Not reached. Open its address once in this browser and accept its certificate, then try again.	Հասանելի չէ։ Մեկ անգամ բացեք դրա հասցեն այս բրաուզերում և ընդունեք դրա վկայագիրը, ապա նորից փորձեք։
 #. text in the browser extension
+#. in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when no download matches the search or the filter
+#, machine
+extension	Nothing matches	Համապատասխանող արդյունքներ չկան
+#. text in the browser extension
 #. on the download button over a video (grey) when the button is turned off on this web site; a 'Turn on' button follows it; short
 #, machine
 extension	Off on this site	Անջատված է այս կայքում
+#. text in the browser extension
+#. command in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): opens the downloaded file; verb
+#, machine
+extension	Open	Բացել
 #. text in the browser extension
 #. button: open the other MDM's address in a tab (to accept its certificate once)
 #, machine
@@ -6276,6 +7079,10 @@ extension	Open it	Բացել
 #. help under the pairing boxes; Options, Remote and Pair a device are the app's window, tab and button; keep misterdownloadmanager-cli pair as it is
 #, machine
 extension	Open its address once and accept its certificate, then enter a code from its Options, Remote, Pair a device (or misterdownloadmanager-cli pair).	Մեկ անգամ բացեք դրա հասցեն և ընդունեք դրա վկայագիրը, ապա մուտքագրեք կոդը դրա «Ընտրանքներ», «Հեռակա», «Զուգակցել սարքը» բաժնից (կամ misterdownloadmanager-cli pair)։
+#. text in the browser extension
+#. button at the foot of the Downloads tab in the toolbar button's popup when downloads go to another Mister Download Manager (a server): opens that server's own web page
+#, machine
+extension	Open its page	Բացել դրա էջը
 #. text in the browser extension
 #. button in the toolbar button's popup; keep the name Mister Download Manager as it is
 #, machine
@@ -6288,6 +7095,14 @@ extension	Open post	Բացել գրառումը
 #. on the download button (amber) over a video in a feed (a social site's home page, a timeline) that can't be downloaded from there: the user should open the post the video belongs to; short
 #, machine
 extension	Open the post to download it	Բացել գրառումը՝ ներբեռնելու համար
+#. text in the browser extension
+#. screen readers' name of a finished download's name in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): clicking it opens the file
+#, machine
+extension	Open {file}	Բացել {file}-ը
+#. text in the browser extension
+#. the gear button at the top of in the toolbar button's popup: opens Mister Download Manager's Options window; keep the name Mister Download Manager as it is
+#, machine
+extension	Options in Mister Download Manager	Mister Download Manager-ի ընտրանքներ
 #. text in the browser extension
 #. button in the toolbar button's popup: open the app's Options
 #. the trailing ... means it is still going on: keep it
@@ -6306,9 +7121,30 @@ extension	Pair	Զուգակցել
 #, machine
 extension	Pairing code	Զուգակցման կոդ
 #. text in the browser extension
+#. command in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): stops a running download, to resume it later; verb
+#, machine
+extension	Pause	Դադարեցնել
+#. text in the browser extension
+#. said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when a running download can't be removed or downloaded again
+#, machine
+extension	Pause it first.	Նախ դադարեցրեք այն։
+#. text in the browser extension
+#. screen readers' name of a running download's Pause button in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads)
+#, machine
+extension	Pause {file}	Դադարեցնել {file}
+#. text in the browser extension
+#. under the extension's name in the toolbar button's popup: taking downloads from this browser is paused; short
+#. a download's line in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): stopped by the user, can be resumed; short
+#, machine
+extension	Paused	Դադարեցված է
+#. text in the browser extension
 #. status when the user switched off taking downloads in the toolbar button's popup
 #, machine
 extension	Paused: downloads stay with the browser	Դադարեցված է. ներբեռնումները մնում են դիտարկիչում
+#. text in the browser extension
+#. name of the row of tabs in the toolbar button's popup, read by screen readers
+#, machine
+extension	Popup sections	Բացվող պատուհանի ներդիրներ
 #. text in the browser extension
 #. Option in the browser extension media list: put the page title before the original file name when downloading a detected media file
 #, machine
@@ -6322,9 +7158,29 @@ extension	Protected	Պաշտպանված է
 #, machine
 extension	Protected video	Պաշտպանված տեսանյութ
 #. text in the browser extension
+#. command in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): takes the download off the list, its file stays
+#, machine
+extension	Remove from list	Հեռացնել ցուցակից
+#. text in the browser extension
+#. command in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): goes on with a paused, waiting or failed download; verb
+#, machine
+extension	Resume	Շարունակել
+#. text in the browser extension
+#. screen readers' name of a download's Resume button in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads)
+#, machine
+extension	Resume {file}	Շարունակել {file}
+#. text in the browser extension
 #. button on the download button over a video when the app didn't answer: try again; verb; very short
 #, machine
 extension	Retry	Կրկին փորձել
+#. text in the browser extension
+#. filter in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): the downloads downloading now; short
+#, machine
+extension	Running	Ներբեռնվում է
+#. text in the browser extension
+#. placeholder of the search box in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads); it finds downloads by their name or address
+#, machine
+extension	Search downloads	Որոնել ներբեռնումներ
 #. text in the browser extension
 #. switch in the toolbar button's popup: on, the app downloads through the same proxy the browser uses (one a VPN or proxy extension sets); the browser then asks once to allow reading it
 #, machine
@@ -6339,13 +7195,52 @@ extension	Send downloads to	Ուղարկել ներբեռնումները
 #, machine
 extension	Sending to MDM...	Ուղարկվում է MDM...
 #. text in the browser extension
+#. under the extension's name in the toolbar button's popup: downloads go to another Mister Download Manager, a server, at this address; short
+#, machine
+extension	Sending to {server}	Ուղարկվում է {server}
+#. text in the browser extension
 #. shown briefly on the download button after it was clicked; keep the name Mister Download Manager as it is
 #, machine
 extension	Sent to Mister Download Manager	Ուղարկված է Mister Download Manager
 #. text in the browser extension
+#. tab in the toolbar button's popup: the extension's settings; noun, short
+#, machine
+extension	Settings	Կարգավորումներ
+#. text in the browser extension
+#. command in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): opens the system's share sheet for the file
+#. the trailing ... means it is still going on: keep it
+#, machine
+extension	Share...	Կիսվել...
+#. text in the browser extension
 #. button on the download button over a video after a download was added: shows that download in the app's window; verb; very short
+#. name of the row of filters in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) (All, Running, Done, Failed), read by screen readers; verb
 #, machine
 extension	Show	Ցուցադրել
+#. text in the browser extension
+#. button in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): clears the search and the filter
+#, machine
+extension	Show all downloads	Ցուցադրել բոլոր ներբեռնումները
+#. text in the browser extension
+#. command in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): opens the file's folder with the file selected
+#, machine
+extension	Show in folder	Ցուցադրել թղթապանակում
+#. text in the browser extension
+#. screen readers' name of a download's Show in folder button in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads)
+#, machine
+extension	Show {file} in folder	Ցուցադրել {file}-ը թղթապանակում
+#. text in the browser extension
+#. in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the app isn't running
+#, machine
+extension	Start it to see your downloads here.	Գործարկեք այն՝ ձեր ներբեռնումներն այստեղ տեսնելու համար։
+#. text in the browser extension
+#. button in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the app isn't running; keep the name Mister Download Manager as it is
+#, machine
+extension	Start Mister Download Manager	Գործարկել Mister Download Manager
+#. text in the browser extension
+#. a download's line in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when it has just started and nothing has come yet
+#. the trailing ... means it is still going on: keep it
+#, machine
+extension	Starting...	Սկսվում է...
 #. text in the browser extension
 #. link at the foot of the toolbar button's popup to the creator's GitHub Sponsors page (MDM is free; this is an optional donation)
 #, machine
@@ -6354,6 +7249,18 @@ extension	Support MDM	Աջակցել MDM-ին
 #. check box in the toolbar button's popup: on, downloads go to the app; off, the browser keeps them
 #, machine
 extension	Take downloads from this browser	Վերցնել ներբեռնումներն այս դիտարկիչից
+#. text in the browser extension
+#. said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when a button can't act on the download
+#, machine
+extension	That can't be done to this download now.	Դա հնարավոր չէ անել այս ներբեռնման հետ հիմա։
+#. text in the browser extension
+#. said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when a button's action failed
+#, machine
+extension	That didn't work. Try again.	Չհաջողվեց։ Կրկին փորձեք։
+#. text in the browser extension
+#. said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when a button's download was removed meanwhile
+#, machine
+extension	That download is no longer in the list.	Այդ ներբեռնումն այլևս ցուցակում չկա։
 #. text in the browser extension
 #. in the toolbar button's popup, on a site where the Chrome Web Store's copy of the extension shows no download button; Help is the link at the bottom of the popup
 #, machine
@@ -6371,6 +7278,19 @@ extension	The extension isn't allowed to read this site (the browser's site acce
 #, machine
 extension	The last download was left to the browser.	Վերջին ներբեռնումը թողնվել է զննարկչին։
 #. text in the browser extension
+#. under the list in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when there are more downloads than it shows; keep the name Mister Download Manager as it is
+#, machine
+extension	The newest {shown} of {total}. Mister Download Manager lists them all.	Վերջին {total}-ից ցուցադրվում է {shown}-ը։ Mister Download Manager-ը ցուցադրում է բոլոր ներբեռնումները։
+#. text in the browser extension
+#. question in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) before the finished downloads are taken off the list
+#. {count} = a number (keep the braces as they are)
+#, machine
+extension	The {count} finished downloads go off the list. Their files stay where they are.	{count} ավարտված ներբեռնումները կհեռացվեն ցուցակից։ Դրանց ֆայլերը կմնան իրենց տեղում։
+#. text in the browser extension
+#. note at the top of the list in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when downloads go to another Mister Download Manager (a server): the buttons that need the file on this computer are not offered; keep the name Mister Download Manager as it is
+#, machine
+extension	These are the downloads of the Mister Download Manager at {server}. Open their files there.	Սրանք Mister Download Manager-ի ներբեռնումներն են {server}-ում։ Բացեք դրանց ֆայլերն այնտեղ։
+#. text in the browser extension
 #. why a download stayed with the browser: the app's Options don't capture downloads from this browser (its box is unticked in the list of browsers)
 #, machine
 extension	This browser isn't ticked in Options → General.	Այս զննարկիչը նշված չէ Ընտրանքներ → Ընդհանուր բաժնում։
@@ -6383,17 +7303,34 @@ extension	This computer	Այս համակարգիչը
 #, machine
 extension	This download's details were too large to hand over	Այս ներբեռնման մանրամասները չափազանց մեծ էին փոխանցելու համար
 #. text in the browser extension
+#. in the This page tab in the toolbar button's popup when the browser's tab shows one of its own pages (settings, a new tab)
+#, machine
+extension	This isn't a web page: there's nothing to do here.	Սա վեբ էջ չէ. այստեղ անելիք չկա։
+#. text in the browser extension
+#. tab in the toolbar button's popup: what can be done on the web page open in the browser (its videos, leaving its site to the browser); short
+#, machine
+extension	This page	Այս էջը
+#. text in the browser extension
 #. in the toolbar button's popup, when the page's player plays from a stream built in the page (a blob:): the list of the page's media has nothing to show; Download video is the name of the button over videos
 #, machine
 extension	This page's player streams its video in pieces, so there's no file to list. Point at the video and use its Download video button.	Այս էջի նվագարկիչը տեսանյութը փոխանցում է մասերով, ուստի ցուցակագրելու ֆայլ չկա։ Մոտեցրեք ցուցիչը տեսանյութին և օգտագործեք դրա «Ներբեռնել տեսանյութը» կոճակը։
+#. text in the browser extension
+#. said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the system has no way to do it
+#, machine
+extension	This system can't do that.	Այս համակարգը չի կարող դա անել։
+#. text in the browser extension
+#. in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the app is too old to list its downloads here
+#, machine
+extension	This version can't list its downloads here yet.	Այս տարբերակը դեռ չի կարող ցուցադրել իր ներբեռնումներն այստեղ։
 #. text in the browser extension
 #. button on the download button over a video when it is off on this web site: turns it on again here; verb; very short
 #, machine
 extension	Turn on	Միացնել
 #. text in the browser extension
-#. link beside "Downloads from <site> stay with the browser" in the toolbar button's popup: take the site off the excluded sites again
+#. under the extension's name in the toolbar button's popup: the app is older than the extension; keep the name Mister Download Manager as it is; short
+#. in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the app is too old to list its downloads here; keep the name Mister Download Manager as it is
 #, machine
-extension	Undo	Հետարկել
+extension	Update Mister Download Manager	Թարմացնել Mister Download Manager
 #. text in the browser extension
 #. status when the app is older than the extension; keep the name Mister Download Manager as it is
 #, machine
@@ -6411,9 +7348,48 @@ extension	Video	Տեսանյութ
 #, machine
 extension	Wait a moment, then try again.	Մի պահ սպասեք, ապա նորից փորձեք։
 #. text in the browser extension
+#. a download's line in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): waiting in a queue, never started; short
+#, machine
+extension	Waiting	Սպասում է
+#. text in the browser extension
+#. in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the app has no downloads; keep the name Mister Download Manager as it is
+#, machine
+extension	What you download with Mister Download Manager shows up here.	Այն, ինչ ներբեռնում եք Mister Download Manager-ով, կցուցադրվի այստեղ։
+#. text in the browser extension
+#. Tooltip of the Hide the download button in full screen option in the toolbar button's popup; Download video is the name of the button over videos
+#, machine
+extension	While the page is in full screen, its videos show no Download video button	Երբ էջը ամբողջ էկրանով է, դրա տեսանյութերը չեն ցուցադրում «Ներբեռնել տեսանյութը» կոճակը
+#. text in the browser extension
 #. pairing failed: the code was wrong
 #, machine
 extension	Wrong code.	Սխալ կոդ։
+#. text in the browser extension
+#. tooltip of the number on the Downloads tab in the toolbar button's popup: how many downloads are running
+#. {count} = a number (keep the braces as they are)
+#, machine
+extension	{count} downloading now	Ներբեռնվում է {count} ներբեռնում
+#. text in the browser extension
+#. a running download's line in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): how much has come of its size
+#. {size} = a file size such as "4.2 MB" (keep the braces as they are)
+#, machine
+extension	{done} of {size}	{done}-ը {size}-ից
+#. text in the browser extension
+#. said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) after Delete file
+#, machine
+extension	{file} deleted	{file}-ը ջնջված է
+#. text in the browser extension
+#. said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) after Remove from list
+#, machine
+extension	{file} removed from the list	{file}-ը հեռացված է ցուցակից
+#. text in the browser extension
+#. question in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) before a download's file is deleted
+#, machine
+extension	{file} will be deleted from your computer, and the download taken off the list. This can't be undone.	{file}-ը կջնջվի ձեր համակարգչից, իսկ ներբեռնումը կհեռացվի ցուցակից։ Սա հնարավոր չէ չեղարկել։
+#. text in the browser extension
+#. a running download's line in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): the time left, as a clock (minutes:seconds)
+#. {time} = a time of day (keep the braces as they are)
+#, machine
+extension	{time} left	{time} մնաց
 #. key name or combination in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
 #, machine
@@ -6465,11 +7441,19 @@ key	Delete	Delete
 #. key name or combination in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
 #, machine
+key	Down / Alt+Down	Ներքև / Alt+Ներքև
+#. key name or combination in the Help menu's windows (About, updates, shortcuts, Tell a friend)
+#. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
+#, machine
 key	Drag on blank space	Քաշել դատարկ տարածքի վրա
 #. key name or combination in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
 #, machine
 key	Enter	Enter
+#. key name or combination in the Help menu's windows (About, updates, shortcuts, Tell a friend)
+#. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
+#, machine
+key	Enter / Space	Enter / Space
 #. key name or combination in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
 #, machine
@@ -6482,6 +7466,10 @@ key	F3	F3
 #. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
 #, machine
 key	Home / End	Home / End
+#. key name or combination in the Help menu's windows (About, updates, shortcuts, Tell a friend)
+#. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
+#, machine
+key	Left / Right	Ձախ / Աջ
 #. key name or combination in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
 #, machine
@@ -6509,7 +7497,7 @@ key	Shift+Up / Shift+Down	Shift+Վերև / Shift+Ներքև
 #. key name or combination in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
 #, machine
-key	Tab	Tab
+key	Tab / Shift+Tab	Tab / Shift+Tab
 #. key name or combination in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
 #, machine
@@ -6651,6 +7639,11 @@ menu	&Undo	&Հետարկել
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
 menu	&Video downloads	&Տեսանյութերի ներբեռնումներ
+#. menu command in the main window
+#. View → Window system: Wayland's own windows (the name of a Linux display system, usually kept as is)
+#. & marks the keyboard shortcut letter: keep one & before a letter of the translation
+#, machine
+menu	&Wayland	Ուեյլենդ(&W)
 #. menu command in the main window
 #. View menu: submenu choosing the window system MDM's windows use on Linux (X11 through XWayland, or Wayland)
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
@@ -7110,7 +8103,7 @@ menu	To &IDM export file...	&IDM արտահանման ֆայլ...
 #. the trailing ... means it opens a window: keep it
 #, machine
 menu	To &text file...	&Տեքստային ֆայլ...
-#. menu command in the main window
+#. menu command in the main window; menu command in the main window (menus, toolbar, Categories pane)
 #. noun: the toolbar (submenu of View with its settings)
 #, machine
 menu	Toolbar	Գործիքագոտի

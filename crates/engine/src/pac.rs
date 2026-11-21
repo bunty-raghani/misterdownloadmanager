@@ -1,9 +1,11 @@
 //! Proxy auto-config (Options → Proxy / Socks → "Use automatic configuration script"): the
 //! script's `FindProxyForURL(url, host)` decides the proxy for each address. It runs in a small
 //! JavaScript engine (QuickJS), with the helper functions PAC scripts expect written here (our
-//! own, from the PAC definition) and DNS answered by the system. Answers are kept per script and
-//! host. The script comes from the network: it gets the language only (no files, no modules),
-//! limited memory and a limited time.
+//! own, from the PAC definition) and DNS answered by the system. An answer is kept per script and
+//! the address the script was given (a script decides by path, scheme or port too, not only by
+//! host; an https address is cut to `https://host:port/`, as browsers give it one). The script
+//! comes from the network: it gets the language only (no files, no modules), limited memory and a
+//! limited time.
 
 use std::cell::Cell;
 use std::collections::HashMap;
@@ -20,7 +22,7 @@ use url::Url;
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Route {
     Direct,
-    /// A proxy address: `http://host:port`, `https://…` or `socks5://…`.
+    /// A proxy address: `http://host:port`, `https://…`, `socks5h://…` or `socks4://…`.
     Proxy(String),
 }
 
@@ -29,25 +31,46 @@ pub enum Route {
 pub fn routes(script: &Arc<str>, url: &Url) -> Result<Vec<Route>, String> {
     use std::hash::{Hash, Hasher};
     let host = url.host_str().unwrap_or("").to_ascii_lowercase();
-    // Kept per script (its text's hash) and host.
+    // What the script is given (and answers for): an https address is cut to its scheme, host
+    // and port, as browsers hand it one, so a path or query (a token, a private page) can't
+    // reach the script. Kept per script (its text's hash) and that address, since a script may
+    // answer by path, scheme or port as well as by host.
+    let asked = script_address(url);
     let mut h = std::collections::hash_map::DefaultHasher::new();
     script.hash(&mut h);
-    let key = (h.finish(), host.clone());
+    let key = (h.finish(), asked.clone());
     if let Some(r) = CACHE.lock().unwrap().as_ref().and_then(|c| c.get(&key)) {
         return Ok(r.clone());
     }
-    let answer = run(script, url.as_str(), &host)?;
+    let answer = run(script, asked.as_str(), &host)?;
     let r = parse(&answer);
-    CACHE
-        .lock()
-        .unwrap()
-        .get_or_insert_with(HashMap::new)
-        .insert(key, r.clone());
+    let mut cache = CACHE.lock().unwrap();
+    let cache = cache.get_or_insert_with(HashMap::new);
+    // A page of thousands of links, each with its own answer: start again rather than grow
+    // without end (an answer is a script run away).
+    if cache.len() >= CACHE_MAX {
+        cache.clear();
+    }
+    cache.insert(key, r.clone());
     Ok(r)
 }
 
-type Answers = HashMap<(u64, String), Vec<Route>>;
+/// The address a PAC script is given: browsers hand an https address as `https://host:port/`
+/// with no path, query or fragment (an http one goes as it is).
+fn script_address(url: &Url) -> Url {
+    let mut asked = url.clone();
+    if asked.scheme() == "https" {
+        asked.set_path("/");
+        asked.set_query(None);
+        asked.set_fragment(None);
+    }
+    asked
+}
+
+type Answers = HashMap<(u64, Url), Vec<Route>>;
 static CACHE: Mutex<Option<Answers>> = Mutex::new(None);
+/// The most answers kept at once.
+const CACHE_MAX: usize = 4096;
 
 /// `FindProxyForURL`'s answer: `PROXY a:8080; SOCKS b:1080; DIRECT` → routes, unknown kinds
 /// skipped. An empty answer means direct.
@@ -62,7 +85,9 @@ pub fn parse(answer: &str) -> Vec<Route> {
                 ("DIRECT", _) => Some(Route::Direct),
                 ("PROXY" | "HTTP", Some(a)) => Some(Route::Proxy(format!("http://{a}"))),
                 ("HTTPS", Some(a)) => Some(Route::Proxy(format!("https://{a}"))),
-                ("SOCKS" | "SOCKS5", Some(a)) => Some(Route::Proxy(format!("socks5://{a}"))),
+                // A SOCKS5 proxy looks the site's name up, as browsers have it (#1558):
+                // this computer's DNS never sees it.
+                ("SOCKS" | "SOCKS5", Some(a)) => Some(Route::Proxy(format!("socks5h://{a}"))),
                 ("SOCKS4", Some(a)) => Some(Route::Proxy(format!("socks4://{a}"))),
                 _ => None,
             }
@@ -251,12 +276,72 @@ mod tests {
             parse("PROXY proxy.corp:8080; SOCKS s.corp:1080; DIRECT"),
             vec![
                 Route::Proxy("http://proxy.corp:8080".into()),
-                Route::Proxy("socks5://s.corp:1080".into()),
+                Route::Proxy("socks5h://s.corp:1080".into()),
                 Route::Direct
+            ]
+        );
+        assert_eq!(
+            parse("SOCKS5 s.corp:1080; SOCKS4 old.corp:1080"),
+            vec![
+                Route::Proxy("socks5h://s.corp:1080".into()),
+                Route::Proxy("socks4://old.corp:1080".into()),
             ]
         );
         assert_eq!(parse(""), vec![Route::Direct]);
         assert_eq!(parse("WEIRD x; DIRECT"), vec![Route::Direct]);
+    }
+
+    /// A script may answer by path: one address's answer must not decide another's on the same
+    /// host. (The answer kept was per host, so the first address's proxy went to them all.)
+    #[test]
+    fn an_answer_is_kept_per_address_not_per_host() {
+        let script: Arc<str> = Arc::from(
+            r#"
+            function FindProxyForURL(url, host) {
+                return url.indexOf("/proxy/") >= 0 ? "PROXY p.test:8080" : "DIRECT";
+            }"#,
+        );
+        assert_eq!(
+            routes(&script, &Url::parse("http://x.test/proxy/a.bin").unwrap()).unwrap(),
+            vec![Route::Proxy("http://p.test:8080".into())]
+        );
+        assert_eq!(
+            routes(&script, &Url::parse("http://x.test/direct/b.bin").unwrap()).unwrap(),
+            vec![Route::Direct],
+            "another address on the same host has its own answer"
+        );
+    }
+
+    /// An https address reaches the script as `https://host:port/`, no path, query or fragment,
+    /// as browsers hand it one: a token or a private page can't get out through the script.
+    #[test]
+    fn an_https_address_is_cut_before_the_script_sees_it() {
+        let script: Arc<str> = Arc::from(
+            r#"
+            function FindProxyForURL(url, host) {
+                return url === "https://x.test:8443/" ? "DIRECT" : "PROXY p.test:8080";
+            }"#,
+        );
+        assert_eq!(
+            routes(
+                &script,
+                &Url::parse("https://x.test:8443/private/a.bin?token=1#top").unwrap()
+            )
+            .unwrap(),
+            vec![Route::Direct],
+            "the path, query and fragment never reach the script"
+        );
+        // An http address keeps its path, as before.
+        let script: Arc<str> = Arc::from(
+            r#"
+            function FindProxyForURL(url, host) {
+                return url.indexOf("/proxy/") >= 0 ? "PROXY p.test:8080" : "DIRECT";
+            }"#,
+        );
+        assert_eq!(
+            routes(&script, &Url::parse("http://x.test/proxy/a.bin").unwrap()).unwrap(),
+            vec![Route::Proxy("http://p.test:8080".into())]
+        );
     }
 
     #[test]
@@ -275,12 +360,19 @@ mod tests {
             vec![Route::Direct]
         );
         assert_eq!(
-            route(script, "https://mirror.example.org/downloads/os.iso"),
+            route(script, "http://mirror.example.org/downloads/os.iso"),
             vec![Route::Proxy("http://iso.proxy:3128".into())]
         );
+        // An https address is cut to its host before the script (as browsers do), so a path
+        // pattern can't route it; the host's rule applies.
         assert_eq!(
             route(script, "https://cdn.example.org/a.zip")[0],
             Route::Proxy("http://proxy.corp:8080".into())
+        );
+        assert_eq!(
+            route(script, "https://mirror.example.org/downloads/os.iso")[0],
+            Route::Proxy("http://proxy.corp:8080".into()),
+            "an https path never reaches the script"
         );
     }
 

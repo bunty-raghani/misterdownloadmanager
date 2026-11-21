@@ -11,6 +11,18 @@ pub const LIMITS_SENTENCE: &str =
     // i18n: {mb} and {hours} are input boxes, drawn where they stand in the translation; keep the one line break: the second line sits under the first box
     crate::i18n::mark("Download no more than {mb} MBytes\nevery {hours} hours");
 
+/// What a screen reader calls the sentence's two boxes (#1407): its words are painted, not
+/// exposed, so each box is named for what it counts. Shared by the same two places the
+/// sentence is.
+pub const LIMITS_MB_NAME: &str = crate::i18n::mark(
+    // i18n: a11y name of the first Download limits box, where "Download no more than {n} MBytes" puts its {n}
+    "Download limit: MBytes",
+);
+pub const LIMITS_HOURS_NAME: &str = crate::i18n::mark(
+    // i18n: a11y name of the second Download limits box, where "every {n} hours" puts its {n}
+    "Download limit: every how many hours",
+);
+
 #[derive(Default)]
 pub struct Quota {
     /// Bytes received, per second, oldest first.

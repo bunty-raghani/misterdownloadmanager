@@ -15,6 +15,8 @@ pub struct Batch {
     auth: bool,
     login: String,
     password: String,
+    /// Save to: every file of the batch there; empty, each to its category's folder.
+    folder: String,
     focused: bool,
     /// The pattern's addresses (or why none), and the inputs they were made from.
     cached: Option<(PatternKey, Result<Vec<url::Url>, &'static str>)>,
@@ -26,10 +28,12 @@ pub struct Batch {
 /// What a pattern's addresses are made from: address, letters, from, to, size.
 type PatternKey = (String, bool, String, String, String);
 
-/// What OK adds: the addresses, and the login if one was given.
+/// What OK adds: the addresses, the login if one was given, and the folder they all go to if
+/// one was (else each file goes to its category's folder).
 pub struct Added {
     pub urls: Vec<url::Url>,
     pub login: Option<(String, String)>,
+    pub folder: Option<std::path::PathBuf>,
 }
 
 impl Batch {
@@ -44,6 +48,7 @@ impl Batch {
             auth: false,
             login: String::new(),
             password: String::new(),
+            folder: String::new(),
             focused: false,
             cached: None,
             focus_to: false,
@@ -67,6 +72,12 @@ impl Batch {
     #[cfg(test)]
     fn expand(&self) -> Vec<url::Url> {
         self.pattern().unwrap_or_default()
+    }
+
+    /// The folder Save to names, if it names one.
+    fn save_to(&self) -> Option<std::path::PathBuf> {
+        let folder = self.folder.trim();
+        (!folder.is_empty()).then(|| std::path::PathBuf::from(folder))
     }
 
     /// The addresses the pattern stands for, or why there are none (English, marked).
@@ -157,7 +168,7 @@ impl Batch {
             ctx,
             "batch",
             "Batch download",
-            [474.0, 387.0],
+            [474.0, 420.0],
             false,
             LIGHT_BG(),
             |ui, o| self.body(ui, o, urls, why),
@@ -168,6 +179,7 @@ impl Batch {
                 login: self
                     .auth
                     .then(|| (self.login.clone(), self.password.clone())),
+                folder: self.save_to(),
             }),
             Outcome::Closed => Outcome::Closed,
             Outcome::Open => Outcome::Open,
@@ -381,10 +393,32 @@ impl Batch {
             text(&p, o.x + 102.0, o.y + 317.0, &more, LIGHT_TEXT());
         }
 
+        // Save to: one folder for every file, or (empty) each to its category's folder, as Link
+        // grabber's packages.
+        // i18n: Batch download: the folder every file goes to (a label before its box)
+        let folder_label = crate::i18n::t("Save to:");
+        winui::fit(
+            ui,
+            &p,
+            o.x + 11.0,
+            winui::baseline_in(o.y + 354.0, 21.0),
+            folder_label,
+            LIGHT_TEXT(),
+            o.x + 98.0,
+            "batch-folder-label",
+        );
+        winui::folder_box(
+            ui,
+            r(o, 102.0, 354.0, 362.0, 21.0),
+            &mut self.folder,
+            "batch-folder",
+            Some(crate::i18n::t("Each file's category folder")),
+        );
+
         let valid = !urls.is_empty();
         let ok = winui::button_light(
             ui,
-            r(o, 274.0, 354.0, 73.0, 21.0),
+            r(o, 274.0, 387.0, 73.0, 21.0),
             "OK",
             if valid {
                 ButtonKind::Default
@@ -396,7 +430,7 @@ impl Batch {
         let ok = winui::why_disabled(ok, !valid, why.unwrap_or("")).clicked();
         let cancel = winui::button_light(
             ui,
-            r(o, 372.0, 354.0, 73.0, 21.0),
+            r(o, 372.0, 387.0, 73.0, 21.0),
             "Cancel",
             ButtonKind::Normal,
             false,
@@ -492,6 +526,19 @@ mod tests {
             !Batch::new().focus_to,
             "File → Add batch download: the address"
         );
+    }
+
+    /// #1403: Save to empty (or blank) gives no folder, each file going to its category's;
+    /// a folder typed or chosen is given whole, without the spaces around it.
+    #[test]
+    fn save_to_gives_the_batch_its_folder() {
+        let mut b = batch("http://x/img*.jpg");
+        assert_eq!(b.save_to(), None);
+        b.folder = "   ".into();
+        assert_eq!(b.save_to(), None);
+        let folder = std::env::temp_dir().join("Batch pictures");
+        b.folder = format!("  {}  ", folder.display());
+        assert_eq!(b.save_to(), Some(folder));
     }
 
     #[test]

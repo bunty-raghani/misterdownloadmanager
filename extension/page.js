@@ -1,10 +1,13 @@
 // Mister Download Manager's link watcher (a content script, in every page and frame):
 //  - a link clicked with Alt held (Option on a Mac) is the browser's to download (background.js
 //    leaves its download alone), the key the app's help names for it. The background hears of
-//    it as the button goes down, before the browser can start a download (Chromium and Safari
-//    download such a link themselves at the click). Firefox does nothing with that click (its
-//    Alt+click saves a link only with browser.altClickSave set, off by default), so there the
-//    link is followed as a plain click follows it, once the background knows (#332);
+//    it as the button goes down, before the browser can start a download. The link is then
+//    followed as a plain click follows it, once the background knows, in every browser (#332,
+//    #1494): the browser's own Alt+click is stopped. Chromium and Safari would save the link
+//    without opening it ("download link"), which saves a bot check's page ("Just a moment...")
+//    instead of letting its script run; followed, the check runs in the tab and the download
+//    that comes after it stays the browser's. Firefox does nothing with that click (it saves
+//    the link only with browser.altClickSave set, off by default);
 //  - Safari only: it has no downloads API, so background.js can't take a download from the
 //    browser. The click on a link to a file type Options lists is held here instead and offered
 //    to the app (message `link`); if the app doesn't take it, the click goes on as if never held.
@@ -15,7 +18,6 @@
   if (prev && typeof prev.stop === "function") prev.stop();
   const ext = globalThis.browser ?? globalThis.chrome;
   const SAFARI = Boolean(ext.runtime.getManifest?.().browser_specific_settings?.safari);
-  const FIREFOX = /^moz-extension:/i.test(ext.runtime.getURL?.("") || "");
 
   const tell = (message) => {
     try {
@@ -29,7 +31,10 @@
   // ---- Safari: the file types to hold links for (Options, as background.js keeps them) --------
 
   let patterns = [];
+  // The app's Torrent settings leave .torrent files to the browser (#1058).
+  let noTorrents = false;
   const learn = (rules) => {
+    noTorrents = Boolean(rules && rules.torrents === false);
     // As background.js typePatterns reads the list: names separated by spaces, `*` any run.
     patterns =
       rules && rules.capture
@@ -98,11 +103,14 @@
     if (a) tell({ type: "bypass", url: a.href });
   };
 
-  // Firefox: an Alt+click on a link the page left alone (no script of its own took it) is
-  // followed as a plain click once the background has it; the browser's own handling of it
-  // (nothing, or a save with browser.altClickSave) is stopped, so it happens once.
+  // An Alt+click on a link the page left alone (no script of its own took it) is followed as a
+  // plain click once the background has it; the browser's own handling of it (Chromium's and
+  // Safari's save of the link, Firefox's nothing, or its save with browser.altClickSave) is
+  // stopped, so it happens once. Alt with Ctrl, Cmd or Shift (a new tab or window), the middle
+  // button: the browser's own, as they are. A `download` link is followed as such (the browser
+  // downloads it, under its name).
   const follow = (e) => {
-    if (!FIREFOX || !e.altKey || e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey) return;
+    if (!e.altKey || e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey) return;
     if (e.defaultPrevented) return;
     const a = linkOf(e);
     if (!a) return;
@@ -121,7 +129,7 @@
     // Safari: a plain click (or Cmd/Shift: a link opened elsewhere is held the same).
     if (SAFARI && e.type === "click" && e.button === 0 && patterns.length) {
       const type = typeOf(a);
-      if (type && patterns.some((p) => p.test(type))) hold(e, a);
+      if (type && !(noTorrents && /^torrent$/i.test(type)) && patterns.some((p) => p.test(type))) hold(e, a);
     }
   };
   addEventListener("pointerdown", press, true);

@@ -19,6 +19,9 @@ pub struct SlowDisk {
     pub cache: u64,
     /// What every flush during the transfer takes on top of writing what waits in the cache.
     pub flush_takes: Duration,
+    /// `flush_takes` for the forced flushes too (at the start and the end): a disk whose every
+    /// flush is slow, even with nothing of this file waiting (a busy disk's cache, #1328).
+    pub every_flush: bool,
     /// Held exclusively for each flush and shared for each write (tests watch it).
     pub gate: Arc<RwLock<()>>,
     backlog: Arc<Mutex<Backlog>>,
@@ -80,6 +83,7 @@ impl SlowDisk {
             rate,
             cache,
             flush_takes,
+            every_flush: false,
             gate: Default::default(),
             backlog: Arc::new(Mutex::new(Backlog {
                 bytes: 0.0,
@@ -93,6 +97,14 @@ impl SlowDisk {
     /// A disk that is only slow to flush (`takes`), its writes as fast as the real disk's.
     pub fn slow_flush(takes: Duration) -> Self {
         Self::new(0, u64::MAX, takes)
+    }
+
+    /// [`SlowDisk::slow_flush`], the forced flushes as slow (`every_flush`).
+    pub fn slow_every_flush(takes: Duration) -> Self {
+        SlowDisk {
+            every_flush: true,
+            ..Self::slow_flush(takes)
+        }
     }
 
     pub fn stats(&self) -> DiskStats {
@@ -119,6 +131,7 @@ impl SlowDisk {
     /// Run `flush` once everything in the cache is on the disk; `extra`: plus `flush_takes`
     /// (the saves while the connections run, not the forced ones at the start and the end).
     pub fn flush<T>(&self, extra: bool, flush: impl FnOnce() -> T) -> T {
+        let extra = extra || self.every_flush;
         let began = self.clock.now();
         // A forced save of a disk only slow to flush is a plain one (the gate tells tests a slow
         // flush runs).

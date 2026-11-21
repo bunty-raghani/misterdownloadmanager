@@ -92,9 +92,6 @@
       }
     }
   },
-  "popup_undo": {
-    "message": "Rückgängig"
-  },
   "popup_excluded": {
     "message": "Downloads von $site$ bleiben beim Browser",
     "placeholders": {
@@ -148,6 +145,9 @@
   },
   "declined_integration_off": {
     "message": "„Erweiterte Browserintegration verwenden“ ist in „Optionen → Allgemein“ deaktiviert."
+  },
+  "declined_torrents": {
+    "message": "Es ist ein Torrent, und „Magnet-Links und .torrent-Dateien mit Mister Download Manager öffnen“ ist in den Torrent-Einstellungen deaktiviert."
   },
   "declined_site_access": {
     "message": "Die Erweiterung darf diese Website nicht lesen (Websitezugriff des Browsers)."
@@ -328,5 +328,424 @@
   },
   "video_original": {
     "message": "Original"
+  },
+  "video_compatible": {
+    "message": "Am kompatibelsten"
+  },
+  "popup_video_hide_fullscreen": {
+    "message": "Download-Schaltfläche im Vollbildmodus ausblenden"
+  },
+  "popup_video_hide_fullscreen_title": {
+    "message": "Wenn die Seite im Vollbildmodus ist, wird für Videos keine Download-Schaltfläche angezeigt."
+  },
+  "popup_remote_forget": {
+    "message": "Vergessen"
+  },
+  "popup_gear": {
+    "message": "Optionen in Mister Download Manager"
+  },
+  "popup_tabs": {
+    "message": "Popup-Abschnitte"
+  },
+  "popup_tab_downloads": {
+    "message": "Downloads"
+  },
+  "popup_tab_page": {
+    "message": "Diese Seite"
+  },
+  "popup_tab_settings": {
+    "message": "Einstellungen"
+  },
+  "popup_conn": {
+    "message": "Verbunden · $version$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.5.2"
+      }
+    }
+  },
+  "popup_conn_plain": {
+    "message": "Verbunden"
+  },
+  "popup_conn_off": {
+    "message": "Nicht verbunden"
+  },
+  "popup_conn_paused": {
+    "message": "Angehalten"
+  },
+  "popup_conn_update": {
+    "message": "Mister Download Manager aktualisieren"
+  },
+  "popup_conn_remote": {
+    "message": "Wird an $server$ gesendet",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_cancel": {
+    "message": "Abbrechen"
+  },
+  "popup_page_none": {
+    "message": "Dies ist keine Webseite: Hier gibt es nichts zu tun."
+  },
+  "popup_exclude_by_rule": {
+    "message": "Vom Browser durch eine Regel in den Optionen belassen"
+  },
+  "popup_dl_search": {
+    "message": "Downloads suchen"
+  },
+  "popup_dl_filters": {
+    "message": "Anzeigen"
+  },
+  "popup_dl_all": {
+    "message": "Alle"
+  },
+  "popup_dl_running": {
+    "message": "Wird ausgeführt"
+  },
+  "popup_dl_done_filter": {
+    "message": "Fertig"
+  },
+  "popup_dl_failed_filter": {
+    "message": "Fehlgeschlagen"
+  },
+  "popup_dl_clear": {
+    "message": "Fertige löschen"
+  },
+  "popup_dl_running_count": {
+    "message": "$count$ Downloads laufen gerade",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_remote": {
+    "message": "Dies sind die Downloads von Mister Download Manager auf $server$. Öffnen Sie die Dateien dort.",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_dl_more": {
+    "message": "Die neuesten $shown$ von $total$. Mister Download Manager listet alle auf.",
+    "placeholders": {
+      "shown": {
+        "content": "$1",
+        "example": "60"
+      },
+      "total": {
+        "content": "$2",
+        "example": "245"
+      }
+    }
+  },
+  "popup_dl_of": {
+    "message": "$done$ von $size$",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "12.3 MB"
+      },
+      "size": {
+        "content": "$2",
+        "example": "48.7 MB"
+      }
+    }
+  },
+  "popup_dl_left": {
+    "message": "Noch $time$",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "0:42"
+      }
+    }
+  },
+  "popup_dl_starting": {
+    "message": "Startet..."
+  },
+  "popup_dl_paused": {
+    "message": "Angehalten"
+  },
+  "popup_dl_waiting": {
+    "message": "Wartet"
+  },
+  "popup_dl_done": {
+    "message": "Fertig"
+  },
+  "popup_dl_just_now": {
+    "message": "gerade eben"
+  },
+  "popup_dl_failed": {
+    "message": "Fehlgeschlagen"
+  },
+  "popup_dl_failed_why": {
+    "message": "Fehlgeschlagen: $why$",
+    "placeholders": {
+      "why": {
+        "content": "$1",
+        "example": "the server refused the connection"
+      }
+    }
+  },
+  "popup_dl_gone": {
+    "message": "Datei gelöscht oder verschoben"
+  },
+  "popup_dl_loading": {
+    "message": "Sucht nach Downloads..."
+  },
+  "popup_dl_none": {
+    "message": "Noch keine Downloads"
+  },
+  "popup_dl_none_text": {
+    "message": "Was Sie mit Mister Download Manager herunterladen, wird hier angezeigt."
+  },
+  "popup_dl_no_match": {
+    "message": "Keine Übereinstimmungen"
+  },
+  "popup_dl_no_match_text": {
+    "message": "Kein Downloadname oder keine Adresse enthält „$words$“.",
+    "placeholders": {
+      "words": {
+        "content": "$1",
+        "example": "report"
+      }
+    }
+  },
+  "popup_dl_show_all": {
+    "message": "Alle Downloads anzeigen"
+  },
+  "popup_list_off": {
+    "message": "Mister Download Manager wird nicht ausgeführt"
+  },
+  "popup_list_off_text": {
+    "message": "Starten Sie es, um Ihre Downloads hier anzuzeigen."
+  },
+  "popup_list_start": {
+    "message": "Mister Download Manager starten"
+  },
+  "popup_list_old": {
+    "message": "Mister Download Manager aktualisieren"
+  },
+  "popup_list_old_text": {
+    "message": "Diese Version kann ihre Downloads hier noch nicht auflisten."
+  },
+  "popup_list_busy": {
+    "message": "Mister Download Manager ist ausgelastet. Versuche es erneut..."
+  },
+  "popup_list_unreached": {
+    "message": "Mister Download Manager nicht erreichbar"
+  },
+  "popup_list_remote_unreachable": {
+    "message": "Mister Download Manager unter $server$ nicht erreichbar",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_list_remote_unreachable_text": {
+    "message": "Überprüfen Sie, ob es ausgeführt wird und ob dieser Browser sein Zertifikat akzeptiert (Einstellungen → Downloads senden an → Öffnen).",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_act_open": {
+    "message": "Öffnen"
+  },
+  "popup_act_open_named": {
+    "message": "$file$ öffnen",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_folder": {
+    "message": "Im Ordner anzeigen"
+  },
+  "popup_act_folder_named": {
+    "message": "$file$ im Ordner anzeigen",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_copy_file": {
+    "message": "Datei kopieren"
+  },
+  "popup_act_share": {
+    "message": "Teilen..."
+  },
+  "popup_act_copy_link": {
+    "message": "Link kopieren"
+  },
+  "popup_act_pause": {
+    "message": "Anhalten"
+  },
+  "popup_act_pause_named": {
+    "message": "$file$ anhalten",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_resume": {
+    "message": "Fortsetzen"
+  },
+  "popup_act_resume_named": {
+    "message": "$file$ fortsetzen",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_again": {
+    "message": "Erneut herunterladen"
+  },
+  "popup_act_remove": {
+    "message": "Aus Liste entfernen"
+  },
+  "popup_act_delete": {
+    "message": "Datei löschen..."
+  },
+  "popup_act_more": {
+    "message": "Weitere Aktionen"
+  },
+  "popup_act_more_named": {
+    "message": "Weitere Aktionen für $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_title": {
+    "message": "Datei löschen?"
+  },
+  "popup_ask_delete": {
+    "message": "Möchten Sie $file$ wirklich löschen und den Download aus der Liste entfernen? Dies kann nicht rückgängig gemacht werden.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_ok": {
+    "message": "Löschen"
+  },
+  "popup_ask_clear_title": {
+    "message": "Fertige Downloads löschen?"
+  },
+  "popup_ask_clear": {
+    "message": "Die $count$ abgeschlossenen Downloads werden aus der Liste entfernt. Ihre Dateien bleiben, wo sie sind.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "8"
+      }
+    }
+  },
+  "popup_ask_clear_ok": {
+    "message": "Löschen"
+  },
+  "popup_said_file": {
+    "message": "$file$ kopiert. Fügen Sie es in einen Ordner, einen Chat oder eine Nachricht ein.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_link": {
+    "message": "Link kopiert"
+  },
+  "popup_said_removed": {
+    "message": "$file$ aus der Liste entfernt",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_deleted": {
+    "message": "$file$ gelöscht",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_again": {
+    "message": "$file$ wird erneut heruntergeladen",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_cleared": {
+    "message": "Fertige Downloads gelöscht"
+  },
+  "popup_act_gone": {
+    "message": "Dieser Download ist nicht mehr in der Liste."
+  },
+  "popup_act_missing": {
+    "message": "Die Datei befindet sich nicht mehr am Speicherort (verschoben oder gelöscht)."
+  },
+  "popup_act_running": {
+    "message": "Zuerst anhalten."
+  },
+  "popup_act_cant": {
+    "message": "Diese Aktion kann für diesen Download jetzt nicht ausgeführt werden."
+  },
+  "popup_act_unsupported": {
+    "message": "Dieses System kann das nicht."
+  },
+  "popup_act_off": {
+    "message": "Mister Download Manager wird nicht ausgeführt."
+  },
+  "popup_act_busy": {
+    "message": "Mister Download Manager hat nicht rechtzeitig geantwortet. Versuchen Sie es erneut."
+  },
+  "popup_act_failed": {
+    "message": "Das hat nicht funktioniert. Versuchen Sie es erneut."
+  },
+  "status_running": {
+    "message": "Wird heruntergeladen: $count$",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_open_remote": {
+    "message": "Seite öffnen"
   }
 }

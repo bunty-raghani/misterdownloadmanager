@@ -1,102 +1,374 @@
-/* The toolbar button's popup: the app's look (Windows 11 controls, one blue), day and dark. */
+/* The toolbar button's popup (#1496): MDM's own look, Windows 11's controls in light and dark,
+   one blue (#0078D4), read-only things flat grey. 400 px wide by default; it reflows from the
+   360 px or so Firefox's overflow panel gives it up to the 800 px a browser allows (container
+   queries on .shell), right to left, at any zoom. */
 :root {
-  --bg: #ffffff;
-  --text: #1a1a1a;
-  --muted: #5f5f5f;
-  --edge: #d6d6d6;
-  --field: #f5f5f5;
+  --popup-w: 400px;
+  --popup-h: 548px;
+  --bg: #f9f9f9;
+  --surface: #ffffff;
+  --hover: rgba(0, 0, 0, 0.042);
+  /* A row under the pointer, opaque (the quick buttons fade the text under them into it). */
+  --row-hover: #f0f0f0;
+  --press: rgba(0, 0, 0, 0.068);
+  --field: #ffffff;
+  --text: #1b1b1b;
+  --text-2: #5d5d5d;
+  --text-3: #8a8a8a;
+  --line: #e5e5e5;
+  --control: #d4d4d4;
+  --control-under: #a8a8a8;
   --accent: #0078d4;
-  --accent-text: #ffffff;
+  --accent-hover: #1a86d9;
+  --accent-press: #2b8fdc;
+  --accent-ink: #005fb8;
+  --on-accent: #ffffff;
+  --accent-soft: rgba(0, 120, 212, 0.1);
   --ok: #0f7b0f;
   --bad: #c42b1c;
+  --bad-soft: rgba(196, 43, 28, 0.08);
   --warn: #9d5d00;
-  color-scheme: light dark;
+  --track: #e1e1e1;
+  --focus: #1b1b1b;
+  --shadow: 0 8px 16px rgba(0, 0, 0, 0.14), 0 0 2px rgba(0, 0, 0, 0.12);
+  --r: 4px;
+  --r-lg: 8px;
+  color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #202020;
-    --text: #f3f3f3;
-    --muted: #b5b5b5;
-    --edge: #3d3d3d;
-    --field: #2b2b2b;
-    --accent: #4cc2ff;
-    --accent-text: #000000;
+    --surface: #2b2b2b;
+    --hover: rgba(255, 255, 255, 0.06);
+    --row-hover: #2d2d2d;
+    --press: rgba(255, 255, 255, 0.04);
+    --field: #2d2d2d;
+    --text: #ffffff;
+    --text-2: #c8c8c8;
+    --text-3: #9d9d9d;
+    --line: #3a3a3a;
+    --control: #454545;
+    --control-under: #8a8a8a;
+    --accent-ink: #60cdff;
+    --accent-soft: rgba(96, 205, 255, 0.12);
     --ok: #6ccb5f;
     --bad: #ff99a4;
+    --bad-soft: rgba(255, 153, 164, 0.1);
     --warn: #fce100;
+    --track: #3d3d3d;
+    --focus: #ffffff;
+    --shadow: 0 8px 16px rgba(0, 0, 0, 0.4), 0 0 2px rgba(0, 0, 0, 0.5);
+    color-scheme: dark;
   }
 }
+
 * { box-sizing: border-box; }
 /* The hidden attribute wins over a class's display ("How to fix it" showed while connected). */
 [hidden] { display: none !important; }
+html { background: var(--bg); }
 body {
-  margin: 0;
-  width: 300px;
-  padding: 12px 14px;
+  /* At the left whatever the direction: a page wider than the popup (the popup opened in a tab)
+     doesn't push a right-to-left one out of the picture. */
+  margin: 0 auto 0 0;
+  width: var(--popup-w);
   background: var(--bg);
   color: var(--text);
-  font: 13px/1.4 "Segoe UI", system-ui, sans-serif;
+  font: 13px/1.38 "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, "Noto Sans", sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
-header { display: flex; align-items: center; gap: 8px; font-weight: 600; margin-bottom: 10px; }
-.status { display: flex; align-items: flex-start; gap: 8px; padding: 8px 10px; background: var(--field); border: 1px solid var(--edge); border-radius: 4px; }
-.dot { flex: none; width: 8px; height: 8px; margin-top: 6px; border-radius: 50%; background: var(--muted); }
-.status.ok .dot { background: var(--ok); }
-.status.bad .dot { background: var(--bad); }
-.status.warn .dot { background: var(--warn); }
-.link { display: inline-block; margin: 6px 0 0; color: var(--accent); text-decoration: none; cursor: pointer; }
-.link:hover { text-decoration: underline; }
-.switch { display: flex; align-items: center; gap: 8px; margin: 12px 0 4px; cursor: pointer; }
-.switch input { width: 16px; height: 16px; margin: 0; accent-color: var(--accent); }
-button {
-  font: inherit;
-  color: var(--text);
-  background: var(--field);
-  border: 1px solid var(--edge);
-  border-radius: 4px;
-  padding: 5px 12px;
-  cursor: pointer;
+/* Firefox's fixed-width panel (popup.js fitPanel): the panel's width, whatever it is. */
+.fit body { width: 100vw; }
+button, input { font: inherit; color: inherit; }
+.ico { flex: none; fill: none; stroke: currentColor; stroke-width: 1.25; stroke-linecap: round; stroke-linejoin: round; }
+.ico .dot-fill { fill: currentColor; stroke: none; }
+
+.shell {
+  container: shell / inline-size;
+  display: flex;
+  flex-direction: column;
+  height: var(--popup-h);
+  max-height: 600px;
+  position: relative;
 }
-button:hover { filter: brightness(0.96); }
-button:focus-visible, input:focus-visible, .link:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-button.accent { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
-button.row { width: 100%; text-align: start; margin-top: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-/* Each button as wide as its text; when both don't fit on one line (a wider font, a longer
-   language), Options goes below Open and each takes the whole line, so neither is cut. */
-.actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-.actions button { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.note { color: var(--muted); margin: 10px 0 0; font-size: 12px; }
-/* The last download left to the browser, and why (#208): its name on one line, the rule below. */
-.declined { margin: 10px 0 0; font-size: 12px; }
-.declined span { display: block; }
+
+/* ---- focus: Windows 11's ring, two pixels, outside the control --------------------------- */
+:focus { outline: none; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; border-radius: var(--r); }
+.dl :focus-visible { outline-offset: -2px; }
+
+/* ---- the header -------------------------------------------------------------------------- */
+.top { display: flex; align-items: center; gap: 10px; padding: 12px 10px 10px 14px; }
+.logo { flex: none; }
+.ident { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ident .name { font-size: 14px; font-weight: 600; line-height: 1.25; letter-spacing: -0.005em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.conn { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-2); min-width: 0; }
+.conn #status-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dot { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--text-3); }
+.conn.ok .dot { background: var(--ok); }
+.conn.bad .dot { background: var(--bad); }
+.conn.warn .dot { background: var(--warn); }
+.problem { margin: 0 12px 8px; padding: 8px 10px; border-radius: var(--r); background: var(--bad-soft); border: 1px solid color-mix(in srgb, var(--bad) 30%, transparent); font-size: 12px; }
+.problem p { margin: 0 0 2px; }
+
+/* ---- buttons ----------------------------------------------------------------------------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  min-height: 30px; padding: 4px 12px;
+  background: var(--surface); color: var(--text);
+  border: 1px solid var(--control); border-bottom-color: color-mix(in srgb, var(--control) 70%, var(--control-under));
+  border-radius: var(--r);
+  cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.btn:hover { background: color-mix(in srgb, var(--surface) 92%, var(--text)); }
+.btn:active { background: color-mix(in srgb, var(--surface) 88%, var(--text)); color: var(--text-2); }
+.btn.accent { background: var(--accent); color: var(--on-accent); border-color: transparent; border-bottom-color: rgba(0, 0, 0, 0.25); }
+.btn.accent:hover { background: var(--accent-hover); }
+.btn.accent:active { background: var(--accent-press); color: rgba(255, 255, 255, 0.8); }
+.btn.danger { background: var(--bad); color: #fff; border-color: transparent; }
+.btn.danger:hover { background: color-mix(in srgb, var(--bad) 88%, #000); }
+.btn.subtle { background: transparent; border-color: transparent; color: var(--text); }
+.btn.subtle:hover { background: var(--hover); }
+.btn.small { min-height: 26px; padding: 2px 10px; font-size: 12px; }
+.btn:disabled, .btn:disabled:hover { background: var(--hover); color: var(--text-3); border-color: transparent; cursor: default; }
+.btn.accent:disabled { background: var(--track); color: var(--text-3); }
+.btn.subtle:disabled, .btn.subtle:disabled:hover { background: transparent; }
+.icon-btn {
+  flex: none; display: inline-grid; place-items: center;
+  width: 32px; height: 32px; padding: 0;
+  background: transparent; border: 0; border-radius: var(--r); color: var(--text-2); cursor: pointer;
+}
+.icon-btn.small { width: 28px; height: 28px; }
+.icon-btn:hover { background: var(--hover); color: var(--text); }
+.icon-btn:active { background: var(--press); }
+.icon-btn:disabled { color: var(--text-3); opacity: 0.6; background: none; cursor: default; }
+.link, .link-btn { color: var(--accent-ink); text-decoration: none; cursor: pointer; background: none; border: 0; padding: 0; }
+.link:hover, .link-btn:hover { text-decoration: underline; }
+
+/* ---- tabs: Windows 11's top navigation, the selected one underlined in the accent -------- */
+.tabs { display: flex; gap: 2px; padding: 0 8px; border-bottom: 1px solid var(--line); }
+.tab {
+  position: relative; flex: 1 1 0; min-width: 0;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  height: 36px; padding: 0 8px;
+  background: transparent; border: 0; border-radius: var(--r) var(--r) 0 0;
+  color: var(--text-2); cursor: pointer;
+}
+.tab > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tab:hover { color: var(--text); background: var(--hover); }
+.tab[aria-selected="true"] { color: var(--text); font-weight: 600; }
+.tab[aria-selected="true"]::after {
+  content: ""; position: absolute; left: 50%; bottom: -1px; width: 20px; height: 3px; margin-left: -10px;
+  border-radius: 2px; background: var(--accent);
+}
+.pill {
+  flex: none; min-width: 18px; height: 16px; padding: 0 5px; border-radius: 8px;
+  background: var(--accent); color: var(--on-accent);
+  font-size: 11px; font-weight: 600; line-height: 16px; text-align: center; font-variant-numeric: tabular-nums;
+}
+.pill.quiet { background: var(--track); color: var(--text-2); }
+
+/* ---- panels ------------------------------------------------------------------------------ */
+.panel { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.panel .scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 12px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 4px 12px; margin: 0; }
+.card h2, .media h2 { margin: 8px 0 4px; font-size: 12px; font-weight: 600; color: var(--text-2); }
+.note { color: var(--text-2); margin: 0; font-size: 12px; }
+.note.bad, .bad { color: var(--bad); }
+.note.tip { color: var(--text-3); }
+
+/* A switch row: the text, then Windows 11's toggle switch. */
+.toggle-row { display: flex; align-items: center; gap: 12px; min-height: 40px; padding: 6px 0; cursor: pointer; }
+.toggle-row + .toggle-row { border-top: 1px solid var(--line); }
+.toggle-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.toggle-text .sub { color: var(--text-2); font-size: 12px; }
+.toggle {
+  appearance: none; -webkit-appearance: none; flex: none; position: relative; margin: 0;
+  width: 40px; height: 20px; border-radius: 10px; border: 1px solid var(--control-under);
+  background: transparent; cursor: pointer; transition: background 0.12s;
+}
+.toggle::before {
+  content: ""; position: absolute; top: 3px; inset-inline-start: 3px; width: 12px; height: 12px; border-radius: 50%;
+  background: var(--text-2); transition: inset-inline-start 0.12s, width 0.12s;
+}
+.toggle:hover::before { width: 14px; top: 2px; height: 14px; }
+.toggle:checked { background: var(--accent); border-color: var(--accent); }
+.toggle:checked::before { background: #fff; inset-inline-start: 23px; }
+.toggle:checked:hover::before { inset-inline-start: 21px; }
+.toggle:disabled { opacity: 0.5; cursor: default; }
+.toggle:focus-visible { outline-offset: 2px; border-radius: 10px; }
+
+.said-inline { margin: 0 0 8px; padding: 6px 10px; border-radius: var(--r); background: var(--accent-soft); font-size: 12px; overflow-wrap: anywhere; }
+.declined { display: flex; flex-direction: column; gap: 2px; padding: 8px 12px; font-size: 12px; }
 #declined-what { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-#declined-why { color: var(--muted); }
-/* "Never take downloads from <site>" done (#404): it says so where the button was, with Undo. */
-.excluded { display: flex; align-items: center; gap: 10px; margin: 6px 0 0; padding: 6px 10px; background: var(--field); border: 1px solid var(--edge); border-radius: 4px; }
-#excluded-text { flex: 1; min-width: 0; overflow-wrap: anywhere; }
-button.undo { flex: none; padding: 2px 4px; border: 0; background: none; color: var(--accent); }
-button.undo:hover { filter: none; text-decoration: underline; }
-footer { display: flex; justify-content: space-between; align-items: baseline; margin-top: 10px; border-top: 1px solid var(--edge); padding-top: 6px; color: var(--muted); font-size: 12px; }
-/* Help and Support MDM side by side on the footer's one line: the popup keeps its height. */
-.footer-links { display: flex; align-items: baseline; gap: 14px; min-width: 0; }
-/* The media the tab loaded (#38): one row each, its type, name, what is known, and Download. */
-.media { margin-top: 12px; border-top: 1px solid var(--edge); padding-top: 8px; }
-.media h2 { margin: 0 0 6px; font-size: 12px; font-weight: 600; color: var(--muted); }
-.media ul { list-style: none; margin: 0; padding: 0; max-height: 228px; overflow-y: auto; }
-.media li { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--edge); }
-.media li:last-child { border-bottom: 0; }
-.tag { flex: none; min-width: 38px; padding: 1px 4px; border: 1px solid var(--edge); border-radius: 3px; background: var(--field); font-size: 10px; font-weight: 600; text-align: center; letter-spacing: .02em; }
+#declined-why { color: var(--text-2); }
+
+/* Settings: where downloads go (#157). */
+.choice { display: flex; align-items: center; gap: 8px; min-height: 30px; cursor: pointer; }
+.choice input { margin: 0; accent-color: var(--accent); width: 16px; height: 16px; flex: none; }
+.send { padding-bottom: 8px; }
+.remote-item { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.remote-item .choice { min-width: 0; flex: 1; }
+.remote-item .choice span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.remote-form { display: flex; flex-direction: column; gap: 6px; padding: 4px 0 0 24px; }
+[dir="rtl"] .remote-form { padding: 4px 24px 0 0; }
+.field {
+  width: 100%; min-height: 30px; padding: 4px 8px;
+  background: var(--field); border: 1px solid var(--control); border-bottom-color: var(--control-under); border-radius: var(--r);
+}
+.field:focus { border-bottom: 2px solid var(--accent); padding-bottom: 3px; outline: none; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.actions .btn { flex: 1 1 auto; min-width: 0; }
+.about { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; color: var(--text-3); font-size: 12px; padding: 0 2px 4px; margin-top: auto; }
+.footer-links { display: flex; align-items: baseline; gap: 14px; min-width: 0; flex-wrap: wrap; }
+
+/* This page: the media the tab loaded (#38), a card: its title, the naming switch, the list. */
+.media { display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 4px 12px; }
+.media .note { padding: 6px 0 8px; }
+.media ul { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.media ul:empty { display: none; }
+.media li { display: flex; align-items: center; gap: 10px; padding: 8px 0; }
+.media li + li { border-top: 1px solid var(--line); }
+.tag { flex: none; min-width: 40px; padding: 2px 4px; border-radius: 3px; background: var(--track); color: var(--text-2); font-size: 10px; font-weight: 600; text-align: center; letter-spacing: 0.02em; }
 .what { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .what .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.what .meta { color: var(--muted); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.media li button { flex: none; padding: 3px 10px; }
-.media li button:disabled { cursor: default; color: var(--muted); filter: none; }
+.what .meta { color: var(--text-2); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .drm { flex: none; color: var(--bad); font-size: 11px; font-weight: 600; }
-.media .note { margin-top: 6px; }
-.media .note.bad { color: var(--bad); }
-/* Send downloads to (#157): this computer, or another MDM with its address and a pairing code. */
-.send { margin-top: 12px; border-top: 1px solid var(--edge); padding-top: 8px; }
-.send h2 { margin: 0 0 6px; font-size: 12px; font-weight: 600; color: var(--muted); }
-.choice { display: flex; align-items: center; gap: 6px; margin: 4px 0; }
-#remote-form input[type="url"], #remote-form input[inputmode] { width: 100%; box-sizing: border-box; margin-top: 6px; padding: 4px 6px; border: 1px solid var(--edge); border-radius: 4px; background: var(--field); color: inherit; font: inherit; }
-#remote-form .actions { margin-top: 8px; }
-.note.bad { color: var(--bad); }
+
+/* ---- Downloads (#1496) ------------------------------------------------------------------- */
+.dl-tools { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px 8px; }
+.search { position: relative; display: block; }
+.search-ico { position: absolute; inset-inline-start: 9px; top: 50%; translate: 0 -50%; display: grid; color: var(--text-3); pointer-events: none; }
+#dl-search {
+  width: 100%; height: 32px; padding: 0 10px; padding-inline-start: 32px;
+  background: var(--field); border: 1px solid var(--control); border-bottom-color: var(--control-under); border-radius: var(--r);
+}
+#dl-search::placeholder { color: var(--text-3); }
+#dl-search:focus { border-bottom: 2px solid var(--accent); outline: none; }
+#dl-search::-webkit-search-cancel-button { cursor: pointer; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px;
+  border-radius: 13px; border: 1px solid var(--control); background: var(--surface); color: var(--text);
+  cursor: pointer; font-size: 12px;
+}
+.chip:hover { background: color-mix(in srgb, var(--surface) 92%, var(--text)); }
+.chip[aria-checked="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.chip .n { font-variant-numeric: tabular-nums; color: var(--text-2); font-size: 11px; }
+.chip .n:empty { display: none; }
+.chip[aria-checked="true"] .n { color: rgba(255, 255, 255, 0.85); }
+.chip:focus-visible { border-radius: 13px; }
+.note-bar { display: flex; align-items: center; gap: 8px; margin: 0 12px 6px; padding: 6px 10px; border-radius: var(--r); background: var(--accent-soft); font-size: 12px; color: var(--text); }
+.note-bar .ico { color: var(--accent-ink); }
+
+.dl-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 2px 6px 6px; scrollbar-gutter: stable; }
+.dl-list { list-style: none; margin: 0; padding: 0; }
+.dl {
+  position: relative; display: flex; align-items: center; gap: 10px;
+  min-height: 52px; padding: 6px 6px 6px 8px; border-radius: var(--r-lg);
+}
+[dir="rtl"] .dl { padding: 6px 8px 6px 6px; }
+.dl:hover, .dl:focus-within { background: var(--row-hover); }
+.dl-icon { flex: none; width: 28px; height: 28px; display: grid; place-items: center; color: var(--text-3); }
+.dl-icon img { width: 24px; height: 24px; }
+.dl-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.dl-name {
+  display: block; max-width: 100%; padding: 0; margin: 0; border: 0; background: none;
+  text-align: start; white-space: nowrap; overflow: hidden;
+  font-weight: 500; color: var(--text); line-height: 18px; unicode-bidi: plaintext;
+}
+/* Right to left, a name in Latin letters still starts at the row's start, as its status does. */
+[dir="rtl"] .dl-name { text-align: right; }
+button.dl-name { cursor: pointer; }
+button.dl-name:hover { text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--text) 40%, transparent); text-underline-offset: 2px; }
+.dl-status { font-size: 12px; line-height: 16px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+.dl-status.ok { color: var(--ok); }
+.dl-status.bad { color: var(--bad); }
+.dl-status.muted { color: var(--text-3); }
+.dl[data-state="gone"] .dl-name { color: var(--text-3); }
+.dl[data-state="gone"] .dl-icon { opacity: 0.45; filter: grayscale(1); }
+.dl[data-state="failed"] .dl-icon { position: relative; }
+.dl-bar { display: block; height: 3px; margin-top: 4px; border-radius: 2px; background: var(--track); overflow: hidden; }
+.dl-bar > span { display: block; height: 100%; width: 0; border-radius: 2px; background: var(--accent); transition: width 0.4s ease-out; }
+.dl-bar.paused > span { background: var(--text-3); }
+.dl-bar.busy > span { width: 30%; animation: busy 1.4s ease-in-out infinite; }
+@keyframes busy { from { margin-inline-start: -30%; } to { margin-inline-start: 100%; } }
+
+/* The row's quick buttons: shown on its hover or focus, over the end of its text (which fades
+   into the row under them), so nothing moves and the name keeps its cut. */
+.dl-quick {
+  position: absolute; inset-inline-end: 40px; top: 50%; translate: 0 -50%;
+  display: flex; gap: 2px; padding-inline-start: 20px;
+  background: linear-gradient(to right, transparent, var(--row-hover) 18px);
+  opacity: 0; pointer-events: none;
+}
+[dir="rtl"] .dl-quick { background: linear-gradient(to left, transparent, var(--row-hover) 18px); }
+.dl:hover .dl-quick, .dl:focus-within .dl-quick { opacity: 1; pointer-events: auto; }
+.dl-more { color: var(--text-2); }
+
+.empty { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 4px; padding: 40px 24px; color: var(--text-2); }
+.empty-ico { display: grid; place-items: center; width: 56px; height: 56px; margin-bottom: 8px; border-radius: 50%; background: var(--surface); border: 1px solid var(--line); color: var(--text-3); }
+.empty-title { margin: 0; font-size: 14px; font-weight: 600; color: var(--text); }
+.empty-text { margin: 0 0 8px; font-size: 12px; max-width: 300px; }
+.empty.busy .empty-ico { animation: breathe 1.6s ease-in-out infinite; }
+@keyframes breathe { 50% { opacity: 0.45; } }
+.more-note { margin: 8px 8px 4px; text-align: center; color: var(--text-3); font-size: 12px; }
+
+.foot { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 8px 12px 12px; border-top: 1px solid var(--line); }
+.foot .btn.accent { flex: 0 1 auto; max-width: 100%; margin-inline-start: auto; padding-inline: 16px; }
+.foot .btn.subtle { flex: 0 1 auto; margin-inline-start: -8px; }
+
+/* ---- the menu (⋯) and the question -------------------------------------------------------- */
+.menu {
+  position: fixed; z-index: 10; min-width: 200px; max-width: calc(100vw - 8px); padding: 4px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--shadow);
+}
+.menu-item {
+  display: flex; align-items: center; gap: 10px; width: 100%; height: 30px; padding: 0 10px;
+  background: none; border: 0; border-radius: var(--r); color: var(--text); text-align: start; cursor: pointer; white-space: nowrap;
+}
+.menu-item .ico { color: var(--text-2); }
+.menu-item:hover, .menu-item:focus { background: var(--hover); }
+.menu-item:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+.menu-item.danger, .menu-item.danger .ico { color: var(--bad); }
+.menu .sep { height: 1px; margin: 4px -4px; background: var(--line); }
+
+.ask {
+  width: min(320px, calc(100vw - 32px)); padding: 20px; border: 1px solid var(--line); border-radius: var(--r-lg);
+  background: var(--surface); color: var(--text); box-shadow: var(--shadow);
+}
+.ask::backdrop { background: rgba(0, 0, 0, 0.3); }
+.ask h2 { margin: 0 0 8px; font-size: 16px; font-weight: 600; }
+.ask p { margin: 0 0 20px; color: var(--text-2); overflow-wrap: anywhere; }
+.ask .actions .btn { flex: 1 1 0; }
+
+.said {
+  position: absolute; inset-inline: 12px; bottom: 60px; z-index: 5; margin: 0; padding: 8px 12px;
+  border-radius: var(--r); background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); font-size: 12px;
+}
+.said.ok { border-inline-start: 3px solid var(--ok); }
+.said.bad { border-inline-start: 3px solid var(--bad); }
+body:not([data-tab="downloads"]) .said { bottom: 12px; }
+
+/* ---- widths --------------------------------------------------------------------------------- */
+/* Narrow (Firefox's overflow panel): tighter, the chips' counts kept, the footer's buttons in a column. */
+@container shell (max-width: 380px) {
+  .top { padding-inline: 12px 8px; }
+  .dl-tools { padding-inline: 10px; }
+  .chip { padding: 0 8px; }
+  .dl { gap: 8px; }
+}
+/* Wide (up to 800 px): more room for names and status, the filters beside the search. */
+@container shell (min-width: 560px) {
+  .dl-tools { flex-direction: row; align-items: center; }
+  .search { flex: 1; }
+  .dl { min-height: 48px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+  .dl-bar.busy > span { width: 100%; opacity: 0.5; margin: 0; }
+}
+@media (forced-colors: active) {
+  .tab[aria-selected="true"]::after, .dl-bar > span, .pill { background: Highlight; forced-color-adjust: none; }
+  .toggle:checked { background: Highlight; }
+}

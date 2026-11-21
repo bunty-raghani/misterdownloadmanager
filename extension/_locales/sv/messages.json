@@ -92,9 +92,6 @@
       }
     }
   },
-  "popup_undo": {
-    "message": "Ångra"
-  },
   "popup_excluded": {
     "message": "Nedladdningar från $site$ stannar kvar i webbläsaren",
     "placeholders": {
@@ -148,6 +145,9 @@
   },
   "declined_integration_off": {
     "message": "Använd avancerad webbläsarintegrering är avstängd i Alternativ → Allmänt."
+  },
+  "declined_torrents": {
+    "message": "Det är en torrent, och Öppna magnetlänkar och .torrent-filer med Mister Download Manager är avstängt i Torrentinställningar."
   },
   "declined_site_access": {
     "message": "Tillägget får inte läsa den här webbplatsen (webbläsarens webbplatsåtkomst)."
@@ -328,5 +328,424 @@
   },
   "video_original": {
     "message": "original"
+  },
+  "video_compatible": {
+    "message": "Mest kompatibel"
+  },
+  "popup_video_hide_fullscreen": {
+    "message": "Dölj nedladdningsknappen i helskärm"
+  },
+  "popup_video_hide_fullscreen_title": {
+    "message": "Medan sidan är i helskärm visas ingen nedladdningsknapp för dess videor"
+  },
+  "popup_remote_forget": {
+    "message": "Glöm"
+  },
+  "popup_gear": {
+    "message": "Alternativ i Mister Download Manager"
+  },
+  "popup_tabs": {
+    "message": "Popup-avsnitt"
+  },
+  "popup_tab_downloads": {
+    "message": "Hämtningar"
+  },
+  "popup_tab_page": {
+    "message": "Den här sidan"
+  },
+  "popup_tab_settings": {
+    "message": "Inställningar"
+  },
+  "popup_conn": {
+    "message": "Ansluten · $version$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.5.2"
+      }
+    }
+  },
+  "popup_conn_plain": {
+    "message": "Ansluten"
+  },
+  "popup_conn_off": {
+    "message": "Inte ansluten"
+  },
+  "popup_conn_paused": {
+    "message": "Pausad"
+  },
+  "popup_conn_update": {
+    "message": "Uppdatera Mister Download Manager"
+  },
+  "popup_conn_remote": {
+    "message": "Skickar till $server$",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_cancel": {
+    "message": "Avbryt"
+  },
+  "popup_page_none": {
+    "message": "Det här är ingen webbsida: det finns inget att göra här."
+  },
+  "popup_exclude_by_rule": {
+    "message": "Överlämnades till webbläsaren av en regel i Alternativ"
+  },
+  "popup_dl_search": {
+    "message": "Sök hämtningar"
+  },
+  "popup_dl_filters": {
+    "message": "Visa"
+  },
+  "popup_dl_all": {
+    "message": "Alla"
+  },
+  "popup_dl_running": {
+    "message": "Körs"
+  },
+  "popup_dl_done_filter": {
+    "message": "Klar"
+  },
+  "popup_dl_failed_filter": {
+    "message": "Misslyckades"
+  },
+  "popup_dl_clear": {
+    "message": "Rensa slutförda"
+  },
+  "popup_dl_running_count": {
+    "message": "$count$ hämtas nu",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_remote": {
+    "message": "Det här är hämtningarna från Mister Download Manager på $server$. Öppna filerna där.",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_dl_more": {
+    "message": "De nyaste $shown$ av $total$. Mister Download Manager listar alla.",
+    "placeholders": {
+      "shown": {
+        "content": "$1",
+        "example": "60"
+      },
+      "total": {
+        "content": "$2",
+        "example": "245"
+      }
+    }
+  },
+  "popup_dl_of": {
+    "message": "$done$ av $size$",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "12.3 MB"
+      },
+      "size": {
+        "content": "$2",
+        "example": "48.7 MB"
+      }
+    }
+  },
+  "popup_dl_left": {
+    "message": "$time$ kvar",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "0:42"
+      }
+    }
+  },
+  "popup_dl_starting": {
+    "message": "Startar..."
+  },
+  "popup_dl_paused": {
+    "message": "Pausad"
+  },
+  "popup_dl_waiting": {
+    "message": "Väntar"
+  },
+  "popup_dl_done": {
+    "message": "Klar"
+  },
+  "popup_dl_just_now": {
+    "message": "just nu"
+  },
+  "popup_dl_failed": {
+    "message": "Misslyckades"
+  },
+  "popup_dl_failed_why": {
+    "message": "Misslyckades: $why$",
+    "placeholders": {
+      "why": {
+        "content": "$1",
+        "example": "the server refused the connection"
+      }
+    }
+  },
+  "popup_dl_gone": {
+    "message": "Filen har tagits bort eller flyttats"
+  },
+  "popup_dl_loading": {
+    "message": "Söker efter hämtningar..."
+  },
+  "popup_dl_none": {
+    "message": "Inga hämtningar ännu"
+  },
+  "popup_dl_none_text": {
+    "message": "Vad du hämtar med Mister Download Manager visas här."
+  },
+  "popup_dl_no_match": {
+    "message": "Inget matchar"
+  },
+  "popup_dl_no_match_text": {
+    "message": "Ingen hämtnings namn eller adress innehåller ”$words$”.",
+    "placeholders": {
+      "words": {
+        "content": "$1",
+        "example": "report"
+      }
+    }
+  },
+  "popup_dl_show_all": {
+    "message": "Visa alla hämtningar"
+  },
+  "popup_list_off": {
+    "message": "Mister Download Manager körs inte"
+  },
+  "popup_list_off_text": {
+    "message": "Starta den för att se dina hämtningar här."
+  },
+  "popup_list_start": {
+    "message": "Starta Mister Download Manager"
+  },
+  "popup_list_old": {
+    "message": "Uppdatera Mister Download Manager"
+  },
+  "popup_list_old_text": {
+    "message": "Den här versionen kan inte lista sina hämtningar här än."
+  },
+  "popup_list_busy": {
+    "message": "Mister Download Manager är upptagen. Försöker igen..."
+  },
+  "popup_list_unreached": {
+    "message": "Kan inte nå Mister Download Manager"
+  },
+  "popup_list_remote_unreachable": {
+    "message": "Kan inte nå Mister Download Manager på $server$",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_list_remote_unreachable_text": {
+    "message": "Kontrollera att den körs och att den här webbläsaren accepterar dess certifikat (Inställningar → Skicka hämtningar till → Öppna den).",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_act_open": {
+    "message": "Öppna"
+  },
+  "popup_act_open_named": {
+    "message": "Öppna $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_folder": {
+    "message": "Visa i mappen"
+  },
+  "popup_act_folder_named": {
+    "message": "Visa $file$ i mappen",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_copy_file": {
+    "message": "Kopiera fil"
+  },
+  "popup_act_share": {
+    "message": "Dela..."
+  },
+  "popup_act_copy_link": {
+    "message": "Kopiera länk"
+  },
+  "popup_act_pause": {
+    "message": "Pausa"
+  },
+  "popup_act_pause_named": {
+    "message": "Pausa $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_resume": {
+    "message": "Återuppta"
+  },
+  "popup_act_resume_named": {
+    "message": "Återuppta $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_again": {
+    "message": "Hämta igen"
+  },
+  "popup_act_remove": {
+    "message": "Ta bort från listan"
+  },
+  "popup_act_delete": {
+    "message": "Ta bort fil..."
+  },
+  "popup_act_more": {
+    "message": "Fler åtgärder"
+  },
+  "popup_act_more_named": {
+    "message": "Fler åtgärder för $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_title": {
+    "message": "Vill du ta bort filen?"
+  },
+  "popup_ask_delete": {
+    "message": "$file$ kommer att tas bort från din dator, och hämtningen tas bort från listan. Detta kan inte ångras.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_ok": {
+    "message": "Ta bort"
+  },
+  "popup_ask_clear_title": {
+    "message": "Vill du rensa slutförda hämtningar?"
+  },
+  "popup_ask_clear": {
+    "message": "De $count$ slutförda hämtningarna tas bort från listan. Filerna finns kvar där de är.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "8"
+      }
+    }
+  },
+  "popup_ask_clear_ok": {
+    "message": "Rensa"
+  },
+  "popup_said_file": {
+    "message": "Filen $file$ har kopierats. Klistra in den i en mapp, en chatt eller ett meddelande.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_link": {
+    "message": "Länk kopierad"
+  },
+  "popup_said_removed": {
+    "message": "$file$ borttagen från listan",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_deleted": {
+    "message": "$file$ borttagen",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_again": {
+    "message": "Hämtar $file$ igen",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_cleared": {
+    "message": "Slutförda hämtningar har rensats"
+  },
+  "popup_act_gone": {
+    "message": "Den hämtningen finns inte längre i listan."
+  },
+  "popup_act_missing": {
+    "message": "Filen finns inte längre där den sparades (flyttad eller borttagen)."
+  },
+  "popup_act_running": {
+    "message": "Pausa den först."
+  },
+  "popup_act_cant": {
+    "message": "Det går inte att göra det med den här hämtningen nu."
+  },
+  "popup_act_unsupported": {
+    "message": "Det här systemet kan inte göra det."
+  },
+  "popup_act_off": {
+    "message": "Mister Download Manager körs inte."
+  },
+  "popup_act_busy": {
+    "message": "Mister Download Manager svarade inte i tid. Försök igen."
+  },
+  "popup_act_failed": {
+    "message": "Det fungerade inte. Försök igen."
+  },
+  "status_running": {
+    "message": "Hämtar: $count$",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_open_remote": {
+    "message": "Öppna dess sida"
   }
 }

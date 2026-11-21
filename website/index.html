@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Mister Download Manager — free download manager and IDM alternative</title>
-  <meta name="description" content="Free, open-source download manager for Windows, with macOS and Linux to try. The IDM layout you know, 5× faster in our benchmark: every connection at once, crash-safe resume, torrents, video from web pages, browser integration, 86 languages.">
+  <meta name="description" content="Free, open-source download manager for Windows and Linux, with macOS to try. The IDM layout you know, 5× faster in our local benchmark: every connection at once, crash-safe resume, torrents, video from web pages, browser integration, 86 languages.">
   <meta name="theme-color" content="#1f63d6" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#0c1a33" media="(prefers-color-scheme: dark)">
   <meta name="color-scheme" content="light dark">
@@ -26,8 +26,13 @@
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
   <link rel="manifest" href="/site.webmanifest">
   <link rel="alternate" type="application/atom+xml" title="Mister Download Manager news" href="/news.xml">
+  <link rel="stylesheet" href="/vitrine/vitrine.css">
+  <link rel="stylesheet" href="/vitrine/vitrine-modal.css">
   <link rel="stylesheet" href="/styles.css">
   <!--@theme-->
+  <script src="/vitrine/vitrine-core.js" defer></script>
+  <script src="/vitrine/vitrine-modal.js" defer></script>
+  <script src="/vitrine/vitrine.js" defer></script>
   <script src="/main.js" defer></script>
   <script type="application/ld+json">{{SOFTWARE_LD}}</script>
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Mister Download Manager","alternateName":"MDM","url":"{{SITE}}/"}</script>
@@ -56,7 +61,7 @@
           <div class="wb-act">
             <!--@split-->
           </div>
-          <p class="wb-fine"><a href="/download.html#macos"><svg class="os-ico" aria-hidden="true"><use href="#os-macos"/></svg>macOS</a> and <a href="/download.html#linux"><svg class="os-ico" aria-hidden="true"><use href="#os-linux"/></svg>Linux</a> to try.</p>
+          <p class="wb-fine">For <a href="/download.html#linux"><svg class="os-ico" aria-hidden="true"><use href="#os-linux"/></svg>Linux</a> too, and <a href="/download.html#macos"><svg class="os-ico" aria-hidden="true"><use href="#os-macos"/></svg>macOS</a> to try.</p>
           <p class="wb-stores">Browser extension: <a class="wb-amo" href="{{AMO}}"><img src="/assets/browsers/firefox.png" width="16" height="16" alt="">Add to Firefox</a> <a class="wb-amo" href="{{CWS}}"><img src="/assets/browsers/chrome.png" width="16" height="16" alt="">Add to Chrome</a>, for Edge, Brave and Opera too. <span class="wb-browsers"><span><img src="/assets/browsers/chrome.png" width="16" height="16" alt="">Chrome</span> <span><img src="/assets/browsers/edge.png" width="16" height="16" alt="">Edge</span> <span><img src="/assets/browsers/brave.png" width="16" height="16" alt="">Brave</span> <span><img src="/assets/browsers/opera.png" width="16" height="16" alt="">Opera</span></span></p>
           <!--@fields-->
           <div class="wb-code"><!--@barcode--><span translate="no">MDM {{VERSION}}</span></div>
@@ -155,7 +160,7 @@
       <div class="wrap">
         <div class="sec-intro">
           <h2 id="speed-title">Faster than IDM. Timed to the millisecond.</h2>
-          <p>Our benchmark, replayed: the same PC, the same test server, the median of alternating runs.</p>
+          <p>Our benchmark, replayed: both programs on one PC, downloading from a test server on that same PC (a loopback test), the median of alternating runs. It times the programs, not your internet connection.</p>
         </div>
         <div class="race" data-race>
           <div class="race-head">
@@ -183,8 +188,20 @@
             <p class="race-note" data-note>Played in real time.</p>
             <a class="text-link" href="/benchmark.html">Every run and the raw data</a>
           </div>
-          <noscript><p class="race-note">1 GiB: MDM 1.01 s, IDM 5.46 s. A 256 KiB file: MDM 0.03 s, IDM 3.14 s. A server that allows two connections: MDM 12.6 s on 2 connections, IDM 15.9 s after opening 480.</p></noscript>
+          <noscript><p class="race-note">From a test server on the same PC (loopback). 1 GiB: MDM 1.01 s, IDM 5.46 s. A 256 KiB file: MDM 0.03 s, IDM 3.14 s. A server that allows two connections: MDM 12.6 s on 2 connections, IDM 15.9 s after opening 480.</p></noscript>
         </div>
+      </div>
+    </section>
+
+    <!-- Signed for: what the stores count and what people wrote (build.py signed_sheet). -->
+    <section class="sec signed" id="reviews" aria-labelledby="signed-title">
+      <div class="wrap">
+        <div class="sec-intro">
+          <h2 id="signed-title">Signed for, around the world.</h2>
+          <p>What the stores count, and what people wrote in their own words and languages. Every quote is exact and links to where it was written.</p>
+        </div>
+        <!--@signed-->
+        <p class="services-links"><a class="text-link" href="/press.html">Press and mentions: every article and video</a></p>
       </div>
     </section>
 
@@ -204,7 +221,7 @@
             <dl class="fields">
               <div><dt>Installer</dt><dd>setup.exe — connects your browsers</dd></div>
               <div><dt>Portable</dt><dd>portable.zip — runs from a folder or USB stick</dd></div>
-              <div><dt>Needs</dt><dd>64-bit Windows 10 or 11, about 100 MB</dd></div>
+              <div><dt>Needs</dt><dd>{{WINDOWS_CPUS}} Windows 10 or 11, about 100 MB</dd></div>
             </dl>
             <a class="btn btn-go" href="{{FILE_SETUP}}"><svg class="os-ico" aria-hidden="true"><use href="#os-windows"/></svg> Download the installer</a>
           </li>
@@ -219,8 +236,8 @@
             <a class="btn btn-line" href="{{FILE_DMG_ARM64}}"><svg class="os-ico" aria-hidden="true"><use href="#os-macos"/></svg> Download for Apple Silicon</a>
           </li>
           <li class="service os-card" data-os="linux" data-href="{{FILE_APPIMAGE}}" data-label="Download for Linux">
-            <h3><svg class="os-ico" aria-hidden="true"><use href="#os-linux"/></svg> Linux <small>x86-64</small></h3>
-            <p class="service-tags"><span class="tag try">Experimental</span></p>
+            <h3><svg class="os-ico" aria-hidden="true"><use href="#os-linux"/></svg> Linux <small>{{LINUX_CPUS}}</small></h3>
+            <p class="service-tags"><span class="tag stable">Stable</span></p>
             <dl class="fields">
               <div><dt>AppImage</dt><dd>any distribution: make it executable, run it</dd></div>
               <div><dt>Packages</dt><dd><a href="{{FILE_DEB}}">.deb</a> for Debian and Ubuntu, <a href="{{FILE_RPM}}">.rpm</a> for Fedora</dd></div>
@@ -331,14 +348,14 @@
                 <tr><th scope="row">FTP and FTPS</th><td class="yes">Yes</td><td class="yes">Yes<sup><a href="#s3">3</a></sup></td></tr>
                 <tr><th scope="row">Interface languages</th><td class="yes">86, built in</td><td>About 40, as separate downloads<sup><a href="#s3">3</a></sup></td></tr>
                 <tr><th scope="row">Browser extensions</th><td>Firefox, Chrome, Edge, Brave, Opera, Vivaldi</td><td class="yes">Chrome, Firefox, Edge<sup><a href="#s3">3</a></sup></td></tr>
-                <tr><th scope="row">Systems</th><td>Windows 10/11; macOS and Linux to try</td><td>Windows<sup><a href="#s3">3</a></sup></td></tr>
+                <tr><th scope="row">Systems</th><td>Windows 10/11 and Linux; macOS to try</td><td>Windows<sup><a href="#s3">3</a></sup></td></tr>
                 <tr><th scope="row">Maturity</th><td>New</td><td class="yes">Refined over many years</td></tr>
               </tbody>
             </table>
           </div>
           <ol class="sources">
             <li id="s1">"Try IDM 30-days free trial" — <a href="https://www.internetdownloadmanager.com/">internetdownloadmanager.com</a>; prices at <a href="https://secure.internetdownloadmanager.com/buy_idm.html">its purchase page</a></li>
-            <li id="s2">Our benchmark: IDM 6.42 (licensed copy) and MDM on the same PC, against the same local test server, in alternating runs; medians, Mann-Whitney p &lt; 0.001 · <a href="/benchmark.html">charts, report and raw data</a></li>
+            <li id="s2">Our benchmark: IDM 6.42 (licensed copy) and MDM on the same PC, downloading from a test server on that PC (loopback, no internet in between), in alternating runs; medians, Mann-Whitney p &lt; 0.001 · <a href="/benchmark.html">charts, report and raw data</a></li>
             <li id="s3"><a href="https://www.internetdownloadmanager.com/">internetdownloadmanager.com</a>: supported Windows versions, browser extensions, video, FTP, scheduling and translations; no mention of BitTorrent or magnet links</li>
           </ol>
         </div>
@@ -351,14 +368,14 @@
       <div class="wrap facts-inner">
         <div class="sec-intro">
           <h2 id="tldr-title">In short</h2>
-          <p><strong>Mister Download Manager (MDM)</strong> is a free, open-source download manager for Windows 10 and 11, with builds for Linux and macOS. It looks and works like Internet Download Manager (IDM), but it is free (GPL-3.0), downloaded a 1 GiB file 5.4 times faster than IDM 6.42 in our published benchmark, and also downloads torrents, magnet links and videos from web pages. A browser extension for Chrome, Edge, Brave, Opera, Vivaldi and Firefox hands downloads to it.</p>
+          <p><strong>Mister Download Manager (MDM)</strong> is a free, open-source download manager for Windows 10 and 11 and Linux, with builds for macOS to try. It looks and works like Internet Download Manager (IDM), but it is free (GPL-3.0), downloaded a 1 GiB file 5.4 times faster than IDM 6.42 in our published benchmark (a loopback test, from a server on the same PC), and also downloads torrents, magnet links and videos from web pages. A browser extension for Chrome, Edge, Brave, Opera, Vivaldi and Firefox hands downloads to it.</p>
         </div>
         <div class="sheet sheet-labelled facts-sheet">
         <p class="sheet-band"><b>Mister Download Manager {{VERSION}}</b><span>The facts</span></p>
         <dl class="fields facts">
           <div><dt>Price</dt><dd>Free forever, no ads, no trial</dd></div>
           <div><dt>Licence</dt><dd>Open source, GNU GPL 3.0</dd></div>
-          <div><dt>Systems</dt><dd>Windows 10/11; macOS and Linux to try</dd></div>
+          <div><dt>Systems</dt><dd>Windows 10/11 and Linux; macOS to try</dd></div>
           <div><dt>Downloads</dt><dd>HTTP(S), FTP(S), torrents, magnets, video pages</dd></div>
           <div><dt>Speed</dt><dd>Up to 128 connections per file, re-split as they go</dd></div>
           <div><dt>Languages</dt><dd>86, right to left included</dd></div>
@@ -413,7 +430,7 @@
           <details><summary>Is it safe to install?</summary><p>The whole source is public, and every release is built from it on GitHub's servers. No adware, no spyware, no bundled offers. The helpers it downloads for video are verified before they run. <a href="/faq/is-it-safe.html">More</a></p></details>
           <details><summary>Can I move my downloads over from IDM?</summary><p>Yes: export your list from IDM, then choose Tasks → Import → From IDM export file in MDM. <a href="/faq/import-from-idm.html">More</a></p></details>
           <details><summary>Which browsers work with it?</summary><p>Firefox, Chrome, Edge, Brave, Opera and Vivaldi through the extension, from <a href="{{AMO}}">Firefox's add-ons store</a> and <a href="{{CWS}}">the Chrome Web Store</a>. Without the extension, copy a link and MDM opens the download window. <a href="/faq/browsers.html">More</a></p></details>
-          <details><summary>Mac or Linux?</summary><p>Yes: every release has an AppImage, .deb, .rpm and .tar.gz for Linux and a .dmg for Apple Silicon and Intel Macs. Today's are marked experimental; from version 0.5.0, Linux isn't, after checks on four desktops, and macOS stays experimental. <a href="/faq/systems.html">More</a></p></details>
+          <details><summary>Mac or Linux?</summary><p>Yes: every release has an AppImage, .deb, .rpm and .tar.gz for Linux and a .dmg for Apple Silicon and Intel Macs. Linux is supported, checked on four desktops (GNOME, KDE Plasma, Xfce and Cinnamon); macOS is still experimental. <a href="/faq/systems.html">More</a></p></details>
           <details><summary>Where can I get help?</summary><p>The <a href="/help/">user guide</a> covers every window, with step-by-step tutorials. Something broken? <a href="{{REPO}}/issues/new?template=bug.yml">Open an issue on GitHub</a>, or use Help → Report a problem in the app.</p></details>
         </div>
         <p class="services-links"><a class="text-link" href="/faq/">All questions</a><a class="text-link" href="/help/troubleshooting.html">Troubleshooting</a><a class="text-link" href="{{REPO}}/issues/new?template=bug.yml">Report an issue</a></p>

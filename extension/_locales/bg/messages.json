@@ -92,9 +92,6 @@
       }
     }
   },
-  "popup_undo": {
-    "message": "Отмяна"
-  },
   "popup_excluded": {
     "message": "Изтеглянията от $site$ остават в браузъра",
     "placeholders": {
@@ -148,6 +145,9 @@
   },
   "declined_integration_off": {
     "message": "„Използване на разширена интеграция с браузъра“ е изключено в Опции → Общи."
+  },
+  "declined_torrents": {
+    "message": "Това е торент и „Отваряне на магнитни връзки и .torrent файлове с Mister Download Manager“ е изключено в настройките за торенти."
   },
   "declined_site_access": {
     "message": "Разширението няма разрешение да чете този сайт (достъпът на браузъра до сайта)."
@@ -328,5 +328,424 @@
   },
   "video_original": {
     "message": "оригинал"
+  },
+  "video_compatible": {
+    "message": "Най-съвместим"
+  },
+  "popup_video_hide_fullscreen": {
+    "message": "Скриване на бутона за изтегляне в режим на цял екран"
+  },
+  "popup_video_hide_fullscreen_title": {
+    "message": "Докато страницата е на цял екран, нейните видеоклипове не показват бутон за изтегляне на видео"
+  },
+  "popup_remote_forget": {
+    "message": "Забрави"
+  },
+  "popup_gear": {
+    "message": "Опции в Mister Download Manager"
+  },
+  "popup_tabs": {
+    "message": "Раздели на изскачащия прозорец"
+  },
+  "popup_tab_downloads": {
+    "message": "Изтегляния"
+  },
+  "popup_tab_page": {
+    "message": "Тази страница"
+  },
+  "popup_tab_settings": {
+    "message": "Настройки"
+  },
+  "popup_conn": {
+    "message": "Свързан · $version$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.5.2"
+      }
+    }
+  },
+  "popup_conn_plain": {
+    "message": "Свързан"
+  },
+  "popup_conn_off": {
+    "message": "Няма връзка"
+  },
+  "popup_conn_paused": {
+    "message": "На пауза"
+  },
+  "popup_conn_update": {
+    "message": "Актуализирайте Mister Download Manager"
+  },
+  "popup_conn_remote": {
+    "message": "Изпращане до $server$",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_cancel": {
+    "message": "Отказ"
+  },
+  "popup_page_none": {
+    "message": "Това не е уеб страница: тук няма какво да се прави."
+  },
+  "popup_exclude_by_rule": {
+    "message": "Оставено на браузъра от правило в Опции"
+  },
+  "popup_dl_search": {
+    "message": "Търсене на изтегляния"
+  },
+  "popup_dl_filters": {
+    "message": "Покажете"
+  },
+  "popup_dl_all": {
+    "message": "Всички"
+  },
+  "popup_dl_running": {
+    "message": "Изтеглят се"
+  },
+  "popup_dl_done_filter": {
+    "message": "Готово"
+  },
+  "popup_dl_failed_filter": {
+    "message": "Неуспешно"
+  },
+  "popup_dl_clear": {
+    "message": "Изчистване на завършените"
+  },
+  "popup_dl_running_count": {
+    "message": "$count$ изтегляния се извършват в момента",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_remote": {
+    "message": "Това са изтеглянията на Mister Download Manager на сървъра $server$. Отворете файловете им там.",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_dl_more": {
+    "message": "Показани са най-новите $shown$ от $total$. Mister Download Manager показва всички.",
+    "placeholders": {
+      "shown": {
+        "content": "$1",
+        "example": "60"
+      },
+      "total": {
+        "content": "$2",
+        "example": "245"
+      }
+    }
+  },
+  "popup_dl_of": {
+    "message": "$done$ от $size$",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "12.3 MB"
+      },
+      "size": {
+        "content": "$2",
+        "example": "48.7 MB"
+      }
+    }
+  },
+  "popup_dl_left": {
+    "message": "Остават $time$",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "0:42"
+      }
+    }
+  },
+  "popup_dl_starting": {
+    "message": "Стартиране..."
+  },
+  "popup_dl_paused": {
+    "message": "На пауза"
+  },
+  "popup_dl_waiting": {
+    "message": "Изчаква се"
+  },
+  "popup_dl_done": {
+    "message": "Готово"
+  },
+  "popup_dl_just_now": {
+    "message": "току-що"
+  },
+  "popup_dl_failed": {
+    "message": "Неуспешно"
+  },
+  "popup_dl_failed_why": {
+    "message": "Неуспешно: $why$",
+    "placeholders": {
+      "why": {
+        "content": "$1",
+        "example": "the server refused the connection"
+      }
+    }
+  },
+  "popup_dl_gone": {
+    "message": "Файлът е изтрит или преместен"
+  },
+  "popup_dl_loading": {
+    "message": "Търсене на изтегляния..."
+  },
+  "popup_dl_none": {
+    "message": "Все още няма изтегляния"
+  },
+  "popup_dl_none_text": {
+    "message": "Тук се показват изтеглянията с Mister Download Manager."
+  },
+  "popup_dl_no_match": {
+    "message": "Няма съвпадения"
+  },
+  "popup_dl_no_match_text": {
+    "message": "Няма изтегляне с име или адрес, съдържащ „$words$“.",
+    "placeholders": {
+      "words": {
+        "content": "$1",
+        "example": "report"
+      }
+    }
+  },
+  "popup_dl_show_all": {
+    "message": "Покажете всички изтегляния"
+  },
+  "popup_list_off": {
+    "message": "Mister Download Manager не работи"
+  },
+  "popup_list_off_text": {
+    "message": "Стартирайте го, за да видите изтеглянията си тук."
+  },
+  "popup_list_start": {
+    "message": "Стартирайте Mister Download Manager"
+  },
+  "popup_list_old": {
+    "message": "Актуализирайте Mister Download Manager"
+  },
+  "popup_list_old_text": {
+    "message": "Тази версия все още не може да показва изтеглянията си тук."
+  },
+  "popup_list_busy": {
+    "message": "Mister Download Manager е зает. Опитва се отново..."
+  },
+  "popup_list_unreached": {
+    "message": "Няма връзка с Mister Download Manager"
+  },
+  "popup_list_remote_unreachable": {
+    "message": "Няма връзка с Mister Download Manager на $server$",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_list_remote_unreachable_text": {
+    "message": "Проверете дали работи и дали този браузър приема сертификата му (Настройки → Изпращане на изтегляния към → Отваряне).",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_act_open": {
+    "message": "Отваряне"
+  },
+  "popup_act_open_named": {
+    "message": "Отворете $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_folder": {
+    "message": "Покажете в папката"
+  },
+  "popup_act_folder_named": {
+    "message": "Покажете $file$ в папката",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_copy_file": {
+    "message": "Копиране на файл"
+  },
+  "popup_act_share": {
+    "message": "Споделяне..."
+  },
+  "popup_act_copy_link": {
+    "message": "Копиране на връзка"
+  },
+  "popup_act_pause": {
+    "message": "Пауза"
+  },
+  "popup_act_pause_named": {
+    "message": "Поставете $file$ на пауза",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_resume": {
+    "message": "Продължаване"
+  },
+  "popup_act_resume_named": {
+    "message": "Продължете изтеглянето на $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_again": {
+    "message": "Изтегляне отново"
+  },
+  "popup_act_remove": {
+    "message": "Премахване от списъка"
+  },
+  "popup_act_delete": {
+    "message": "Изтриване на файл..."
+  },
+  "popup_act_more": {
+    "message": "Още действия"
+  },
+  "popup_act_more_named": {
+    "message": "Още действия за $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_title": {
+    "message": "Да изтрия ли файла?"
+  },
+  "popup_ask_delete": {
+    "message": "Сигурни ли сте, че искате да изтриете $file$ от компютъра си и да премахнете изтеглянето от списъка? Това действие не може да бъде отменено.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_ok": {
+    "message": "Изтриване"
+  },
+  "popup_ask_clear_title": {
+    "message": "Да изчистя ли завършените изтегляния?"
+  },
+  "popup_ask_clear": {
+    "message": "Сигурни ли сте, че искате да премахнете $count$ завършени изтегляния от списъка? Файловете им остават на мястото си.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "8"
+      }
+    }
+  },
+  "popup_ask_clear_ok": {
+    "message": "Изчистване"
+  },
+  "popup_said_file": {
+    "message": "Копиран $file$. Поставете го в папка, чат или съобщение.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_link": {
+    "message": "Връзката е копирана"
+  },
+  "popup_said_removed": {
+    "message": "$file$ беше премахнат от списъка",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_deleted": {
+    "message": "$file$ беше изтрит",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_again": {
+    "message": "Изтегляне на $file$ отново",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_cleared": {
+    "message": "Завършените изтегляния са изчистени"
+  },
+  "popup_act_gone": {
+    "message": "Това изтегляне вече не е в списъка."
+  },
+  "popup_act_missing": {
+    "message": "Файлът вече не е на мястото, където е записан (преместен или изтрит)."
+  },
+  "popup_act_running": {
+    "message": "Първо го поставете на пауза."
+  },
+  "popup_act_cant": {
+    "message": "Това действие не може да бъде извършено с това изтегляне в момента."
+  },
+  "popup_act_unsupported": {
+    "message": "Тази система не може да го направи."
+  },
+  "popup_act_off": {
+    "message": "Mister Download Manager не работи."
+  },
+  "popup_act_busy": {
+    "message": "Mister Download Manager не отговори навреме. Опитайте отново."
+  },
+  "popup_act_failed": {
+    "message": "Неуспешно действие. Опитайте отново."
+  },
+  "status_running": {
+    "message": "Изтеглят се: $count$",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_open_remote": {
+    "message": "Отваряне на страницата му"
   }
 }

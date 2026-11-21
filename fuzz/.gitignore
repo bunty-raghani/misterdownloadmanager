@@ -1,0 +1,5 @@
+# cargo fuzz's own: the build, the corpus a run grows (seeded from seeds/), its findings.
+/target/
+/corpus/
+/artifacts/
+/coverage/

@@ -92,9 +92,6 @@
       }
     }
   },
-  "popup_undo": {
-    "message": "בטל"
-  },
   "popup_excluded": {
     "message": "הורדות מ־$site$ נשארות בדפדפן",
     "placeholders": {
@@ -148,6 +145,9 @@
   },
   "declined_integration_off": {
     "message": "האפשרות 'השתמש בשילוב דפדפן מתקדם' כבויה ב'אפשרויות' ← 'כללי'."
+  },
+  "declined_torrents": {
+    "message": "זהו קובץ טורנט, והאפשרות ״פתיחת קישורי magnet וקובצי .torrent באמצעות Mister Download Manager״ כבויה בהגדרות הטורנט."
   },
   "declined_site_access": {
     "message": "אין הרשאה להרחבה לקרוא אתר זה (גישת האתר של הדפדפן)."
@@ -328,5 +328,424 @@
   },
   "video_original": {
     "message": "מקורית"
+  },
+  "video_compatible": {
+    "message": "התאמה מרבית"
+  },
+  "popup_video_hide_fullscreen": {
+    "message": "הסתרת לחצן ההורדה במסך מלא"
+  },
+  "popup_video_hide_fullscreen_title": {
+    "message": "כאשר הדף במסך מלא, הסרטונים שלו לא מציגים את לחצן ״הורד סרטון״"
+  },
+  "popup_remote_forget": {
+    "message": "שכח"
+  },
+  "popup_gear": {
+    "message": "אפשרויות ב- Mister Download Manager"
+  },
+  "popup_tabs": {
+    "message": "מקטעי חלון קופץ"
+  },
+  "popup_tab_downloads": {
+    "message": "הורדות"
+  },
+  "popup_tab_page": {
+    "message": "דף זה"
+  },
+  "popup_tab_settings": {
+    "message": "הגדרות"
+  },
+  "popup_conn": {
+    "message": "מחובר · $version$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.5.2"
+      }
+    }
+  },
+  "popup_conn_plain": {
+    "message": "מחובר"
+  },
+  "popup_conn_off": {
+    "message": "לא מחובר"
+  },
+  "popup_conn_paused": {
+    "message": "מושהה"
+  },
+  "popup_conn_update": {
+    "message": "עדכן את Mister Download Manager"
+  },
+  "popup_conn_remote": {
+    "message": "שולח אל $server$",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_cancel": {
+    "message": "ביטול"
+  },
+  "popup_page_none": {
+    "message": "זהו אינו דף אינטרנט: אין מה לעשות כאן."
+  },
+  "popup_exclude_by_rule": {
+    "message": "הושאר לדפדפן על ידי כלל בהגדרות"
+  },
+  "popup_dl_search": {
+    "message": "חפש הורדות"
+  },
+  "popup_dl_filters": {
+    "message": "הצג"
+  },
+  "popup_dl_all": {
+    "message": "הכל"
+  },
+  "popup_dl_running": {
+    "message": "פועלות"
+  },
+  "popup_dl_done_filter": {
+    "message": "הושלם"
+  },
+  "popup_dl_failed_filter": {
+    "message": "נכשל"
+  },
+  "popup_dl_clear": {
+    "message": "נקה שהושלמו"
+  },
+  "popup_dl_running_count": {
+    "message": "$count$ הורדות פעילות",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_remote": {
+    "message": "אלה ההורדות של Mister Download Manager ב- $server$. פתח את הקבצים שלהן שם.",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_dl_more": {
+    "message": "$shown$ החדשות ביותר מתוך $total$. Mister Download Manager מפרט את כולן.",
+    "placeholders": {
+      "shown": {
+        "content": "$1",
+        "example": "60"
+      },
+      "total": {
+        "content": "$2",
+        "example": "245"
+      }
+    }
+  },
+  "popup_dl_of": {
+    "message": "$done$ מתוך $size$",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "12.3 MB"
+      },
+      "size": {
+        "content": "$2",
+        "example": "48.7 MB"
+      }
+    }
+  },
+  "popup_dl_left": {
+    "message": "נותרו $time$",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "0:42"
+      }
+    }
+  },
+  "popup_dl_starting": {
+    "message": "מפעיל..."
+  },
+  "popup_dl_paused": {
+    "message": "מושהה"
+  },
+  "popup_dl_waiting": {
+    "message": "ממתין"
+  },
+  "popup_dl_done": {
+    "message": "הושלם"
+  },
+  "popup_dl_just_now": {
+    "message": "ממש עכשיו"
+  },
+  "popup_dl_failed": {
+    "message": "נכשל"
+  },
+  "popup_dl_failed_why": {
+    "message": "נכשל: $why$",
+    "placeholders": {
+      "why": {
+        "content": "$1",
+        "example": "the server refused the connection"
+      }
+    }
+  },
+  "popup_dl_gone": {
+    "message": "הקובץ נמחק או הועבר"
+  },
+  "popup_dl_loading": {
+    "message": "מחפש הורדות..."
+  },
+  "popup_dl_none": {
+    "message": "אין עדיין הורדות"
+  },
+  "popup_dl_none_text": {
+    "message": "מה שתוריד באמצעות Mister Download Manager יופיע כאן."
+  },
+  "popup_dl_no_match": {
+    "message": "לא נמצאו התאמות"
+  },
+  "popup_dl_no_match_text": {
+    "message": "לא נמצאה הורדה שהשם או הכתובת שלה מכילים את ״$words$״.",
+    "placeholders": {
+      "words": {
+        "content": "$1",
+        "example": "report"
+      }
+    }
+  },
+  "popup_dl_show_all": {
+    "message": "הצג את כל ההורדות"
+  },
+  "popup_list_off": {
+    "message": "Mister Download Manager אינו פועל"
+  },
+  "popup_list_off_text": {
+    "message": "הפעל אותו כדי לראות את ההורדות שלך כאן."
+  },
+  "popup_list_start": {
+    "message": "הפעל את Mister Download Manager"
+  },
+  "popup_list_old": {
+    "message": "עדכן את Mister Download Manager"
+  },
+  "popup_list_old_text": {
+    "message": "גרסה זו לא יכולה לפרט את ההורדות שלה כאן עדיין."
+  },
+  "popup_list_busy": {
+    "message": "Mister Download Manager עסוק. מנסה שוב..."
+  },
+  "popup_list_unreached": {
+    "message": "לא ניתן להגיע אל Mister Download Manager"
+  },
+  "popup_list_remote_unreachable": {
+    "message": "לא ניתן להגיע אל Mister Download Manager בכתובת $server$",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_list_remote_unreachable_text": {
+    "message": "ודא שהוא פועל, ושהדפדפן הזה מקבל את האישור שלו (הגדרות ← שלח הורדות אל ← פתח אותו).",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_act_open": {
+    "message": "פתח"
+  },
+  "popup_act_open_named": {
+    "message": "פתח את $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_folder": {
+    "message": "הצג בתיקייה"
+  },
+  "popup_act_folder_named": {
+    "message": "הצג את $file$ בתיקייה",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_copy_file": {
+    "message": "העתק קובץ"
+  },
+  "popup_act_share": {
+    "message": "שתף..."
+  },
+  "popup_act_copy_link": {
+    "message": "העתק קישור"
+  },
+  "popup_act_pause": {
+    "message": "השהה"
+  },
+  "popup_act_pause_named": {
+    "message": "השהה את $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_resume": {
+    "message": "המשך"
+  },
+  "popup_act_resume_named": {
+    "message": "המשך את $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_again": {
+    "message": "הורד שוב"
+  },
+  "popup_act_remove": {
+    "message": "הסר מהרשימה"
+  },
+  "popup_act_delete": {
+    "message": "מחק קובץ..."
+  },
+  "popup_act_more": {
+    "message": "פעולות נוספות"
+  },
+  "popup_act_more_named": {
+    "message": "פעולות נוספות עבור $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_title": {
+    "message": "למחוק את הקובץ?"
+  },
+  "popup_ask_delete": {
+    "message": "הקובץ $file$ יימחק מהמחשב שלך, וההורדה תוסר מהרשימה. לא ניתן לבטל פעולה זו.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_ok": {
+    "message": "מחק"
+  },
+  "popup_ask_clear_title": {
+    "message": "לנקות הורדות שהושלמו?"
+  },
+  "popup_ask_clear": {
+    "message": "ההורדות שהושלמו ($count$) יוסרו מהרשימה. הקבצים שלהן יישארו במקומם.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "8"
+      }
+    }
+  },
+  "popup_ask_clear_ok": {
+    "message": "נקה"
+  },
+  "popup_said_file": {
+    "message": "הועתק $file$. הדבק אותו בתיקיה, בצ׳אט או בהודעה.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_link": {
+    "message": "הקישור הועתק"
+  },
+  "popup_said_removed": {
+    "message": "$file$ הוסר מהרשימה",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_deleted": {
+    "message": "$file$ נמחק",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_again": {
+    "message": "מוריד את $file$ שוב",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_cleared": {
+    "message": "הורדות שהושלמו נוקו"
+  },
+  "popup_act_gone": {
+    "message": "ההורדה הזו כבר לא ברשימה."
+  },
+  "popup_act_missing": {
+    "message": "הקובץ שלו כבר לא נמצא במקום שבו נשמר (הועבר או נמחק)."
+  },
+  "popup_act_running": {
+    "message": "השהה קודם."
+  },
+  "popup_act_cant": {
+    "message": "לא ניתן לבצע זאת בהורדה זו כעת."
+  },
+  "popup_act_unsupported": {
+    "message": "המערכת הזו לא יכולה לעשות זאת."
+  },
+  "popup_act_off": {
+    "message": "Mister Download Manager אינו פועל."
+  },
+  "popup_act_busy": {
+    "message": "Mister Download Manager לא ענה בזמן. נסה שוב."
+  },
+  "popup_act_failed": {
+    "message": "זה לא עבד. נסה שוב."
+  },
+  "status_running": {
+    "message": "מוריד: $count$",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_open_remote": {
+    "message": "פתח את הדף שלו"
   }
 }

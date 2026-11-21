@@ -2,8 +2,9 @@
 
 [← Back to docs index](README.md)
 
-MDM runs on 64-bit Windows 10 and Windows 11, and on 64-bit Linux: see [On Linux](#on-linux).
-Builds for macOS are new and still experimental: see [On a Mac](#on-a-mac).
+MDM runs on Windows 10 and Windows 11 (x64, ARM64 and 32-bit), and on 64-bit Linux (x86-64 and
+ARM64): see [On Linux](#on-linux). Builds for macOS are new and still experimental: see
+[On a Mac](#on-a-mac).
 
 ## Choose a download
 
@@ -14,6 +15,16 @@ Every version is on the [Releases](https://github.com/anefzaoui/misterdownloadma
 | `MisterDownloadManager-<version>-setup.exe` | The installer. Pick this one unless you have a reason not to. It can set up browser integration and open `.torrent` files and magnet links with MDM. |
 | `MisterDownloadManager-<version>-portable.zip` | A portable copy. The download list and settings stay in a `data` folder next to the program, and nothing is written to the registry. Browser integration needs the installer. See [Portable mode](portable.md). |
 | `MisterDownloadManager-<version>-x64.zip` | The same programs without an installer. It keeps its data in `%APPDATA%\misterdownloadmanager`, like an installed copy. |
+
+These three are for 64-bit Windows on an Intel or AMD processor (x64), the usual PC. From the
+version after 0.5.2, each comes for two more kinds of PC too, with the processor in its name:
+
+| Files | For |
+|---|---|
+| `...-setup-arm64.exe`, `...-portable-arm64.zip`, `...-arm64.zip` | **Windows on ARM** (PCs with a Snapdragon or another ARM processor). On Windows 11 the x64 files run there too, translated by Windows, more slowly. The ARM64 setup installed over the x64 one replaces it; your list and settings stay, as they are kept in your profile, not with the program. |
+| `...-setup-x86.exe`, `...-portable-x86.zip`, `...-x86.zip` | **32-bit Windows 10.** Not sure which you have? **Settings → System → About → System type** says it. MDM can't download ffmpeg for you there (none is built for 32-bit Windows that MDM can check): to get the best video qualities, choose an ffmpeg of your own in **Helpers...** ([Video](video.md#yt-dlp-and-ffmpeg)). |
+
+**Help → Check for updates** updates each copy to the files for its own processor.
 
 ### With WinGet
 
@@ -31,7 +42,10 @@ WinGet downloads the setup and installs MDM without the setup's questions.
 MDM runs on 64-bit Linux with a desktop session. It is tested on Ubuntu 24.04, Debian 12 and
 Fedora, with GNOME, KDE Plasma, Xfce and Cinnamon, on X11 and in Wayland sessions. Pick one
 of these files (up to version 0.2.4, their names end in `-experimental`, as in
-`...-linux-x86_64-experimental.deb`):
+`...-linux-x86_64-experimental.deb`). From the version after 0.5.2, each also comes for 64-bit
+ARM computers, with `arm64` in place of `x86_64` (`...-linux-arm64.deb`); they are built and
+tested on GitHub's ARM machines. On ARM, MDM doesn't download gallery-dl itself (its author
+builds none for it): install it with your system's packages or pip.
 
 | File | What it is |
 |---|---|
@@ -248,7 +262,7 @@ used, and how to make and share one.
 
 ## The tray icon
 
-Closing the main window doesn't quit MDM. It hides in the notification area, and downloads, queues and schedules carry on. To make closing quit (a portable copy's folder can then be deleted), untick **Options → General → Keep running when closing the window**. If there is no icon for MDM at all — not in the notification area, nor behind the ^ hidden icons — the window minimizes to the taskbar instead, so downloads continue and there is a way back. An icon behind ^ can be clicked to bring the window back, and starting MDM again always does.
+Closing the main window doesn't quit MDM. It hides in the notification area, and downloads, queues and schedules carry on. To make closing quit (a portable copy's folder can then be deleted), untick **Options → General → Keep running when closing the window**. If there is no icon for MDM at all — not in the notification area, nor behind the ^ hidden icons — the window minimizes to the taskbar instead, so downloads continue and there is a way back. An icon behind ^ can be clicked to bring the window back, and starting MDM again always does. On macOS the window closes into the Dock, as Mac apps' windows do: click MDM's icon in the Dock (or in the menu bar) to bring it back, and quit with **Cmd+Q** or **Mister Download Manager → Quit**.
 
 On Linux this needs a tray, which most desktops have (KDE Plasma, Xfce, Cinnamon, Ubuntu's GNOME or GNOME with the AppIndicator extension, waybar's tray). On a desktop without one (some tiling window managers), closing the window quits MDM, since there would be nowhere to bring it back from.
 

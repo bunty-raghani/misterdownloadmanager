@@ -12,11 +12,12 @@
 //! - macOS: `pmset schedule wake` and IOKit's scheduled power events need an administrator;
 //!   MDM never asks for one by itself, so the option says why.
 //!
-//! While a queue with the option runs, the computer is kept from sleeping (Windows: a power
-//! request; Linux: logind's sleep and idle inhibitor; macOS: `caffeinate`), so a computer woken
-//! for it doesn't fall asleep again before the downloads are done. Afterwards the system's own
-//! sleep settings apply again, and the queue's "Turn off computer when done" can put it to
-//! sleep at once.
+//! While a queue with the option runs, and while any download runs (#939), the computer is kept
+//! from sleeping by itself (Windows: a power request; Linux: logind's sleep inhibitor; macOS:
+//! `caffeinate -i`), so a computer woken for a queue, or left downloading, doesn't fall asleep
+//! before the downloads are done. The screen still turns off and locks as the system's settings
+//! say. Afterwards the system's own sleep settings apply again, and the queue's "Turn off
+//! computer when done" can put it to sleep at once.
 
 use std::sync::mpsc::{Receiver, Sender};
 
@@ -171,6 +172,42 @@ fn ask_support() -> Support {
     crate::unix::wake_support()
 }
 
+/// Why the computer is kept awake: the words the system lists it with (Windows' `powercfg
+/// /requests`, `systemd-inhibit --list`, GNOME's "Some applications are busy").
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Awake<'a> {
+    /// A queue with "Wake the computer" is running (#142): its name.
+    Queue(&'a str),
+    /// Downloads are running (#939): a computer left downloading doesn't fall asleep before
+    /// they are done, as a browser's downloads keep it awake.
+    Downloads,
+}
+
+impl Awake<'_> {
+    fn reason(self) -> String {
+        match self {
+            Awake::Queue(queue) => crate::i18n::fmt(
+                // i18n: why the computer isn't going to sleep, in the system's list of programs that keep it awake; {queue} = the queue's name
+                crate::i18n::t("Mister Download Manager is running the queue \"{queue}\""),
+                &[("queue", crate::i18n::t(queue))],
+            ),
+            Awake::Downloads => {
+                // i18n: why the computer isn't going to sleep, in the system's list of programs that keep it awake (Windows' power requests, Linux's inhibitors)
+                crate::i18n::t("Mister Download Manager is downloading").to_owned()
+            }
+        }
+    }
+}
+
+/// Why the computer is kept awake now: a running queue that woke it (its name), else running
+/// downloads (`downloading`: any download in the list is), else nothing.
+pub fn why_awake(queues: &[Queue], downloading: bool) -> Option<Awake<'_>> {
+    match queues.iter().find(|q| q.running && q.schedule.wake) {
+        Some(q) => Some(Awake::Queue(&q.name)),
+        None => downloading.then_some(Awake::Downloads),
+    }
+}
+
 /// What the app keeps: the wake asked of the system, and whether it keeps the computer awake.
 #[derive(Default)]
 pub struct Waker {
@@ -184,6 +221,8 @@ pub struct Waker {
     /// Linux alarm used up by another wake, an alarm another program set has gone off).
     checked: Option<std::time::Instant>,
     awake: bool,
+    /// The reason last asked with (held, on its way or refused).
+    reason: Option<String>,
     /// When keeping the computer awake was last refused, and how often in a row (asked again
     /// 5 s later, after a minute of refusals once a minute).
     refused: Option<(std::time::Instant, u32)>,
@@ -261,11 +300,14 @@ impl Waker {
         }
     }
 
-    /// Keep the computer awake while `on` (a queue with the option is running). Returns at once:
-    /// the system is asked on the holder's thread, and its answer read on a later call.
-    pub fn keep_awake(&mut self, on: bool, queue: &str) {
-        if !on {
+    /// Keep the computer awake for `why` (a download is running, or a queue that woke it), None
+    /// lets it sleep again. Returns at once: the system is asked on the holder's thread, and its
+    /// answer read on a later call. A new reason (the queue is done, its downloads go on) is
+    /// asked again with its own words, for the system's list of what keeps it awake.
+    pub fn keep_awake(&mut self, why: Option<Awake<'_>>) {
+        let Some(why) = why else {
             self.refused = None;
+            self.reason = None;
             if std::mem::take(&mut self.awake) {
                 tracing::info!("wake: no longer keeping the computer awake");
             }
@@ -274,30 +316,35 @@ impl Waker {
                 self.holder.release();
             }
             return;
-        }
+        };
         if let Some(held) = self.holder.answer() {
             if held {
-                tracing::info!("wake: keeping the computer awake");
+                tracing::info!(
+                    "wake: keeping the computer awake: {}",
+                    self.reason.as_deref().unwrap_or_default()
+                );
                 self.awake = true;
                 self.refused = None;
             } else {
+                self.awake = false;
                 self.refusal();
             }
         }
+        let reason = why.reason();
+        let same = self.reason.as_deref() == Some(reason.as_str());
         // A refusal is asked again a little later: logind refuses while the sleep the computer
         // just woke from is still ending, which is when a woken queue starts.
         let wait = |n: u32| std::time::Duration::from_secs(if n < 12 { 5 } else { 60 });
-        if self.awake
+        if (self.awake && same)
             || self.holder.asking()
-            || self.refused.is_some_and(|(t, n)| t.elapsed() < wait(n))
+            || (same && self.refused.is_some_and(|(t, n)| t.elapsed() < wait(n)))
         {
             return;
         }
-        let reason = crate::i18n::fmt(
-            // i18n: why the computer isn't going to sleep, in the system's list of programs that keep it awake; {queue} = the queue's name
-            crate::i18n::t("Mister Download Manager is running the queue \"{queue}\""),
-            &[("queue", crate::i18n::t(queue))],
-        );
+        if !same {
+            self.refused = None;
+        }
+        self.reason = Some(reason.clone());
         if !self.holder.hold(reason) {
             self.refusal();
         }
@@ -309,19 +356,27 @@ impl Waker {
     }
 
     /// Cancel the wake (MDM is quitting: Linux's alarm would outlive it). The computer may sleep
-    /// again: waited for at most a second (the system lets go of it when MDM ends anyway).
+    /// again: waited for at most [`QUIT_WAIT`] (the system lets go of it when MDM ends anyway).
     pub fn clear(&mut self) {
+        self.clear_within(QUIT_WAIT);
+    }
+
+    /// [`Waker::clear`], waiting at most `limit` for the system to let the computer sleep.
+    fn clear_within(&mut self, limit: std::time::Duration) {
         self.wanted = None;
         if std::mem::take(&mut self.armed) {
             let _ = arm(None);
         }
         self.awake = false;
+        self.reason = None;
         if self.holder.may_hold() {
-            self.holder
-                .release_within(std::time::Duration::from_secs(1));
+            self.holder.release_within(limit);
         }
     }
 }
+
+/// How long quitting waits for the system to let the computer sleep again.
+const QUIT_WAIT: std::time::Duration = std::time::Duration::from_secs(1);
 
 /// An order for the holder's thread, with its number.
 enum Order {
@@ -597,27 +652,73 @@ mod tests {
         assert_eq!(next_wake(&queues[..1], now), None);
     }
 
-    use std::sync::{Arc, Mutex};
+    use std::sync::Arc;
+    use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
+    use std::sync::mpsc::{RecvTimeoutError, channel};
     use std::time::Instant;
 
     /// The queue's name (a constant: a literal in a call would be taken for a text to translate).
     const QUEUE: &str = "night";
 
-    /// What a fake system was asked: a reason (hold) or None (let go).
-    type Asked = Arc<Mutex<Vec<Option<String>>>>;
+    /// Long enough for anything a test waits for to come on the slowest runner, and the most a
+    /// fake system waits for its answer: a deadlock breaker, never a time any check is about.
+    const STUCK: std::time::Duration = std::time::Duration::from_secs(30);
 
-    /// A Waker whose system takes `slow` to answer each hold, and answers `agrees`.
-    fn waker(slow: std::time::Duration, agrees: bool) -> (Waker, Asked) {
-        let asked = Asked::default();
-        let log = asked.clone();
+    /// A fake system that answers each call when the test says so ([`System::answer`]): slow or
+    /// hanging for exactly as long as the test wants, without a clock. Its calls are counted as
+    /// they return, so a test sees whether keep_awake waited for an answer (it can't have had
+    /// one before the test gave it) instead of timing it.
+    struct System {
+        /// Each call as it is made: a reason (hold) or None (let go).
+        calls: std::sync::mpsc::Receiver<Option<String>>,
+        answers: std::sync::mpsc::Sender<bool>,
+        /// Calls that have returned with the test's answer.
+        returned: Arc<AtomicU32>,
+        /// A call waited [`STUCK`] for its answer: the test was held up, by the code it tests.
+        stuck: Arc<AtomicBool>,
+    }
+
+    impl System {
+        /// The next call the holder's thread makes: its reason, None to let go.
+        #[track_caller]
+        fn next(&self) -> Option<String> {
+            self.calls.recv_timeout(STUCK).expect("the system is asked")
+        }
+
+        /// Answer the call under way, or the next one: whether the system agrees.
+        fn answer(&self, agrees: bool) {
+            self.answers.send(agrees).unwrap();
+        }
+
+        fn returned(&self) -> u32 {
+            self.returned.load(Ordering::SeqCst)
+        }
+
+        fn stuck(&self) -> bool {
+            self.stuck.load(Ordering::SeqCst)
+        }
+    }
+
+    /// A Waker on a [`System`] of the test's.
+    fn waker() -> (Waker, System) {
+        let (calls, calls_rx) = channel();
+        let (answers_tx, answers) = channel();
+        let returned = Arc::new(AtomicU32::new(0));
+        let stuck = Arc::new(AtomicBool::new(false));
+        let (done, held_up) = (returned.clone(), stuck.clone());
         let call: Call = Box::new(move |reason| {
-            log.lock().unwrap().push(reason.map(str::to_owned));
-            if reason.is_some() {
-                std::thread::sleep(slow);
-                agrees
-            } else {
-                true
-            }
+            let _ = calls.send(reason.map(str::to_owned));
+            let agrees = match answers.recv_timeout(STUCK) {
+                Ok(agrees) => agrees,
+                Err(RecvTimeoutError::Timeout) => {
+                    held_up.store(true, Ordering::SeqCst);
+                    false
+                }
+                // The test is over.
+                Err(RecvTimeoutError::Disconnected) => false,
+            };
+            done.fetch_add(1, Ordering::SeqCst);
+            agrees
         });
         let w = Waker {
             holder: Holder::new(call),
@@ -625,109 +726,198 @@ mod tests {
         };
         // The translations are read once, on the first text (the app has read them long before).
         let _ = crate::i18n::t("Mister Download Manager is running the queue \"{queue}\"");
-        (w, asked)
+        let system = System {
+            calls: calls_rx,
+            answers: answers_tx,
+            returned,
+            stuck,
+        };
+        (w, system)
     }
 
-    /// Call `keep_awake` as the window does, each call timed, until `done` or `limit`.
-    fn ticks(w: &mut Waker, on: bool, limit: std::time::Duration, done: impl Fn(&Waker) -> bool) {
+    /// Call `keep_awake(why)` as the window does, tick after tick, until `done`: the holder's
+    /// answer comes from its thread, read on a later tick.
+    fn tick_until(w: &mut Waker, why: Option<Awake<'_>>, done: impl Fn(&Waker) -> bool) {
         let start = Instant::now();
-        while !done(w) && start.elapsed() < limit {
-            let t = Instant::now();
-            w.keep_awake(on, QUEUE);
-            assert!(
-                t.elapsed() < std::time::Duration::from_millis(50),
-                "keep_awake waited {:?}",
-                t.elapsed()
-            );
-            std::thread::sleep(std::time::Duration::from_millis(10));
+        while !done(w) {
+            assert!(start.elapsed() < STUCK, "never came");
+            w.keep_awake(why);
+            std::thread::sleep(std::time::Duration::from_millis(1));
         }
+    }
+
+    /// Orders sent to the holder's thread (holds and releases), whether or not it took them yet.
+    fn orders(w: &Waker) -> u64 {
+        w.holder.next
     }
 
     #[test]
     fn keeping_awake_never_waits_for_a_slow_system() {
-        let secs = std::time::Duration::from_secs;
-        let (mut w, asked) = waker(secs(2), true);
-        let t = Instant::now();
-        w.keep_awake(true, QUEUE);
-        assert!(t.elapsed() < std::time::Duration::from_millis(50));
+        let (mut w, sys) = waker();
+        w.keep_awake(Some(Awake::Queue(QUEUE)));
+        // The system is asked, and answers only once the test says: keep_awake came back
+        // without its answer (one that waited would have, the fake's own after STUCK).
+        assert!(sys.next().unwrap().contains(QUEUE));
+        assert_eq!(sys.returned(), 0, "keep_awake waited for the system");
         assert!(!w.awake, "not held before the system said so");
-        // Every tick returns at once while the system takes its time, and it is asked once.
-        ticks(&mut w, true, secs(6), |w| w.awake);
-        assert!(w.awake, "held once the system agreed");
-        assert_eq!(asked.lock().unwrap().len(), 1);
-        assert!(asked.lock().unwrap()[0].as_deref().unwrap().contains(QUEUE));
-        // The queue stops: let go, at once too.
-        let t = Instant::now();
-        w.keep_awake(false, "");
-        assert!(t.elapsed() < std::time::Duration::from_millis(50));
-        assert!(!w.awake);
-        let start = Instant::now();
-        while asked.lock().unwrap().len() < 2 && start.elapsed() < secs(3) {
-            std::thread::sleep(std::time::Duration::from_millis(10));
+        // Every tick while the system takes its time comes back too, and asks nothing more.
+        for _ in 0..50 {
+            w.keep_awake(Some(Awake::Queue(QUEUE)));
         }
-        assert_eq!(asked.lock().unwrap()[1], None, "let go");
+        assert!(!w.awake);
+        assert_eq!((sys.returned(), orders(&w)), (0, 1), "asked once");
+        sys.answer(true);
+        tick_until(&mut w, Some(Awake::Queue(QUEUE)), |w| w.awake);
+        assert_eq!(orders(&w), 1);
+        // The queue stops: let go, without waiting for the system either.
+        w.keep_awake(None);
+        assert!(!w.awake);
+        assert_eq!(sys.next(), None, "let go");
+        assert_eq!(sys.returned(), 1, "keep_awake waited for the let go");
+        sys.answer(true);
+        assert!(!sys.stuck(), "keep_awake waited for the system");
     }
 
     #[test]
     fn a_refusal_is_asked_again_later_not_every_tick() {
         let secs = std::time::Duration::from_secs;
-        let (mut w, asked) = waker(std::time::Duration::ZERO, false);
-        ticks(&mut w, true, secs(2), |w| w.refused.is_some());
+        let (mut w, sys) = waker();
+        w.keep_awake(Some(Awake::Queue(QUEUE)));
+        assert!(sys.next().is_some());
+        sys.answer(false);
+        tick_until(&mut w, Some(Awake::Queue(QUEUE)), |w| w.refused.is_some());
         assert_eq!(w.refused.map(|(_, n)| n), Some(1));
         // The next ticks within the 5 s don't ask again.
-        ticks(&mut w, true, std::time::Duration::from_millis(200), |_| {
-            false
-        });
-        assert_eq!(asked.lock().unwrap().len(), 1);
-        // 5 s later it is asked again.
+        for _ in 0..50 {
+            w.keep_awake(Some(Awake::Queue(QUEUE)));
+        }
+        assert_eq!(orders(&w), 1);
+        // 5 s later it is asked again, on the next tick.
         let earlier = Instant::now().checked_sub(secs(6)).unwrap();
         w.refused = Some((earlier, 1));
-        ticks(&mut w, true, secs(2), |w| {
+        w.keep_awake(Some(Awake::Queue(QUEUE)));
+        assert_eq!(orders(&w), 2);
+        assert!(sys.next().is_some());
+        sys.answer(false);
+        tick_until(&mut w, Some(Awake::Queue(QUEUE)), |w| {
             w.refused.is_some_and(|(_, n)| n == 2)
         });
-        assert_eq!(asked.lock().unwrap().len(), 2);
+        assert_eq!(orders(&w), 2);
         assert!(!w.awake);
         // Nothing held: nothing to let go.
-        w.keep_awake(false, "");
+        w.keep_awake(None);
         assert_eq!(w.refused, None);
-        std::thread::sleep(std::time::Duration::from_millis(100));
-        assert_eq!(asked.lock().unwrap().len(), 2);
+        assert_eq!(orders(&w), 2);
+        assert!(!sys.stuck());
     }
 
     #[test]
     fn stopping_while_the_hold_is_on_its_way_lets_it_go() {
-        let (mut w, asked) = waker(std::time::Duration::from_millis(300), true);
-        w.keep_awake(true, QUEUE);
-        w.keep_awake(false, "");
-        let start = Instant::now();
-        while asked.lock().unwrap().len() < 2 && start.elapsed() < std::time::Duration::from_secs(3)
-        {
-            std::thread::sleep(std::time::Duration::from_millis(10));
+        let (mut w, sys) = waker();
+        w.keep_awake(Some(Awake::Queue(QUEUE)));
+        w.keep_awake(None);
+        // The hold, answered "yes" late, after the stop; then the let go.
+        assert!(sys.next().is_some(), "the hold");
+        sys.answer(true);
+        assert_eq!(sys.next(), None, "let go");
+        sys.answer(true);
+        // The late "yes" is never taken for the stopped queue's: nothing to let go again.
+        w.keep_awake(None);
+        assert!(!w.awake && !w.holder.may_hold());
+        assert_eq!(orders(&w), 2);
+        // Nor for the next hold's: by the time the system is asked it, both answers are back.
+        w.keep_awake(Some(Awake::Queue(QUEUE)));
+        assert!(sys.next().is_some(), "the next hold");
+        for _ in 0..50 {
+            w.keep_awake(Some(Awake::Queue(QUEUE)));
         }
-        let asked = asked.lock().unwrap().clone();
-        assert!(asked[0].is_some() && asked[1].is_none(), "{asked:?}");
-        // The late "yes" is never taken for the stopped queue's.
-        std::thread::sleep(std::time::Duration::from_millis(50));
-        w.keep_awake(false, "");
-        assert!(!w.awake);
+        assert!(!w.awake, "an old answer taken for the new hold's");
+        assert!(!sys.stuck());
     }
 
     #[test]
     fn quitting_waits_for_a_hanging_system_at_most_a_second() {
-        let (mut w, asked) = waker(std::time::Duration::from_secs(10), true);
-        w.keep_awake(true, QUEUE);
-        std::thread::sleep(std::time::Duration::from_millis(50));
+        let (mut w, sys) = waker();
+        w.keep_awake(Some(Awake::Queue(QUEUE)));
+        // The system takes the hold and never answers while MDM quits.
+        assert!(sys.next().is_some());
         let t = Instant::now();
         w.clear();
         let took = t.elapsed();
-        assert!(took < std::time::Duration::from_millis(1500), "{took:?}");
+        // It waited for the let go as long as it may (the let go waits behind the hold), and
+        // came back while the system still hangs.
+        assert!(took >= QUIT_WAIT, "{took:?}");
+        assert_eq!(sys.returned(), 0, "the system answered");
+        assert!(!sys.stuck(), "clear waited for the system");
         assert!(!w.awake);
-        assert_eq!(asked.lock().unwrap().len(), 1);
+        assert_eq!(orders(&w), 2, "let go");
         // A system that answers: quitting lets go, and waits for it.
-        let (mut w, asked) = waker(std::time::Duration::ZERO, true);
-        ticks(&mut w, true, std::time::Duration::from_secs(2), |w| w.awake);
-        w.clear();
-        assert_eq!(asked.lock().unwrap().last(), Some(&None));
+        let (mut w, sys) = waker();
+        w.keep_awake(Some(Awake::Queue(QUEUE)));
+        assert!(sys.next().is_some());
+        sys.answer(true);
+        tick_until(&mut w, Some(Awake::Queue(QUEUE)), |w| w.awake);
+        let returned = sys.returned.clone();
+        let system = std::thread::spawn(move || {
+            assert_eq!(sys.next(), None, "let go");
+            sys.answer(true);
+            sys
+        });
+        w.clear_within(STUCK);
+        // Back once the system let go, not before.
+        assert_eq!(returned.load(Ordering::SeqCst), 2);
+        let sys = system.join().unwrap();
+        assert!(!w.awake && !sys.stuck());
+    }
+
+    /// Downloads keep the computer awake, a running queue that woke it with its own name
+    /// (#939). A queue without the option, or nothing running, lets it sleep.
+    #[test]
+    fn downloads_keep_the_computer_awake() {
+        let mut queues = vec![Queue::new(QUEUE, false), Queue::new(QUEUE, false)];
+        assert_eq!(why_awake(&queues, false), None);
+        assert_eq!(why_awake(&queues, true), Some(Awake::Downloads));
+        queues[1].running = true;
+        assert_eq!(why_awake(&queues, true), Some(Awake::Downloads));
+        queues[1].schedule.wake = true;
+        assert_eq!(why_awake(&queues, false), Some(Awake::Queue(QUEUE)));
+        assert_eq!(why_awake(&queues, true), Some(Awake::Queue(QUEUE)));
+        let _ = crate::i18n::t("Mister Download Manager is downloading");
+        assert_eq!(
+            Awake::Downloads.reason(),
+            "Mister Download Manager is downloading"
+        );
+    }
+
+    /// The queue that woke the computer is done and its downloads go on: the hold is asked again
+    /// with the downloads' words, once; when they end, it is let go.
+    #[test]
+    fn a_new_reason_is_asked_again_once() {
+        let (mut w, sys) = waker();
+        w.keep_awake(Some(Awake::Queue(QUEUE)));
+        assert!(sys.next().unwrap().contains(QUEUE));
+        sys.answer(true);
+        tick_until(&mut w, Some(Awake::Queue(QUEUE)), |w| w.awake);
+        // The queue is done, its downloads go on: asked again on the next tick, in their words.
+        w.keep_awake(Some(Awake::Downloads));
+        assert_eq!(
+            sys.next().as_deref(),
+            Some("Mister Download Manager is downloading")
+        );
+        sys.answer(true);
+        tick_until(&mut w, Some(Awake::Downloads), |w| !w.holder.asking());
+        // More ticks with the same reason ask nothing more.
+        for _ in 0..50 {
+            w.keep_awake(Some(Awake::Downloads));
+        }
+        assert!(w.awake);
+        assert_eq!(orders(&w), 2);
+        // They end: let go.
+        w.keep_awake(None);
+        assert_eq!(sys.next(), None, "let go");
+        sys.answer(true);
+        assert_eq!(orders(&w), 3);
+        assert!(!w.awake && !sys.stuck());
     }
 
     #[test]

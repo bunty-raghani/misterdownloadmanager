@@ -11,7 +11,7 @@ since: 0.1.0
 shot: images/help/options-proxy.webp
 shot_alt: Options on its Proxy / Socks page: No proxy/socks, Use system settings, Use automatic configuration script and Manual proxy/socks configuration
 where: Options → Proxy / Socks
-help: options.md#proxy-socks
+help: options.md#proxy--socks
 ---
 
 ## The proxy you already use

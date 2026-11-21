@@ -92,9 +92,6 @@
       }
     }
   },
-  "popup_undo": {
-    "message": "Anulați"
-  },
   "popup_excluded": {
     "message": "Descărcările de pe $site$ rămân în browser",
     "placeholders": {
@@ -148,6 +145,9 @@
   },
   "declined_integration_off": {
     "message": "Opțiunea „Utilizare integrare avansată browser” este dezactivată în Opțiuni → General."
+  },
+  "declined_torrents": {
+    "message": "Este un torrent, iar „Deschideți linkurile magnet și fișierele .torrent cu Mister Download Manager” este dezactivat în setările Torrent."
   },
   "declined_site_access": {
     "message": "Extensia nu are permisiunea de a citi acest site (accesul la site al browserului)."
@@ -328,5 +328,424 @@
   },
   "video_original": {
     "message": "original"
+  },
+  "video_compatible": {
+    "message": "Cea mai compatibilă"
+  },
+  "popup_video_hide_fullscreen": {
+    "message": "Ascundeți butonul de descărcare în modul ecran complet"
+  },
+  "popup_video_hide_fullscreen_title": {
+    "message": "În timp ce pagina este în modul ecran complet, videoclipurile sale nu afișează butonul Descărcați videoclipul"
+  },
+  "popup_remote_forget": {
+    "message": "Uită"
+  },
+  "popup_gear": {
+    "message": "Opțiuni în Mister Download Manager"
+  },
+  "popup_tabs": {
+    "message": "Secțiuni pop-up"
+  },
+  "popup_tab_downloads": {
+    "message": "Descărcări"
+  },
+  "popup_tab_page": {
+    "message": "Această pagină"
+  },
+  "popup_tab_settings": {
+    "message": "Setări"
+  },
+  "popup_conn": {
+    "message": "Conectat · $version$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.5.2"
+      }
+    }
+  },
+  "popup_conn_plain": {
+    "message": "Conectat"
+  },
+  "popup_conn_off": {
+    "message": "Nu este conectat"
+  },
+  "popup_conn_paused": {
+    "message": "În pauză"
+  },
+  "popup_conn_update": {
+    "message": "Actualizați Mister Download Manager"
+  },
+  "popup_conn_remote": {
+    "message": "Se trimite la $server$",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_cancel": {
+    "message": "Anulare"
+  },
+  "popup_page_none": {
+    "message": "Aceasta nu este o pagină web: nu este nimic de făcut aici."
+  },
+  "popup_exclude_by_rule": {
+    "message": "Lăsat browserului printr-o regulă din Opțiuni"
+  },
+  "popup_dl_search": {
+    "message": "Căutați descărcări"
+  },
+  "popup_dl_filters": {
+    "message": "Afișați"
+  },
+  "popup_dl_all": {
+    "message": "Toate"
+  },
+  "popup_dl_running": {
+    "message": "În curs"
+  },
+  "popup_dl_done_filter": {
+    "message": "Finalizat"
+  },
+  "popup_dl_failed_filter": {
+    "message": "Eșuat"
+  },
+  "popup_dl_clear": {
+    "message": "Ștergeți finalizate"
+  },
+  "popup_dl_running_count": {
+    "message": "$count$ se descarcă acum",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_remote": {
+    "message": "Acestea sunt descărcările aplicației Mister Download Manager de pe $server$. Deschideți fișierele acolo.",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_dl_more": {
+    "message": "Se afișează cele mai noi $shown$ din $total$. Mister Download Manager le afișează pe toate.",
+    "placeholders": {
+      "shown": {
+        "content": "$1",
+        "example": "60"
+      },
+      "total": {
+        "content": "$2",
+        "example": "245"
+      }
+    }
+  },
+  "popup_dl_of": {
+    "message": "$done$ din $size$",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "12.3 MB"
+      },
+      "size": {
+        "content": "$2",
+        "example": "48.7 MB"
+      }
+    }
+  },
+  "popup_dl_left": {
+    "message": "$time$ rămas",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "0:42"
+      }
+    }
+  },
+  "popup_dl_starting": {
+    "message": "Se pornește..."
+  },
+  "popup_dl_paused": {
+    "message": "În pauză"
+  },
+  "popup_dl_waiting": {
+    "message": "În așteptare"
+  },
+  "popup_dl_done": {
+    "message": "Finalizat"
+  },
+  "popup_dl_just_now": {
+    "message": "chiar acum"
+  },
+  "popup_dl_failed": {
+    "message": "Eșuat"
+  },
+  "popup_dl_failed_why": {
+    "message": "Eșuat: $why$",
+    "placeholders": {
+      "why": {
+        "content": "$1",
+        "example": "the server refused the connection"
+      }
+    }
+  },
+  "popup_dl_gone": {
+    "message": "Fișier șters sau mutat"
+  },
+  "popup_dl_loading": {
+    "message": "Se caută descărcări..."
+  },
+  "popup_dl_none": {
+    "message": "Nicio descărcare încă"
+  },
+  "popup_dl_none_text": {
+    "message": "Ceea ce descărcați cu Mister Download Manager apare aici."
+  },
+  "popup_dl_no_match": {
+    "message": "Nimic nu se potrivește"
+  },
+  "popup_dl_no_match_text": {
+    "message": "Niciun nume sau adresă de descărcare nu conține „$words$”.",
+    "placeholders": {
+      "words": {
+        "content": "$1",
+        "example": "report"
+      }
+    }
+  },
+  "popup_dl_show_all": {
+    "message": "Afișați toate descărcările"
+  },
+  "popup_list_off": {
+    "message": "Mister Download Manager nu rulează"
+  },
+  "popup_list_off_text": {
+    "message": "Porniți-l pentru a vedea descărcările aici."
+  },
+  "popup_list_start": {
+    "message": "Porniți Mister Download Manager"
+  },
+  "popup_list_old": {
+    "message": "Actualizați Mister Download Manager"
+  },
+  "popup_list_old_text": {
+    "message": "Această versiune nu poate lista încă descărcările aici."
+  },
+  "popup_list_busy": {
+    "message": "Mister Download Manager este ocupat. Se încearcă din nou..."
+  },
+  "popup_list_unreached": {
+    "message": "Nu se poate accesa Mister Download Manager"
+  },
+  "popup_list_remote_unreachable": {
+    "message": "Nu se poate accesa Mister Download Manager la $server$",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_list_remote_unreachable_text": {
+    "message": "Verificați dacă rulează și dacă acest browser îi acceptă certificatul (Setări → Trimiteți descărcări către → Deschideți-l).",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_act_open": {
+    "message": "Deschideți"
+  },
+  "popup_act_open_named": {
+    "message": "Deschideți $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_folder": {
+    "message": "Afișați în dosar"
+  },
+  "popup_act_folder_named": {
+    "message": "Afișați $file$ în dosar",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_copy_file": {
+    "message": "Copiați fișierul"
+  },
+  "popup_act_share": {
+    "message": "Partajare..."
+  },
+  "popup_act_copy_link": {
+    "message": "Copiați linkul"
+  },
+  "popup_act_pause": {
+    "message": "Pauză"
+  },
+  "popup_act_pause_named": {
+    "message": "Puneți pe pauză $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_resume": {
+    "message": "Reluați"
+  },
+  "popup_act_resume_named": {
+    "message": "Reluați $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_again": {
+    "message": "Descărcați din nou"
+  },
+  "popup_act_remove": {
+    "message": "Eliminați din listă"
+  },
+  "popup_act_delete": {
+    "message": "Șterge fișierul..."
+  },
+  "popup_act_more": {
+    "message": "Mai multe acțiuni"
+  },
+  "popup_act_more_named": {
+    "message": "Mai multe acțiuni pentru $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_title": {
+    "message": "Ștergeți fișierul?"
+  },
+  "popup_ask_delete": {
+    "message": "$file$ va fi șters de pe computer și descărcarea va fi eliminată din listă. Această acțiune nu poate fi anulată.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_ok": {
+    "message": "Ștergeți"
+  },
+  "popup_ask_clear_title": {
+    "message": "Ștergeți descărcările finalizate?"
+  },
+  "popup_ask_clear": {
+    "message": "Cele $count$ descărcări finalizate vor fi eliminate din listă. Fișierele lor rămân unde sunt.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "8"
+      }
+    }
+  },
+  "popup_ask_clear_ok": {
+    "message": "Ștergeți"
+  },
+  "popup_said_file": {
+    "message": "S-a copiat $file$. Lipiți-l într-un folder, un chat sau un mesaj.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_link": {
+    "message": "Link copiat"
+  },
+  "popup_said_removed": {
+    "message": "$file$ eliminat din listă",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_deleted": {
+    "message": "$file$ șters",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_again": {
+    "message": "Se descarcă din nou $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_cleared": {
+    "message": "Descărcările finalizate au fost șterse"
+  },
+  "popup_act_gone": {
+    "message": "Descărcarea respectivă nu mai este în listă."
+  },
+  "popup_act_missing": {
+    "message": "Fișierul său nu mai este unde a fost salvat (mutat sau șters)."
+  },
+  "popup_act_running": {
+    "message": "Puneți-l mai întâi pe pauză."
+  },
+  "popup_act_cant": {
+    "message": "Acest lucru nu se poate face acum pentru această descărcare."
+  },
+  "popup_act_unsupported": {
+    "message": "Acest sistem nu poate face asta."
+  },
+  "popup_act_off": {
+    "message": "Mister Download Manager nu rulează."
+  },
+  "popup_act_busy": {
+    "message": "Mister Download Manager nu a răspuns la timp. Încercați din nou."
+  },
+  "popup_act_failed": {
+    "message": "Nu a funcționat. Încercați din nou."
+  },
+  "status_running": {
+    "message": "Se descarcă: $count$",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_open_remote": {
+    "message": "Deschideți pagina sa"
   }
 }

@@ -13,11 +13,12 @@ The browser can't find the small helper program it talks to. It is registered wh
 1. Install MDM with the setup from [the download page](https://misterdownloadmanager.com/download.html), and keep **Set up browser integration** ticked.
 2. Already installed? Open MDM, then **Options → General → Test browser integration**, and click **Set it up** if it offers to.
 3. The portable copy can't be connected: it writes nothing outside its own folder. Use the installed copy for browser integration. See [Portable mode](portable.md).
-4. On Linux and macOS, MDM sets browser integration up itself each time it starts: start MDM once. **Test browser integration** says what went wrong if it couldn't, such as **The helper program the browsers start is missing**: **Set it up** puts it back.
-5. Restart the browser after setting it up.
-6. **Zen, Helium, Brave Origin or another browser built on Firefox or Chromium, as your only browser on Linux or macOS?** Older versions of MDM set browser integration up only for the browsers they knew; the current one also knows Brave Origin and the Beta, Dev and Nightly versions of Brave, Chrome and Edge. Update MDM and start it once.
-7. **The AppImage on Linux:** the AppImage's files are gone once it quits, so MDM keeps a copy of its helper program in its data folder (`~/.local/share/misterdownloadmanager/browser-host`) and points the browsers there. Start MDM once after moving or renaming the AppImage, or after an AppImage manager (Gear Lever, AppImageLauncher and the like) moved it, so the helper knows where to start it from.
-8. **Zen on Windows:** Zen 1.21.15b and later have a bug of their own that keeps add-ons from reaching their helper program ([zen-browser/desktop#15432](https://github.com/zen-browser/desktop/issues/15432)), with any add-on that uses one. Until Zen fixes it, Zen 1.21.14b works.
+4. **Started MDM from inside a zip?** WinRAR, 7-Zip and Windows itself run a program from inside a zip by unpacking it to a temporary folder, which they delete afterwards. A copy run that way can't be connected (**Test browser integration** says **This copy runs from a temporary folder that will be deleted**): unzip it to a folder of its own first. Older versions of MDM did set browser integration up from there, and left the browsers looking for a copy that was gone (**The browsers are set up for a copy that is gone**). Start your installed MDM, up to date, once: it takes browser integration back by itself.
+5. On Linux and macOS, MDM sets browser integration up itself each time it starts: start MDM once. **Test browser integration** says what went wrong if it couldn't, such as **The helper program the browsers start is missing**: **Set it up** puts it back.
+6. Restart the browser after setting it up.
+7. **Zen, Helium, Brave Origin or another browser built on Firefox or Chromium, as your only browser on Linux or macOS?** Older versions of MDM set browser integration up only for the browsers they knew; the current one also knows Brave Origin and the Beta, Dev and Nightly versions of Brave, Chrome and Edge. Update MDM and start it once.
+8. **The AppImage on Linux:** the AppImage's files are gone once it quits, so MDM keeps a copy of its helper program in its data folder (`~/.local/share/misterdownloadmanager/browser-host`) and points the browsers there. Start MDM once after moving or renaming the AppImage, or after an AppImage manager (Gear Lever, AppImageLauncher and the like) moved it, so the helper knows where to start it from.
+9. **Zen on Windows:** Zen 1.21.15b and later have a bug of their own that keeps add-ons from reaching their helper program ([zen-browser/desktop#15432](https://github.com/zen-browser/desktop/issues/15432)), with any add-on that uses one. Until Zen fixes it, Zen 1.21.14b works.
 
 ## MDM didn't start in time {#not-running}
 
@@ -60,6 +61,8 @@ If MDM says it's up to date, there's nothing for you to do. The extension update
 
 A download carries its site's cookies (and a form's data) to MDM. A few sites set so many that together they exceed what MDM accepts from the browser (1 MB). The browser kept this one. Signing out and back in to the site usually trims them.
 
+**Download all links** and **Download selected links** send a long list of links in parts of up to 1 MB, so a page with tens of thousands of links reaches Link grabber whole. A single link longer than that, which no server takes, can't be sent: it is left out, the others still reach Link grabber, and this page opens to say so. When a site's cookies alone fill the 1 MB, no link can go with them: sign out and back in to the site, as above.
+
 ## Downloads stay with the browser although MDM is connected {#options}
 
 The extension is connected, but MDM's own settings leave this download to the browser. Check, in MDM:
@@ -68,12 +71,13 @@ The extension is connected, but MDM's own settings leave this download to the br
 2. The file's type is listed in **Options → File types**.
 3. The site isn't in **Don't start downloading automatically from the following sites**, nor the address in **Don't start downloading automatically from the following addresses**.
 4. The file isn't smaller than **Don't take files smaller than** in **Options → File types**.
+5. For a `.torrent` file: **Open magnet links and .torrent files with Mister Download Manager** is on in **Tasks → Torrent settings**.
 
 Also check the extension's toolbar button: with **Take downloads from this browser** off, everything stays with the browser.
 
 ## The browser opens PDFs and music instead of sending them {#opened}
 
-MDM also takes the file types the browser would show or play itself (a PDF, an MP3), when they're listed in **Options → File types** and **Also take files the browser would open** is ticked in **Options → General → Keys...**. This needs a Chromium browser (Chrome, Edge, Brave, Opera, Vivaldi) version 128 or later, or Firefox. Sites in MDM's excluded sites keep opening them in the browser. Hold **Alt** (**Option** on a Mac) while clicking a link to leave it to the browser: Firefox then follows it as a plain click does, while Chromium browsers and Safari download it themselves (it is their own "download link").
+MDM also takes the file types the browser would show or play itself (a PDF, an MP3, also in a frame of a page), when they're listed in **Options → File types** and **Also take files the browser would open** is ticked in **Options → General → Keys...**. This needs a Chromium browser (Chrome, Edge, Brave, Opera, Vivaldi) version 128 or later, or Firefox. Sites in MDM's excluded sites keep opening them in the browser. Hold **Alt** (**Option** on a Mac) while clicking a link to leave it to the browser: the extension follows it as a plain click does (the browser opens or downloads it, and a site's bot check runs in the tab first), instead of the browser's own Alt+click, which saves the link without opening it in Chromium browsers and Safari.
 
 ## No Download video button on YouTube in Chrome, Edge or Brave {#store-youtube}
 

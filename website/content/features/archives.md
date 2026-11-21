@@ -57,11 +57,15 @@ Recycle Bin (the Trash on macOS and Linux) only if you ask.
 
 In [Link grabber](link-grabber.md), the volumes of one archive form one package. Each package
 has its folder, the archives' password, **Extract when done** (ticked by itself when the package
-holds an archive) and **Delete archives after extracting**. The password is kept in memory only,
-never written to disk.
+holds an archive) and **Delete archives after extracting**. The password is kept in memory only: it
+is tried first when an archive needs one, and is never saved by itself.
 
 ![Link grabber listing the links of a page in packages, with their names, sizes and whether they are online](images/help/link-grabber.webp)
 *Link grabber: untick what you don't want, then Add to queue.*
 
-An encrypted archive without its password opens the **Archive password** window. Hover over the
+An encrypted archive is tried with its package's password and your saved passwords first
+(**Options → Archives → Archive passwords...**, the one that fits moving to the top; a package's
+password the archive needed joins them), and only then opens the **Archive password** window,
+which can remember what you type. 7-Zip gets each password on its input, never on its command
+line. Hover over the
 download in the list to read what happened: how many files were extracted and where, or why not.

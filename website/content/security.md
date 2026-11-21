@@ -16,7 +16,7 @@ You'll get an answer as soon as possible. A fix is released before the details a
 - Every release is built from the public source code by **GitHub Actions**, on GitHub's servers; the build logs are public.
 - Each release lists the **SHA-256** checksum of every file in `SHA256SUMS.txt`. Check your download against it: see [Download](/download.html#check-your-download).
 - Get MDM **only from this site or the project's GitHub releases**. Copies elsewhere may be altered.
-- The Windows installer isn't code-signed yet, so Windows SmartScreen may warn before the first start. Code signing will be added.
+- The Windows installer isn't code-signed yet, so Windows SmartScreen may warn before the first start. Code signing will be added: see the [code signing policy](/code-signing-policy.html).
 
 ## What protects you
 

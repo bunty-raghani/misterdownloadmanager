@@ -92,9 +92,6 @@
       }
     }
   },
-  "popup_undo": {
-    "message": "Angre"
-  },
   "popup_excluded": {
     "message": "Nedlastinger fra $site$ blir igjen i nettleseren",
     "placeholders": {
@@ -148,6 +145,9 @@
   },
   "declined_integration_off": {
     "message": "Bruk avansert nettleserintegrasjon er deaktivert i Alternativer → Generelt."
+  },
+  "declined_torrents": {
+    "message": "Det er en torrent, og «Åpne magnetkoblinger og .torrent-filer med Mister Download Manager» er slått av i torrentinnstillingene."
   },
   "declined_site_access": {
     "message": "Utvidelsen har ikke tillatelse til å lese dette nettstedet (nettleserens nettstedstilgang)."
@@ -328,5 +328,424 @@
   },
   "video_original": {
     "message": "original"
+  },
+  "video_compatible": {
+    "message": "Mest kompatibel"
+  },
+  "popup_video_hide_fullscreen": {
+    "message": "Skjul nedlastingsknappen i fullskjerm"
+  },
+  "popup_video_hide_fullscreen_title": {
+    "message": "Mens siden er i fullskjerm, viser videoene ingen nedlastingsknapp"
+  },
+  "popup_remote_forget": {
+    "message": "Glem"
+  },
+  "popup_gear": {
+    "message": "Alternativer i Mister Download Manager"
+  },
+  "popup_tabs": {
+    "message": "Seksjoner i hurtigmenyen"
+  },
+  "popup_tab_downloads": {
+    "message": "Nedlastinger"
+  },
+  "popup_tab_page": {
+    "message": "Denne siden"
+  },
+  "popup_tab_settings": {
+    "message": "Innstillinger"
+  },
+  "popup_conn": {
+    "message": "Tilkoblet · $version$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.5.2"
+      }
+    }
+  },
+  "popup_conn_plain": {
+    "message": "Tilkoblet"
+  },
+  "popup_conn_off": {
+    "message": "Ikke tilkoblet"
+  },
+  "popup_conn_paused": {
+    "message": "Pauset"
+  },
+  "popup_conn_update": {
+    "message": "Oppdater Mister Download Manager"
+  },
+  "popup_conn_remote": {
+    "message": "Sender til $server$",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_cancel": {
+    "message": "Avbryt"
+  },
+  "popup_page_none": {
+    "message": "Dette er ikke en nettside: det er ingenting å gjøre her."
+  },
+  "popup_exclude_by_rule": {
+    "message": "Overlatt til nettleseren av en regel i Alternativer"
+  },
+  "popup_dl_search": {
+    "message": "Søk i nedlastinger"
+  },
+  "popup_dl_filters": {
+    "message": "Vis"
+  },
+  "popup_dl_all": {
+    "message": "Alle"
+  },
+  "popup_dl_running": {
+    "message": "Kjører"
+  },
+  "popup_dl_done_filter": {
+    "message": "Fullført"
+  },
+  "popup_dl_failed_filter": {
+    "message": "Mislyktes"
+  },
+  "popup_dl_clear": {
+    "message": "Fjern fullførte"
+  },
+  "popup_dl_running_count": {
+    "message": "$count$ laster ned nå",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_remote": {
+    "message": "Dette er nedlastingene til Mister Download Manager på $server$. Åpne filene der.",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_dl_more": {
+    "message": "De nyeste $shown$ av $total$. Mister Download Manager viser alle.",
+    "placeholders": {
+      "shown": {
+        "content": "$1",
+        "example": "60"
+      },
+      "total": {
+        "content": "$2",
+        "example": "245"
+      }
+    }
+  },
+  "popup_dl_of": {
+    "message": "$done$ av $size$",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "12.3 MB"
+      },
+      "size": {
+        "content": "$2",
+        "example": "48.7 MB"
+      }
+    }
+  },
+  "popup_dl_left": {
+    "message": "$time$ igjen",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "0:42"
+      }
+    }
+  },
+  "popup_dl_starting": {
+    "message": "Starter..."
+  },
+  "popup_dl_paused": {
+    "message": "Pauset"
+  },
+  "popup_dl_waiting": {
+    "message": "Venter"
+  },
+  "popup_dl_done": {
+    "message": "Fullført"
+  },
+  "popup_dl_just_now": {
+    "message": "akkurat nå"
+  },
+  "popup_dl_failed": {
+    "message": "Mislyktes"
+  },
+  "popup_dl_failed_why": {
+    "message": "Mislyktes: $why$",
+    "placeholders": {
+      "why": {
+        "content": "$1",
+        "example": "the server refused the connection"
+      }
+    }
+  },
+  "popup_dl_gone": {
+    "message": "Filen er slettet eller flyttet"
+  },
+  "popup_dl_loading": {
+    "message": "Søker etter nedlastinger..."
+  },
+  "popup_dl_none": {
+    "message": "Ingen nedlastinger ennå"
+  },
+  "popup_dl_none_text": {
+    "message": "Det du laster ned med Mister Download Manager, vises her."
+  },
+  "popup_dl_no_match": {
+    "message": "Ingen treff"
+  },
+  "popup_dl_no_match_text": {
+    "message": "Ingen nedlastings navn eller adresse inneholder «$words$».",
+    "placeholders": {
+      "words": {
+        "content": "$1",
+        "example": "report"
+      }
+    }
+  },
+  "popup_dl_show_all": {
+    "message": "Vis alle nedlastinger"
+  },
+  "popup_list_off": {
+    "message": "Mister Download Manager kjører ikke"
+  },
+  "popup_list_off_text": {
+    "message": "Start den for å se nedlastingene dine her."
+  },
+  "popup_list_start": {
+    "message": "Start Mister Download Manager"
+  },
+  "popup_list_old": {
+    "message": "Oppdater Mister Download Manager"
+  },
+  "popup_list_old_text": {
+    "message": "Denne versjonen kan ikke vise nedlastingene sine her ennå."
+  },
+  "popup_list_busy": {
+    "message": "Mister Download Manager er opptatt. Prøver igjen..."
+  },
+  "popup_list_unreached": {
+    "message": "Kan ikke nå Mister Download Manager"
+  },
+  "popup_list_remote_unreachable": {
+    "message": "Kan ikke nå Mister Download Manager på $server$",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_list_remote_unreachable_text": {
+    "message": "Sjekk at den kjører, og at denne nettleseren godtar sertifikatet (Innstillinger → Send nedlastinger til → Åpne den).",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_act_open": {
+    "message": "Åpne"
+  },
+  "popup_act_open_named": {
+    "message": "Åpne $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_folder": {
+    "message": "Vis i mappe"
+  },
+  "popup_act_folder_named": {
+    "message": "Vis $file$ i mappe",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_copy_file": {
+    "message": "Kopier fil"
+  },
+  "popup_act_share": {
+    "message": "Del..."
+  },
+  "popup_act_copy_link": {
+    "message": "Kopier kobling"
+  },
+  "popup_act_pause": {
+    "message": "Sett på pause"
+  },
+  "popup_act_pause_named": {
+    "message": "Sett $file$ på pause",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_resume": {
+    "message": "Gjenoppta"
+  },
+  "popup_act_resume_named": {
+    "message": "Gjenoppta $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_again": {
+    "message": "Last ned på nytt"
+  },
+  "popup_act_remove": {
+    "message": "Fjern fra listen"
+  },
+  "popup_act_delete": {
+    "message": "Slett fil..."
+  },
+  "popup_act_more": {
+    "message": "Flere handlinger"
+  },
+  "popup_act_more_named": {
+    "message": "Flere handlinger for $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_title": {
+    "message": "Slette filen?"
+  },
+  "popup_ask_delete": {
+    "message": "$file$ blir slettet fra datamaskinen din, og nedlastingen fjernes fra listen. Dette kan ikke angres.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_ok": {
+    "message": "Slett"
+  },
+  "popup_ask_clear_title": {
+    "message": "Fjern fullførte nedlastinger?"
+  },
+  "popup_ask_clear": {
+    "message": "De $count$ fullførte nedlastingene fjernes fra listen. Filene blir der de er.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "8"
+      }
+    }
+  },
+  "popup_ask_clear_ok": {
+    "message": "Fjern"
+  },
+  "popup_said_file": {
+    "message": "Kopierte $file$. Lim den inn i en mappe, en chat eller en melding.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_link": {
+    "message": "Kobling kopiert"
+  },
+  "popup_said_removed": {
+    "message": "$file$ fjernet fra listen",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_deleted": {
+    "message": "$file$ slettet",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_again": {
+    "message": "Laster ned $file$ på nytt",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_cleared": {
+    "message": "Fullførte nedlastinger fjernet"
+  },
+  "popup_act_gone": {
+    "message": "Nedlastingen er ikke lenger i listen."
+  },
+  "popup_act_missing": {
+    "message": "Filen er ikke lenger der den ble lagret (flyttet eller slettet)."
+  },
+  "popup_act_running": {
+    "message": "Sett den på pause først."
+  },
+  "popup_act_cant": {
+    "message": "Dette kan ikke gjøres med denne nedlastingen nå."
+  },
+  "popup_act_unsupported": {
+    "message": "Dette systemet kan ikke gjøre det."
+  },
+  "popup_act_off": {
+    "message": "Mister Download Manager kjører ikke."
+  },
+  "popup_act_busy": {
+    "message": "Mister Download Manager svarte ikke i tide. Prøv igjen."
+  },
+  "popup_act_failed": {
+    "message": "Det fungerte ikke. Prøv igjen."
+  },
+  "status_running": {
+    "message": "Laster ned: $count$",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_open_remote": {
+    "message": "Åpne siden"
   }
 }

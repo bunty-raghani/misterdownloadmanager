@@ -133,3 +133,55 @@ fn browser_hand_overs_while_hidden_in_the_tray() {
 fn browser_hand_overs_while_minimized() {
     hand_overs_while("minimized");
 }
+
+/// #1333: MDM started by the native host with /fromhost boots hidden and opens only the dialog.
+#[test]
+#[ignore = "opens the app's windows (off-screen): needs OpenGL or Direct3D; run with --ignored"]
+fn browser_hand_over_when_started_from_host() {
+    let dir = tempfile::tempdir().unwrap();
+    let data = dir.path();
+    let settings = serde_json::json!({
+        "update_check": false,
+        "helpers_asked": true,
+        "language_asked": true,
+        "extension_never_ask": true,
+        "minimize_to_tray": false,
+        "torrent_dht": false,
+        "torrent_lsd": false,
+        "torrent_upnp": false,
+        "torrent_incoming": false,
+    });
+    std::fs::write(
+        data.join("downloads.json"),
+        serde_json::json!({ "next_id": 1, "items": [], "version": 2, "settings": settings })
+            .to_string(),
+    )
+    .unwrap();
+    let mut app = Command::new(APP)
+        .arg(mdm_ipc::FROM_HOST)
+        .env("MDM_DATA_DIR", data)
+        .env("MDM_OFFSCREEN", "1")
+        .spawn()
+        .unwrap();
+    let wait = Duration::from_secs(60);
+    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        wait_for(&mut app, data, "started from host: hidden", wait);
+
+        second_launch(data, &["/d", "http://127.0.0.1:9/mdm-test-fromhost.zip"]);
+        wait_for(&mut app, data, "window opened: file-info", wait);
+    }));
+    let _ = Command::new(APP)
+        .arg("/exit")
+        .env("MDM_DATA_DIR", data)
+        .env("MDM_OFFSCREEN", "1")
+        .status();
+    let until = Instant::now() + Duration::from_secs(15);
+    while app.try_wait().unwrap().is_none() && Instant::now() < until {
+        std::thread::sleep(Duration::from_millis(200));
+    }
+    let _ = app.kill();
+    let _ = app.wait();
+    if let Err(e) = result {
+        std::panic::resume_unwind(e);
+    }
+}

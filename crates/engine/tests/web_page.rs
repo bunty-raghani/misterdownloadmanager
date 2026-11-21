@@ -329,3 +329,131 @@ async fn a_resume_that_meets_a_page_keeps_the_data() {
         assert!(!saved.dest.exists(), "{faults}: never finished");
     }
 }
+
+/// A download handed over by the browser (#1460): its own download of `url` was `size` bytes and
+/// ended at `browser_final`; saved as `name` (or named by MDM). The link's one use is spent first,
+/// as the browser's request spent it. The file saved (its bytes) or the error, and what the
+/// folder holds.
+async fn handed_over(
+    url: &str,
+    name: Option<&str>,
+    size: u64,
+    browser_final: Option<&str>,
+) -> (Result<Vec<u8>, Error>, Vec<String>) {
+    // The browser's request: its answer's head read, the rest left (the browser was stopped).
+    let browsers = reqwest::get(url).await.unwrap();
+    assert!(browsers.status().is_success());
+    drop(browsers);
+    let dir = tempfile::tempdir().unwrap();
+    let dest = match name {
+        Some(n) => Destination::File(dir.path().join(n)),
+        None => Destination::Dir(dir.path().to_owned()),
+    };
+    let req = Request {
+        url: url.parse().unwrap(),
+        headers: Default::default(),
+        dest,
+    };
+    let opts = Options {
+        expected_size: Some(size),
+        browser_final: browser_final.map(|u| u.parse().unwrap()),
+        retry_delay: std::time::Duration::from_millis(50),
+        ..Options::default()
+    };
+    let out = Download::start(req, opts)
+        .wait()
+        .await
+        .map(|o| std::fs::read(o.path).unwrap());
+    let mut files: Vec<String> = std::fs::read_dir(dir.path())
+        .unwrap()
+        .map(|e| e.unwrap().file_name().to_string_lossy().into_owned())
+        .collect();
+    files.sort();
+    (out, files)
+}
+
+/// #1460: Lanzou's link, asked again by MDM after the browser, answers with its host's bot check
+/// (a small script page, chunked): a 117 MB program was announced, the page is never saved as it.
+#[tokio::test]
+async fn a_one_time_links_second_answer_is_never_the_program() {
+    let s = server().await;
+    let url = s.url("/gen/117M/file?html_after=1&html_body=challenge&html_chunked=1");
+    let (out, files) = handed_over(&url, Some("大表哥.exe"), 117 << 20, None).await;
+    assert!(refused(&out), "{:?}", out.map(|b| b.len()));
+    assert!(files.is_empty(), "nothing saved: {files:?}");
+}
+
+/// #1460: an answer that isn't a page (a JSON or text error, an empty answer), no larger than a
+/// page where the browser's file was 117 MB, with its length or chunked: not the file, never saved,
+/// whatever its name.
+#[tokio::test]
+async fn an_answer_far_smaller_than_the_browsers_file_is_not_saved() {
+    let s = server().await;
+    for (seed, faults, name) in [
+        (1, "html_body=json", Some("大表哥.exe")),
+        (2, "html_body=json&html_chunked=1", Some("大表哥.exe")),
+        (3, "html_body=text", None),
+        (4, "html_body=text&html_chunked=1", None),
+        // As the file's own type, under its name (a script's error sent as the download).
+        (
+            5,
+            "html_body=json&html_type=application/octet-stream&html_cd=1",
+            None,
+        ),
+    ] {
+        let url = s.url(&format!("/gen/117M/file?seed={seed}&html_after=1&{faults}"));
+        let (out, files) = handed_over(&url, name, 117 << 20, None).await;
+        match out {
+            Err(Error::NotTheFile { size, sent }) => {
+                assert_eq!(size, 117 << 20, "{faults}");
+                assert!(sent > 0 && sent < 100, "{faults}: {sent}");
+            }
+            other => panic!("{faults}: {:?}", other.map(|b| b.len())),
+        }
+        assert!(files.is_empty(), "{faults}: nothing saved: {files:?}");
+    }
+}
+
+/// #1460: where the browser's own download ended (#630) is asked once instead, and gives the
+/// file; the browser's file a little larger than the answer, or no larger than a page, is the
+/// file as before.
+#[tokio::test]
+async fn the_browsers_address_or_a_close_size_still_downloads() {
+    let s = server().await;
+    let link = s.url("/gen/600K/file?seed=7&html_after=1&html_body=json");
+    let at = s.url("/gen/600K/file.exe?seed=7");
+    let (out, _) = handed_over(&link, Some("x.exe"), 600 << 10, Some(&at)).await;
+    let mut want = vec![0; 600 << 10];
+    content::fill(7, 0, &mut want);
+    assert!(out.unwrap() == want, "the browser's address gave the file");
+    // The file, its size announced a little off (a browser's estimate, a file just changed).
+    let (out, _) = handed_over(&s.url("/gen/600K/a.exe?seed=7"), None, 700 << 10, None).await;
+    assert!(out.unwrap() == want);
+    // A small file announced as small, the answer smaller still: a small file.
+    let (out, files) = handed_over(
+        &s.url("/gen/40K/f?seed=8&html_after=1&html_body=json"),
+        None,
+        40 << 10,
+        None,
+    )
+    .await;
+    assert!(out.is_ok(), "{:?}", out.err());
+    assert_eq!(files.len(), 1, "{files:?}");
+}
+
+/// #1460: the file's information window says so too, before anything is saved.
+#[tokio::test]
+async fn the_look_says_it_is_not_the_file() {
+    let s = server().await;
+    let url = s.url("/gen/117M/file?html=1&html_body=json");
+    let opts = Options {
+        expected_size: Some(117 << 20),
+        ..Options::default()
+    };
+    let probed = mdm_engine::probe_kept(url.parse().unwrap(), Default::default(), &opts).await;
+    assert!(
+        matches!(probed, Err(Error::NotTheFile { .. })),
+        "{:?}",
+        probed.map(|(i, _)| i.size)
+    );
+}

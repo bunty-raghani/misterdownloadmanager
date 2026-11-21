@@ -137,6 +137,7 @@ async fn run(name: &str, magnet: &str, setup: &Setup) -> String {
         listen_ip: setup.listen_ip,
         // Local peer discovery listens on every address (UDP 6771): not with one address.
         lsd: setup.listen_ip.is_none(),
+        require_authorization: false,
         ..Config::new(dir)
     })
     .await

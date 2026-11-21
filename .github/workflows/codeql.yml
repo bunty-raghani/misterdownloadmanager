@@ -1,0 +1,52 @@
+# CodeQL: GitHub's static analysis of the source, for mistakes that become security problems
+# (unchecked input reaching a file path, a command or a URL, and the like). Three languages: the
+# Rust workspace, the JavaScript of the browser extension and the tools, and the workflows
+# themselves (GitHub Actions). None needs a build (build-mode: none: CodeQL reads the source), so
+# it runs on every pull request to main, every push to main, and weekly, as new queries arrive.
+# Results go to the Security tab (Code scanning), and a pull request shows those it adds.
+name: CodeQL
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  schedule:
+    - cron: "41 3 * * 2"
+  workflow_dispatch:
+
+# A newer commit on a pull request makes its older run moot: cancel it (main runs to the end).
+concurrency:
+  group: codeql-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: ${{ matrix.language }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      security-events: write # upload the results to the Security tab
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [rust, javascript-typescript, actions]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - uses: github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: none
+          # What is left out (third-party code, the test server, the test tooling) and why.
+          config-file: ./.github/codeql/codeql-config.yml
+
+      - uses: github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          category: /language:${{ matrix.language }}

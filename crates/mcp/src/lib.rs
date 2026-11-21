@@ -6,7 +6,7 @@
 use std::sync::Arc;
 
 use mdm_ipc::Command;
-use mdm_ipc::api::{API_OFF as API_OFF_CODE, DownloadInfo, ErrorAnswer, ListAnswer, STATUSES};
+use mdm_ipc::api::{API_OFF as API_OFF_CODE, ErrorAnswer, ListAnswer};
 use rmcp::handler::server::{router::tool::ToolRouter, wrapper::Parameters};
 use rmcp::{ServerHandler, tool, tool_handler, tool_router};
 use schemars::JsonSchema;
@@ -25,18 +25,28 @@ const API_OFF: &str = "Mister Download Manager's automation API is off. Ask the 
                        again.";
 
 const INSTRUCTIONS: &str = "Controls Mister Download Manager, the download manager running on \
-    this computer. list_downloads shows its downloads with their ids; pause_downloads, \
-    resume_downloads and remove_downloads act on those ids; add_download adds an address \
-    (http, https, ftp, ftps or a magnet link); start_queue starts the main download queue. \
-    Listing and acting on downloads needs the app's automation API, which the user turns on \
-    with `misterdownloadmanager-cli api on`. Sizes and speeds are in bytes and bytes per second.";
+    this computer. list_downloads shows its downloads with their ids (and optional id, status, \
+    category, queue, or search filtering); pause_downloads, resume_downloads and \
+    remove_downloads act on those ids; add_download adds an address (http, https, ftp, ftps \
+    or a magnet link); start_queue starts a download queue (the main queue by default, or \
+    by name); stop_queue stops a download queue (the main queue by default, or by name). \
+    Listing and acting on downloads, stopping a queue, and starting a named queue need \
+    the app's automation API, which the user turns on with `misterdownloadmanager-cli api on`. \
+    Sizes, free space and speeds are in bytes and bytes per second.";
 
 #[derive(Deserialize, JsonSchema, Default)]
 pub struct ListArgs {
+    /// Only the download with this id.
+    pub id: Option<u64>,
     /// Only downloads with this status: Queued, Downloading, Stopped, Complete or Error.
     pub status: Option<String>,
     /// Only downloads whose file name or address contains this text (any case).
     pub search: Option<String>,
+    /// Only downloads in this category (key in the app's categories: "General", "Compressed",
+    /// "Documents", "Music", "Programs", "Video", or a custom category).
+    pub category: Option<String>,
+    /// Only downloads in this queue (the main queue by default, or by name).
+    pub queue: Option<String>,
     /// At most this many, newest first (default 100).
     pub limit: Option<usize>,
 }
@@ -50,9 +60,34 @@ pub struct AddArgs {
     pub folder: Option<String>,
     /// The file name to save it as (default: from the address or the server).
     pub file_name: Option<String>,
-    /// true: only add it to the main queue, without starting it now.
+    /// A category for the download (key in the app's categories: "General", "Compressed",
+    /// "Documents", "Music", "Programs", "Video", or a custom category; default: by file type).
+    pub category: Option<String>,
+    /// A queue by name: where the download waits (with `later`; default: main queue).
+    pub queue: Option<String>,
+    /// The checksum the finished file must have, as the command line's `--checksum` takes it
+    /// (`sha256:…`, a bare hex value, …); the app refuses one it can't read.
+    pub checksum: Option<String>,
+    /// The page's address (Referer header), for links that need one or an expired link's renewal.
+    pub referer: Option<String>,
+    /// The User-Agent header to send with download requests.
+    pub user_agent: Option<String>,
+    /// A Cookie header to send with download requests (e.g. `session=xyz; uid=123`), for links
+    /// that require authentication.
+    #[serde(default, alias = "cookies")]
+    pub cookie: Option<String>,
+    /// true: do not save the download to the app's history or saved list.
+    #[serde(default)]
+    pub private: bool,
+    /// true: only add it to the download queue, without starting it now.
     #[serde(default)]
     pub later: bool,
+}
+
+#[derive(Deserialize, JsonSchema, Default)]
+pub struct QueueArgs {
+    /// The name of the download queue to start or stop (default: main queue).
+    pub queue: Option<String>,
 }
 
 #[derive(Deserialize, JsonSchema)]
@@ -111,10 +146,11 @@ impl Server {
 impl Server {
     #[tool(
         description = "Lists Mister Download Manager's downloads, newest first: id, file, url, \
-                       path, status (Queued, Downloading, Stopped, Complete or Error), size and \
-                       downloaded (bytes; size null while unknown), speed (bytes per second), \
-                       when it was added and, for a failed one, why (error); with the total \
-                       speed and how many match.",
+                       path, status (Queued, Downloading, Stopped, Complete or Error), category, \
+                       size and downloaded (bytes; size null while unknown), speed (bytes per \
+                       second), when it was added and, for a failed one, why (error); with the \
+                       total speed, free disk space (bytes, null when unknown), available \
+                       queues and categories, and how many match.",
         annotations(read_only_hint = true, open_world_hint = false)
     )]
     async fn list_downloads(
@@ -148,17 +184,33 @@ impl Server {
                  https, ftp and ftps addresses and magnet links."
             ));
         }
+        let queue = args.queue.filter(|q| !q.trim().is_empty());
+        let category = args.category.filter(|c| !c.trim().is_empty());
         self.call(Command {
             url: Some(url.clone()),
             dir: args.folder.filter(|d| !d.trim().is_empty()),
             name: args.file_name.filter(|n| !n.trim().is_empty()),
+            category: category.clone(),
+            queue: queue.clone(),
+            checksum: args.checksum.filter(|c| !c.trim().is_empty()),
+            referer: args.referer.filter(|r| !r.trim().is_empty()),
+            user_agent: args.user_agent.filter(|u| !u.trim().is_empty()),
+            cookies: args.cookie.filter(|c| !c.trim().is_empty()),
             later: args.later,
+            private: args.private,
             silent: true,
             ..Default::default()
         })
         .await?;
         Ok(if args.later {
-            format!("Added {url} to the main queue (not started). list_downloads shows it.")
+            match queue {
+                Some(q) => {
+                    format!("Added {url} to queue \"{q}\" (not started). list_downloads shows it.")
+                }
+                None => {
+                    format!("Added {url} to the main queue (not started). list_downloads shows it.")
+                }
+            }
         } else {
             format!("Added {url} and started it. list_downloads shows its progress.")
         })
@@ -220,20 +272,58 @@ impl Server {
     }
 
     #[tool(
-        description = "Starts Mister Download Manager's main download queue.",
+        description = "Starts Mister Download Manager's download queue (starts the main queue \
+                       if omitted, or a queue by name).",
         annotations(
             read_only_hint = false,
             destructive_hint = false,
             idempotent_hint = true
         )
     )]
-    async fn start_queue(&self) -> Result<String, String> {
+    async fn start_queue(&self, Parameters(args): Parameters<QueueArgs>) -> Result<String, String> {
+        let queue = args.queue.filter(|q| !q.trim().is_empty());
+        match queue {
+            Some(ref q) => {
+                self.call(Command {
+                    action: Some("start_queue".into()),
+                    queue: Some(q.clone()),
+                    ..Default::default()
+                })
+                .await?;
+                Ok(format!("Started download queue \"{q}\"."))
+            }
+            None => {
+                self.call(Command {
+                    start_queue: true,
+                    ..Default::default()
+                })
+                .await?;
+                Ok("Started the main download queue.".into())
+            }
+        }
+    }
+
+    #[tool(
+        description = "Stops Mister Download Manager's download queue (stops the main queue \
+                       if omitted, or a queue by name).",
+        annotations(
+            read_only_hint = false,
+            destructive_hint = false,
+            idempotent_hint = true
+        )
+    )]
+    async fn stop_queue(&self, Parameters(args): Parameters<QueueArgs>) -> Result<String, String> {
+        let queue = args.queue.filter(|q| !q.trim().is_empty());
         self.call(Command {
-            start_queue: true,
+            action: Some("stop_queue".into()),
+            queue: queue.clone(),
             ..Default::default()
         })
         .await?;
-        Ok("Started the main download queue.".into())
+        Ok(match queue {
+            Some(q) => format!("Stopped download queue \"{q}\"."),
+            None => "Stopped the main download queue.".into(),
+        })
     }
 }
 
@@ -305,44 +395,31 @@ fn addable(url: &str) -> bool {
 fn filter_list(answer: &str, args: &ListArgs) -> Result<String, String> {
     let list: ListAnswer =
         serde_json::from_str(answer).map_err(|e| format!("unreadable answer: {e}"))?;
-    let status = match args
-        .status
-        .as_deref()
-        .map(str::trim)
-        .filter(|s| !s.is_empty())
-    {
-        None => None,
-        Some(s) => Some(
-            STATUSES
-                .into_iter()
-                .find(|k| k.eq_ignore_ascii_case(s))
-                .ok_or_else(|| format!("Unknown status {s:?}: use one of {STATUSES:?}."))?,
-        ),
+    let filter = mdm_ipc::api::ListFilter {
+        id: args.id,
+        status: args.status.as_deref(),
+        search: args.search.as_deref(),
+        category: args.category.as_deref(),
+        queue: args.queue.as_deref(),
+        limit: None,
     };
-    let search = args
-        .search
-        .as_deref()
-        .map(|s| s.trim().to_lowercase())
-        .filter(|s| !s.is_empty());
-    let mut downloads: Vec<DownloadInfo> = list
-        .downloads
-        .into_iter()
-        .filter(|d| status.is_none_or(|s| d.status == s))
-        .filter(|d| {
-            search.as_ref().is_none_or(|q| {
-                d.file.to_lowercase().contains(q) || d.url.to_lowercase().contains(q)
-            })
-        })
-        .collect();
-    let matching = downloads.len();
-    downloads.sort_by_key(|d| std::cmp::Reverse(d.id));
+    let filtered = list.filtered(&filter).map_err(|e| e.to_string())?;
+    let matching = filtered.downloads.len();
+    let mut downloads = filtered.downloads;
     downloads.truncate(args.limit.unwrap_or(DEFAULT_LIMIT));
-    Ok(serde_json::json!({
+    let mut obj = serde_json::json!({
         "downloads": downloads,
         "matching": matching,
-        "speed": list.speed,
-    })
-    .to_string())
+        "speed": filtered.speed,
+        "free": filtered.free,
+    });
+    if !filtered.queues.is_empty() {
+        obj["queues"] = serde_json::to_value(&filtered.queues).unwrap_or_default();
+    }
+    if !filtered.categories.is_empty() {
+        obj["categories"] = serde_json::to_value(&filtered.categories).unwrap_or_default();
+    }
+    Ok(obj.to_string())
 }
 
 #[cfg(test)]
@@ -351,10 +428,10 @@ mod tests {
     use serde_json::Value;
 
     const LIST: &str = r#"{"downloads":[
-        {"id":1,"file":"ubuntu.iso","url":"https://releases.ubuntu.com/ubuntu.iso","status":"Complete","path":"/downloads/f","size":100,"downloaded":50,"speed":0,"added":null},
-        {"id":2,"file":"7z.exe","url":"https://www.7-zip.org/a/7z.exe","status":"Downloading","path":"/downloads/f","size":100,"downloaded":50,"speed":0,"added":null},
-        {"id":3,"file":"report.pdf","url":"https://example.com/report.pdf","status":"Stopped","path":"/downloads/f","size":100,"downloaded":50,"speed":0,"added":null}
-    ],"speed":1234}"#;
+        {"id":1,"file":"ubuntu.iso","url":"https://releases.ubuntu.com/ubuntu.iso","status":"Complete","path":"/downloads/f","size":100,"downloaded":50,"speed":0,"added":null,"category":"Programs"},
+        {"id":2,"file":"7z.exe","url":"https://www.7-zip.org/a/7z.exe","status":"Downloading","path":"/downloads/f","size":100,"downloaded":50,"speed":0,"added":null,"category":"Compressed"},
+        {"id":3,"file":"report.pdf","url":"https://example.com/report.pdf","status":"Stopped","path":"/downloads/f","size":100,"downloaded":50,"speed":0,"added":null,"category":"Documents"}
+    ],"speed":1234,"free":50000000000,"queues":[{"name":"Main","running":true,"ids":[1,2]},{"name":"Night","running":false,"ids":[3]}],"categories":[{"key":"Programs","name":"Programs"},{"key":"Compressed","name":"Compressed"},{"key":"Documents","name":"Documents"}]}"#;
 
     fn ids(answer: &str) -> Vec<u64> {
         let v: Value = serde_json::from_str(answer).unwrap();
@@ -370,7 +447,16 @@ mod tests {
     fn lists_newest_first_filtered_and_cut() {
         let all = filter_list(LIST, &ListArgs::default()).unwrap();
         assert_eq!(ids(&all), [3, 2, 1]);
-        assert!(all.contains(r#""matching":3"#) && all.contains(r#""speed":1234"#));
+        assert!(
+            all.contains(r#""matching":3"#)
+                && all.contains(r#""speed":1234"#)
+                && all.contains(r#""free":50000000000"#)
+        );
+        let args = ListArgs {
+            id: Some(2),
+            ..Default::default()
+        };
+        assert_eq!(ids(&filter_list(LIST, &args).unwrap()), [2]);
         let args = ListArgs {
             status: Some("downloading".into()),
             ..Default::default()
@@ -381,6 +467,25 @@ mod tests {
             ..Default::default()
         };
         assert_eq!(ids(&filter_list(LIST, &args).unwrap()), [1]);
+        let args = ListArgs {
+            category: Some("compressed".into()),
+            ..Default::default()
+        };
+        assert_eq!(ids(&filter_list(LIST, &args).unwrap()), [2]);
+        let args = ListArgs {
+            queue: Some("night".into()),
+            ..Default::default()
+        };
+        assert_eq!(ids(&filter_list(LIST, &args).unwrap()), [3]);
+        let args = ListArgs {
+            queue: Some("missing".into()),
+            ..Default::default()
+        };
+        assert!(
+            filter_list(LIST, &args)
+                .unwrap_err()
+                .contains("Unknown queue")
+        );
         let args = ListArgs {
             limit: Some(1),
             ..Default::default()

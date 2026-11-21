@@ -4,7 +4,7 @@
 
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
-use std::sync::atomic::AtomicBool;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::Sender;
 
 use crate::protocol::{Kind, Notes};
@@ -55,6 +55,8 @@ struct Handler {
     dir: PathBuf,
     notes: Mutex<Notes>,
     events: Mutex<Sender<Event>>,
+    /// The app has said something: a connection gone before that was no app leaving.
+    heard: AtomicBool,
 }
 
 impl Handler {
@@ -111,17 +113,26 @@ impl minidumper::ServerHandler for Handler {
                 });
             }
         }
-        // A frozen app lives on (it may recover); a crashed one disconnects by itself.
+        // A frozen app lives on (it may recover); a crashed one disconnects by itself. The lines
+        // it sent were this dump's: a later report reads the file again.
         if let Ok(mut n) = self.notes.lock() {
             n.panic = None;
+            n.log.clear();
         }
         minidumper::LoopAction::Continue
     }
 
     fn on_message(&self, kind: u32, buffer: Vec<u8>) {
+        self.heard.store(true, Ordering::Release);
         let recovered = kind == crate::protocol::kind::RECOVERED;
         if let Ok(mut n) = self.notes.lock() {
             n.take(kind, &buffer);
+            if kind == crate::protocol::kind::LOG {
+                tracing::info!(
+                    "crash monitor: the app sent its last {} log lines",
+                    n.log.len()
+                );
+            }
         }
         if recovered {
             self.send(Event::Recovered);
@@ -129,6 +140,15 @@ impl minidumper::ServerHandler for Handler {
     }
 
     fn on_client_disconnected(&self, num_clients: usize) -> minidumper::LoopAction {
+        // A connection that went before saying anything is a try that didn't finish, not the
+        // app leaving: on macOS a connection is a socket, then a Mach port, and a try that came
+        // between the two (the monitor still starting) leaves a socket that closes at once. The
+        // app's next try connects; leaving here would leave it no one to connect to. (An app
+        // that died before it said anything is seen gone by the monitor's watch on it.)
+        if num_clients == 0 && !self.heard.load(Ordering::Acquire) {
+            tracing::info!("crash monitor: a connection went before it said anything");
+            return minidumper::LoopAction::Continue;
+        }
         if num_clients == 0 {
             let notes = self.notes();
             self.send(Event::Gone {
@@ -153,6 +173,7 @@ pub fn serve(socket: &Path, data: &Path, events: Sender<Event>) -> Result<(), St
         dir: crashes_dir(data),
         notes: Mutex::new(Notes::default()),
         events: Mutex::new(events),
+        heard: AtomicBool::new(false),
     };
     let shutdown = AtomicBool::new(false);
     let result = server
@@ -160,4 +181,53 @@ pub fn serve(socket: &Path, data: &Path, events: Sender<Event>) -> Result<(), St
         .map_err(|e| e.to_string());
     let _ = std::fs::remove_file(socket);
     result
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::time::{Duration, Instant};
+
+    /// A connection that goes before it says anything (a try caught halfway, as on macOS while
+    /// the monitor starts) doesn't end the monitor: the app's next connection is served, and its
+    /// leaving is the one that ends it.
+    #[test]
+    fn a_connection_gone_before_it_said_anything_is_not_the_app_leaving() {
+        let dir = tempfile::tempdir().unwrap();
+        let socket = dir.path().join("half.sock");
+        let data = dir.path().to_path_buf();
+        let (tx, rx) = std::sync::mpsc::channel();
+        let served = {
+            let socket = socket.clone();
+            std::thread::spawn(move || serve(&socket, &data, tx))
+        };
+        let connect = || {
+            let limit = Instant::now() + Duration::from_secs(10);
+            loop {
+                match minidumper::Client::with_name(minidumper::SocketName::Path(&socket)) {
+                    Ok(c) => return c,
+                    Err(e) if Instant::now() > limit => panic!("the monitor never listened: {e}"),
+                    Err(_) => std::thread::sleep(Duration::from_millis(10)),
+                }
+            }
+        };
+        // A connection that says nothing and goes; the monitor has seen it go once it answers
+        // the next connection's ping.
+        drop(connect());
+        let app = connect();
+        app.ping().expect("the monitor still answers");
+        assert!(
+            rx.try_recv().is_err(),
+            "the monitor took the silent connection for the app"
+        );
+        app.send_message(crate::protocol::kind::CLEAN, b"null")
+            .unwrap();
+        app.ping().unwrap();
+        drop(app);
+        match rx.recv_timeout(Duration::from_secs(10)) {
+            Ok(Event::Gone { clean, .. }) => assert!(clean, "the app's clean exit was lost"),
+            other => panic!("the app's leaving wasn't seen: {other:?}"),
+        }
+        served.join().unwrap().unwrap();
+    }
 }

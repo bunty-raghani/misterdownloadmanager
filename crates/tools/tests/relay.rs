@@ -317,8 +317,13 @@ fn real_helpers_go_through_the_relay() {
             "webpage_url": lab.url("/page"), "url": url, "ext": "mp4", "protocol": protocol,
         });
         std::fs::write(&info, json.to_string()).unwrap();
-        let cmd =
-            mdm_tools::proc::ytdlp_info(std::path::Path::new(&ytdlp), &[], &ours(what, &[]), &info);
+        let cmd = mdm_tools::proc::ytdlp_info(
+            std::path::Path::new(&ytdlp),
+            &[],
+            &ours(what, &[]),
+            &info,
+            &lab.url("/page"),
+        );
         finish(what, cmd)
     };
     let print_log = |label: &str| {

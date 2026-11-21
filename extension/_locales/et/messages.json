@@ -92,9 +92,6 @@
       }
     }
   },
-  "popup_undo": {
-    "message": "Võta tagasi"
-  },
   "popup_excluded": {
     "message": "Allalaadimised saidilt $site$ jäävad brauserisse",
     "placeholders": {
@@ -148,6 +145,9 @@
   },
   "declined_integration_off": {
     "message": "Valik „Kasuta täiustatud brauseri integreerimist” on valikutes Suvandid → Üldine välja lülitatud."
+  },
+  "declined_torrents": {
+    "message": "See on torrent ja „Ava magnetlingid ja .torrent-failid programmiga Mister Download Manager” on torrenti sätetes välja lülitatud."
   },
   "declined_site_access": {
     "message": "Laiendil pole lubatud seda saiti lugeda (brauseri saidi juurdepääs)."
@@ -328,5 +328,424 @@
   },
   "video_original": {
     "message": "algne"
+  },
+  "video_compatible": {
+    "message": "Kõige ühilduvam"
+  },
+  "popup_video_hide_fullscreen": {
+    "message": "Peida allalaadimisnupp täisekraanil"
+  },
+  "popup_video_hide_fullscreen_title": {
+    "message": "Kui leht on täisekraanil, ei kuvata selle videote kohal nuppu „Laadi video alla”"
+  },
+  "popup_remote_forget": {
+    "message": "Unusta"
+  },
+  "popup_gear": {
+    "message": "Valikud rakenduses Mister Download Manager"
+  },
+  "popup_tabs": {
+    "message": "Hüpikakna jaotised"
+  },
+  "popup_tab_downloads": {
+    "message": "Allalaadimised"
+  },
+  "popup_tab_page": {
+    "message": "See leht"
+  },
+  "popup_tab_settings": {
+    "message": "Sätted"
+  },
+  "popup_conn": {
+    "message": "Ühendatud · $version$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.5.2"
+      }
+    }
+  },
+  "popup_conn_plain": {
+    "message": "Ühendatud"
+  },
+  "popup_conn_off": {
+    "message": "Pole ühendatud"
+  },
+  "popup_conn_paused": {
+    "message": "Peatatud"
+  },
+  "popup_conn_update": {
+    "message": "Värskenda rakendust Mister Download Manager"
+  },
+  "popup_conn_remote": {
+    "message": "Saadetakse serverisse $server$",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_cancel": {
+    "message": "Loobu"
+  },
+  "popup_page_none": {
+    "message": "See pole veebileht: siin pole midagi teha."
+  },
+  "popup_exclude_by_rule": {
+    "message": "Jäeti brauserile valikute reegli järgi"
+  },
+  "popup_dl_search": {
+    "message": "Otsi allalaadimisi"
+  },
+  "popup_dl_filters": {
+    "message": "Näita"
+  },
+  "popup_dl_all": {
+    "message": "Kõik"
+  },
+  "popup_dl_running": {
+    "message": "Töös"
+  },
+  "popup_dl_done_filter": {
+    "message": "Valmis"
+  },
+  "popup_dl_failed_filter": {
+    "message": "Nurjus"
+  },
+  "popup_dl_clear": {
+    "message": "Puhasta lõpetatud"
+  },
+  "popup_dl_running_count": {
+    "message": "$count$ allalaadimist käib praegu",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_remote": {
+    "message": "Need on rakenduse Mister Download Manager allalaadimised serveris $server$. Ava nende failid seal.",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_dl_more": {
+    "message": "Kuvatakse $total$ allalaadimisest uusimat $shown$. Mister Download Manager loetleb need kõik.",
+    "placeholders": {
+      "shown": {
+        "content": "$1",
+        "example": "60"
+      },
+      "total": {
+        "content": "$2",
+        "example": "245"
+      }
+    }
+  },
+  "popup_dl_of": {
+    "message": "$done$/$size$",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "12.3 MB"
+      },
+      "size": {
+        "content": "$2",
+        "example": "48.7 MB"
+      }
+    }
+  },
+  "popup_dl_left": {
+    "message": "$time$ jäänud",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "0:42"
+      }
+    }
+  },
+  "popup_dl_starting": {
+    "message": "Käivitamine..."
+  },
+  "popup_dl_paused": {
+    "message": "Peatatud"
+  },
+  "popup_dl_waiting": {
+    "message": "Ootel"
+  },
+  "popup_dl_done": {
+    "message": "Valmis"
+  },
+  "popup_dl_just_now": {
+    "message": "just praegu"
+  },
+  "popup_dl_failed": {
+    "message": "Nurjus"
+  },
+  "popup_dl_failed_why": {
+    "message": "Nurjus: $why$",
+    "placeholders": {
+      "why": {
+        "content": "$1",
+        "example": "the server refused the connection"
+      }
+    }
+  },
+  "popup_dl_gone": {
+    "message": "Fail kustutati või teisaldati"
+  },
+  "popup_dl_loading": {
+    "message": "Otsin allalaadimisi..."
+  },
+  "popup_dl_none": {
+    "message": "Allalaadimisi pole veel"
+  },
+  "popup_dl_none_text": {
+    "message": "See, mida rakendusega Mister Download Manager alla laadid, kuvatakse siin."
+  },
+  "popup_dl_no_match": {
+    "message": "Midagi ei sobi"
+  },
+  "popup_dl_no_match_text": {
+    "message": "Ühelgi allalaadimise nimel ega aadressil pole „$words$”.",
+    "placeholders": {
+      "words": {
+        "content": "$1",
+        "example": "report"
+      }
+    }
+  },
+  "popup_dl_show_all": {
+    "message": "Näita kõiki allalaadimisi"
+  },
+  "popup_list_off": {
+    "message": "Mister Download Manager ei tööta"
+  },
+  "popup_list_off_text": {
+    "message": "Allalaadimiste nägemiseks käivita see."
+  },
+  "popup_list_start": {
+    "message": "Käivita Mister Download Manager"
+  },
+  "popup_list_old": {
+    "message": "Värskenda rakendust Mister Download Manager"
+  },
+  "popup_list_old_text": {
+    "message": "See versioon ei saa veel oma allalaadimisi siin loetleda."
+  },
+  "popup_list_busy": {
+    "message": "Mister Download Manager on hõivatud. Proovin uuesti..."
+  },
+  "popup_list_unreached": {
+    "message": "Rakendusega Mister Download Manager ei saa ühendust"
+  },
+  "popup_list_remote_unreachable": {
+    "message": "Rakendusega Mister Download Manager serveris $server$ ei saa ühendust",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_list_remote_unreachable_text": {
+    "message": "Kontrolli, kas see töötab ja kas brauser usaldab selle sertifikaati (Sätted → Saada allalaadimised → Ava).",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_act_open": {
+    "message": "Ava"
+  },
+  "popup_act_open_named": {
+    "message": "Ava $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_folder": {
+    "message": "Näita kaustas"
+  },
+  "popup_act_folder_named": {
+    "message": "Näita faili $file$ kaustas",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_copy_file": {
+    "message": "Kopeeri fail"
+  },
+  "popup_act_share": {
+    "message": "Jaga..."
+  },
+  "popup_act_copy_link": {
+    "message": "Kopeeri link"
+  },
+  "popup_act_pause": {
+    "message": "Peata"
+  },
+  "popup_act_pause_named": {
+    "message": "Peata $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_resume": {
+    "message": "Jätka"
+  },
+  "popup_act_resume_named": {
+    "message": "Jätka faili $file$ allalaadimist",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_again": {
+    "message": "Laadi uuesti alla"
+  },
+  "popup_act_remove": {
+    "message": "Eemalda loendist"
+  },
+  "popup_act_delete": {
+    "message": "Kustuta fail..."
+  },
+  "popup_act_more": {
+    "message": "Rohkem toiminguid"
+  },
+  "popup_act_more_named": {
+    "message": "Rohkem toiminguid faili $file$ jaoks",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_title": {
+    "message": "Kas kustutada fail?"
+  },
+  "popup_ask_delete": {
+    "message": "Kas soovite faili $file$ kustutada? See eemaldatakse arvutist ja allalaadimine loendist. Seda ei saa tagasi võtta.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_ok": {
+    "message": "Kustuta"
+  },
+  "popup_ask_clear_title": {
+    "message": "Kas puhastada lõpetatud allalaadimised?"
+  },
+  "popup_ask_clear": {
+    "message": "Kas soovite lõpetatud allalaadimised ($count$) loendist eemaldada? Nende failid jäävad oma kohale.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "8"
+      }
+    }
+  },
+  "popup_ask_clear_ok": {
+    "message": "Puhasta"
+  },
+  "popup_said_file": {
+    "message": "Kopeeritud $file$. Kleebi see kausta, vestlusesse või sõnumisse.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_link": {
+    "message": "Link kopeeritud"
+  },
+  "popup_said_removed": {
+    "message": "Fail $file$ eemaldati loendist",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_deleted": {
+    "message": "Fail $file$ kustutati",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_again": {
+    "message": "Laadin faili $file$ uuesti alla",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_cleared": {
+    "message": "Lõpetatud allalaadimised puhastatud"
+  },
+  "popup_act_gone": {
+    "message": "See allalaadimine pole enam loendis."
+  },
+  "popup_act_missing": {
+    "message": "Selle faili pole enam seal, kuhu see salvestati (teisaldatud või kustutatud)."
+  },
+  "popup_act_running": {
+    "message": "Peata see esmalt."
+  },
+  "popup_act_cant": {
+    "message": "Seda toimingut ei saa praegu selle allalaadimisega teha."
+  },
+  "popup_act_unsupported": {
+    "message": "See süsteem ei saa seda teha."
+  },
+  "popup_act_off": {
+    "message": "Mister Download Manager ei tööta."
+  },
+  "popup_act_busy": {
+    "message": "Mister Download Manager ei vastanud õigel ajal. Proovi uuesti."
+  },
+  "popup_act_failed": {
+    "message": "See ei õnnestunud. Proovi uuesti."
+  },
+  "status_running": {
+    "message": "Allalaadimisi: $count$",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_open_remote": {
+    "message": "Ava selle leht"
   }
 }

@@ -1,6 +1,8 @@
 [workspace]
 resolver = "3"
 members = ["crates/*"]
+# The fuzz targets are a workspace of their own (nightly, libFuzzer): see fuzz/Cargo.toml.
+exclude = ["fuzz"]
 
 [workspace.package]
 version = "0.5.2"
@@ -41,6 +43,10 @@ egui_extras = { version = "0.37.0", features = ["svg", "image"] }
 # The font parser egui reads fonts with, the same version: a system font is checked with it
 # before egui is given it, since egui stops on a configured font it can't read (theme.rs, #931).
 skrifa = { version = "0.44.0", default-features = false, features = ["std"] }
+# A font from the system for a script MDM's own font lists don't name (theme.rs, #1125): the
+# system's own choice (DirectWrite, CoreText) through fontique, in the same egui fork; the font
+# files are mapped, not read into memory.
+egui_system_font_provider = { git = "https://github.com/anefzaoui/egui.git", rev = "823e3f3bffce51c87a48f15a27edaa9c13698447" }
 image = { version = "0.25.10", default-features = false, features = ["png"] }
 dirs = "7.0.0"
 # Gzipped IP blocklists, read to convert them for librqbit (crates/torrent blocklist.rs).
@@ -53,6 +59,7 @@ windows-sys = { version = "0.61.2", features = [
     "Win32_Media_Audio",
     "Win32_NetworkManagement_IpHelper",
     "Win32_NetworkManagement_Ndis",
+    "Win32_Networking_WinHttp",
     "Win32_Networking_WinSock",
     "Win32_Security_Credentials",
     "Win32_Security_Cryptography",
@@ -64,6 +71,7 @@ windows-sys = { version = "0.61.2", features = [
     "Win32_System_IO",
     "Win32_System_Ioctl",
     "Win32_System_LibraryLoader",
+    "Win32_System_Memory",
     "Win32_System_Power",
     "Win32_System_ProcessStatus",
     "Win32_System_Registry",
@@ -101,15 +109,19 @@ proptest = "1.12.0"
 # handshake, HTTP/2 settings and header order), on BoringSSL. Builds BoringSSL from source:
 # CMake, a C/C++ compiler, libclang and, on Windows, NASM.
 wreq = { version = "=0.16.3", default-features = false, features = ["webpki-roots", "tokio-rt", "socks", "stream", "gzip", "brotli", "zstd", "deflate"] }
-wreq-util = { version = "=0.2.1", default-features = false, features = ["emulation"] }
+# emulation-compression: the profile's own Accept-Encoding, in Chrome's place and words (#1494).
+wreq-util = { version = "=0.2.1", default-features = false, features = ["emulation", "emulation-compression"] }
 # Its trusted certificates: Mozilla's (as wreq's own default) and the system's, which MDM's own
 # connection trusts too (an antivirus's or a company's HTTPS inspection adds its own there).
 rustls-native-certs = "0.8.5"
 webpki-root-certs = "1.0.11"
+webpki-roots = "1.0.12"
 reqwest = { version = "0.13.5", default-features = false, features = ["rustls", "stream", "system-proxy", "socks"] }
 # FTP and FTPS (crates/engine/src/ftp.rs), with TLS through the rustls and platform verifier
 # reqwest uses. "deprecated" is what enables implicit FTPS (ftps://, port 990).
 suppaftp = { version = "12.2.1", default-features = false, features = ["tokio-rustls-aws-lc-rs", "deprecated"] }
+# FTP through a SOCKS proxy (#1558); already in the tree through librqbit and wreq.
+tokio-socks = "0.5.3"
 rustls = { version = "0.23.46", default-features = false, features = ["aws-lc-rs", "std", "tls12", "logging"] }
 rustls-platform-verifier = "0.7.1"
 # Custom DNS (#36): plain DNS, DNS over TLS and over HTTPS, with aws-lc-rs (no ring) and the
@@ -126,11 +138,13 @@ hyper-util = { version = "0.1.21", default-features = false, features = ["client
 # library rustls brings anyway, with the same features.
 aws-lc-rs = { version = "1.19.0", default-features = false, features = ["aws-lc-sys", "prebuilt-nasm"] }
 # The MCP server (crates/mcp): the official Rust SDK, stdio only.
-rmcp = { version = "3.8.0", default-features = false, features = ["server", "macros", "transport-io"] }
+rmcp = { version = "3.9.0", default-features = false, features = ["server", "macros", "transport-io"] }
 schemars = "1.2.3"
 tokio-rustls = { version = "0.26.6", default-features = false, features = ["aws-lc-rs", "tls12", "logging"] }
 # The lab FTP server's test certificates.
 rcgen = { version = "0.14", default-features = false, features = ["crypto", "aws_lc_rs", "pem"] }
+# Their dates (rcgen's own).
+time = { version = "0.3", default-features = false, features = ["std"] }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.154"
 toml = { version = "1.1.2", default-features = false, features = ["std", "parse", "serde"] }
@@ -195,6 +209,17 @@ opt-level = 3
 [profile.dev.package."*"]
 debug = "line-tables-only"
 
+# The crash monitor's stack walker (rust-minidump's, through framehop) works out a frozen
+# thread's frames from the registers the dump caught, which can be anything mid-instruction: it
+# adds to them as a release build does, wrapping, and a frame that leads nowhere ends the walk.
+# Debug builds check that arithmetic and panicked instead ("attempt to add with overflow" in
+# pe-unwind-info), so a freeze test's report was never written (the busy minimized window's,
+# #1481). Release builds never checked it.
+[profile.dev.package.pe-unwind-info]
+overflow-checks = false
+[profile.dev.package.framehop]
+overflow-checks = false
+
 # storytold's egui fork (as storytold/craft-libs, D-003) plus MDM's commits on anefzaoui/egui
 # (branch mdm-start-hidden, on mdm-wgpu, on mdm-accesskit-windows): every window created hidden
 # gets an AccessKit adapter, with OpenGL (glow) and with Direct3D (wgpu, #89), so screen readers
@@ -209,36 +234,49 @@ debug = "line-tables-only"
 # by one thread at a time, egui's copy and paste and MDM's own reads (`egui_winit::clipboard::
 # lock_system_clipboard`, #629); a dialog that changes its size is drawn at the window's new size
 # (its size applied before the pass, the Direct3D surface matched to the window before painting,
-# #471, by aniyow07). craft-libs can take the same commits to share one egui again.
+# #471, by aniyow07); an OpenGL window's swap interval is chosen per window, before each swap
+# (`ViewportHooks::swap_waits_for_vsync`, branch mdm-swap-interval: Linux, renderer.rs, #347);
+# an OpenGL window's context is made current again when it is no longer the thread's own (macOS),
+# and a texture OpenGL can't create is kept for a later frame instead of a panic (branch
+# mdm/glow-texture-no-panic, #1173); a window OpenGL can't paint for a moment (its context can't
+# be made current on it, a frame that can't be shown) is painted again 100 ms later instead of a
+# panic, the context kept, and the app is told (`ViewportHooks::gl_paint_failed`, branch
+# mdm-gl-context-errors, #1448).
+# craft-libs can take the same commits to share one egui again.
 [patch.crates-io]
 # librqbit 9.1.0 with per-torrent rate limits that change while a torrent runs (#39), and a
 # magnet lookup's progress counted (#92), and every socket bound to one address (`bind_ip`,
 # #143), and every HTTP client of a session built through MDM's TLS setup (`configure_http_client`:
 # a system without CA certificates), and a DHT that stops asking a bootstrap node that never
 # answers once another one has, and loads its saved IPv6 nodes (#650), and a piece whose hash
-# check a pause cuts short queued again instead of lost (#706), until upstream has them
+# check a pause cuts short queued again instead of lost (#706), and the peers that others name
+# asked of MDM before they are used (`peer_filter`), until upstream has them
 # (ikatson/rqbit); every crate of that repository from the same commit.
-librqbit = { git = "https://github.com/anefzaoui/rqbit.git", rev = "694291b61fcfd6a77fef7762541b0ef25773ae31" }
-librqbit-bencode = { git = "https://github.com/anefzaoui/rqbit.git", rev = "694291b61fcfd6a77fef7762541b0ef25773ae31" }
-librqbit-buffers = { git = "https://github.com/anefzaoui/rqbit.git", rev = "694291b61fcfd6a77fef7762541b0ef25773ae31" }
-librqbit-clone-to-owned = { git = "https://github.com/anefzaoui/rqbit.git", rev = "694291b61fcfd6a77fef7762541b0ef25773ae31" }
-librqbit-core = { git = "https://github.com/anefzaoui/rqbit.git", rev = "694291b61fcfd6a77fef7762541b0ef25773ae31" }
-librqbit-dht = { git = "https://github.com/anefzaoui/rqbit.git", rev = "694291b61fcfd6a77fef7762541b0ef25773ae31" }
-librqbit-lsd = { git = "https://github.com/anefzaoui/rqbit.git", rev = "694291b61fcfd6a77fef7762541b0ef25773ae31" }
-librqbit-peer-protocol = { git = "https://github.com/anefzaoui/rqbit.git", rev = "694291b61fcfd6a77fef7762541b0ef25773ae31" }
-librqbit-sha1-wrapper = { git = "https://github.com/anefzaoui/rqbit.git", rev = "694291b61fcfd6a77fef7762541b0ef25773ae31" }
-librqbit-tracker-comms = { git = "https://github.com/anefzaoui/rqbit.git", rev = "694291b61fcfd6a77fef7762541b0ef25773ae31" }
-librqbit-upnp = { git = "https://github.com/anefzaoui/rqbit.git", rev = "694291b61fcfd6a77fef7762541b0ef25773ae31" }
-ecolor = { git = "https://github.com/anefzaoui/egui.git", rev = "91dd7f70ed2ccfcfd3196a87ceda0d106e22c98d" }
-emath = { git = "https://github.com/anefzaoui/egui.git", rev = "91dd7f70ed2ccfcfd3196a87ceda0d106e22c98d" }
-epaint = { git = "https://github.com/anefzaoui/egui.git", rev = "91dd7f70ed2ccfcfd3196a87ceda0d106e22c98d" }
-epaint_default_fonts = { git = "https://github.com/anefzaoui/egui.git", rev = "91dd7f70ed2ccfcfd3196a87ceda0d106e22c98d" }
-egui = { git = "https://github.com/anefzaoui/egui.git", rev = "91dd7f70ed2ccfcfd3196a87ceda0d106e22c98d" }
-egui-winit = { git = "https://github.com/anefzaoui/egui.git", rev = "91dd7f70ed2ccfcfd3196a87ceda0d106e22c98d" }
-egui_glow = { git = "https://github.com/anefzaoui/egui.git", rev = "91dd7f70ed2ccfcfd3196a87ceda0d106e22c98d" }
-egui-wgpu = { git = "https://github.com/anefzaoui/egui.git", rev = "91dd7f70ed2ccfcfd3196a87ceda0d106e22c98d" }
-egui_extras = { git = "https://github.com/anefzaoui/egui.git", rev = "91dd7f70ed2ccfcfd3196a87ceda0d106e22c98d" }
-eframe = { git = "https://github.com/anefzaoui/egui.git", rev = "91dd7f70ed2ccfcfd3196a87ceda0d106e22c98d" }
+librqbit = { git = "https://github.com/anefzaoui/rqbit.git", rev = "c99ca4b4602e586437912bc9adecbe1111f1ee25" }
+librqbit-bencode = { git = "https://github.com/anefzaoui/rqbit.git", rev = "c99ca4b4602e586437912bc9adecbe1111f1ee25" }
+librqbit-buffers = { git = "https://github.com/anefzaoui/rqbit.git", rev = "c99ca4b4602e586437912bc9adecbe1111f1ee25" }
+librqbit-clone-to-owned = { git = "https://github.com/anefzaoui/rqbit.git", rev = "c99ca4b4602e586437912bc9adecbe1111f1ee25" }
+librqbit-core = { git = "https://github.com/anefzaoui/rqbit.git", rev = "c99ca4b4602e586437912bc9adecbe1111f1ee25" }
+librqbit-dht = { git = "https://github.com/anefzaoui/rqbit.git", rev = "c99ca4b4602e586437912bc9adecbe1111f1ee25" }
+librqbit-lsd = { git = "https://github.com/anefzaoui/rqbit.git", rev = "c99ca4b4602e586437912bc9adecbe1111f1ee25" }
+librqbit-peer-protocol = { git = "https://github.com/anefzaoui/rqbit.git", rev = "c99ca4b4602e586437912bc9adecbe1111f1ee25" }
+librqbit-sha1-wrapper = { git = "https://github.com/anefzaoui/rqbit.git", rev = "c99ca4b4602e586437912bc9adecbe1111f1ee25" }
+librqbit-tracker-comms = { git = "https://github.com/anefzaoui/rqbit.git", rev = "c99ca4b4602e586437912bc9adecbe1111f1ee25" }
+librqbit-upnp = { git = "https://github.com/anefzaoui/rqbit.git", rev = "c99ca4b4602e586437912bc9adecbe1111f1ee25" }
+# librqbit's uTP (#1384) as merged upstream after 0.7.0, until a release has it
+# (ikatson/librqbit-utp#3, #4): on Windows, one packet sent to a closed port (or one oversized
+# datagram) no longer stops uTP for the whole session, and ringbuf 0.5.
+librqbit-utp = { git = "https://github.com/ikatson/librqbit-utp.git", rev = "06e1c53c8df6edb2830d6aab64a6d4bed8479908" }
+ecolor = { git = "https://github.com/anefzaoui/egui.git", rev = "823e3f3bffce51c87a48f15a27edaa9c13698447" }
+emath = { git = "https://github.com/anefzaoui/egui.git", rev = "823e3f3bffce51c87a48f15a27edaa9c13698447" }
+epaint = { git = "https://github.com/anefzaoui/egui.git", rev = "823e3f3bffce51c87a48f15a27edaa9c13698447" }
+epaint_default_fonts = { git = "https://github.com/anefzaoui/egui.git", rev = "823e3f3bffce51c87a48f15a27edaa9c13698447" }
+egui = { git = "https://github.com/anefzaoui/egui.git", rev = "823e3f3bffce51c87a48f15a27edaa9c13698447" }
+egui-winit = { git = "https://github.com/anefzaoui/egui.git", rev = "823e3f3bffce51c87a48f15a27edaa9c13698447" }
+egui_glow = { git = "https://github.com/anefzaoui/egui.git", rev = "823e3f3bffce51c87a48f15a27edaa9c13698447" }
+egui-wgpu = { git = "https://github.com/anefzaoui/egui.git", rev = "823e3f3bffce51c87a48f15a27edaa9c13698447" }
+egui_extras = { git = "https://github.com/anefzaoui/egui.git", rev = "823e3f3bffce51c87a48f15a27edaa9c13698447" }
+eframe = { git = "https://github.com/anefzaoui/egui.git", rev = "823e3f3bffce51c87a48f15a27edaa9c13698447" }
 winit = { git = "https://github.com/storytold/winit.git", rev = "a517b3846ee8457d84ee4975110bfda6797c44dc" }
 # wgpu-hal 30.0.1 (the v30.0.1 release commit) with one change: a window's Direct3D 12 swap chain
 # is made with DXGI_SCALING_NONE instead of STRETCH, so while a dialog resizes, Windows shows the

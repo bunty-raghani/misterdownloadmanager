@@ -13,7 +13,16 @@ computer on your network), the browser extension pointed at it, or its command l
 
 ## With Docker
 
-Build the image from MDM's source (a published image comes later):
+From the release after 0.5.2, pull the published image from GitHub Container Registry (x86-64
+only for now):
+
+```sh
+docker pull ghcr.io/anefzaoui/misterdownloadmanager:<version>
+# or the latest release:
+docker pull ghcr.io/anefzaoui/misterdownloadmanager:latest
+```
+
+Or build the image yourself from MDM's source:
 
 ```sh
 git clone https://github.com/anefzaoui/misterdownloadmanager
@@ -36,8 +45,11 @@ docker run -d --name mdm --restart unless-stopped \
   -v /srv/mdm-config:/config \
   -v /srv/downloads:/downloads \
   --user "$(id -u):$(id -g)" \
-  misterdownloadmanager
+  ghcr.io/anefzaoui/misterdownloadmanager:<version>
 ```
+
+(Replace `ghcr.io/anefzaoui/misterdownloadmanager:<version>` with `misterdownloadmanager` if
+you built the image yourself.)
 
 - `/config` keeps the list, the settings, the certificate and the paired devices.
 - `/downloads` is where files land: each category has its folder inside (`Music`, `Video`,
@@ -108,11 +120,20 @@ an address: `misterdownloadmanager /d https://example.com/file.zip`.
 
 ## Send downloads from your browser
 
-In the browser extension's menu, **Send downloads to → Another Mister Download Manager (a server)**: type the server's address,
-open it once in that browser to accept its certificate, then enter a pairing code (`pair`
-above). Downloads the extension catches, and **Download with Mister Download Manager** on a link,
-then go to the server instead of this computer. The browser's cookies are not sent to the server:
-a download that needs you to be signed in to a site stays with this computer.
+In the browser extension's menu, under **Send downloads to**:
+
+- Select **Another Mister Download Manager (a server)**: type the server's address,
+  open it once in that browser to accept its certificate, then enter a pairing code (`pair`
+  above).
+- The extension remembers paired servers: switch between any paired server and **This computer**
+  with a single click without having to re-pair. Switching back leaves the browser paired; click
+  **×** next to a server to unpair and forget it on both sides.
+- Downloads the extension catches, and **Download with Mister Download Manager** on a link,
+  then go to the server instead of this computer. The browser's cookies are not sent to the server:
+  a download that needs you to be signed in to a site stays with this computer.
+- The **Download video** button over videos sends the server the video's page when you click it,
+  and nothing before: whether it shows is up to this computer's MDM (its Options), and when
+  there's no MDM on this computer, it shows on every site.
 
 ## What a server doesn't do
 

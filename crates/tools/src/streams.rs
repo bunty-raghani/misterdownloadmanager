@@ -24,6 +24,7 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use futures::future::BoxFuture;
+use mdm_engine::browserlike::{self, Connection};
 use mdm_engine::download::{ConnView, SegmentView, State as DlState};
 use mdm_engine::{Destination, Download, Request, ServiceFault, Unlocked, Unlocker};
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
@@ -601,6 +602,7 @@ pub fn fetch(
             opts.speak_as(ua.clone());
         }
         opts.agent_fallback = None;
+        opts.own_agent = None;
         opts.browser_final = None;
         opts.expected_type = None;
         opts.expected_size = None;
@@ -660,36 +662,66 @@ enum Unlisted {
     Failed(String),
 }
 
-/// The pieces of stream `s` (an HLS playlist fetched and read, DASH's as yt-dlp listed them).
+/// The pieces of stream `s` (an HLS playlist fetched and read, DASH's as yt-dlp listed them),
+/// and the browser-like connection when the playlist only came on it (#1289: its site's bot
+/// check refused MDM's own connection; its pieces then start on it).
 async fn list_pieces(
     s: &Stream,
     opts: &mdm_engine::Options,
-) -> Result<Vec<crate::pieces::Piece>, Unlisted> {
+) -> Result<(Vec<crate::pieces::Piece>, Option<Connection>), Unlisted> {
     use crate::pieces::Unlisted as U;
     let (extra, extra_key) = match &s.kind {
-        Kind::Dash(p) => return Ok(p.clone()),
+        Kind::Dash(p) => return Ok((p.clone(), None)),
         Kind::Hls { extra, extra_key } => (extra.as_deref(), extra_key.as_deref()),
         Kind::File { .. } => return Err(Unlisted::Failed("not a stream in pieces".into())),
     };
     let failed = |e: String| Unlisted::Failed(format!("the playlist: {e}"));
+    let headers = header_map(&s.headers);
     let client = mdm_engine::http_client(opts, &s.url).map_err(|e| failed(e.to_string()))?;
     let resp = client
         .get(s.url.clone())
-        .headers(header_map(&s.headers))
+        .headers(headers.clone())
         .send()
         .await
         .map_err(|e| failed(e.to_string()))?;
-    if !resp.status().is_success() {
+    let refused = !resp.status().is_success();
+    let (base, text, browser) = if refused
+        && browserlike::AVAILABLE
+        && browserlike::refuses_programs(resp.status(), resp.headers())
+    {
+        // Asked once more the way a browser connects, as a download's file is (#668).
+        let status = resp.status();
+        let refusal = || failed(format!("the server answered {status}"));
+        let b = Connection::new(opts, &s.url, &headers).map_err(|_| refusal())?;
+        let cancel = CancellationToken::new();
+        let mut answer = b
+            .get(s.url.clone(), headers, &cancel)
+            .await
+            .map_err(|_| refusal())?;
+        if !answer.status.is_success() {
+            return Err(refusal());
+        }
+        let mut body = Vec::new();
+        while let Some(chunk) = answer.chunk().await.map_err(|e| failed(e.to_string()))? {
+            body.extend_from_slice(&chunk);
+        }
+        let text = String::from_utf8_lossy(&body).into_owned();
+        (answer.url.clone(), text, Some(b))
+    } else if refused {
         return Err(failed(format!("the server answered {}", resp.status())));
-    }
-    // Its pieces' addresses are taken from where it ended up, as hlsnative takes them.
-    let base = resp.url().clone();
-    let text = resp.text().await.map_err(|e| failed(e.to_string()))?;
-    crate::pieces::hls(&text, &base, extra, extra_key).map_err(|e| match e {
+    } else {
+        // Its pieces' addresses are taken from where it ended up, as hlsnative takes them.
+        let base = resp.url().clone();
+        let text = resp.text().await.map_err(|e| failed(e.to_string()))?;
+        (base, text, None)
+    };
+    let pieces = crate::pieces::hls(&text, &base, extra, extra_key).map_err(|e| match e {
         U::Live => Unlisted::Helper(Helper::Live),
         U::Protected(_) => Unlisted::Helper(Helper::Protected),
         U::NoPieces => Unlisted::Failed("the playlist lists no pieces".into()),
-    })
+        U::BadIv => Unlisted::Failed("the playlist gives a key a malformed IV".into()),
+    })?;
+    Ok((pieces, browser))
 }
 
 /// Stream `i` of `plan`, in pieces: listed, downloaded several at once into its pieces' folder
@@ -705,7 +737,7 @@ fn fetch_pieces(
     report: &dyn Report,
 ) -> Fetched {
     let s = &plan.streams[i];
-    let list = match engine.handle.block_on(list_pieces(s, &engine.opts)) {
+    let (list, browser) = match engine.handle.block_on(list_pieces(s, &engine.opts)) {
         Ok(l) => l,
         Err(Unlisted::Helper(why)) => return Fetched::Helper(why),
         Err(Unlisted::Failed(e)) => return Fetched::Failed(e),
@@ -720,6 +752,7 @@ fn fetch_pieces(
                 stream_of(&f).ok_or_else(|| format!("yt-dlp gave no address for format {id}"))?;
             handle
                 .block_on(list_pieces(&s, &opts))
+                .map(|(pieces, _)| pieces)
                 .map_err(|e| match e {
                     Unlisted::Failed(e) => e,
                     Unlisted::Helper(h) => h.english(),
@@ -739,6 +772,7 @@ fn fetch_pieces(
         token.clone(),
         shared.clone(),
         relist,
+        browser,
     ));
     let mut cancelled = false;
     while !task.is_finished() {

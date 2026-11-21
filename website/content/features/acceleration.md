@@ -26,8 +26,9 @@ start and progress, and a table with what every connection is doing right now.
 
 ## Measured, not claimed
 
-On the same PC and the same test server, MDM fetched a 1 GiB file in 1.0 s against IDM 6.42's
-5.5 s, and a 256 KiB file in 0.03 s against 3.1 s: the medians of alternating runs. The
+On the same PC, downloading from a test server on that PC, MDM fetched a 1 GiB file in 1.0 s
+against IDM 6.42's 5.5 s, and a 256 KiB file in 0.03 s against 3.1 s: the medians of alternating
+runs. It is a loopback test: it times the programs, not an internet connection. The
 [benchmark page](/benchmark.html) has every run, the method and the raw data.
 
 More connections help only where a server sends each one at a limited speed. Most servers allow

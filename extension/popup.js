@@ -1,7 +1,9 @@
 // The toolbar button's popup: whether the browser reaches Mister Download Manager (and, when it
-// doesn't, a link to the help page's section for why), pausing capture, leaving the current
-// site to the browser, opening the app or its Options, and the media the tab loaded (#38), each
-// to download. background.js does the work.
+// doesn't, a link to the help page's section for why), then three tabs (#1496): Downloads (MDM's
+// newest downloads, popup-downloads.js), This page (the media the tab loaded, #38, each to
+// download; leaving its site to the browser, #404) and Settings (pausing capture, the browser's
+// proxy, the video button in full screen, where downloads go, #157; MDM's Options). background.js
+// does the work; popup-ui.js has the shared pieces.
 const ext = globalThis.browser ?? globalThis.chrome;
 const HELP = "https://misterdownloadmanager.com/help/browser-help.html";
 // The creator's GitHub Sponsors page (the app's Help → Support MDM): a plain link, in a new tab.
@@ -10,54 +12,117 @@ const t = (key, ...subs) => ext.i18n.getMessage(key, subs) || key;
 const $ = (id) => document.getElementById(id);
 const ask = (m) => ext.runtime.sendMessage(m).catch(() => ({ ok: false }));
 const lang = ext.i18n.getUILanguage();
+const query = new URLSearchParams(location.search);
 
 document.documentElement.lang = lang;
 document.documentElement.dir = t("@@bidi_dir") === "rtl" ? "rtl" : "ltr";
 for (const el of document.querySelectorAll("[data-i18n]")) el.textContent = t(el.dataset.i18n);
 for (const el of document.querySelectorAll("[data-i18n-placeholder]")) el.placeholder = t(el.dataset.i18nPlaceholder);
+for (const el of document.querySelectorAll("[data-i18n-label]")) {
+  el.setAttribute("aria-label", t(el.dataset.i18nLabel));
+  if (el.tagName === "BUTTON") el.title = t(el.dataset.i18nLabel);
+}
+for (const el of document.querySelectorAll("[data-icon]")) el.prepend(icon(el.dataset.icon));
 $("help").href = HELP;
 $("support").href = SPONSORS;
+
+// ---- its size --------------------------------------------------------------------------------
+
+// 400 pixels wide by default (popup.css), down to the 360 or so Firefox gives a popup in its
+// overflow menu, which an add-on can't tell (it then fills that width), and up to the 800 a
+// browser allows. `?w=` sets it for the pictures.
+if (/^\d{3}$/.test(query.get("w") || "")) {
+  document.documentElement.style.setProperty("--popup-w", `${Math.min(800, Math.max(320, Number(query.get("w"))))}px`);
+}
+const firefox = typeof globalThis.browser === "object" && Boolean(ext.runtime.getBrowserInfo);
+function fitPanel() {
+  // Only where the popup's width isn't ours to choose: Firefox's fixed-width panel.
+  const narrow = firefox && window.innerWidth > 0 && window.innerWidth < document.body.offsetWidth - 2;
+  document.documentElement.classList.toggle("fit", narrow);
+}
+if (firefox) {
+  window.addEventListener("resize", fitPanel);
+  requestAnimationFrame(fitPanel);
+}
+
+// ---- tabs ------------------------------------------------------------------------------------
+
+const TABS = ["downloads", "page", "settings"];
+function selectTab(name, focus = false) {
+  for (const n of TABS) {
+    const on = n === name;
+    const tab = $(`tab-${n}`);
+    tab.setAttribute("aria-selected", String(on));
+    tab.tabIndex = on ? 0 : -1;
+    $(`panel-${n}`).hidden = !on;
+    if (on && focus) tab.focus();
+  }
+  document.body.dataset.tab = name;
+}
+const tabs = () => TABS.map((n) => $(`tab-${n}`));
+roving(document.querySelector(".tabs"), tabs, { axis: "x", onMove: (el) => selectTab(el.id.slice(4)) });
+for (const tab of tabs()) tab.addEventListener("click", () => selectTab(tab.id.slice(4)));
+// The first tab: Downloads; This page when the popup is opened for a page in a tab of its own
+// (`?page=`, the tests); `?tab=` for the pictures.
+const firstTab = TABS.includes(query.get("tab")) ? query.get("tab") : query.has("page") ? "page" : "downloads";
+selectTab(firstTab);
+Downloads.start();
 
 // The tab it is about: the window's active tab; with `?page=ADDRESS` (this page opened in a tab of
 // its own, for the tests and the pictures), the tab showing that address.
 async function currentTab() {
-  const page = new URLSearchParams(location.search).get("page");
+  const page = query.get("page");
   if (page) return (await ext.tabs.query({}).catch(() => [])).find((x) => x.url === page) || null;
   const [tab] = await ext.tabs.query({ active: true, currentWindow: true }).catch(() => []);
   return tab || null;
 }
+
+// ---- the header: connected, to which MDM -----------------------------------------------------
 
 async function show() {
   const s = await ask({ type: "state" });
   const box = $("status");
   const text = $("status-text");
   box.classList.remove("ok", "bad", "warn");
+  let problem = "";
   if (s.connected && s.why === "update-app") {
     box.classList.add("warn");
-    text.textContent = t("status_update_app");
+    text.textContent = t("popup_conn_update");
+    problem = t("status_update_app");
   } else if (s.connected && s.remote) {
     box.classList.add(s.paused ? "warn" : "ok");
-    text.textContent = s.paused ? t("status_paused") : t("status_remote", s.remote);
+    let host = s.remote;
+    try {
+      host = new URL(s.remote).host;
+    } catch {
+      // As given.
+    }
+    text.textContent = s.paused ? t("popup_conn_paused") : t("popup_conn_remote", host);
+    box.title = s.paused ? t("status_paused") : t("status_remote", s.remote);
   } else if (s.connected) {
     box.classList.add(s.paused ? "warn" : "ok");
-    text.textContent = s.paused ? t("status_paused") : s.app ? t("status_connected_version", s.app) : t("status_connected");
+    text.textContent = s.paused ? t("popup_conn_paused") : s.app ? t("popup_conn", s.app) : t("popup_conn_plain");
+    box.title = s.paused ? t("status_paused") : s.app ? t("status_connected_version", s.app) : t("status_connected");
   } else {
     box.classList.add("bad");
-    text.textContent = t(`status_${(s.why || "not_installed").replace(/-/g, "_")}`);
+    text.textContent = t("popup_conn_off");
+    problem = t(`status_${(s.why || "not_installed").replace(/-/g, "_")}`);
   }
+  $("problem").hidden = !problem;
+  $("problem-text").textContent = problem;
   const fix = $("fix");
   fix.hidden = s.connected && s.why !== "update-app";
   fix.href = `${HELP}#${s.why || "not-installed"}`;
   $("take").checked = !s.paused;
   showDeclined(s.connected && s.declined);
   $("take").disabled = !s.connected;
-  $("open").disabled = $("options").disabled = !s.connected;
+  $("open").disabled = $("options").disabled = $("gear").disabled = !s.connected || Boolean(s.remote);
   $("version").textContent = s.version ? `v${s.version}` : "";
   // Send downloads to: this computer, or another MDM (#157).
+  const remotes = Array.isArray(s.remotes) ? s.remotes : [];
+  renderRemotes(remotes, s.remote);
   $("to-here").checked = !s.remote && $("remote-form").hidden;
-  $("to-remote").checked = Boolean(s.remote) || !$("remote-form").hidden;
-  $("open").disabled = $("open").disabled || Boolean(s.remote);
-  $("options").disabled = $("options").disabled || Boolean(s.remote);
+  $("to-remote").checked = (remotes.length === 0 ? Boolean(s.remote) : false) || !$("remote-form").hidden;
   const tab = await currentTab();
   let site = "";
   try {
@@ -66,42 +131,41 @@ async function show() {
   } catch {
     // Not a web page (the browser's own): nothing to leave.
   }
+  $("page-none").hidden = Boolean(site);
   await showExcluded(site, s.connected);
   if (site) await showMedia(tab, s.connected);
 }
 
-// "Never take downloads from <site>", or, once the site's downloads stay with the browser, that
-// said where the button was, with Undo (#404): it takes the site off Options' excluded sites
-// again. A site excluded by a pattern of Options' own (`*.example.com`) has no Undo here: Options
-// holds it.
+// ---- This page --------------------------------------------------------------------------------
+
+// "Never take downloads from <site>" (#404), a switch: on, the site's downloads stay with the
+// browser (Options → File types → excluded sites), and it says so below; off again takes the
+// site back off the list. A site excluded by a pattern of Options' own (`*.example.com`) is
+// shown on, and can't be switched off here: Options holds it.
 async function showExcluded(site, connected) {
-  const exclude = $("exclude");
-  const box = $("excluded");
-  const listed = site && connected ? await ask({ type: "site-excluded", host: site }) : {};
-  const said = (excluded, undo) => {
-    exclude.hidden = !site || !connected || excluded;
-    box.hidden = !site || !connected || !excluded;
-    $("undo").hidden = !undo;
-  };
-  exclude.textContent = t("popup_exclude_site", site);
-  exclude.title = exclude.textContent;
+  const box = $("site-box");
+  const sw = $("exclude");
+  box.hidden = !site || !connected;
+  if (box.hidden) return;
+  const listed = await ask({ type: "site-excluded", host: site });
+  const label = t("popup_exclude_site", site);
+  $("exclude-label").textContent = label;
+  $("exclude-row").title = label;
   $("excluded-text").textContent = t("popup_excluded", site);
-  said(Boolean(listed.excluded), Boolean(listed.undo));
-  exclude.onclick = async () => {
-    exclude.disabled = true;
-    const r = await ask({ type: "exclude-site", host: site });
-    exclude.disabled = false;
-    if (!r.ok) return;
-    said(true, true);
-    $("undo").focus();
+  const said = (excluded, own) => {
+    sw.checked = excluded;
+    sw.disabled = excluded && !own;
+    $("excluded").hidden = !excluded;
+    $("exclude-note").hidden = !(excluded && !own);
+    $("exclude-note").textContent = excluded && !own ? t("popup_exclude_by_rule") : "";
   };
-  $("undo").onclick = async () => {
-    $("undo").disabled = true;
-    const r = await ask({ type: "include-site", host: site });
-    $("undo").disabled = false;
-    if (!r.ok) return;
-    said(false, false);
-    exclude.focus();
+  said(Boolean(listed.excluded), Boolean(listed.undo));
+  sw.onchange = async () => {
+    const on = sw.checked;
+    sw.disabled = true;
+    const r = await ask({ type: on ? "exclude-site" : "include-site", host: site });
+    sw.disabled = false;
+    said(r.ok ? on : !on, true);
   };
 }
 
@@ -156,31 +220,14 @@ function nameOf(m) {
   }
 }
 
-function clock(seconds) {
-  const s = Math.round(seconds);
-  const two = (n) => String(n).padStart(2, "0");
-  return s >= 3600 ? `${Math.floor(s / 3600)}:${two(Math.floor(s / 60) % 60)}:${two(s % 60)}` : `${Math.floor(s / 60)}:${two(s % 60)}`;
-}
-
-// A size in the browser's language (its own unit names).
-function sizeText(bytes) {
-  const units = [["gigabyte", 1 << 30], ["megabyte", 1 << 20], ["kilobyte", 1 << 10]];
-  const [unit, n] = units.find(([, n]) => bytes >= n) || ["byte", 1];
-  try {
-    return new Intl.NumberFormat(lang, { style: "unit", unit, unitDisplay: "short", maximumFractionDigits: 1 }).format(bytes / n);
-  } catch {
-    return `${(bytes / n).toFixed(1)} ${unit}`;
-  }
-}
-
 // What is known of it: its qualities (or picture size), length, size; "Live" for a live stream.
 function metaOf(m) {
   const parts = [];
   if (m.width && m.heights.length === 1) parts.push(`${m.width}×${m.heights[0]}`);
   else if (m.heights.length) parts.push(m.heights.map((h) => `${h}p`).join(" · "));
   if (m.live) parts.push(t("popup_media_live"));
-  else if (m.duration > 0) parts.push(clock(m.duration));
-  if (m.size > 0) parts.push(sizeText(m.size));
+  else if (m.duration > 0) parts.push(clockText(m.duration));
+  if (m.size > 0) parts.push(sizeText(m.size, lang));
   return parts.join(" · ");
 }
 
@@ -196,6 +243,10 @@ async function showMedia(tab, connected) {
   const list = (r && r.media) || [];
   const kept = Boolean(r && r.keptOff);
   $("media").hidden = false;
+  // Its count on the tab, so the list is found from Downloads.
+  const pill = $("tab-media");
+  pill.hidden = !list.length;
+  pill.textContent = list.length ? String(list.length) : "";
   // Why there's nothing to list, honestly: this copy leaves the site alone (Help says what's left
   // to do), the player streams pieces no address names, or the page hasn't loaded any yet.
   const none = $("media-none");
@@ -230,6 +281,8 @@ async function showMedia(tab, connected) {
       li.append(drm);
     } else {
       const get = document.createElement("button");
+      get.type = "button";
+      get.className = "btn small";
       get.textContent = t("popup_media_download");
       get.title = t("menu");
       get.disabled = !connected;
@@ -253,6 +306,17 @@ ext.storage.local.get({ mediaTitleName: false })
 // The list's names follow it at once.
 mediaTitleName.addEventListener("change", () =>
   ext.storage.local.set({ mediaTitleName: mediaTitleName.checked }).then(show, () => {}));
+
+// ---- Settings ---------------------------------------------------------------------------------
+
+// Hide the download button over videos while the page is in full screen (#670), off as installed.
+const hideFullscreen = $("video-hide-fullscreen");
+$("video-hide-fullscreen-row").title = t("popup_video_hide_fullscreen_title");
+ext.storage.local.get({ hideVideoFullscreen: false })
+  .then((v) => (hideFullscreen.checked = Boolean(v.hideVideoFullscreen)))
+  .catch(() => {});
+hideFullscreen.addEventListener("change", () =>
+  ext.storage.local.set({ hideVideoFullscreen: hideFullscreen.checked }).catch(() => {}));
 
 // #42: reading the browser's proxy (a VPN or proxy extension's) is an opt-in, this switch, off as
 // installed. Firefox: the optional "proxy" permission, asked for on it. Chromium can't make that
@@ -298,20 +362,78 @@ $("open").addEventListener("click", async () => {
   await ask({ type: "open-app" });
   window.close();
 });
-$("options").addEventListener("click", async () => {
-  await ask({ type: "open-options" });
-  window.close();
-});
+// Options in MDM: the Settings tab's button, and the header's gear.
+for (const id of ["options", "gear"]) {
+  $(id).addEventListener("click", async () => {
+    await ask({ type: "open-options" });
+    window.close();
+  });
+}
+
+function renderRemotes(remotes, activeUrl) {
+  const list = $("remotes-list");
+  if (!list) return;
+  list.textContent = "";
+  for (const url of remotes) {
+    const row = document.createElement("div");
+    row.className = "remote-item";
+
+    const label = document.createElement("label");
+    label.className = "choice";
+
+    const radio = document.createElement("input");
+    radio.type = "radio";
+    radio.name = "to";
+    radio.checked = url === activeUrl && $("remote-form").hidden;
+    radio.addEventListener("change", async () => {
+      $("remote-form").hidden = true;
+      await ask({ type: "remote-select", url });
+      show();
+      Downloads.ask();
+    });
+
+    const span = document.createElement("span");
+    try {
+      span.textContent = new URL(url).host;
+    } catch {
+      span.textContent = url;
+    }
+    span.title = url;
+    span.dir = "ltr";
+
+    label.append(radio, span);
+
+    const forget = document.createElement("button");
+    forget.type = "button";
+    forget.className = "icon-btn small remote-forget";
+    forget.append(icon("close", 14));
+    const forgetTitle = t("popup_remote_forget");
+    forget.title = forgetTitle;
+    forget.setAttribute("aria-label", `${forgetTitle}: ${span.textContent}`);
+    forget.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      await ask({ type: "remote-forget", url });
+      show();
+      Downloads.ask();
+    });
+
+    row.append(label, forget);
+    list.append(row);
+  }
+}
 
 // Send downloads to (#157): another MDM is paired here with its address and a code it shows.
-$("to-remote").addEventListener("change", () => {
+const openRemoteForm = () => {
   $("remote-form").hidden = false;
   $("remote-url").focus();
-});
+};
+$("to-remote").addEventListener("change", openRemoteForm);
+$("to-remote").addEventListener("click", openRemoteForm);
 $("to-here").addEventListener("change", async () => {
   $("remote-form").hidden = true;
   await ask({ type: "remote-off" });
   show();
+  Downloads.ask();
 });
 $("remote-open").addEventListener("click", () => {
   try {
@@ -330,6 +452,7 @@ $("remote-pair").addEventListener("click", async () => {
     $("remote-form").hidden = true;
     $("remote-code").value = "";
     show();
+    Downloads.ask();
     return;
   }
   said.textContent = t(`remote_${String(r.why || "failed").replace(/-/g, "_")}`);

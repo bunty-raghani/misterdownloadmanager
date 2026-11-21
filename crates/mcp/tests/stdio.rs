@@ -30,9 +30,17 @@ fn fake_app(dir: &std::path::Path, api_on: bool) -> Arc<Mutex<Vec<Value>>> {
                 json!({ "error": "the automation API is off", "code": "api-off" }).to_string()
             } else if req["query"] == "list" {
                 json!({ "downloads": [
-                    { "id": 1, "file": "old.zip", "url": "https://example.com/old.zip", "status": "Complete", "path": "/downloads/f", "size": 100, "downloaded": 50, "speed": 0, "added": null },
-                    { "id": 2, "file": "new.iso", "url": "https://example.com/new.iso", "status": "Downloading", "path": "/downloads/f", "size": 100, "downloaded": 50, "speed": 0, "added": null },
-                ], "speed": 1000 })
+                    { "id": 1, "file": "old.zip", "url": "https://example.com/old.zip", "status": "Complete", "path": "/downloads/f", "size": 100, "downloaded": 50, "speed": 0, "added": null, "category": "Compressed" },
+                    { "id": 2, "file": "new.iso", "url": "https://example.com/new.iso", "status": "Downloading", "path": "/downloads/f", "size": 100, "downloaded": 50, "speed": 0, "added": null, "category": "General" },
+                ], "speed": 1000, "free": 20000000000u64,
+                "queues": [
+                    { "name": "Main", "running": true, "ids": [1] },
+                    { "name": "Night", "running": false, "ids": [2] },
+                ],
+                "categories": [
+                    { "key": "General", "name": "General" },
+                    { "key": "Compressed", "name": "Compressed" },
+                ] })
                 .to_string()
             } else if req["action"].is_string() {
                 json!({ "done": req["ids"], "skipped": [] }).to_string()
@@ -143,11 +151,32 @@ fn an_assistant_lists_adds_and_acts_through_the_app() {
             "pause_downloads",
             "remove_downloads",
             "resume_downloads",
-            "start_queue"
+            "start_queue",
+            "stop_queue"
         ]
     );
 
     let (list, err) = mcp.call("list_downloads", json!({ "status": "downloading" }));
+    assert!(!err, "{list}");
+    let list: Value = serde_json::from_str(&list).unwrap();
+    assert_eq!(list["downloads"][0]["id"], 2);
+    assert_eq!(list["matching"], 1);
+    assert_eq!(list["free"], 20000000000u64);
+    assert!(list["queues"].is_array() && list["categories"].is_array());
+
+    let (list, err) = mcp.call("list_downloads", json!({ "id": 1 }));
+    assert!(!err, "{list}");
+    let list: Value = serde_json::from_str(&list).unwrap();
+    assert_eq!(list["downloads"][0]["id"], 1);
+    assert_eq!(list["matching"], 1);
+
+    let (list, err) = mcp.call("list_downloads", json!({ "category": "Compressed" }));
+    assert!(!err, "{list}");
+    let list: Value = serde_json::from_str(&list).unwrap();
+    assert_eq!(list["downloads"][0]["id"], 1);
+    assert_eq!(list["matching"], 1);
+
+    let (list, err) = mcp.call("list_downloads", json!({ "queue": "Night" }));
     assert!(!err, "{list}");
     let list: Value = serde_json::from_str(&list).unwrap();
     assert_eq!(list["downloads"][0]["id"], 2);
@@ -168,18 +197,44 @@ fn an_assistant_lists_adds_and_acts_through_the_app() {
     assert!(!err && text.contains(r#""done":[1]"#), "{text}");
     let (_, err) = mcp.call("pause_downloads", json!({ "ids": [2] }));
     assert!(!err);
-    let (_, err) = mcp.call("start_queue", json!({}));
-    assert!(!err);
+    let (text, err) = mcp.call("start_queue", json!({}));
+    assert!(!err && text.contains("main download queue"), "{text}");
+    let (text, err) = mcp.call("stop_queue", json!({}));
+    assert!(!err && text.contains("main download queue"), "{text}");
+
+    let (text, err) = mcp.call(
+        "add_download",
+        json!({ "url": "https://example.com/b.zip", "later": true, "queue": "Night", "category": "Compressed", "referer": "https://example.com/page.html", "user_agent": "CustomAgent/1.0", "cookie": "session=xyz123; uid=42", "private": true }),
+    );
+    assert!(!err && text.contains(r#"queue "Night""#), "{text}");
+    let (text, err) = mcp.call("start_queue", json!({ "queue": "Night" }));
+    assert!(!err && text.contains(r#"queue "Night""#), "{text}");
+    let (text, err) = mcp.call("stop_queue", json!({ "queue": "Night" }));
+    assert!(!err && text.contains(r#"queue "Night""#), "{text}");
 
     // What reached the app: the fields its channel reads (mdm_ipc::Command), with the token.
     let seen = seen.lock().unwrap();
-    let add = seen.iter().find(|r| r["url"].is_string()).unwrap();
+    let add = seen
+        .iter()
+        .find(|r| r["url"] == "https://example.com/a.zip")
+        .unwrap();
     assert_eq!(add["url"], "https://example.com/a.zip");
     assert_eq!(add["dir"], "D:\\Files");
     assert_eq!(
         (add["later"].clone(), add["silent"].clone()),
         (json!(true), json!(true))
     );
+    let add_night = seen
+        .iter()
+        .find(|r| r["url"] == "https://example.com/b.zip")
+        .unwrap();
+    assert_eq!(add_night["url"], "https://example.com/b.zip");
+    assert_eq!(add_night["queue"], "Night");
+    assert_eq!(add_night["category"], "Compressed");
+    assert_eq!(add_night["referer"], "https://example.com/page.html");
+    assert_eq!(add_night["user_agent"], "CustomAgent/1.0");
+    assert_eq!(add_night["cookies"], "session=xyz123; uid=42");
+    assert_eq!(add_night["private"], true);
     assert!(
         seen.iter()
             .any(|r| r["action"] == "delete" && r["ids"] == json!([1]))
@@ -189,6 +244,18 @@ fn an_assistant_lists_adds_and_acts_through_the_app() {
             .any(|r| r["action"] == "pause" && r["ids"] == json!([2]))
     );
     assert!(seen.iter().any(|r| r["start_queue"] == true));
+    assert!(
+        seen.iter()
+            .any(|r| r["action"] == "stop_queue" && r["queue"].is_null())
+    );
+    assert!(
+        seen.iter()
+            .any(|r| r["action"] == "start_queue" && r["queue"] == "Night")
+    );
+    assert!(
+        seen.iter()
+            .any(|r| r["action"] == "stop_queue" && r["queue"] == "Night")
+    );
     assert!(seen.iter().all(|r| r["token"] == "secret"));
 }
 

@@ -6,7 +6,8 @@
 //! Everywhere: no empty part, `.`, `..`, separator or control character. On Windows also none of
 //! `:<>"|?*`, no trailing dot or space (Windows drops them, so two names become one), and no device name
 //! (`CON`, `NUL.txt`, `COM1`…). Where names ignore letter case (Windows, macOS), no two files
-//! whose paths differ only by case.
+//! whose paths differ only by case, and nowhere a file and a folder of the same name (`a` and
+//! `a/b`): the first written would stand where the other needs a folder.
 
 /// The first unsafe name: its path (parts joined by `/`) and why.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -36,6 +37,9 @@ where
     P: AsRef<[String]>,
 {
     let mut seen = std::collections::HashSet::new();
+    // Every folder the files go through: a torrent can list `a` and `a/b` (a file and a folder
+    // of the same name), which no disk can hold; it is refused before anything is written.
+    let mut folders = std::collections::HashSet::new();
     for parts in files {
         let parts = parts.as_ref();
         let path = parts.join("/");
@@ -51,11 +55,32 @@ where
                 return Err(refuse(why));
             }
         }
-        let key = if case_blind {
-            path.to_lowercase()
-        } else {
-            path.clone()
+        let fold = |s: &str| {
+            if case_blind {
+                s.to_lowercase()
+            } else {
+                s.to_owned()
+            }
         };
+        let mut prefix = String::new();
+        for (i, part) in parts.iter().enumerate() {
+            if i > 0 {
+                prefix.push('/');
+            }
+            prefix.push_str(part);
+            if i + 1 == parts.len() {
+                break;
+            }
+            let key = fold(&prefix);
+            if seen.contains(&key) {
+                return Err(refuse("a file and a folder with the same name"));
+            }
+            folders.insert(key);
+        }
+        let key = fold(&path);
+        if folders.contains(&key) {
+            return Err(refuse("a file and a folder with the same name"));
+        }
         if !seen.insert(key) {
             return Err(refuse(if case_blind {
                 "two files whose names differ only by letter case"
@@ -188,5 +213,24 @@ mod tests {
         assert!(windows(twins).is_err());
         assert_eq!(linux(twins), Ok(()));
         assert!(linux(&[&["a.txt"], &["a.txt"]]).is_err(), "exact twins");
+    }
+
+    /// A torrent may list a file and another file inside a folder of the same name (`a` and
+    /// `a/b`): one would be written where the other needs a folder, so it is refused first.
+    #[test]
+    fn a_file_cannot_be_a_folder_too() {
+        let file_then_folder: &[&[&str]] = &[&["a"], &["a", "b"]];
+        assert!(windows(file_then_folder).is_err());
+        assert!(
+            linux(file_then_folder).is_err(),
+            "a file and a folder clash on every disk"
+        );
+        let folder_then_file: &[&[&str]] = &[&["a", "b"], &["a"]];
+        assert!(windows(folder_then_file).is_err());
+        let shared: &[&[&str]] = &[&["a", "b"], &["a", "c"]];
+        assert_eq!(windows(shared), Ok(()), "a folder two files use is fine");
+        let twins: &[&[&str]] = &[&["A"], &["a", "b"]];
+        assert!(windows(twins).is_err(), "one folder where case is ignored");
+        assert_eq!(linux(twins), Ok(()));
     }
 }

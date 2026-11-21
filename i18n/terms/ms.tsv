@@ -15,3 +15,5 @@ resume	sambung semula	continuing a stopped download
 settings	Tetapan	the Settings window; the Options toolbar button and menu: 'Pilihan'
 scheduler	Penjadual	MDM's Scheduler window/tool
 piece	cebisan	torrent pieces; 'First and last pieces first' = 'Cebisan pertama dan terakhir dahulu'
+peer	rakan	torrent swarm peers (seeders/leechers); column header: 'Rakan'
+share ratio	nisbah perkongsian	torrent share ratio; column header: 'Nisbah perkongsian'

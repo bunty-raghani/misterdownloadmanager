@@ -92,9 +92,6 @@
       }
     }
   },
-  "popup_undo": {
-    "message": "Späť"
-  },
   "popup_excluded": {
     "message": "Stiahnutia z $site$ zostávajú v prehliadači",
     "placeholders": {
@@ -148,6 +145,9 @@
   },
   "declined_integration_off": {
     "message": "Použiť rozšírenú integráciu prehliadača je vypnuté v Možnostiach → Všeobecné."
+  },
+  "declined_torrents": {
+    "message": "Je to torrent a možnosť Otvoriť magnetické odkazy a súbory .torrent pomocou Mister Download Manager je v nastaveniach torrentov vypnutá."
   },
   "declined_site_access": {
     "message": "Rozšírenie nemá povolené čítať túto stránku (prístup prehliadača k stránke)."
@@ -328,5 +328,424 @@
   },
   "video_original": {
     "message": "pôvodné"
+  },
+  "video_compatible": {
+    "message": "Najkompatibilnejší"
+  },
+  "popup_video_hide_fullscreen": {
+    "message": "Skryť tlačidlo sťahovania v režime celej obrazovky"
+  },
+  "popup_video_hide_fullscreen_title": {
+    "message": "Keď je stránka v režime celej obrazovky, pri jej videách sa nezobrazuje tlačidlo Stiahnuť video"
+  },
+  "popup_remote_forget": {
+    "message": "Zabudnúť"
+  },
+  "popup_gear": {
+    "message": "Možnosti v aplikácii Mister Download Manager"
+  },
+  "popup_tabs": {
+    "message": "Sekcie kontextovej ponuky"
+  },
+  "popup_tab_downloads": {
+    "message": "Sťahovania"
+  },
+  "popup_tab_page": {
+    "message": "Táto stránka"
+  },
+  "popup_tab_settings": {
+    "message": "Nastavenia"
+  },
+  "popup_conn": {
+    "message": "Pripojené · $version$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.5.2"
+      }
+    }
+  },
+  "popup_conn_plain": {
+    "message": "Pripojené"
+  },
+  "popup_conn_off": {
+    "message": "Nepripojené"
+  },
+  "popup_conn_paused": {
+    "message": "Pozastavené"
+  },
+  "popup_conn_update": {
+    "message": "Aktualizovať Mister Download Manager"
+  },
+  "popup_conn_remote": {
+    "message": "Odosiela sa na $server$",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_cancel": {
+    "message": "Zrušiť"
+  },
+  "popup_page_none": {
+    "message": "Toto nie je webová stránka: tu nie je čo robiť."
+  },
+  "popup_exclude_by_rule": {
+    "message": "Ponechané prehliadaču pravidlom v Možnostiach"
+  },
+  "popup_dl_search": {
+    "message": "Hľadať sťahovania"
+  },
+  "popup_dl_filters": {
+    "message": "Zobraziť"
+  },
+  "popup_dl_all": {
+    "message": "Všetky"
+  },
+  "popup_dl_running": {
+    "message": "Spustené"
+  },
+  "popup_dl_done_filter": {
+    "message": "Hotovo"
+  },
+  "popup_dl_failed_filter": {
+    "message": "Zlyhalo"
+  },
+  "popup_dl_clear": {
+    "message": "Vymazať dokončené"
+  },
+  "popup_dl_running_count": {
+    "message": "$count$ sa sťahuje",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_remote": {
+    "message": "Toto sú sťahovania aplikácie Mister Download Manager na $server$. Otvorte ich súbory tam.",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_dl_more": {
+    "message": "Najnovších $shown$ z $total$. Mister Download Manager ich zobrazuje všetky.",
+    "placeholders": {
+      "shown": {
+        "content": "$1",
+        "example": "60"
+      },
+      "total": {
+        "content": "$2",
+        "example": "245"
+      }
+    }
+  },
+  "popup_dl_of": {
+    "message": "$done$ z $size$",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "12.3 MB"
+      },
+      "size": {
+        "content": "$2",
+        "example": "48.7 MB"
+      }
+    }
+  },
+  "popup_dl_left": {
+    "message": "Zostáva $time$",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "0:42"
+      }
+    }
+  },
+  "popup_dl_starting": {
+    "message": "Spúšťa sa..."
+  },
+  "popup_dl_paused": {
+    "message": "Pozastavené"
+  },
+  "popup_dl_waiting": {
+    "message": "Čaká sa"
+  },
+  "popup_dl_done": {
+    "message": "Hotovo"
+  },
+  "popup_dl_just_now": {
+    "message": "práve teraz"
+  },
+  "popup_dl_failed": {
+    "message": "Zlyhalo"
+  },
+  "popup_dl_failed_why": {
+    "message": "Zlyhalo: $why$",
+    "placeholders": {
+      "why": {
+        "content": "$1",
+        "example": "the server refused the connection"
+      }
+    }
+  },
+  "popup_dl_gone": {
+    "message": "Súbor bol odstránený alebo presunutý"
+  },
+  "popup_dl_loading": {
+    "message": "Hľadajú sa sťahovania..."
+  },
+  "popup_dl_none": {
+    "message": "Zatiaľ žiadne sťahovania"
+  },
+  "popup_dl_none_text": {
+    "message": "To, čo stiahnete pomocou aplikácie Mister Download Manager, sa zobrazí tu."
+  },
+  "popup_dl_no_match": {
+    "message": "Nič sa nezhoduje"
+  },
+  "popup_dl_no_match_text": {
+    "message": "Žiadne sťahovanie nemá v názve alebo adrese „$words$“.",
+    "placeholders": {
+      "words": {
+        "content": "$1",
+        "example": "report"
+      }
+    }
+  },
+  "popup_dl_show_all": {
+    "message": "Zobraziť všetky sťahovania"
+  },
+  "popup_list_off": {
+    "message": "Mister Download Manager nie je spustený"
+  },
+  "popup_list_off_text": {
+    "message": "Spustite ho, aby ste tu videli svoje sťahovania."
+  },
+  "popup_list_start": {
+    "message": "Spustiť Mister Download Manager"
+  },
+  "popup_list_old": {
+    "message": "Aktualizovať Mister Download Manager"
+  },
+  "popup_list_old_text": {
+    "message": "Táto verzia zatiaľ nemôže zobraziť svoje sťahovania."
+  },
+  "popup_list_busy": {
+    "message": "Aplikácia Mister Download Manager je zaneprázdnená. Skúša sa znova..."
+  },
+  "popup_list_unreached": {
+    "message": "Nedá sa pripojiť k Mister Download Manager"
+  },
+  "popup_list_remote_unreachable": {
+    "message": "Nedá sa pripojiť k aplikácii Mister Download Manager na serveri $server$",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_list_remote_unreachable_text": {
+    "message": "Skontrolujte, či je spustený a či tento prehliadač akceptuje jeho certifikát (Nastavenia → Posielať sťahovania do → Otvoriť).",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_act_open": {
+    "message": "Otvoriť"
+  },
+  "popup_act_open_named": {
+    "message": "Otvoriť $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_folder": {
+    "message": "Zobraziť v priečinku"
+  },
+  "popup_act_folder_named": {
+    "message": "Zobraziť $file$ v priečinku",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_copy_file": {
+    "message": "Kopírovať súbor"
+  },
+  "popup_act_share": {
+    "message": "Zdieľať..."
+  },
+  "popup_act_copy_link": {
+    "message": "Kopírovať odkaz"
+  },
+  "popup_act_pause": {
+    "message": "Pozastaviť"
+  },
+  "popup_act_pause_named": {
+    "message": "Pozastaviť $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_resume": {
+    "message": "Pokračovať"
+  },
+  "popup_act_resume_named": {
+    "message": "Pokračovať v sťahovaní $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_again": {
+    "message": "Stiahnuť znova"
+  },
+  "popup_act_remove": {
+    "message": "Odstrániť zo zoznamu"
+  },
+  "popup_act_delete": {
+    "message": "Odstrániť súbor..."
+  },
+  "popup_act_more": {
+    "message": "Ďalšie akcie"
+  },
+  "popup_act_more_named": {
+    "message": "Ďalšie akcie pre $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_title": {
+    "message": "Odstrániť súbor?"
+  },
+  "popup_ask_delete": {
+    "message": "$file$ sa odstráni z vášho počítača a sťahovanie sa odstráni zo zoznamu. Túto akciu nemožno vrátiť späť.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_ok": {
+    "message": "Odstrániť"
+  },
+  "popup_ask_clear_title": {
+    "message": "Vymazať dokončené sťahovania?"
+  },
+  "popup_ask_clear": {
+    "message": "Dokončených $count$ sťahovaní sa odstráni zo zoznamu. Ich súbory zostanú tam, kde sú.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "8"
+      }
+    }
+  },
+  "popup_ask_clear_ok": {
+    "message": "Vymazať"
+  },
+  "popup_said_file": {
+    "message": "Súbor $file$ bol skopírovaný. Prilepte ho do priečinka, chatu alebo správy.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_link": {
+    "message": "Odkaz skopírovaný"
+  },
+  "popup_said_removed": {
+    "message": "$file$ odstránený zo zoznamu",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_deleted": {
+    "message": "$file$ odstránený",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_again": {
+    "message": "Sťahuje sa súbor $file$ znova",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_cleared": {
+    "message": "Dokončené sťahovania vymazané"
+  },
+  "popup_act_gone": {
+    "message": "Toto sťahovanie už nie je v zozname."
+  },
+  "popup_act_missing": {
+    "message": "Jeho súbor už nie je tam, kde bol uložený (presunutý alebo odstránený)."
+  },
+  "popup_act_running": {
+    "message": "Najprv ho pozastavte."
+  },
+  "popup_act_cant": {
+    "message": "Toto sa nedá vykonať s týmto sťahovaním."
+  },
+  "popup_act_unsupported": {
+    "message": "Tento systém to nedokáže."
+  },
+  "popup_act_off": {
+    "message": "Mister Download Manager nie je spustený."
+  },
+  "popup_act_busy": {
+    "message": "Mister Download Manager neodpovedal včas. Skúste to znova."
+  },
+  "popup_act_failed": {
+    "message": "Nepodarilo sa. Skúste to znova."
+  },
+  "status_running": {
+    "message": "Sťahuje sa: $count$",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_open_remote": {
+    "message": "Otvoriť jeho stránku"
   }
 }

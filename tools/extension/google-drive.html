@@ -1,0 +1,25 @@
+<!doctype html>
+<!-- Google Drive shared folder: a list of two files and one playing in the preview dialog (#758). -->
+<html><head><meta charset="utf-8"><meta name="mdm-page" content="https://drive.google.com/drive/folders/18l2MEarbNGo94E1x0sU2mpfkRmLrVVo3"><title>Shared Folder - Google Drive</title><link rel="stylesheet" href="feeds.css"></head>
+<body>
+<main>
+  <!-- The folder's file list: two files with their links and cards -->
+  <div role="grid" class="folder-list">
+    <div role="row" class="file-row">
+      <a href="https://drive.google.com/file/d/1s52ek_4YTDRt_EOkx1FS53u-vJa0c4nu/view">sample_one.mp4</a>
+    </div>
+    <div role="row" class="file-row">
+      <a href="https://drive.google.com/file/d/2t63fk_5ZUERu_FPlx2GT64v-wKb1d5ov/view">sample_two.mp4</a>
+    </div>
+  </div>
+
+  <!-- The preview dialog holding the playing video -->
+  <div role="dialog" aria-modal="true" class="preview-dialog">
+    <a href="https://drive.google.com/file/d/1s52ek_4YTDRt_EOkx1FS53u-vJa0c4nu/view">Open in new tab</a>
+    <div class="player-container">
+      <video data-expect="https://drive.google.com/file/d/1s52ek_4YTDRt_EOkx1FS53u-vJa0c4nu/view"
+             src="https://rr1---sn-4g5ednss.googlevideo.com/videoplayback?expire=123&driveid=1s52ek_4YTDRt_EOkx1FS53u-vJa0c4nu"></video>
+    </div>
+  </div>
+</main>
+</body></html>

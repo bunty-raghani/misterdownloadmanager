@@ -61,6 +61,7 @@ fn every_release_mdm_can_drive_saves_a_gallery() {
             &Ask::default(),
             &Default::default(),
             None,
+            None,
         )
         .unwrap_or_else(|e| panic!("{v}: {e}"));
         let deadline = Instant::now() + Duration::from_secs(90);
@@ -110,6 +111,7 @@ fn every_release_mdm_can_drive_saves_a_gallery() {
             &Ask::default(),
             &Default::default(),
             Some(engine),
+            None,
         )
         .unwrap_or_else(|e| panic!("{v}: {e}"));
         let deadline = Instant::now() + Duration::from_secs(90);

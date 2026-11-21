@@ -8,7 +8,11 @@ use std::sync::mpsc::{Receiver, Sender, channel};
 use std::sync::{Arc, Mutex};
 
 mod beside;
+mod picture;
 mod watch;
+
+#[cfg(windows)]
+pub(crate) use picture::small_icon_px;
 
 pub use watch::Icon;
 
@@ -60,19 +64,36 @@ pub enum OnClose {
     Quit,
 }
 
-/// What closing the main window does: `keep_running` is Options' "Keep running when closing the
+/// What closing the main window does: `quitting` whether MDM was asked to quit (File → Exit, the
+/// tray's Exit, `/exit`, Update now, a queue's or a download's "Exit when done": `App::quit`),
+/// which quits whatever the rest says; `keep_running` is Options' "Keep running when closing the
 /// window", `tray` whether a tray object exists, `icon` what the shell last said of its icon
 /// ([`Tray::icon`]; Linux: there when a tray host runs), `taskbar` whether a window can wait in the
 /// taskbar or the Dock instead (not Linux: #59, a window there that merely minimized could never
-/// be closed).
+/// be closed), `dock` whether a click on the app's icon in the Dock brings a hidden window back
+/// (macOS, `unix::open_events::dock_reopens`).
 ///
 /// Never a hidden window with no icon to bring it back: the taskbar (or quitting) only when the
 /// shell said the icon is gone. No answer, or an old one, hides the window as an icon that is
 /// there does (#750, #718, #754: a shell that couldn't confirm the icon left the window in the
 /// taskbar with the icon right there); such a window still comes back from the icon once the
-/// shell answers, and a second start of MDM always brings it back.
-pub fn on_close(keep_running: bool, tray: bool, icon: Icon, taskbar: bool) -> OnClose {
-    if !(keep_running && tray) {
+/// shell answers, and a second start of MDM always brings it back. On macOS the Dock is that way
+/// back (#1125): MDM's icon stays there while it runs, and a click on it shows the window, so
+/// closing hides the window as Mac apps do, whatever the menu bar shows (an icon behind the
+/// notch, or turned off in System Settings, is no way back).
+pub fn on_close(
+    quitting: bool,
+    keep_running: bool,
+    tray: bool,
+    icon: Icon,
+    taskbar: bool,
+    dock: bool,
+) -> OnClose {
+    if quitting || !keep_running {
+        OnClose::Quit
+    } else if dock {
+        OnClose::Hide
+    } else if !tray {
         OnClose::Quit
     } else if icon != Icon::Gone {
         OnClose::Hide
@@ -472,20 +493,32 @@ impl Native {
         items.push((limiter_on.id().clone(), TrayCmd::LimiterOn));
         items.push((limiter_off.id().clone(), TrayCmd::LimiterOff));
 
-        let icon = match picture() {
+        // Windows: the size the taskbar draws the icon at, and the taskbar, drawn again for another
+        // by the watcher (`WindowsShell::fit`).
+        #[cfg(windows)]
+        let fitted = crate::win32::tray_icon_px();
+        #[cfg(windows)]
+        let px = fitted.1;
+        #[cfg(not(windows))]
+        let px = picture::fitting();
+        let icon = match picture(px) {
             Ok(icon) => icon,
             Err(e) => {
                 tracing::warn!("tray icon: no picture: {e}");
                 return None;
             }
         };
-        let tray = match TrayIconBuilder::new()
+        let builder = TrayIconBuilder::new()
             .with_menu(Box::new(menu))
             .with_menu_on_left_click(false)
             .with_tooltip(crate::MAIN_TITLE)
-            .with_icon(icon)
-            .build()
-        {
+            .with_icon(icon);
+        // Linux and the BSDs (StatusNotifierItem): the item's title is its name in the shell's
+        // lists, KDE's notification area among them, which showed MDM's icon with no name (#1305).
+        // Not on macOS, where a title is text beside the icon in the menu bar; Windows has none.
+        #[cfg(not(any(windows, target_os = "macos")))]
+        let builder = builder.with_title(crate::MAIN_TITLE);
+        let tray = match builder.build() {
             Ok(tray) => tray,
             Err(e) => {
                 tracing::warn!("tray icon: not made: {e}");
@@ -504,6 +537,8 @@ impl Native {
                     // MDM_TEST_TRAY_RECT=0: the shell gives the icon no place, as the reporters'
                     // did for one behind ^ (the close test, with a real icon the shell holds).
                     rect_withheld: std::env::var_os("MDM_TEST_TRAY_RECT").is_some_and(|v| v == "0"),
+                    fit: picture::Fit::new(fitted),
+                    shown: None,
                 },
                 move || wake.request_repaint(),
             )
@@ -518,6 +553,9 @@ impl Native {
                 ..
             } = e
             {
+                // The window is asked for: a stall from now on is felt (crash.rs, #1126). Seen
+                // during one where the icon's events come on a thread of their own (Linux).
+                crate::crash::asked();
                 let _ = icon_tx.send(TrayCmd::Toggle);
                 icon_ctx.request_repaint();
             }
@@ -538,6 +576,7 @@ impl Native {
                         .map(|(_, d)| TrayCmd::ShowDownload(*d))
                 });
             if let Some(cmd) = cmd {
+                crate::crash::asked();
                 let _ = menu_tx.send(cmd);
                 menu_ctx.request_repaint();
             }
@@ -591,6 +630,10 @@ impl Native {
         return self.watch.tip(tip);
         #[cfg(not(windows))]
         {
+            // Linux and the BSDs: the shell shows the item's title (the app's name) above the
+            // tip's text, so the tip's own first line, the name again, is left out (#1305).
+            #[cfg(not(target_os = "macos"))]
+            let tip = without_name(tip);
             let _ = self.tray.set_tooltip(Some(tip));
             true
         }
@@ -636,6 +679,44 @@ struct WindowsShell {
     hwnd: isize,
     id: Option<u32>,
     rect_withheld: bool,
+    /// The size and taskbar the icon is drawn for (#1161).
+    fit: picture::Fit<(isize, u32)>,
+    /// The picture the watcher last drew the icon with, kept while the shell has it (the first is
+    /// tray-icon's).
+    shown: Option<crate::win32::TrayPicture>,
+}
+
+#[cfg(windows)]
+impl WindowsShell {
+    /// Draw icon `id` again at the size the notification area draws it now, when that changed
+    /// ([`picture::Fit`]): the taskbar's display scale changed, or Explorer started again (a new
+    /// taskbar, given tray-icon's first picture back). Explorer is waited for here, on the
+    /// watcher's thread, never on the window's (#747); a draw it didn't take is tried again with
+    /// the next question.
+    fn fit(&mut self, id: u32) {
+        let now = crate::win32::tray_icon_px();
+        if !self.fit.due(now) {
+            return;
+        }
+        let px = now.1;
+        match picture::at(px) {
+            Ok(p) => {
+                if let Some(shown) = crate::win32::tray_icon_picture(self.hwnd, id, &p.rgba, px) {
+                    self.shown = Some(shown);
+                    self.fit.drawn(now);
+                    tracing::info!(
+                        "tray icon: drawn at {px} px (from the {} px picture)",
+                        picture::source(px)
+                    );
+                }
+            }
+            Err(e) => {
+                // Never asked again for this size: the picture won't come out better.
+                self.fit.drawn(now);
+                tracing::warn!("tray icon: no {px} px picture: {e}");
+            }
+        }
+    }
 }
 
 #[cfg(windows)]
@@ -646,8 +727,9 @@ impl watch::Port for WindowsShell {
             TrayAnswer::NoTaskbar => watch::Shell::NoTaskbar,
             TrayAnswer::Silent => watch::Shell::Silent,
             TrayAnswer::Answered { held, placed } => {
-                if held.is_some() {
+                if let Some(id) = held {
                     self.id = held;
+                    self.fit(id);
                 }
                 watch::Shell::Answered {
                     placed,
@@ -673,43 +755,136 @@ fn short(name: &str) -> String {
     s.replace('&', "&&")
 }
 
-/// The icon's picture: the app icon's ([`crate::app_picture`]), square. Never an empty one:
-/// tray-icon takes a 0×0 picture, and macOS then fails to make the menu bar item of it (it
-/// encodes the picture as a PNG, which can't be 0 wide), so before #529 macOS had no menu bar
-/// icon and closing the window quit.
-fn picture() -> Result<tray_icon::Icon, String> {
-    let p = crate::app_picture();
-    if p.width == 0 || p.width != p.height {
-        return Err(format!("{}×{} px", p.width, p.height));
+/// The icon's picture at `px` px: the app icon's hand-made picture of the size the system draws
+/// it at ([`picture`], #1161). Never an empty one: tray-icon takes a 0×0 picture, and macOS then
+/// fails to make the menu bar item of it (it encodes the picture as a PNG, which can't be 0 wide),
+/// so before #529 macOS had no menu bar icon and closing the window quit.
+fn picture(px: u32) -> Result<tray_icon::Icon, String> {
+    let p = picture::at(px)?;
+    if p.size == 0 || p.rgba.len() != (p.size * p.size * 4) as usize {
+        return Err(format!("{0}×{0} px", p.size));
     }
-    tray_icon::Icon::from_rgba(p.rgba.clone(), p.width, p.height).map_err(|e| e.to_string())
+    tray_icon::Icon::from_rgba(p.rgba, p.size, p.size).map_err(|e| e.to_string())
+}
+
+/// A tip's text without its first line when that line is the app's name: what a
+/// StatusNotifierItem shows under its title, which is the name already (#1305).
+#[cfg_attr(any(windows, target_os = "macos"), allow(dead_code))]
+fn without_name(tip: &str) -> &str {
+    match tip.strip_prefix(crate::MAIN_TITLE) {
+        Some(rest) if rest.is_empty() || rest.starts_with('\n') => rest.trim_start_matches('\n'),
+        _ => tip,
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
+    /// #1305: under a StatusNotifierItem's title (the app's name), the tip leaves the name out:
+    /// what follows it, or nothing while idle; a tip that doesn't start with the name is kept.
+    #[test]
+    fn the_tip_under_the_title_leaves_the_name_out() {
+        let name = crate::MAIN_TITLE;
+        assert_eq!(without_name(name), "");
+        assert_eq!(
+            without_name(&format!("{name}\n2 downloads, 1.5 MB/s")),
+            "2 downloads, 1.5 MB/s"
+        );
+        assert_eq!(
+            without_name(&format!("{name}\n2 downloads\nSpeed Limiter: 512 KB/sec")),
+            "2 downloads\nSpeed Limiter: 512 KB/sec"
+        );
+        assert_eq!(without_name("Something else"), "Something else");
+        assert_eq!(
+            without_name(&format!("{name}s and more")),
+            format!("{name}s and more")
+        );
+    }
+
     /// The close decision (#750, #718, #754, #545): an icon the shell says is there, or no answer
     /// at all, hides the window; only the shell saying the icon is gone leaves it in the taskbar.
     #[test]
     fn closing_hides_unless_the_shell_says_the_icon_is_gone() {
         for icon in [Icon::There, Icon::Unknown] {
-            assert_eq!(on_close(true, true, icon, true), OnClose::Hide, "{icon:?}");
+            assert_eq!(
+                on_close(false, true, true, icon, true, false),
+                OnClose::Hide,
+                "{icon:?}"
+            );
         }
-        assert_eq!(on_close(true, true, Icon::Gone, true), OnClose::Minimize);
+        assert_eq!(
+            on_close(false, true, true, Icon::Gone, true, false),
+            OnClose::Minimize
+        );
     }
 
     /// The rest of the close decision, on every system (#457, #59).
     #[test]
     fn closing_quits_with_the_option_off_no_tray_or_nowhere_to_wait() {
         // No icon and no taskbar to wait in (Linux with no tray host): quit.
-        assert_eq!(on_close(true, true, Icon::Gone, false), OnClose::Quit);
-        assert_eq!(on_close(true, true, Icon::There, false), OnClose::Hide);
+        assert_eq!(
+            on_close(false, true, true, Icon::Gone, false, false),
+            OnClose::Quit
+        );
+        assert_eq!(
+            on_close(false, true, true, Icon::There, false, false),
+            OnClose::Hide
+        );
         // The option off, or no tray object at all: closing quits, whatever the shell says.
         for icon in [Icon::There, Icon::Unknown, Icon::Gone] {
-            assert_eq!(on_close(false, true, icon, true), OnClose::Quit);
-            assert_eq!(on_close(true, false, icon, true), OnClose::Quit);
+            assert_eq!(
+                on_close(false, false, true, icon, true, false),
+                OnClose::Quit
+            );
+            assert_eq!(
+                on_close(false, true, false, icon, true, false),
+                OnClose::Quit
+            );
         }
+    }
+
+    /// #1125: on macOS a click on MDM's icon in the Dock brings the window back, so closing
+    /// leaves MDM running there, as Mac apps do, whatever the menu bar shows of its icon and even
+    /// with no menu bar icon at all. Unticked, "Keep running when closing the window" still quits.
+    #[test]
+    fn on_macos_closing_leaves_mdm_in_the_dock() {
+        for tray in [true, false] {
+            for icon in [Icon::There, Icon::Unknown, Icon::Gone] {
+                assert_eq!(on_close(false, true, tray, icon, true, true), OnClose::Hide);
+                assert_eq!(
+                    on_close(false, false, tray, icon, true, true),
+                    OnClose::Quit
+                );
+                // Cmd+Q, MDM → Quit, Exit when done: quits.
+                assert_eq!(on_close(true, true, tray, icon, true, true), OnClose::Quit);
+            }
+        }
+    }
+
+    /// Asked to quit (File → Exit, the tray's Exit, `/exit`, Update now, "Exit when done"), MDM
+    /// quits whatever "Keep running when closing the window" and the shell say; only a plain close
+    /// of the window follows them (a finished queue set to exit used to hide MDM in the tray).
+    #[test]
+    fn a_quit_request_quits_whatever_the_close_setting_says() {
+        for keep in [true, false] {
+            for tray in [true, false] {
+                for icon in [Icon::There, Icon::Unknown, Icon::Gone] {
+                    for taskbar in [true, false] {
+                        assert_eq!(
+                            on_close(true, keep, tray, icon, taskbar, false),
+                            OnClose::Quit,
+                            "{keep} {tray} {icon:?} {taskbar}"
+                        );
+                    }
+                }
+            }
+        }
+        // The same window closed by hand, with the defaults: hidden in the tray.
+        assert_eq!(
+            on_close(false, true, true, Icon::There, true, false),
+            OnClose::Hide
+        );
     }
 
     #[test]
@@ -721,14 +896,18 @@ mod tests {
     }
 
     /// #529: the tray's picture is a real one on every system, macOS's menu bar included (where
-    /// the window icon, `app_icon`, is empty on purpose).
+    /// the window icon, `app_icon`, is empty on purpose), at every size it is drawn at (#1161).
     #[test]
     fn the_tray_picture_is_never_empty() {
-        let p = crate::app_picture();
-        assert_eq!((p.width, p.height), (256, 256));
-        assert_eq!(p.rgba.len(), 256 * 256 * 4);
-        assert!(p.rgba.chunks(4).any(|px| px[3] > 0), "a blank picture");
-        assert!(picture().is_ok());
+        for px in [16, 20, 24, 28, 32, 40, 44, 48, 256] {
+            let p = picture::at(px).unwrap();
+            assert_eq!(p.rgba.len(), (px * px * 4) as usize);
+            assert!(
+                p.rgba.chunks(4).any(|c| c[3] > 0),
+                "{px} px: a blank picture"
+            );
+            assert!(picture(px).is_ok(), "{px} px");
+        }
         #[cfg(target_os = "macos")]
         assert_eq!(
             crate::app_icon().width,

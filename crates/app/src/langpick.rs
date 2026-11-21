@@ -27,6 +27,9 @@ pub struct Picker {
     /// First visible row.
     top: f32,
     focus_asked: bool,
+    /// The keys moved the selection since the search box last changed: a screen reader then
+    /// follows the rows, not the box (#1190).
+    keys_moved: bool,
 }
 
 impl Picker {
@@ -44,6 +47,7 @@ impl Picker {
             selected,
             top: 0.0,
             focus_asked: false,
+            keys_moved: false,
         }
     }
 
@@ -111,6 +115,9 @@ impl Picker {
                     true,
                     false,
                 );
+                if search.changed() {
+                    self.keys_moved = false;
+                }
                 if !self.focus_asked {
                     search.request_focus();
                     self.focus_asked = true;
@@ -182,6 +189,7 @@ impl Picker {
                     moved = Some(last);
                 }
                 if let Some(m) = moved {
+                    self.keys_moved = true;
                     self.selected = rows[m];
                     // Keep the selection in view.
                     let m = m as f32;
@@ -279,7 +287,8 @@ impl Picker {
                         winui::pointer_only(),
                     );
                     let scroll = egui::accesskit::Action::ScrollIntoView;
-                    if resp.clicked() {
+                    // A screen reader's focus selects the row, as its click does (#1190).
+                    if resp.clicked() || winui::focus_target(&resp.ctx, resp.id) {
                         *selected = entry;
                         bring = Some(k);
                     } else if resp
@@ -303,7 +312,8 @@ impl Picker {
                         egui::Id::unique(("language-row", k)),
                         winui::pointer_only(),
                     );
-                    if resp.clicked() {
+                    // A screen reader's focus selects the row, as a click does (#1190).
+                    if resp.clicked() || winui::focus_target(ui.ctx(), resp.id) {
                         self.selected = *entry;
                     }
                     if resp.double_clicked() {
@@ -357,6 +367,17 @@ impl Picker {
                 }
                 for (k, entry) in rows.iter().enumerate().skip(in_view.end) {
                     hidden_row(k, *entry, &mut self.selected);
+                }
+                // Once the keys move the selection, the selected row is what a screen reader says
+                // has the focus while the search box has it (a combo box's list; #1190: it said
+                // nothing); typing gives the box back.
+                if self.keys_moved
+                    && search.has_focus()
+                    && let Some(k) = rows.iter().position(|e| *e == self.selected)
+                {
+                    let row = egui::Id::unique(("language-row", k)).accesskit_id();
+                    ui.ctx()
+                        .accesskit_node_builder(search.id, |n| n.set_active_descendant(row));
                 }
                 if let Some(k) = bring {
                     let k = k as f32;

@@ -92,9 +92,6 @@
       }
     }
   },
-  "popup_undo": {
-    "message": "Zpět"
-  },
   "popup_excluded": {
     "message": "Stahování z $site$ zůstává v prohlížeči",
     "placeholders": {
@@ -148,6 +145,9 @@
   },
   "declined_integration_off": {
     "message": "Použít pokročilou integraci prohlížeče je vypnuto v Možnosti → Obecné."
+  },
+  "declined_torrents": {
+    "message": "Je to torrent a v nastavení torrentů je vypnutá možnost Otevřít magnetické odkazy a soubory .torrent pomocí Mister Download Manager."
   },
   "declined_site_access": {
     "message": "Rozšíření nemá povoleno číst tento web (přístup prohlížeče k webu)."
@@ -328,5 +328,424 @@
   },
   "video_original": {
     "message": "původní"
+  },
+  "video_compatible": {
+    "message": "Nejkompatibilnější"
+  },
+  "popup_video_hide_fullscreen": {
+    "message": "Skrýt tlačítko stahování v režimu celé obrazovky"
+  },
+  "popup_video_hide_fullscreen_title": {
+    "message": "Když je stránka v režimu celé obrazovky, její videa nezobrazují tlačítko Stáhnout video"
+  },
+  "popup_remote_forget": {
+    "message": "Zapomenout"
+  },
+  "popup_gear": {
+    "message": "Možnosti v Mister Download Manager"
+  },
+  "popup_tabs": {
+    "message": "Sekce vyskakovacího okna"
+  },
+  "popup_tab_downloads": {
+    "message": "Stahování"
+  },
+  "popup_tab_page": {
+    "message": "Tato stránka"
+  },
+  "popup_tab_settings": {
+    "message": "Nastavení"
+  },
+  "popup_conn": {
+    "message": "Připojeno · $version$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.5.2"
+      }
+    }
+  },
+  "popup_conn_plain": {
+    "message": "Připojeno"
+  },
+  "popup_conn_off": {
+    "message": "Nepřipojeno"
+  },
+  "popup_conn_paused": {
+    "message": "Pozastaveno"
+  },
+  "popup_conn_update": {
+    "message": "Aktualizovat Mister Download Manager"
+  },
+  "popup_conn_remote": {
+    "message": "Odesílá se na $server$",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_cancel": {
+    "message": "Zrušit"
+  },
+  "popup_page_none": {
+    "message": "Toto není webová stránka: zde není co dělat."
+  },
+  "popup_exclude_by_rule": {
+    "message": "Ponecháno prohlížeči podle pravidla v Možnostech"
+  },
+  "popup_dl_search": {
+    "message": "Hledat stahování"
+  },
+  "popup_dl_filters": {
+    "message": "Zobrazit"
+  },
+  "popup_dl_all": {
+    "message": "Vše"
+  },
+  "popup_dl_running": {
+    "message": "Probíhá"
+  },
+  "popup_dl_done_filter": {
+    "message": "Hotovo"
+  },
+  "popup_dl_failed_filter": {
+    "message": "Chyba"
+  },
+  "popup_dl_clear": {
+    "message": "Vymazat dokončené"
+  },
+  "popup_dl_running_count": {
+    "message": "$count$ se stahuje",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_remote": {
+    "message": "Toto jsou stahování aplikace Mister Download Manager na serveru $server$. Otevřete jejich soubory tam.",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_dl_more": {
+    "message": "Nejnovějších $shown$ z $total$. Mister Download Manager uvádí všechna.",
+    "placeholders": {
+      "shown": {
+        "content": "$1",
+        "example": "60"
+      },
+      "total": {
+        "content": "$2",
+        "example": "245"
+      }
+    }
+  },
+  "popup_dl_of": {
+    "message": "$done$ z $size$",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "12.3 MB"
+      },
+      "size": {
+        "content": "$2",
+        "example": "48.7 MB"
+      }
+    }
+  },
+  "popup_dl_left": {
+    "message": "Zbývá $time$",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "0:42"
+      }
+    }
+  },
+  "popup_dl_starting": {
+    "message": "Spouštění..."
+  },
+  "popup_dl_paused": {
+    "message": "Pozastaveno"
+  },
+  "popup_dl_waiting": {
+    "message": "Čeká"
+  },
+  "popup_dl_done": {
+    "message": "Hotovo"
+  },
+  "popup_dl_just_now": {
+    "message": "právě teď"
+  },
+  "popup_dl_failed": {
+    "message": "Chyba"
+  },
+  "popup_dl_failed_why": {
+    "message": "Chyba: $why$",
+    "placeholders": {
+      "why": {
+        "content": "$1",
+        "example": "the server refused the connection"
+      }
+    }
+  },
+  "popup_dl_gone": {
+    "message": "Soubor byl odstraněn nebo přesunut"
+  },
+  "popup_dl_loading": {
+    "message": "Hledání stahování..."
+  },
+  "popup_dl_none": {
+    "message": "Zatím žádná stahování"
+  },
+  "popup_dl_none_text": {
+    "message": "Zde se zobrazí, co stahujete pomocí Mister Download Manager."
+  },
+  "popup_dl_no_match": {
+    "message": "Nic neodpovídá"
+  },
+  "popup_dl_no_match_text": {
+    "message": "Žádné stahování neobsahuje „$words$“ v názvu ani adrese.",
+    "placeholders": {
+      "words": {
+        "content": "$1",
+        "example": "report"
+      }
+    }
+  },
+  "popup_dl_show_all": {
+    "message": "Zobrazit všechna stahování"
+  },
+  "popup_list_off": {
+    "message": "Mister Download Manager není spuštěný"
+  },
+  "popup_list_off_text": {
+    "message": "Spusťte ho, abyste zde viděli svá stahování."
+  },
+  "popup_list_start": {
+    "message": "Spustit Mister Download Manager"
+  },
+  "popup_list_old": {
+    "message": "Aktualizovat Mister Download Manager"
+  },
+  "popup_list_old_text": {
+    "message": "Tato verze zde zatím nemůže zobrazit svá stahování."
+  },
+  "popup_list_busy": {
+    "message": "Mister Download Manager je zaneprázdněn. Zkouším to znovu..."
+  },
+  "popup_list_unreached": {
+    "message": "Nelze se připojit k Mister Download Manager"
+  },
+  "popup_list_remote_unreachable": {
+    "message": "Nelze se připojit k Mister Download Manager na $server$",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_list_remote_unreachable_text": {
+    "message": "Zkontrolujte, zda je spuštěna a zda tento prohlížeč přijímá její certifikát (Nastavení → Odesílat stahování do → Otevřít ji).",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_act_open": {
+    "message": "Otevřít"
+  },
+  "popup_act_open_named": {
+    "message": "Otevřít $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_folder": {
+    "message": "Zobrazit ve složce"
+  },
+  "popup_act_folder_named": {
+    "message": "Zobrazit $file$ ve složce",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_copy_file": {
+    "message": "Kopírovat soubor"
+  },
+  "popup_act_share": {
+    "message": "Sdílet..."
+  },
+  "popup_act_copy_link": {
+    "message": "Kopírovat odkaz"
+  },
+  "popup_act_pause": {
+    "message": "Pozastavit"
+  },
+  "popup_act_pause_named": {
+    "message": "Pozastavit $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_resume": {
+    "message": "Pokračovat"
+  },
+  "popup_act_resume_named": {
+    "message": "Pokračovat $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_again": {
+    "message": "Stáhnout znovu"
+  },
+  "popup_act_remove": {
+    "message": "Odebrat ze seznamu"
+  },
+  "popup_act_delete": {
+    "message": "Odstranit soubor..."
+  },
+  "popup_act_more": {
+    "message": "Další akce"
+  },
+  "popup_act_more_named": {
+    "message": "Další akce pro $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_title": {
+    "message": "Opravdu chcete odstranit soubor?"
+  },
+  "popup_ask_delete": {
+    "message": "Soubor $file$ bude smazán z počítače a stahování odebráno ze seznamu. Tuto akci nelze vrátit zpět.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_ok": {
+    "message": "Odstranit"
+  },
+  "popup_ask_clear_title": {
+    "message": "Opravdu chcete vymazat dokončená stahování?"
+  },
+  "popup_ask_clear": {
+    "message": "Dokončených $count$ stahování bude odebráno ze seznamu. Jejich soubory zůstanou tam, kde jsou.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "8"
+      }
+    }
+  },
+  "popup_ask_clear_ok": {
+    "message": "Vymazat"
+  },
+  "popup_said_file": {
+    "message": "Soubor $file$ byl zkopírován. Vložte jej do složky, chatu nebo zprávy.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_link": {
+    "message": "Odkaz zkopírován"
+  },
+  "popup_said_removed": {
+    "message": "$file$ odebrán ze seznamu",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_deleted": {
+    "message": "$file$ smazán",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_again": {
+    "message": "Stahování souboru $file$ znovu",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_cleared": {
+    "message": "Dokončená stahování byla vymazána"
+  },
+  "popup_act_gone": {
+    "message": "Toto stahování již není v seznamu."
+  },
+  "popup_act_missing": {
+    "message": "Soubor již není uložen na původním místě (byl přesunut nebo odstraněn)."
+  },
+  "popup_act_running": {
+    "message": "Nejprve ho pozastavte."
+  },
+  "popup_act_cant": {
+    "message": "Tuto akci nelze nyní u tohoto stahování provést."
+  },
+  "popup_act_unsupported": {
+    "message": "Tento systém to nedokáže."
+  },
+  "popup_act_off": {
+    "message": "Mister Download Manager není spuštěný."
+  },
+  "popup_act_busy": {
+    "message": "Mister Download Manager neodpověděl včas. Zkuste to znovu."
+  },
+  "popup_act_failed": {
+    "message": "To se nepodařilo. Zkuste to znovu."
+  },
+  "status_running": {
+    "message": "Stahuje se: $count$",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_open_remote": {
+    "message": "Otevřít jeho stránku"
   }
 }

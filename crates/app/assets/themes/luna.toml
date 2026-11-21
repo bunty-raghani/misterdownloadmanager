@@ -2,7 +2,8 @@
 # feel of its colours and shapes, drawn by MDM (no picture, font or icon of Microsoft's), with an
 # icon set drawn for MDM in that manner.
 # It is also an example of a theme file: seeds for the colours, the roles XP sets apart by hand,
-# XP's controls (shaded buttons with a glow under the pointer, green ticks, progress in blocks),
+# XP's controls (shaded buttons with a glow under the pointer, green ticks, progress in blocks,
+# scroll bars on pale blue buttons, column headers shaded along their bottom, Tahoma menus),
 # a deep blue title bar on Windows and an icon set. XP had no dark mode: the dark side is the
 # same look at night.
 
@@ -15,9 +16,11 @@ field-focus = "border"
 check = "luna"
 button = "luna"
 progress = "blocks"
-scroll = "classic"
+scroll = "luna"
 focus = "dotted"
 caption = "luna"
+header = "luna"
+ui-font = "tahoma"
 
 [sizes]
 # Square text boxes and menus; buttons and progress bars rounded a little.
@@ -29,6 +32,9 @@ radius = 0
 "radius.menu-item" = 0
 "radius.popup" = 0
 "radius.egui" = 0
+# Tahoma 8 points, XP's menu font; the title bar's bold a little larger.
+"font.ui" = 11
+"font.ui.bold" = 12
 
 [seeds.light]
 background = "#ece9d8"
@@ -56,8 +62,8 @@ success = "#6fd36f"
 # XP's buttons: shaded from white at the top, a dark blue edge, an orange glow inside under the
 # pointer and a blue one on the default button; pressed, the face a shade deeper.
 gloss = "#ffffff"
-button = "#d8d2c6"
-"button.hot" = "#d8d2c6"
+button = "#d6d0c5"
+"button.hot" = "#d6d0c5"
 "button.pressed" = "#c4bdaf"
 "button.border" = "#003c74"
 "button.bottom" = "#003c74"
@@ -85,10 +91,16 @@ check = "#ffffff"
 "check.on.disabled" = "#cac8bb"
 "check.mark" = "#21a121"
 # Progress in green blocks, the progress window's bar too.
-"progress.bar" = "#2bb52b"
-"meter.fill" = "#2bb52b"
+"progress.bar" = "#2ed33a"
+"meter.fill" = "#2ed33a"
 "meter.track" = "#ffffff"
 "meter.edge" = "#686868"
+# The progress window's connections: a blue bar, white where nothing has come yet, a magenta line
+# where each connection starts; the table under it on a greyish mauve.
+"segments.done" = "#0000ff"
+"segments.missing" = "#ffffff"
+"segments.start" = "#c000c0"
+"progress.connections" = "#beb4bd"
 # The keyboard focus: Windows' dotted rectangle, black.
 "focus.ring" = "#000000"
 # Menus: a light blue item under the pointer.
@@ -100,31 +112,40 @@ menubar = "#ece9d8"
 "menubar.bottom" = "#ece9d8"
 "menubar.hot" = "#c1d2ee"
 "menubar.open" = "#c1d2ee"
-"menubar.line" = "#d8d2bd"
+"menubar.line" = "#ffffff"
+# The etched line between the menu bar and the toolbar: white, grey, white.
+"toolbar.line" = "#aca899"
+"toolbar.line.light" = "#ffffff"
 # Toolbar buttons: light blue with a blue edge under the pointer.
 "toolbar.hot" = "#c1d2ee"
 "toolbar.hot.faint" = "#dfe8f6"
 "toolbar.hot.edge" = "#316ac5"
 "toolbar.hot.border" = "#316ac5"
 "toolbar.pressed" = "#98b5e2"
-# Scroll bars: a lavender blue thumb, its arrows always shown.
-"scroll.track" = "#f7f6f1"
+# Scroll bars: the arrows and the thumb on pale blue buttons with a light inner edge, dark blue
+# arrows and grip, on a near-white track.
+"scroll.track" = "#fcfcf8"
 "scroll.corner" = "#ece9d8"
-"scroll.thumb" = "#9db6ec"
-"scroll.thumb.hot" = "#7c9de4"
-"scroll.thumb.pressed" = "#5f86d8"
-# Column headers: XP's light beige.
-header = "#f2f1e8"
+"scroll.thumb" = "#c1d3fb"
+"scroll.thumb.hot" = "#d6e3fe"
+"scroll.thumb.pressed" = "#a6bef2"
+"scroll.edge" = "#a4b6dc"
+"scroll.glyph" = "#4d6185"
+# Column headers: XP's beige, its three bottom rows shading to the dividers' colour.
+header = "#ebeadb"
 "header.sep" = "#cbc7b8"
 "header.line" = "#d6d2c2"
-"header.sorted" = "#e8e6da"
-# The title bar: a deep blue, lighter along its top edge; a paler blue while the window isn't
-# the active one. Its buttons a lighter blue, Close red-orange, with a white edge and glyph.
-caption = "#0a54e0"
+"header.sorted" = "#e2e0d0"
+# Lists' and tables' frames: XP's grey.
+"list.frame" = "#96978f"
+# The title bar: a deep blue with a bright rim along its top, lighter again toward its dark
+# bottom edge; a paler blue while the window isn't the active one. Its buttons a lighter blue,
+# Close red-orange, with a white edge and glyph.
+caption = "#0054e3"
 "caption.inactive" = "#7a96df"
 "caption.text" = "#ffffff"
 "caption.text.inactive" = "#d8e4f8"
-"caption.button" = "#2f6ff0"
+"caption.button" = "#2a5ff0"
 "caption.close" = "#e0441c"
 "caption.close.text" = "#ffffff"
 
@@ -158,6 +179,7 @@ check = "#161b26"
 "check.mark" = "#4fc24f"
 "progress.bar" = "#2fae2f"
 "meter.fill" = "#2fae2f"
+"progress.connections" = "#282530"
 "meter.track" = "#161b26"
 "meter.edge" = "#4a5a7c"
 "focus.ring" = "#ffffff"
@@ -180,6 +202,8 @@ menubar = "#1f2533"
 "scroll.thumb" = "#4f6596"
 "scroll.thumb.hot" = "#6079b0"
 "scroll.thumb.pressed" = "#7890c6"
+"scroll.edge" = "#33415f"
+"scroll.glyph" = "#dbe4ff"
 header = "#232a3a"
 "header.sep" = "#3c4558"
 "header.line" = "#2e3648"

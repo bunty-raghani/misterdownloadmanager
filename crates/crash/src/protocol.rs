@@ -17,6 +17,9 @@ pub mod kind {
     pub const CLEAN: u32 = 5;
     /// [`super::AppState`]: what is open and running, sent when it changes.
     pub const STATE: u32 = 6;
+    /// The last lines the app logged (a JSON list of them), kept in its memory: sent with a
+    /// panic or a freeze, for a report made while the disk holds the log file's end (#1354).
+    pub const LOG: u32 = 7;
 }
 
 /// The app and the system it runs on, sent when the session starts.
@@ -64,7 +67,7 @@ pub struct Freeze {
     pub main: bool,
     pub seconds: u64,
     /// How much the window thread ran while the frame went on (None: not measured, by an older
-    /// MDM or on macOS). It tells a loop from a wait from a computer too busy to run MDM.
+    /// MDM). It tells a loop from a wait from a computer too busy to run MDM.
     #[serde(default)]
     pub busy: Option<Busy>,
     /// What the frame was doing when the watchdog saw it stop ("the tray icon"; empty: not
@@ -81,10 +84,14 @@ pub struct Busy {
     pub wall_ms: u64,
     /// The processor time the window thread got in it (user + kernel), in ms.
     pub cpu_ms: u64,
-    /// Page faults in it (Windows: the whole process's, soft ones included; Linux: the window
-    /// thread's from disk). None where unknown.
+    /// Page faults in it (Windows and macOS: the whole process's, soft ones included; Linux: the
+    /// window thread's from disk). None where unknown.
     #[serde(default)]
     pub faults: Option<u64>,
+    /// Page-ins in it: pages of the whole process read from disk, its code or its memory (macOS;
+    /// None elsewhere, or by an older MDM). Many mean the window waited for the disk (#1515).
+    #[serde(default)]
+    pub pageins: Option<u64>,
 }
 
 /// What MDM had open and running (counts only: no addresses or file names).
@@ -136,6 +143,10 @@ pub struct Notes {
     /// A freeze was announced and its dump hasn't arrived yet: every freeze is followed by its
     /// own dump, however long the window took to answer meanwhile (#420).
     pub freeze_dump_due: bool,
+    /// The last lines the app logged, as it sent them with its panic or freeze (empty when it
+    /// sent none; the log file stands for them then).
+    #[serde(default)]
+    pub log: Vec<String>,
 }
 
 impl Notes {
@@ -153,6 +164,7 @@ impl Notes {
             kind::RECOVERED => self.recovered = true,
             kind::CLEAN => self.clean = true,
             kind::STATE => self.state = serde_json::from_slice(body).ok(),
+            kind::LOG => self.log = serde_json::from_slice(body).unwrap_or_default(),
             _ => {}
         }
     }
@@ -213,6 +225,8 @@ mod tests {
             br#"{"message":"boom","location":"a.rs:1:2","thread":"main","backtrace":""}"#,
         );
         assert_eq!(n.dump_kind(), Kind::Panic);
+        n.take(kind::LOG, br#"["a line","the last line"]"#);
+        assert_eq!(n.log, ["a line", "the last line"]);
         // Unknown kinds and broken bodies change nothing.
         n.take(99, b"{}");
         n.take(kind::SESSION, b"not json");

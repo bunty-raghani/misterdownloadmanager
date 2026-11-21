@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
-# Builds the Linux release into target/dist/ (up to 0.2.4, each name ended in "-experimental"):
-#   MisterDownloadManager-<version>-linux-x86_64.AppImage        runs on most distros
-#   MisterDownloadManager-<version>-linux-x86_64.AppImage.zsync  its updates (AppImage tools)
-#   MisterDownloadManager-<version>-linux-x86_64.tar.gz          the plain programs
-#   MisterDownloadManager-<version>-linux-x86_64.deb             Debian, Ubuntu, Mint
-#   MisterDownloadManager-<version>-linux-x86_64.rpm             Fedora, RHEL, openSUSE
+# Builds the Linux release for this machine's processor into target/dist/ (up to 0.2.4, each
+# name ended in "-experimental"), <arch> being x86_64 on a 64-bit Intel or AMD machine and arm64
+# on a 64-bit ARM one:
+#   MisterDownloadManager-<version>-linux-<arch>.AppImage        runs on most distros
+#   MisterDownloadManager-<version>-linux-<arch>.AppImage.zsync  its updates (AppImage tools)
+#   MisterDownloadManager-<version>-linux-<arch>.tar.gz          the plain programs
+#   MisterDownloadManager-<version>-linux-<arch>.deb             Debian, Ubuntu, Mint
+#   MisterDownloadManager-<version>-linux-<arch>.rpm             Fedora, RHEL, openSUSE
 # Update now (crates/tools/src/update.rs), the website (tools/website/build.py) and the docs
 # look for these names, and still for the "-experimental" ones of older releases.
 # Needs: cargo, pwsh (the extension), python3 with Pillow (the icon), dpkg-deb, rpmbuild, network access (appimagetool is fetched),
@@ -17,7 +19,14 @@ dist="$root/target/dist"
 bin="$root/target/release"
 version="$(sed -n 's/^version *= *"\([^"]*\)".*/\1/p' "$root/Cargo.toml" | head -1)"
 [ -n "$version" ] || { echo "no version in Cargo.toml" >&2; exit 1; }
-name="MisterDownloadManager-$version-linux-x86_64"
+# The processor as the files' names say it (arch), and as Debian (deb_arch), RPM and AppImage
+# (pkg_arch) do.
+case "$(uname -m)" in
+  x86_64) arch=x86_64 deb_arch=amd64 pkg_arch=x86_64 ;;
+  aarch64) arch=arm64 deb_arch=arm64 pkg_arch=aarch64 ;;
+  *) echo "no Linux release is built for $(uname -m)" >&2; exit 1 ;;
+esac
+name="MisterDownloadManager-$version-linux-$arch"
 programs=(misterdownloadmanager misterdownloadmanager-nmhost misterdownloadmanager-cli misterdownloadmanager-mcp)
 
 if [ "${1:-}" != "--no-build" ]; then
@@ -43,7 +52,7 @@ for p in "${programs[@]}"; do install -m 755 "$bin/$p" "$tree/usr/bin/$p"; done
 # Crash reports: the release's symbols from the programs' debug info (the -symbols zip), then the
 # programs without it or their symbol table (#25; the build id that matches them to the symbols,
 # and the unwind tables, stay).
-python3 "$root/tools/installer/symbols.py" linux-x86_64 "$version" "$dist" "${programs[@]/#/$bin/}"
+python3 "$root/tools/installer/symbols.py" "linux-$arch" "$version" "$dist" "${programs[@]/#/$bin/}"
 for p in "${programs[@]}"; do strip --strip-all "$tree/usr/bin/$p"; done
 # The oldest glibc the programs run on: the newest GLIBC_x.y symbol version they ask for. The
 # .deb and .rpm require it, so a system too old refuses the package instead of installing
@@ -74,6 +83,7 @@ Terminal=false
 Categories=Network;FileTransfer;
 StartupWMClass=misterdownloadmanager
 MimeType=x-scheme-handler/magnet;application/x-bittorrent;
+Keywords=mdm;idm;download manager;
 EOF
 
 # tar.gz: the programs, the extension and the licence in one folder.
@@ -105,7 +115,7 @@ mkdir -p "$deb/DEBIAN"
 cat > "$deb/DEBIAN/control" <<EOF
 Package: misterdownloadmanager
 Version: $version
-Architecture: amd64
+Architecture: $deb_arch
 Maintainer: Mister Download Manager <https://github.com/anefzaoui/misterdownloadmanager>
 Depends: libc6 (>= $glibc), libgtk-3-0, libgl1, libegl1, libxkbcommon0, libxkbcommon-x11-0, ca-certificates
 Section: net
@@ -151,7 +161,7 @@ $(cd "$system" && find . -mindepth 1 -type d | sed 's|^\.||' | grep -Ev '^/(etc|
 $(cd "$system" && find . -type f | sed 's|^\.||' | sort)
 EOF
 rpmbuild --define "_topdir $rpm" --define "_build_id_links none" -bb "$rpm/SPECS/mdm.spec"
-cp "$rpm"/RPMS/x86_64/*.rpm "$dist/$name.rpm"
+cp "$rpm"/RPMS/$pkg_arch/*.rpm "$dist/$name.rpm"
 
 # AppImage: the same tree as an AppDir.
 appdir="$stage/AppDir"
@@ -159,17 +169,35 @@ cp -r "$tree" "$appdir"
 ln -s usr/bin/misterdownloadmanager "$appdir/AppRun"
 cp "$tree/usr/share/applications/misterdownloadmanager.desktop" "$appdir/"
 cp "$tree/usr/share/icons/hicolor/256x256/apps/misterdownloadmanager.png" "$appdir/"
+# appimagetool and the runtime it puts at the front of every AppImage, each at a fixed release and
+# checked by its sha256: their `continuous` tags move with every upstream commit, so the same MDM
+# tag could otherwise be packaged with a different tool. A new version is a new pair of hashes here
+# (GitHub shows each file's sha256 on its release page).
+appimagetool_tag=1.9.1
+runtime_tag=20251108
+case "$pkg_arch" in
+  x86_64)
+    appimagetool_sha=ed4ce84f0d9caff66f50bcca6ff6f35aae54ce8135408b3fa33abfc3cb384eb0
+    runtime_sha=2fca8b443c92510f1483a883f60061ad09b46b978b2631c807cd873a47ec260d ;;
+  aarch64)
+    appimagetool_sha=f0837e7448a0c1e4e650a93bb3e85802546e60654ef287576f46c71c126a9158
+    runtime_sha=00cbdfcf917cc6c0ff6d3347d59e0ca1f7f45a6df1a428a0d6d8a78664d87444 ;;
+esac
 tool="$stage/appimagetool"
-python3 "$root/tools/installer/fetch_release.py" AppImage/appimagetool continuous appimagetool-x86_64.AppImage "$tool"
+runtime="$stage/runtime"
+python3 "$root/tools/installer/fetch_release.py" AppImage/appimagetool "$appimagetool_tag" \
+  "appimagetool-$pkg_arch.AppImage" "$tool" "$appimagetool_sha"
+python3 "$root/tools/installer/fetch_release.py" AppImage/type2-runtime "$runtime_tag" \
+  "runtime-$pkg_arch" "$runtime" "$runtime_sha"
 chmod +x "$tool"
 # Update information (#24): AppImageLauncher, Gear Lever and AppImageUpdate read it from the
 # AppImage, find the latest release's .zsync and download only the parts that changed. MDM's own
 # Update now doesn't need it. The pattern also matches the names up to 0.2.4, with "-experimental".
-update="gh-releases-zsync|anefzaoui|misterdownloadmanager|latest|MisterDownloadManager-*-linux-x86_64*.AppImage.zsync"
+update="gh-releases-zsync|anefzaoui|misterdownloadmanager|latest|MisterDownloadManager-*-linux-$arch*.AppImage.zsync"
 # No FUSE on CI runners: the tool runs from its own extracted copy.
 # zstd at its strongest level (#25; unpacking is as fast): the tool's 128K blocks stay, as 1M
 # blocks make the AppImage start slower (AppImage/appimagetool#64).
-APPIMAGE_EXTRACT_AND_RUN=1 ARCH=x86_64 "$tool" -u "$update" \
+APPIMAGE_EXTRACT_AND_RUN=1 ARCH=$pkg_arch "$tool" -u "$update" --runtime-file "$runtime" \
   --mksquashfs-opt -Xcompression-level --mksquashfs-opt 22 "$appdir" "$dist/$name.AppImage"
 # appimagetool writes the .zsync itself (beside the AppImage, or in the current folder); with
 # one that doesn't, zsyncmake makes it.

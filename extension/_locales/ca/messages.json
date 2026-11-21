@@ -92,9 +92,6 @@
       }
     }
   },
-  "popup_undo": {
-    "message": "Desfés"
-  },
   "popup_excluded": {
     "message": "Les baixades de $site$ es queden al navegador",
     "placeholders": {
@@ -148,6 +145,9 @@
   },
   "declined_integration_off": {
     "message": "L'opció «Utilitza la integració avançada del navegador» està desactivada a Opcions → General."
+  },
+  "declined_torrents": {
+    "message": "És un torrent, i l’opció «Obre enllaços magnet i fitxers .torrent amb Mister Download Manager» està desactivada a la configuració de torrents."
   },
   "declined_site_access": {
     "message": "L'extensió no té permís per llegir aquest lloc (accés al lloc del navegador)."
@@ -328,5 +328,424 @@
   },
   "video_original": {
     "message": "original"
+  },
+  "video_compatible": {
+    "message": "Més compatible"
+  },
+  "popup_video_hide_fullscreen": {
+    "message": "Amaga el botó de baixada en pantalla completa"
+  },
+  "popup_video_hide_fullscreen_title": {
+    "message": "Mentre la pàgina estigui en pantalla completa, els seus vídeos no mostraran el botó Baixa el vídeo"
+  },
+  "popup_remote_forget": {
+    "message": "Oblida"
+  },
+  "popup_gear": {
+    "message": "Opcions a Mister Download Manager"
+  },
+  "popup_tabs": {
+    "message": "Seccions de la finestra emergent"
+  },
+  "popup_tab_downloads": {
+    "message": "Baixades"
+  },
+  "popup_tab_page": {
+    "message": "Aquesta pàgina"
+  },
+  "popup_tab_settings": {
+    "message": "Configuració"
+  },
+  "popup_conn": {
+    "message": "Connectat · $version$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.5.2"
+      }
+    }
+  },
+  "popup_conn_plain": {
+    "message": "Connectat"
+  },
+  "popup_conn_off": {
+    "message": "No connectat"
+  },
+  "popup_conn_paused": {
+    "message": "En pausa"
+  },
+  "popup_conn_update": {
+    "message": "Actualitza Mister Download Manager"
+  },
+  "popup_conn_remote": {
+    "message": "S'està enviant a $server$",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_cancel": {
+    "message": "Cancel·la"
+  },
+  "popup_page_none": {
+    "message": "Això no és una pàgina web: no hi ha res a fer aquí."
+  },
+  "popup_exclude_by_rule": {
+    "message": "El navegador l'ha deixat per una regla a Opcions"
+  },
+  "popup_dl_search": {
+    "message": "Cerca baixades"
+  },
+  "popup_dl_filters": {
+    "message": "Mostra"
+  },
+  "popup_dl_all": {
+    "message": "Totes"
+  },
+  "popup_dl_running": {
+    "message": "En curs"
+  },
+  "popup_dl_done_filter": {
+    "message": "Completada"
+  },
+  "popup_dl_failed_filter": {
+    "message": "Ha fallat"
+  },
+  "popup_dl_clear": {
+    "message": "Neteja les baixades completades"
+  },
+  "popup_dl_running_count": {
+    "message": "$count$ baixant ara",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_remote": {
+    "message": "Aquestes són les baixades de Mister Download Manager a $server$. Obre els fitxers allà.",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_dl_more": {
+    "message": "Les $shown$ més recents de $total$. Mister Download Manager les llista totes.",
+    "placeholders": {
+      "shown": {
+        "content": "$1",
+        "example": "60"
+      },
+      "total": {
+        "content": "$2",
+        "example": "245"
+      }
+    }
+  },
+  "popup_dl_of": {
+    "message": "$done$ de $size$",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "12.3 MB"
+      },
+      "size": {
+        "content": "$2",
+        "example": "48.7 MB"
+      }
+    }
+  },
+  "popup_dl_left": {
+    "message": "$time$ restant",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "0:42"
+      }
+    }
+  },
+  "popup_dl_starting": {
+    "message": "S'està iniciant..."
+  },
+  "popup_dl_paused": {
+    "message": "En pausa"
+  },
+  "popup_dl_waiting": {
+    "message": "En espera"
+  },
+  "popup_dl_done": {
+    "message": "Completada"
+  },
+  "popup_dl_just_now": {
+    "message": "ara mateix"
+  },
+  "popup_dl_failed": {
+    "message": "Ha fallat"
+  },
+  "popup_dl_failed_why": {
+    "message": "Ha fallat: $why$",
+    "placeholders": {
+      "why": {
+        "content": "$1",
+        "example": "the server refused the connection"
+      }
+    }
+  },
+  "popup_dl_gone": {
+    "message": "El fitxer s'ha suprimit o s'ha mogut"
+  },
+  "popup_dl_loading": {
+    "message": "S'estan cercant baixades..."
+  },
+  "popup_dl_none": {
+    "message": "Encara no hi ha baixades"
+  },
+  "popup_dl_none_text": {
+    "message": "El que baixis amb Mister Download Manager apareixerà aquí."
+  },
+  "popup_dl_no_match": {
+    "message": "No hi ha coincidències"
+  },
+  "popup_dl_no_match_text": {
+    "message": "Cap nom o adreça de baixada conté «$words$».",
+    "placeholders": {
+      "words": {
+        "content": "$1",
+        "example": "report"
+      }
+    }
+  },
+  "popup_dl_show_all": {
+    "message": "Mostra totes les baixades"
+  },
+  "popup_list_off": {
+    "message": "Mister Download Manager no s'està executant"
+  },
+  "popup_list_off_text": {
+    "message": "Inicia-la per veure les baixades aquí."
+  },
+  "popup_list_start": {
+    "message": "Inicia Mister Download Manager"
+  },
+  "popup_list_old": {
+    "message": "Actualitza Mister Download Manager"
+  },
+  "popup_list_old_text": {
+    "message": "Aquesta versió encara no pot llistar les seves baixades aquí."
+  },
+  "popup_list_busy": {
+    "message": "Mister Download Manager està ocupat. S'està provant de nou..."
+  },
+  "popup_list_unreached": {
+    "message": "No es pot contactar amb Mister Download Manager"
+  },
+  "popup_list_remote_unreachable": {
+    "message": "No es pot connectar amb Mister Download Manager a $server$",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_list_remote_unreachable_text": {
+    "message": "Comprova que s’està executant i que aquest navegador accepta el seu certificat (Configuració → Envia baixades a → Obre’l).",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_act_open": {
+    "message": "Obre"
+  },
+  "popup_act_open_named": {
+    "message": "Obre $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_folder": {
+    "message": "Mostra a la carpeta"
+  },
+  "popup_act_folder_named": {
+    "message": "Mostra $file$ a la carpeta",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_copy_file": {
+    "message": "Copia el fitxer"
+  },
+  "popup_act_share": {
+    "message": "Comparteix..."
+  },
+  "popup_act_copy_link": {
+    "message": "Copia l'enllaç"
+  },
+  "popup_act_pause": {
+    "message": "Posa en pausa"
+  },
+  "popup_act_pause_named": {
+    "message": "Posa en pausa $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_resume": {
+    "message": "Reprèn"
+  },
+  "popup_act_resume_named": {
+    "message": "Reprèn $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_again": {
+    "message": "Baixa de nou"
+  },
+  "popup_act_remove": {
+    "message": "Elimina de la llista"
+  },
+  "popup_act_delete": {
+    "message": "Suprimeix el fitxer..."
+  },
+  "popup_act_more": {
+    "message": "Més accions"
+  },
+  "popup_act_more_named": {
+    "message": "Més accions per a $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_title": {
+    "message": "Vols suprimir el fitxer?"
+  },
+  "popup_ask_delete": {
+    "message": "$file$ se suprimirà de l'ordinador i la baixada s'eliminarà de la llista. Això no es pot desfer.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_ok": {
+    "message": "Suprimeix"
+  },
+  "popup_ask_clear_title": {
+    "message": "Vols netejar les baixades completades?"
+  },
+  "popup_ask_clear": {
+    "message": "Les $count$ baixades completades s'eliminaran de la llista. Els seus fitxers es mantindran on són.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "8"
+      }
+    }
+  },
+  "popup_ask_clear_ok": {
+    "message": "Neteja"
+  },
+  "popup_said_file": {
+    "message": "S'ha copiat $file$. Enganxa'l en una carpeta, un xat o un missatge.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_link": {
+    "message": "Enllaç copiat"
+  },
+  "popup_said_removed": {
+    "message": "$file$ eliminat de la llista",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_deleted": {
+    "message": "$file$ suprimit",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_again": {
+    "message": "S'està baixant $file$ de nou",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_cleared": {
+    "message": "Baixades completades netejades"
+  },
+  "popup_act_gone": {
+    "message": "Aquesta baixada ja no és a la llista."
+  },
+  "popup_act_missing": {
+    "message": "El fitxer ja no és on s'havia desat (s'ha mogut o s'ha suprimit)."
+  },
+  "popup_act_running": {
+    "message": "Posa-ho en pausa primer."
+  },
+  "popup_act_cant": {
+    "message": "Ara no es pot fer això amb aquesta baixada."
+  },
+  "popup_act_unsupported": {
+    "message": "Aquest sistema no pot fer això."
+  },
+  "popup_act_off": {
+    "message": "Mister Download Manager no s'està executant."
+  },
+  "popup_act_busy": {
+    "message": "Mister Download Manager no ha respost a temps. Torna-ho a provar."
+  },
+  "popup_act_failed": {
+    "message": "No ha funcionat. Torna-ho a provar."
+  },
+  "status_running": {
+    "message": "S'estan baixant: $count$",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_open_remote": {
+    "message": "Obre la seva pàgina"
   }
 }

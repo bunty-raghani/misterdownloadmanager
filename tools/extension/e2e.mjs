@@ -16,15 +16,28 @@
 // The cases (per browser): folders (another extension's download in a folder of its own keeps
 // it, #578), link (a .zip link, throttled and not), ask (Firefox set to ask what to
 // do with each new type, as Waterfox is: caught before its dialog, #208), cookie (cookies and referrer
-// forwarded), names (Content-Disposition), redirect, leadon (a page going to the file by script, #374), form (POST, 303), alt (Alt+click leaves it
-// to the browser: a link, a redirect, a page's script; Firefox's own default too, #332), sites (a listed
-// site's page linking to a file on another host leaves it to the browser, #1049), opened (a PDF or MP3 the browser would show or play), spot (the video button
+// forwarded), startedfrom (the page a download was started from goes whole, where its Referer is
+// the site's address only; kept with the download for Refresh download address, #607), names
+// (Content-Disposition), torrents (a tracker's .torrent stays with the browser
+// while Torrent settings leave torrents alone, #1058), redirect, redirectNames (a link that only redirects to its file, named by
+// the file's own answer: filename*, a percent-encoded filename, relative and two redirects, #1427), leadon (a page going to the file by script, #374), form (POST, 303), alt (Alt+click leaves it
+// to the browser: a link, a redirect, a page's script, a bot check's page that runs its script first,
+// #1494; Firefox's own default too, #332), sites (a listed
+// site's page linking to a file on another host leaves it to the browser, #1049), manylinks
+// (Download all links on a page of 20,000 long links, in parts, to one Link grabber list), opened
+// (a PDF or MP3 the browser would show or play), openedNames
+// (such a video under its server's name, inline or an attachment, #948), pdfs (a PDF a page shows: at a signed address, typed
+// binary/octet-stream, behind a redirect, in a frame, an embed, an object; one the page's script fetches stays the page's;
+// #1087), spot (the video button
 // clear of the page's controls, #421), feeds (a video in a feed sends its post, its own file, or
 // nothing and says so, never the feed: sample pages served at LinkedIn's, Facebook's, X's,
 // Instagram's, Reddit's, TikTok's, Vimeo's, Dailymotion's addresses, #689), preview (the video button kept over a hover-to-play
-// preview the page stopped as the pointer went to it, #503), steady (the video button keeping one place over
+// preview the page stopped as the pointer went to it, #503), ytpreview (the same over YouTube's own
+// preview, a click sending the preview's video, not the one its main player watched last, #1271), steady (the video button keeping one place over
 // a preview that grows and shows its own buttons while hovered, #560), player (one place over a
-// player whose settings button comes and goes as the pointer moves, #899), csp (the video button
+// player whose settings button comes and goes as the pointer moves, #899), bilibili (one free
+// corner over Bilibili's player, clear of its feedback button under the button's end, kept as the
+// pointer reaches it and the player hides its bars, #1582), csp (the video button
 // under a strict CSP), hls (the stream a player loaded), streams (HLS and DASH players handed over
 // by the button, the right-click menu and the media list, and read by yt-dlp; #155; also with no
 // .m3u8 or .mpd, served as text/plain or octet-stream, #171), sniffed (#171 without yt-dlp: such
@@ -33,19 +46,22 @@
 // scripted (a video a server's program sends, named after its page with its real type: the list,
 // the button, the Download video window; #695, #800), guarded (a stream another site's server
 // serves to its page's player only: looked up and downloaded with the Origin and Referer the
-// browser sent, #900),
+// browser sent, #900), played (a feed whose page names no video: the file and the stream the tab
+// played for each video, found by its length, downloaded by MDM; never the next video, #1092),
 // qualities (the button's menu: a stream's qualities looked up by MDM, with their sizes; the one
 // picked downloads with its progress window only, MDM's main window hidden), page (the menu on a
 // real video page, E2E_VIDEO_PAGE, and the line E2E_VIDEO_PICK downloaded: off by default), video (shown,
 // clicked, dragged, kept; "never on the site" in the last browser; the button's clicks go through
 // its menu's "Open in…" to the Download video window, as in csp, hls, streams, sniffed and
-// inplace), panelOptions (the button follows Options in an open tab: off, on, the site listed;
-// #532), videoFocus (mouse idle/fullscreen and keyboard focus, #480), fullscreen (one
+// inplace), panelOptions (the button follows Options in an open tab: off, on, its size, the site
+// listed; #532, #1278), videoFocus (mouse idle/fullscreen and keyboard focus, #480), fullscreen (one
 // button over a video in full screen, the page's or the player's, and after the extension was
 // updated while it showed, #336), reconnect (a tab opened while
 // the host couldn't start gets the button once it can, no reload; then MDM started by a click, and
 // reached after it quits and starts again, #474), start (MDM not running: the host starts it),
-// exclude (the toolbar button's "Never take downloads from <site>" says it worked, with Undo, #404),
+// exclude (the toolbar button's "Never take downloads from <site>" says it worked, and is switched
+// off again, #404), recent (the popup's Downloads tab: MDM's downloads with their icons, states and
+// actions, the toolbar button's count, #1496),
 // remote (Send downloads to → Another MDM, #157: paired from the popup, a link downloaded by a
 // headless MDM; E2E_REMOTE_URL for one running elsewhere, such as the Docker image: remoteServer).
 //
@@ -54,7 +70,8 @@
 // case saves <lang>-looking.png, <lang>-video-tab.png and <lang>-audio-tab.png there (the player and
 // the menu), before the pick, and the `scripted` case <lang>-media-list.png (the popup's list) and
 // <lang>-video-window.png. Neither changes anything when unset. E2E_APP_LANG sets MDM's own language
-// (the words it sends the menu).
+// (the words it sends the menu). E2E_COLOR_SCHEME=light|dark shows the pages (the video button with
+// them) and the popup in those colours.
 //
 // Windows: the host is registered for the current user while it runs (nmhost --register, as the
 // installer does) and unregistered at the end. Every registry key that touches (the browsers'
@@ -272,6 +289,18 @@ const MORE_AT = `function () {
   const r = m && m.getBoundingClientRect();
   return JSON.stringify(r && r.width ? { x: r.left + r.width / 2, y: r.top + r.height / 2 } : null);
 }`;
+// The look-ups the browser's button asked of the test instance so far (the host logs each), with
+// when: [ms since the epoch].
+function lookupsLogged() {
+  let text = "";
+  try {
+    text = fs.readFileSync(path.join(data, "logs", "mdm.log"), "utf8");
+  } catch {
+    return [];
+  }
+  return [...text.matchAll(/^(\S+)\s+INFO nmhost .*looked up the qualities of a video/gm)].map((m) => Date.parse(m[1].replace(/(\.\d{3})\d*Z$/, "$1Z")));
+}
+
 // A click on the button's arrow, as a person makes it: the pointer onto it first, a moment (the tab
 // shows its grip as the pointer comes, and keeps its end where it was), then the click where the
 // arrow is now.
@@ -380,6 +409,10 @@ async function chromium(bin, profile, dl, page, ready) {
     const { targetId } = await cdp.send("Target.createTarget", { url: "about:blank" });
     const { sessionId } = await cdp.send("Target.attachToTarget", { targetId, flatten: true });
     await cdp.send("Page.enable", {}, sessionId);
+    // E2E_COLOR_SCHEME (light or dark): the page in those colours, and the video button with it.
+    if (process.env.E2E_COLOR_SCHEME) {
+      await cdp.send("Emulation.setEmulatedMedia", { features: [{ name: "prefers-color-scheme", value: process.env.E2E_COLOR_SCHEME }] }, sessionId);
+    }
     const evaluate = async (expression) => {
       const r = await cdp.send("Runtime.evaluate", { expression, userGesture: true, awaitPromise: true, returnByValue: true }, sessionId);
       if (r.exceptionDetails) throw new Error(`evaluate: ${r.exceptionDetails.text} ${expression}`);
@@ -471,7 +504,10 @@ async function chromium(bin, profile, dl, page, ready) {
         const { data } = await cdp.send("Page.captureScreenshot", { format: "png", clip }, s);
         fs.writeFileSync(file, Buffer.from(data, "base64"));
       };
-      return { evaluate: ev, shot, close: () => cdp.send("Target.closeTarget", { targetId: tid }).catch(() => {}) };
+      // Its viewport as the popup's (#1496): what the popup lays out in, and where a dialog opens;
+      // at twice the pixels, as the pictures are taken (the file icons asked for that size).
+      const viewport = (width, height) => cdp.send("Emulation.setDeviceMetricsOverride", { width, height, deviceScaleFactor: 2, mobile: false }, s);
+      return { evaluate: ev, shot, viewport, close: () => cdp.send("Target.closeTarget", { targetId: tid }).catch(() => {}) };
     };
     // The tab's requests to `hosts` (http and https) answered here, never by the network:
     // `respond(url)` gives { status, type, body }, or null for the network's own answer.
@@ -1552,6 +1588,23 @@ const PANEL_KEPT_MS = 5000 + 1500;
 // Options → General → Download panels, changed as its OK does: the settings saved in
 // downloads.json, which the host reads at each question. Changed with the app stopped, so its own
 // next save doesn't put them back.
+// The extension holding Options' excluded sites with localhost in them or not (it asks them
+// again as its popup opens; else only a minute after it last did, at a download): Chromium's rule
+// for the files the browser would open follows them.
+async function localhostListed(t, listed) {
+  const popup = await t.session.tab(`${t.session.base}popup.html`);
+  try {
+    await until(`the extension's excluded sites ${listed ? "with" : "without"} localhost`, 10000, () =>
+      popup
+        .evaluate(`(globalThis.browser ?? chrome).storage.local.get({ rules: null }).then((v) => Boolean(v.rules) && (v.rules.excludedSites || "").split(/\\s+/).includes("localhost") === ${listed})`)
+        .catch(() => false),
+    );
+    await sleep(300);
+  } finally {
+    await popup.close();
+  }
+}
+
 async function panelSettings(change) {
   await stopApp();
   const file = path.join(data, "downloads.json");
@@ -1561,8 +1614,16 @@ async function panelSettings(change) {
   await startApp();
 }
 
+// Whether the button's pill is its round form (`compact`: the logo, the arrow, the ✕), and its width.
+const PILL_COMPACT = `function () {
+  const p = this.querySelector ? this.querySelector(".pill") : null;
+  return p ? JSON.stringify({ compact: p.classList.contains("compact"), w: p.getBoundingClientRect().width }) : null;
+}`;
+
 // #532: the button follows Options in a tab already open (no reload: YouTube never reloads),
-// switched off, on again, and off on the site; and after a reload.
+// switched off, on again, and off on the site; and after a reload. #1278: Button size Compact
+// makes it the round button over a large video in the open tab, Full puts its words back.
+// E2E_SHOTS (Chromium): <lang>-<scheme>-button-full.png and -button-compact.png, the video with it.
 async function videoButtonFollowsOptions(session) {
   const page = `${LAB}/page?video=${encodeURIComponent("/gen/1M/clip.mp4")}`;
   await session.navigate(page);
@@ -1586,13 +1647,46 @@ async function videoButtonFollowsOptions(session) {
     await away();
     if (!(await hover(session, v))) throw new Error("switched on again: no button in the open tab");
     done.push("on again: back in the open tab");
+    // #1278: Button size. Full: its words over this 640 px video; Compact: the round button.
+    const shots = process.env.E2E_SHOTS && session.shot ? path.resolve(process.env.E2E_SHOTS) : "";
+    const tag = `${process.env.E2E_LANG || "en"}-${process.env.E2E_COLOR_SCHEME || "system"}`;
+    const size = async (want) => {
+      // Over the video until the button's form is the one wanted (the page asks the app again
+      // when its answer is older than 5 s).
+      return until(`the button ${want ? "compact" : "full"}`, 15000, async () => {
+        await hover(session, v);
+        const p = await session.pill(PILL_COMPACT);
+        return p && p.compact === want ? p : null;
+      });
+    };
+    const shoot = async (name) => {
+      if (!shots) return;
+      await sleep(400);
+      await session.shot(path.join(shots, `${tag}-button-${name}.png`), { l: v.l - 16, t: v.t - 16, r: v.r + 16, b: Math.min(v.b, v.t + 140) + 16 });
+    };
+    const full = await size(false);
+    await shoot("full");
+    await panelSettings({ video_panel_compact: true });
+    await away();
+    const small = await size(true);
+    if (!(small.w < full.w)) throw new Error(`Compact: the round button (${small.w} px) is no smaller than the full one (${full.w} px)`);
+    await shoot("compact");
+    done.push(`Compact: the round button in the open tab (${Math.round(small.w)} px, Full ${Math.round(full.w)} px)`);
+    await session.mouse(5, 5);
+    await session.navigate(page);
+    await size(true);
+    done.push("and after a reload");
+    await panelSettings({ video_panel_compact: false });
+    await away();
+    await size(false);
+    done.push("Full again: its words back in the open tab");
     await panelSettings({ video_panel_sites: "127.0.0.1" });
     await away();
     if (await hover(session, v)) throw new Error("the site listed in Options: the button still shows in the open tab");
     done.push("the site listed: gone in the open tab");
   } finally {
     await session.mouse(5, 5);
-    await panelSettings({ video_panel: true, video_panel_sites: "" });
+    await panelSettings({ video_panel: true, video_panel_sites: "", video_panel_compact: false });
   }
   return done.join("; ");
 }
@@ -1768,7 +1862,8 @@ async function proxyInChromium(t) {
     return seen;
   };
   const fixed = { mode: "fixed_servers", rules: { singleProxy: { scheme: "http", host: "127.0.0.1", port: PROXY_PORT } } };
-  const popup = await s.tab(`${s.base}popup.html`);
+  // Its switches are on the Settings tab (#1496).
+  const popup = await s.tab(`${s.base}popup.html?tab=settings`);
   try {
     await setProxy(fixed);
     await until("the popup", 10000, () =>
@@ -1872,7 +1967,8 @@ const CASES = {
     await pref("network.proxy.http", "127.0.0.1");
     await pref("network.proxy.http_port", PROXY_PORT);
     await pref("network.proxy.type", 1);
-    const popupUrl = `${s.base}popup.html`;
+    // Its switches are on the Settings tab (#1496), where a click lands on them.
+    const popupUrl = `${s.base}popup.html?tab=settings`;
     const granted = async (popup) => popup.evaluate("browser.permissions.contains({ permissions: ['proxy'] })");
     // One file through the lab's host: how many of its requests went through the proxy (the
     // browser's own first; MDM's when it got the proxy) after `wait` ms.
@@ -2038,6 +2134,30 @@ const CASES = {
     return `${mdm.length} request(s) with sid=1, the page as referrer, the browser's User-Agent`;
   },
 
+  // #607: a page whose referrer policy is `origin` (as a link to another site's file gets by
+  // default; the lab stays on 127.0.0.1, which IDM may be told to leave alone): the browser sends
+  // only the page's site as the Referer, the extension the page itself, which MDM keeps with the
+  // download (its list on disk): Refresh download address opens it.
+  async startedfrom(t) {
+    const file = `e2e-from-${t.name}.zip`;
+    const page = `${LAB}/page?referrer=origin&link=${encodeURIComponent(`/gen/1M/${file}`)}`;
+    await t.session.navigate(page);
+    await t.session.evaluate("document.getElementById('link').click()");
+    await arrived(file, 1 << 20);
+    await keptNothing(t.dl);
+    const saved = await until(`${file} saved with its page`, 20000, () => {
+      try {
+        const list = JSON.parse(fs.readFileSync(path.join(data, "downloads.json"), "utf8").replace(/^\uFEFF/, ""));
+        return (list.items || []).find((i) => String(i.dest || "").endsWith(file) && i.page) || null;
+      } catch {
+        return null;
+      }
+    });
+    if (saved.page !== page) throw new Error(`saved with the page ${saved.page}, not ${page}`);
+    if (saved.referer !== `${LAB}/`) throw new Error(`its Referer is ${saved.referer}, not the site's address ${LAB}/`);
+    return `the page ${saved.page} kept with it, its Referer ${saved.referer}`;
+  },
+
   // Names from Content-Disposition: filename= and filename*= (UTF-8).
   async names(t) {
     const plain = `e2e-report-${t.name}.zip`;
@@ -2058,6 +2178,97 @@ const CASES = {
     return `${plain}, ${star}, ${raw}`;
   },
 
+  // #1058: a .torrent from a tracker's download.php (named by Content-Disposition, sent as
+  // application/x-bittorrent) stays with the browser while Torrent settings' "Open magnet links
+  // and .torrent files with Mister Download Manager" is off, as by default, though TORRENT is in
+  // File types (it is in this run's list); with it on, MDM takes it (its Add torrent fetches it)
+  // and the browser keeps nothing.
+  async torrents(t) {
+    const p = `/gen/16K/tracker-${t.name}/download.php`;
+    const link = (name) => `${p}?id=42&cd=${encodeURIComponent(name)}&type=${encodeURIComponent("application/x-bittorrent")}`;
+    const off = `e2e-show-${t.name}.torrent`;
+    await clickLink(t, link(off));
+    const at = path.join(t.dl, off);
+    try {
+      await until(`${off} in the browser's folder`, 20000, () => fs.existsSync(at) && fs.statSync(at).size === 16 << 10);
+    } catch (e) {
+      e.message += ` (requests: ${(await requests(p)).map(brief).join("; ") || "none"}; the browser's folder: ${fs.readdirSync(t.dl).join(", ") || "empty"})`;
+      throw e;
+    }
+    await sleep(2000);
+    const asked = await requests(p);
+    if (asked.length !== 1) throw new Error(`off: ${asked.length} requests (only the browser's expected): ${asked.map(brief).join("; ")}`);
+    if ((await mdmList()).some((d) => d.file === off)) throw new Error("off: MDM took it too");
+    if (WIN && appWindows(appPid()).includes("Add torrent")) throw new Error("off: Add torrent opened");
+    // MDM's log says why (the host's line, or the extension's notice it wrote down).
+    const logged = () => {
+      const file = path.join(data, "logs", "mdm.log");
+      const log = fs.existsSync(file) ? fs.readFileSync(file, "utf8") : "";
+      return log.split(/\r?\n/).find((l) => l.includes(off) && l.includes("Torrent settings"));
+    };
+    const why = await until("MDM's log line for it", 10000, logged).catch(() => {
+      throw new Error("off: MDM's log doesn't say why it stayed with the browser");
+    });
+    fs.rmSync(at);
+    // E2E_SHOTS (Chromium): <lang>-<scheme>-torrent-left.png, the popup saying why.
+    const shots = process.env.E2E_SHOTS ? path.resolve(process.env.E2E_SHOTS) : "";
+    const tag = `${process.env.E2E_LANG || "en"}-${process.env.E2E_COLOR_SCHEME || "system"}`;
+    if (shots && t.session.tab) {
+      // The reason is on the popup's This page tab (#1496).
+      const popup = await t.session.tab(`${t.session.base}popup.html?tab=page`);
+      try {
+        const said = await until("the popup's reason", 10000, () =>
+          popup.evaluate(`(() => { const b = document.getElementById("declined"); return b && !b.hidden && document.getElementById("declined-why").textContent; })()`).catch(() => ""),
+        );
+        await sleep(500);
+        await popup.shot(path.join(shots, `${tag}-torrent-left.png`));
+        if (!said) throw new Error("the popup gives no reason");
+      } finally {
+        await popup.close();
+      }
+    }
+    // On: the extension learns it at its next question for the rules (Chromium: asked now;
+    // Firefox: once its copy is a minute old).
+    await panelSettings({ torrent_handler: true });
+    try {
+      if (t.session.inExtension) await t.session.inExtension("refreshRules().then(() => true)");
+      else {
+        await sleep(61000);
+        const primer = `e2e-primer-${t.name}.torrent`;
+        await clickLink(t, link(primer));
+        await until(`${primer} in the browser's folder`, 20000, () => fs.existsSync(path.join(t.dl, primer)));
+        await sleep(2000);
+        fs.rmSync(path.join(t.dl, primer), { force: true });
+      }
+      await clearLog();
+      const on = `e2e-show-on-${t.name}.torrent`;
+      await clickLink(t, link(on));
+      // Add torrent fetches it with the browser's request (MDM's own request after the browser's).
+      // The app started again with the setting (panelSettings): its process now.
+      const pid = WIN ? appPid() : 0;
+      await until("MDM's request for it", 20000, async () => (await requests(p)).length >= 2);
+      if (WIN) {
+        await until("Add torrent", 15000, () => appWindows(pid).includes("Add torrent")).catch((e) => {
+          e.message += ` (its windows: ${JSON.stringify(appWindows(pid))})`;
+          throw e;
+        });
+        // E2E_SHOTS: <lang>-<scheme>-torrent-taken.png, Add torrent as the browser's .torrent
+        // opens it (what the setting off did too, before #1058).
+        if (shots) {
+          await sleep(3000);
+          const cap = path.join(root, "tools", "lab", "cap-own.ps1");
+          spawnSync("powershell", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", cap, "-ProcessId", String(pid), "-Title", "Add torrent", "-Out", path.join(shots, `${tag}-torrent-taken.png`)], { stdio: "ignore" });
+        }
+        appWindows(pid, "Add torrent");
+        await until("Add torrent closed", 5000, () => !appWindows(pid).includes("Add torrent"));
+      }
+      await keptNothing(t.dl);
+    } finally {
+      await panelSettings({ torrent_handler: false });
+    }
+    return `off: the browser kept ${off}, MDM's log says why (${why.split(": ").slice(-1)[0].slice(0, 60)}...); on: Add torrent fetched it, the browser kept nothing`;
+  },
+
   // A redirect: MDM keeps the address clicked (it asks it again to renew the link).
   async redirect(t) {
     const file = `e2e-r-${t.name}.zip`;
@@ -2068,6 +2279,47 @@ const CASES = {
     await mdmRequests(`/gen/2M/${file}`);
     await keptNothing(t.dl);
     return "the address clicked kept, the file from its target";
+  },
+
+  // #1427: a link that only redirects (302) to its file, whose own answer alone names it: MDM
+  // saves it under the name the browser gives it (filename* or a percent-encoded filename),
+  // through a relative Location and two redirects too, never the first address's name.
+  async redirectNames(t) {
+    const enc = encodeURIComponent;
+    const star = (n) => `attachment; filename="fallback.bin"; filename*=UTF-8''${enc(n)}`;
+    const cases = [
+      ["both", `e2e Report – both ${t.name}.zip`, star, (f) => `/redirect?to=${enc(`/${f}`)}`],
+      ["star only", `e2e Report – star ${t.name}.zip`, (n) => `attachment; filename*=UTF-8''${enc(n)}`, (f) => `/redirect?to=${enc(`/${f}`)}`],
+      ["plain %20", `e2e Report plain ${t.name}.zip`, (n) => `attachment; filename="${n.replaceAll(" ", "%20")}"`, (f) => `/redirect?to=${enc(`/${f}`)}`],
+      ["relative", `e2e Report – relative ${t.name}.zip`, star, (f) => `/redirect?to=${enc(f)}`],
+      ["two", `e2e Report – two ${t.name}.zip`, star, (f) => `/redirect?to=${enc(`/redirect?to=${enc(`/${f}`)}`)}`],
+      ["pdf", `e2e Report – pdf ${t.name}.pdf`, star, (f) => `/redirect?to=${enc(`/${f}`)}`],
+      // Files the browser would show or play, named inline (#948's rule makes them downloads).
+      ["pdf inline", `e2e Report – inline ${t.name}.pdf`, (n) => `inline; filename*=UTF-8''${enc(n)}`, (f) => `/redirect?to=${enc(`/${f}&type=application%2Fpdf`)}`],
+      ["mp4 inline %20", `e2e Clip inline ${t.name}.mp4`, (n) => `inline; filename="${n.replaceAll(" ", "%20")}"`, (f) => `/redirect?to=${enc(`/${f}&type=video%2Fmp4`)}`],
+    ];
+    const folder = (n) => (n.endsWith(".pdf") ? "Documents" : n.endsWith(".mp4") ? "Video" : "Compressed");
+    const done = [];
+    for (const [label, name, cd, link] of cases) {
+      // As in `opened`: IDM, when it runs, takes a PDF or a video the browser would show.
+      if (idmRunning && label.includes("inline")) {
+        done.push(`${label} (left out: IDM runs and takes it)`);
+        continue;
+      }
+      const file = `gen/1M/download?seed=${done.length + 41}&cdraw=${enc(cd(name))}`;
+      await clickLink(t, link(file));
+      try {
+        await arrived(name, 1 << 20, folder(name));
+      } catch (e) {
+        const tab = await t.session.evaluate("[location.href, document.contentType]").catch((x) => x.message);
+        const log = (await requests("/gen/1M/download")).slice(-3).map(brief).join("; ");
+        e.message = `${label}: ${e.message} [the tab: ${JSON.stringify(tab)}; the file's last requests: ${log}; the browser's folder: ${fs.readdirSync(t.dl).join(", ") || "empty"}]`;
+        throw e;
+      }
+      await keptNothing(t.dl);
+      done.push(label);
+    }
+    return `named by the file's own answer: ${done.join(", ")}`;
   },
 
   // A page that goes to the file by script (#374): MDM gets the file's address, not the page's.
@@ -2106,14 +2358,17 @@ const CASES = {
     return `posted again with token=abc (${posts.length} request(s)); 303: ${seen.map((e) => `${e.method} ${e.path.split("/")[1]} ${e.status}`).join(", ")}`;
   },
 
-  // Alt+click (Option+click on a Mac, #332): the browser keeps the download, MDM gets nothing. A
-  // link to the file; one that redirects to it; Firefox's family: one to a page whose script goes
-  // to the file (Chromium downloads such a link's page itself), and its default setting, where the
-  // browser alone does nothing with an Alt+click (browser.altClickSave off; the run's profile has
-  // it on, as Chromium's behaviour).
+  // Alt+click (Option+click on a Mac, #332): the browser keeps the download, MDM gets nothing. The
+  // extension stops the browser's own Alt+click (Chromium's save of the link without opening it)
+  // and follows the link as a plain click, so its page opens in the tab (#1494). A link to the
+  // file; one that redirects to it; one to a page whose script goes to the file; one to a page
+  // behind a bot check whose script must run first (the lab's js_challenge: "Just a moment...",
+  // a cookie set and the address loaded again 3 s later, then the file: before #1494 Chromium
+  // saved the check's page); Firefox's family: its default setting too, where the browser alone
+  // does nothing with an Alt+click (browser.altClickSave off; the run's profile has it on).
   async alt(t) {
     const firefox = Boolean(t.session.inBrowser);
-    const kept = async (label, link, file) => {
+    const kept = async (label, link, file, { refused = 0 } = {}) => {
       const p = `/gen/1M/${file}`;
       await t.session.navigate(`${LAB}/page?link=${encodeURIComponent(link)}`);
       const a = await rect(t.session, "#link");
@@ -2134,7 +2389,13 @@ const CASES = {
       const item = (await mdmList()).find((d) => d.file === file);
       if (item) throw new Error(`${label}: MDM got it too: ${item.status} ${item.path}`);
       const all = await requests(p);
-      if (all.length !== 1) throw new Error(`${label}: ${all.length} requests for it (only the browser's expected): ${all.map(brief).join("; ")}`);
+      // The check's page first (the browser's page load, refused), then the file, once.
+      const served = all.filter((e) => e.status === 200);
+      const checks = all.filter((e) => e.outcome === "fault:js_challenge");
+      if (served.length !== 1 || checks.length !== refused || all.length !== refused + 1) {
+        throw new Error(`${label}: ${all.length} requests for it (${refused ? `the check's page and ` : ""}only the browser's expected): ${all.map(brief).join("; ")}`);
+      }
+      if (refused && all.at(-1).status !== 200) throw new Error(`${label}: the file wasn't asked after the check: ${all.map(brief).join("; ")}`);
       fs.rmSync(at);
       return label;
     };
@@ -2142,8 +2403,9 @@ const CASES = {
     const name = (k) => `e2e-alt-${k}-${t.name}.zip`;
     done.push(await kept("the link", `/gen/1M/${name("link")}`, name("link")));
     done.push(await kept("a redirect", `/redirect?to=${encodeURIComponent(`/gen/1M/${name("redirect")}`)}`, name("redirect")));
+    done.push(await kept("a page's script", `/leadon?to=${encodeURIComponent(`/gen/1M/${name("script")}`)}`, name("script")));
+    done.push(await kept("a bot check's page (3 s)", `/gen/1M/${name("check")}?js_challenge=3000`, name("check"), { refused: 1 }));
     if (firefox) {
-      done.push(await kept("a page's script", `/leadon?to=${encodeURIComponent(`/gen/1M/${name("script")}`)}`, name("script")));
       const pref = JSON.stringify("browser.altClickSave");
       await t.session.inBrowser(`(Services.prefs.setBoolPref(${pref}, false), "set")`);
       try {
@@ -2190,6 +2452,83 @@ const CASES = {
     return "a file on 127.0.0.1 linked from a listed site's page (localhost): the browser's, MDM untouched";
   },
 
+  // Download all links on a page of 20,000 links with long paths (E2E_MANY_LINKS: another
+  // number), about 5 MB of them, past the 1 MB a message to the host may be: sent in parts, they
+  // open in Link grabber as one list, every link once, and nothing opens the help page. Firefox's
+  // right-click menu is opened and its item chosen; Chromium's can't be opened headless, so its
+  // handler is called as the menu calls it.
+  async manylinks(t) {
+    const n = Number(process.env.E2E_MANY_LINKS || 20000);
+    const page = `${LAB}/page?files=${n}&pathlen=200&title=many`;
+    await t.session.navigate(page);
+    const log = path.join(data, "logs", "mdm.log");
+    const from = fs.existsSync(log) ? fs.statSync(log).size : 0;
+    const label = "Download all links with Mister Download Manager";
+    const help = "https://misterdownloadmanager.com/help/browser-help.html";
+    // The tabs open now (the help page's, when the extension explains a failure).
+    const tabs = () =>
+      t.kind === "chromium"
+        ? t.session.inExtension(`chrome.tabs.query({}).then((ts) => ts.map((x) => x.pendingUrl || x.url || ""))`)
+        : t.session.inBrowser(`[...gBrowser.tabs].map((x) => x.linkedBrowser.currentURI.spec || "")`);
+    const started = Date.now();
+    let clicked;
+    if (t.kind === "chromium") {
+      clicked = await t.session.inExtension(`(async () => {
+        const tab = (await chrome.tabs.query({})).find((x) => x.url === ${JSON.stringify(page)});
+        if (!tab) return "no tab";
+        await menuClicked({ menuItemId: "mdm-all", pageUrl: tab.url, frameId: 0 }, tab);
+        const { status } = await chrome.storage.local.get("status");
+        return "called; status " + JSON.stringify(status && status.why) + ", badge " + JSON.stringify(await chrome.action.getBadgeText({}));
+      })()`);
+    } else {
+      const at = await t.session.evaluate(`(() => { const b = document.getElementById("blank").getBoundingClientRect(); return [b.left + 4, b.top + b.height / 2]; })()`);
+      clicked = await t.session.menu(at[0], at[1], label);
+      if (!String(clicked).startsWith("chosen")) throw new Error(`the menu: ${clicked}`);
+    }
+    // E2E_OLD_APP (a released app and its host, which know no parts): each part reaches Link
+    // grabber as a list of its own, and nothing says why (no line in its log): it opens, and no
+    // help page does.
+    if (process.env.E2E_OLD_APP) {
+      if (!WIN) throw new Skip(NO_UIA);
+      const pid = ourApps()[0];
+      const shown = await until("Link grabber", 120000, async () => (await tabs()).some((u) => u.startsWith(help)) ? ["help"] : appWindows(pid).includes("Link grabber") && appWindows(pid));
+      if (shown[0] === "help") throw new Error(`the help page opened: ${(await tabs()).join(", ")} (${clicked})`);
+      await sleep(3000);
+      if ((await tabs()).some((u) => u.startsWith(help))) throw new Error(`the help page opened: ${(await tabs()).join(", ")}`);
+      await stopApp();
+      return `an older app: Link grabber opened (${shown.join(", ")}), no help page in ${((Date.now() - started) / 1000).toFixed(1)} s (${clicked})`;
+    }
+    // The app's line once the list is whole (crates/app/src/linkparts.rs), or the help page.
+    const said = () => (fs.existsSync(log) ? fs.readFileSync(log, "utf8").slice(from) : "");
+    const whole = new RegExp(`a page's (\\d+) links came in (\\d+) parts`);
+    let got = null;
+    try {
+      got = await until("the page's links in MDM", 90000, async () => whole.exec(said()) || ((await tabs()).some((u) => u.startsWith(help)) && "help"));
+    } catch (e) {
+      e.message += ` (${clicked}; tabs: ${(await tabs()).join(", ")})`;
+      throw e;
+    }
+    const open = await tabs();
+    if (got === "help") throw new Error(`the help page opened instead: ${open.filter((u) => u.startsWith(help)).join(", ")} (${clicked})`);
+    const [, links, parts] = got.map(Number);
+    if (links !== n) throw new Error(`${links} links reached MDM, not ${n} (${parts} parts)`);
+    if (parts < 2) throw new Error(`in ${parts} part: the test's list should need more`);
+    const ms = Date.now() - started;
+    let windows = "";
+    if (WIN) {
+      const pid = ourApps()[0];
+      const shown = await until("Link grabber", 20000, () => appWindows(pid).includes("Link grabber") && appWindows(pid));
+      windows = `, windows: ${shown.join(", ")}`;
+      appWindows(pid, "Link grabber");
+    }
+    await sleep(1000);
+    const after = await tabs();
+    if (after.some((u) => u.startsWith(help))) throw new Error(`the help page opened too: ${after.join(", ")}`);
+    // Link grabber looks its links up: stopped with the app (the next case starts another).
+    await stopApp();
+    return `${links} links in ${parts} parts to Link grabber in ${(ms / 1000).toFixed(1)} s${windows}; no help page (${clicked})`;
+  },
+
   // Files the browser would show or play, made downloads, MDM's (Chromium 128+, Firefox): typed
   // into the address bar, the tab stays on its page. A PDF sent with "Content-Disposition:
   // inline; filename=..." (as many servers do), one sent without it, an MP3 sent inline.
@@ -2225,6 +2564,125 @@ const CASES = {
     }
     if (failed.length) throw new Error(`${failed.join(" | ")}${done.length ? ` (taken: ${done.join(", ")})` : ""}`);
     return `taken, the tab stayed: ${[...done, ...left].join(", ")}`;
+  },
+
+  // #1087: a PDF a page shows, as course sites deliver theirs from a CDN: a signed address (a
+  // query string), sent as S3's binary/octet-stream, behind a redirect to another host, in a
+  // frame (of the page's host and of another), an <embed> and an <object>: MDM's, the page
+  // stays. A PDF the page's script fetches and shows itself (its own viewer) stays the page's:
+  // taken, the page would get nothing. A listed site's frame stays the browser's (#1049).
+  async pdfs(t) {
+    if (t.kind === "chromium" && t.session.major < 128) throw new Skip(`${t.name} ${t.session.major}: needs 128 (header conditions)`);
+    // Not the excluded sites a case before listed (the extension asks them only now and then).
+    await localhostListed(t, false);
+    // The page on localhost; the files on 127.0.0.1 (another host, as a CDN is; IDM, when it
+    // runs, leaves 127.0.0.1 alone).
+    const other = `http://localhost:${PORT}`;
+    const pdf = (f, more = "") => `${LAB}/gen/256K/${f}?inline=bare${more}`;
+    const framed = (tag) => (f) => ({ html: tag.replace("SRC", pdf(f)) });
+    const shapes = [
+      ["signed", (f) => ({ nav: pdf(f, "&Expires=1893456000&Signature=abc~def__&Key-Pair-Id=K2JCJMDEHXQW5F") })],
+      ["binary", (f) => ({ nav: pdf(f, "&type=binary/octet-stream") })],
+      ["redirect", (f) => ({ nav: `${other}/redirect?to=${encodeURIComponent(pdf(f))}` })],
+      ["iframe", framed('<iframe src="SRC" width=600 height=400></iframe>')],
+      ["xframe", (f) => ({ page: `${other}/page?link=none`, ...framed('<iframe src="SRC" width=600 height=400></iframe>')(f) })],
+      ["embed", framed('<embed src="SRC" type=application/pdf width=600 height=400>')],
+      ["object", framed('<object data="SRC" type=application/pdf width=600 height=400></object>')],
+    ];
+    const done = [];
+    const failed = [];
+    const clean = () => {
+      for (const f of fs.readdirSync(t.dl)) fs.rmSync(path.join(t.dl, f), { force: true, recursive: true });
+    };
+    for (const [label, make] of shapes) {
+      const file = `e2e-${label}-${t.name}.pdf`;
+      const s = make(file);
+      const page = s.page || `${LAB}/page?link=none`;
+      try {
+        await t.session.navigate(page);
+        if (s.nav) await t.session.navigate(s.nav, { download: true });
+        if (s.html) await t.session.evaluate(`(document.body.insertAdjacentHTML("beforeend", ${JSON.stringify(s.html)}), 1)`);
+        // The usual wait: a busy computer's Chromium has been seen to start such a download 10 s late.
+        await arrived(file, 256 << 10, "Documents");
+        const at = await t.session.evaluate("location.href");
+        if (at !== page) throw new Error(`the tab shows ${at}, not the page it was on`);
+        await keptNothing(t.dl);
+        done.push(label);
+      } catch (e) {
+        const log = (await requests(`/gen/256K/${file}`)).map(brief).join("; ");
+        failed.push(`${label}: ${e.message} [requests: ${log || "none"}; the browser's folder: ${fs.readdirSync(t.dl).join(", ") || "empty"}]`);
+        clean();
+      }
+    }
+    const left = [];
+    // The page's own viewer: it fetches the file and shows what it read (a blob).
+    {
+      const file = `e2e-fetched-${t.name}.pdf`;
+      try {
+        await t.session.navigate(`${LAB}/page?link=none`);
+        const got = await t.session.evaluate(
+          `fetch(${JSON.stringify(pdf(file))}).then((r) => r.blob()).then((b) => { const f = document.createElement("iframe"); f.src = URL.createObjectURL(b); document.body.append(f); return b.size; })`,
+        );
+        if (got !== 256 << 10) throw new Error(`the page read ${got} bytes`);
+        await sleep(3000);
+        const item = (await mdmList()).find((d) => d.file === file);
+        if (item) throw new Error(`MDM took it: ${item.status} ${item.path}`);
+        const all = await requests(`/gen/256K/${file}`);
+        if (all.length !== 1) throw new Error(`${all.length} requests (only the page's expected): ${all.map(brief).join("; ")}`);
+        await keptNothing(t.dl);
+        left.push("one the page fetched: the page's");
+      } catch (e) {
+        failed.push(`fetched: ${e.message}`);
+        clean();
+      }
+    }
+    // A listed site's frame (#1049): the browser shows it, MDM untouched.
+    {
+      const file = `e2e-listed-${t.name}.pdf`;
+      const saved = JSON.parse(fs.readFileSync(path.join(data, "downloads.json"), "utf8").replace(/^﻿/, ""));
+      const was = saved.settings.excluded_sites;
+      await panelSettings({ excluded_sites: "localhost" });
+      try {
+        await localhostListed(t, true);
+        await t.session.navigate(`${other}/page?link=none`);
+        await t.session.evaluate(`(document.body.insertAdjacentHTML("beforeend", ${JSON.stringify(`<iframe src="${pdf(file)}" width=600 height=400></iframe>`)}), 1)`);
+        await sleep(4000);
+        const item = (await mdmList()).find((d) => d.file === file);
+        if (item) throw new Error(`MDM took it: ${item.status} ${item.path}`);
+        await keptNothing(t.dl);
+        left.push("a listed site's frame: shown by the browser");
+      } catch (e) {
+        failed.push(`listed: ${e.message} [requests: ${(await requests(`/gen/256K/${file}`)).map(brief).join("; ") || "none"}]`);
+        clean();
+      } finally {
+        await panelSettings({ excluded_sites: was });
+        await localhostListed(t, false);
+      }
+    }
+    if (failed.length) throw new Error(`${failed.join(" | ")}${done.length ? ` (taken: ${done.join(", ")})` : ""}`);
+    return `taken, the page stayed: ${done.join(", ")}; ${left.join("; ")}`;
+  },
+
+  // #948: such a file under the server's own name, not its address's (`main.mp4`, `main.mkv`): one
+  // played inline with "inline; filename=...", which the extension's rule makes a download (the
+  // name goes with the header: MDM reads it from its own answer), and one sent as an attachment
+  // (the rule leaves it, and its name, as they are).
+  async openedNames(t) {
+    if (t.kind === "chromium" && t.session.major < 128) throw new Skip(`${t.name} ${t.session.major}: needs 128 (header conditions)`);
+    const done = [];
+    for (const [at, query, file] of [
+      ["/gen/1M/main.mp4", "inline=1", `e2e-movie-${t.name}.mp4`],
+      ["/gen/1M/main.mkv", "type=video%2Fx-matroska", `e2e-film-${t.name}.mkv`],
+    ]) {
+      await t.session.navigate(`${LAB}/page?link=none`);
+      await t.session.navigate(`${LAB}${at}?${query}&cd=${encodeURIComponent(file)}`, { download: true });
+      await arrived(file, 1 << 20, "Video", 20000);
+      await keptNothing(t.dl);
+      done.push(`${at.split("/").pop()} (${query.split("=")[0]}) as ${file}`);
+    }
+    const wrong = fs.readdirSync(path.join(downloads, "Video")).filter((f) => /^main( \(\d+\))?\.(mp4|mkv)$/.test(f));
+    if (wrong.length) throw new Error(`saved under the address's name too: ${wrong.join(", ")}`);
+    return done.join(", ");
   },
 
   // The video button on a page whose Content-Security-Policy allows no inline style.
@@ -2390,6 +2848,61 @@ const CASES = {
     return `${Math.abs(first.l - b.l) > 2 || Math.abs(first.t - b.t) > 2 ? "moved" : "stayed"} off the preview's sound button, at ${Math.round(b.l - v.l)},${Math.round(b.t - v.t)}; then still for ${seen.length} looks (8 steps there, 2.5 s on it while the preview shrank and hid its button), sent ${address.replace(LAB, "")}`;
   },
 
+  // #1271: YouTube's own hover preview, as its home page has it. The preview plays in a player
+  // of its own (.html5-video-player) inside the card's link, and stops as the pointer leaves the
+  // thumbnail for the button: YouTube hides it in a container of no size. Its main player sits
+  // under the page with no box (at the window's corner), still holding the video watched last.
+  // A sample page served at www.youtube.com (nothing from YouTube itself), both players
+  // answering as YouTube's do (getVideoData). The button stays while the pointer is on it, and a
+  // click sends the preview's video, never the one watched last.
+  async ytpreview(t) {
+    const PREVIEW = "mdmPreview1";
+    const WATCHED = "mdmWatched1";
+    const html = `<!doctype html><meta charset="utf-8"><title>YouTube</title>
+<style>body{margin:0;font:14px sans-serif}#player{display:none}.card{position:absolute;left:120px;top:100px;width:480px}
+.thumb{display:block;position:relative;width:480px;height:270px;border-radius:12px;overflow:hidden;background:linear-gradient(135deg,#3b6ea5,#a7c7e7)}
+.preview{position:absolute;inset:0}.preview.off{display:none}video{display:block;width:100%;height:100%;background:#0b1e33}</style>
+<div id="player"><div id="movie_player" class="html5-video-player"><video></video></div></div>
+<div class="card"><a class="thumb" href="/watch?v=${PREVIEW}"><div class="preview off"><div id="inline-preview-player" class="html5-video-player"><video muted></video></div></div></a>
+<p><a href="/watch?v=${PREVIEW}">A test clip</a></p></div>
+<script>
+document.getElementById("movie_player").getVideoData = () => ({ video_id: "${WATCHED}" });
+document.getElementById("inline-preview-player").getVideoData = () => ({ video_id: "${PREVIEW}" });
+const thumb = document.querySelector(".thumb");
+const preview = document.querySelector(".preview");
+thumb.addEventListener("mouseenter", () => { preview.classList.remove("off"); document.body.dataset.preview = "playing"; });
+thumb.addEventListener("mouseleave", () => { preview.classList.add("off"); document.body.dataset.preview = "stopped"; });
+</script>`;
+    await t.session.serve(["www.youtube.com"], (url) =>
+      new URL(url).pathname === "/" ? { status: 200, type: "text/html; charset=utf-8", body: html } : { status: 404, type: "text/plain", body: "not a sample page" },
+    );
+    await t.session.navigate("https://www.youtube.com/");
+    const thumb = await rect(t.session, ".thumb");
+    const b = await hover(t.session, thumb);
+    if (!b) throw new Error("no button over the preview");
+    // Onto the button: YouTube stops its preview.
+    await t.session.mouse(b.l + 14, (b.t + b.b) / 2);
+    await until("the page's preview stopped", 3000, () => t.session.evaluate(`document.body.dataset.preview === "stopped"`));
+    await sleep(2000);
+    // E2E_YTPREVIEW_SHOT: a folder for a PR's pictures: the page with the preview stopped and the
+    // pointer on the button, and the Download video window the click opened.
+    const shots = process.env.E2E_YTPREVIEW_SHOT || "";
+    if (shots) fs.mkdirSync(shots, { recursive: true });
+    if (shots && t.session.screenshot) await t.session.screenshot(path.join(shots, `${t.name}-page.png`));
+    const kept = await rect(t.session, "mdm-video-button");
+    if (!kept) throw new Error("the button went with the preview");
+    // Where it was: at the thumbnail's top right, its end against the edge (its grip, shown
+    // under the pointer, widens it to the left).
+    near(kept.r, b.r, "kept, right edge");
+    near(kept.t, b.t, "kept, top");
+    const address = await clickButton(t.session, kept, shots && path.join(shots, `${t.name}-window.png`));
+    if (address === `https://www.youtube.com/watch?v=${WATCHED}`) throw new Error("the video window got the video watched last, not the preview's");
+    if (address !== `https://www.youtube.com/watch?v=${PREVIEW}`) throw new Error(`the video window got ${address}`);
+    await t.session.mouse(5, 5);
+    await until("the button gone after the pointer left", 3000, async () => !(await rect(t.session, "mdm-video-button")));
+    return `kept over the stopped preview, sent watch?v=${PREVIEW} (not the main player's ${WATCHED}), gone after`;
+  },
+
   // #899: a site's player shows its own settings button at the top right while the pointer moves
   // over the player, and hides it a moment after the pointer stops or leaves the player (for the
   // button, which is no part of it). The button takes a free corner once, and stays there as the
@@ -2470,6 +2983,128 @@ const CASES = {
     if (flips || kept.length) throw new Error(`the button hopped (${flips} times): ${seen.join("; ")}`);
     await t.session.mouse(5, 5);
     return `took the ${side(b)} corner clear of the player's settings button, then kept it for ${seen.length} looks (to it, on it, back over the video, still, moved, on it again) while the player hid its settings button ${hid} times`;
+  },
+
+  // #1582: Bilibili's player, as its video pages have it (built here, nothing from Bilibili). A
+  // top bar over the video holds a feedback button at the top right, 14 px from the edge (under
+  // the end of the button's default spot, between its corners), and a control bar holds buttons
+  // at both bottom corners; both show while the pointer moves over the player and hide a moment
+  // after it stops or as it leaves the player, for the button, which is no part of it. 0.5.2 went
+  // to the free top left, then back to the top right as the pointer reached it and the top bar
+  // hid, and away again when it came back: it dodged the pointer. The button takes the top left
+  // (not over the feedback button) and keeps it as the pointer goes to it, rests on it, goes
+  // back over the video and comes again; a click sends the video.
+  async bilibili(t) {
+    await t.session.navigate(`${LAB}/page?w=800&h=450&video=${encodeURIComponent("/gen/1M/clip.mp4")}`);
+    await t.session.evaluate(`(() => {
+      const v = document.querySelector("#video");
+      const box = document.createElement("div");
+      box.id = "bpx-player";
+      box.style.cssText = "position:relative;display:inline-block;background:#000;line-height:0";
+      v.replaceWith(box);
+      box.appendChild(v);
+      const overlay = (css) => {
+        const d = document.createElement("div");
+        d.style.cssText = "position:absolute;left:0;right:0;pointer-events:none;opacity:0;visibility:hidden;" + css;
+        box.appendChild(d);
+        return d;
+      };
+      const top = overlay("top:0;height:120px;background:linear-gradient(#0008,#0000);z-index:2");
+      const issue = document.createElement("span");
+      issue.id = "player-feedback";
+      issue.textContent = "?";
+      issue.style.cssText = "position:absolute;right:14px;top:18px;width:54px;height:24px;cursor:pointer;pointer-events:all;color:#fff;font:16px/24px sans-serif;text-align:center";
+      top.appendChild(issue);
+      const bar = overlay("bottom:0;height:48px;background:#0009;z-index:2;display:flex;justify-content:space-between;align-items:center");
+      for (const name of ["play", "fullscreen"]) {
+        const b = document.createElement("button");
+        b.id = "player-" + name;
+        b.textContent = name;
+        b.style.cssText = "pointer-events:all;width:200px;height:40px;margin:0 8px";
+        bar.appendChild(b);
+      }
+      let idle = 0;
+      const show = (on) => {
+        for (const d of [top, bar]) {
+          d.style.opacity = on ? "1" : "0";
+          d.style.visibility = on ? "visible" : "hidden";
+        }
+        if (!on) document.body.dataset.hidden = String(Number(document.body.dataset.hidden || 0) + 1);
+      };
+      box.addEventListener("mousemove", () => {
+        show(true);
+        clearTimeout(idle);
+        idle = setTimeout(() => show(false), 1500);
+      });
+      box.addEventListener("mouseleave", () => {
+        clearTimeout(idle);
+        show(false);
+      });
+      return true;
+    })()`);
+    const v = await rect(t.session, "#video");
+    const mid = [(v.l + v.r) / 2, (v.t + v.b) / 2];
+    const seen = [];
+    let covered = 0;
+    const side = (r) => (r ? `${(r.l + r.r) / 2 > mid[0] ? "right" : "left"}-${(r.t + r.b) / 2 > mid[1] ? "bottom" : "top"}` : "gone");
+    const look = async (what) => {
+      const r = await rect(t.session, "mdm-video-button");
+      const f = await t.session.evaluate(`(() => { const e = document.getElementById("player-feedback"); const r = e.getBoundingClientRect();
+        return getComputedStyle(e.parentElement).opacity > 0.5 ? { l: r.left, t: r.top, r: r.right, b: r.bottom } : null; })()`);
+      if (r && f && r.l < f.r && r.r > f.l && r.t < f.b && r.b > f.t) covered += 1;
+      seen.push(`${what} ${side(r)}${r ? ` ${Math.round(r.l)},${Math.round(r.t)}` : ""}`);
+      return r;
+    };
+    const glide = async (from, to, steps, what) => {
+      for (let i = 1; i <= steps; i++) {
+        await t.session.mouse(from[0] + ((to[0] - from[0]) * i) / steps, from[1] + ((to[1] - from[1]) * i) / steps);
+        await sleep(60);
+        await look(`${what} ${i}`);
+      }
+    };
+    const rest = async (ms, what) => {
+      for (let n = 0; n < ms / 100; n++) {
+        await sleep(100);
+        await look(`${what} ${n}`);
+      }
+    };
+    const first = await hover(t.session, v);
+    if (!first) throw new Error("no button over the player");
+    await until("the player's top bar", 5000, () => t.session.evaluate(`getComputedStyle(document.getElementById("player-feedback").parentElement).opacity === "1"`));
+    // The pointer moves on a little over the video (the button fades 1.5 s after it rests, #480),
+    // and the button has had its time (400 ms) to look again at the spot it took.
+    await t.session.mouse(mid[0] + 3, mid[1] + 2);
+    await sleep(600);
+    const b = await look("shown");
+    if (!b) throw new Error("the button went as the player's bars showed");
+    if (covered) throw new Error(`the button covers the player's feedback button: ${seen.join("; ")}`);
+    if (side(b) !== "left-top") throw new Error(`the button took the ${side(b)} corner (the top left is the free one)`);
+    // To the button (out of the player): the player hides its bars. Resting on it, back over the
+    // video (the bars show again), still, and to it again.
+    const on = [b.l + 14, (b.t + b.b) / 2];
+    await glide(mid, on, 10, "to it");
+    await rest(2000, "on it");
+    await glide(on, mid, 8, "back");
+    await rest(1000, "over the video");
+    await t.session.mouse(mid[0] + 20, mid[1] + 10);
+    await rest(500, "moved");
+    await glide([mid[0] + 20, mid[1] + 10], on, 10, "again");
+    await rest(1500, "on it again");
+    const hid = await t.session.evaluate("Number(document.body.dataset.hidden || 0)");
+    if (hid < 2) throw new Error(`the player hid its bars ${hid} time(s): the test's player didn't behave as Bilibili's`);
+    // Gone a moment is fine: it fades while the pointer rests still over the video (#480).
+    const away = seen.filter((x) => !x.includes(side(b)) && !x.includes(" gone"));
+    if (away.length || covered) throw new Error(`the button moved or covered the feedback button (${covered}): ${seen.join("; ")}`);
+    const landed = await rect(t.session, "mdm-video-button");
+    if (!landed) throw new Error("no button under the pointer at the end");
+    near(landed.l, b.l, "kept, left edge");
+    near(landed.t, b.t, "kept, top");
+    // E2E_BILIBILI_SHOT: a picture of the page with the pointer on the button, for a PR's body.
+    if (process.env.E2E_BILIBILI_SHOT && t.session.screenshot) await t.session.screenshot(process.env.E2E_BILIBILI_SHOT);
+    const address = await clickButton(t.session, landed);
+    if (address !== `${LAB}/gen/1M/clip.mp4`) throw new Error(`the video window got ${address}`);
+    await t.session.mouse(5, 5);
+    return `took the top left, clear of the player's feedback button, and kept it for ${seen.length} looks (to it, on it, back over the video, moved, on it again) while the player hid its bars ${hid} times; sent ${address.replace(LAB, "")}`;
   },
 
   // A player playing a stream (a blob: in the page): the button sends the manifest it loaded.
@@ -2707,9 +3342,12 @@ const CASES = {
     const open = () => t.session.tab(`${t.session.base}popup.html?page=${encodeURIComponent(page)}`);
     const seen = (popup) =>
       popup.evaluate(`(() => { const v = (id) => { const e = document.getElementById(id); return e && !e.hidden && e.offsetParent !== null; };
-        return { offer: v("exclude"), offerText: document.getElementById("exclude").textContent, done: v("excluded"),
+        const sw = document.getElementById("exclude");
+        // An older popup's button (E2E_EXCLUDE_BEFORE), or the switch (#1496): off is the offer.
+        const isSwitch = sw && sw.type === "checkbox";
+        return { offer: v("exclude") && !(isSwitch && sw.checked), offerText: isSwitch ? document.getElementById("exclude-label").textContent : sw.textContent, done: v("excluded"),
           doneText: document.getElementById("excluded-text") ? document.getElementById("excluded-text").textContent : document.getElementById("excluded").textContent,
-          undo: v("undo") }; })()`);
+          undo: isSwitch ? Boolean(sw.checked && !sw.disabled) : v("undo") }; })()`);
     const snap = async (popup, name) => {
       if (shots && popup.shot) await popup.shot(path.join(shots, `${lang}-${name}.png`));
     };
@@ -2734,17 +3372,267 @@ const CASES = {
         return (s.done || s.offer) && s;
       });
       if (again.offer || !again.undo) throw new Error(`opened again: ${JSON.stringify(again)}`);
-      await popup.evaluate(`document.getElementById("undo").click(), true`);
+      await popup.evaluate(`(document.getElementById("undo") || document.getElementById("exclude")).click(), true`);
       await until(`${site} off MDM's excluded sites`, 10000, () => !listed());
       const undone = await until("the offer back", 5000, async () => {
         const s = await seen(popup);
         return s.offer && !s.done && s;
       });
-      return `"${done.doneText}" with Undo, also when opened again; Undo took ${site} off (the offer back: "${undone.offerText}")`;
+      return `"${done.doneText}", switched on, also when opened again; switched off took ${site} off (the offer back: "${undone.offerText}")`;
     } finally {
       await popup.close();
       // Never left listed for the next case.
       if (listed()) await ipc({ include_site: site }).catch(() => {});
+    }
+  },
+
+  // #1496: the popup's Downloads tab on this computer's MDM: a finished file, one deleted from
+  // the disk since, a running one, a failed one, each with the system's icon for its type, its
+  // state and its buttons; the toolbar button's count; search and filters; every action the app
+  // does (off the screens: open, show in folder, copy the file and share are logged by the test
+  // instance instead of shown; Copy link writes to a stand-in clipboard, never the computer's);
+  // Delete and Clear finished ask first; the arrow keys. E2E_SHOTS: <lang>-<scheme>-dl-*.png,
+  // the states and widths for a pull request. E2E_RECENT_BEFORE=1: only the popup as it is (an
+  // older popup in the packed extension), for the "before" pictures.
+  async recent(t) {
+    if (!t.session.tab || !t.session.base) throw new Skip("the popup in a tab of its own");
+    const shots = process.env.E2E_SHOTS ? path.resolve(process.env.E2E_SHOTS) : "";
+    const tag = `${process.env.E2E_LANG || "en"}-${process.env.E2E_COLOR_SCHEME || "system"}`;
+    const page = `${LAB}/page?title=${encodeURIComponent("Lab downloads")}`;
+    await t.session.navigate(page);
+    const open = async (query = "", width = 400) => {
+      const p = await t.session.tab(`${t.session.base}popup.html?keep=1${query ? `&${query}` : ""}`);
+      if (p.viewport) await p.viewport(width, 548);
+      await until("the popup", 10000, () => p.evaluate(`document.readyState === "complete" && Boolean(document.getElementById("dl-list") || document.getElementById("status"))`).catch(() => false));
+      return p;
+    };
+    const snap = async (p, name) => {
+      if (shots && p.shot) {
+        await sleep(350);
+        await p.shot(path.join(shots, `${tag}-${name}.png`));
+      }
+    };
+    if (process.env.E2E_RECENT_BEFORE === "1") {
+      const p = await open(`page=${encodeURIComponent(page)}`, 300);
+      await sleep(1500);
+      await snap(p, "popup-before");
+      await p.close();
+      return "the popup as packed, pictured";
+    }
+    const lab = (p) => `${LAB}${p}`;
+    const files = {
+      done: "quarterly-report-final.pdf",
+      gone: "holiday-photos.zip",
+      running: "linux-distro-image.iso",
+      failed: "setup-tool.exe",
+    };
+    // An empty list and no copies of these files from an earlier case or browser: the counts and
+    // names are this case's own.
+    const earlier = await mdmList();
+    if (earlier.length) {
+      await ipc({ action: "pause", ids: earlier.filter((d) => d.status === "Downloading").map((d) => d.id) }).catch(() => {});
+      await ipc({ action: "remove", ids: earlier.map((d) => d.id) });
+      await until("an empty list", 10000, async () => !(await mdmList()).length);
+    }
+    const stems = Object.values(files).map((f) => f.replace(/\.[^.]+$/, ""));
+    const sweep = (dir) => {
+      for (const e of fs.existsSync(dir) ? fs.readdirSync(dir, { withFileTypes: true }) : []) {
+        const p = path.join(dir, e.name);
+        if (e.isDirectory()) sweep(p);
+        else if (stems.some((stem) => e.name.startsWith(stem))) fs.rmSync(p, { force: true });
+      }
+    };
+    sweep(downloads);
+    // Through the browser (its hand-off starts the toolbar button's count), and through MDM's own
+    // channel (as from its window).
+    await clickLink(t, `/gen/2M/${files.done}`);
+    await arrived(files.done, 2 << 20, "Documents");
+    await ipc({ url: lab(`/gen/1M/${files.gone}`), silent: true });
+    const gone = await arrived(files.gone, 1 << 20);
+    fs.rmSync(gone.path, { force: true });
+    await ipc({ url: lab(`/gen/1M/${files.failed}?refuse=403&seed=${Date.now()}`), silent: true });
+    await until(`${files.failed} failed`, 30000, async () => (await mdmList()).some((d) => d.file === files.failed && d.status === "Error"));
+    await clickLink(t, `/gen/600M/${files.running}?rate=96K`);
+    await until(`${files.running} running`, 30000, async () => (await mdmList()).some((d) => d.file === files.running && d.status === "Downloading" && d.downloaded > 0));
+    await keptNothing(t.dl);
+    const byName = async () => Object.fromEntries((await mdmList()).map((d) => [d.file, d]));
+    const ids = await byName();
+    // Each by its id from here (Download again may number the file's new copy).
+    const now = async (file) => (await mdmList()).find((d) => d.id === ids[file].id);
+    const p = await open();
+    const ROWS = `JSON.stringify([...document.querySelectorAll("#dl-list li.dl")].map((li) => ({
+      id: Number(li.dataset.id), state: li.dataset.state, name: li.querySelector(".dl-name").dataset.full,
+      status: li.querySelector(".dl-status").textContent, icon: ((li.querySelector(".dl-icon img") || {}).src || "").slice(0, 22),
+      bar: li.querySelector(".dl-bar").hidden ? null : li.querySelector(".dl-bar").getAttribute("aria-valuenow"),
+      buttons: [...li.querySelectorAll("button")].filter((b) => !b.hidden).map((b) => b.className.includes("dl-name") ? "name" : b.title) })))`;
+    const rows = async () => JSON.parse(await p.evaluate(ROWS));
+    const row = async (file) => (await rows()).find((r) => r.name === file);
+    const said = () => p.evaluate(`document.getElementById("said").hidden ? "" : document.getElementById("said").textContent`);
+    const logged = (what) => {
+      try {
+        return fs.readFileSync(path.join(data, "logs", "mdm.log"), "utf8").split(/\r?\n/).filter((l) => l.includes(what));
+      } catch {
+        return [];
+      }
+    };
+    const menuOf = async (file) => {
+      await p.evaluate(`(() => { const li = document.querySelector('#dl-list li.dl[data-id="${ids[file].id}"]'); li.querySelector(".dl-more").click(); return true; })()`);
+      return JSON.parse(await p.evaluate(`JSON.stringify([...document.querySelectorAll(".menu .menu-item")].map((b) => b.dataset.act))`));
+    };
+    const choose = (act) => p.evaluate(`(document.querySelector('.menu .menu-item[data-act="${act}"]').click(), true)`);
+    const steps = [];
+    try {
+      // The four, newest first, each as it is, with its type's icon.
+      const all = await until("the four downloads in the popup", 20000, async () => {
+        const r = await rows();
+        const icons = r.filter((x) => x.icon.startsWith("data:image/")).length;
+        return r.length === 4 && icons === 4 && r;
+      }).catch(async (e) => {
+        e.message += ` (the popup: ${await p.evaluate(ROWS).catch(() => "?")})`;
+        throw e;
+      });
+      const states = Object.fromEntries(all.map((r) => [r.name, r.state]));
+      const want = { [files.done]: "done", [files.gone]: "gone", [files.running]: "running", [files.failed]: "failed" };
+      if (JSON.stringify(states) !== JSON.stringify(Object.fromEntries(Object.keys(states).map((k) => [k, want[k]])))) throw new Error(`states: ${JSON.stringify(states)}`);
+      if (all[0].name !== files.running) throw new Error(`not newest first: ${all.map((r) => r.name).join(", ")}`);
+      const running = all.find((r) => r.name === files.running);
+      if (!/ of .* left/.test(running.status) && !/·/.test(running.status)) throw new Error(`the running one says "${running.status}"`);
+      if (running.bar === null) throw new Error("the running one has no bar");
+      const counts = JSON.parse(await p.evaluate(`JSON.stringify([...document.querySelectorAll("#dl-filters .chip")].map((c) => c.querySelector(".n").textContent))`));
+      if (counts.join() !== "4,1,2,1") throw new Error(`the filters' counts: ${counts}`);
+      steps.push(`4 rows (${all.map((r) => `${r.state}: "${r.status}"`).join("; ")}), counts ${counts}`);
+      if (t.session.inExtension) {
+        const badge = await until("the toolbar's count", 10000, () => t.session.inExtension("chrome.action.getBadgeText({})").then((b) => b === "1" && b));
+        steps.push(`badge "${badge}"`);
+      }
+      await snap(p, "dl-list");
+      // The same at Firefox's overflow width, and wide.
+      for (const [w, name] of [[360, "dl-list-360"], [720, "dl-list-720"]]) {
+        const q = await open(`w=${w}`, w);
+        await until("its rows", 10000, async () => JSON.parse(await q.evaluate(`JSON.stringify(document.querySelectorAll("#dl-list li.dl").length)`)) === 4);
+        await snap(q, name);
+        await q.close();
+      }
+      // The buttons: a finished file has all; one deleted from the disk none that needs it.
+      const doneMenu = await menuOf(files.done);
+      const wantDone = ["open", "folder", "copyFile", ...(WIN || process.platform === "darwin" ? ["share"] : []), "copyLink", "again", "remove", "del"];
+      if (doneMenu.join() !== wantDone.join()) throw new Error(`a finished file's menu: ${doneMenu}`);
+      await snap(p, "dl-menu");
+      await p.evaluate(`(document.querySelector(".menu .menu-item").dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })), true)`);
+      const goneMenu = await menuOf(files.gone);
+      if (goneMenu.some((a) => ["open", "copyFile", "share", "del"].includes(a))) throw new Error(`a deleted file's menu: ${goneMenu}`);
+      await choose("folder");
+      steps.push(`menus: finished [${doneMenu}], deleted [${goneMenu}]`);
+      // Copy file, Share, Open, Show in folder: done by the app (logged off the screens).
+      const donePath = ids[files.done].path;
+      for (const [act, line] of [
+        ["copyFile", `clipboard (off-screen, not copied): the file ${donePath}`],
+        ["share", `share (off-screen, not shown): ${donePath}`],
+        ["open", `open (off-screen, not opened): ${donePath}`],
+        ["folder", `folder (off-screen, not opened): ${donePath}`],
+      ]) {
+        if (act === "share" && !(WIN || process.platform === "darwin")) continue;
+        await menuOf(files.done);
+        await choose(act);
+        await until(`${act} done by MDM`, 10000, () => logged(line).length > 0);
+      }
+      const copiedSaid = await until("Copy file's word", 5000, said).catch(() => "");
+      steps.push(`copy file, share, open, show in folder: done by MDM (logged); said "${copiedSaid}"`);
+      // Copy link: to a stand-in clipboard.
+      await p.evaluate(`(navigator.clipboard.writeText = async (text) => { window.__copied = text; }, true)`);
+      await menuOf(files.done);
+      await choose("copyLink");
+      const copied = await until("the link copied", 5000, () => p.evaluate("window.__copied || ''"));
+      if (copied !== ids[files.done].url) throw new Error(`copied ${copied}, not ${ids[files.done].url}`);
+      // Search and filters.
+      await p.evaluate(`(() => { const s = document.getElementById("dl-search"); s.value = "report"; s.dispatchEvent(new Event("input")); return true; })()`);
+      await until("the search", 5000, async () => (await rows()).map((r) => r.name).join() === files.done);
+      await snap(p, "dl-search");
+      await p.evaluate(`(() => { const s = document.getElementById("dl-search"); s.value = "zzz-nothing"; s.dispatchEvent(new Event("input")); return true; })()`);
+      await until("nothing matches", 5000, () => p.evaluate(`!document.getElementById("dl-empty").hidden && document.querySelectorAll("#dl-list li.dl").length === 0`));
+      await snap(p, "dl-no-match");
+      await p.evaluate(`(document.getElementById("dl-empty-act").click(), true)`);
+      await p.evaluate(`(document.querySelector('#dl-filters .chip[data-filter="failed"]').click(), true)`);
+      await until("the failed filter", 5000, async () => (await rows()).map((r) => r.name).join() === files.failed);
+      await snap(p, "dl-failed");
+      await p.evaluate(`(document.querySelector('#dl-filters .chip[data-filter="all"]').click(), true)`);
+      await until("all again", 5000, async () => (await rows()).length === 4);
+      steps.push("search, no match, the failed filter");
+      // Pause and resume the running one (its quick buttons).
+      const quick = (file, title) => p.evaluate(`(() => { const li = document.querySelector('#dl-list li.dl[data-id="${ids[file].id}"]');
+        const b = [...li.querySelectorAll(".dl-quick button")].find((x) => !x.hidden && x.title === ${JSON.stringify(title)}); b.click(); return true; })()`);
+      const titles = JSON.parse(await p.evaluate(`JSON.stringify([document.querySelector('#dl-list li.dl [data-label="popup_act_pause"]').title, document.querySelector('#dl-list li.dl [data-label="popup_act_resume"]').title])`));
+      await quick(files.running, titles[0]);
+      await until("paused in MDM", 10000, async () => ((await now(files.running)) || {}).status === "Stopped");
+      await until("paused in the popup", 5000, async () => (await row(files.running)).state === "paused");
+      await snap(p, "dl-paused");
+      await quick(files.running, titles[1]);
+      await until("resumed in MDM", 10000, async () => ((await now(files.running)) || {}).status === "Downloading");
+      steps.push("paused and resumed");
+      // The arrow keys move between the rows.
+      const keys = await p.evaluate(`(() => {
+        const first = document.querySelector("#dl-list li.dl button:not([hidden])"); first.focus();
+        first.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }));
+        const li = document.activeElement.closest("li.dl");
+        return JSON.stringify({ moved: li && li !== first.closest("li.dl"), stops: [...document.querySelectorAll("#dl-list button")].filter((b) => b.tabIndex === 0).length });
+      })()`);
+      const k = JSON.parse(keys);
+      if (!k.moved) throw new Error("ArrowDown didn't move to the next row");
+      steps.push(`arrow keys move between rows (${k.stops} tab stops in the list)`);
+      // Download again; then Remove (the deleted one), Delete (the failed one: asked first).
+      await menuOf(files.done);
+      await choose("again");
+      await until("downloaded again", 30000, () => logged(`redownload download ${ids[files.done].id}: done`).length > 0);
+      await until("complete again", 30000, async () => ((await now(files.done)) || {}).status === "Complete");
+      await menuOf(files.gone);
+      await choose("remove");
+      await until("removed from MDM's list", 10000, async () => !(await now(files.gone)));
+      await menuOf(files.failed);
+      await choose("del");
+      const asked = await until("Delete's question", 5000, () => p.evaluate(`document.getElementById("ask").open && document.getElementById("ask-text").textContent`));
+      await snap(p, "dl-delete-ask");
+      await p.evaluate(`(document.getElementById("ask-ok").click(), true)`);
+      await until("deleted from MDM's list", 10000, async () => !(await now(files.failed)));
+      steps.push(`download again, remove, delete (asked: "${asked}")`);
+      // Clear finished: asked, then the finished ones go, their files stay.
+      const again = (await now(files.done)).path;
+      await p.evaluate(`(document.getElementById("dl-clear").click(), true)`);
+      await until("Clear's question", 5000, () => p.evaluate(`document.getElementById("ask").open`));
+      await p.evaluate(`(document.getElementById("ask-ok").click(), true)`);
+      await until("the finished ones cleared", 10000, async () => !(await now(files.done)));
+      if (!fs.existsSync(again)) throw new Error("Clear finished deleted a file");
+      // The running one stopped and removed; then the empty list, and MDM not running.
+      await quick(files.running, titles[0]);
+      await until("stopped", 10000, async () => ((await now(files.running)) || {}).status === "Stopped");
+      await ipc({ action: "remove", ids: [ids[files.running].id] });
+      await until("the empty list", 10000, () => p.evaluate(`!document.getElementById("dl-empty").hidden && document.getElementById("dl-empty-title").textContent`));
+      await snap(p, "dl-empty");
+      await stopApp();
+      const off = await until("MDM not running, said", 15000, () => p.evaluate(`!document.getElementById("dl-empty-act").hidden && document.getElementById("dl-empty-title").textContent`));
+      await snap(p, "dl-off");
+      steps.push(`cleared (files kept); empty; "${off}"`);
+      // The other tabs, pictured.
+      if (shots) {
+        await startApp();
+        const pg = await open(`tab=page&page=${encodeURIComponent(page)}`);
+        await sleep(1200);
+        await snap(pg, "tab-page");
+        await pg.close();
+        const st = await open("tab=settings");
+        await sleep(1200);
+        await snap(st, "tab-settings");
+        await st.close();
+      }
+      return steps.join("; ");
+    } finally {
+      await p.close();
+      await startApp().catch(() => {});
+      const left = await mdmList().catch(() => []);
+      const ours = left.filter((d) => Object.values(ids).some((i) => i.id === d.id) || Object.values(files).includes(d.file));
+      for (const d of ours) await ipc({ action: "pause", ids: [d.id] }).catch(() => {});
+      if (ours.length) await ipc({ action: "remove", ids: ours.map((d) => d.id) }).catch(() => {});
+      await sleep(500);
+      sweep(downloads);
     }
   },
 
@@ -2862,8 +3750,24 @@ const CASES = {
       const state = await until("the stream player", 15000, () => t.session.evaluate("document.body.dataset.stream || ''"));
       if (state !== "done") throw new Error(`the page's player: ${state}`);
       const v = await rect(t.session, "#player");
+      // #1053: the pointer passing over the button (onto it and off the video within a moment)
+      // asks nothing; resting on it asks at once, without the button's own wait over the video
+      // (600 ms), and the arrow's click later shares that look-up.
+      const asked = lookupsLogged().length;
+      if (!(await hover(t.session, v))) throw new Error("no button over the stream's player");
+      const passAt = await t.session.pill(MORE_AT);
+      if (!passAt) throw new Error("no arrow on the button");
+      await t.session.mouse(passAt.x, passAt.y);
+      await t.session.mouse(v.r + 40, v.b + 40);
+      await sleep(1500);
+      if (lookupsLogged().length !== asked) throw new Error("a pass over the button looked the video up");
       const b = await hover(t.session, v);
       if (!b) throw new Error("no button over the stream's player");
+      const restAt = await t.session.pill(MORE_AT);
+      await t.session.mouse(restAt.x, restAt.y);
+      const rested = Date.now();
+      const early = await until("the look-up of the pointer resting on the button", 5000, () => lookupsLogged().slice(asked)[0]);
+      const restMs = early - rested;
       // An earlier browser's downloads of this stream off the list (with their files): the same
       // quality again would be a duplicate, which Options' default asks about.
       const earlier = (await mdmList()).filter((d) => d.url.startsWith(`${LAB}/hls/`)).map((d) => d.id);
@@ -2901,6 +3805,8 @@ const CASES = {
         return p && p.rows.length ? p : null;
       });
       const rowsMs = Date.now() - clicked;
+      if (lookupsLogged().length !== asked + 1) throw new Error(`${lookupsLogged().length - asked} look-ups, not the rest's one shared by the arrow's click`);
+      if (restMs > 500) throw new Error(`the look-up came ${restMs} ms after the pointer rested on the button, not about 200 ms`);
       if (!m.rows.some((r) => r.size)) throw new Error(`no row has a size: ${JSON.stringify(m.rows.map((r) => [r.name, r.size]))}`);
       if (!m.open.text) throw new Error("no \"All qualities and subtitles…\" under the qualities");
       // The arrows move through the menu, and the page's shortcuts don't hear them.
@@ -2953,9 +3859,144 @@ const CASES = {
       if (!green.acts.some((a) => a.act === "show")) throw new Error(`no "Show": ${JSON.stringify(green)}`);
       if (appWindows(pid).includes(VIDEO_WINDOW)) throw new Error("the click opened the Download video window");
       const list = (rs) => rs.map((r) => `${r.name}${r.size ? ` ${r.size}` : ""}`).join(", ");
-      return `chip "${chipped.chip}"; the click: ${best.file} (${green.text} · Show); ${looked ? "looking, then " : ""}VIDEO ${pictures.rows.length} (${list(pictures.rows)}), AUDIO ${sounds.rows.length} (${list(sounds.rows)}); "${row.name}" picked: ${item.file} (${item.status}) with its progress window "${opened}" only, the main window hidden; click to rows ${rowsMs} ms, pick to first progress ${startMs} ms`;
+      return `chip "${chipped.chip}"; the click: ${best.file} (${green.text} · Show); ${looked ? "looking, then " : ""}VIDEO ${pictures.rows.length} (${list(pictures.rows)}), AUDIO ${sounds.rows.length} (${list(sounds.rows)}); "${row.name}" picked: ${item.file} (${item.status}) with its progress window "${opened}" only, the main window hidden; click to rows ${rowsMs} ms, pick to first progress ${startMs} ms; a pass over the button asked nothing, resting on it asked ${restMs} ms later, once`;
     } finally {
       // The next case starts MDM as usual.
+      await stopApp();
+    }
+  },
+
+  // #1092: a feed whose page names no video (/feed: yt-dlp finds none in it nor in its post's
+  // page), its players fed by the page (blob:): the button over each offers what the tab played
+  // for that video, found by its length. The first post's file, fetched in ranges: "Download best"
+  // its MP4, downloaded by MDM's engine with the feed as Referer; the second's HLS stream: its
+  // qualities, looked up by MDM, one picked and downloaded; the third, the next video, only begun:
+  // its own file, never the first's. E2E_SHOTS: <lang>-played-file.png and
+  // <lang>-played-stream.png (the player and its menu); with E2E_PLAYED_BEFORE=1 (an older
+  // extension, for a pull request's "before") <lang>-played-file-before.png and
+  // <lang>-played-stream-before.png only.
+  async played(t) {
+    if (!ytdlp) throw new Skip("no yt-dlp (E2E_YTDLP or PATH)");
+    if (!ffmpeg) throw new Skip("no ffmpeg (E2E_FFMPEG or PATH)");
+    await stopApp();
+    fs.rmSync(path.join(data, "ipc.json"), { force: true });
+    spawn(appExe, ["/startup"], { env: process.env, stdio: "ignore", detached: false });
+    try {
+      await until("the test instance, in the notification area", 20000, () => mdmList().then(() => true, () => false));
+      const s = t.session;
+      const FILE_A = "/gen/2M/feed-a.mp4";
+      // An earlier browser's downloads of these off the list (with their files).
+      const earlier = (await mdmList()).filter((d) => d.url.startsWith(`${LAB}${FILE_A}`) || d.url.startsWith(`${LAB}/hls/`)).map((d) => d.id);
+      if (earlier.length) await ipc({ action: "delete", ids: earlier });
+      await s.navigate(`${LAB}/feed`);
+      const state = await until("the feed's players", 30000, () => s.evaluate("document.body.dataset.feed || ''"));
+      if (state !== "done") throw new Error(`the feed's players: ${state} ${await s.evaluate("document.body.dataset.feedError || ''")}`);
+      const shots = process.env.E2E_SHOTS && s.shot ? path.resolve(process.env.E2E_SHOTS) : "";
+      const lang = process.env.E2E_LANG || "en";
+      // The button over `v`, the pointer brought onto it again a few times (MDM may be slow to say
+      // the button may show while it looks a video up).
+      const over = async (v) => {
+        for (let i = 0; i < 4; i++) {
+          const b = await hover(s, v);
+          if (b) return b;
+          await s.mouse(2, 2);
+          await sleep(1000);
+        }
+        return null;
+      };
+      // The button over `sel` with `chip`, its menu opened and filled (a picture of both: `shot`).
+      const menuOver = async (sel, chip, shot = "") => {
+        await s.mouse(2, 2);
+        await s.evaluate(`document.querySelector(${JSON.stringify(sel)}).scrollIntoView({ block: "center" })`);
+        await sleep(500);
+        const v = await rect(s, sel);
+        if (!(await over(v))) throw new Error(`${sel}: no button`);
+        // E2E_PLAYED_BEFORE=1: pictures of an older extension's menu there (a pull request's
+        // "before"), which never offers what played: its menu once its look-up ended, then no more.
+        // Its menu: its arrow (the pointer resting on the button starts its look-up, #1053), then
+        // what the look-up and what the tab played came to (a minute and a half at most).
+        await clickArrow(s);
+        const filled = (q) => q && !q.busy && (q.rows.length || q.note);
+        const said = new Set();
+        const m = await until(`${sel}: its menu`, 90000, async () => {
+          const q = await s.picks("row");
+          if (q) said.add(q.busy ? "looking" : q.note || q.rows.map((r) => r.name).join(", "));
+          return filled(q) ? q : null;
+        }).catch((e) => {
+          // An older extension may have nothing to say there (a feed's video no post names).
+          if (process.env.E2E_PLAYED_BEFORE) return null;
+          throw new Error(`${e.message} (it said: ${[...said].join(" | ")})`);
+        });
+        // E2E_PLAYED_BEFORE=1: pictures of an older extension's menu there (a pull request's
+        // "before"), which never offers what played.
+        if (process.env.E2E_PLAYED_BEFORE) {
+          await sleep(400);
+          const q = (await s.picks()) || m || { box: (await rect(s, "mdm-video-button")) || v };
+          if (shots && shot) await s.shot(path.join(shots, `${lang}-${shot}-before.png`), { l: Math.min(v.l, q.box.l) - 10, t: Math.min(v.t, q.box.t) - 10, r: Math.max(v.r, q.box.r) + 10, b: Math.max(v.b, q.box.b) + 10 });
+          return null;
+        }
+        if (!m.rows.length) throw new Error(`${sel}: its menu says "${m.note}"`);
+        const p = await s.pill(PILL_STATE);
+        if (!p || p.chip !== chip) throw new Error(`${sel}: the button's chip is "${p && p.chip}", not ${chip}`);
+        if (shots && shot) {
+          await sleep(400);
+          const q = await s.picks();
+          await s.shot(path.join(shots, `${lang}-${shot}.png`), { l: Math.min(v.l, q.box.l) - 10, t: Math.min(v.t, q.box.t) - 10, r: Math.max(v.r, q.box.r) + 10, b: Math.max(v.b, q.box.b) + 10 });
+        }
+        return { p, m };
+      };
+      // A size of `n` MB in the browser's language ("2 MB", "2 م.ب").
+      const megabytes = (size, n) => new RegExp(`^(${n}|${"٠١٢٣٤٥٦٧٨٩"[n]})\\s?\\S+$`).test(size.replace(/\u00a0/g, " "));
+      const rows = (m) => m.rows.map((r) => `${r.name}${r.size ? ` ${r.size}` : ""}`).join(", ");
+      // The first post: its file (2 MB, 360p MP4), its only line; the next video's (3 MB) never.
+      const one = await menuOver("#feed1", "360p", "played-file");
+      if (!one) {
+        await menuOver("#feed2", "720p", "played-stream");
+        throw new Skip("E2E_PLAYED_BEFORE: the older menus' pictures taken");
+      }
+      const top = one.m.rows[0];
+      if (one.m.rows.length !== 1 || top.kind !== "top" || !/\bMP4\b/.test(top.name) || !megabytes(top.size, 2)) {
+        throw new Error(`#feed1's menu: ${rows(one.m)}`);
+      }
+      await clearLog();
+      const before = new Set((await mdmList()).map((d) => d.id));
+      await s.mouse(top.x, top.y, "click");
+      const item = await until("#feed1's file, in MDM's list", 15000, async () => (await mdmList().catch(() => [])).find((d) => !before.has(d.id))).catch(async (e) => {
+        throw new Error(`${e.message} (the button: ${JSON.stringify(await s.pill(PILL_STATE))}, the menu: ${JSON.stringify(await s.picks())})`);
+      });
+      if (!item.url.startsWith(`${LAB}${FILE_A}?`)) throw new Error(`MDM downloads ${item.url}, not #feed1's file`);
+      const green = await until("the button's green state", 10000, async () => {
+        const q = await s.pill(PILL_STATE);
+        return q && q.state === "sent" ? q : null;
+      });
+      const done = await until(`${item.file}, complete`, 45000, async () => {
+        const d = (await mdmList().catch(() => [])).find((x) => x.id === item.id);
+        if (d && d.status === "Error") throw new Error(`${item.file}: ${d.error}`);
+        return d && d.status === "Complete" ? d : null;
+      });
+      if (fs.statSync(done.path).size !== 2 << 20) throw new Error(`${done.path}: ${fs.statSync(done.path).size} bytes`);
+      // Every request of MDM's for it: the feed as its Referer.
+      const got = await requests(FILE_A);
+      if (!got.length || got.some((e) => e.referer !== `${LAB}/feed`)) throw new Error(`MDM's requests for #feed1's file: ${JSON.stringify(got.map((e) => [brief(e), e.referer]))}`);
+      // The second: the stream's qualities (MDM's look-up of its manifest); 360p picked.
+      const two = await menuOver("#feed2", "720p", "played-stream");
+      const q360 = two.m.rows.find((r) => r.kind === "video" && /\b360p\b/.test(r.name));
+      if (!q360 || !two.m.rows.some((r) => /\b720p\b/.test(r.name))) throw new Error(`#feed2's menu: ${rows(two.m)}`);
+      const before2 = new Set((await mdmList()).map((d) => d.id));
+      await s.mouse(q360.x, q360.y, "click");
+      const stream = await until("#feed2's 360p, in MDM's list", 15000, async () => (await mdmList().catch(() => [])).find((d) => !before2.has(d.id)));
+      if (stream.url !== `${LAB}/hls/master.m3u8`) throw new Error(`MDM downloads ${stream.url}, not #feed2's stream`);
+      const streamed = await until(`${stream.file}, complete`, 90000, async () => {
+        const d = (await mdmList().catch(() => [])).find((x) => x.id === stream.id);
+        if (d && d.status === "Error") throw new Error(`${stream.file}: ${d.error}`);
+        return d && d.status === "Complete" ? d : null;
+      });
+      // The third, the next video: its own file (3 MB), not the first's.
+      const three = await menuOver("#feed3", "360p");
+      if (three.m.rows.length !== 1 || !megabytes(three.m.rows[0].size, 3)) throw new Error(`#feed3's menu: ${rows(three.m)}`);
+      await s.mouse(2, 2);
+      return `#feed1: chip "${one.p.chip}", "${rows(one.m)}", ${done.file} ${done.size} bytes, ${got.length} request(s) with the feed as Referer, "${green.text}"; #feed2: ${rows(two.m)}, 360p: ${streamed.file}; #feed3: "${rows(three.m)}"`;
+    } finally {
       await stopApp();
     }
   },
@@ -3037,7 +4078,9 @@ const CASES = {
   // menu shows, then, with E2E_VIDEO_PICK=<a pattern of a line's words>, that line picked and
   // downloaded to its end, its file's size beside the line's (#801: the size shown is the size
   // that comes). E2E_SHOTS as in `qualities`: <lang>-page-list.png (the menu), page-pick.png
-  // (the line about to be picked, scrolled to).
+  // (the line about to be picked, scrolled to). E2E_PAGE_REST=<ms> times the click instead (#1053):
+  // the pointer goes over the video and straight onto the button's arrow, rests there that long
+  // and clicks; how long from the click to the qualities is the case's answer.
   async page(t) {
     const address = process.env.E2E_VIDEO_PAGE;
     if (!address) throw new Skip("no E2E_VIDEO_PAGE");
@@ -3050,9 +4093,35 @@ const CASES = {
     try {
       await until("the test instance, in the notification area", 20000, () => mdmList().then(() => true, () => false));
       await t.session.navigate(address);
+      // Timing the click: the video playing, as a person watching it would have it (a player
+      // that waits for its play button shows no picture before).
+      if (process.env.E2E_PAGE_REST) {
+        await until("the page's video", 30000, () => rect(t.session, "video"));
+        await t.session.evaluate("(() => { const v = document.querySelector('video'); v.muted = true; v.play().catch(() => {}); return 0; })()");
+        await sleep(2000);
+      }
       const v = await until("the page's video", 30000, () => rect(t.session, "video"));
-      const b = await hover(t.session, v);
+      // A heavy page (YouTube) may still be busy at the first try.
+      const b = (await hover(t.session, v)) || (await hover(t.session, v));
       if (!b) throw new Error("no button over the page's video");
+      const rest = process.env.E2E_PAGE_REST;
+      if (rest) {
+        const at = await t.session.pill(MORE_AT);
+        if (!at) throw new Error("no arrow on the button");
+        await t.session.mouse(at.x, at.y);
+        await sleep(Number(rest));
+        await t.session.mouse(at.x, at.y, "click");
+        const clicked = Date.now();
+        // Asked every 50 ms (`until`'s quarter second would blur the time).
+        for (;;) {
+          const p = await t.session.picks("row");
+          if (p && !p.busy && !p.rows.length) throw new Error(`the menu shows no qualities: "${p.note}"`);
+          // Done looking (the lines under "Download best" are there).
+          if (p && !p.busy && p.rows.length) return `on the button ${rest} ms, click to ${p.rows.length - 1} qualities ${Date.now() - clicked} ms`;
+          if (Date.now() - clicked > 120000) throw new Error("timed out: the qualities in the menu");
+          await sleep(50);
+        }
+      }
       await until("the best quality on the button's chip", 120000, async () => {
         const p = await t.session.pill(PILL_STATE);
         return p && p.state === "ready" && p.chip ? p : null;
@@ -3325,7 +4394,8 @@ const CASES = {
     const r = await remoteServer();
     const s = t.session;
     const file = `e2e-remote-${t.name}.zip`;
-    const popup = await s.tab(`${s.base}popup.html`);
+    const popup = await s.tab(`${s.base}popup.html?tab=settings&keep=1`);
+    if (popup.viewport) await popup.viewport(400, 548);
     try {
       await until("the popup", 10000, () => popup.evaluate(`document.readyState === "complete" && Boolean(document.getElementById("to-remote"))`).catch(() => false));
       await sleep(300);
@@ -3363,7 +4433,27 @@ const CASES = {
       if (theirs.some((e) => (e.cookie || "").length)) throw new Error(`a cookie went to the server's download: ${theirs.map((e) => e.cookie).join("; ")}`);
       if ((await mdmList().catch(() => [])).some((d) => d.file === file)) throw new Error("this computer's MDM got it too");
       await keptNothing(t.dl);
-      return `paired (${said}); ${file} downloaded by the server into ${path.relative(r.downloads, at)} (${theirs.length} request(s), no cookie), not by this computer`;
+      // The popup's Downloads tab (#1496): the server's downloads, with a word saying so, and
+      // none of the buttons that need the file on this computer.
+      await popup.evaluate(`(document.getElementById("tab-downloads").click(), true)`);
+      const listed = JSON.parse(
+        await until("the server's downloads in the popup", 15000, () =>
+          popup.evaluate(`(() => { const li = [...document.querySelectorAll("#dl-list li.dl")].find((x) => x.querySelector(".dl-name").dataset.full === ${JSON.stringify(file)});
+            if (!li || document.getElementById("dl-remote").hidden || li.dataset.state !== "done") return "";
+            li.querySelector(".dl-more").click();
+            const menu = [...document.querySelectorAll(".menu .menu-item")].map((b) => b.dataset.act);
+            return JSON.stringify({ note: document.getElementById("dl-remote-text").textContent, menu, open: li.querySelector(".dl-name").tagName }); })()`),
+        ),
+      );
+      if (listed.menu.some((a) => ["open", "folder", "copyFile", "share", "del", "again"].includes(a)) || listed.open !== "SPAN") {
+        throw new Error(`the server's download offers what needs the file here: ${JSON.stringify(listed)}`);
+      }
+      if (process.env.E2E_SHOTS && popup.shot) {
+        await popup.evaluate(`(document.querySelector(".menu .menu-item").dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })), true)`);
+        await sleep(400);
+        await popup.shot(path.join(path.resolve(process.env.E2E_SHOTS), `${process.env.E2E_LANG || "en"}-${process.env.E2E_COLOR_SCHEME || "system"}-dl-remote.png`));
+      }
+      return `paired (${said}); ${file} downloaded by the server into ${path.relative(r.downloads, at)} (${theirs.length} request(s), no cookie), not by this computer; the popup lists it ("${listed.note}"), its menu [${listed.menu}]`;
     } finally {
       await popup.evaluate(`(document.getElementById("to-here").click(), true)`).catch(() => {});
       await sleep(500);
@@ -3381,6 +4471,9 @@ const KNOWN_BUGS = {};
 // The registry keys `nmhost --register` and `--unregister` touch (crates/nmhost REGISTRY_KEYS,
 // FIREFOX_KEY, CHROME_EXTERNAL_KEY): each browser's host entry and Chrome's external extension,
 // per user and for everyone (the latter only read: an installed copy's). [key, 32-bit view].
+// Also this account's .torrent and magnet associations (TORRENT_KEYS), which Torrent settings'
+// switch writes (win32.rs set_torrent_handlers): no test instance may touch them (#1058); one
+// changed fails the run, after being put back.
 const HOST = "com.misterdownloadmanager.host";
 const REG_KEYS = ["HKCU", "HKLM"].flatMap((root) => [
   ...[
@@ -3391,7 +4484,8 @@ const REG_KEYS = ["HKCU", "HKLM"].flatMap((root) => [
     "Software\\Mozilla\\NativeMessagingHosts",
   ].map((k) => [`${root}\\${k}\\${HOST}`, false]),
   [`${root}\\Software\\Google\\Chrome\\Extensions`, true],
-]);
+]).concat([".torrent", "magnet", "MisterDownloadManager.Torrent"].map((k) => [`HKCU\\Software\\Classes\\${k}`, false]));
+const TORRENT_KEYS = new Set(REG_KEYS.filter(([k]) => k.includes("\\Classes\\")).map(([k]) => k));
 
 // Linux and macOS: the host's manifests (`<HOST>.json`) in the home folder's browser folders,
 // found by a walk (each browser family has its own places: crates/ipc browsers.rs host_dirs),
@@ -3597,9 +4691,13 @@ async function run() {
         extension_never_ask: true,
         show_start_dialog: false,
         automation_api: true,
-        // The default types plus XZ, for the proxy case (a type other download managers leave alone).
-        auto_types: "3GP 7Z AAC ACE AIF APK ARJ ASF AVI BIN BZ2 EXE GZ GZIP IMG ISO LZH M4A M4V MKV MOV MP3 MP4 MPA MPE MPEG MPG MSI MSU OGG OGV PDF PLJ PPS PPT QT R0* R1* RA RAR RM RMVB SEA SIT SITX TAR TIF TIFF WAV WMA WMV XZ Z ZIP",
+        // The default types plus XZ, for the proxy case (a type other download managers leave
+        // alone); TORRENT for the torrents case (#1058).
+        auto_types: "3GP 7Z AAC ACE AIF APK ARJ ASF AVI BIN BZ2 EXE GZ GZIP IMG ISO LZH M4A M4V MKV MOV MP3 MP4 MPA MPE MPEG MPG MSI MSU OGG OGV PDF PLJ PPS PPT QT R0* R1* RA RAR RM RMVB SEA SIT SITX TAR TIF TIFF TORRENT WAV WMA WMV XZ Z ZIP",
         category_dirs: dirs,
+        // Torrent settings' switch decided (off): the instance never settles it from this
+        // computer's installer value or associations (#1058).
+        torrent_handler: false,
       },
     }),
   );
@@ -3762,9 +4860,12 @@ async function run() {
         : `${WIN ? "registry" : "host manifests"}: ${regBefore.length} ${WIN ? "keys" : "files"} byte-identical to before the run${regCheck.changed.length ? ` (put back: ${regCheck.changed.join(", ")})` : ""}; present before: ${kept.join(", ") || "none"}`,
     );
   }
+  // A test instance changed this account's .torrent or magnet association (put back above).
+  const associations = regCheck ? regCheck.changed.filter((k) => TORRENT_KEYS.has(k)) : [];
+  if (associations.length) console.log(`registry: the run CHANGED this account's torrent associations (put back): ${associations.join(", ")}`);
   if (test) console.log(testLeft.length ? `test host: STILL REGISTERED: ${testLeft.join(", ")}` : `test host: ${test.keys.join(", ")} registered for the run, removed`);
   console.log(`total ${((Date.now() - t0) / 1000).toFixed(0)}s`);
-  if (results.some((r) => r[2] === "FAILED" || r[2] === "BUG") || (regCheck && regCheck.differ.length) || testLeft.length) process.exit(1);
+  if (results.some((r) => r[2] === "FAILED" || r[2] === "BUG") || (regCheck && regCheck.differ.length) || associations.length || testLeft.length) process.exit(1);
 }
 
 // Run when started, not when another script imports its helpers (tools/readme/browser-shots.mjs).

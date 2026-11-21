@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Benchmark: Mister Download Manager vs IDM, timed to the millisecond</title>
-  <meta name="description" content="Seven downloads, each run at least seven times by IDM 6.42 and Mister Download Manager from the same test server: MDM was 5.4× faster on 1 GiB and 106× on small files. Charts, raw data and the method.">
+  <meta name="description" content="Seven downloads, each run at least seven times by IDM 6.42 and Mister Download Manager from a local test server (loopback): MDM was 5.4× faster on 1 GiB and 106× on small files. Charts, raw data and the method.">
   <meta name="theme-color" content="#1f63d6" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#0c1a33" media="(prefers-color-scheme: dark)">
   <meta name="color-scheme" content="light dark">
@@ -20,8 +20,13 @@
   <link rel="icon" href="/assets/favicon-32.png" type="image/png" sizes="32x32">
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
   <link rel="manifest" href="/site.webmanifest">
+  <link rel="stylesheet" href="/vitrine/vitrine.css">
+  <link rel="stylesheet" href="/vitrine/vitrine-modal.css">
   <link rel="stylesheet" href="/styles.css">
   <!--@theme-->
+  <script src="/vitrine/vitrine-core.js" defer></script>
+  <script src="/vitrine/vitrine-modal.js" defer></script>
+  <script src="/vitrine/vitrine.js" defer></script>
   <script src="/main.js" defer></script>
   <script src="/vendor/echarts.min.js" defer></script>
   <script src="/bench.js" defer></script>
@@ -35,7 +40,7 @@
       <div class="wrap">
         <ol class="crumbs" aria-label="Breadcrumb"><li><a href="/">Home</a></li><li aria-current="page">Benchmark</li></ol>
         <h1>IDM vs MDM, timed to the millisecond.</h1>
-        <p class="lede small">Both apps on the same PC, downloading from the same test server, in alternating runs. The server's own log says when each request arrived and when the last byte left, so nothing relies on either app's word.</p>
+        <p class="lede small">Both apps on the same PC, downloading from a test server on that same PC, in alternating runs. It is a loopback test: it times the programs, not an internet connection. The server's own log says when each request arrived and when the last byte left, so nothing relies on either app's word.</p>
       </div>
     </section>
 

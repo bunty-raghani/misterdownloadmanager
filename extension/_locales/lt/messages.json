@@ -92,9 +92,6 @@
       }
     }
   },
-  "popup_undo": {
-    "message": "Atšaukti"
-  },
   "popup_excluded": {
     "message": "Atsisiuntimai iš $site$ lieka naršyklėje",
     "placeholders": {
@@ -148,6 +145,9 @@
   },
   "declined_integration_off": {
     "message": "Parinktyse „Bendra“ išjungta „Naudoti išplėstinę naršyklės integraciją“."
+  },
+  "declined_torrents": {
+    "message": "Tai torrentas, o „Atidaryti magnetines nuorodas ir .torrent failus su Mister Download Manager“ yra išjungta torrentų nustatymuose."
   },
   "declined_site_access": {
     "message": "Plėtiniui neleidžiama skaityti šios svetainės (naršyklės prieiga prie svetainės)."
@@ -328,5 +328,424 @@
   },
   "video_original": {
     "message": "originalas"
+  },
+  "video_compatible": {
+    "message": "Labiausiai suderinamas"
+  },
+  "popup_video_hide_fullscreen": {
+    "message": "Slėpti atsisiuntimo mygtuką viso ekrano režimu"
+  },
+  "popup_video_hide_fullscreen_title": {
+    "message": "Kai puslapis yra viso ekrano režimu, jo vaizdo įrašuose nerodomas mygtukas „Atsisiųsti vaizdo įrašą“"
+  },
+  "popup_remote_forget": {
+    "message": "Pamiršti"
+  },
+  "popup_gear": {
+    "message": "Parinktys programoje Mister Download Manager"
+  },
+  "popup_tabs": {
+    "message": "Iššokančiojo lango sekcijos"
+  },
+  "popup_tab_downloads": {
+    "message": "Atsisiuntimai"
+  },
+  "popup_tab_page": {
+    "message": "Šis puslapis"
+  },
+  "popup_tab_settings": {
+    "message": "Parametrai"
+  },
+  "popup_conn": {
+    "message": "Prisijungta · $version$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.5.2"
+      }
+    }
+  },
+  "popup_conn_plain": {
+    "message": "Prisijungta"
+  },
+  "popup_conn_off": {
+    "message": "Neprisijungta"
+  },
+  "popup_conn_paused": {
+    "message": "Pristabdyta"
+  },
+  "popup_conn_update": {
+    "message": "Atnaujinti Mister Download Manager"
+  },
+  "popup_conn_remote": {
+    "message": "Siunčiama į $server$",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_cancel": {
+    "message": "Atšaukti"
+  },
+  "popup_page_none": {
+    "message": "Tai nėra tinklalapis: čia nėra ką veikti."
+  },
+  "popup_exclude_by_rule": {
+    "message": "Palikta naršyklei pagal parinkčių taisyklę"
+  },
+  "popup_dl_search": {
+    "message": "Ieškoti atsisiuntimų"
+  },
+  "popup_dl_filters": {
+    "message": "Rodyti"
+  },
+  "popup_dl_all": {
+    "message": "Visi"
+  },
+  "popup_dl_running": {
+    "message": "Vykdoma"
+  },
+  "popup_dl_done_filter": {
+    "message": "Baigta"
+  },
+  "popup_dl_failed_filter": {
+    "message": "Nepavyko"
+  },
+  "popup_dl_clear": {
+    "message": "Išvalyti baigtus"
+  },
+  "popup_dl_running_count": {
+    "message": "$count$ aktyvūs atsisiuntimai",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_remote": {
+    "message": "Tai yra Mister Download Manager atsisiuntimai iš $server$. Atidarykite jų failus ten.",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_dl_more": {
+    "message": "Naujausi $shown$ iš $total$. Mister Download Manager pateikia visus.",
+    "placeholders": {
+      "shown": {
+        "content": "$1",
+        "example": "60"
+      },
+      "total": {
+        "content": "$2",
+        "example": "245"
+      }
+    }
+  },
+  "popup_dl_of": {
+    "message": "$done$ iš $size$",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "12.3 MB"
+      },
+      "size": {
+        "content": "$2",
+        "example": "48.7 MB"
+      }
+    }
+  },
+  "popup_dl_left": {
+    "message": "Liko $time$",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "0:42"
+      }
+    }
+  },
+  "popup_dl_starting": {
+    "message": "Pradedama..."
+  },
+  "popup_dl_paused": {
+    "message": "Pristabdyta"
+  },
+  "popup_dl_waiting": {
+    "message": "Laukiama"
+  },
+  "popup_dl_done": {
+    "message": "Baigta"
+  },
+  "popup_dl_just_now": {
+    "message": "ką tik"
+  },
+  "popup_dl_failed": {
+    "message": "Nepavyko"
+  },
+  "popup_dl_failed_why": {
+    "message": "Nepavyko: $why$",
+    "placeholders": {
+      "why": {
+        "content": "$1",
+        "example": "the server refused the connection"
+      }
+    }
+  },
+  "popup_dl_gone": {
+    "message": "Failas panaikintas arba perkeltas"
+  },
+  "popup_dl_loading": {
+    "message": "Ieškoma atsisiuntimų..."
+  },
+  "popup_dl_none": {
+    "message": "Kol kas nėra atsisiuntimų"
+  },
+  "popup_dl_none_text": {
+    "message": "Tai, ką atsisiunčiate su Mister Download Manager, rodoma čia."
+  },
+  "popup_dl_no_match": {
+    "message": "Nieko nerasta"
+  },
+  "popup_dl_no_match_text": {
+    "message": "Jokio atsisiuntimo pavadinime ar adrese nėra „$words$“.",
+    "placeholders": {
+      "words": {
+        "content": "$1",
+        "example": "report"
+      }
+    }
+  },
+  "popup_dl_show_all": {
+    "message": "Rodyti visus atsisiuntimus"
+  },
+  "popup_list_off": {
+    "message": "Mister Download Manager neveikia"
+  },
+  "popup_list_off_text": {
+    "message": "Paleiskite, kad matytumėte atsisiuntimus čia."
+  },
+  "popup_list_start": {
+    "message": "Paleisti Mister Download Manager"
+  },
+  "popup_list_old": {
+    "message": "Atnaujinti Mister Download Manager"
+  },
+  "popup_list_old_text": {
+    "message": "Ši versija dar negali čia pateikti savo atsisiuntimų."
+  },
+  "popup_list_busy": {
+    "message": "Mister Download Manager užimta. Bandoma dar kartą..."
+  },
+  "popup_list_unreached": {
+    "message": "Nepavyksta pasiekti Mister Download Manager"
+  },
+  "popup_list_remote_unreachable": {
+    "message": "Nepavyksta pasiekti Mister Download Manager serveryje $server$",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_list_remote_unreachable_text": {
+    "message": "Patikrinkite, ar ji veikia ir ar ši naršyklė priima jos sertifikatą (Nustatymai → Siųsti atsisiuntimus į → Atidaryti).",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_act_open": {
+    "message": "Atidaryti"
+  },
+  "popup_act_open_named": {
+    "message": "Atidaryti $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_folder": {
+    "message": "Rodyti aplanke"
+  },
+  "popup_act_folder_named": {
+    "message": "Rodyti $file$ aplanke",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_copy_file": {
+    "message": "Kopijuoti failą"
+  },
+  "popup_act_share": {
+    "message": "Bendrinti..."
+  },
+  "popup_act_copy_link": {
+    "message": "Kopijuoti nuorodą"
+  },
+  "popup_act_pause": {
+    "message": "Pristabdyti"
+  },
+  "popup_act_pause_named": {
+    "message": "Pristabdyti $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_resume": {
+    "message": "Tęsti"
+  },
+  "popup_act_resume_named": {
+    "message": "Tęsti $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_again": {
+    "message": "Atsisiųsti iš naujo"
+  },
+  "popup_act_remove": {
+    "message": "Pašalinti iš sąrašo"
+  },
+  "popup_act_delete": {
+    "message": "Naikinti failą..."
+  },
+  "popup_act_more": {
+    "message": "Daugiau veiksmų"
+  },
+  "popup_act_more_named": {
+    "message": "Daugiau veiksmų $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_title": {
+    "message": "Naikinti failą?"
+  },
+  "popup_ask_delete": {
+    "message": "$file$ bus ištrintas iš jūsų kompiuterio, o atsisiuntimas pašalintas iš sąrašo. To negalima anuliuoti.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_ok": {
+    "message": "Naikinti"
+  },
+  "popup_ask_clear_title": {
+    "message": "Ar tikrai norite išvalyti baigtus atsisiuntimus?"
+  },
+  "popup_ask_clear": {
+    "message": "$count$ baigtų atsisiuntimų bus pašalinti iš sąrašo. Jų failai liks ten, kur yra.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "8"
+      }
+    }
+  },
+  "popup_ask_clear_ok": {
+    "message": "Išvalyti"
+  },
+  "popup_said_file": {
+    "message": "Nukopijuota $file$. Įklijuokite į aplanką, pokalbį ar pranešimą.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_link": {
+    "message": "Nuoroda nukopijuota"
+  },
+  "popup_said_removed": {
+    "message": "$file$ pašalintas iš sąrašo",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_deleted": {
+    "message": "$file$ ištrintas",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_again": {
+    "message": "Atsisiunčiama $file$ iš naujo",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_cleared": {
+    "message": "Baigti atsisiuntimai išvalyti"
+  },
+  "popup_act_gone": {
+    "message": "Šio atsisiuntimo sąraše nebėra."
+  },
+  "popup_act_missing": {
+    "message": "Jo failo nebėra ten, kur jis buvo įrašytas (perkeltas arba panaikintas)."
+  },
+  "popup_act_running": {
+    "message": "Pirmiausia pristabdykite."
+  },
+  "popup_act_cant": {
+    "message": "Šio atsisiuntimo dabar negalima atlikti."
+  },
+  "popup_act_unsupported": {
+    "message": "Ši sistema to negali padaryti."
+  },
+  "popup_act_off": {
+    "message": "Mister Download Manager neveikia."
+  },
+  "popup_act_busy": {
+    "message": "Mister Download Manager neatsakė laiku. Bandykite dar kartą."
+  },
+  "popup_act_failed": {
+    "message": "Nepavyko. Bandykite dar kartą."
+  },
+  "status_running": {
+    "message": "Atsisiunčiama: $count$",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_open_remote": {
+    "message": "Atidaryti jo puslapį"
   }
 }

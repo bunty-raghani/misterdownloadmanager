@@ -136,6 +136,15 @@ pub fn text(input: &Input, home: Option<&Path>) -> String {
                     );
                 }
             }
+            // Pages read from disk meanwhile (macOS counts them for the whole of MDM): many
+            // mean the window waited for its own code or memory, read back from a slow disk;
+            // none rule the disk out (#1515: stuck on a function's first instruction).
+            if let Some(n) = input.notes.freeze.as_ref().and_then(|f| f.busy?.pageins) {
+                let _ = writeln!(
+                    s,
+                    "{n} page-ins during the freeze (pages of MDM read from disk: its code or its memory)."
+                );
+            }
             // Where the frame was when the watchdog saw the freeze: what held it, when the
             // snapshot came too late to show it (#574).
             if let Some(f) = input.notes.freeze.as_ref().filter(|f| !f.step.is_empty()) {
@@ -338,7 +347,7 @@ pub fn make(
         time: chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true),
         notes: notes.clone(),
         analysis: analysis.as_ref(),
-        log_tail: crate::logs::tail(data, 150),
+        log_tail: crate::logs::tail_or_recent(data, crate::logs::RECENT, &notes.log),
         dump: dump
             .and_then(|d| d.file_name())
             .map(|n| n.to_string_lossy().into_owned()),
@@ -857,6 +866,7 @@ mod tests {
                         wall_ms: 7_500,
                         cpu_ms,
                         faults: Some(12_000),
+                        pageins: None,
                     }),
                     step: String::new(),
                 }),
@@ -917,6 +927,65 @@ mod tests {
             signature(Kind::Freeze, &freeze_with(&bare, 100)),
             "freeze while the computer was busy"
         );
+    }
+
+    /// #1515: a macOS freeze, its window thread found as the dump's first (the main thread, no
+    /// id), stopped on the first instruction of one of MDM's functions: how little it ran, and
+    /// how many pages MDM read from disk meanwhile, are both said. Without page-ins (Windows,
+    /// Linux, an older MDM) the line isn't there.
+    #[test]
+    fn a_macos_freeze_says_how_much_it_ran_and_its_page_ins() {
+        let mut a = stopped_in_own_code();
+        a.threads[0].frames[0] = frame("core::ptr::drop_in_place<torrents::Outcome>");
+        let mut input = freeze_with(&a, 60);
+        let f = input.notes.freeze.as_mut().unwrap();
+        f.ui_thread = 0;
+        f.main = true;
+        f.busy = Some(crate::protocol::Busy {
+            wall_ms: 8_000,
+            cpu_ms: 60,
+            faults: Some(3_100),
+            pageins: Some(812),
+        });
+        let t = text(&input, None);
+        assert!(t.contains("-- Window thread (frozen): main (1) --"), "{t}");
+        assert!(
+            t.contains("Its thread ran only 0.1 of 8.0 s, and not in a wait"),
+            "{t}"
+        );
+        assert!(
+            t.contains(
+                "
+812 page-ins during the freeze (pages of MDM read from disk: its code or its memory).
+"
+            ),
+            "{t}"
+        );
+        // None at all is said too: the disk didn't hold it.
+        input
+            .notes
+            .freeze
+            .as_mut()
+            .unwrap()
+            .busy
+            .as_mut()
+            .unwrap()
+            .pageins = Some(0);
+        assert!(text(&input, None).contains(
+            "
+0 page-ins during the freeze"
+        ));
+        // Unknown: not said.
+        input
+            .notes
+            .freeze
+            .as_mut()
+            .unwrap()
+            .busy
+            .as_mut()
+            .unwrap()
+            .pageins = None;
+        assert!(!text(&input, None).contains("page-ins"));
     }
 
     /// #355, as reported: the dump was written 7 s after it was asked for, when the window thread

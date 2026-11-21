@@ -37,6 +37,7 @@ async fn main() {
         upnp: false,
         dht: false,
         lsd: true,
+        require_authorization: false,
         ..Config::new(out.join(".leech"))
     })
     .await

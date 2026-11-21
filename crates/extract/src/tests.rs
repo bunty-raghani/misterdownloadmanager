@@ -111,6 +111,30 @@ fn volume_names() {
     assert_eq!(base_name(Path::new("movie.part1.rar")), "movie");
 }
 
+/// A name whose lowercase is longer in bytes than the name itself (`İ` to `i̇`): the base is
+/// cut by the suffix's length, not at an offset measured in the lowercase.
+#[test]
+fn a_volume_name_whose_lowercase_is_longer() {
+    let five = "İ".repeat(5);
+    assert_eq!(
+        volume_key(&format!("{five}.rar")).map(|v| v.base),
+        Some(five.clone())
+    );
+    assert_eq!(
+        volume_key(&format!("{five}.r00")).map(|v| v.base),
+        Some(five.clone())
+    );
+    assert_eq!(
+        volume_key(&format!("{five}.7z.001")).map(|v| v.base),
+        Some(five.clone())
+    );
+    assert_eq!(
+        volume_key(&format!("{five}.part2.rar")).map(|v| v.base),
+        Some(five)
+    );
+    assert_eq!(volume_key("İ.rar").map(|v| v.base), Some("İ".to_owned()));
+}
+
 #[test]
 fn zip_smart_folder_and_marks() {
     let t = tempfile::tempdir().unwrap();
@@ -303,6 +327,23 @@ fn sevenz_plain_encrypted_and_split_through_7zip() {
         Err(Error::WrongPassword)
     ));
     run(&enc, &dest, Some("s3cret"), Subfolder::Smart)
+        .0
+        .unwrap();
+    no_staging(&dest);
+    // Its names encrypted too (`-mhe`): 7-Zip asks before it can list it; the password, given
+    // on its input, opens it.
+    let hidden = t.path().join("hidden.7z");
+    seven_of(&tool, &src, &hidden, &["-ps3cret", "-mhe=on"]);
+    let dest = t.path().join("o3");
+    assert!(matches!(
+        run(&hidden, &dest, None, Subfolder::Smart).0,
+        Err(Error::NeedsPassword)
+    ));
+    assert!(matches!(
+        run(&hidden, &dest, Some("bad"), Subfolder::Smart).0,
+        Err(Error::WrongPassword)
+    ));
+    run(&hidden, &dest, Some("s3cret"), Subfolder::Smart)
         .0
         .unwrap();
     no_staging(&dest);
@@ -548,23 +589,36 @@ fn hatchzip_in_place_wrong_passwords_change_nothing() {
     assert!(!a.exists());
 }
 
+/// Write a program a test then runs: `content` goes to `path`, executable.
+///
+/// A `sh` of its own writes it, never this process: a file written here while another test's
+/// thread starts a program is handed to that child still open for writing, and Linux refuses to
+/// run a file open for writing anywhere ("Text file busy"), so running it would fail now and
+/// then.
+#[cfg(unix)]
+fn write_program(path: &Path, content: &[u8]) {
+    let mut sh = std::process::Command::new("/bin/sh")
+        .args(["-c", "cat > \"$1\" && chmod 755 \"$1\"", "sh"])
+        .arg(path)
+        .stdin(std::process::Stdio::piped())
+        .spawn()
+        .unwrap();
+    sh.stdin.take().unwrap().write_all(content).unwrap();
+    assert!(sh.wait().unwrap().success(), "{}", path.display());
+}
+
 /// A stand-in for HatchZip: records its arguments beside the archive, runs `body` (`$out` its
 /// folder, `$archive` the archive) and exits with `code`.
 #[cfg(unix)]
 fn fake_hatchzip(dir: &Path, code: i32, body: &str) -> PathBuf {
-    use std::os::unix::fs::PermissionsExt;
     static N: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
     let n = N.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     let p = dir.join(format!("fake-hatchzip-{code}-{n}"));
-    std::fs::write(
-        &p,
-        format!(
-            "#!/bin/sh\nout=\"${{2#--output=}}\"\narchive=\"$6\"\nmkdir -p \"$out\"\n\
-             echo \"$@\" > \"$archive.args\"\n{body}\necho 'error: it stopped' >&2\nexit {code}\n"
-        ),
-    )
-    .unwrap();
-    std::fs::set_permissions(&p, std::fs::Permissions::from_mode(0o755)).unwrap();
+    let script = format!(
+        "#!/bin/sh\nout=\"${{2#--output=}}\"\narchive=\"$6\"\nmkdir -p \"$out\"\n\
+         echo \"$@\" > \"$archive.args\"\n{body}\necho 'error: it stopped' >&2\nexit {code}\n"
+    );
+    write_program(&p, script.as_bytes());
     p
 }
 
@@ -847,7 +901,8 @@ fn a_failed_move_in_place_keeps_every_file() {
     let out = t.path().join("stuck.hatchzip-out");
     let back = || std::fs::set_permissions(out.join("z"), std::fs::Permissions::from_mode(0o755));
     let Err(Error::Unplaced { to, left, .. }) = r else {
-        back().unwrap();
+        // The rights back if `z` was made, then what came instead.
+        let _ = back();
         panic!("{r:?}")
     };
     back().unwrap();
@@ -880,7 +935,8 @@ fn a_folder_that_cant_be_read_says_where_the_files_are() {
         runs.path(),
     );
     let out = t.path().join("shut.hatchzip-out");
-    std::fs::set_permissions(&out, std::fs::Permissions::from_mode(0o755)).unwrap();
+    // Its rights back if it was made; what came instead is said below.
+    let _ = std::fs::set_permissions(&out, std::fs::Permissions::from_mode(0o755));
     // Root reads any folder: nothing to check then.
     if r.is_ok() {
         return;

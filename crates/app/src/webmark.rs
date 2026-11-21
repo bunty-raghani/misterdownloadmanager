@@ -6,6 +6,11 @@
 //! downloaded files as coming from the internet" says and, on Windows, as Windows' own policy
 //! for attachments says: browsers save their downloads through Windows' attachment services,
 //! which leave the mark out under "Do not preserve zone information in file attachments".
+//!
+//! The mark is written by whatever writes the file, on its thread, before the download is said to
+//! be done (#1103): never on the window's thread, where a disk slow to take it froze the window
+//! (#510), and before the file can be opened (Windows checks the mark then) or renamed (a rename
+//! keeps it).
 
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};

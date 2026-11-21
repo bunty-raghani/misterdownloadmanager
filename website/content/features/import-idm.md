@@ -37,8 +37,8 @@ expect: the toolbar, the categories, the download list, the progress window with
 connection, queues and the Scheduler. It is free, with no trial and no sign-up.
 
 IDM is the more mature product, refined over many years. MDM finished faster in [our
-benchmark](/benchmark.html): a 1 GiB file in 1.0 s against IDM 6.42's 5.5 s, on the same PC and
-the same test server. The [FAQ](/faq/mdm-vs-idm.html) sums up the other differences.
+benchmark](/benchmark.html): a 1 GiB file in 1.0 s against IDM 6.42's 5.5 s, both on one PC,
+downloading from a test server on that PC (a loopback test). The [FAQ](/faq/mdm-vs-idm.html) sums up the other differences.
 
 ## Choose before you add
 

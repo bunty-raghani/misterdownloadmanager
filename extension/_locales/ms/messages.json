@@ -92,9 +92,6 @@
       }
     }
   },
-  "popup_undo": {
-    "message": "Buat asal"
-  },
   "popup_excluded": {
     "message": "Muat turun daripada $site$ kekal dengan penyemak imbas",
     "placeholders": {
@@ -148,6 +145,9 @@
   },
   "declined_integration_off": {
     "message": "Guna penyepaduan penyemak imbas lanjutan dimatikan dalam Pilihan → Umum."
+  },
+  "declined_torrents": {
+    "message": "Ia adalah torrent, dan Buka pautan magnet dan fail .torrent dengan Mister Download Manager dimatikan dalam Tetapan Torrent."
   },
   "declined_site_access": {
     "message": "Sambungan tidak dibenarkan membaca tapak ini (akses tapak penyemak imbas)."
@@ -204,7 +204,7 @@
     "message": "Mister Download Manager sedang sibuk dengan video lain"
   },
   "video_queued": {
-    "message": "Ditambah pada giliran"
+    "message": "Ditambah pada baris gilir"
   },
   "video_failed_lookup": {
     "message": "Tidak dapat mencarinya"
@@ -328,5 +328,424 @@
   },
   "video_original": {
     "message": "asal"
+  },
+  "video_compatible": {
+    "message": "Paling serasi"
+  },
+  "popup_video_hide_fullscreen": {
+    "message": "Sembunyikan butang muat turun dalam skrin penuh"
+  },
+  "popup_video_hide_fullscreen_title": {
+    "message": "Semasa halaman dalam skrin penuh, videonya tidak menunjukkan butang Muat turun video"
+  },
+  "popup_remote_forget": {
+    "message": "Lupakan"
+  },
+  "popup_gear": {
+    "message": "Pilihan dalam Mister Download Manager"
+  },
+  "popup_tabs": {
+    "message": "Bahagian tetingkap timbul"
+  },
+  "popup_tab_downloads": {
+    "message": "Muat turun"
+  },
+  "popup_tab_page": {
+    "message": "Halaman ini"
+  },
+  "popup_tab_settings": {
+    "message": "Tetapan"
+  },
+  "popup_conn": {
+    "message": "Bersambung · $version$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.5.2"
+      }
+    }
+  },
+  "popup_conn_plain": {
+    "message": "Bersambung"
+  },
+  "popup_conn_off": {
+    "message": "Tidak bersambung"
+  },
+  "popup_conn_paused": {
+    "message": "Dijeda"
+  },
+  "popup_conn_update": {
+    "message": "Kemas kini Mister Download Manager"
+  },
+  "popup_conn_remote": {
+    "message": "Menghantar ke $server$",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_cancel": {
+    "message": "Batal"
+  },
+  "popup_page_none": {
+    "message": "Ini bukan halaman web: tiada apa-apa yang boleh dilakukan di sini."
+  },
+  "popup_exclude_by_rule": {
+    "message": "Dibiarkan kepada penyemak imbas oleh peraturan dalam Pilihan"
+  },
+  "popup_dl_search": {
+    "message": "Cari muat turun"
+  },
+  "popup_dl_filters": {
+    "message": "Tunjuk"
+  },
+  "popup_dl_all": {
+    "message": "Semua"
+  },
+  "popup_dl_running": {
+    "message": "Sedang berjalan"
+  },
+  "popup_dl_done_filter": {
+    "message": "Selesai"
+  },
+  "popup_dl_failed_filter": {
+    "message": "Gagal"
+  },
+  "popup_dl_clear": {
+    "message": "Kosongkan yang selesai"
+  },
+  "popup_dl_running_count": {
+    "message": "$count$ sedang memuat turun sekarang",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_remote": {
+    "message": "Ini ialah muat turun Mister Download Manager di $server$. Buka failnya di sana.",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_dl_more": {
+    "message": "$shown$ yang terbaharu daripada $total$. Mister Download Manager menyenaraikan kesemuanya.",
+    "placeholders": {
+      "shown": {
+        "content": "$1",
+        "example": "60"
+      },
+      "total": {
+        "content": "$2",
+        "example": "245"
+      }
+    }
+  },
+  "popup_dl_of": {
+    "message": "$done$ daripada $size$",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "12.3 MB"
+      },
+      "size": {
+        "content": "$2",
+        "example": "48.7 MB"
+      }
+    }
+  },
+  "popup_dl_left": {
+    "message": "Baki $time$",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "0:42"
+      }
+    }
+  },
+  "popup_dl_starting": {
+    "message": "Memulakan..."
+  },
+  "popup_dl_paused": {
+    "message": "Dijeda"
+  },
+  "popup_dl_waiting": {
+    "message": "Menunggu"
+  },
+  "popup_dl_done": {
+    "message": "Selesai"
+  },
+  "popup_dl_just_now": {
+    "message": "baru sahaja"
+  },
+  "popup_dl_failed": {
+    "message": "Gagal"
+  },
+  "popup_dl_failed_why": {
+    "message": "Gagal: $why$",
+    "placeholders": {
+      "why": {
+        "content": "$1",
+        "example": "the server refused the connection"
+      }
+    }
+  },
+  "popup_dl_gone": {
+    "message": "Fail dipadam atau dialihkan"
+  },
+  "popup_dl_loading": {
+    "message": "Mencari muat turun..."
+  },
+  "popup_dl_none": {
+    "message": "Belum ada muat turun"
+  },
+  "popup_dl_none_text": {
+    "message": "Apa-apa yang anda muat turun dengan Mister Download Manager akan muncul di sini."
+  },
+  "popup_dl_no_match": {
+    "message": "Tiada padanan"
+  },
+  "popup_dl_no_match_text": {
+    "message": "Tiada nama atau alamat muat turun yang mengandungi “$words$”.",
+    "placeholders": {
+      "words": {
+        "content": "$1",
+        "example": "report"
+      }
+    }
+  },
+  "popup_dl_show_all": {
+    "message": "Tunjukkan semua muat turun"
+  },
+  "popup_list_off": {
+    "message": "Mister Download Manager tidak berjalan"
+  },
+  "popup_list_off_text": {
+    "message": "Mulakan aplikasi untuk melihat muat turun anda di sini."
+  },
+  "popup_list_start": {
+    "message": "Mulakan Mister Download Manager"
+  },
+  "popup_list_old": {
+    "message": "Kemas kini Mister Download Manager"
+  },
+  "popup_list_old_text": {
+    "message": "Versi ini belum dapat menyenaraikan muat turunnya di sini."
+  },
+  "popup_list_busy": {
+    "message": "Mister Download Manager sibuk. Mencuba lagi..."
+  },
+  "popup_list_unreached": {
+    "message": "Tidak dapat mencapai Mister Download Manager"
+  },
+  "popup_list_remote_unreachable": {
+    "message": "Tidak dapat mencapai Mister Download Manager di $server$",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_list_remote_unreachable_text": {
+    "message": "Semak sama ada aplikasi sedang berjalan dan sama ada penyemak imbas ini menerima sijilnya (Tetapan → Hantar muat turun ke → Buka).",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_act_open": {
+    "message": "Buka"
+  },
+  "popup_act_open_named": {
+    "message": "Buka $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_folder": {
+    "message": "Tunjukkan dalam folder"
+  },
+  "popup_act_folder_named": {
+    "message": "Tunjukkan $file$ dalam folder",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_copy_file": {
+    "message": "Salin fail"
+  },
+  "popup_act_share": {
+    "message": "Kongsi..."
+  },
+  "popup_act_copy_link": {
+    "message": "Salin pautan"
+  },
+  "popup_act_pause": {
+    "message": "Jeda"
+  },
+  "popup_act_pause_named": {
+    "message": "Jeda $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_resume": {
+    "message": "Sambung semula"
+  },
+  "popup_act_resume_named": {
+    "message": "Sambung semula $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_again": {
+    "message": "Muat turun semula"
+  },
+  "popup_act_remove": {
+    "message": "Alih keluar daripada senarai"
+  },
+  "popup_act_delete": {
+    "message": "Padam fail..."
+  },
+  "popup_act_more": {
+    "message": "Tindakan lanjut"
+  },
+  "popup_act_more_named": {
+    "message": "Tindakan lanjut untuk $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_title": {
+    "message": "Adakah anda mahu memadam fail ini?"
+  },
+  "popup_ask_delete": {
+    "message": "$file$ akan dipadamkan daripada komputer anda, dan muat turun dialih keluar daripada senarai. Ini tidak boleh dibuat asal.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_ok": {
+    "message": "Padam"
+  },
+  "popup_ask_clear_title": {
+    "message": "Adakah anda mahu mengosongkan muat turun yang selesai?"
+  },
+  "popup_ask_clear": {
+    "message": "Adakah anda mahu mengalih keluar $count$ muat turun yang selesai daripada senarai? Failnya kekal di tempatnya.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "8"
+      }
+    }
+  },
+  "popup_ask_clear_ok": {
+    "message": "Kosongkan"
+  },
+  "popup_said_file": {
+    "message": "Fail $file$ disalin. Tampalkannya ke dalam folder, sembang atau mesej.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_link": {
+    "message": "Pautan disalin"
+  },
+  "popup_said_removed": {
+    "message": "$file$ dialih keluar daripada senarai",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_deleted": {
+    "message": "$file$ dipadamkan",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_again": {
+    "message": "Memuat turun $file$ semula",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_cleared": {
+    "message": "Muat turun yang selesai dikosongkan"
+  },
+  "popup_act_gone": {
+    "message": "Muat turun itu tiada lagi dalam senarai."
+  },
+  "popup_act_missing": {
+    "message": "Failnya tiada lagi di tempat ia disimpan (dialihkan atau dipadam)."
+  },
+  "popup_act_running": {
+    "message": "Jeda dahulu."
+  },
+  "popup_act_cant": {
+    "message": "Itu tidak boleh dilakukan pada muat turun ini sekarang."
+  },
+  "popup_act_unsupported": {
+    "message": "Sistem ini tidak dapat melakukan itu."
+  },
+  "popup_act_off": {
+    "message": "Mister Download Manager tidak berjalan."
+  },
+  "popup_act_busy": {
+    "message": "Mister Download Manager tidak menjawab tepat pada masanya. Cuba lagi."
+  },
+  "popup_act_failed": {
+    "message": "Itu tidak berjaya. Cuba lagi."
+  },
+  "status_running": {
+    "message": "Sedang memuat turun: $count$",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_open_remote": {
+    "message": "Buka halamannya"
   }
 }

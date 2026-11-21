@@ -14,8 +14,8 @@ lossless (#186: text and one-pixel lines stay sharp), written only when its byte
 
 Every <img> in website/*.html that shows a WebP written here gets its width and height set to the
 picture's size in CSS pixels (its pixels / --density: docs-shots.ps1 shoots at 1x, so 1 unless the
-shots were taken with -Zoom 2), which is also how the lightbox (main.js) knows the scale to show it
-at. The sizes are printed; an <img> that names a missing WebP is reported.
+shots were taken with -Zoom 2), which is also how the lightbox (Vitrine, set up in main.js)
+knows the scale to show it at. The sizes are printed; an <img> that names a missing WebP is reported.
 
 Needs: pip install pillow
 """

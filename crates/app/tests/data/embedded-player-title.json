@@ -1,0 +1,25 @@
+{
+  "about": "A film page whose video plays in another site's player, in a frame: what a browser saw on https://www.shortverse.com/films/before-the-short-film (2026-11-14), reduced. The tab and its title; the Vimeo player's frame the video plays in and that frame's own title; the stream the player loaded (its signed address shortened); yt-dlp's answer for that stream (2026.10.26, -J, reduced: it knows it only by its address, `playlist`). The extension sends `sent` as the video's title (tools/extension/test.mjs); the app names the file `file` (crates/app/src/videodlg.rs).",
+  "tab": {
+    "url": "https://www.shortverse.com/films/before-the-short-film",
+    "title": "Before The - Short Film | Shortverse"
+  },
+  "frame": {
+    "url": "https://player.vimeo.com/video/1244858801?enablejsapi=1&amp;api=1&amp;byline=0&amp;badge=0&amp;title=0",
+    "title": "Before The - Short Film from Justin Barry on Vimeo"
+  },
+  "stream": "https://skyfire.vimeocdn.com/1794657008-0x0/fbac8c29/psid=0/v2/playlist/av/primary/sub/340836368-en-x-autogen/prot/cHI9/playlist.m3u8?ext-subs=1&omit=av1-hevc-opus&pathsig=x",
+  "ytdlp": {
+    "id": "playlist",
+    "title": "playlist",
+    "extractor": "generic",
+    "duration": 26,
+    "formats": [
+      {"format_id": "audio-high-Original", "ext": "mp4", "vcodec": "none", "protocol": "m3u8_native"},
+      {"format_id": "2413", "ext": "mp4", "height": 720, "fps": 24.0, "vcodec": "avc1.640020", "acodec": "none", "tbr": 2413.0, "protocol": "m3u8_native"},
+      {"format_id": "15818", "ext": "mp4", "height": 2160, "fps": 24.0, "vcodec": "avc1.640034", "acodec": "none", "tbr": 15818.0, "protocol": "m3u8_native"}
+    ]
+  },
+  "sent": "Before The - Short Film",
+  "file": "Before The - Short Film.mp4"
+}

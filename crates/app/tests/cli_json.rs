@@ -27,11 +27,15 @@ async fn a_download_reports_progress_then_done() {
     .unwrap();
     let dir = tempfile::tempdir().unwrap();
     let dest = dir.path().join("json.bin");
+    // A data folder of its own: the command line reads the app's proxy settings (#1556), and
+    // those of whoever runs the tests stay out of it.
+    let data = tempfile::tempdir().unwrap();
     let out = tokio::task::spawn_blocking(move || {
         Command::new(APP)
             .arg(mdm_cli::FLAG)
             .args(["--json", "get", &s.url("/gen/3M?seed=5"), "-o"])
             .arg(&dest)
+            .env("MDM_DATA_DIR", data.path())
             .output()
             .unwrap()
     })

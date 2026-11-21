@@ -1,5 +1,6 @@
 ; Mister Download Manager's Windows installer (Inno Setup 6). Built by tools/installer/build.ps1,
-; which passes /DAppVersion=... and, when a certificate is set up, /DSign with /Smdmsign=...
+; which passes /DAppVersion=..., /DArch=... and /DBin=... and, when a certificate is set up,
+; /DSign with /Smdmsign=...
 ;
 ; Install for the current user (no administrator rights, %LOCALAPPDATA%\Programs) or for
 ; everyone (Program Files); the wizard asks. Tasks: browser integration (native messaging host
@@ -15,7 +16,14 @@
 #define AppExe "misterdownloadmanager.exe"
 #define HostExe "misterdownloadmanager-nmhost.exe"
 #define Root "..\.."
-#define Bin Root + "\target\release"
+; The processor (build.ps1 -Arch): x64, arm64 or x86, an installer each; and the folder its
+; programs were built in (target\<Rust's target>\release).
+#ifndef Arch
+  #define Arch "x64"
+#endif
+#ifndef Bin
+  #define Bin Root + "\target\x86_64-pc-windows-msvc\release"
+#endif
 
 [Setup]
 ; Never change AppId: upgrades and the uninstaller find the installation by it.
@@ -34,15 +42,33 @@ PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
 ; The Run entry is the installing user's, also when installing for everyone.
 UsedUserAreasWarning=no
+; One installer per processor, all with the same AppId: the ARM64 one run on a Windows on ARM PC
+; that has the x64 one replaces it in place. x64 runs on x64 Windows and, emulated, on Windows 11
+; on ARM; ARM64 on Windows on ARM only; the 32-bit one on 32-bit Windows only (x86os): on a 64-bit
+; one it would replace a per-user x64 copy (which would then update to the 32-bit files for good)
+; or add a second copy in Program Files (x86). There Setup refuses with its own message, which
+; names the processors it is for.
+#if Arch == "arm64"
+ArchitecturesAllowed=arm64
+ArchitecturesInstallIn64BitMode=arm64
+#elif Arch == "x86"
+ArchitecturesAllowed=x86os
+#else
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
+#endif
 MinVersion=10.0
 WizardStyle=modern
 SetupIconFile={#Root}\crates\app\assets\icons\app\mdm.ico
 UninstallDisplayIcon={app}\{#AppExe}
 UninstallDisplayName={#AppName}
 OutputDir={#Root}\target\dist
+; x64's keeps the name it had before there were others: MDM's Update now looks for it by name.
+#if Arch == "x64"
 OutputBaseFilename=MisterDownloadManager-{#AppVersion}-setup
+#else
+OutputBaseFilename=MisterDownloadManager-{#AppVersion}-setup-{#Arch}
+#endif
 ; A 64 MB dictionary (#25): an 8 MB one (lzma2/max) only finds what repeats close by in the
 ; solid archive. A few MB smaller; building needs about 750 MB of memory, installing 64 MB.
 Compression=lzma2/ultra64
@@ -76,6 +102,13 @@ lang_en.TaskGroupOther=Other:
 lang_en.Launch=Start {#AppName}
 lang_en.KeepData=Also delete your download list and settings?%n%nYour downloaded files are not touched either way.
 
+; 32-bit Windows' setup run on 64-bit Windows (x86os above): which setup to take instead. Other
+; languages show Setup's own message, that this Windows isn't supported.
+#if Arch == "x86"
+[Messages]
+lang_en.WindowsVersionNotSupported=This is the setup for 32-bit Windows, and this computer runs 64-bit Windows. Download MisterDownloadManager-{#AppVersion}-setup.exe instead (or MisterDownloadManager-{#AppVersion}-setup-arm64.exe on a Windows on ARM PC).
+#endif
+
 [Tasks]
 Name: "browser"; Description: "{cm:TaskBrowser}"
 Name: "torrents"; Description: "{cm:TaskTorrents}"
@@ -106,6 +139,11 @@ Root: HKCU; Subkey: "Software\MisterDownloadManager"; ValueType: string; ValueNa
 ; Start with Windows: the same value Options -> "Launch on startup" writes and reads, with the
 ; argument that starts MDM in the notification area (#226; win32.rs startup_command).
 Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "MisterDownloadManager"; ValueData: """{app}\{#AppExe}"" /startup"; Flags: uninsdeletevalue; Tasks: startup
+; The "torrents" task, ticked or not: Torrent settings' switch on the app's first start that hasn't
+; decided it (#1058: it then also decides whether the browser hands .torrent downloads over;
+; settings.rs settle_torrent_handler). Only read, once.
+Root: HKCU; Subkey: "Software\MisterDownloadManager"; ValueType: string; ValueName: "InstallTorrents"; ValueData: "1"; Flags: uninsdeletevalue uninsdeletekeyifempty; Tasks: torrents
+Root: HKCU; Subkey: "Software\MisterDownloadManager"; ValueType: string; ValueName: "InstallTorrents"; ValueData: "0"; Flags: uninsdeletevalue uninsdeletekeyifempty; Tasks: not torrents
 ; .torrent files and magnet links (HKA: the user's or everyone's classes, as installed).
 Root: HKA; Subkey: "Software\Classes\MisterDownloadManager.torrent"; ValueType: string; ValueName: ""; ValueData: "Torrent file"; Flags: uninsdeletekey; Tasks: torrents
 Root: HKA; Subkey: "Software\Classes\MisterDownloadManager.torrent\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\{#AppExe},0"; Tasks: torrents
@@ -116,6 +154,21 @@ Root: HKA; Subkey: "Software\Classes\magnet"; ValueType: string; ValueName: ""; 
 Root: HKA; Subkey: "Software\Classes\magnet"; ValueType: string; ValueName: "URL Protocol"; ValueData: ""; Tasks: torrents
 Root: HKA; Subkey: "Software\Classes\magnet\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\{#AppExe},0"; Tasks: torrents
 Root: HKA; Subkey: "Software\Classes\magnet\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#AppExe}"" ""%1"""; Tasks: torrents
+; Windows' Default apps (#1091): MDM listed for MAGNET and .torrent, where the user picks it (a
+; choice recorded there for another program stays first, and no program may change it). The
+; same keys and names as win32.rs set_torrent_handlers; ApplicationName matches the
+; RegisteredApplications value's name, and each association has an MDM-only ProgID. The app
+; writes its description in the interface language for the user's own registration.
+Root: HKA; Subkey: "Software\Classes\MisterDownloadManager.Magnet"; ValueType: string; ValueName: ""; ValueData: "URL:Magnet link"; Flags: uninsdeletekey; Tasks: torrents
+Root: HKA; Subkey: "Software\Classes\MisterDownloadManager.Magnet"; ValueType: string; ValueName: "URL Protocol"; ValueData: ""; Tasks: torrents
+Root: HKA; Subkey: "Software\Classes\MisterDownloadManager.Magnet\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: """{app}\{#AppExe}"",0"; Tasks: torrents
+Root: HKA; Subkey: "Software\Classes\MisterDownloadManager.Magnet\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#AppExe}"" ""%1"""; Tasks: torrents
+Root: HKA; Subkey: "Software\MisterDownloadManager\Capabilities"; ValueType: string; ValueName: "ApplicationName"; ValueData: "{#AppName}"; Flags: uninsdeletekey; Tasks: torrents
+Root: HKA; Subkey: "Software\MisterDownloadManager\Capabilities"; ValueType: string; ValueName: "ApplicationDescription"; ValueData: "Downloads files, videos and torrents"; Tasks: torrents
+Root: HKA; Subkey: "Software\MisterDownloadManager\Capabilities"; ValueType: string; ValueName: "ApplicationIcon"; ValueData: """{app}\{#AppExe}"",0"; Tasks: torrents
+Root: HKA; Subkey: "Software\MisterDownloadManager\Capabilities\FileAssociations"; ValueType: string; ValueName: ".torrent"; ValueData: "MisterDownloadManager.Torrent"; Tasks: torrents
+Root: HKA; Subkey: "Software\MisterDownloadManager\Capabilities\UrlAssociations"; ValueType: string; ValueName: "magnet"; ValueData: "MisterDownloadManager.Magnet"; Tasks: torrents
+Root: HKA; Subkey: "Software\RegisteredApplications"; ValueType: string; ValueName: "{#AppName}"; ValueData: "Software\MisterDownloadManager\Capabilities"; Flags: uninsdeletevalue; Tasks: torrents
 
 [Run]
 Filename: "{app}\{#HostExe}"; Parameters: "--register"; Flags: runhidden; Tasks: browser; Check: not IsAdminInstallMode
@@ -197,6 +250,13 @@ begin
     ForgetIfOurs('Software\Classes\magnet', ExpandConstant('{app}\{#AppExe}'));
     if RegQueryStringValue(HKA, 'Software\Classes\.torrent', '', Value) and (Value = 'MisterDownloadManager.torrent') then
       RegDeleteValue(HKA, 'Software\Classes\.torrent', '');
+    { Default apps (#1091): what the app registered for this user (Torrent settings' switch),
+      also when this install was everyone's. }
+    if RegQueryStringValue(HKCU, 'Software\RegisteredApplications', '{#AppName}', Value) and (CompareText(Value, 'Software\MisterDownloadManager\Capabilities') = 0) then
+      RegDeleteValue(HKCU, 'Software\RegisteredApplications', '{#AppName}');
+    RegDeleteKeyIncludingSubkeys(HKCU, 'Software\MisterDownloadManager\Capabilities');
+    if RegQueryStringValue(HKCU, 'Software\Classes\MisterDownloadManager.Magnet\shell\open\command', '', Value) and (Pos(Lowercase(ExpandConstant('{app}\{#AppExe}')), Lowercase(Value)) > 0) then
+      RegDeleteKeyIncludingSubkeys(HKCU, 'Software\Classes\MisterDownloadManager.Magnet');
     RemoveData := False;
     if DirExists(Data) and not UninstallSilent() then
       RemoveData := MsgBox(CustomMessage('KeepData'), mbConfirmation, MB_YESNO or MB_DEFBUTTON2) = IDYES;

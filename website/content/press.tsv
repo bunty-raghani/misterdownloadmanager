@@ -1,0 +1,30 @@
+# Articles, reviews and videos about MDM by others, for /press.html (build.py build_press).
+# Independent pieces only, each opened and checked on the date below: its title as the page gives
+# it (emoji, tags and the site's name left off), its date as the page states it. Left out: pages that
+# re-host or wrap MDM's files, sites that also hand out cracks, pieces whose title calls MDM a clone
+# or reverse engineered, and the maintainer's own posts. Lockergnome's critique has its own place
+# on the page (build_press), with our answer.
+# Checked: 2026-11-18
+# kind	lang	outlet	date	url	title
+article	en	ChatPicture	2026-11-15	https://www.chatpicture.com/en/blog/someone-rebuilt-idm-from-the-outside-and-wrote-down-what-they-did-not-touch	Mister Download Manager, a clean-room IDM in Rust
+article	en	Mohamed El Adly	2026-11-12	https://www.mohamedeladly.com/blog/mister-download-manager-idm-alternative	Free IDM Alternative: Mister Download Manager, Step by Step
+article	en	ZOLNA	2026-11-11	https://www.zolna.co.uk/blog/misterdownloadmanager-free-open-source-download-manager-rust	A free, open-source download manager takes aim at IDM, with a benchmark of its own
+article	en	Asad Webs	2026-11-10	https://asadwebs.com/blog/mister-download-manager-free-idm-alternative	Mister Download Manager: Free Open-Source IDM Alternative
+article	ar	درة تك (Dora Tech)	2026-11-11	https://www.bbkiwi2011.com/2026/11/mister-download-manager-idm.html	Mister Download Manager: بديل IDM مجاني ومفتوح المصدر يدعم التورنت والفيديو
+article	bn	Tech Mart	2026-11-11	https://www.techmart.com.bd/mister-download-manager-free-idm-alternative	Mister Download Manager : ফ্রি IDM বিকল্প কেমন?
+article	zh-Hant	免費資源網路社群 (free.com.tw)	2026-11-16	https://free.com.tw/mister-download-manager/	Mister Download Manager 免費開源 IDM 替代品
+article	zh-Hans	金金的电脑工具箱 (tycp.xyz)	2026-11-09	https://www.tycp.xyz/3635.html	Mister Download Manager：Rust开源下载器 5倍加速IDM 永久免费
+article	zh-Hans	WarpNav 曲速导航	2026-11-09	https://warpnav.com/mister-download-manager	Mister Download Manager – IDM 的免费开源平替下载器
+article	id	Mughu	2026-11-13	https://mughu.id/blog/mister-download-manager-alternatif-idm	Mister Download Manager: Alternatif IDM Gratis untuk Windows 10 dan 11
+article	it	TurboLab.it	2026-11-16	https://turbolab.it/download-manager-13742/mister-download-manager-alternativa-open-source-idm-5004	Mister Download Manager l'alternativa open source di IDM
+article	it	Linux Easy	2026-11-11	https://www.linuxeasy.org/mister-download-manager-ossia-lalternativa-open-a-idm-per-linux/	Mister Download Manager ossia l'alternativa open a IDM per Linux
+article	ko	VenusGirl (Tistory)	2026-11-11	https://venusgirls.tistory.com/entry/Mister-Download-Manager-v052	Mister Download Manager v0.5.2
+article	ru	PlayGround.ru	2026-11-09	https://www.playground.ru/misc/news/entuziast_predstavil_mister_download_manager_besplatnyj_otkrytyj_analog_idm_na_yazyke_rust_s_podderzhkoj_torrentov-1889146	Энтузиаст представил Mister Download Manager - бесплатный открытый аналог IDM на языке Rust с поддержкой торрентов
+video	en	Alex Hitt	2026-11-13	https://www.youtube.com/watch?v=zkGAXrE3m4E	Mister Download Manager GitHub Overview: Connection Limits and Server Pushback
+video	en	Shark Tech	2026-11-13	https://www.youtube.com/watch?v=uGyToepao88	Forget IDM! Mister Download Manager Is FREE & Supports Torrent Downloads!
+video	en	Alex Hitt	2026-11-11	https://www.youtube.com/watch?v=-B67Hywhw_g	Mister Download Manager GitHub Explained: How Byte Ranges Resume After a Crash
+video	ar	اتعلم ويندوز	2026-11-13	https://www.youtube.com/watch?v=Om-hnerf43w	وداعًا IDM أفضل بديل مجاني لتحميل الملفات Mister Download Manager
+video	ar	Proteachin	2026-11-10	https://www.youtube.com/watch?v=rfCBOQvnIVw	أفضل بديل مجاني لبرنامج IDM؟ شرح Mister Download Manager وتحميل الملفات بسرعة
+video	ar	Proteachin	2026-11-05	https://www.youtube.com/watch?v=Q8FztPUXuEY	وداعًا IDM؟ أفضل بديل مجاني لـ Internet Download Manager شرح MBDM
+video	fa	رضا دنیوی (Reza Donyavi)	2026-11-11	https://www.youtube.com/watch?v=UIpNv0FcaT4	جایگزین رایگان IDM بدون کرک! آموزش نصب و معرفی Mister Download Manager
+video	pt	Byte Cortes	2026-11-09	https://www.youtube.com/watch?v=n8mDbYRA2ZE	Mister Download Manager: alternativa grátis e open source ao IDM

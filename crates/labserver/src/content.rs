@@ -26,6 +26,59 @@ pub fn media_head(kind: &str) -> Option<&'static [u8]> {
     })
 }
 
+/// The header of an MP4 movie of `millis` ms (#1092): an ftyp, then a moov whose mvhd says the
+/// length and whose tracks say what the file holds (a picture `height` px high when `video`, a
+/// sound when `audio`), as a player's whole file starts; a mdat's header after it covers the rest
+/// of the file (`size` bytes in all). What a reader of the header needs, and nothing a decoder
+/// could play.
+pub fn movie_head(millis: u32, video: bool, audio: bool, height: u32, size: u64) -> Vec<u8> {
+    fn boxed(kind: &[u8; 4], body: &[u8]) -> Vec<u8> {
+        let len = u32::try_from(8 + body.len()).unwrap_or(u32::MAX);
+        [&len.to_be_bytes()[..], kind, body].concat()
+    }
+    // mvhd version 0: flags, creation and modification times, the timescale (1000), the length,
+    // then the rate, the volume and the matrix (left as zeros).
+    let mvhd = boxed(
+        b"mvhd",
+        &[
+            &[0u8; 12][..],
+            &1000u32.to_be_bytes(),
+            &millis.to_be_bytes(),
+            &[0u8; 80],
+        ]
+        .concat(),
+    );
+    let trak = |kind: &[u8; 4], h: u32| {
+        // tkhd version 0: its picture's width and height (16.16) at its end.
+        let tkhd = boxed(
+            b"tkhd",
+            &[
+                &[0u8; 76][..],
+                &((h * 16 / 9) << 16).to_be_bytes(),
+                &(h << 16).to_be_bytes(),
+            ]
+            .concat(),
+        );
+        let hdlr = boxed(b"hdlr", &[&[0u8; 8][..], kind, &[0u8; 13]].concat());
+        let mdia = boxed(
+            b"mdia",
+            &[boxed(b"mdhd", &[0u8; 24]), hdlr, boxed(b"minf", &[0u8; 64])].concat(),
+        );
+        boxed(b"trak", &[tkhd, mdia].concat())
+    };
+    let mut tracks = Vec::new();
+    if video {
+        tracks.extend(trak(b"vide", height));
+    }
+    if audio {
+        tracks.extend(trak(b"soun", 0));
+    }
+    let moov = boxed(b"moov", &[mvhd, tracks].concat());
+    let head = [boxed(b"ftyp", b"isom\0\0\x02\0isomiso2avc1mp41"), moov].concat();
+    let rest = u32::try_from(size.saturating_sub(head.len() as u64)).unwrap_or(u32::MAX);
+    [head, rest.to_be_bytes().to_vec(), b"mdat".to_vec()].concat()
+}
+
 /// [`fill`], with `head` over the file's first bytes.
 pub fn fill_with_head(seed: u64, offset: u64, buf: &mut [u8], head: &[u8]) {
     fill(seed, offset, buf);
@@ -69,6 +122,54 @@ mod tests {
             fill(7, off as u64, &mut part);
             assert_eq!(part, whole[off..]);
         }
+    }
+
+    #[test]
+    fn a_movie_head_says_its_length_and_tracks_and_covers_the_file() {
+        // The boxes at one level: (type, start, size).
+        fn boxes(b: &[u8], from: usize, to: usize) -> Vec<(String, usize, usize)> {
+            let mut out = Vec::new();
+            let mut at = from;
+            while at + 8 <= to {
+                let size = u32::from_be_bytes(b[at..at + 4].try_into().unwrap()) as usize;
+                out.push((
+                    String::from_utf8_lossy(&b[at + 4..at + 8]).into_owned(),
+                    at,
+                    size,
+                ));
+                at += size;
+            }
+            out
+        }
+        let head = movie_head(21_000, true, true, 360, 2 << 20);
+        let top = boxes(&head, 0, head.len());
+        let names: Vec<&str> = top.iter().map(|(n, ..)| n.as_str()).collect();
+        assert_eq!(names, ["ftyp", "moov", "mdat"]);
+        // The mdat covers the rest of the file.
+        let (_, mdat_at, mdat_size) = top[2];
+        assert_eq!((mdat_at + mdat_size) as u64, 2 << 20);
+        let (_, moov_at, moov_size) = top[1];
+        let moov = boxes(&head, moov_at + 8, moov_at + moov_size);
+        let (_, mvhd_at, _) = moov[0];
+        assert_eq!(moov[0].0, "mvhd");
+        let field = |at: usize| u32::from_be_bytes(head[at..at + 4].try_into().unwrap());
+        assert_eq!((field(mvhd_at + 20), field(mvhd_at + 24)), (1000, 21_000));
+        // Each track's handler, after its tkhd and inside its mdia.
+        let kinds: Vec<String> = moov[1..]
+            .iter()
+            .map(|(_, at, size)| {
+                let trak = boxes(&head, at + 8, at + size);
+                assert_eq!(trak[0].0, "tkhd");
+                let (_, mdia_at, mdia_size) = trak[1];
+                let (_, hdlr_at, _) = boxes(&head, mdia_at + 8, mdia_at + mdia_size)[1];
+                String::from_utf8_lossy(&head[hdlr_at + 16..hdlr_at + 20]).into_owned()
+            })
+            .collect();
+        assert_eq!(kinds, ["vide", "soun"]);
+        assert_eq!(
+            boxes(&movie_head(5, false, true, 0, 1 << 20), 0, 1 << 20).len(),
+            3
+        );
     }
 
     #[test]

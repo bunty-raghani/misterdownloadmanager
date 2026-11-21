@@ -20,6 +20,13 @@ pub fn is_video_page(url: &Url) -> bool {
         .or_else(|| host.strip_prefix("m."))
         .unwrap_or(&host);
     let path = url.path();
+    // A stream's own address — an HLS playlist (`.m3u8`) or DASH's (`.mpd`) — is a video page in
+    // this sense: yt-dlp reads the playlist and its qualities, and what is downloaded is merged
+    // into one playable file. Pasting a playlist used to download the playlist itself.
+    let lower = path.to_ascii_lowercase();
+    if lower.ends_with(".m3u8") || lower.ends_with(".mpd") {
+        return true;
+    }
     let segs: Vec<&str> = path.split('/').filter(|s| !s.is_empty()).collect();
     let query = |k: &str| url.query_pairs().any(|(key, v)| key == k && !v.is_empty());
     match host {
@@ -144,6 +151,16 @@ mod tests {
 
     fn gallery(s: &str) -> bool {
         is_gallery_page(&s.parse().unwrap())
+    }
+
+    #[test]
+    fn a_streams_playlist_is_a_video_page() {
+        assert!(page("https://cdn.example/hls/master.m3u8"));
+        assert!(page("https://cdn.example/v/index.M3U8?token=abc"));
+        assert!(page("https://cdn.example/movie/manifest.mpd"));
+        // A plain file, or a scheme no video is fetched over.
+        assert!(!page("https://cdn.example/files/readme.txt"));
+        assert!(!page("ftp://cdn.example/hls/master.m3u8"));
     }
 
     #[test]

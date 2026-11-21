@@ -107,6 +107,7 @@ PLACES = {
     "app.rs": "the main window",
     "batch.rs": "the Batch download window",
     "checksum.rs": "the Checksum window",
+    "deleter.rs": "the main window's messages (deleting downloads' files)",
     "chrome.rs": "the main window (menus, toolbar, Categories pane)",
     "dialogs.rs": "a dialog box",
     "extractq.rs": "extracting archives (a download's log, the Archive password window)",

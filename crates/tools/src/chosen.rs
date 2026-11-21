@@ -43,6 +43,23 @@ struct Programs {
         skip_serializing_if = "Option::is_none"
     )]
     gallery_dl: Option<Installed>,
+    /// The JavaScript runtime yt-dlp uses for YouTube (#1570; `jsruntime`).
+    #[serde(
+        rename = "js-runtime",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    js_runtime: Option<ChosenRuntime>,
+}
+
+/// A JavaScript runtime the person chose (`jsruntime::choose`): which one (its name to yt-dlp:
+/// `node`, `deno`, `quickjs`, `bun`), the version it said (empty: not asked), and where it is.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ChosenRuntime {
+    pub kind: String,
+    #[serde(default)]
+    pub version: String,
+    pub exe: std::path::PathBuf,
 }
 
 const FILE: &str = "programs.json";
@@ -73,6 +90,27 @@ fn slot(p: &mut Programs, h: Helper) -> &mut Option<Installed> {
         Helper::Ffmpeg => &mut p.ffmpeg,
         Helper::GalleryDl => &mut p.gallery_dl,
     }
+}
+
+/// The JavaScript runtime the person chose, if any and still there.
+pub fn chosen_runtime(dir: &Path) -> Option<ChosenRuntime> {
+    read(dir).js_runtime.filter(|c| c.exe.is_file())
+}
+
+/// Use `runtime` from now on (`jsruntime::choose` checks it first).
+pub fn choose_runtime(dir: &Path, runtime: ChosenRuntime) -> Result<(), Error> {
+    let mut p = read(dir);
+    p.js_runtime = Some(runtime);
+    write(dir, &p)
+}
+
+/// Back to the JavaScript runtime MDM finds or installs.
+pub fn forget_runtime(dir: &Path) -> Result<(), Error> {
+    let mut p = read(dir);
+    if p.js_runtime.take().is_some() {
+        write(dir, &p)?;
+    }
+    Ok(())
 }
 
 /// The program the person chose for `h`, if any and still there.
@@ -201,6 +239,7 @@ mod tests {
                 ytdlp: Some(mine.clone()),
                 ffmpeg: Some(mine.clone()),
                 gallery_dl: Some(mine.clone()),
+                js_runtime: None,
             },
         )
         .unwrap();
@@ -229,6 +268,49 @@ mod tests {
             !dir.path().join("gallery-dl").exists(),
             "nothing downloaded"
         );
+    }
+
+    /// A chosen runtime is kept beside the other choices, read back only while it is there, and
+    /// forgotten alone.
+    #[test]
+    fn a_chosen_runtime_is_kept_and_forgotten() {
+        let dir = tempfile::tempdir().unwrap();
+        let ff = dir.path().join("ff");
+        let node = dir.path().join("node");
+        std::fs::write(&ff, b"x").unwrap();
+        std::fs::write(&node, b"x").unwrap();
+        choose_runtime(
+            dir.path(),
+            ChosenRuntime {
+                kind: "node".into(),
+                version: "24.11.0".into(),
+                exe: node.clone(),
+            },
+        )
+        .unwrap();
+        let mut p = read(dir.path());
+        p.ffmpeg = Some(Installed {
+            version: "8.0".into(),
+            exe: ff.clone(),
+        });
+        write(dir.path(), &p).unwrap();
+        assert_eq!(chosen_runtime(dir.path()).unwrap().exe, node);
+        assert_eq!(chosen(dir.path(), Helper::Ffmpeg).unwrap().exe, ff);
+        forget_runtime(dir.path()).unwrap();
+        assert_eq!(chosen_runtime(dir.path()), None);
+        assert_eq!(chosen(dir.path(), Helper::Ffmpeg).unwrap().exe, ff);
+        // Gone from the disk: not used.
+        choose_runtime(
+            dir.path(),
+            ChosenRuntime {
+                kind: "node".into(),
+                version: String::new(),
+                exe: node.clone(),
+            },
+        )
+        .unwrap();
+        std::fs::remove_file(&node).unwrap();
+        assert_eq!(chosen_runtime(dir.path()), None);
     }
 
     #[test]
@@ -260,6 +342,7 @@ mod tests {
                 exe: exe.clone(),
             }),
             gallery_dl: None,
+            js_runtime: None,
         };
         write(dir.path(), &p).unwrap();
         assert_eq!(

@@ -7,6 +7,16 @@
 #. {n} = a number (keep the braces as they are)
 #, machine
 @plural	Also delete the {n} file from disk|Also delete the {n} files from disk	तशेंच {n} फायल डिस्केंतल्यान काडून उडयात|तशेंच {n} फायली डिस्केंतल्यान काडून उडयात
+#. count in cnl.rs
+#. Click'n'Load window: a page whose web site the browser doesn't name, so MDM can't tell which site it is
+#. {n} = a number (keep the braces as they are)
+#, machine
+@plural	An unknown site wants to send {n} link to Link grabber.|An unknown site wants to send {n} links to Link grabber.	अज्ञात साइट Link grabber कडेन {n} लिंक धाडपाक सोदता.|अज्ञात साइट Link grabber कडेन {n} लिंक्स धाडपाक सोदता.
+#. count in torrent downloads
+#. number of additional files in a list of files
+#. {n} = a number (keep the braces as they are)
+#, machine
+@plural	And {n} other file.|And {n} other files.	आनी {n} हेर फायल.|आनी {n} हेर फायली.
 #. count in a dialog box
 #. never shown for a single download
 #. {n} = a number (keep the braces as they are)
@@ -106,11 +116,21 @@
 #. {n} = a number (keep the braces as they are)
 #, machine
 @plural	{n} file had the name of a file there already and was numbered|{n} files had the name of a file there already and were numbered	{n} फायलीक पयलींच थंय आशिल्ल्या फायलीचें नांव आशिल्लें आनी ताका क्रमांक दिलो|{n} फायलींक पयलींच थंय आशिल्ल्या फायलींचें नांव आशिल्लें आनी तांकां क्रमांक दिलो
+#. count in the main window's messages (deleting downloads' files)
+#. the message's next line: how many more deleted files stayed on the disk
+#. {n} = a number (keep the braces as they are)
+#, machine
+@plural	{n} more file could not be deleted either.|{n} more files could not be deleted either.	आनीक {n} फायल डिलीट करूंक शकली ना.|आनीक {n} फायली डिलीट करूंक शकल्यो नात.
 #. count in the Add torrent window
 #. a number of peers (computers sharing a torrent), after where they came from
 #. {n} = a number (keep the braces as they are)
 #, machine
 @plural	{n} peer|{n} peers	{n} पियर|{n} पियर
+#. count in the Options window
+#. Options → Archives: beside the Archive passwords button: how many are saved
+#. {n} = a number (keep the braces as they are)
+#, machine
+@plural	{n} saved|{n} saved	{n} सांबाळ्ळें|{n} सांबाळ्ळीं
 #. count in the main window
 #. {n} = a number (keep the braces as they are)
 #, machine
@@ -133,6 +153,11 @@
 #. {n} = a number (keep the braces as they are)
 #, machine
 @plural	{n} tracker: {peers}|{n} trackers: {peers}	{n} ट्रॅकर: {peers}|{n} ट्रॅकर: {peers}
+#. count in cnl.rs
+#. Click'n'Load window: {site} is a web site's name such as "example.com"
+#. {site} = a web site's name such as "example.com"; {n} = a number (keep the braces as they are)
+#, machine
+@plural	{site} wants to send {n} link to Link grabber.|{site} wants to send {n} links to Link grabber.	{site} Link grabber कडेन {n} लिंक धाडपाक सोदता.|{site} Link grabber कडेन {n} लिंक्स धाडपाक सोदता.
 #. count in playlistdlg.rs
 #. in Download video: a playlist title then how many videos it has ({count})
 #. {count} = a number (keep the braces as they are)
@@ -151,7 +176,7 @@
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
 	&Apply	&लागू करात
-#. text in the Scheduler window
+#. text in the Scheduler window; button in standard windows
 #. verb: close the window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
@@ -174,6 +199,10 @@
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
 	&Start now	&आतां सुरू करात
+#. text in the Options window
+#. under Download panels site exclusions list
+#, machine
+	(separate by spaces; * matches anything)	(जागे वरवीं वेगळे करात; * खंयच्याय गजालीक जुळटा)
 #. text in the Options window
 #, machine
 	(separate names by spaces)	(नांवां स्पेस दिवन वेगळीं करात)
@@ -205,6 +234,10 @@
 #, machine
 	7z and RAR archives are extracted by 7-Zip ({path}).	7z आनी RAR आर्कायव्ह 7-Zip ({path}) वरवीं काडटात.
 #. text in the Options window
+#. Options → Archives, when Extract in place with HatchZip (a program's name) is on: {path} is where its program is
+#, machine
+	7z and RAR archives are extracted by HatchZip ({path}).	7z आनी RAR आर्काइव्ह HatchZip ({path}) वरवीं एक्सट्रॅक्ट करतात.
+#. text in the Options window
 #. Options → Archives, when 7-Zip isn't installed
 #, machine
 	7z and RAR archives need 7-Zip (7-zip.org), which isn't installed.	7z आनी RAR आर्कायव्हां खातीर 7-Zip (7-zip.org) जाय; तें इन्स्टॉल ना.
@@ -227,6 +260,10 @@
 #. {name} = a file name (keep the braces as they are)
 #, machine
 	A file of this torrent can't be saved safely: {name}	ह्या टोरंटाची एक फाइल सुरक्षितपणान सांबाळपाक मेळना: {name}
+#. text in a dialog box
+#. the question about a name typed in Save As, above the file's path; the choices are the duplicate question's (numbered name, overwrite)
+#, machine
+	A file with this name is already there:	ह्या नांवाची फायल पयलींच आसा:
 #. message or event log entry in the main window
 #. Link grabber added a magnet link whose torrent could not be found; {error} says why
 #. {error} = an error message (keep the braces as they are)
@@ -260,6 +297,10 @@
 #. tooltip on the disabled Rename box for a single-file torrent
 #, machine
 	A single-file torrent keeps its name	एक-फायल टोरेंट आपलें नांव तिगोवन दवरता
+#. text in torrent_ownership.rs
+#. a torrent's folder is a link or junction leading outside its destination
+#, machine
+	A torrent file's folder points outside its destination	एका टॉरेंट फायलीचो फोल्डर ताच्या गंतव्यस्थानाभायर दाखयता
 #. text in the Add torrent window
 #. Add trackers: MDM never contacts a tracker on this computer or the local network
 #, machine
@@ -280,6 +321,10 @@
 #. {size} = a file size such as "4.2 MB" (keep the braces as they are)
 #, machine
 	about {size}	सुमार {size}
+#. text in the Options window
+#. Options → Archives → Link grabber check box: Click'n'Load, a link site's button that sends its links to a program on this computer (port 9666, as JDownloader)
+#, machine
+	Accept Click'n'Load from web pages (port 9666)	वेब पानांवयल्यान Click'n'Load स्वीकारात (पोर्ट 9666)
 #. checkbox in the Add torrent window
 #. Torrent settings: other peers may connect to this computer
 #, machine
@@ -319,7 +364,7 @@
 #. the trailing ... means it is still going on: keep it
 #, machine
 	Add browser...	ब्राउझर जोडचें...
-#. text in categories.rs
+#. text in categories.rs; text in a dialog box
 #, machine
 	Add category	वर्गवारी जोडचें
 #. button in rssdlg.rs
@@ -423,10 +468,6 @@
 #. window title: the addresses whose downloads stay with the browser
 #, machine
 	Addresses left to the browser	ब्रावझराक दवरिल्लीं पत्तीं
-#. button in the Options window
-#. the trailing ... means it opens a window: keep it
-#, machine
-	Advanced / Socks...	प्रगत / SOCKS...
 #. text in extension.rs
 #. a check of Test browser integration (Options → General)
 #, machine
@@ -435,6 +476,10 @@
 #. a country's name (where a download's server is)
 #, machine
 	Afghanistan	अफगाणिस्तान
+#. text in the Options window
+#. Options → Add an account: a note under the user name and password fields (Mega-Debrid bans the address for some minutes after a few wrong passwords)
+#, machine
+	After a few wrong passwords the service blocks this connection for some minutes.	कांय चुकीच्या पासवर्ड उपरांत सेवा कांय मिनटां खातीर हें कनेक्शन ब्लॉक करता.
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -454,7 +499,7 @@
 #. item in the Categories tree in the main window
 #, machine
 	All Downloads	सगळीं डाउनलोड
-#. message or event log entry in the main window
+#. message or event log entry in the main window; text in standard windows
 #, machine
 	All files	सगळीं फायली
 #. text in helpers.rs
@@ -464,11 +509,19 @@
 #. in the Subtitles list of Download video: every language the video's uploader gave
 #, machine
 	All the uploader's	अपलोड करपी सगळ्यांचे
+#. text in cnl.rs
+#. button in the Click'n'Load window: let this site send links (remembered)
+#, machine
+	Allow	परवानगी दिवची
 #. text in the Options window
 #. checkbox under the number of connections per download; {n} is 32
 #. {n} = a number (keep the braces as they are)
 #, machine
 	Allow more than {n} connections	{n} परस चड जोडण्यांक परवानगी दियात
+#. text in cnl.rs
+#. Click'n'Load window, under the question: nothing happens to the links before the user adds them in Link grabber
+#, machine
+	Allow only sites you use. Nothing is looked up or downloaded before you add it in Link grabber.	फकत तुमी वापरतात तीं साइट्स परवानगी दिवचीं. तुमी Link grabber तें जोडचे मेरेन कांयच सोदप वा डाउनलोड करप जायना.
 #. text in errors.rs
 #, machine
 	already being downloaded: {path}	पयलींच डाउनलोड जावपात आसा: {path}
@@ -490,6 +543,10 @@
 #. checkbox in the Options window
 #, machine
 	Also take files the browser would open (PDF, music, video)	ब्रावझर उगडटा त्या फायली (PDF, संगीत, व्हिडिओ) घेयात
+#. text in the Link grabber window
+#. Link grabber, a link's status: the remedy from the failure's sentence, for a site whose bot check lets only browsers through. The sentence, with the same advice, is the cell's hover tip
+#, machine
+	Alt+click the link	लिंकाचेर Alt+क्लिक करात
 #. message or event log entry in the main window
 #. View menu: a check item; dark mode on, whatever the system's setting
 #, machine
@@ -526,10 +583,22 @@
 #. the trailing ... means it is still going on: keep it
 #, machine
 	Another DNS...	आनीक एक DNS...
+#. text in torrent downloads
+#. starting a torrent whose destination another listed download claims
+#, machine
+	Another download already claims this torrent's destination	दुसऱ्या डाउनलोडान ह्या टॉरेंटाचें गंतव्यस्थान पयलींच दावो केला
+#. message or event log entry in the main window; text in the Add torrent window
+#. said when a torrent would write a file another download in the list already uses; {file} is its path
+#, machine
+	Another download already claims {file}. Choose a different destination.	दुसऱ्या डाउनलोडान {file} पयलींच दावो केला. वेगळें गंतव्यस्थान निवडात.
 #. text in unix.rs
 #. the Scheduler, under "Wake the computer to run this queue" (Linux): the computer's one wake alarm is already set by something else
 #, machine
 	Another program has set the computer's wake alarm	आनीक एका कार्यावळीन संगणकाचो जाग येवपाचो गजर सेट केला
+#. text in the Options window
+#. Options → Proxy / Socks: Test's answer; {ms} milliseconds; {ip} the internet address the site saw (the proxy's, or this computer's without one)
+#, machine
+	Answered in {ms} ms. The internet sees {ip}.	{ms} ms भितर जाप मेळ्ळी. इंटरनॅटाक {ip} दिसता.
 #. text in the Options window
 #. Options → DNS settings: the test's answer; {ms} milliseconds, {ip} the address found
 #, machine
@@ -554,6 +623,19 @@
 #. what a screen reader calls Link grabber's password box
 #, machine
 	Archive password	आर्काइव्ह पासवर्ड
+#. window title in the Options window
+#. window title: the passwords tried on encrypted archives
+#, machine
+	Archive passwords	आर्काइव्ह पासवर्ड
+#. text in the settings
+#. the list of archive passwords in the system's keychain (Credential Manager, the keyring): its name there
+#, machine
+	archive passwords	आर्काइव्ह पासवर्ड
+#. button in the Options window
+#. Options → Archives: button: edit the list of passwords tried on encrypted archives
+#. the trailing ... means it opens a window: keep it
+#, machine
+	Archive passwords...	आर्काइव्ह पासवर्ड...
 #. group box title in the Options window; text in the Options window
 #. Options → Archives: group box title
 #. tab title: extracting downloaded archives, and Link grabber
@@ -691,6 +773,10 @@
 #. a country's name (where a download's server is)
 #, machine
 	Bhutan	भूतान
+#. text in cnl.rs
+#. button in the Click'n'Load window: refuse this site's links (remembered)
+#, machine
+	Block	ब्लॉक करात
 #. text in the Add torrent window
 #. Torrent settings: the address of an IP blocklist (empty: none)
 #, machine
@@ -729,7 +815,7 @@
 #. a country's name (where a download's server is)
 #, machine
 	British Indian Ocean Territory	ब्रिटीश हिंदी महासागर प्रदेश
-#. text in the Link grabber window; button in the Link grabber window; button in the Options window
+#. text in a dialog box; text in the Link grabber window; button in the Link grabber window; button in the Options window
 #. verb: choose a folder
 #, machine
 	Browse	ब्राउज करा
@@ -763,6 +849,10 @@
 #. Link grabber, a link's status: the server asked to try later (429, 503)
 #, machine
 	Busy, try later	व्यस्त, उपरांत प्रयत्न करात
+#. text in the Options window
+#. Options → Download panels: the size of the download button over videos, chosen after it (Full / Compact)
+#, machine
+	Button size:	बटणाचो आकार:
 #. message or event log entry in the main window
 #, machine
 	by batch download	बॅच डाउनलोड करून
@@ -781,6 +871,10 @@
 #. a country's name (where a download's server is)
 #, machine
 	Cameroon	कॅमेरून
+#. text in the Link grabber window
+#. Link grabber, a link's status: a server that can't send parts of a file, so the download can't resume; there is nothing to do here. The sentence is the cell's hover tip
+#, machine
+	Can't resume	पुन्हा सुरू करूंक शकना
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -824,7 +918,7 @@
 #. remote control page (on a phone): label of the category choice for a new download
 #, machine
 	Category	श्रेणी
-#. text in categories.rs
+#. text in categories.rs; text in a dialog box
 #. title of the folder picker of the category dialog
 #, machine
 	Category folder	वर्ग फोल्डर
@@ -867,7 +961,8 @@
 #. RSS feeds window, at the bottom: "Check feeds every [30] minutes"
 #, machine
 	Check feeds every	दर
-#. window title in the Help menu's windows (About, updates, shortcuts, Tell a friend)
+#. window title in the Help menu's windows (About, updates, shortcuts, Tell a friend); text in helpers.rs
+#. Helpers: button: look for newer versions of MDM's own helpers now, and install them
 #, machine
 	Check for updates	अद्यतनां खातीर तपासणी करात
 #. checkbox in the Help menu's windows (About, updates, shortcuts, Tell a friend)
@@ -886,6 +981,10 @@
 #. tooltip of the close-setting: checked keeps MDM running when the window closes, in the notification area when available or else the taskbar; downloads continue; unchecked closing quits
 #, machine
 	Checked, closing the window keeps MDM running: it hides in the notification area when available, or minimizes to the taskbar otherwise, and downloads continue; unchecked, closing quits MDM	हो पर्याय निवडल्यास, विंडो बंद केल्यार MDM चालूच उरता: उपलब्ध आसल्यार सूचना क्षेत्रांत लिपता, नाजाल्यार टास्कबारांत ल्हान जाता, आनी डाउनलोड चालूच उरतात; हो पर्याय निवडूंक ना जाल्यार, विंडो बंद केल्यार MDM बंद जाता.
+#. text in the Options window
+#. tooltip of "Keep private-window downloads in the list": checked, downloads from a browser's private (incognito) window are saved in the list and survive MDM closing or restarting; unchecked, they are kept in memory only and are gone when MDM closes. Their cookies are never saved.
+#, machine
+	Checked, downloads from a browser's private window are saved in the list and are still there when MDM restarts; unchecked, they are kept in memory only and are gone when MDM closes. Their cookies are never saved	चेक केल्ल्यान, ब्राउझराच्या खाजगी विन्डोजातल्यान डाउनलोड केल्ल्यो फायली वळेरींत सांबाळ्ळ्यो वतात आनी MDM परतून चालू केल्यार लेगीत थंयच आसतात; चेक करूंक नाशिल्ल्यान, त्यो फकत मेमरींत दवरतात आनी MDM बंद केल्यार नश्ट जातात. तांच्यो कुकीज केन्नाच सांबाळ्ळ्यो वचनात
 #. message or event log entry in the main window
 #. event log entry after Recheck: {have} and {total} are sizes ("1.2 GB of 4 GB there")
 #, machine
@@ -894,7 +993,8 @@
 #. event log entry: a torrent's files are being read and checked again (Recheck)
 #, machine
 	Checking every piece again	दर एक कुडको परतून तपासत आसात
-#. text in the Help menu's windows (About, updates, shortcuts, Tell a friend)
+#. text in the Help menu's windows (About, updates, shortcuts, Tell a friend); text in helpers.rs
+#. Helpers: MDM is asking whether a newer version of a helper exists
 #. the trailing ... means it is still going on: keep it
 #, machine
 	Checking for updates...	अद्यतनां खातीर तपासणी करता...
@@ -923,7 +1023,9 @@
 #. the list's Status column while a torrent's files or a finished file are checked (against the torrent's hashes or a checksum); {percent} how much is checked, e.g. "42%". One short word: the column is narrow
 #, machine
 	Checking {percent}	तपासणी {percent}
-#. text in the Checksum window; text in the Link grabber window
+#. text in the Checksum window; text in extension.rs; text in the Link grabber window; text in the Options window
+#. in the browser extension's window, while it reads whether the browsers can reach MDM (a moment, usually)
+#. Test browser integration, while it reads where browser integration stands (a moment, usually)
 #. the trailing ... means it is still going on: keep it
 #, machine
 	Checking...	तपासणी चालू आसा...
@@ -957,10 +1059,24 @@
 #. a country's name (where a download's server is)
 #, machine
 	Christmas Island	क्रिसमस जुंवो
-#. button in the download list
+#. button in the download list; button in the Options window
 #. verb: clears this filter
 #, machine
 	Clear	साफ करात
+#. message or event log entry in the main window; window title in cnl.rs
+#. title of the notice when Click'n'Load couldn't start
+#. window title: a web page used Click'n'Load (a link site's button that sends its links to this program)
+#, machine
+	Click'n'Load	क्लिक’न’लोड
+#. text in cnl.rs
+#. notice: Click'n'Load couldn't start; {port} is 9666; JDownloader is another download manager that uses the same port
+#, machine
+	Click'n'Load can't start: another program (JDownloader?) is using port {port}. Close it, then turn Click'n'Load off and on again in Options.	Click'n'Load सुरू करूंक शकना: दुसरें प्रोग्राम (JDownloader?) पोर्ट {port} वापरता. तें बंद करात, मागीर पर्यायांत Click'n'Load बंद करून परत चालू करात.
+#. text in cnl.rs
+#. notice: Click'n'Load couldn't start; {error} the system's reason
+#. {error} = an error message (keep the braces as they are)
+#, machine
+	Click'n'Load can't start: {error}	Click'n'Load सुरू करूंक शकना: {error}
 #. text in a download's progress window
 #. column title: the peer's torrent program
 #, machine
@@ -1004,6 +1120,10 @@
 #. a country's name (where a download's server is)
 #, machine
 	Comoros	कोमोरोस
+#. option (radio button) in the Options window
+#. Options → Download panels → Button size: only the round button (the logo, the arrow, the close mark) over every video
+#, machine
+	Compact	कॉम्पॅक्ट
 #. item in the Categories tree in the download list; value in a column's filter list in the download list; text in the download list (sizes, speeds, status); text in a download's progress window; text in remote.rs
 #. a download's status (state it is in, not a command)
 #. a download's status (state it is in, not a command): finished
@@ -1031,6 +1151,10 @@
 #. a country's name (where a download's server is)
 #, machine
 	Congo	काँगो
+#. text in the Add torrent window
+#. Torrent settings: uTP, BitTorrent over UDP, which many peers use (more peers, often faster)
+#, machine
+	Connect over uTP too (UDP)	uTP (UDP) वरवीं जोडणी करात
 #. text in extension.rs
 #. in the browser extension's window, beside a browser whose extension reached MDM
 #, machine
@@ -1052,6 +1176,9 @@
 #. text in the Options window
 #, machine
 	Connections:	जोडणी:
+#. link (opens a web page) in the Help menu's windows (About, updates, shortcuts, Tell a friend)
+#, machine
+	Contributors	योगदान दिवपी
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -1097,11 +1224,24 @@
 #. {host} = a server name such as "example.com" (keep the braces as they are)
 #, machine
 	could not reach {host} ({cause})	{host} मेरेन पावंक शकले ना ({cause})
+#. text in helpers.rs
+#. Helpers: the last update check failed (no network...); MDM checks again later by itself
+#, machine
+	Couldn't check for updates: MDM tries again later	अपडेटी तपासपाक शकले ना: MDM उपरांत परतून प्रयत्न करता
 #. text in extracting archives (a download's log, the Archive password window)
 #. in a download's log: {name} is the archive's file name, {why} the reason
 #. {name} = a file name (keep the braces as they are)
 #, machine
 	Couldn't extract {name}: {why}	{name} काडप शक्य जालें ना: {why}
+#. message or event log entry in the main window
+#. a video's or gallery's log: MDM couldn't look for a newer yt-dlp (or gallery-dl); {name} = its name, {error} = why
+#. {name} = a file name; {error} = an error message (keep the braces as they are)
+#, machine
+	Couldn't look for a newer {name}: {error}	नवें {name} सोदपाक शकले ना: {error}
+#. checkbox in the Add torrent window
+#. Add torrent: keep a multi-file torrent inside its own outer folder; untick to use Save to directly
+#, machine
+	Create a folder for this torrent	ह्या टॉरेंटा खातीर एक फोल्डर तयार करात
 #. window title in a dialog box
 #, machine
 	Create folder	फोल्डर तयार करा
@@ -1179,7 +1319,7 @@
 #. text in the Options window
 #, machine
 	Default max. conn. number	पूर्वनिर्धारीत चडांत चड जोडणी संख्या
-#. message or event log entry in the main window; button in a dialog box; button in the Options window; button in rssdlg.rs
+#. text in the main window's messages (deleting downloads' files); button in a dialog box; button in the Options window; button in rssdlg.rs; text in torrent downloads
 #. button: deletes the category
 #. verb: delete the item
 #, machine
@@ -1335,6 +1475,10 @@
 #. Add torrent, a checkbox: download the files from their start, to watch a video while it downloads
 #, machine
 	Download in order	क्रमानुक्रमानें डाउनलोड करा
+#. text in the Link grabber window
+#. Link grabber, a link's status: the remedy from the failure's sentence, for a file whose checksum didn't match. The sentence is the cell's hover tip
+#, machine
+	Download it again	तें परत डाउनलोड करात
 #. button in a dialog box
 #, machine
 	Download Later	उपरांत डाउनलोड करात
@@ -1416,6 +1560,11 @@
 #, machine
 	Downloading again from the start	परत सुरवातीकडल्यान डाउनलोड जाता
 #. text in the Download video window
+#. in Download video: MDM downloads Deno (a program's name) and checks it against its published checksum
+#. the trailing ... means it is still going on: keep it
+#, machine
+	Downloading and verifying Deno (about 40 MB)...	Deno डाउनलोड आनी पडताळणी चालू आसा (सुमार 40 MB)...
+#. text in the Download video window
 #. the trailing ... means it is still going on: keep it
 #, machine
 	Downloading and verifying ffmpeg (about 80 MB)...	ffmpeg (सुमार 80 MB) डाउनलोड आनी पडताळणी चालू आसा...
@@ -1437,6 +1586,10 @@
 #, machine
 	Downloading the update... {percent}	अद्ययावतीकरण डाउनलोड करता... {percent}
 #. text in helpers.rs
+#. Helpers: a newer version of a helper is being downloaded; {percent} = how far, a number
+#, machine
+	Downloading the update... {percent}%	अपडेट डाउनलोड जाता... {percent}%
+#. text in helpers.rs
 #. {name} = yt-dlp or ffmpeg; {n} of {total} = which helper of how many; {percent} = how far, e.g. 45%
 #. {name} = a file name; {n} = a number (keep the braces as they are)
 #, machine
@@ -1449,6 +1602,10 @@
 #. title of the window that sums up downloads added together (a playlist, a batch) once all are done
 #, machine
 	Downloads complete	डाउनलोड पुराय जालीं
+#. text in win32.rs
+#. Windows' Settings → Default apps: what Mister Download Manager is
+#, machine
+	Downloads files, videos and torrents	फायली, व्हिडिओ आनी टॉरेंट डाउनलोड करता
 #. text in the tray icon's menu
 #. tray menu: a submenu of the downloads now running; choosing one shows its progress window
 #, machine
@@ -1479,17 +1636,26 @@
 #, machine
 	Dragged out of Download complete and moved to {folder}	डाउनलोड पुराय जाल्यांतल्यान भायर ओडून {folder} हांगा व्हरलें
 #. message or event log entry in the main window
+#. a download's note: its file was dragged out of the download list and moved somewhere MDM can't tell (a program took it, the Recycle Bin)
+#, machine
+	Dragged out of the list and moved to a place MDM couldn't learn	यादींतल्यान भायर ओडून MDM कडेन शिकूंक मेळना अशा जाग्यार व्हरलें
+#. message or event log entry in the main window
+#. a download's note: its file was dragged out of the download list and moved to that folder
+#, machine
+	Dragged out of the list and moved to {folder}	यादींतल्यान भायर ओडून {folder} तें व्हरलें
+#. message or event log entry in the main window
 #. in Import, where the addresses came from: dragged onto the window
 #, machine
 	Dropped links	ओडून हाडिल्ली लिंक्स
-#. window title in a dialog box
+#. text in a dialog box
+#. window title: the question asked when an address added is already in the list of downloads
 #, machine
 	Duplicate download link	दुप्पट डाउनलोड दुवो
 #. text in the Options window
 #. Options → Network adapter: what "Any" means
 #, machine
 	Each connection takes the system's route.	दरेक जोडणी प्रणालीचो मार्ग घेता.
-#. text in the Link grabber window
+#. text in the Batch download window; text in the Link grabber window
 #. Link grabber, in the empty "Save to" box: each file goes to its category's folder (Options → Save to)
 #, machine
 	Each file's category folder	प्रत्येक फायलीचो वर्ग फोल्डर
@@ -1655,6 +1821,14 @@
 #. Options → Archives check box (a Link grabber package has its own "Extract when done")
 #, machine
 	Extract archives when their download completes	जेन्ना आर्काइव्ह डाउनलोड पुराय जाता तेन्ना तीं काडून उडोवचीं
+#. text in the Options window
+#. Options → Archives check box, greyed: HatchZip (a program's name, hatchzip.dev its site) isn't installed
+#, machine
+	Extract in place with HatchZip (hatchzip.dev, not installed)	HatchZip (hatchzip.dev, इन्स्टॉल केल्लें ना) वरवीं जाग्यार एक्सट्रॅक्ट करात
+#. text in the Options window
+#. Options → Archives check box: HatchZip (a program's name) removes the archive while extracting it, so only the extracted files need disk space
+#, machine
+	Extract in place with HatchZip: only the files need room	HatchZip वरवीं जाग्यार एक्सट्रॅक्ट करात: फकत फायलींक सुवात जाय
 #. text in the Link grabber window
 #. Link grabber check box: extract the package's archives once they are downloaded
 #, machine
@@ -1715,6 +1889,10 @@
 #. noun: a file of no known type
 #, machine
 	File	फायल
+#. text in a dialog box
+#. window title: the question asked when the name typed in Download File Info's Save As is a file already there
+#, machine
+	File already exists	फायल पयलींच आसा
 #. text in the Options window
 #. tooltip of "Mark downloaded files as coming from the internet" on Linux
 #, machine
@@ -1925,6 +2103,14 @@
 #. checkbox in the Options window
 #, machine
 	ftp	FTP
+#. tooltip (why a control is greyed) in the Options window
+#. Options → Proxy / Socks: why the "ftp" box of an HTTP proxy is greyed
+#, machine
+	FTP downloads don't go through an HTTP proxy. Choose SOCKS5 or SOCKS4 to send them through the proxy.	FTP डाउनलोड HTTP प्रॉक्सी वरवीं वचनात नात. तीं प्रॉक्सी वरवीं धाडपाक SOCKS5 वा SOCKS4 निवडात.
+#. text in the Options window
+#. Options → Download panels → Button size: the button with its words ("Download video", the quality) where they fit (the default)
+#, machine
+	Full	पूर्ण
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -1989,6 +2175,11 @@
 #. a country's name (where a download's server is)
 #, machine
 	Gibraltar	जिब्राल्टर
+#. text in helpers.rs
+#. Helpers: button: use the previous version of a helper again (if the new one misbehaves); {version} = that version
+#. {version} = a version number (keep the braces as they are)
+#, machine
+	Go back to {version}	{version} कडेन परत वच
 #. text in a download's progress window
 #. a torrent's sharing, when Torrent settings keep it on
 #, machine
@@ -2044,6 +2235,10 @@
 #. checkbox in a download's progress window; checkbox in the Scheduler window
 #, machine
 	Hang up modem when done	काम जाल्यार मोडेम बंद करप
+#. text in extracting archives (a download's log, the Archive password window)
+#. in a download's log: HatchZip (a program's name) extracted the archive in place, removing it as it went
+#, machine
+	HatchZip extracted it in place: the archive was removed as its files came out	HatchZip न तें जाग्यार एक्सट्रॅक्ट केलें: फायली भायर सरतना आर्काइव्ह काडून उडयलें
 #. text in a download's progress window
 #. legend: pieces downloaded
 #, machine
@@ -2167,6 +2362,15 @@
 #. Options → Accounts: the account's sign-in is in the system's keyring (Linux), which is locked now; MDM never unlocks it
 #, machine
 	in the locked keyring	लॉक केल्ल्या कीरिंगांत
+#. what a keyboard shortcut does in the Help menu's windows (About, updates, shortcuts, Tell a friend)
+#, machine
+	In the toolbar: open a button's menu	टूलबारांत: बटणाचो मेनू उगडा
+#. what a keyboard shortcut does in the Help menu's windows (About, updates, shortcuts, Tell a friend)
+#, machine
+	In the toolbar: press the button	टूलबारांत: बटण दाबा
+#. what a keyboard shortcut does in the Help menu's windows (About, updates, shortcuts, Tell a friend)
+#, machine
+	In the toolbar: the previous / next button	टूलबारांत: आदलें / फुडलें बटण
 #. text in standard windows
 #. a spin box's arrow, for screen readers: one more
 #, machine
@@ -2192,6 +2396,10 @@
 #, machine
 	Install 7-Zip (free), then right-click the download and choose Extract.	7-Zip (फुकट) इन्स्टॉल करात, मागीर डावनलोडाचेर उजवें क्लिक करून Extract निवडात.
 #. text in the Download video window
+#. button in Download video: download and install Deno, the JavaScript runtime YouTube needs (Deno is a program's name)
+#, machine
+	Install Deno	Deno स्थापीत करात
+#. text in the Download video window
 #. button: download and install the ffmpeg program
 #, machine
 	Install ffmpeg	ffmpeg स्थापीत कर
@@ -2207,6 +2415,10 @@
 #. Linux, after a missing library's name, on a distribution MDM doesn't know
 #, machine
 	Install what's missing from your distribution's packages.	तुमच्या वितरणाच्या पॅकेजांतल्यान उणी आशिल्ली लायब्ररी इन्स्टॉल करात.
+#. text in extracting archives (a download's log, the Archive password window)
+#. in the "7-Zip needed" window, under why (Linux: 7-Zip comes from the distribution's packages, named 7zip or p7zip)
+#, machine
+	Install your system's 7zip (or p7zip) package, then right-click the download and choose Extract.	तुमच्या सिस्टमाचें 7zip (वा p7zip) पॅकेज इन्स्टॉल करात, मागीर डाउनलोडचेर उजवें क्लिक करून एक्सट्रॅक्ट निवडात.
 #. text in the Download video window
 #. button: download and install the yt-dlp program
 #, machine
@@ -2268,6 +2480,10 @@
 #. why an archive wasn't extracted (after "Couldn't extract {name}: ")
 #, machine
 	it needs a password	ताका पासवर्ड जाय
+#. text in extracting archives (a download's log, the Archive password window)
+#. why an archive wasn't extracted in place (after "Couldn't extract {name}: "); {folder} holds the files extracted so far
+#, machine
+	it stopped partway. The files extracted so far are in {folder}, the rest is still in the archive: Extract continues	तें अर्द्यावर थांबलें. आतां मेरेन एक्सट्रॅक्ट केल्ल्यो फायली {folder} त आसात, बाकीच्यो आर्काइव्हांत आसात: एक्सट्रॅक्ट चालू दवरात
 #. text in the Add torrent window
 #. Torrent settings, under "Find peers on the local network"
 #, machine
@@ -2289,6 +2505,11 @@
 #. a country's name (where a download's server is)
 #, machine
 	Italy	इटली
+#. text in extracting archives (a download's log, the Archive password window)
+#. why an archive wasn't extracted in place (after "Couldn't extract {name}: "); HatchZip took its files out (the archive is gone), but moving them stopped: {to} holds those moved, {left} the others, {error} the system's reason
+#. {error} = an error message (keep the braces as they are)
+#, machine
+	its files came out, but moving them stopped ({error}). Those moved are in {to}, the others still in {left}; nothing was deleted	तांच्यो फायली भायर आयल्यो, पूण तांकां व्हरप थांबयलें ({error}). व्हरिल्ल्यो फायली {to} त आसात, बाकीच्यो {left} त आसात; कांयच डिलीट केल्लें ना
 #. text in errors.rs
 #. {error} = an error message (keep the braces as they are)
 #, machine
@@ -2317,6 +2538,10 @@
 #. a country's name (where a download's server is)
 #, machine
 	Japan	जपान
+#. text in helpers.rs
+#. Video helpers: the row of the JavaScript runtime yt-dlp needs for YouTube (Deno is a program's name)
+#, machine
+	JavaScript runtime (Deno)	जावास्क्रिप्ट रनटायम (Deno)
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -2341,6 +2566,14 @@
 #. text in a dialog box; text in a download's progress window; text in the Add torrent window
 #, machine
 	KBytes/sec	केबी/सेकंद
+#. text in helpers.rs
+#. Helpers: checkbox: MDM checks for and installs newer versions of its own yt-dlp, ffmpeg, gallery-dl and Deno by itself
+#, machine
+	Keep MDM's helpers up to date automatically	MDM चे मदतनीस आपोआप अपडेटेड दवरात
+#. text in the Options window
+#. checkbox: downloads started from a browser's private (incognito) window are saved in MDM's download list like any other, so they are still there after MDM restarts
+#, machine
+	Keep private-window downloads in the list	खाजगी विन्डोजातल्यान डाउनलोड केल्ल्यो फायली वळेरींत दवरात
 #. text in the Options window
 #. checkbox: closing keeps MDM running, in the notification area when available or else the taskbar, instead of quitting
 #, machine
@@ -2434,6 +2667,10 @@
 #. Options → Remote check box (off by default)
 #, machine
 	Let phones and computers on the local network control MDM	थळाव्या नेटवर्का वयल्या फोनांक आनी संगणकांक MDM नियंत्रीत करूंक दिवचें
+#. text in helpers.rs
+#. Video helpers: what the JavaScript runtime is for, after its name (yt-dlp is a program's name)
+#, machine
+	lets yt-dlp list all of YouTube's qualities	yt-dlp क YouTube चे सगळे गुणधर्म दाखोवपाक दिता
 #. option (radio button) in the Batch download window
 #. the * in the address runs through letters
 #, machine
@@ -2528,6 +2765,10 @@
 #. text in the Add torrent window; button in the Download video window
 #, machine
 	Look up	सोद
+#. text in the Options window
+#. Options → Proxy / Socks → Manual, SOCKS: the proxy turns the sites' names into addresses (socks5h), so this computer's DNS never sees them
+#, machine
+	Look up site names through the proxy	प्रॉक्सी वरवीं साइट नांवां सोदात
 #. tooltip (why a control is greyed) in the Download video window
 #. why Download Now is greyed: the page address was changed after the look-up
 #, machine
@@ -2561,6 +2802,14 @@
 #. tooltip of "Mark downloaded files as coming from the internet" on macOS
 #, machine
 	macOS checks the files marked this way: Gatekeeper before a program first opens. Unticked, no download is marked.	macOS ह्या प्रकारें चिन्हांकित केल्ल्यो फायली तपासता: प्रोग्राम पयलीं खेपे उगडटना Gatekeeper तपासता. निवड न केल्यार, एकूय डाउनलोड चिन्हांकित जायना.
+#. text in extension.rs
+#. a check of Test browser integration, and the browser extension's window (macOS): macOS refused to let MDM read or write a browser's folder (where the browser finds MDM's helper)
+#, machine
+	macOS keeps Mister Download Manager out of a browser's folder.	macOS Mister Download Manager क ब्राउझराच्या फोल्डरांतल्यान भायर दवरता.
+#. text in extension.rs
+#. a check of Test browser integration, and the browser extension's window (macOS): macOS refused to let MDM read or write {browser}'s folder (where the browser finds MDM's helper); {browser} is a browser's name
+#, machine
+	macOS keeps Mister Download Manager out of {browser}'s folder.	macOS Mister Download Manager क {browser} च्या फोल्डरांतल्यान भायर दवरता.
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -2605,6 +2854,10 @@
 #. text in the Options window
 #, machine
 	Manual proxy/socks configuration	मॅन्युअल प्रॉक्सी/SOCKS कॉन्फिगुरेशन
+#. text in the Add torrent window
+#. Torrent settings: the hover text of "Connect over uTP too (UDP)"
+#, machine
+	Many peers take only uTP. Without it, MDM can't reach them.	खूब पियर फकत uTP घेतात. ताच्या बगर, MDM तांच्या मेरेन पावपाक शकना.
 #. checkbox in the Add torrent window
 #. Torrent settings: ask the router (UPnP) to forward the port
 #, machine
@@ -2679,6 +2932,10 @@
 #. remote control page (on a phone): an action failed
 #, machine
 	MDM could not do it.	MDM तें करूंक शकलें ना.
+#. text in torrent downloads
+#. question before starting/resuming a torrent that would modify files MDM did not create; Yes authorizes writes, No leaves files unchanged
+#, machine
+	MDM didn't create these files. Starting the torrent can resize them and replace their contents, including unticked files that share pieces. Use them for this torrent?	MDM न ह्यो फायली तयार करूंक नात. टॉरेंट चालू केल्यार तांचो आकार बदलूंक शकता आनी तांचो मजकूर बदलूंक शकता, जातूंत टिक करूंक नाशिल्ल्यो फायली आसतात त्योय. ह्या टॉरेंटा खातीर त्यो वापरच्यो?
 #. text in remote.rs
 #. remote control page (on a phone): MDM can't be reached while pairing
 #, machine
@@ -2688,6 +2945,14 @@
 #. the trailing ... means it is still going on: keep it
 #, machine
 	MDM does not answer. Trying again...	MDM जाप दिना. परत प्रयत्न करता...
+#. text in helpers.rs
+#. Video helpers: MDM can't download Deno on this system (32-bit Windows, an unusual processor); Deno and Node.js are program names
+#, machine
+	MDM has no copy for this system: install Deno or Node.js	ह्या प्रणालीखातीर MDM क कोणतीच प्रत मेळना: Deno वा Node.js स्थापीत करात
+#. text in helpers.rs
+#. Video helpers: MDM can't download this helper on this Windows (ffmpeg on 32-bit Windows); "Use another program" is the button below
+#, machine
+	MDM has no copy for this system: install it, or use another program	MDM क ह्या सिस्टमा खातीर प्रत ना: तें इन्स्टॉल करात, वा दुसरें प्रोग्राम वापरात
 #. text in remote.rs
 #. remote control page (on a phone): no pairing code is shown in MDM; "Pair a device" is MDM's button
 #, machine
@@ -2751,10 +3016,14 @@
 #. text in crashui.rs
 #, machine
 	Mister Download Manager crash report	Mister Download Manager क्रॅश अहवाल
-#. text in crashui.rs
+#. text in crashui.rs; text in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. crash report window heading: an internal error, MDM still running
 #, machine
 	Mister Download Manager hit an internal error	Mister Download Manager कडेन अंतर्गत त्रुटी जाली
+#. text in wake.rs
+#. why the computer isn't going to sleep, in the system's list of programs that keep it awake (Windows' power requests, Linux's inhibitors)
+#, machine
+	Mister Download Manager is downloading	Mister Download Manager डाउनलोड करता
 #. text in wake.rs
 #. why the computer isn't going to sleep, in the system's list of programs that keep it awake; {queue} = the queue's name
 #. {queue} = a queue name such as "Main queue" (keep the braces as they are)
@@ -2823,6 +3092,14 @@
 #. a country's name (where a download's server is)
 #, machine
 	Morocco	मोरोक्को
+#. text in playlistdlg.rs
+#. a quality in Download video for a whole playlist: each video's best H.264 video with AAC sound, an MP4 that every video editor, TV and phone plays; keep "(H.264 + AAC)" as it is
+#, machine
+	Most compatible (H.264 + AAC)	चड अनुकूल (H.264 + AAC)
+#. text in the Download video window
+#. a choice in the Download video window: the best H.264 video with AAC sound, an MP4 that every video editor, TV and phone plays; keep "(H.264 + AAC)" as it is; {height} is the resolution (1080p)
+#, machine
+	Most compatible (H.264 + AAC) · {height}	चड अनुकूल (H.264 + AAC) · {height}
 #. button in a download's Properties window
 #. verb: move the file to another folder
 #, machine
@@ -2832,7 +3109,7 @@
 	Move a page up / down	एक पान वयर/सकयल व्हरात
 #. what a keyboard shortcut does in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #, machine
-	Move between the categories and the download list	श्रेणीं आनी डाउनलोड वळेरीमदीं बदलात
+	Move between the toolbar, the categories and the download list	टूलबार, वर्ग आनी डाउनलोड वळेरी हांचे मदीं वचचें
 #. text in the Scheduler window
 #, machine
 	Move down	सकयल व्हरात
@@ -2946,6 +3223,11 @@
 #. button: create a new item
 #, machine
 	New	नवें
+#. message or event log entry in the main window
+#. event log: the browser's new download of the same file gave a download that waited for a new address (its link had expired) its address, and it goes on from there; {host} = the new address's server
+#. {host} = a server name such as "example.com" (keep the braces as they are)
+#, machine
+	New address from the browser ({host}): going on from it	ब्राउझरांतल्यान नवो पत्तो ({host}): ताचे वयल्यान फुडें वचप
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -2991,6 +3273,10 @@
 #. text in a dialog box
 #, machine
 	No addresses yet	अजून पत्ते ना
+#. text in the Options window
+#. Options → Proxy / Socks: Test got no answer in time
+#, machine
+	No answer within 20 seconds.	20 सेकंदां भितर जाप मेळ्ळी ना.
 #. text in extension.rs
 #. a check of Test browser integration (Linux, macOS): MDM found no browser it can connect to (one installed as a Flatpak isn't found)
 #, machine
@@ -3054,6 +3340,11 @@
 #. text in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #, machine
 	No mail app: the message is copied, paste it in your mail.	मेल ऍप ना: संदेश कॉपी केल्लो आसा, तो तुमच्या मेलान पेस्ट करात.
+#. message or event log entry in the main window
+#. a video's or gallery's log: MDM looked for a newer yt-dlp (or gallery-dl) and the one it has is the newest; {name} = its name
+#. {name} = a file name (keep the braces as they are)
+#, machine
+	No newer {name} than this one	हाचे परस नवें {name} ना
 #. text in errors.rs
 #, machine
 	no peer sent the torrent's file list in time	खंयच्याच पियरान वेळार टॉरेंटाची फाइल वळेरी धाडली ना
@@ -3086,7 +3377,7 @@
 #. message or event log entry in the main window
 #, machine
 	No web addresses were found in {file}.	{file} त खंयचीच वेब पत्ती मेळ्ळी ना.
-#. text in the Download video window
+#. text in the Options window; text in the Download video window
 #. in the Subtitles list of Download video: download no subtitles
 #, machine
 	None	खंयचेच न्हय
@@ -3144,10 +3435,14 @@
 #, machine
 	Not in a queue	रांगेत ना
 #. text in helpers.rs
-#. Video helpers: no copy of this helper yet
 #, machine
 	Not installed yet	अजून स्थापित करूंक ना
-#. button in helpers.rs
+#. text in the Link grabber window
+#. Link grabber, a link's status: a web page sent it (Click'n'Load), so it isn't looked up (name, size, online) before it is added
+#, machine
+	Not looked up	पळोवंक ना
+#. text in cnl.rs; button in helpers.rs
+#. button in the Click'n'Load window: refuse these links, ask again next time
 #, machine
 	Not now	आतां न्हय
 #. text in helpers.rs
@@ -3192,6 +3487,10 @@
 #. option (radio button) in the Options window
 #, machine
 	Off	बंद
+#. tooltip (why a control is greyed) in the Add torrent window
+#. why "Connect over uTP too" is greyed in Torrent settings: the proxy is on
+#, machine
+	Off with the proxy: uTP goes over UDP, which a SOCKS5 proxy doesn't carry	प्रॉक्सी बंद आसल्यार: uTP UDP वरवीं वता, जें SOCKS5 प्रॉक्सी घेना
 #. text in the Add torrent window
 #, machine
 	Off: a finished torrent stops, like any download.	बंद: पुराय जाल्लें टॉरेंट, खंयच्याय डाउनलोडा भशेन, थांबता.
@@ -3199,6 +3498,10 @@
 #. Options → Remote → Status: the remote control is off
 #, machine
 	Off: nothing on the network can reach MDM.	बंद: नेटवर्काचेर कांयच MDM मेरेन पावपाक शकना.
+#. text in rssdlg.rs
+#. RSS feeds window, Download rules: under the rule's feeds; the rule was turned off because every feed it watched was removed
+#, machine
+	Off: the feeds it watched were removed.	बंद: तिणें पळयल्लीं फीड्स काडून उडयलीं.
 #. text in the Options window
 #, machine
 	Offer to download links copied to the clipboard	क्लिपबोर्डांत कॉपी केल्ले दुवे डाउनलोड करपाक दिवचें
@@ -3249,6 +3552,10 @@
 #. text in the Options window
 #, machine
 	One address per line; * stands for any text: example.com/private/*	दरेक वळीक एक पत्तो; * खंयच्याय मजकुरा खातीर उबो रावता: example.com/private/*
+#. text in the Options window
+#. Archive passwords window: how the list is used
+#, machine
+	One password per line, tried in this order on an encrypted archive before MDM asks. The one that fits moves to the top.	दर वळीक एक पासवर्ड, MDM विचारचे पयलीं एन्क्रिप्ट केल्ल्या आर्काइवाचेर ह्या क्रमान प्रयत्न करतात. जो जुळटा तो वयर सरकता.
 #. option (radio button) in the Scheduler window
 #, machine
 	One-time downloading	एक फावट डाउनलोड करप
@@ -3295,7 +3602,9 @@
 #. button that opens the torrent's containing folder in the file manager
 #, machine
 	Open folder	फोल्डर उगडचें
-#. text in a download's progress window
+#. text in the Link grabber window; text in a download's progress window
+#. Link grabber, a link's status: the remedy from the failure's sentence, for a site link that is a web page, not the file (and a server that sent a web page instead of it). The sentence is the cell's hover tip
+#. Link grabber, a link's status: the remedy from the failure's sentence, for a server that sent a web page instead of the file. The sentence is the cell's hover tip
 #. button in a download's progress window when the site sent a web page (a waiting page, a captcha) instead of the file: opens the download's link in the web browser
 #, machine
 	Open in browser	ब्राउझरांत उगडात
@@ -3348,6 +3657,10 @@
 #. tab title: what happens when the download finishes
 #, machine
 	Options on completion	पुराय जातकच विकल्प
+#. text in the Options window
+#. Options → Add an account: label before the field for an API key the user made at the service (Mega-Debrid: My Account → API Key; the other way to sign in)
+#, machine
+	Or paste an application's API key:	वा ऍप्लिकेशनाची API की पेस्ट करात:
 #. text in the Options window
 #. Options → Add an account: label before the field for the service's API token (the other way to sign in)
 #, machine
@@ -3413,6 +3726,7 @@
 	Password	पासवर्ड
 #. text in the Link grabber window; text in the Options window
 #. Link grabber: the package's archives' password (a label before its box)
+#. Options → Add an account: label before the field for the password at the debrid service
 #, machine
 	Password:	पासवर्ड:
 #. text in the Add torrent window
@@ -3514,6 +3828,11 @@
 #. Options → Accounts: a debrid account's state; {days} the days of premium left
 #, machine
 	premium, {days} days left	प्रीमियम, {days} दीस उरल्यात
+#. text in the Options window
+#. Options → General: shown inside the shortcut recorder box while waiting for the user to press a 2-key or 3-key shortcut (#558)
+#. the trailing ... means it is still going on: keep it
+#, machine
+	Press keys...	की दाबात...
 #. button in a dialog box
 #. verb: open the part already downloaded
 #, machine
@@ -3522,6 +3841,10 @@
 #. tooltip of the greyed Preview button in Download File Info
 #, machine
 	Preview isn't available yet	पळोवंक अजून मेळना
+#. text in the Download video window
+#. a private-window video's authentication failure: only cookies supplied by that private window may be used, even after restarting MDM
+#, machine
+	Private-window downloads do not use Cookies for video sites from Options. Open the page in a private window, sign in there, and use its Download video button again.	खाजगी विन्डोजातले डाउनलोड ऑप्शनांतल्यान व्हिडिओ सायटीं खातीर कुकीज वापरनात. खाजगी विन्डोजात पान उगडात, थंय साइन इन करात, आनी परतून Download video बटण वापरा.
 #. text in the Options window
 #. Options → Sites Logins → Cookies for video sites: label before the browser profile's name or folder (may stay empty)
 #, machine
@@ -3636,6 +3959,11 @@
 #. {error} = an error message (keep the braces as they are)
 #, machine
 	Recheck failed: {error}	परतून तपासपाक अपेस आयलें: {error}
+#. text in a download's progress window
+#. a live stream's status: yt-dlp records it (it shows no progress, only the size so far)
+#. the trailing ... means it is still going on: keep it
+#, machine
+	Recording...	रेकॉर्डिंग चालू आसा...
 #. message or event log entry in the main window
 #. window title, verb: download the file again from the start
 #, machine
@@ -3647,6 +3975,10 @@
 #. RSS feeds window: fetch the selected feed again now
 #, machine
 	Refresh	रिफ्रेश करात
+#. text in the Link grabber window
+#. Link grabber, a link's status: the remedy from the failure's sentence, for a download link that expired. The sentence is the cell's hover tip
+#, machine
+	Refresh the address	पतो रिफ्रेश करात
 #. text in the Options window
 #. tab title: how dates and times are written (date order, 12- or 24-hour clock)
 #, machine
@@ -3655,6 +3987,10 @@
 #. RSS feeds window, Download rules: the two boxes above hold regular expressions
 #, machine
 	Regular expressions	नेमीत अभिव्यक्ती
+#. text in extracting archives (a download's log, the Archive password window)
+#. in Archive password: check box: keep the password typed in Options → Archives → Archive passwords, to try it on the next encrypted archives
+#, machine
+	Remember it for other archives	हेर आर्काइवां खातीर याद दवरात
 #. text in a download's progress window
 #, machine
 	Remember Speed Limiter settings for this file	ह्या फायला खातीर स्पीड लिमिटर सेटिंग्ज उगडास दवर
@@ -3688,8 +4024,9 @@
 #. {name} = a file name (keep the braces as they are)
 #, machine
 	Remove {name} from the list?	यादींतल्यान {name} काडून उडोवचें?
-#. text in a download's progress window
+#. text in a download's progress window; text in torrent_rename.rs
 #. noun: label before the deferred new file or folder name in the progress window
+#. noun: label before the new file or folder name in Add torrent
 #, machine
 	Rename	परत नांव दियात
 #. text in the Batch download window
@@ -3824,7 +4161,8 @@
 #. text in a download's progress window; text in a download's Properties window
 #, machine
 	Save To:	हांगा सांबाळ:
-#. text in the Link grabber window; text in rssdlg.rs
+#. text in the Batch download window; text in the Link grabber window; text in rssdlg.rs
+#. Batch download: the folder every file goes to (a label before its box)
 #. Link grabber: the folder the package's files go to (a label before its box)
 #. RSS feeds window, Download rules: the folder the rule's torrents go to
 #, machine
@@ -3838,6 +4176,11 @@
 #. label before the folder the torrent is saved in
 #, machine
 	Saved in	हांगा सांबाळ्ळें
+#. text in a download's progress window
+#. a live stream's status: stopped, and what was recorded being made into the video file kept
+#. the trailing ... means it is still going on: keep it
+#, machine
+	Saving...	सांबाळप चालू आसा...
 #. tab in the Scheduler window
 #. noun: tab title; when the queue starts and stops
 #, machine
@@ -3853,10 +4196,6 @@
 #. text in the Batch download window
 #, machine
 	Second file:	दुसरी फाइल:
-#. text in a dialog box
-#. title of the folder picker
-#, machine
-	Select a folder	एक फोल्डर निवडात
 #. button in playlistdlg.rs; button in the Add torrent window; text in torrentfiles.rs
 #. button in Download video for a playlist: tick every video
 #, machine
@@ -3939,10 +4278,10 @@
 #. text in the Options window
 #, machine
 	Service:	सेवा:
-#. text in the Add torrent window
+#. tooltip (why a control is greyed) in the Add torrent window
 #. why "Use the proxy" is greyed in Torrent settings
 #, machine
-	Set a socks5:// proxy in Options → Proxy / Socks first	पयलीं पर्याय → प्रॉक्सी / सॉक्स हातूंत socks5:// प्रॉक्सी सेट करा
+	Set a SOCKS5 proxy in Options → Proxy / Socks (Manual, Type SOCKS5) first	पयलीं Options → Proxy / Socks (Manual, Type SOCKS5) हातूंत SOCKS5 प्रॉक्सी सेट करात
 #. checkbox in the Options window
 #, machine
 	Set file creation date as provided by the server	सर्व्हरान दिल्ल्या प्रमाण फाइल तयार करपाची तारीख सेट करात
@@ -3999,6 +4338,10 @@
 #. {error} = an error message (keep the braces as they are)
 #, machine
 	Sharing stopped: {error}	वांटणी थांबयली: {error}
+#. text in the Options window
+#. Options → General: label for the global keyboard shortcut that shows or hides MDM's main window (#558)
+#, machine
+	Shortcut to show or hide window:	विंडो दाखोवपा वा लिपवपा खातीर शॉर्टकट:
 #. text in the download list
 #, machine
 	Show	दाखय
@@ -4060,6 +4403,10 @@
 #, machine
 	Sierra Leone	सिएरा लिओन
 #. button in the Options window
+#. button: sign in to the debrid service with the user name and password typed in
+#, machine
+	Sign in	साइन इन करात
+#. button in the Options window
 #. button: sign in to the debrid service in the browser, by typing a code there
 #, machine
 	Sign in in the browser	ब्राउझरांत साइन इन करचें
@@ -4076,6 +4423,10 @@
 #, machine
 	Sign-ins and passwords are kept in Windows Credential Manager.	साइन-इन्स आनी पासवर्ड Windows क्रेडेंशियल मॅनेजरांत सांबाळ्ळ्यात.
 #. text in the Options window
+#. Options → Add an account: signed in, the service gives no account name; {state} premium or not
+#, machine
+	Signed in ({state})	साइन इन केलें ({state})
+#. text in the Options window
 #. Options → Add an account: signed in; {user} the account's name, {state} premium or not
 #, machine
 	Signed in as {user} ({state})	{user} म्हूण साइन इन केल्लें ({state})
@@ -4083,6 +4434,26 @@
 #. Options → Accounts: the account's sign-in can't be read (signed out, or the settings came from another computer)
 #, machine
 	signed out: sign in again	साइन आउट केल्लें: परत साइन इन करचें
+#. message or event log entry in the main window
+#. View → Draw with: a greyed note under why a graphics system doesn't draw MDM; {date}: the day that was found
+#, machine
+	Since {date}	{date} सावन
+#. message or event log entry in the main window
+#. View → Draw with: a greyed note under why a graphics system ("it": Direct3D, Vulkan, Metal or OpenGL) doesn't draw MDM; {date}: the day that was found; MDM tries it again once the graphics driver is updated
+#, machine
+	Since {date}: MDM tries it again after a driver update	{date} सावन: ड्रायव्हर अपडेट जाल्या उपरांत MDM परतून प्रयत्न करता
+#. message or event log entry in the main window
+#. View → Draw with: a greyed note under why a graphics system ("it": Direct3D, Vulkan, Metal or OpenGL) doesn't draw MDM; {date}: the day that was found; MDM tries that graphics system again when it next starts
+#, machine
+	Since {date}: MDM tries it again at its next start	{date} सावन: MDM फुडल्या वेळार सुरू जातना परतून प्रयत्न करता
+#. message or event log entry in the main window
+#. View → Draw with: a greyed note under why a graphics system ("it": Direct3D, Vulkan, Metal or OpenGL) doesn't draw MDM; {date}: the day that was found; {retry}: the day MDM tries it again
+#, machine
+	Since {date}: MDM tries it again on {retry}	{date} सावन: MDM {retry} क परतून प्रयत्न करता
+#. message or event log entry in the main window
+#. View → Draw with: a greyed note under why a graphics system ("it": Direct3D, Vulkan, Metal or OpenGL) doesn't draw MDM; {date}: the day that was found; {retry}: the day MDM tries it again, unless the graphics driver is updated before
+#, machine
+	Since {date}: MDM tries it again on {retry}, or after a driver update	{date} सावन: MDM {retry} क परतून प्रयत्न करता, वा ड्रायव्हर अपडेट जाल्या उपरांत
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -4205,6 +4576,26 @@
 #. window title in a dialog box
 #, machine
 	Speed Limiter settings	गती मर्यादीत करपी मांडावळ
+#. text in the download list (sizes, speeds, status)
+#. tip of a download's Transfer rate in the list: {limit} is the most this download may take ("512 KB/sec"), set with the Speed Limiter
+#, machine
+	Speed Limiter: at most {limit} for this download	स्पीड लिमिटर: ह्या डाउनलोड खातीर चडांत चड {limit}
+#. text in the download list (sizes, speeds, status)
+#. the status bar and the tray icon's tip while the Speed Limiter's limit for all downloads together is on: {limit} is the most they may take together ("1024 KB/sec")
+#, machine
+	Speed Limiter: {limit} for all downloads	स्पीड लिमिटर: सगळ्या डाउनलोड खातीर {limit}
+#. text in the download list (sizes, speeds, status)
+#. tip of a download's Transfer rate in the list: {limit} is the most all downloads together may take ("1024 KB/sec"), set in the Speed Limiter's settings
+#, machine
+	Speed Limiter: {limit} for all downloads together	स्पीड लिमिटर: सगळ्या डाउनलोड खातीर एकठांय {limit}
+#. text in the download list (sizes, speeds, status)
+#. the status bar and the tray icon's tip while Downloads → Speed Limiter is turned on: {limit} is the most each download may take ("512 KB/sec")
+#, machine
+	Speed Limiter: {limit} per download	स्पीड लिमिटर: दर डाउनलोडाक {limit}
+#. text in the download list (sizes, speeds, status)
+#. the status bar and the tray icon's tip while both Speed Limiter limits are on: {one} is the most each download may take ("512 KB/sec"), {all} the most all of them together may take ("1024 KB/sec")
+#, machine
+	Speed Limiter: {one} per download, {all} for all	स्पीड लिमिटर: दर डाउनलोडाक {one}, सगळ्यां खातीर {all}
 #. message or event log entry in the main window
 #. tooltip on the disabled Rename box when the file is one part of a split archive (.part1.rar, .7z.001…)
 #, machine
@@ -4289,6 +4680,10 @@
 #. remote control page (on a phone): button: stop a queue
 #, machine
 	Stop	थांबयात
+#. text in a download's progress window
+#. button in a live stream's progress window: stop recording it and keep what was recorded as a video file
+#, machine
+	Stop and save	थांबयात आनी सांबाळात
 #. text in the Scheduler window; checkbox in the Scheduler window
 #, machine
 	Stop download at	हांगा डाउनलोड थांबोवप
@@ -4476,6 +4871,11 @@
 #, machine
 	The best qualities, MP3, Opus and FLAC need ffmpeg (about 80 MB).	उत्तम गुणवत्ता, MP3, Opus आनी FLAC खातीर ffmpeg (सुमार 80 MB) जाय.
 #. text in the Download video window
+#. in Download video, on 32-bit Windows (no button: no ffmpeg build MDM can check exists for it); Helpers... is the button below
+#. the trailing ... means it is still going on: keep it
+#, machine
+	The best qualities, MP3, Opus and FLAC need ffmpeg, which MDM has no copy of for 32-bit Windows: choose your own with Helpers...	सर्वोत्तम दर्ज्याचे पर्याय, MP3, Opus आनी FLAC वापरपाक ffmpegाची गरज आसा; 32-बिट Windows खातीर MDM कडेन ffmpegाची प्रत ना: Helpers... वापरून तुमची स्वताची प्रत वेंचून काडात...
+#. text in the Download video window
 #. in Download video, on macOS and Linux (no button: the system installs it)
 #, machine
 	The best qualities, MP3, Opus and FLAC need ffmpeg: install it with your system's package manager (or Homebrew).	उत्तम गुणवत्ता, MP3, Opus आनी FLAC खातीर ffmpeg जाय: तुमच्या सिस्टिमाच्या पॅकेज मॅनेजर वरवीं (वा Homebrew) तें स्थापीत करात.
@@ -4483,6 +4883,10 @@
 #. an error: the browser's VPN or proxy extension logs in to its proxy itself, and MDM can't; Options → Proxy / Socks → Network adapter is where an adapter can be chosen
 #, machine
 	the browser's proxy (a VPN or proxy extension) asks for a login only that extension has: use the VPN's own app, or choose its network adapter in Options → Proxy / Socks	ब्राउझराचो प्रॉक्सी (VPN वा प्रॉक्सी एक्स्टेंशन) फकत त्या एक्स्टेंशनाकच मेळपी लॉगइन मागता: VPN चें स्वताचें ॲप वापरात, वा ऑप्शन्स → प्रॉक्सी / SOCKS हांगा ताचो नेटवर्क ॲडाप्टर निवडात
+#. text in extension.rs
+#. a check of Test browser integration: the browsers are pointed at a copy of MDM that was deleted (often one started from inside a zip); that copy's folder shows on the line under it
+#, machine
+	The browsers are set up for a copy that is gone:	ब्राउझर काडून उडयल्ल्या प्रतीखातीर सेट केल्यात:
 #. text in extension.rs
 #. a check of Test browser integration: the browsers find MDM's helper program
 #, machine
@@ -4542,6 +4946,10 @@
 #. text in errors.rs
 #, machine
 	the connection was lost while receiving data	डेटा मेळटना जोडणी सोंपली
+#. text in torrent downloads
+#. files kept appearing while the user was confirming a torrent start; stop rather than repeat questions indefinitely
+#, machine
+	The destination keeps changing. Stop changes to its files and try starting the torrent again.	गंतव्यस्थान बदलत रावता. ताच्या फायलींतले बदल थांबयात आनी टॉरेंट परतून चालू करपाचो यत्न करात.
 #. text in the Add torrent window
 #. a magnet link's lookup, after 30 seconds: the DHT got no answer from anyone
 #, machine
@@ -4585,6 +4993,10 @@
 #. text in errors.rs
 #, machine
 	the drive or network share is no longer available	ड्राइव्ह वा नेटवर्क शेअर आतां उपलब्ध ना
+#. text in extracting archives (a download's log, the Archive password window)
+#. in a download's log, after HatchZip (a program's name) extracted in place: the entries left out (links, unsafe names) were not deleted, they are still in {folder}
+#, machine
+	The entries left out are still in {folder}	भायर उडयल्लीं नोंदी अजून {folder} त आसात
 #. text in extension.rs
 #, machine
 	The extension is already in this app. Apple hasn't notarized this build, so Safari needs these steps to allow it.	एक्स्टेंशन आदींच ह्या अॅपांत आसा. Apple न हें बिल्ड नोटराइज केलें ना, देखून Safari क तें वापरपाक दिवपाक हीं पावलां गरजेचीं.
@@ -4610,6 +5022,14 @@
 #. {algorithm} = a checksum algorithm such as "SHA-256" (keep the braces as they are)
 #, machine
 	The file matches ({algorithm})	फाइल जुळटा ({algorithm})
+#. text in errors.rs
+#. why a download failed on Linux or macOS (#1102): the file name is longer than the system allows ({limit} bytes, 255; a letter can take several bytes), counting the temporary files saved beside the file while it downloads. {path} = the path
+#, machine
+	the file name is too long: at most {limit} bytes with the files saved while it downloads. Choose a shorter name ({path})	फायल नांव खूब लांब आसा: डाउनलोड जातना सांबाळिल्ल्या फायलीं सयत चडांत चड {limit} बाइट्स. ल्हान नांव वेंचून काडात ({path})
+#. text in errors.rs
+#. why a download failed (#1102): the file name is longer than Windows allows ({limit} characters, 255), counting the temporary files saved beside the file while it downloads. {path} = the path
+#, machine
+	the file name is too long: at most {limit} characters with the files saved while it downloads. Choose a shorter name ({path})	फायल नांव खूब लांब आसा: डाउनलोड जातना सांबाळिल्ल्या फायलीं सयत चडांत चड {limit} अक्षरां. ल्हान नांव वेंचून काडात ({path})
 #. text in a dialog box
 #, machine
 	The file saved as	फाइल अशी सांबाळ्ळी
@@ -4628,6 +5048,10 @@
 #. {error} = an error message (keep the braces as they are)
 #, machine
 	The files could not be chosen: {error}	फायली वेंचूंक शकले ना: {error}
+#. text in torrent downloads
+#. error when deleting a torrent added by an older MDM that saved no record of its files: they stay on the disk
+#, machine
+	The files were kept because this older download has no ownership record	फायली दवरल्यो कारण ह्या पोरन्या डाउनलोडा कडेन मालकी हक्काची नोंद ना
 #. text in a dialog box
 #. {error} = an error message (keep the braces as they are)
 #, machine
@@ -4662,13 +5086,18 @@
 #. an error: the network adapter chosen in Options (a VPN's, usually) is off or gone; {adapter} its name
 #, machine
 	the network adapter {adapter} is not connected	नेटवर्क अडॅप्टर {adapter} जोडला ना
+#. text in torrent_ownership.rs
+#. error when a torrent's output folder path cannot be used
+#, machine
+	The output folder is invalid	आउटपुट फोल्डर अवैध आसा
 #. text in extracting archives (a download's log, the Archive password window)
 #. why an archive wasn't extracted (after "Couldn't extract {name}: ")
 #, machine
 	the password is wrong	पासवर्ड चुकला
 #. text in errors.rs
+#. why a download failed (#1102): the folder and file name together are longer than Windows allows ({limit} characters, 259), counting the temporary files saved beside the file while it downloads (their names are longer). {path} = the path
 #, machine
-	the path is too long for Windows: {path}	Windows खातीर मार्ग खूब लांब आसा: {path}
+	the path is too long for Windows: at most {limit} characters with the files saved while it downloads. Choose a shorter file name or folder ({path})	Windows खातीर मार्ग खूब लांब आसा: डाउनलोड करतना सांबाळिल्ल्या फायलीं सयत चडांत चड {limit} अक्षरां. ल्हान फायल नांव वा फोल्डर वेंचून काडात ({path})
 #. text in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. why updates could not be checked: the newest release on the site has no number
 #, machine
@@ -4691,6 +5120,14 @@
 #. text in crashui.rs
 #, machine
 	The report is on your clipboard: paste it in a comment on the issue.	अहवाल तुमच्या क्लिपबोर्डाचेर आसा: तो इश्यूचेर टिप्पणींत पेस्ट करात.
+#. text in torrent downloads
+#. error when deleting a torrent: the .torrent file MDM kept is another torrent's
+#, machine
+	The saved .torrent file does not match this download	सांबाळिल्ली .torrent फायल ह्या डाउनलोडाक जुळना
+#. text in torrent downloads
+#. starting an old torrent whose cached metadata was lost; re-adding can restore it without deleting data
+#, machine
+	The saved .torrent file is missing or unreadable. Add the torrent again to recover its metadata; keep its existing files.	सांबाळिल्ली .torrent फायल मेळना वा वाचपाक शकना. तिचो मेटाडेटा परत मेळोवपाक टॉरेंट परतून जोडा; तिच्यो सद्याच्यो फायली दवरात.
 #. text in errors.rs
 #. an FTPS (or other TLS) connection could not be secured
 #, machine
@@ -4723,6 +5160,15 @@
 #, machine
 	the server sent an unexpected part of the file ({detail})	सर्वरान फायलाचो अनपेक्षित भाग धाडलो ({detail})
 #. text in errors.rs
+#. why a download failed (#1460): the browser's own download of the link was a file of {size} (such as 117.65 MB), but when MDM asked the server for it, it sent only {sent} (such as 4.65 KB): an error or a notice, not the file. Some links work only once, or only in the browser. Alt+click: the link clicked with the Alt key held, which leaves the download to the browser
+#. {size} = a file size such as "4.2 MB" (keep the braces as they are)
+#, machine
+	the server sent only {sent} where the browser's file is {size} (a link that works once, or only in the browser): Alt+click the link to let the browser download it	ब्राउझराची फायल {size} आसतना सर्वरान फकत {sent} धाडलें (एक फावट वा फकत ब्राउझरांत काम करपी लिंक): ब्राउझराक ती डाउनलोड करपाक दिवपाक लिंक Alt+क्लिक करात
+#. text in debrid.rs
+#. Options → Accounts: the service doesn't say whether the account is premium (Mega-Debrid, signed in with an API key); a free account's links are refused when downloading
+#, machine
+	the service doesn't say whether it is premium	सेवा प्रीमियम आसा काय ना तें सांगना
+#. text in errors.rs
 #. why a download failed (#701): a file host answered with its own web page (a countdown before the link, a captcha, a sign-in) where the file was expected. The browser gets past it; MDM's browser extension then hands the real file back to MDM
 #, machine
 	the site sent a web page instead of the file (a waiting page, a captcha or a sign-in): open the link in your browser, finish there, and the download comes back to MDM	सायटीन फायली बदला वेबपेज धाडलें (वाट पळोवपाचें पान, कॅप्चा वा सायन-इन): तुमचें ब्राउझरांत लिंक उगडात, थंय पुराय करात, आनी डाउनलोड MDM कडेन परत येतलें
@@ -4750,6 +5196,34 @@
 #. the Download video window: the site's certificate is trusted neither by yt-dlp nor by the computer (asked again with the computer's certificates, #955); usually an antivirus or a proxy that reads secure (HTTPS) connections signs sites with a certificate of its own
 #, machine
 	The site's certificate isn't trusted, by yt-dlp nor by this computer: an antivirus's web filter or a proxy that reads HTTPS may be in the way. Turn its HTTPS scanning off, or add its certificate to the computer's, then look the page up again.	साइटचें प्रमाणपत्र yt-dlp वा ह्या संगणकान विश्वासार्ह मानिल्लें ना: अँटीव्हायरसचें वेब फिल्टर वा HTTPS वाचपी प्रॉक्सी आड येवंक शकता. ताचें HTTPS स्कॅनिंग बंद करात, वा ताचें प्रमाणपत्र संगणकाच्या प्रमाणपत्रांत जोडा, मागीर पानाची परत तपासणी करात.
+#. text in errors.rs
+#. why a download failed: the site's security certificate (what proves a secure, HTTPS, site is the one it says) is past its end date. Browsers warn about the same site
+#, machine
+	the site's security certificate has expired, so MDM can't be sure it's the real site (your browser warns about it too)	साइटचें सुरक्षा प्रमाणपत्र कालबाह्य जालां, देखून MDM ती खरी साइट आसा हाची खात्री करूंक शकना (तुमचो ब्राउझर लेगीत ताचे विशीं इशारो दिता)
+#. text in errors.rs
+#. why a download failed: the site's security certificate was made for other site names than the one in the address
+#, machine
+	the site's security certificate is for another site name, so MDM can't be sure it's the real site (your browser warns about it too)	साइटचें सुरक्षा प्रमाणपत्र दुसऱ्या साइट नांवा खातीर आसा, देखून MDM ती खरी साइट आसा हाची खात्री करूंक शकना (तुमचो ब्राउझर लेगीत ताचे विशीं इशारो दिता)
+#. text in errors.rs
+#. why a download failed: the site's security certificate is made for other uses than a website (its "extended key usage" leaves out web servers)
+#, machine
+	the site's security certificate isn't made for websites, so MDM can't be sure it's the real site	साइटचें सुरक्षा प्रमाणपत्र वेबसाइटां खातीर तयार केलें ना, देखून MDM खात्रीन सांगपाक शकना की ती खरी साइट आसा
+#. text in errors.rs
+#. why a download failed: the site's security certificate was signed by the site itself or by an issuer this computer doesn't trust. Browsers warn about the same site
+#, machine
+	the site's security certificate isn't trusted (it's self-signed or from an unknown issuer), so MDM can't be sure it's the real site (your browser warns about it too)	साइटचें सुरक्षा प्रमाणपत्र विश्वासार्ह ना (तें स्व-सही केल्लें वा अज्ञात जारीकर्त्याचें आसा), देखून MDM ती खरी साइट आसा हाची खात्री करूंक शकना (तुमचो ब्राउझर लेगीत ताचे विशीं इशारो दिता)
+#. text in errors.rs
+#. why a download failed: the site's security certificate's validity hasn't begun; usually this computer's date or time is wrong
+#, machine
+	the site's security certificate isn't valid yet: check this computer's date and time	साइटचें सुरक्षा प्रमाणपत्र अजून वैध ना: ह्या संगणकाची तारीख आनी वेळ तपासात
+#. text in errors.rs
+#. why a download failed: the site's security certificate was refused for another reason (a bad signature, a broken certificate)
+#, machine
+	the site's security certificate was refused, so MDM can't be sure it's the real site	साइटचें सुरक्षा प्रमाणपत्र न्हयकारलें, देखून MDM ती खरी साइट आसा हाची खात्री करूंक शकना
+#. text in errors.rs
+#. why a download failed: the issuer of the site's security certificate took it back
+#, machine
+	the site's security certificate was revoked by its issuer, so MDM won't trust it	साइटचें सुरक्षा प्रमाणपत्र ताच्या जारीकर्त्यान रद्द केलें, देखून MDM ताचेर विश्वास दवरचो ना
 #. text in crashui.rs
 #. crash report window: the symbols couldn't be downloaded; the report still works
 #, machine
@@ -4762,6 +5236,10 @@
 #. Options → Connection → DNS: the operating system's own DNS (the default)
 #, machine
 	The system's DNS	सिस्टमाचो DNS
+#. text in the Options window
+#. Options → Proxy / Socks: Test's server answered without saying the address it saw
+#, machine
+	The test page didn't say the address it saw.	चांचणी पानांत ताका दिसपी पत्तो सांगलें ना.
 #. text in whereis.rs
 #. the tooltip of where a download's server is: how the time shown is measured
 #, machine
@@ -4774,6 +5252,23 @@
 #. an error: the torrent is gone from the torrent session
 #, machine
 	the torrent is no longer there	टॉरेंट आतां थंय ना
+#. text in torrent_ownership.rs
+#. unsafe path found in a saved torrent ownership record
+#. error when the saved record of a torrent's files holds a path that leaves its folder
+#, machine
+	The torrent ownership record contains an unsafe path	टॉरेंट मालकी हक्काच्या नोंदींत एक असुरक्षित मार्ग आसा
+#. text in torrent_ownership.rs
+#. error when the saved record of a torrent's files differs from the .torrent file
+#, machine
+	The torrent ownership record does not match its file list	टॉरेंट मालकी हक्काची नोंद ताच्या फायल वळेरीक जुळना
+#. text in torrent_ownership.rs
+#. error when the saved record of a torrent's files cannot be read as one
+#, machine
+	The torrent ownership record is invalid	टॉरेंट मालकी हक्काची नोंद अवैध आसा
+#. text in torrent downloads
+#. the user refused write permission for existing files when starting a torrent
+#, machine
+	The torrent was not started because permission to use existing files was declined.	सद्याच्यो फायली वापरपाची परवानगी न्हयकारिल्ली म्हणून टॉरेंट चालू जालो ना.
 #. message or event log entry in the main window
 #. {error} = an error message (keep the braces as they are)
 #, machine
@@ -4807,6 +5302,10 @@
 #. why OK is greyed when naming a new queue
 #, machine
 	There is already a queue with this name	ह्या नांवाची रांग पयलींच आसा
+#. text in extracting archives (a download's log, the Archive password window)
+#. why an archive wasn't extracted (after "Couldn't extract {name}: "); HatchZip is a program's name
+#, machine
+	there isn't enough free space for its files, HatchZip says; nothing was changed	तिचे फायलीं खातीर पुरेशी रिकामी सुवात ना, HatchZip म्हणटा; कांयच बदलूंक ना
 #. text in a download's progress window
 #, machine
 	These settings are unavailable when "Show download complete dialog" is turned on	“डाउनलोड पुराय जाल्लो संवाद दाखोव” चालू आसतना ह्यो सेटिंग्ज उपलब्ध नात
@@ -4846,6 +5345,10 @@
 #. Options → Remote → Listen on: only programs on this computer can connect (127.0.0.1)
 #, machine
 	This computer only (127.0.0.1)	फकत हें संगणक (127.0.0.1)
+#. text in extension.rs
+#. a check of Test browser integration: MDM was started from inside a zip (or from the temporary folder), which is deleted after it quits, so it can't be connected to the browsers
+#, machine
+	This copy runs from a temporary folder that will be deleted	ही प्रत तात्पुरत्या फोल्डरांतल्यान चलता, जो काडून उडयलो वतलो
 #. text in the Scheduler window
 #. tooltip on the Scheduler's date when it is in the past
 #, machine
@@ -4910,6 +5413,10 @@
 #. why "Put them into the video" is greyed: ffmpeg (a helper program) is not installed
 #, machine
 	This needs ffmpeg	हाका ffmpeg जाय
+#. text in the Add torrent window
+#. tooltip of the greyed "Create a folder for this torrent" checkbox: debrid downloads cannot use it
+#, machine
+	This option is available for direct BitTorrent downloads	हो पर्याय थेट BitTorrent डाउनलोडां खातीर उपलब्ध आसा
 #. text in the Options window
 #. Options → Accounts: a portable copy (it writes nothing outside its folder) keeps the sign-ins in its own settings, encrypted so that only this Windows account can read them
 #, machine
@@ -4923,6 +5430,10 @@
 #. {name} = a file name (keep the braces as they are)
 #, machine
 	this program isn't {name}	हो प्रोग्रॅम {name} न्हय
+#. text in the Options window
+#. Options → General: shown when the chosen global shortcut is already registered by another program (#558)
+#, machine
+	This shortcut is already in use	हो शॉर्टकट पयलींच वापरेंत आसा
 #. text in errors.rs
 #. why a download failed: the site's bot check (Cloudflare) lets browsers through, not programs. Alt+click: the link clicked with the Alt key held, which leaves the download to the browser
 #, machine
@@ -4937,9 +5448,21 @@
 #. text in the Add torrent window
 #, machine
 	This torrent is already in the download list	हो टॉरेंट पयलींच डावनलोड यादींत आसा
+#. message or event log entry in the main window
+#. said when a torrent is added again while an action on the same torrent is still running
+#, machine
+	This torrent is busy. Wait for its current operation to finish before adding it again.	हो टॉरेंट व्यस्त आसा. तो परतून जोडचे पयलीं ताची सद्याची कृती पुराय जावपाची वाट पळयात.
 #. text in errors.rs
 #, machine
 	this torrent is not in the list	हो टॉरेंट वळेरींत ना
+#. text in torrent_ownership.rs
+#. torrent start needs explicit write permission; {file} is the first existing file without a matching grant
+#, machine
+	This torrent needs permission to use {file} before it can start.	हो टॉरेंट चालू करचे पयलीं {file} वापरपाक परवानगी जाय.
+#. message or event log entry in the main window; text in a download's Properties window
+#. shown when Move or Rename is refused: a torrent saved straight in Save to shares that folder with other files
+#, machine
+	This torrent shares its destination folder	हो टॉरेंट ताचो गंतव्य फोल्डर हेर फायलीं वांगडा वांटून घेता
 #. text in the Download video window
 #. the Download video window: the page's video is copy-protected
 #, machine
@@ -5022,7 +5545,7 @@
 #. title of the separate window listing a torrent's files
 #, machine
 	Torrent files	टॉरेंट फायली
-#. window title in the Add torrent window
+#. message or event log entry in the main window; window title in the Add torrent window
 #, machine
 	Torrent settings	टॉरेंट सेटींग
 #. text in torrent downloads
@@ -5070,6 +5593,10 @@
 #. {name} = a file name (keep the braces as they are)
 #, machine
 	Try again later, or download {name} yourself and choose it in {helpers} → {other}.	उपरांत परतून प्रयत्न करात, वा {name} स्वता डाउनलोड करात आनी {helpers} → {other} हातूंत तें विंचून काडात.
+#. text in extracting archives (a download's log, the Archive password window)
+#. the trailing ... means it is still going on: keep it
+#, machine
+	Trying the saved archive passwords...	सांबाळिल्ले आर्काइव पासवर्ड वापरून पळयतात...
 #. text in the Scheduler window
 #. Tuesday, as short as a calendar's column head (two letters in English)
 #, machine
@@ -5134,6 +5661,10 @@
 #. text in helpers.rs
 #, machine
 	Two free helpers make it work. Get them now, and saving a video is one click away when you find one.	दोन फुकट मदतनीस तें काम करतात. तीं आतां मेळोवचीं, आनी तुमकां एक मेळ्ळ्यार व्हिडिओ सेव्ह करप एक क्लिक पयस आसा.
+#. label in the Options window; text in the Options window
+#. Options → Proxy / Socks → Manual: label before the kind of proxy (HTTP, HTTPS, SOCKS5, SOCKS4)
+#, machine
+	Type	प्रकार
 #. text in rssdlg.rs
 #. RSS feeds window: shown when there are no feeds yet
 #, machine
@@ -5233,14 +5764,31 @@
 #. button (short): move the account up the list (accounts are asked in the list's order)
 #, machine
 	Up	वयल्यान
+#. text in helpers.rs
+#. Helpers: MDM's own copy of a helper is the newest version
+#, machine
+	Up to date	अपडेटेड
 #. text in playlistdlg.rs
 #. a quality in Download video for a whole playlist: each video at this height or the nearest below; {height} is a number (1080)
 #, machine
 	Up to {height}p	{height}p मेरेन
+#. text in helpers.rs
+#. Helpers: button: check for a newer version of this helper now and install it
+#, machine
+	Update	अपडेट करात
 #. button in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. button: download and install the new version, then restart
 #, machine
 	Update now	आतां अद्ययावतीकरण कर
+#. text in helpers.rs
+#. Helpers: a program the person chose, or the system's copy: MDM doesn't update it, the person (or their package manager) does
+#, machine
+	Updated by you	तुमचे वतीन अपडेट केलें
+#. text in helpers.rs
+#. Helpers: MDM updated its own copy of a helper lately; {version} = the new version
+#. {version} = a version number (keep the braces as they are)
+#, machine
+	Updated to {version}	{version} कडेन अपडेट केलें
 #. text in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. {error} = an error message (keep the braces as they are)
 #, machine
@@ -5266,6 +5814,9 @@
 #. text in the Options window
 #, machine
 	Use automatic configuration script	स्वयंचलित कॉन्फिगरेशन स्क्रिप्ट वापर
+#. text in torrent downloads
+#, machine
+	Use existing torrent files	सद्याच्यो टॉरेंट फायली वापरात
 #. checkbox in the Options window
 #, machine
 	Use FTP in PASV mode	PASV मोडात FTP वापर
@@ -5273,6 +5824,10 @@
 #. Video helpers: button: go back to the copy MDM downloads and checks itself
 #, machine
 	Use MDM's own copy	MDM ची स्वतःची प्रत वापरात
+#. checkbox in the Options window
+#. Options → Sites Logins: checkbox under Cookies for video sites: yt-dlp also reads the person's own yt-dlp config file
+#, machine
+	Use my yt-dlp config file	म्हजी yt-dlp कॉन्फिग फायल वापरात
 #. text in the Batch download window
 #. why Batch download's OK is greyed
 #, machine
@@ -5298,9 +5853,6 @@
 #. text in a dialog box
 #, machine
 	Use them for this torrent? What matches it is kept, the rest replaced.	ह्या टॉरेंटा खातीर तांचो वापर करचो? जें जुळटा तें दवरलें वतलें, बाकीचें बदललें वतलें.
-#. label in the Options window
-#, machine
-	Use this proxy for the following protocols:	फुडल्या प्रोटोकॉल खातीर हो प्रॉक्सी वापर:
 #. text in rssdlg.rs
 #. RSS feeds window, Download rules: the rule is on
 #, machine
@@ -5312,6 +5864,10 @@
 #. column title: the user name
 #, machine
 	User	वापरपी
+#. text in the Options window
+#. Options → Add an account: label before the field for the user name at the debrid service
+#, machine
+	User name:	वापरपी नांव:
 #. page title in the Options window
 #, machine
 	User names and passwords for servers/sites	सर्व्हर/सायटीं खातीर वापरपी नांवां आनी पासवर्ड
@@ -5324,6 +5880,10 @@
 #. label in the Options window
 #, machine
 	UserName	वापरपी नांव
+#. tooltip (why a control is greyed) in the Add torrent window
+#. why "Connect over uTP too" is greyed in Torrent settings: incoming connections are off
+#, machine
+	uTP uses the port for incoming connections: turn on Accept incoming connections	uTP येवपी जोडणीं खातीर पोर्ट वापरता: येवपी जोडणीं स्वीकारात चालू करात
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -5367,6 +5927,16 @@
 #. {version} = a version number (keep the braces as they are)
 #, machine
 	Version {version} ({commit})	आवृत्ती {version} ({commit})
+#. text in helpers.rs
+#. Helpers: a newer version of a helper exists ("Update" downloads it); {version} = its version
+#. {version} = a version number (keep the braces as they are)
+#, machine
+	Version {version} available	आवृत्ती {version} उपलब्ध आसा
+#. text in helpers.rs
+#. Helpers: a newer version is downloaded and checked, and is used as soon as the downloads using this helper end; {version} = its version
+#. {version} = a version number (keep the braces as they are)
+#, machine
+	Version {version} is ready: used once its downloads end	आवृत्ती {version} तयार आसा: डाउनलोड पुराय जाले उपरांत वापरतात
 #. text in the download list (sizes, speeds, status)
 #. category name: video files
 #, machine
@@ -5417,6 +5987,10 @@
 #. a download's status (state it is in, not a command): waiting in a queue
 #, machine
 	Waiting	वाट पळयता
+#. message or event log entry in the main window
+#. event log: after Refresh download address, the download waits for the browser's next download of the same file, whose address it takes
+#, machine
+	Waiting for a new address from the browser	ब्राउझरांतल्यान नव्या पत्त्याची वाट पळयता
 #. text in the Options window
 #. Options → Remote → Pair a device: how long the code stays valid; {time} = minutes:seconds ("9:58")
 #. {time} = a time of day (keep the braces as they are)
@@ -5474,6 +6048,10 @@
 #, machine
 	Windows allows wake timers only while plugged in	Windows फकत प्लग इन केल्ल्या वेळारच वेक टायमराक परवानगी दिता
 #. text in the Options window
+#. Options → General → Shortcut to show or hide window: shown in the disabled shortcut box on Linux (#558)
+#, machine
+	Windows and macOS	Windows आनी macOS
+#. text in the Options window
 #. tooltip of "Mark downloaded files as coming from the internet" on Windows
 #, machine
 	Windows checks the files marked this way: SmartScreen before a program first runs, Office's Protected View before a document opens. Unticked, or under Windows' policy "Do not preserve zone information in file attachments", no download is marked.	Windows ह्या प्रकारें चिन्हांकित केल्ल्यो फायली तपासता: प्रोग्राम पयलीं खेपे चलयताना SmartScreen तपासता, आनी डॉक्युमेंट उगडटना Officeचें Protected View तपासता. निवड न केल्यार, वा Windowsच्या “फायल अटॅचमेंटांतली झोन म्हायती सांबाळू नाकात” ह्या धोरणाखाला, एकूय डाउनलोड चिन्हांकित जायना.
@@ -5485,6 +6063,10 @@
 #. why the computer could not be put to sleep (fills {error})
 #, machine
 	Windows refused	Windows नकार दिलो
+#. message or event log entry in the main window
+#. after ticking "Open magnet links and .torrent files with Mister Download Manager", when Windows' Default apps keeps another app; {apps}: their names. "MAGNET" as Windows' Default apps lists it
+#, machine
+	Windows still opens magnet links or .torrent files with {apps}, chosen in Windows' Default apps, where only you can change it. Settings opens there now: pick Mister Download Manager for MAGNET and .torrent.	Windows अजुनूय मॅग्नेट लिंक्स वा .torrent फायली {apps} वापरून उगडटा, जें Windows च्या Default apps त वेंचून काडलां, आनी थंय फकत तुमीच बदलूंक शकतात. Settings आतां थंय उगडटा: MAGNET आनी .torrent खातीर Mister Download Manager वेंचून काडात.
 #. text in langpick.rs
 #, machine
 	Windows' language	Windows ची भास
@@ -5584,13 +6166,21 @@
 #, machine
 	Your own program: {path} ({version})	तुमचो स्वताचो प्रोग्रॅम: {path} ({version})
 #. text in helpers.rs
-#. Video helpers (macOS, Linux): {path} = the system's ffmpeg
+#. Video helpers: {path} = the computer's own JavaScript runtime (node.exe, deno.exe), used as it is: MDM needn't download one
+#, machine
+	Your system's, nothing to download: {path}	तुमच्या सिस्टमांतलें, डाउनलोड करपाची गरज ना: {path}
+#. text in helpers.rs
+#. Video helpers: {path} = the system's yt-dlp, ffmpeg or gallery-dl
 #, machine
 	Your system's: {path}	तुमच्या सिस्टमाचो: {path}
 #. text in the Download video window
 #. in Download video and the browser's video menu: yt-dlp had no JavaScript runtime, so YouTube listed only some qualities (often only the sound); Node.js and Deno are program names
 #, machine
 	YouTube needs a JavaScript runtime to list its video qualities: install Node.js or Deno, then look it up again	YouTube क आपल्या व्हिडियोची गुणवत्ता दाखोवपाक JavaScript रनटायमची गरज आसता: Node.js वा Deno स्थापीत करात, आनी मागीर परत पळयात
+#. text in the Options window
+#. Options → Sites Logins → Use my yt-dlp config file: its tooltip
+#, machine
+	yt-dlp also reads its own config files (on Windows %APPDATA%\\yt-dlp\\config.txt, on Linux and macOS ~/.config/yt-dlp/config). Most of what MDM chooses, the folder, the name and the quality, still wins, but options there that skip or filter videos apply too.	yt-dlp आपलीं कॉन्फिग फायलींय वाचता (Windows चेर %APPDATA%\\yt-dlp\\config.txt, Linux आनी macOS चेर ~/.config/yt-dlp/config). MDM जें निवडटा, फोल्डर, नांव आनी गुणवत्ता, तें अजूनय जिखता, पूण थंय आशिल्ले पर्याय जे व्हिडिओ वगळटात वा फिल्टर करतात तेय लागू जातात.
 #. text in the Download video window
 #. the Download video window: yt-dlp couldn't read the cookies of the browser chosen in Options (Chrome, Edge...), which holds them while it runs; {browser} = its name
 #, machine
@@ -5711,7 +6301,9 @@
 #. a kind of file, by its extension: {ext} = "ZIP", "PDF"…
 #, machine
 	{ext} File	{ext} फाइल
-#. message or event log entry in the main window
+#. text in the main window's messages (deleting downloads' files); text in torrent downloads
+#. a message: a deleted download's file stayed on the disk; {file} = its name
+#. error dialog when a torrent's files could not be deleted; {file} is the download's name, {error} why
 #. {error} = an error message (keep the braces as they are)
 #, machine
 	{file} could not be deleted from the disk: {error}	{file} डिस्केंतल्यान काडूंक शकली ना: {error}
@@ -5732,7 +6324,7 @@
 	{file} is too large to be a list of addresses ({size}). Import reads text files, web pages and .ef2 exports of up to {limit}.	{file} पत्त्यांच्या वळेरी खातीर खूब व्हड आसा ({size}). आयात {limit} मेरेनच्यो मजकूर फायली, वेब पानां आनी .ef2 निर्यात वाचता.
 #. text in a dialog box
 #, machine
-	{file} was moved elsewhere by dragging it out of Download complete, and MDM couldn't learn where. Look for it where you dropped it.	{file} डाउनलोड पुराय जाल्ल्यांतल्यान ओडून हेरकडेन व्हरलें, आनी MDM कडेन थळें कळ्ळें ना. जंय सोडलां थंय तें सोदात.
+	{file} was moved elsewhere by dragging it out of MDM, and MDM couldn't learn where. Look for it where you dropped it.	{file} MDM भायर ओडून हेरकडेन व्हेली, आनी MDM क थंय खंय आसा तें कळूंक शकलें ना. तुमी खंय सोडली थंय सोदात.
 #. text in the Checksum window
 #. {algorithm} = a checksum algorithm such as "SHA-256" (keep the braces as they are)
 #, machine
@@ -5741,6 +6333,10 @@
 #. {algorithm} = a checksum algorithm such as "SHA-256" (keep the braces as they are)
 #, machine
 	{file}: the file matches its checksum ({algorithm})	{file}: फायल तिच्या चेकसमाक ({algorithm}) जुळटा
+#. text in torrent downloads
+#. said after Delete with files when some files stayed on the disk; {file} is the download's name; the files' paths follow it
+#, machine
+	{file}: these files stayed on the disk, because MDM didn't create them or another download uses them:	{file}: ह्यो फायली डिस्कचेर उरल्यो, कारण MDM न त्यो तयार करूंक नात वा दुसऱ्या डाउनलोडान त्यो वापरल्यात:
 #. text in a download's progress window
 #. {have} and {total} = numbers of pieces; {size} = one piece's size
 #. {size} = a file size such as "4.2 MB" (keep the braces as they are)
@@ -5819,6 +6415,11 @@
 #. {name} = a file name (keep the braces as they are)
 #, machine
 	{name} is a 7z or RAR archive. MDM extracts those with 7-Zip, which isn't installed.	{name} एक 7z वा RAR आर्काइव्ह आसा. MDM तीं 7-Zip वरवीं काडटा, पूण 7-Zip इंस्टॉल केल्लें ना.
+#. text in errors.rs
+#. error: a helper (yt-dlp, ffmpeg, gallery-dl, Deno) is being downloaded already, by MDM's automatic update or another copy of MDM; {name} = its name
+#. {name} = a file name (keep the braces as they are)
+#, machine
+	{name} is being downloaded already: try again in a moment	{name} पयलींच डाउनलोड जाता: थोड्या वेळान परतून प्रयत्न करात
 #. text in extracting archives (a download's log, the Archive password window)
 #. in Archive password: {name} is the archive's file name
 #. {name} = a file name (keep the braces as they are)
@@ -5829,12 +6430,22 @@
 #. {name} = a file name (keep the braces as they are)
 #, machine
 	{name} isn't offered as {how}.	{name} {how} म्हणून उपलब्ध ना.
+#. message or event log entry in the main window
+#. a video's or gallery's log: a newer yt-dlp (or gallery-dl) is in, and the download starts again with it; {name} = yt-dlp or gallery-dl, {version} = the new version
+#. {name} = a file name; {version} = a version number (keep the braces as they are)
+#, machine
+	{name} {version} is in: trying again with it	{name} {version} आयलां: ताचे वांगडा परतून प्रयत्न करता
 #. text in errors.rs
 #. error: a program chosen as a helper is too old; {name} = gallery-dl, {version} = its version, {oldest} = the oldest one MDM can use
 #. {name} = a file name; {version} = a version number (keep the braces as they are)
 #, machine
 	{name} {version} is too old: MDM needs {oldest} or newer	{name} {version} खूब पोरनो आसा: MDM-क {oldest} वा ताचे परस नवो जाय पडटा
-#. text in a dialog box
+#. message or event log entry in the main window
+#. a video's or gallery's log: it failed in a way that usually means yt-dlp (or gallery-dl) is out of date with the site; {name} = yt-dlp or gallery-dl, {version} = the version used
+#. {name} = a file name; {version} = a version number (keep the braces as they are)
+#, machine
+	{name} {version} may be out of date for this site: looking for a newer version	ह्या सायटी खातीर {name} {version} जुनी आसूं येता: नवी आवृत्ती सोदता
+#. text in a dialog box; text in helpers.rs
 #. one failed download in the summary of a group of downloads: {name} its file name, {error} why it failed
 #. {name} = a file name; {error} = an error message (keep the braces as they are)
 #, machine
@@ -5864,6 +6475,16 @@
 #. why a helper couldn't be downloaded ({problem}), then what to do about it ({advice}, whole sentences)
 #, machine
 	{problem}. {advice}	{problem}. {advice}
+#. text in the download list (sizes, speeds, status)
+#. the progress window's Transfer rate row while the limit for all downloads together applies: {rate} is this download's speed now ("512.000 KB/sec"), {limit} the most all downloads together may take ("1024 KB/sec"). The row is narrow: keep it short
+#. {rate} = a speed such as "1.2 MB/sec" (keep the braces as they are)
+#, machine
+	{rate} (limit for all downloads: {limit})	{rate} (सगळ्या डाउनलोडां खातीर मर्यादा: {limit})
+#. text in the download list (sizes, speeds, status)
+#. the progress window's Transfer rate row while a speed limit applies: {rate} is the download's speed now ("512.000 KB/sec"), {limit} the most this download may take ("512 KB/sec"). The row is narrow: keep it short
+#. {rate} = a speed such as "1.2 MB/sec" (keep the braces as they are)
+#, machine
+	{rate} (limit: {limit})	{rate} (मर्यादा: {limit})
 #. text in errors.rs
 #. a debrid service's error: too many requests; MDM waits and retries
 #, machine
@@ -6034,6 +6655,10 @@ extension	Added to MDM	MDM क जोडले
 #, machine
 extension	Added to the queue	रांगेत जोडली
 #. text in the browser extension
+#. filter in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): every download; short
+#, machine
+extension	All	सगळे
+#. text in the browser extension
 #. command in the menu of the download button over a video: opens the app's Download video window, with every quality and the subtitles
 #. the trailing ... means it is still going on: keep it
 #, machine
@@ -6064,9 +6689,41 @@ extension	Button settings...	बटनाचीं सेटींग्स...
 #, machine
 extension	can't be saved	सांबाळपाक शकना
 #. text in the browser extension
+#. in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the browser can't reach the app (why is said below it); keep the name Mister Download Manager as it is
+#, machine
+extension	Can't reach Mister Download Manager	Mister Download Manager मेरेन पावपाक शकना
+#. text in the browser extension
+#. in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the other Mister Download Manager (a server) doesn't answer; keep the name Mister Download Manager as it is
+#, machine
+extension	Can't reach the Mister Download Manager at {server}	{server} वयलें Mister Download Manager मेरेन पावपाक शकना
+#. text in the browser extension
 #. shown briefly on the download button when nothing on the page says which video the player is playing, so nothing was sent
 #, machine
 extension	Can't tell which video this is: open its own page and try there	हो कोणचो व्हिडिओ तें समजना: ताचें स्वताचें पान उगडात आनी थंय परत यत्न करात
+#. text in the browser extension
+#. button of a question in the toolbar button's popup: don't do it
+#, machine
+extension	Cancel	रद्द करात
+#. text in the browser extension
+#. in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the other Mister Download Manager (a server) doesn't answer; Settings, Send downloads to and Open it are the names of a tab, a section and a button of the popup
+#, machine
+extension	Check that it's running, and that this browser accepts its certificate (Settings → Send downloads to → Open it).	तें चालू आसा आनी ह्या ब्राउझरान ताचें प्रमाणपत्र मान्य केलां काय ना तें तपासात (सेटिंग्ज → डाउनलोड पाठयात → तें उगडात).
+#. text in the browser extension
+#. button of the question in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): takes the finished downloads off the list; verb
+#, machine
+extension	Clear	काडात
+#. text in the browser extension
+#. button in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): takes the finished downloads off the list (their files stay); short
+#, machine
+extension	Clear finished	पुराय जाल्लें साफ करात
+#. text in the browser extension
+#. title of the question in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) before the finished downloads are taken off the list
+#, machine
+extension	Clear finished downloads?	पुराय जाल्ले डाउनलोड काडपाची तुमची खात्री आसा?
+#. text in the browser extension
+#. under the extension's name in the toolbar button's popup: the browser reaches the app; short
+#, machine
+extension	Connected	जोडलें
 #. text in the browser extension
 #. the toolbar button's status when the browser reaches the app; keep the name Mister Download Manager as it is
 #, machine
@@ -6077,13 +6734,52 @@ extension	Connected to Mister Download Manager	Mister Download Manager कडे
 #, machine
 extension	Connected to Mister Download Manager {version}	Mister Download Manager {version} कडेन जोडलां
 #. text in the browser extension
+#. under the extension's name in the toolbar button's popup: the browser reaches the app; its version follows; short
+#. {version} = a version number (keep the braces as they are)
+#, machine
+extension	Connected · {version}	जोडलें · {version}
+#. text in the browser extension
+#. said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) after Copy file
+#, machine
+extension	Copied {file}. Paste it into a folder, a chat or a message.	{file} कॉपी केलें. तें फोल्डरांत, चॅटांत वा मेसेजांत पेस्ट करात.
+#. text in the browser extension
+#. command in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): puts the file itself on the clipboard, to paste it into a folder, a chat or a message
+#, machine
+extension	Copy file	फायल कॉपी करात
+#. text in the browser extension
+#. command in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): copies the download's address
+#, machine
+extension	Copy link	लिंक कॉपी करात
+#. text in the browser extension
 #. in the menu under the download button over a video: finding the video's qualities failed; the app's own explanation follows on the next line
 #, machine
 extension	Could not look it up	सोदूंक शकले ना
 #. text in the browser extension
+#. button of the question in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): deletes the file; verb
+#, machine
+extension	Delete	पुसून टाकात
+#. text in the browser extension
+#. command in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): takes the download off the list and deletes its file from the disk (it asks first)
+#. the trailing ... means it is still going on: keep it
+#, machine
+extension	Delete file...	फायल काडून उडयात...
+#. text in the browser extension
+#. title of the question in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) before a download's file is deleted
+#, machine
+extension	Delete the file?	फायल पुसून टाकपाची तुमची खात्री आसा?
+#. text in the browser extension
+#. filter in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): the finished downloads; short
+#. a download's line in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): it has just finished; short
+#, machine
+extension	Done	पुराय जालें
+#. text in the browser extension
 #. button beside a video, sound or stream in the toolbar button's popup: download it with the app; verb; short
 #, machine
 extension	Download	डावनलोड करा
+#. text in the browser extension
+#. command in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): downloads the file again from the start
+#, machine
+extension	Download again	परत डाउनलोड करात
 #. text in the browser extension
 #. command in the browser's right-click menu on a page: download the links of the whole page; keep the name Mister Download Manager as it is
 #, machine
@@ -6113,7 +6809,20 @@ extension	Download with Mister Download Manager	Mister Download Manager वर�
 #, machine
 extension	Download {what}	{what} डाउनलोड करात
 #. text in the browser extension
-#. shown in the toolbar button's popup after the site was excluded
+#. said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) after Download again
+#, machine
+extension	Downloading {file} again	{file} परत डाउनलोड जाता
+#. text in the browser extension
+#. second line of the toolbar button's tooltip while the app downloads: how many downloads are running
+#. {count} = a number (keep the braces as they are)
+#, machine
+extension	Downloading: {count}	डाउनलोड जाता: {count}
+#. text in the browser extension
+#. tab in the toolbar button's popup: the list of Mister Download Manager's newest downloads; noun, short
+#, machine
+extension	Downloads	डाउनलोड
+#. text in the browser extension
+#. shown under the switch Never take downloads from this site in the toolbar button's popup while it is on
 #. {site} = a web site's name such as "example.com" (keep the braces as they are)
 #, machine
 extension	Downloads from {site} stay with the browser	{site} कडल्यान डाउनलोड ब्रावझरा कडेन रावतात
@@ -6129,6 +6838,27 @@ extension	Drag the dots to move it along the edge	तिडके व्हि�
 #. the address typed isn't an https:// address
 #, machine
 extension	Enter its https:// address.	ताचो https:// पत्तो घाला.
+#. text in the browser extension
+#. filter in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): the downloads that failed; short
+#. a download's line in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): it failed; short
+#, machine
+extension	Failed	अपेशी
+#. text in the browser extension
+#. a download's line in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): it failed, and why (the app's words)
+#, machine
+extension	Failed: {why}	अपेशी: {why}
+#. text in the browser extension
+#. a finished download's line in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when its file is no longer where it was saved
+#, machine
+extension	File deleted or moved	फायल पुसून टाकली वा हलयली
+#. text in the browser extension
+#. said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) after Clear finished
+#, machine
+extension	Finished downloads cleared	पुराय जाल्ले डाउनलोड काडले
+#. text in the browser extension
+#. button: forget / unpair this server
+#, machine
+extension	Forget	विसरात
 #. text in the browser extension
 #. button on the download button over a video when the app didn't answer: opens the app's download page; MDM is the app's short name, keep it; very short
 #, machine
@@ -6146,6 +6876,10 @@ extension	Help	मदत
 #, machine
 extension	Hide on this video	ह्या व्हिडियोचेर लिपयचें
 #. text in the browser extension
+#. Option in the toolbar button's popup: while a web page is in full screen, the Download video button over its videos stays hidden
+#, machine
+extension	Hide the download button in full screen	पूर्ण स्क्रीन मोडात डाउनलोड बटण लिपयात
+#. text in the browser extension
 #. hint in the toolbar button's popup; Alt is the keyboard key
 #, machine
 extension	Hold Alt while clicking a link to let the browser download it.	ब्रावझराक डाउनलोड करपाक दिवपाक लिंक क्लिक करतना Alt धरून दवरात.
@@ -6162,6 +6896,10 @@ extension	It didn't work. Try again.	तें काम करिना. पर
 #, machine
 extension	It shows no code now: click Pair a device there first.	तें आतां कोड दाखयना: पयलीं थंय एक साधन जोडात क्लिक करात.
 #. text in the browser extension
+#. why a download stayed with the browser: it is a .torrent file and the app's Torrent settings don't open torrents with Mister Download Manager, so the browser keeps it for the user's own torrent program; keep the setting's name as the app shows it
+#, machine
+extension	It's a torrent, and Open magnet links and .torrent files with Mister Download Manager is off in Torrent settings.	तो एक टॉरेंट आसा, आनी टॉरेंट सेटिंग्ज तेंत Mister Download Manager वापरून मॅग्नेट लिंक्स आनी .torrent फायली उगडात हें बंद आसा.
+#. text in the browser extension
 #. why a download stayed with the browser: the file is smaller than the app's minimum size setting
 #, machine
 extension	It's smaller than the minimum size in Options → File types.	तो पर्याय → फाइल प्रकारांतील किमान आकारापरस ल्हान आसा.
@@ -6169,6 +6907,10 @@ extension	It's smaller than the minimum size in Options → File types.	तो �
 #. why a download stayed with the browser: its address matches the app's list of addresses not to take
 #, machine
 extension	Its address is in Options → File types, addresses left to the browser.	ताचो पत्तो पर्याय → फाइल प्रकार, ब्राउझराक उरिल्ले पत्तो हातूंत आसा.
+#. text in the browser extension
+#. said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when a download's file can't be opened, copied or shared
+#, machine
+extension	Its file is no longer where it was saved (moved or deleted).	ताची फायल आतां थंय ना जंय ती सांबाळिल्ली (हलयली वा पुसून टाकली).
 #. text in the browser extension
 #. why a download stayed with the browser: its web site is on the app's list of sites not to take downloads from
 #, machine
@@ -6178,14 +6920,31 @@ extension	Its site is in Options → File types, sites left to the browser.	त�
 #, machine
 extension	Its type isn't in Options → File types.	ताचो प्रकार पर्याय → फाइल प्रकारांत ना.
 #. text in the browser extension
+#. a finished download's line in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): it finished less than a minute ago; lower case where the language allows
+#, machine
+extension	just now	आताच
+#. text in the browser extension
+#. in the This page tab in the toolbar button's popup, under the switch Never take downloads from this site, when a pattern in Mister Download Manager's Options excludes the site (the switch can't be turned off here)
+#, machine
+extension	Left to the browser by a rule in Options	पर्यायांतल्या नियमान ब्राउझराक सोडिलें
+#. text in the browser extension
 #. in the toolbar button's popup: the last download the extension let the browser keep instead of handing it to the app; followed by why (one of the declined_* texts)
 #. {name} = a file name (keep the braces as they are)
 #, machine
 extension	Left to the browser: {name}	ब्राउझराक उरिल्ले: {name}
 #. text in the browser extension
+#. said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) after Copy link
+#, machine
+extension	Link copied	लिंक कॉपी केली
+#. text in the browser extension
 #. beside a stream in the toolbar button's popup: it is a live broadcast (no fixed length); short
 #, machine
 extension	Live	लायव्ह
+#. text in the browser extension
+#. in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads), while it asks the app for them
+#. the trailing ... means it is still going on: keep it
+#, machine
+extension	Looking for downloads...	डाउनलोड सोदतात...
 #. text in the browser extension
 #. in the menu that opens from the download button over a video, while the app finds which qualities (resolutions, formats) the video can be downloaded in
 #, machine
@@ -6207,6 +6966,10 @@ extension	Media on this page	ह्या पानांवरील माध�
 #, machine
 extension	Mister Download Manager	Mister Download Manager
 #. text in the browser extension
+#. said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the app didn't answer in time; keep the name Mister Download Manager as it is
+#, machine
+extension	Mister Download Manager didn't answer in time. Try again.	Mister Download Manager वेळार जाप दिवंक शकलें ना. परत प्रयत्न करात.
+#. text in the browser extension
 #. status when the app was started for a download but didn't answer in time; keep the name Mister Download Manager as it is
 #, machine
 extension	Mister Download Manager didn't start in time	Mister Download Manager वेळार सुरू जालें ना
@@ -6219,6 +6982,11 @@ extension	Mister Download Manager doesn't accept this copy of the extension	Mist
 #, machine
 extension	Mister Download Manager is busy with other videos	Mister Download Manager हेर व्हिडिओंकडेन व्यस्त आसा
 #. text in the browser extension
+#. in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the app didn't answer in time; keep the name Mister Download Manager as it is
+#. the trailing ... means it is still going on: keep it
+#, machine
+extension	Mister Download Manager is busy. Trying again...	Mister Download Manager व्यस्त आसा. परतून यत्न करतात...
+#. text in the browser extension
 #. shown briefly on the download button when the app could not be reached; keep the name Mister Download Manager as it is
 #, machine
 extension	Mister Download Manager isn't installed or didn't start	Mister Download Manager स्थापीत केल्लें ना वा सुरू जालें ना
@@ -6226,6 +6994,14 @@ extension	Mister Download Manager isn't installed or didn't start	Mister Downloa
 #. status when the browser can't find the app's connection; keep the name Mister Download Manager as it is
 #, machine
 extension	Mister Download Manager isn't installed, or its browser integration isn't set up	Mister Download Manager स्थापीत केल्लें ना, वा ताचें ब्रावझर एकीकरण सेट केल्लें ना
+#. text in the browser extension
+#. in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the app isn't running; keep the name Mister Download Manager as it is
+#, machine
+extension	Mister Download Manager isn't running	Mister Download Manager चालू ना
+#. text in the browser extension
+#. said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the app isn't running; keep the name Mister Download Manager as it is
+#, machine
+extension	Mister Download Manager isn't running.	Mister Download Manager चालू ना.
 #. text in the browser extension
 #. in the menu under the download button over a video: the app needs the yt-dlp tool (a program's name, keep it as it is) to find this video's qualities, and it isn't installed; keep the name Mister Download Manager as it is
 #, machine
@@ -6239,19 +7015,39 @@ extension	Mister Download Manager then downloads through the same proxy as this 
 #, machine
 extension	Mister Download Manager then downloads through the same proxy as this browser. While this is off, the extension doesn't read the browser's proxy.	Mister Download Manager ह्या ब्राउझराच्या प्रॉक्सी वरवीं डाउनलोड करता. हें बंद आसतना, एक्स्टेंशन ब्राउझराची प्रॉक्सी वाचपी ना.
 #. text in the browser extension
+#. tooltip of the ⋯ button of a download in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): opens its menu
+#, machine
+extension	More actions	आनीक कृती
+#. text in the browser extension
+#. screen readers' name of the ⋯ button of a download in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads)
+#, machine
+extension	More actions for {file}	{file} खातीर आनीक कृती
+#. text in the browser extension
 #. the small arrow next to the Download video button that opens its menu (read aloud by screen readers)
 #, machine
 extension	More options	आनीक पर्याय
+#. text in the browser extension
+#. in the list under the download button over a video, after a quality's height (1080p): the H.264 video with AAC sound in an MP4, the file that plays in every video editor, TV and phone; short, about 20 characters at most
+#, machine
+extension	Most compatible	सगळ्यांत सुसंगत
 #. text in the browser extension
 #. menu command of the download button over a video: never show the button on this web site again
 #. {site} = a web site's name such as "example.com" (keep the braces as they are)
 #, machine
 extension	Never on {site}	{site} चेर केन्नाच न्हय
 #. text in the browser extension
-#. button in the toolbar button's popup: leave this web site's downloads to the browser from now on
+#. switch in the This page tab in the toolbar button's popup: on, this web site's downloads are left to the browser from now on
 #. {site} = a web site's name such as "example.com" (keep the braces as they are)
 #, machine
 extension	Never take downloads from {site}	{site} कडल्यान डाउनलोड केन्नाच घेवंक न्हय
+#. text in the browser extension
+#. in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when no download matches the search; the words searched for follow
+#, machine
+extension	No download's name or address has “{words}”.	खंयच्याच डाउनलोडाच्या नांवांत वा पत्त्यांत “{words}” ना.
+#. text in the browser extension
+#. in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the app has no downloads
+#, machine
+extension	No downloads yet	अजून डाउनलोड ना
 #. text in the browser extension
 #. shown in the toolbar button's popup when the current web page hasn't loaded any video, sound or stream yet
 #, machine
@@ -6261,13 +7057,25 @@ extension	No video or sound found on this page yet. Play it, then open this agai
 #, machine
 extension	No video to download here	हांगा डाउनलोड करपाक व्हिडिओ ना
 #. text in the browser extension
+#. under the extension's name in the toolbar button's popup: the browser can't reach the app (why is said below it); short
+#, machine
+extension	Not connected	जोडलें ना
+#. text in the browser extension
 #. pairing failed: the other MDM didn't answer
 #, machine
 extension	Not reached. Open its address once in this browser and accept its certificate, then try again.	पावना. ह्या ब्राउझरांत एक फावट ताचो पत्तो उगडून ताचें प्रमाणपत्र मान्य करात, मागीर परतून प्रयत्न करात.
 #. text in the browser extension
+#. in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when no download matches the search or the filter
+#, machine
+extension	Nothing matches	कांयच मेळना
+#. text in the browser extension
 #. on the download button over a video (grey) when the button is turned off on this web site; a 'Turn on' button follows it; short
 #, machine
 extension	Off on this site	ह्या साइटचेर बंद आसा
+#. text in the browser extension
+#. command in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): opens the downloaded file; verb
+#, machine
+extension	Open	उगडात
 #. text in the browser extension
 #. button: open the other MDM's address in a tab (to accept its certificate once)
 #, machine
@@ -6276,6 +7084,10 @@ extension	Open it	तें उगडात
 #. help under the pairing boxes; Options, Remote and Pair a device are the app's window, tab and button; keep misterdownloadmanager-cli pair as it is
 #, machine
 extension	Open its address once and accept its certificate, then enter a code from its Options, Remote, Pair a device (or misterdownloadmanager-cli pair).	ताचो पत्तो एक फावट उगडून ताचें प्रमाणपत्र मान्य करात, मागीर ताच्या ऑप्शन्स, रिमोट, पेअर अ डिव्हाइस (वा misterdownloadmanager-cli pair) कडल्यान एक कोड घाला.
+#. text in the browser extension
+#. button at the foot of the Downloads tab in the toolbar button's popup when downloads go to another Mister Download Manager (a server): opens that server's own web page
+#, machine
+extension	Open its page	ताचें पान उगडात
 #. text in the browser extension
 #. button in the toolbar button's popup; keep the name Mister Download Manager as it is
 #, machine
@@ -6288,6 +7100,14 @@ extension	Open post	पोस्ट उगडात
 #. on the download button (amber) over a video in a feed (a social site's home page, a timeline) that can't be downloaded from there: the user should open the post the video belongs to; short
 #, machine
 extension	Open the post to download it	डाउनलोड करपाक पोस्ट उगडात
+#. text in the browser extension
+#. screen readers' name of a finished download's name in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): clicking it opens the file
+#, machine
+extension	Open {file}	{file} उगडात
+#. text in the browser extension
+#. the gear button at the top of in the toolbar button's popup: opens Mister Download Manager's Options window; keep the name Mister Download Manager as it is
+#, machine
+extension	Options in Mister Download Manager	Mister Download Manager भितर पर्याय
 #. text in the browser extension
 #. button in the toolbar button's popup: open the app's Options
 #. the trailing ... means it is still going on: keep it
@@ -6306,9 +7126,30 @@ extension	Pair	जोडात
 #, machine
 extension	Pairing code	जोडणी कोड
 #. text in the browser extension
+#. command in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): stops a running download, to resume it later; verb
+#, machine
+extension	Pause	थांबयात
+#. text in the browser extension
+#. said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when a running download can't be removed or downloaded again
+#, machine
+extension	Pause it first.	पयलीं तें थांबयात.
+#. text in the browser extension
+#. screen readers' name of a running download's Pause button in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads)
+#, machine
+extension	Pause {file}	{file} थांबयात
+#. text in the browser extension
+#. under the extension's name in the toolbar button's popup: taking downloads from this browser is paused; short
+#. a download's line in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): stopped by the user, can be resumed; short
+#, machine
+extension	Paused	थांबयलें
+#. text in the browser extension
 #. status when the user switched off taking downloads in the toolbar button's popup
 #, machine
 extension	Paused: downloads stay with the browser	विराम दिल्लें: डाउनलोड ब्राउझरा वांगडाच उरतात
+#. text in the browser extension
+#. name of the row of tabs in the toolbar button's popup, read by screen readers
+#, machine
+extension	Popup sections	पॉपअप विभाग
 #. text in the browser extension
 #. Option in the browser extension media list: put the page title before the original file name when downloading a detected media file
 #, machine
@@ -6322,9 +7163,29 @@ extension	Protected	सुरक्षीत
 #, machine
 extension	Protected video	सुरक्षित व्हिडिओ
 #. text in the browser extension
+#. command in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): takes the download off the list, its file stays
+#, machine
+extension	Remove from list	यादींतल्यान काडात
+#. text in the browser extension
+#. command in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): goes on with a paused, waiting or failed download; verb
+#, machine
+extension	Resume	परत सुरू करात
+#. text in the browser extension
+#. screen readers' name of a download's Resume button in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads)
+#, machine
+extension	Resume {file}	{file} परत सुरू करात
+#. text in the browser extension
 #. button on the download button over a video when the app didn't answer: try again; verb; very short
 #, machine
 extension	Retry	परतून यत्न करात
+#. text in the browser extension
+#. filter in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): the downloads downloading now; short
+#, machine
+extension	Running	चलू आसा
+#. text in the browser extension
+#. placeholder of the search box in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads); it finds downloads by their name or address
+#, machine
+extension	Search downloads	डाउनलोड सोदात
 #. text in the browser extension
 #. switch in the toolbar button's popup: on, the app downloads through the same proxy the browser uses (one a VPN or proxy extension sets); the browser then asks once to allow reading it
 #, machine
@@ -6339,13 +7200,52 @@ extension	Send downloads to	डावनलोड हांगा धाडा�
 #, machine
 extension	Sending to MDM...	MDM कडेन धाडटा...
 #. text in the browser extension
+#. under the extension's name in the toolbar button's popup: downloads go to another Mister Download Manager, a server, at this address; short
+#, machine
+extension	Sending to {server}	{server} कडेन धाडटा
+#. text in the browser extension
 #. shown briefly on the download button after it was clicked; keep the name Mister Download Manager as it is
 #, machine
 extension	Sent to Mister Download Manager	Mister Download Manager कडेन धाडलें
 #. text in the browser extension
+#. tab in the toolbar button's popup: the extension's settings; noun, short
+#, machine
+extension	Settings	सेटिंग्ज
+#. text in the browser extension
+#. command in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): opens the system's share sheet for the file
+#. the trailing ... means it is still going on: keep it
+#, machine
+extension	Share...	शेअर करात...
+#. text in the browser extension
 #. button on the download button over a video after a download was added: shows that download in the app's window; verb; very short
+#. name of the row of filters in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) (All, Running, Done, Failed), read by screen readers; verb
 #, machine
 extension	Show	दाखयात
+#. text in the browser extension
+#. button in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): clears the search and the filter
+#, machine
+extension	Show all downloads	सगले डाउनलोड दाखयात
+#. text in the browser extension
+#. command in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): opens the file's folder with the file selected
+#, machine
+extension	Show in folder	फोल्डरांत दाखयात
+#. text in the browser extension
+#. screen readers' name of a download's Show in folder button in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads)
+#, machine
+extension	Show {file} in folder	{file} फोल्डरांत दाखयात
+#. text in the browser extension
+#. in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the app isn't running
+#, machine
+extension	Start it to see your downloads here.	तुमचे डाउनलोड हांगा पळोवपाक तें सुरू करात.
+#. text in the browser extension
+#. button in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the app isn't running; keep the name Mister Download Manager as it is
+#, machine
+extension	Start Mister Download Manager	Mister Download Manager सुरू करात
+#. text in the browser extension
+#. a download's line in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when it has just started and nothing has come yet
+#. the trailing ... means it is still going on: keep it
+#, machine
+extension	Starting...	सुरू जाता...
 #. text in the browser extension
 #. link at the foot of the toolbar button's popup to the creator's GitHub Sponsors page (MDM is free; this is an optional donation)
 #, machine
@@ -6354,6 +7254,18 @@ extension	Support MDM	MDM क समर्थन करा
 #. check box in the toolbar button's popup: on, downloads go to the app; off, the browser keeps them
 #, machine
 extension	Take downloads from this browser	ह्या ब्राउझरांतल्यान डाउनलोड घेयात
+#. text in the browser extension
+#. said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when a button can't act on the download
+#, machine
+extension	That can't be done to this download now.	हें डाउनलोड आतां करूंक शकना.
+#. text in the browser extension
+#. said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when a button's action failed
+#, machine
+extension	That didn't work. Try again.	तें जालें ना. परतून प्रयत्न करात.
+#. text in the browser extension
+#. said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when a button's download was removed meanwhile
+#, machine
+extension	That download is no longer in the list.	तें डाउनलोड आतां यादींत ना.
 #. text in the browser extension
 #. in the toolbar button's popup, on a site where the Chrome Web Store's copy of the extension shows no download button; Help is the link at the bottom of the popup
 #, machine
@@ -6371,6 +7283,19 @@ extension	The extension isn't allowed to read this site (the browser's site acce
 #, machine
 extension	The last download was left to the browser.	निमणो डाउनलोड ब्राउझराक उरिल्लो.
 #. text in the browser extension
+#. under the list in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when there are more downloads than it shows; keep the name Mister Download Manager as it is
+#, machine
+extension	The newest {shown} of {total}. Mister Download Manager lists them all.	{total} तल्या {shown} नवें. Mister Download Manager तीं सगळीं यादी करता.
+#. text in the browser extension
+#. question in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) before the finished downloads are taken off the list
+#. {count} = a number (keep the braces as they are)
+#, machine
+extension	The {count} finished downloads go off the list. Their files stay where they are.	{count} पुराय जाल्लीं डाउनलोड यादींतल्यान वतात. तांच्यो फायली थंयच उरतात.
+#. text in the browser extension
+#. note at the top of the list in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when downloads go to another Mister Download Manager (a server): the buttons that need the file on this computer are not offered; keep the name Mister Download Manager as it is
+#, machine
+extension	These are the downloads of the Mister Download Manager at {server}. Open their files there.	ही Mister Download Manager चीं {server} वयलीं डाउनलोड आसात. तांच्यो फायली थंय उगडात.
+#. text in the browser extension
 #. why a download stayed with the browser: the app's Options don't capture downloads from this browser (its box is unticked in the list of browsers)
 #, machine
 extension	This browser isn't ticked in Options → General.	हो ब्राउझर पर्याय → सामान्य हातूंत टिक केल्लो ना.
@@ -6383,17 +7308,34 @@ extension	This computer	हें संगणक
 #, machine
 extension	This download's details were too large to hand over	हो डाउनलोड तपशील दिवपा इतलो व्हडलो आशिल्लो
 #. text in the browser extension
+#. in the This page tab in the toolbar button's popup when the browser's tab shows one of its own pages (settings, a new tab)
+#, machine
+extension	This isn't a web page: there's nothing to do here.	हें वेब पान न्हय: हांगा करपाक कांयच ना.
+#. text in the browser extension
+#. tab in the toolbar button's popup: what can be done on the web page open in the browser (its videos, leaving its site to the browser); short
+#, machine
+extension	This page	हें पान
+#. text in the browser extension
 #. in the toolbar button's popup, when the page's player plays from a stream built in the page (a blob:): the list of the page's media has nothing to show; Download video is the name of the button over videos
 #, machine
 extension	This page's player streams its video in pieces, so there's no file to list. Point at the video and use its Download video button.	ह्या पानाचो प्लेयर आपलो व्हिडिओ तुकड्यांनी स्ट्रीम करता, देखून यादींत दाखोवपाक फायल ना. व्हिडिओचेर पॉइंटर व्हरात आनी ताचें “व्हिडिओ डाउनलोड करात” बटण वापरात.
+#. text in the browser extension
+#. said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the system has no way to do it
+#, machine
+extension	This system can't do that.	ह्या सिस्टमाक तें करूंक शकना.
+#. text in the browser extension
+#. in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the app is too old to list its downloads here
+#, machine
+extension	This version can't list its downloads here yet.	ह्या आवृत्तीक हांगा तिचीं डाउनलोड यादी करपाक शक्य ना.
 #. text in the browser extension
 #. button on the download button over a video when it is off on this web site: turns it on again here; verb; very short
 #, machine
 extension	Turn on	चालू करात
 #. text in the browser extension
-#. link beside "Downloads from <site> stay with the browser" in the toolbar button's popup: take the site off the excluded sites again
+#. under the extension's name in the toolbar button's popup: the app is older than the extension; keep the name Mister Download Manager as it is; short
+#. in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the app is too old to list its downloads here; keep the name Mister Download Manager as it is
 #, machine
-extension	Undo	पूर्ववत करात
+extension	Update Mister Download Manager	Mister Download Manager अद्ययावित करात
 #. text in the browser extension
 #. status when the app is older than the extension; keep the name Mister Download Manager as it is
 #, machine
@@ -6411,9 +7353,48 @@ extension	Video	व्हिडिओ
 #, machine
 extension	Wait a moment, then try again.	एक क्षण वाट पळयात, मागीर परतून प्रयत्न करात.
 #. text in the browser extension
+#. a download's line in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): waiting in a queue, never started; short
+#, machine
+extension	Waiting	वाट पळयता
+#. text in the browser extension
+#. in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) when the app has no downloads; keep the name Mister Download Manager as it is
+#, machine
+extension	What you download with Mister Download Manager shows up here.	तुमी Mister Download Manager वरवीं डाउनलोड करता तें हांगा दिसता.
+#. text in the browser extension
+#. Tooltip of the Hide the download button in full screen option in the toolbar button's popup; Download video is the name of the button over videos
+#, machine
+extension	While the page is in full screen, its videos show no Download video button	पान पूर्ण स्क्रीन मोडात आसतना, ताच्या व्हिडियोंचेर डाउनलोड व्हिडियो बटण दिसना
+#. text in the browser extension
 #. pairing failed: the code was wrong
 #, machine
 extension	Wrong code.	चूक कोड.
+#. text in the browser extension
+#. tooltip of the number on the Downloads tab in the toolbar button's popup: how many downloads are running
+#. {count} = a number (keep the braces as they are)
+#, machine
+extension	{count} downloading now	आतां {count} डाउनलोड जाता
+#. text in the browser extension
+#. a running download's line in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): how much has come of its size
+#. {size} = a file size such as "4.2 MB" (keep the braces as they are)
+#, machine
+extension	{done} of {size}	{size} तल्यान {done}
+#. text in the browser extension
+#. said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) after Delete file
+#, machine
+extension	{file} deleted	{file} वगळ्ळें
+#. text in the browser extension
+#. said briefly in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) after Remove from list
+#, machine
+extension	{file} removed from the list	{file} यादींतल्यान काडलें
+#. text in the browser extension
+#. question in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads) before a download's file is deleted
+#, machine
+extension	{file} will be deleted from your computer, and the download taken off the list. This can't be undone.	{file} तुमच्या संगणकावयल्यान वगळ्ळें जातलें, आनी डाउनलोड यादींतल्यान काडलें जातलें. हें परत करूंक शकना.
+#. text in the browser extension
+#. a running download's line in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): the time left, as a clock (minutes:seconds)
+#. {time} = a time of day (keep the braces as they are)
+#, machine
+extension	{time} left	{time} उरलें
 #. key name or combination in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
 #, machine
@@ -6465,11 +7446,19 @@ key	Delete	Delete
 #. key name or combination in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
 #, machine
+key	Down / Alt+Down	सकयल / Alt+सकयल
+#. key name or combination in the Help menu's windows (About, updates, shortcuts, Tell a friend)
+#. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
+#, machine
 key	Drag on blank space	रिकामे सुवातेर ओडून हाडप
 #. key name or combination in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
 #, machine
 key	Enter	Enter
+#. key name or combination in the Help menu's windows (About, updates, shortcuts, Tell a friend)
+#. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
+#, machine
+key	Enter / Space	एंटर / स्पेस
 #. key name or combination in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
 #, machine
@@ -6482,6 +7471,10 @@ key	F3	F3
 #. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
 #, machine
 key	Home / End	Home / End
+#. key name or combination in the Help menu's windows (About, updates, shortcuts, Tell a friend)
+#. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
+#, machine
+key	Left / Right	दावें / उजवें
 #. key name or combination in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
 #, machine
@@ -6509,7 +7502,7 @@ key	Shift+Up / Shift+Down	Shift+वयर / Shift+सकयल
 #. key name or combination in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
 #, machine
-key	Tab	टॅब
+key	Tab / Shift+Tab	टॅब / शिफ्ट+टॅब
 #. key name or combination in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. translate key names as the keyboard shows them (e.g. Strg for Ctrl)
 #, machine
@@ -7120,7 +8113,7 @@ menu	To &IDM export file...	IDM निर्यात फायलीक (&I)...
 #. the trailing ... means it opens a window: keep it
 #, machine
 menu	To &text file...	टेक्स्ट फायलीक (&T)...
-#. menu command in the main window
+#. menu command in the main window; menu command in the main window (menus, toolbar, Categories pane)
 #. noun: the toolbar (submenu of View with its settings)
 #, machine
 menu	Toolbar	टूलबार

@@ -10,7 +10,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-use mdm_tools::update::{Install, Progress};
+use mdm_tools::update::{Arch, Install, Progress};
 
 /// The switch the updated copy starts with.
 pub const UPDATED: &str = "/updated";
@@ -27,13 +27,27 @@ pub enum Next {
 }
 
 /// The release file this copy updates from, when `assets` (name, address) has it (by either of
-/// its names, [`Install::assets`]) and the signature of the release's checksum list.
+/// its names, [`Install::assets`]: the one for this build's own processor, x64, ARM64 or 32-bit)
+/// and the signature of the release's checksum list.
 pub fn asset_for(install: Install, version: &str, assets: &[(String, String)]) -> Option<String> {
+    asset_on(install, Arch::THIS, version, assets)
+}
+
+/// [`asset_for`] for a copy built for `arch`.
+fn asset_on(
+    install: Install,
+    arch: Option<Arch>,
+    version: &str,
+    assets: &[(String, String)],
+) -> Option<String> {
     let has = |n: &str| assets.iter().any(|(a, _)| a == n);
     if !(has("SHA256SUMS.txt") && has("SHA256SUMS.txt.sig")) {
         return None;
     }
-    install.assets(version).into_iter().find(|n| has(n))
+    install
+        .assets_on(arch, version)
+        .into_iter()
+        .find(|n| has(n))
 }
 
 /// Where update files are kept until the next start.
@@ -292,6 +306,8 @@ pub fn tidy() {
 mod tests {
     use super::*;
 
+    const X64: Option<Arch> = Some(Arch::X64);
+
     #[test]
     fn only_a_signed_release_with_this_copys_file_updates_it() {
         let a = |names: &[&str]| -> Vec<(String, String)> {
@@ -306,14 +322,14 @@ mod tests {
             "SHA256SUMS.txt.sig",
         ]);
         assert_eq!(
-            asset_for(Install::Installer, "0.2.2", &full).as_deref(),
+            asset_on(Install::Installer, X64, "0.2.2", &full).as_deref(),
             Some("MisterDownloadManager-0.2.2-setup.exe")
         );
         // An unsigned release, another kind's file, a build from source: no.
         let unsigned = a(&["MisterDownloadManager-0.2.2-setup.exe", "SHA256SUMS.txt"]);
-        assert_eq!(asset_for(Install::Installer, "0.2.2", &unsigned), None);
-        assert_eq!(asset_for(Install::PortableZip, "0.2.2", &full), None);
-        assert_eq!(asset_for(Install::Source, "0.2.2", &full), None);
+        assert_eq!(asset_on(Install::Installer, X64, "0.2.2", &unsigned), None);
+        assert_eq!(asset_on(Install::PortableZip, X64, "0.2.2", &full), None);
+        assert_eq!(asset_on(Install::Source, X64, "0.2.2", &full), None);
     }
 
     /// Linux's and macOS's files lose "-experimental" in a release: a copy finds its file by
@@ -337,18 +353,80 @@ mod tests {
             (release(&[deb]), None),
         ] {
             assert_eq!(
-                asset_for(Install::AppImage, "0.3.0", &assets).as_deref(),
+                asset_on(Install::AppImage, X64, "0.3.0", &assets).as_deref(),
                 want,
                 "{assets:?}"
             );
         }
         assert_eq!(
-            asset_for(Install::Deb, "0.3.0", &release(&[new, deb])).as_deref(),
+            asset_on(Install::Deb, X64, "0.3.0", &release(&[new, deb])).as_deref(),
             Some(deb)
         );
         // Unsigned: neither.
         let unsigned = vec![(new.to_string(), format!("https://x/{new}"))];
-        assert_eq!(asset_for(Install::AppImage, "0.3.0", &unsigned), None);
+        assert_eq!(asset_on(Install::AppImage, X64, "0.3.0", &unsigned), None);
+    }
+
+    /// A release with every processor's files: each copy takes its own processor's, an x64 copy
+    /// run emulated on an ARM PC x64's (until the ARM build is installed).
+    #[test]
+    fn each_processor_takes_its_own_file() {
+        let names = [
+            "MisterDownloadManager-1.0.0-setup.exe",
+            "MisterDownloadManager-1.0.0-setup-arm64.exe",
+            "MisterDownloadManager-1.0.0-setup-x86.exe",
+            "MisterDownloadManager-1.0.0-portable.zip",
+            "MisterDownloadManager-1.0.0-portable-arm64.zip",
+            "MisterDownloadManager-1.0.0-portable-x86.zip",
+            "MisterDownloadManager-1.0.0-x64.zip",
+            "MisterDownloadManager-1.0.0-arm64.zip",
+            "MisterDownloadManager-1.0.0-x86.zip",
+            "MisterDownloadManager-1.0.0-linux-x86_64.AppImage",
+            "MisterDownloadManager-1.0.0-linux-arm64.AppImage",
+            "MisterDownloadManager-1.0.0-linux-x86_64.deb",
+            "MisterDownloadManager-1.0.0-linux-arm64.deb",
+            "SHA256SUMS.txt",
+            "SHA256SUMS.txt.sig",
+        ];
+        let assets: Vec<(String, String)> = names
+            .iter()
+            .map(|n| (n.to_string(), format!("https://x/{n}")))
+            .collect();
+        let (arm, x86) = (Some(Arch::Arm64), Some(Arch::X86));
+        for (install, arch, want) in [
+            (Install::Installer, X64, "setup.exe"),
+            (Install::Installer, arm, "setup-arm64.exe"),
+            (Install::Installer, x86, "setup-x86.exe"),
+            (Install::PortableZip, X64, "portable.zip"),
+            (Install::PortableZip, arm, "portable-arm64.zip"),
+            (Install::PortableZip, x86, "portable-x86.zip"),
+            (Install::PlainZip, X64, "x64.zip"),
+            (Install::PlainZip, arm, "arm64.zip"),
+            (Install::PlainZip, x86, "x86.zip"),
+            (Install::AppImage, X64, "linux-x86_64.AppImage"),
+            (Install::AppImage, arm, "linux-arm64.AppImage"),
+            (Install::Deb, arm, "linux-arm64.deb"),
+        ] {
+            assert_eq!(
+                asset_on(install, arch, "1.0.0", &assets).as_deref(),
+                Some(format!("MisterDownloadManager-1.0.0-{want}").as_str()),
+                "{install:?} {arch:?}"
+            );
+        }
+        // A release from before the ARM builds: an ARM copy finds nothing to update to (the
+        // release's page is offered), never x64's file.
+        let x64_only: Vec<(String, String)> = assets
+            .iter()
+            .filter(|(n, _)| !n.contains("arm64") && !n.contains("x86."))
+            .cloned()
+            .collect();
+        assert_eq!(asset_on(Install::Installer, arm, "1.0.0", &x64_only), None);
+        assert_eq!(asset_on(Install::AppImage, arm, "1.0.0", &x64_only), None);
+        // This build asks for its own processor's.
+        assert_eq!(
+            asset_for(Install::Installer, "1.0.0", &assets),
+            asset_on(Install::Installer, Arch::THIS, "1.0.0", &assets)
+        );
     }
 
     #[test]

@@ -6,7 +6,7 @@ use chrono::{Datelike, Duration as Days, NaiveDate};
 use egui::{Color32, Pos2, Rect, Sense, Ui, pos2, vec2};
 
 use crate::chrome::{IconKey, ShellIcons};
-use crate::dialogs::{Outcome, window};
+use crate::dialogs::{Outcome, question, window};
 use crate::icons::Icon;
 use crate::model::{self, Item};
 use crate::queue::{Queue, TurnOff};
@@ -187,6 +187,25 @@ fn queue_name(n: usize) -> String {
     )
 }
 
+/// Whether `name` is in use: as a queue's stored name or as shown (a built-in queue's in the
+/// interface's language), whatever the case.
+fn name_taken(queues: &[Queue], name: &str) -> bool {
+    let name = name.trim().to_lowercase();
+    queues
+        .iter()
+        .any(|q| q.name.to_lowercase() == name || crate::i18n::t(&q.name).to_lowercase() == name)
+}
+
+/// The name proposed for a new queue: the next number, or the first one after it no queue has
+/// (#1237: with "Queue # 3" deleted and "Queue # 4" kept, the next was "Queue # 4" again, and OK
+/// stayed greyed until the name was changed).
+fn free_queue_name(queues: &[Queue]) -> String {
+    (queues.len() + 1..)
+        .map(queue_name)
+        .find(|n| !name_taken(queues, n))
+        .unwrap_or_default()
+}
+
 impl Scheduler {
     pub fn new(queues: &[Queue], settings: &Settings) -> Self {
         let mut queues = queues.to_vec();
@@ -228,7 +247,7 @@ impl Scheduler {
 
     /// Ask for a new queue's name (Create new queue in a right-click menu).
     pub fn new_queue(&mut self) {
-        self.naming = Some(queue_name(self.queues.len() + 1));
+        self.naming = Some(free_queue_name(&self.queues));
         self.files_rows.selected = None;
     }
 
@@ -498,7 +517,7 @@ impl Scheduler {
             return Outcome::Open;
         }
         if new_queue {
-            self.naming = Some(queue_name(self.queues.len() + 1));
+            self.new_queue();
         }
         if (delete || delete_key) && deletable {
             let name = crate::i18n::t(&self.queues[self.selected].name).to_owned();
@@ -996,6 +1015,7 @@ impl Scheduler {
             o.y + 106.0,
             winui::LIST_HEADER(),
         );
+        winui::header_shade(&p, o.x + 230.0, o.x + 624.0, o.y + 106.0, false);
         let cols = [
             (crate::i18n::mark("File Name"), 230.0, 421.0),
             // i18n: column title: the file's size
@@ -1008,14 +1028,7 @@ impl Scheduler {
         for (title, x0, x1) in cols {
             let title = crate::i18n::t(title);
             text(&p, o.x + x0 + 6.0, o.y + 99.0, title, LIGHT_TEXT());
-            fill(
-                &p,
-                o.x + x1,
-                o.y + 83.0,
-                o.x + x1,
-                o.y + 106.0,
-                winui::HEADER_LINE(),
-            );
+            winui::header_divider(&p, o.x + x1, o.y + 83.0, o.y + 106.0, winui::HEADER_LINE());
         }
         // The rows: the shared row list under the header (its frame on the list's).
         let body = Rect::from_min_max(o + vec2(230.0, 108.0), o + vec2(624.0, 375.0 + DY));
@@ -1196,7 +1209,9 @@ impl Scheduler {
                 text(p, x, baseline, s, c);
             },
         );
-        winui::number_field(
+        // Named as Options → Connection's are, from the constants beside the sentence they
+        // share (quota.rs): its words are painted, not exposed (#1407).
+        let mb_box = winui::number_field(
             ui,
             boxes[0],
             &mut self.limits_mb,
@@ -1205,7 +1220,8 @@ impl Scheduler {
             l.on,
             LIGHT_BG(),
         );
-        winui::number_field(
+        winui::name(&mb_box, crate::i18n::t(crate::quota::LIMITS_MB_NAME));
+        let hours_box = winui::number_field(
             ui,
             boxes[1],
             &mut self.limits_hours,
@@ -1214,6 +1230,7 @@ impl Scheduler {
             l.on,
             LIGHT_BG(),
         );
+        winui::name(&hours_box, crate::i18n::t(crate::quota::LIMITS_HOURS_NAME));
         winui::checkbox_light(
             ui,
             o + vec2(239.0, 127.0),
@@ -1232,14 +1249,12 @@ impl Scheduler {
         let Some(mut name) = self.naming.take() else {
             return;
         };
-        // The names in use, as stored and as shown (a built-in queue's in the interface's
-        // language).
-        let names: Vec<String> = self
-            .queues
-            .iter()
-            .flat_map(|q| [q.name.clone(), crate::i18n::t(&q.name).to_owned()])
-            .collect();
-        let outcome = window(
+        let queues = &self.queues;
+        // A question, as Delete's: above the Scheduler and taking the focus. A plain window
+        // opened with the Scheduler (Create new queue in a right-click menu) went behind it,
+        // where nobody saw it, and the Scheduler waits for it (#1237); so did one the Scheduler
+        // was clicked over.
+        let outcome = question(
             ctx,
             "queue-name",
             "Enter queue name",
@@ -1276,10 +1291,7 @@ impl Scheduler {
                 let why = if typed.is_empty() {
                     // i18n: why OK is greyed when naming a new queue
                     Some("Type the queue's name")
-                } else if names
-                    .iter()
-                    .any(|n| n.to_lowercase() == typed.to_lowercase())
-                {
+                } else if name_taken(queues, typed) {
                     // i18n: why OK is greyed when naming a new queue
                     Some("There is already a queue with this name")
                 } else {
@@ -1331,11 +1343,7 @@ impl Scheduler {
             Outcome::Open => self.naming = Some(name),
             Outcome::Done(()) => {
                 let name = name.trim();
-                let taken = self
-                    .queues
-                    .iter()
-                    .any(|q| q.name.to_lowercase() == name.to_lowercase());
-                if name.is_empty() || taken {
+                if name.is_empty() || name_taken(&self.queues, name) {
                     self.naming = Some(name.to_owned()); // keep asking
                 } else {
                     let q = Queue::new(name, false);
@@ -2161,6 +2169,32 @@ mod tests {
         assert_eq!(merge_items(&[1, 2, 3], &[3, 2], &[1, 3, 4]), vec![3, 4]);
         // Nothing changed elsewhere: the draft as it is.
         assert_eq!(merge_items(&[1, 2], &[2, 1], &[1, 2]), vec![2, 1]);
+    }
+
+    #[test]
+    fn a_new_queue_is_offered_a_name_no_queue_has() {
+        let mut queues = vec![
+            Queue::new("Main download queue", false),
+            Queue::new("Synchronization queue", true),
+        ];
+        assert_eq!(free_queue_name(&queues), "Queue # 3");
+        // "Queue # 3" deleted, "Queue # 4" kept: not "Queue # 4" again, which OK refuses (#1237).
+        queues.push(Queue::new("Queue # 4", false));
+        assert_eq!(free_queue_name(&queues), "Queue # 5");
+        // Whatever the case.
+        queues.push(Queue::new("queue # 5", false));
+        assert_eq!(free_queue_name(&queues), "Queue # 6");
+    }
+
+    #[test]
+    fn a_name_in_use_is_one_whatever_its_case_and_spaces() {
+        let queues = [
+            Queue::new("Main download queue", false),
+            Queue::new("Night", false),
+        ];
+        assert!(name_taken(&queues, " night "));
+        assert!(name_taken(&queues, "MAIN DOWNLOAD QUEUE"));
+        assert!(!name_taken(&queues, "Nightly"));
     }
 
     #[test]

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<!-- https://www.shortverse.com/films/before-the-short-film (2026-11-14), reduced to what says which
+     video the page is about (#1076): its head's meta tags, its JSON-LD, the Vue templates of the
+     hidden welcome box (the only player written in the HTML, which yt-dlp's generic reader takes)
+     and of the film's own player (built by the page's script from `source_url`). No media, the
+     site's styles, scripts and data left out. -->
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<title>Before The - Short Film | Shortverse</title>
+	<meta name="author"             content="Shortverse" />
+	<meta name="description"        content="Before the is short film wich would be improved to full film according to audience and increase of budget and is made by child show how he know till before his name and the tree help him to feel good" />
+	<meta itemprop="name"           content="Before The - Short Film | Shortverse" />
+	<meta property="og:site_name"    content="Shortverse" />
+	<meta property="og:title"        content="Before The - Short Film | Shortverse" />
+	<meta property="og:type"         content="article" />
+	<meta property="og:url"          content="https://www.shortverse.com/films/before-the-short-film" />
+	<meta property="twitter:card"        content="summary_large_image" />
+	<script type="application/ld+json">
+{"@context":"http:\/\/schema.org","@type":"VideoObject","director":{"@type":"Person","name":"Justin Barry","url":"https:\/\/www.shortverse.com\/person\/justin-barry"},"associatedArticle":"https:\/\/www.shortverse.com\/films\/before-the-short-film","embedUrl":"https:\/\/vimeo.com\/1244858801?fl=ip&fe=ec","url":"https:\/\/www.shortverse.com\/films\/before-the-short-film","uploadDate":"2026-11-08T13:34:19+00:00","description":"Before the is short film wich would be improved to full film according to audience and increase of budget and is made by child show how he know till before his name and the tree help him to feel good","name":"Before The - Short Film","interactionStatistic":[{"@type":"InteractionStatistic","interactionType":"https:\/\/schema.org\/WatchAction","userInteractionCount":40},{"@type":"InteractionStatistic","interactionType":"https:\/\/schema.org\/LikeAction","userInteractionCount":0}]}
+	</script>
+</head>
+<body>
+	<div id="app"></div>
+	<script type="text/x-template" id="ViewComponentWelcomeModal">
+		<div class="view-component-welcomemodal modal" ref="modal" aria-modal="true" role="dialog"> <div class="actions"> <button v-on:click="Handle_OnClickClose"></button> </div> <div class="video-wrapper"> <div class="welcome-video"> <iframe width="100%" height="100%" style="margin: 0;" src="https://player.vimeo.com/video/689791758" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe> </div> </div> </div> 
+	</script>
+	<script type="text/x-template" id="ViewVideoVimeo">
+		<iframe allow="autoplay" allowfullscreen="allowfullscreen" frameborder="0" height="100%" id="vimeo-player" mozallowfullscreen="mozallowfullscreen" ref="vimeoPlayer" style="width: 100%; height: 100%;" webkitallowfullscreen="webkitallowfullscreen" width="100%" :src="source_url"></iframe>
+	</script>
+</body>
+</html>

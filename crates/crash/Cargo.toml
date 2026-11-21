@@ -20,6 +20,9 @@ minidump = "0.27"
 minidump-processor = "0.27"
 minidump-unwind = { version = "0.27", features = ["debuginfo-unwind"] }
 breakpad-symbols = "0.27"
+# A symbol supplier of our own (analyze.rs: the release's .sym files by id); rust-minidump's
+# trait is written with it, and it is already in the tree through it.
+async-trait = "0.1.92"
 chrono.workspace = true
 # The release's symbols come down through MDM's own engine, as every MDM download.
 mdm-engine.workspace = true

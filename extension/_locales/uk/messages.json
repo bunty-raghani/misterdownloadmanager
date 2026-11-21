@@ -92,9 +92,6 @@
       }
     }
   },
-  "popup_undo": {
-    "message": "Скасувати"
-  },
   "popup_excluded": {
     "message": "Завантаження з $site$ залишаються в браузері",
     "placeholders": {
@@ -148,6 +145,9 @@
   },
   "declined_integration_off": {
     "message": "Використовувати розширену інтеграцію з браузером вимкнено в Параметри → Загальні."
+  },
+  "declined_torrents": {
+    "message": "Це торрент, і «Відкривати магнітні посилання та файли .torrent за допомогою Mister Download Manager» вимкнено в налаштуваннях торрентів."
   },
   "declined_site_access": {
     "message": "Розширенню не дозволено читати цей сайт (доступ до сайту браузера)."
@@ -328,5 +328,424 @@
   },
   "video_original": {
     "message": "оригінал"
+  },
+  "video_compatible": {
+    "message": "Найсумісніший"
+  },
+  "popup_video_hide_fullscreen": {
+    "message": "Приховати кнопку завантаження в повноекранному режимі"
+  },
+  "popup_video_hide_fullscreen_title": {
+    "message": "Коли сторінка в повноекранному режимі, її відео не показують кнопку «Завантажити відео»"
+  },
+  "popup_remote_forget": {
+    "message": "Забути"
+  },
+  "popup_gear": {
+    "message": "Параметри в Mister Download Manager"
+  },
+  "popup_tabs": {
+    "message": "Розділи спливаючого вікна"
+  },
+  "popup_tab_downloads": {
+    "message": "Завантаження"
+  },
+  "popup_tab_page": {
+    "message": "Ця сторінка"
+  },
+  "popup_tab_settings": {
+    "message": "Налаштування"
+  },
+  "popup_conn": {
+    "message": "Підключено · $version$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.5.2"
+      }
+    }
+  },
+  "popup_conn_plain": {
+    "message": "Підключено"
+  },
+  "popup_conn_off": {
+    "message": "Не підключено"
+  },
+  "popup_conn_paused": {
+    "message": "Призупинено"
+  },
+  "popup_conn_update": {
+    "message": "Оновити Mister Download Manager"
+  },
+  "popup_conn_remote": {
+    "message": "Надсилання до $server$",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_cancel": {
+    "message": "Скасувати"
+  },
+  "popup_page_none": {
+    "message": "Це не вебсторінка: тут нічого не можна зробити."
+  },
+  "popup_exclude_by_rule": {
+    "message": "Залишено браузеру за правилом у Параметрах"
+  },
+  "popup_dl_search": {
+    "message": "Пошук завантажень"
+  },
+  "popup_dl_filters": {
+    "message": "Показати"
+  },
+  "popup_dl_all": {
+    "message": "Усі"
+  },
+  "popup_dl_running": {
+    "message": "Активні"
+  },
+  "popup_dl_done_filter": {
+    "message": "Готово"
+  },
+  "popup_dl_failed_filter": {
+    "message": "Помилка"
+  },
+  "popup_dl_clear": {
+    "message": "Очистити завершені"
+  },
+  "popup_dl_running_count": {
+    "message": "$count$ завантажується зараз",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_remote": {
+    "message": "Це завантаження Mister Download Manager на $server$. Відкрийте їхні файли там.",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_dl_more": {
+    "message": "Найновіші $shown$ з $total$. Mister Download Manager показує їх усі.",
+    "placeholders": {
+      "shown": {
+        "content": "$1",
+        "example": "60"
+      },
+      "total": {
+        "content": "$2",
+        "example": "245"
+      }
+    }
+  },
+  "popup_dl_of": {
+    "message": "$done$ з $size$",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "12.3 MB"
+      },
+      "size": {
+        "content": "$2",
+        "example": "48.7 MB"
+      }
+    }
+  },
+  "popup_dl_left": {
+    "message": "Залишилося $time$",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "0:42"
+      }
+    }
+  },
+  "popup_dl_starting": {
+    "message": "Запуск..."
+  },
+  "popup_dl_paused": {
+    "message": "Призупинено"
+  },
+  "popup_dl_waiting": {
+    "message": "Очікування"
+  },
+  "popup_dl_done": {
+    "message": "Готово"
+  },
+  "popup_dl_just_now": {
+    "message": "щойно"
+  },
+  "popup_dl_failed": {
+    "message": "Помилка"
+  },
+  "popup_dl_failed_why": {
+    "message": "Помилка: $why$",
+    "placeholders": {
+      "why": {
+        "content": "$1",
+        "example": "the server refused the connection"
+      }
+    }
+  },
+  "popup_dl_gone": {
+    "message": "Файл видалено або переміщено"
+  },
+  "popup_dl_loading": {
+    "message": "Пошук завантажень..."
+  },
+  "popup_dl_none": {
+    "message": "Завантажень ще немає"
+  },
+  "popup_dl_none_text": {
+    "message": "Те, що ви завантажуєте за допомогою Mister Download Manager, відображається тут."
+  },
+  "popup_dl_no_match": {
+    "message": "Нічого не знайдено"
+  },
+  "popup_dl_no_match_text": {
+    "message": "Жодне завантаження не містить «$words$» у назві або адресі.",
+    "placeholders": {
+      "words": {
+        "content": "$1",
+        "example": "report"
+      }
+    }
+  },
+  "popup_dl_show_all": {
+    "message": "Показати всі завантаження"
+  },
+  "popup_list_off": {
+    "message": "Mister Download Manager не запущений"
+  },
+  "popup_list_off_text": {
+    "message": "Запустіть його, щоб побачити свої завантаження тут."
+  },
+  "popup_list_start": {
+    "message": "Запустити Mister Download Manager"
+  },
+  "popup_list_old": {
+    "message": "Оновити Mister Download Manager"
+  },
+  "popup_list_old_text": {
+    "message": "Ця версія ще не може відображати свої завантаження тут."
+  },
+  "popup_list_busy": {
+    "message": "Mister Download Manager зайнятий. Повторна спроба..."
+  },
+  "popup_list_unreached": {
+    "message": "Не вдається зв’язатися з Mister Download Manager"
+  },
+  "popup_list_remote_unreachable": {
+    "message": "Не вдається зв’язатися з Mister Download Manager на $server$",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_list_remote_unreachable_text": {
+    "message": "Перевірте, чи він запущений і чи цей браузер приймає його сертифікат (Налаштування → Надсилати завантаження до → Відкрити його).",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_act_open": {
+    "message": "Відкрити"
+  },
+  "popup_act_open_named": {
+    "message": "Відкрити $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_folder": {
+    "message": "Показати в папці"
+  },
+  "popup_act_folder_named": {
+    "message": "Показати $file$ у папці",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_copy_file": {
+    "message": "Копіювати файл"
+  },
+  "popup_act_share": {
+    "message": "Поділитися..."
+  },
+  "popup_act_copy_link": {
+    "message": "Копіювати посилання"
+  },
+  "popup_act_pause": {
+    "message": "Призупинити"
+  },
+  "popup_act_pause_named": {
+    "message": "Призупинити $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_resume": {
+    "message": "Відновити"
+  },
+  "popup_act_resume_named": {
+    "message": "Відновити $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_again": {
+    "message": "Завантажити знову"
+  },
+  "popup_act_remove": {
+    "message": "Видалити зі списку"
+  },
+  "popup_act_delete": {
+    "message": "Видалити файл..."
+  },
+  "popup_act_more": {
+    "message": "Більше дій"
+  },
+  "popup_act_more_named": {
+    "message": "Більше дій для $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_title": {
+    "message": "Видалити файл?"
+  },
+  "popup_ask_delete": {
+    "message": "$file$ буде видалено з вашого комп’ютера, а завантаження — зі списку. Цю дію не можна скасувати.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_ok": {
+    "message": "Видалити"
+  },
+  "popup_ask_clear_title": {
+    "message": "Очистити завершені завантаження?"
+  },
+  "popup_ask_clear": {
+    "message": "Завершені завантаження ($count$) буде видалено зі списку. Їхні файли залишаться на місці.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "8"
+      }
+    }
+  },
+  "popup_ask_clear_ok": {
+    "message": "Очистити"
+  },
+  "popup_said_file": {
+    "message": "Скопійовано $file$. Вставте його в папку, чат або повідомлення.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_link": {
+    "message": "Посилання скопійовано"
+  },
+  "popup_said_removed": {
+    "message": "$file$ видалено зі списку",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_deleted": {
+    "message": "$file$ видалено",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_again": {
+    "message": "Повторне завантаження $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_cleared": {
+    "message": "Завершені завантаження очищено"
+  },
+  "popup_act_gone": {
+    "message": "Цього завантаження більше немає у списку."
+  },
+  "popup_act_missing": {
+    "message": "Його файл більше не знаходиться там, де він був збережений (переміщено або видалено)."
+  },
+  "popup_act_running": {
+    "message": "Спершу призупиніть."
+  },
+  "popup_act_cant": {
+    "message": "Зараз цю дію неможливо виконати для цього завантаження."
+  },
+  "popup_act_unsupported": {
+    "message": "Ця система не може цього зробити."
+  },
+  "popup_act_off": {
+    "message": "Mister Download Manager не запущений."
+  },
+  "popup_act_busy": {
+    "message": "Mister Download Manager не відповів вчасно. Спробуйте ще раз."
+  },
+  "popup_act_failed": {
+    "message": "Не вдалося. Спробуйте ще раз."
+  },
+  "status_running": {
+    "message": "Завантажується: $count$",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_open_remote": {
+    "message": "Відкрити його сторінку"
   }
 }

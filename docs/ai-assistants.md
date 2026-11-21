@@ -15,12 +15,13 @@ The assistant starts the server itself; you only tell the assistant where it is,
 
 | Tool | What it does |
 |---|---|
-| `list_downloads` | Lists your downloads, newest first: file, address, folder, status, size, how much is done, speed. It can list only one status (Queued, Downloading, Stopped, Complete, Error) or only names and addresses that contain some text. |
-| `add_download` | Adds an http, https, ftp or ftps address and starts it, or only queues it. It can say which folder and file name to use. A magnet link opens **Add torrent** in MDM, for you to choose the files. |
+| `list_downloads` | Lists your downloads, newest first: file, address, folder, status, size, how much is done, speed. It can list only one id, only one status (Queued, Downloading, Stopped, Complete, Error), only names and addresses that contain some text, or only one category or queue; reports available disk space too. |
+| `add_download` | Adds an http, https, ftp or ftps address and starts it, or only queues it (into the main queue by default, or a designated queue). It can say which folder, file name and category to use, the checksum the finished file must have, in the same form as the command line's `--checksum` (hex MD5, SHA-1, SHA-256, SHA-512 or CRC32, optionally named, e.g. `sha256:…`), and a custom Referer, User-Agent, or Cookie header. A magnet link opens **Add torrent** in MDM, for you to choose the files. |
 | `pause_downloads` | Pauses running downloads. |
 | `resume_downloads` | Starts or resumes stopped, queued or failed downloads. |
 | `remove_downloads` | Removes downloads from the list and keeps their files, or deletes the files too when asked. A running download must be paused first. |
-| `start_queue` | Starts the main download queue. |
+| `start_queue` | Starts a download queue (the main queue by default, or by name). |
+| `stop_queue` | Stops a download queue (the main queue by default, or by name). |
 
 The assistant can't change MDM's options, see your browser, or turn the automation API on by itself.
 

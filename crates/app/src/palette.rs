@@ -258,6 +258,8 @@ palette! {
     scroll_thumb: "scroll.thumb", "A scroll bar's thumb and arrows" = grey(0x95), grey(0x85);
     scroll_thumb_hot: "scroll.thumb.hot", "The thumb or an arrow under the pointer" = grey(0xb0), grey(0x70);
     scroll_thumb_pressed: "scroll.thumb.pressed", "The thumb or an arrow pressed or dragged" = grey(0xc8), grey(0x5c);
+    scroll_edge: "scroll.edge", "The edge of a scroll bar's arrow buttons and thumb, where the style draws them as buttons (Luna)" = grey(0x95), grey(0x85);
+    scroll_glyph: "scroll.glyph", "The arrows on a scroll bar's buttons and the thumb's grip, where the style draws buttons (Luna)" = grey(0xff), grey(0x00);
     // ---- menu bar and menus ----
     menubar: "menubar", "The menu bar" = grey(0x20), grey(0xff);
     menubar_bottom: "menubar.bottom", "The menu bar's last row" = grey(0x20), grey(0xf2);
@@ -293,6 +295,7 @@ palette! {
     tree_frame: "tree.frame", "The categories pane's frame" = grey(0xdc), grey(0xdc);
     // ---- progress window ----
     status_value: "progress.status", "The progress window's Status value" = grey(0xff), rgb(0x00, 0x00, 0xff);
+    connections: "progress.connections", "The progress window's connections table's background (transparent: a list's, the field's)" = Color32::TRANSPARENT, Color32::TRANSPARENT;
     progress_label_disabled: "progress.label.disabled", "A greyed label in the progress window" = grey(0x80), grey(0x80);
     segment_border: "segments.border", "The segment bar's frame" = rgb(0x65, 0x6b, 0x7b), rgb(0x65, 0x6b, 0x7b);
     segment_corner: "segments.corner", "The segment bar's corner pixels" = rgb(0xa2, 0xa5, 0xaf), rgb(0xa2, 0xa5, 0xaf);
@@ -378,7 +381,7 @@ metrics! {
     font_title: "font.title", "A window's headline (Tahoma Bold): the browser extension's, the helpers'" = 16.0;
     font_code: "font.code", "A sign-in code to type at a service's page" = 22.0;
     font_ui: "font.ui", "Menus and the main window's text (Segoe UI)" = 12.0;
-    font_ui_bold: "font.ui.bold", "Bold headings in the main window" = 13.0;
+    font_ui_bold: "font.ui.bold", "Bold headings in the main window, and the title bar's title in Luna" = 13.0;
     font_small: "font.small", "egui's small text" = 11.0;
     font_body: "font.body", "egui's body text: tooltips, multi-line boxes" = 12.0;
     font_heading: "font.heading", "egui's headings" = 16.0;
@@ -436,6 +439,11 @@ pub struct Controls {
     /// A push button: Windows 11's, or KDE's (the edge in the accent under the pointer, the face
     /// tinted with it pressed).
     pub button: ButtonLook,
+    /// Column headers: flat, or Windows XP's (a shaded bottom edge, inset dividers).
+    pub header: HeaderLook,
+    /// The menus' and the menu bar's font: the system's interface font (Segoe UI on Windows),
+    /// or Tahoma, as Windows XP's menus were.
+    pub ui_font: UiFont,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -486,6 +494,28 @@ pub enum ButtonLook {
 pub enum ScrollLook {
     Overlay,
     Classic,
+    /// Windows XP: the arrows and the thumb on buttons of their own (`scroll.thumb`, edged in
+    /// `scroll.edge`), the arrows and the thumb's grip in `scroll.glyph`.
+    Luna,
+}
+
+/// How a list's or a table's column headers are drawn.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum HeaderLook {
+    /// One colour, a divider the header's height between columns.
+    Flat,
+    /// Windows XP: three rows along the bottom shading toward `header.sep` (the button glow's
+    /// orange under the pointer), dividers inset from both ends with a light line beside them.
+    Luna,
+}
+
+/// The font of the menus and the menu bar.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum UiFont {
+    /// The system's interface font (Segoe UI on Windows).
+    System,
+    /// Tahoma (Windows XP's menus), where Windows has it; the interface font elsewhere.
+    Tahoma,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -541,6 +571,8 @@ impl Controls {
         caption: CaptionLook::System,
         focus: FocusLook::Dotted,
         button: ButtonLook::Fluent,
+        header: HeaderLook::Flat,
+        ui_font: UiFont::System,
     };
 
     /// Sets the control with this key to the style named `value`; false when either is unknown.
@@ -567,6 +599,11 @@ impl Controls {
             ("progress", "gloss") => self.progress = ProgressLook::Gloss,
             ("scroll", "overlay") => self.scroll = ScrollLook::Overlay,
             ("scroll", "classic") => self.scroll = ScrollLook::Classic,
+            ("scroll", "luna") => self.scroll = ScrollLook::Luna,
+            ("header", "flat") => self.header = HeaderLook::Flat,
+            ("header", "luna") => self.header = HeaderLook::Luna,
+            ("ui-font", "system") => self.ui_font = UiFont::System,
+            ("ui-font", "tahoma") => self.ui_font = UiFont::Tahoma,
             ("caption", "system") => self.caption = CaptionLook::System,
             ("caption", "metro") => self.caption = CaptionLook::Metro,
             ("caption", "adwaita") => self.caption = CaptionLook::Adwaita,
@@ -798,6 +835,11 @@ mod tests {
                     }
                     assert!(r >= min, "{} {}: {what} {r:.2}", t.id, p.dark);
                 }
+                // A theme's own connections table reads as its lists do.
+                if p.connections.a() > 0 {
+                    let r = contrast(p.text, p.connections);
+                    assert!(r >= min, "{} {}: text / connections {r:.2}", t.id, p.dark);
+                }
                 let r = contrast(p.link, p.window);
                 assert!(r >= 4.5, "{} {}: link {r:.2}", t.id, p.dark);
                 let r = contrast(p.accent, p.window);
@@ -943,6 +985,22 @@ mod tests {
         assert_eq!(builtins()[7].controls.focus, FocusLook::Ring);
         assert_eq!(builtins()[5].controls.focus, FocusLook::Dotted);
         assert_eq!(builtins()[6].controls.focus, FocusLook::Dotted);
+        // Luna alone takes Windows XP's scroll bars, column headers and Tahoma menus, and its
+        // light side the connections table's own background; the others keep theirs.
+        let luna = builtins()[5];
+        assert_eq!(luna.controls.scroll, ScrollLook::Luna);
+        assert_eq!(luna.controls.header, HeaderLook::Luna);
+        assert_eq!(luna.controls.ui_font, UiFont::Tahoma);
+        assert!(luna.light.connections.a() > 0);
+        for t in builtins() {
+            if t.id != "luna" {
+                assert_eq!(t.controls.header, HeaderLook::Flat, "{}", t.id);
+                assert_eq!(t.controls.ui_font, UiFont::System, "{}", t.id);
+                assert_ne!(t.controls.scroll, ScrollLook::Luna, "{}", t.id);
+                assert_eq!(t.light.connections, Color32::TRANSPARENT, "{}", t.id);
+                assert_eq!(t.dark.connections, Color32::TRANSPARENT, "{}", t.id);
+            }
+        }
         // Emerald: flat 6-point corners, ring focus, and its chips inked rather than lettered
         // in white — the soft fill carries the near-black text in both variants.
         let emerald = builtins()[8];

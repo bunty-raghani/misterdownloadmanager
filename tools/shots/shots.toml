@@ -138,7 +138,7 @@ id = "batch"
 page = "adding-downloads.md"
 under = "Batch download: many numbered files"
 take = "batch"
-alt = "Batch download: an address with an asterisk, what replaces it, and the first, second and last file"
+alt = "Batch download: an address with an asterisk, what replaces it, the first, second and last file, and the folder they go to"
 caption = "One asterisk in the address, then numbers or letters from–to."
 
 [[shot]]
@@ -210,8 +210,8 @@ id = "download-panels"
 page = "browser-integration.md"
 under = "The download button over videos"
 take = "options:panels"
-alt = "The Download panels settings: the button on or off, and the sites it never shows on"
-caption = "Options → General → Edit...: turn the button off, or list sites it never shows on."
+alt = "The Download panels settings: the button on or off, its size, and the sites it never shows on"
+caption = "Options → General → Edit...: turn the button off, choose its size, or list sites it never shows on."
 
 # ---- Video --------------------------------------------------------------------------------------
 
@@ -264,7 +264,7 @@ caption = "Choose the subtitles; tick Put them into the video to keep them insid
 id = "video-playlist"
 page = "video.md"
 under = "Playlists and channels"
-take = "video-playlist:7"
+take = "video-playlist:8"
 alt = "The video window listing a playlist's videos, each with its length and a box to tick, and one quality for all"
 caption = "A playlist: every video ticked, one quality for all."
 

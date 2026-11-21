@@ -92,9 +92,6 @@
       }
     }
   },
-  "popup_undo": {
-    "message": "Hoàn tác"
-  },
   "popup_excluded": {
     "message": "Tải xuống từ $site$ vẫn ở lại trình duyệt",
     "placeholders": {
@@ -148,6 +145,9 @@
   },
   "declined_integration_off": {
     "message": "Tích hợp trình duyệt nâng cao đang tắt trong Tùy chọn → Chung."
+  },
+  "declined_torrents": {
+    "message": "Đây là torrent, và tùy chọn Mở liên kết magnet và tệp .torrent bằng Mister Download Manager đang tắt trong cài đặt Torrent."
   },
   "declined_site_access": {
     "message": "Tiện ích không được phép đọc trang web này (quyền truy cập trang web của trình duyệt)."
@@ -328,5 +328,424 @@
   },
   "video_original": {
     "message": "gốc"
+  },
+  "video_compatible": {
+    "message": "Tương thích nhất"
+  },
+  "popup_video_hide_fullscreen": {
+    "message": "Ẩn nút tải xuống ở chế độ toàn màn hình"
+  },
+  "popup_video_hide_fullscreen_title": {
+    "message": "Khi trang ở chế độ toàn màn hình, video của trang sẽ không hiển thị nút Tải xuống video"
+  },
+  "popup_remote_forget": {
+    "message": "Quên"
+  },
+  "popup_gear": {
+    "message": "Tùy chọn trong Mister Download Manager"
+  },
+  "popup_tabs": {
+    "message": "Các phần trong cửa sổ bật lên"
+  },
+  "popup_tab_downloads": {
+    "message": "Tải xuống"
+  },
+  "popup_tab_page": {
+    "message": "Trang này"
+  },
+  "popup_tab_settings": {
+    "message": "Cài đặt"
+  },
+  "popup_conn": {
+    "message": "Đã kết nối · $version$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.5.2"
+      }
+    }
+  },
+  "popup_conn_plain": {
+    "message": "Đã kết nối"
+  },
+  "popup_conn_off": {
+    "message": "Không kết nối"
+  },
+  "popup_conn_paused": {
+    "message": "Đã tạm dừng"
+  },
+  "popup_conn_update": {
+    "message": "Cập nhật Mister Download Manager"
+  },
+  "popup_conn_remote": {
+    "message": "Đang gửi đến $server$",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_cancel": {
+    "message": "Hủy"
+  },
+  "popup_page_none": {
+    "message": "Đây không phải là trang web: không có gì để làm ở đây."
+  },
+  "popup_exclude_by_rule": {
+    "message": "Đã để trình duyệt xử lý theo quy tắc trong Tùy chọn"
+  },
+  "popup_dl_search": {
+    "message": "Tìm kiếm các bản tải xuống"
+  },
+  "popup_dl_filters": {
+    "message": "Hiển thị"
+  },
+  "popup_dl_all": {
+    "message": "Tất cả"
+  },
+  "popup_dl_running": {
+    "message": "Đang tải xuống"
+  },
+  "popup_dl_done_filter": {
+    "message": "Hoàn tất"
+  },
+  "popup_dl_failed_filter": {
+    "message": "Thất bại"
+  },
+  "popup_dl_clear": {
+    "message": "Xóa các mục đã hoàn tất"
+  },
+  "popup_dl_running_count": {
+    "message": "$count$ lượt tải xuống đang diễn ra",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_remote": {
+    "message": "Đây là các bản tải xuống của Mister Download Manager tại $server$. Hãy mở các tệp của chúng ở đó.",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_dl_more": {
+    "message": "$shown$ bản mới nhất trong số $total$. Mister Download Manager liệt kê tất cả.",
+    "placeholders": {
+      "shown": {
+        "content": "$1",
+        "example": "60"
+      },
+      "total": {
+        "content": "$2",
+        "example": "245"
+      }
+    }
+  },
+  "popup_dl_of": {
+    "message": "$done$ trong $size$",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "12.3 MB"
+      },
+      "size": {
+        "content": "$2",
+        "example": "48.7 MB"
+      }
+    }
+  },
+  "popup_dl_left": {
+    "message": "Còn $time$",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "0:42"
+      }
+    }
+  },
+  "popup_dl_starting": {
+    "message": "Đang bắt đầu..."
+  },
+  "popup_dl_paused": {
+    "message": "Đã tạm dừng"
+  },
+  "popup_dl_waiting": {
+    "message": "Đang chờ"
+  },
+  "popup_dl_done": {
+    "message": "Hoàn tất"
+  },
+  "popup_dl_just_now": {
+    "message": "vừa xong"
+  },
+  "popup_dl_failed": {
+    "message": "Thất bại"
+  },
+  "popup_dl_failed_why": {
+    "message": "Thất bại: $why$",
+    "placeholders": {
+      "why": {
+        "content": "$1",
+        "example": "the server refused the connection"
+      }
+    }
+  },
+  "popup_dl_gone": {
+    "message": "Tệp đã bị xóa hoặc di chuyển"
+  },
+  "popup_dl_loading": {
+    "message": "Đang tìm bản tải xuống..."
+  },
+  "popup_dl_none": {
+    "message": "Chưa có mục tải xuống nào"
+  },
+  "popup_dl_none_text": {
+    "message": "Những gì bạn tải xuống bằng Mister Download Manager sẽ hiển thị ở đây."
+  },
+  "popup_dl_no_match": {
+    "message": "Không có kết quả phù hợp"
+  },
+  "popup_dl_no_match_text": {
+    "message": "Không có tên hoặc địa chỉ tải xuống nào chứa “$words$”.",
+    "placeholders": {
+      "words": {
+        "content": "$1",
+        "example": "report"
+      }
+    }
+  },
+  "popup_dl_show_all": {
+    "message": "Hiển thị tất cả các bản tải xuống"
+  },
+  "popup_list_off": {
+    "message": "Mister Download Manager không chạy"
+  },
+  "popup_list_off_text": {
+    "message": "Hãy khởi động để xem các bản tải xuống của bạn tại đây."
+  },
+  "popup_list_start": {
+    "message": "Khởi động Mister Download Manager"
+  },
+  "popup_list_old": {
+    "message": "Cập nhật Mister Download Manager"
+  },
+  "popup_list_old_text": {
+    "message": "Phiên bản này chưa thể liệt kê các bản tải xuống của nó ở đây."
+  },
+  "popup_list_busy": {
+    "message": "Mister Download Manager đang bận. Đang thử lại..."
+  },
+  "popup_list_unreached": {
+    "message": "Không thể kết nối với Mister Download Manager"
+  },
+  "popup_list_remote_unreachable": {
+    "message": "Không thể kết nối với Mister Download Manager tại $server$",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_list_remote_unreachable_text": {
+    "message": "Kiểm tra xem ứng dụng có đang chạy không và trình duyệt này có chấp nhận chứng chỉ của ứng dụng không (Cài đặt → Gửi tải xuống đến → Mở).",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_act_open": {
+    "message": "Mở"
+  },
+  "popup_act_open_named": {
+    "message": "Mở $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_folder": {
+    "message": "Hiển thị trong thư mục"
+  },
+  "popup_act_folder_named": {
+    "message": "Hiển thị $file$ trong thư mục",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_copy_file": {
+    "message": "Sao chép tệp"
+  },
+  "popup_act_share": {
+    "message": "Chia sẻ..."
+  },
+  "popup_act_copy_link": {
+    "message": "Sao chép liên kết"
+  },
+  "popup_act_pause": {
+    "message": "Tạm dừng"
+  },
+  "popup_act_pause_named": {
+    "message": "Tạm dừng $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_resume": {
+    "message": "Tiếp tục"
+  },
+  "popup_act_resume_named": {
+    "message": "Tiếp tục $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_again": {
+    "message": "Tải xuống lại"
+  },
+  "popup_act_remove": {
+    "message": "Xóa khỏi danh sách"
+  },
+  "popup_act_delete": {
+    "message": "Xóa tệp..."
+  },
+  "popup_act_more": {
+    "message": "Thao tác khác"
+  },
+  "popup_act_more_named": {
+    "message": "Thao tác khác cho $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_title": {
+    "message": "Xóa tệp?"
+  },
+  "popup_ask_delete": {
+    "message": "$file$ sẽ bị xóa khỏi máy tính của bạn và bản tải xuống sẽ bị xóa khỏi danh sách. Thao tác này không thể hoàn tác.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_ok": {
+    "message": "Xóa"
+  },
+  "popup_ask_clear_title": {
+    "message": "Xóa các mục tải xuống đã hoàn tất?"
+  },
+  "popup_ask_clear": {
+    "message": "$count$ bản tải xuống đã hoàn tất sẽ bị xóa khỏi danh sách. Các tệp của chúng vẫn ở nguyên vị trí.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "8"
+      }
+    }
+  },
+  "popup_ask_clear_ok": {
+    "message": "Xóa"
+  },
+  "popup_said_file": {
+    "message": "Đã sao chép $file$. Dán vào thư mục, cuộc trò chuyện hoặc tin nhắn.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_link": {
+    "message": "Đã sao chép liên kết"
+  },
+  "popup_said_removed": {
+    "message": "Đã xóa $file$ khỏi danh sách",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_deleted": {
+    "message": "Đã xóa $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_again": {
+    "message": "Đang tải lại $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_cleared": {
+    "message": "Đã xóa các mục tải xuống đã hoàn tất"
+  },
+  "popup_act_gone": {
+    "message": "Bản tải xuống đó không còn trong danh sách."
+  },
+  "popup_act_missing": {
+    "message": "Tệp không còn ở vị trí đã lưu (đã bị di chuyển hoặc xóa)."
+  },
+  "popup_act_running": {
+    "message": "Hãy tạm dừng trước."
+  },
+  "popup_act_cant": {
+    "message": "Không thể thực hiện điều đó với bản tải xuống này ngay bây giờ."
+  },
+  "popup_act_unsupported": {
+    "message": "Hệ thống này không thể làm điều đó."
+  },
+  "popup_act_off": {
+    "message": "Mister Download Manager không chạy."
+  },
+  "popup_act_busy": {
+    "message": "Mister Download Manager không phản hồi kịp thời. Thử lại."
+  },
+  "popup_act_failed": {
+    "message": "Thao tác đó không thành công. Hãy thử lại."
+  },
+  "status_running": {
+    "message": "Đang tải xuống: $count$",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_open_remote": {
+    "message": "Mở trang của nó"
   }
 }

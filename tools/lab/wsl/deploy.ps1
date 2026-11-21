@@ -20,17 +20,12 @@ $ErrorActionPreference = 'Stop'
 $vbox = Join-Path $env:ProgramFiles 'Oracle\VirtualBox\VBoxManage.exe'
 if ($Label -notmatch '^[A-Za-z0-9._-]+$') { throw "label: letters, digits, '.', '_' and '-' only" }
 
-$user = $env:MDM_VM_USER; $pass = $env:MDM_VM_PASSWORD
-# Or a local file outside the repository, like the other developer keys (%USERPROFILE%\.mdm-dev).
-$keys = Join-Path $env:USERPROFILE '.mdm-dev\vm-account.txt'
-if ((-not $user -or -not $pass) -and (Test-Path $keys)) {
-    foreach ($line in Get-Content $keys) {
-        if (-not $user -and $line -match '^\s*user:\s*(\S+)') { $user = $Matches[1] }
-        if (-not $pass -and $line -match '^\s*password:\s*(\S+)') { $pass = $Matches[1] }
-    }
-}
-if (-not $user -or -not $pass) { throw "no VM account: set MDM_VM_USER and MDM_VM_PASSWORD" }
-$auth = @('--username', $user, '--password', $pass)
+# The account, its password only ever in files (account.ps1): never on a command line.
+. (Join-Path $PSScriptRoot '..\linux-vm\account.ps1')
+$account = Open-VmAccount
+$user = $account.User
+$auth = $account.Auth
+try {
 
 $src = "\\wsl$\$Distro\home\lab\lab\bin\$Label"
 if (-not (Test-Path "$src\misterdownloadmanager")) { throw "no build $Label in $Distro (tools/lab/wsl/build.sh)" }
@@ -57,3 +52,6 @@ if ($LASTEXITCODE) { throw "copy to $Vm failed ($LASTEXITCODE)" }
 Invoke-Guest "chmod +x '$incoming'/* && rm -rf ~/lab/bin/'$Label' && mv '$incoming' ~/lab/bin/'$Label' && ls -l ~/lab/bin/'$Label'"
 $mb = [math]::Round(((Get-ChildItem -File $src | Measure-Object Length -Sum).Sum / 1MB), 1)
 "deployed $Label ($mb MB) to $Vm ~/lab/bin/$Label in $([math]::Round(((Get-Date) - $started).TotalSeconds, 1)) s"
+} finally {
+    Close-VmAccount $account
+}

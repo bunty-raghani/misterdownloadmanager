@@ -67,11 +67,12 @@ for pair in "${targets[@]}"; do
   mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
 
   # Crash reports: the release's symbols for this processor (the -symbols zip, one per .dmg) from
-  # the programs' debug info, which stays in the build's object files until dsymutil gathers it.
+  # the programs' debug info, which stays in the build's object files until dsymutil gathers it,
+  # read with the program itself for its unwinding tables (symbols.py: the dSYM+program pair).
   syms=()
   for p in "${programs[@]}"; do
     dsymutil "$root/target/$t/release/$p" -o "$stage/$arch/dsym/$p.dSYM"
-    syms+=("$stage/$arch/dsym/$p.dSYM")
+    syms+=("$stage/$arch/dsym/$p.dSYM+$root/target/$t/release/$p")
   done
   python3 "$root/tools/installer/symbols.py" "macos-$arch" "$version" "$dist" "${syms[@]}"
   # Then the programs without their debug map and local symbols (the UUID that matches them to

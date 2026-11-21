@@ -52,7 +52,7 @@ impl Pick {
 /// The heights offered, as "Up to …p": each video at that height, or the best below it.
 const HEIGHTS: [u32; 6] = [2160, 1440, 1080, 720, 480, 360];
 /// The one chosen at first: Up to 1080p.
-const DEFAULT_PICK: usize = 3;
+const DEFAULT_PICK: usize = 4;
 
 fn picks(merge: bool) -> Vec<Pick> {
     let mut out = vec![Pick {
@@ -61,6 +61,14 @@ fn picks(merge: bool) -> Vec<Pick> {
         selector: if merge { "bv*+ba/b" } else { "b" }.into(),
         ext: "mp4",
     }];
+    // #1439: each video's best H.264 picture with AAC sound, picked as they are (never
+    // converted), as a single video's Most compatible line.
+    out.push(Pick {
+        // i18n: a quality in Download video for a whole playlist: each video's best H.264 video with AAC sound, an MP4 that every video editor, TV and phone plays; keep "(H.264 + AAC)" as it is
+        label: crate::i18n::t("Most compatible (H.264 + AAC)").to_owned(),
+        selector: mdm_tools::resolve::compatible_selector(merge, None),
+        ext: "mp4",
+    });
     for h in HEIGHTS {
         out.push(Pick {
             label: crate::i18n::fmt(
@@ -176,7 +184,7 @@ impl PlaylistView {
     /// A listed playlist without yt-dlp or the network (`/show video-playlist`: the window's
     /// check in every language, its screenshots), its quality the one at position `pick` in the
     /// list (the same in every language; not a number: the default). Without ffmpeg the list
-    /// ends at "Audio only, original" (7).
+    /// ends at "Audio only, original" (8).
     pub fn sample(pick: &str) -> Self {
         let titles = [
             ("Segmented downloads, explained", Some(754.0), false),
@@ -701,6 +709,12 @@ mod tests {
     fn qualities_for_a_list() {
         let m = picks(true);
         assert_eq!(m[0].selector, "bv*+ba/b");
+        // #1439: the most compatible, right after the best.
+        assert_eq!(
+            m[1].selector,
+            "bv[vcodec^=avc]+ba[acodec^=mp4a]/b[vcodec^=avc][acodec^=mp4a]"
+        );
+        assert_eq!(picks(false)[1].selector, "b[vcodec^=avc][acodec^=mp4a]");
         assert_eq!(
             m[DEFAULT_PICK].selector,
             "bv*[height<=1080]+ba/b[height<=1080]"

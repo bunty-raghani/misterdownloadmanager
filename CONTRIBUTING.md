@@ -53,6 +53,32 @@ Keep changes focused and match the code around them. A few rules hold everywhere
 - **Fix causes, not cases**, and keep producers and consumers of shared data (the download list,
   the browser extension's messages, the catalogs) in step.
 
+## Fuzzing
+
+The parsers that read what servers, web pages and downloaded files send have fuzz targets in
+[`fuzz/`](fuzz) ([cargo fuzz](https://github.com/rust-fuzz/cargo-fuzz), libFuzzer): HLS
+playlists (`hls`), yt-dlp's answers (`ytdlp_json`), web pages' links and videos (`web_page`),
+file names (`file_name`), .torrent files and magnet links (`torrent`), release signatures
+(`signature`), Click'n'Load posts (`click_n_load`) and archives (`archive`). Each calls the real
+function and checks what must always hold (no panic, a file name that is one safe path part, an
+info hash kept). They are a workspace of their own, so the checks above never build them; they
+need a nightly toolchain and run best on Linux (on Windows, the MSVC toolchain with
+AddressSanitizer):
+
+```
+cargo install cargo-fuzz
+cargo +nightly fuzz list
+cargo +nightly fuzz run hls fuzz/corpus/hls fuzz/seeds/hls -- -dict=fuzz/dicts/hls.dict -max_total_time=300
+```
+
+The run grows `fuzz/corpus/<target>` from the committed seeds (`fuzz/seeds`, made from the test
+fixtures by `python fuzz/make_seeds.py`), with the target's dictionary when it has one
+(`fuzz/dicts`: the format's keywords, and numbers at the edge of a type); an input that crashes is saved in `fuzz/artifacts/` and
+replays with `cargo +nightly fuzz run <target> <file>`. Fix what it finds where the input is read,
+with a unit test of that input beside the parser. CI runs every target for two minutes on each
+pull request that changes the crates they read through, and for longer every week
+(ClusterFuzzLite, `.clusterfuzzlite/`).
+
 ## Translations
 
 The interface is in every language Windows 11 offers. The catalogs in [`i18n/`](i18n) were made

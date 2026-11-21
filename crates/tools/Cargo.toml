@@ -11,6 +11,7 @@ publish.workspace = true
 [dependencies]
 aws-lc-rs.workspace = true
 base64.workspace = true
+bytes.workspace = true
 craft-atomic.workspace = true
 futures.workspace = true
 hex.workspace = true
@@ -27,6 +28,9 @@ tracing.workspace = true
 url.workspace = true
 percent-encoding.workspace = true
 zip = { version = "9.1.3", default-features = false, features = ["deflate"] }
+# Node.js's macOS and Linux builds (#1570).
+tar = { version = "0.4.46", default-features = false }
+flate2.workspace = true
 
 [dev-dependencies]
 mdm-labserver.workspace = true
@@ -53,3 +57,7 @@ workspace = true
 
 [target."cfg(windows)".dependencies]
 win32job = "2.0.3"
+
+# A helper's process group killed whole (#1301), safely.
+[target."cfg(unix)".dependencies]
+rustix = { version = "1.1.6", features = ["process"] }

@@ -201,6 +201,83 @@ pub fn keep_inside(p: Pos2, outer: Vec2, area: Rect) -> Pos2 {
     )
 }
 
+/// A monitor in screen pixels: the whole screen and its work area (without the taskbar). Used by
+/// Windows' dialogs::keep_placed only: elsewhere a new window's place is the window manager's or
+/// in points that mean the same on every screen (see there).
+#[cfg_attr(not(windows), allow(dead_code))]
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Screen {
+    pub rect: Rect,
+    pub work: Rect,
+}
+
+/// The screen a window at `r` (screen pixels) is on, as Windows picks one: the one with most of
+/// it, else the nearest (the first of equals: the primary comes first). None without screens.
+#[cfg_attr(not(windows), allow(dead_code))]
+pub fn screen_of(r: Rect, screens: &[Screen]) -> Option<&Screen> {
+    let overlap = |s: &Screen| {
+        let i = s.rect.intersect(r);
+        if i.is_positive() { i.area() } else { 0.0 }
+    };
+    let mut most: Option<(&Screen, f32)> = None;
+    for s in screens {
+        let a = overlap(s);
+        if a > most.map_or(0.0, |(_, m)| m) {
+            most = Some((s, a));
+        }
+    }
+    if let Some((s, _)) = most {
+        return Some(s);
+    }
+    let far = |s: &Screen| s.rect.distance_sq_to_pos(r.center());
+    let mut nearest: Option<&Screen> = None;
+    for s in screens {
+        if nearest.is_none_or(|n| far(s) < far(n)) {
+            nearest = Some(s);
+        }
+    }
+    nearest
+}
+
+/// Whether enough of a window at `r` (screen pixels) is on one screen to be seen and taken by
+/// its title bar: 50 pixels each way (all of a smaller one).
+#[cfg_attr(not(windows), allow(dead_code))]
+pub fn seen(r: Rect, screens: &[Screen]) -> bool {
+    const SEEN: f32 = 50.0;
+    let need = r.size().min(vec2(SEEN, SEEN));
+    screens.iter().any(|s| {
+        let i = s.rect.intersect(r);
+        i.width() >= need.x && i.height() >= need.y
+    })
+}
+
+/// Where a window of `size` screen pixels opens centred on the main window at `main` (screen
+/// pixels): on the main window's screen, inside its work area (the title bar first, for one
+/// larger). In pixels, whatever each screen's scale: a place in points is a place on one screen
+/// only, at its own scale (#1311).
+#[cfg_attr(not(windows), allow(dead_code))]
+pub fn centred_on(main: Rect, size: Vec2, screens: &[Screen]) -> Pos2 {
+    let p = (main.center() - size / 2.0).round();
+    match screen_of(main, screens) {
+        Some(s) => keep_inside(p, size, s.work).round(),
+        None => p,
+    }
+}
+
+/// The safety net: a window at `r` (screen pixels) that isn't [`seen`] on any screen, its top
+/// left corner to have it inside the work area of the screen `home` is on (the main window's),
+/// else of the first screen (the primary); None when it is seen (#1311).
+#[cfg_attr(not(windows), allow(dead_code))]
+pub fn onto_screens(r: Rect, home: Option<Rect>, screens: &[Screen]) -> Option<Pos2> {
+    if seen(r, screens) {
+        return None;
+    }
+    let s = home
+        .and_then(|h| screen_of(h, screens))
+        .or(screens.first())?;
+    Some(keep_inside(s.work.center() - r.size() / 2.0, r.size(), s.work).round())
+}
+
 /// A window's frame in points (`outer` = client + this), for [`keep_inside`].
 pub fn frame(ctx: &egui::Context) -> Vec2 {
     FRAME / ctx.zoom_factor()
@@ -418,6 +495,117 @@ mod tests {
         assert_eq!(next(125, false), 120);
         assert_eq!(next(110, false), 100);
         assert_eq!(next(100, false), 100);
+    }
+
+    /// #1311's screens, in pixels: a laptop at 125 % (the primary, 2560 × 1600) and a monitor at
+    /// 100 % on its right (1920 × 1080), each with a 48 px taskbar.
+    fn mixed_screens() -> [Screen; 2] {
+        let screen = |l: f32, r: f32, b: f32| Screen {
+            rect: Rect::from_min_max(pos2(l, 0.0), pos2(r, b)),
+            work: Rect::from_min_max(pos2(l, 0.0), pos2(r, b - 48.0)),
+        };
+        [screen(0.0, 2560.0, 1600.0), screen(2560.0, 4480.0, 1080.0)]
+    }
+
+    fn inside(r: Rect, area: Rect) -> bool {
+        area.contains_rect(r)
+    }
+
+    /// The main window on the 100 % monitor (#1311). Before: the dialog was placed in the main
+    /// window's points (pixels there, at 100 %), and winit read that place at the scale of the
+    /// screen the new window opens on, the primary's 125 %: the dialog went past the monitor's
+    /// right edge, on no screen. Now: centred on the main window in pixels, on its monitor.
+    #[test]
+    fn a_dialog_opens_on_the_main_windows_screen_whatever_its_scale() {
+        let screens = mixed_screens();
+        let main = Rect::from_min_max(pos2(3400.0, 100.0), pos2(4400.0, 800.0));
+        // A dialog of 600 × 450 points and its frame, at 100 %.
+        let client = vec2(600.0, 450.0);
+        let size = client + FRAME;
+
+        // Before: the place in the main window's points (1 px each), read at 125 %.
+        let main_ppp = 1.0;
+        let main_pt = Rect::from_min_max(main.min / main_ppp, main.max / main_ppp);
+        let outer = client + vec2(6.0, 29.0);
+        let work_pt = Rect::from_min_max(
+            screens[1].work.min / main_ppp,
+            screens[1].work.max / main_ppp,
+        );
+        let p = keep_inside((main_pt.center() - outer / 2.0).round(), size, work_pt).round();
+        let primary_scale = 1.25;
+        let before = Rect::from_min_size(
+            (p.to_vec2() * primary_scale).to_pos2(),
+            size * primary_scale,
+        );
+        assert_eq!(before.min, pos2(4496.25, 263.75), "{before:?}");
+        assert!(!seen(before, &screens), "before: on no screen: {before:?}");
+        // The safety net alone brings such a window onto the main window's screen.
+        let net = onto_screens(before, Some(main), &screens).expect("on no screen");
+        assert!(inside(
+            Rect::from_min_size(net, before.size()),
+            screens[1].work
+        ));
+
+        // Now: centred on the main window, in pixels, wholly on its screen.
+        let now = Rect::from_min_size(centred_on(main, size, &screens), size);
+        assert_eq!(now.min, pos2(3592.0, 205.0), "{now:?}");
+        assert!(inside(now, screens[1].work), "now: {now:?}");
+        assert_eq!(onto_screens(now, Some(main), &screens), None);
+
+        // The main window on the 125 % laptop: there too (it was right there already).
+        let main = Rect::from_min_max(pos2(300.0, 200.0), pos2(1550.0, 1075.0));
+        let size = (client + FRAME) * 1.25;
+        let now = Rect::from_min_size(centred_on(main, size, &screens), size);
+        assert!(inside(now, screens[0].work), "now: {now:?}");
+    }
+
+    /// A dialog larger than the main window's screen, or a main window half on each screen: the
+    /// screen with most of the main window, the dialog's title bar inside its work area.
+    #[test]
+    fn a_dialog_stays_on_one_screen() {
+        let screens = mixed_screens();
+        // Mostly on the monitor, partly on the laptop.
+        let main = Rect::from_min_max(pos2(2400.0, 100.0), pos2(3600.0, 900.0));
+        assert_eq!(screen_of(main, &screens), Some(&screens[1]));
+        let size = vec2(700.0, 500.0);
+        let now = Rect::from_min_size(centred_on(main, size, &screens), size);
+        assert!(inside(now, screens[1].work), "{now:?}");
+        // Taller than the monitor's work area: its top on the screen.
+        let tall = vec2(700.0, 1400.0);
+        let p = centred_on(main, tall, &screens);
+        assert_eq!(p.y, 0.0);
+        assert!(p.x >= 2560.0 && p.x + 700.0 <= 4480.0, "{p:?}");
+    }
+
+    /// The safety net: a window on no screen (or showing a sliver) comes onto the main window's
+    /// screen, else the primary; a minimized main window (at -32000) counts as the nearest one's.
+    #[test]
+    fn a_window_on_no_screen_is_brought_onto_one() {
+        let screens = mixed_screens();
+        let size = vec2(600.0, 400.0);
+        let lost = Rect::from_min_size(pos2(5000.0, 300.0), size);
+        let main = Rect::from_min_max(pos2(3000.0, 100.0), pos2(4000.0, 800.0));
+        let p = onto_screens(lost, Some(main), &screens).expect("lost");
+        assert!(
+            inside(Rect::from_min_size(p, size), screens[1].work),
+            "{p:?}"
+        );
+        let p = onto_screens(lost, None, &screens).expect("lost");
+        assert!(
+            inside(Rect::from_min_size(p, size), screens[0].work),
+            "{p:?}"
+        );
+        // 20 pixels of it on the monitor: not enough to take it.
+        let sliver = Rect::from_min_size(pos2(4460.0, 300.0), size);
+        assert!(!seen(sliver, &screens));
+        assert!(onto_screens(sliver, Some(main), &screens).is_some());
+        // 100 pixels: the user's place, kept.
+        let edge = Rect::from_min_size(pos2(4380.0, 300.0), size);
+        assert_eq!(onto_screens(edge, Some(main), &screens), None);
+        let minimized = Rect::from_min_size(pos2(-32000.0, -32000.0), vec2(160.0, 28.0));
+        assert_eq!(screen_of(minimized, &screens), Some(&screens[0]));
+        // No screens known: nothing to go by.
+        assert_eq!(onto_screens(lost, Some(main), &[]), None);
     }
 
     /// Ctrl + / Ctrl = / Ctrl − / Ctrl 0 through egui as a window gets them: a step each, the

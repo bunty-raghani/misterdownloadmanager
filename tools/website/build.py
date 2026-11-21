@@ -36,6 +36,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import barcode  # noqa: E402
 import contributors  # noqa: E402  (tools/contributors.py: the people the site thanks)
+import vitrine  # noqa: E402  (tools/website/vitrine.py: the lightbox and dialogs, website/vitrine/)
 import sitei18n  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -103,11 +104,18 @@ def published_version() -> str:
 
 
 def setup_size() -> str:
-    """The Windows installer's size as the label shows it ("12.4 MB"), or "" offline."""
+    """The x64 Windows installer's size as the label shows it ("12.4 MB"), or "" offline."""
     for a in LATEST.get("assets", []):
-        if a.get("name", "").endswith("-setup.exe"):
+        if a.get("name") == f"MisterDownloadManager-{VERSION}-setup.exe":
             return f"{a['size'] / 1_000_000:.1f} MB"
     return ""
+
+
+def published(tail: str) -> bool:
+    """Whether the latest published release has MisterDownloadManager-<version>-<tail> (the
+    Windows on ARM, 32-bit Windows and Linux on ARM files come with the release after 0.5.1)."""
+    name = f"MisterDownloadManager-{VERSION}-{tail}"
+    return any(a.get("name") == name for a in LATEST.get("assets", []))
 
 
 def mac_file(arch: str) -> str:
@@ -143,9 +151,21 @@ FILES = {
     "deb": linux_file(".deb"),
     "rpm": linux_file(".rpm"),
     "tar": linux_file(".tar.gz"),
+    # The other processors' (tools/installer/build.ps1 -Arch, build-linux.sh on ARM).
+    "setup_arm64": f"{RELEASE}-setup-arm64.exe",
+    "portable_arm64": f"{RELEASE}-portable-arm64.zip",
+    "zip_arm64": f"{RELEASE}-arm64.zip",
+    "setup_x86": f"{RELEASE}-setup-x86.exe",
+    "portable_x86": f"{RELEASE}-portable-x86.zip",
+    "zip_x86": f"{RELEASE}-x86.zip",
+    "appimage_arm64": f"{RELEASE}-linux-arm64.AppImage",
+    "deb_arm64": f"{RELEASE}-linux-arm64.deb",
+    "rpm_arm64": f"{RELEASE}-linux-arm64.rpm",
+    "tar_arm64": f"{RELEASE}-linux-arm64.tar.gz",
     "chromium": f"{RELEASE}-extension-chromium.zip",
     "firefox": f"{RELEASE}-extension-firefox.xpi",
     "sums": f"{REPO}/releases/download/v{VERSION}/SHA256SUMS.txt",
+    "sums_sig": f"{REPO}/releases/download/v{VERSION}/SHA256SUMS.txt.sig",
 }
 
 # Every page built, for the sitemap: (path, priority).
@@ -333,6 +353,7 @@ ICONS = """<svg width="0" height="0" class="defs" aria-hidden="true">
   <symbol id="i-edit" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4"/></symbol>
   <symbol id="i-code" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M8 7l-5 5 5 5M16 7l5 5-5 5M13.5 4l-3 16"/></symbol>
   <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20.5s-8.5-5-8.5-11A4.5 4.5 0 0 1 12 6.6a4.5 4.5 0 0 1 8.5 2.9c0 6-8.5 11-8.5 11z"/></symbol>
+  <symbol id="i-seal" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 3l7 3v5.5c0 4.3-2.9 7.9-7 9.5-4.1-1.6-7-5.2-7-9.5V6zM9 12l2 2 4-4"/></symbol>
   <symbol id="i-tag" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.5"/></symbol>
   <symbol id="i-moon" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></symbol>
   <symbol id="i-clock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></g></symbol>
@@ -376,7 +397,7 @@ def os_menu() -> str:
         ("windows", "Windows portable", "portable.zip · runs from a folder or USB stick", FILES["portable"]),
         ("macos", "macOS Apple Silicon", ".dmg · M1 and later · experimental", FILES["dmg_arm64"]),
         ("macos", "macOS Intel", ".dmg · Macs with an Intel processor · experimental", FILES["dmg_intel"]),
-        ("linux", "Linux AppImage", "any distribution · experimental", FILES["appimage"]),
+        ("linux", "Linux AppImage", "any distribution", FILES["appimage"]),
         ("linux", "Linux .deb / .rpm", "Debian, Ubuntu · Fedora, openSUSE", "/download.html#linux"),
     ]
     items = "".join(
@@ -535,6 +556,7 @@ def footer() -> str:
             <li><a href="/news.html">What's new</a></li>
             <li><a href="/contributing.html">Contributing</a></li>
             <li><a href="/contributors.html">Contributors</a></li>
+            <li><a href="/press.html">Press and mentions</a></li>
             <li><a href="/news.xml">News feed</a></li>
           </ul>
         </div>
@@ -545,6 +567,7 @@ def footer() -> str:
             <li><a href="/terms.html">Terms of use</a></li>
             <li><a href="/license.html">License</a></li>
             <li><a href="/security.html">Security</a></li>
+            <li><a href="/code-signing-policy.html">Code signing policy</a></li>
           </ul>
         </div>
       </div>
@@ -605,8 +628,13 @@ def head(path: str, title: str, desc: str, *, jsonld: list | None = None, og_typ
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
   <link rel="manifest" href="/site.webmanifest">
   <link rel="alternate" type="application/atom+xml" title="{NAME} news" href="/news.xml">
+  <link rel="stylesheet" href="/vitrine/vitrine.css">
+  <link rel="stylesheet" href="/vitrine/vitrine-modal.css">
   <link rel="stylesheet" href="/styles.css">
   {THEME_SCRIPT}
+  <script src="/vitrine/vitrine-core.js" defer></script>
+  <script src="/vitrine/vitrine-modal.js" defer></script>
+  <script src="/vitrine/vitrine.js" defer></script>
   <script src="/main.js" defer></script>{ld}{extra}"""
 
 
@@ -686,7 +714,7 @@ def waybill_fields() -> str:
     size = f' <small>{SETUP_SIZE}</small>' if SETUP_SIZE else ""
     return (f'<dl class="fields">'
             f'<div><dt>Postage</dt><dd>Free</dd></div>'
-            f'<div><dt>Delivery</dt><dd><a href="/benchmark.html">1 GiB in 1.0 s</a> <small>IDM: 5.5 s</small></dd></div>'
+            f'<div><dt>Delivery</dt><dd><a href="/benchmark.html">1 GiB in 1.0 s</a> <small>IDM: 5.5 s</small> <small class="wb-note">local test server</small></dd></div>'
             f'<div><dt>System</dt><dd>Windows 10 and 11</dd></div>'
             f'<div><dt>Version</dt><dd><a href="/news.html">{VERSION}</a>{size}</dd></div></dl>')
 
@@ -698,7 +726,7 @@ SOFTWARE_LD = {
     "alternateName": "MDM",
     "applicationCategory": "UtilitiesApplication",
     "applicationSubCategory": "Download manager",
-    "operatingSystem": "Windows 10, Windows 11, macOS (experimental), Linux (experimental)",
+    "operatingSystem": "Windows 10, Windows 11, Linux, macOS (experimental)",
     "softwareVersion": VERSION,
     "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
     "license": "https://www.gnu.org/licenses/gpl-3.0.html",
@@ -803,11 +831,13 @@ def dark_of(name: str) -> str | None:
 IMG = re.compile(r'<img\b([^>]*?)\s*/?>')
 
 
-def shot_html(attrs: str, lazy: bool) -> str:
+def shot_html(attrs: str, lazy: bool, link: bool = False) -> str:
     """A help picture as the page shows it: its real size (width and height, so nothing moves as
     it loads), lazy below the first one, and its night version beside it, the site's theme
     choosing which shows (.for-light / .for-dark, as on the home page: they follow the system's
-    choice and the header's switch alike; a hidden lazy picture isn't fetched)."""
+    choice and the header's switch alike; a hidden lazy picture isn't fetched). A figure's picture
+    (`link`) is a link to its file, so it opens big with no script as well; the lightbox (Vitrine,
+    website/vitrine/) opens it over the page instead."""
     a = dict(re.findall(r'(\w[\w-]*)="([^"]*)"', attrs))
     src = a.get("src", "")
     m = re.match(r"/help/images/([\w./-]+)$", src)
@@ -819,12 +849,18 @@ def shot_html(attrs: str, lazy: bool) -> str:
     alt = a.get("alt", "")
     load = ' loading="lazy" decoding="async"' if lazy else ' decoding="async"'
     dark = dark_of(name)
+
+    def one(cls: str, url: str, d: str, ld: str) -> str:
+        """One picture; in a link, the theme's class goes on the link."""
+        own = f' class="{cls}"' if cls and not link else ""
+        img = f'<img{own} src="{url}"{d} alt="{alt}"{ld}>'
+        return f'<a class="{("shot-link " + cls).strip()}" href="{url}">{img}</a>' if link else img
     if not dark:
-        return f'<img src="{src}"{dims} alt="{alt}"{load}>'
+        return one("", src, dims, load)
     dsize = image_size(ROOT / "docs" / "images" / dark)
     ddims = f' width="{dsize[0]}" height="{dsize[1]}"' if dsize else dims
-    return (f'<img class="for-light" src="{src}"{dims} alt="{alt}"{load}>'
-            f'<img class="for-dark" src="/help/images/{dark}"{ddims} alt="{alt}" loading="lazy" decoding="async">')
+    return (one("for-light", src, dims, load)
+            + one("for-dark", f"/help/images/{dark}", ddims, ' loading="lazy" decoding="async"'))
 
 
 def help_figures(body: str) -> str:
@@ -841,9 +877,9 @@ def help_figures(body: str) -> str:
     its night version."""
     seen = [0]
 
-    def pic(attrs: str) -> str:
+    def pic(attrs: str, link: bool = False) -> str:
         seen[0] += 1
-        return shot_html(attrs, lazy=seen[0] > 1)
+        return shot_html(attrs, lazy=seen[0] > 1, link=link)
 
     def figure(inner: str, cls: str = "shot") -> str | None:
         m = re.fullmatch(r"\s*(?:<p>)?\s*<img\b([^>]*?)\s*/?>\s*(?:<br\s*/?>)?\s*(?:<em>((?:(?!</?p>).)*?)</em>)?\s*(?:</p>)?\s*", inner, re.S)
@@ -852,8 +888,8 @@ def help_figures(body: str) -> str:
         cap = f"<figcaption>{m.group(2).strip()}</figcaption>" if m.group(2) else ""
         # A step reads what to do, then shows it.
         if cls == "step":
-            return f'<figure class="{cls}">{cap}{pic(m.group(1))}</figure>'
-        return f'<figure class="{cls}">{pic(m.group(1))}{cap}</figure>'
+            return f'<figure class="{cls}">{cap}{pic(m.group(1), link=True)}</figure>'
+        return f'<figure class="{cls}">{pic(m.group(1), link=True)}{cap}</figure>'
 
     def strip(m: re.Match) -> str:
         """A step strip (<!-- steps --> and a numbered list) or pictures side by side
@@ -1141,6 +1177,174 @@ def build_contributors() -> None:
     </div>""", jsonld=[crumbs_ld(trail)], priority="0.5")
 
 
+# ---- What others say: the stores' figures, quotes, /press.html ------------------------------------
+
+TRENDSHIFT = "https://trendshift.io/repositories/337427"
+SOURCEFORGE = "https://sourceforge.net/projects/mister-download-manager.mirror/files/"
+RELEASE_KEY = f"{REPO}/blob/main/crates/tools/keys/mdm-release.asc"
+# The figures the home page and /press.html show, as each source showed them on FIGURES_CHECKED,
+# rounded down. Read them again where they come from before changing them (and the date): the
+# Chrome Web Store listing (users, rating); the add-ons API, addons.mozilla.org/api/v5/addons/addon/
+# mister-download-manager/ (average_daily_users, ratings); GitHub's releases API, the
+# download_count of the app's own files in every release (installers, zips, .dmg, AppImage, .deb,
+# .rpm, .tar.gz: not the checksums, symbols or extensions); Trendshift's page (its placements).
+FIGURES_CHECKED = "2026-11-18"
+FIGURES = [
+    # (field name, where it comes from, value, its fine print)
+    ("Chrome Web Store", CWS, "50,000+ users", "4.9 out of 5, from 43 ratings"),
+    ("Firefox Add-ons", AMO, "3,800+ daily users", "4.7 out of 5, from 7 ratings"),
+    ("GitHub Releases", f"{REPO}/releases", "280,000+ downloads", "of the app, every version together"),
+    ("Trendshift", TRENDSHIFT, "#1 in Rust",
+     'repository of the day on <time datetime="2026-11-09" translate="no">2026-11-09</time>'),
+]
+# Where MDM comes from, for /press.html's "Available on": (name, link, what it is). The official
+# places first; the community's packages are made by volunteers, each checked to install the
+# release's own files (their checksums match SHA256SUMS.txt) when it was added.
+OFFICIAL = [
+    ("GitHub Releases", f"{REPO}/releases", "Every file of every version, with SHA256SUMS.txt and its signature"),
+    ("misterdownloadmanager.com", "/download.html", "This website: its download links lead to GitHub Releases"),
+    ("Chrome Web Store", CWS, "The browser extension, for Chrome, Edge, Brave, Opera and Vivaldi"),
+    ("Firefox Add-ons", AMO, "The browser extension for Firefox"),
+    ("WinGet", "/download.html#winget", "Windows' package manager installs the setup from GitHub Releases"),
+    ("SourceForge mirror", SOURCEFORGE, "An automatic, exact copy of the GitHub releases; SourceForge shows ads around its downloads"),
+]
+COMMUNITY = [
+    ("AUR: misterdownloadmanager-bin", "https://aur.archlinux.org/packages/misterdownloadmanager-bin", "Arch Linux, from the release's .tar.gz"),
+    ("AUR: mister-download-manager-bin", "https://aur.archlinux.org/packages/mister-download-manager-bin", "Arch Linux, from the release's .deb"),
+    ("Nix: misterdm-nix", "https://github.com/TamagoMasgend/misterdm-nix", "A Nix flake, for NixOS"),
+    ("AM", "https://github.com/ivan-hc/AM", "A package manager for Linux AppImages: installs the release's AppImage"),
+]
+# The language groups of /press.html, in the reader's order: a quote's or a piece's `lang` (its
+# first part) and the group's name.
+PRESS_LANGS = {"en": "English", "ar": "Arabic", "bn": "Bengali", "zh": "Chinese", "fa": "Persian",
+               "id": "Indonesian", "it": "Italian", "ko": "Korean", "pt": "Portuguese", "ru": "Russian",
+               "tr": "Turkish"}
+
+
+def content_tsv(name: str) -> list[list[str]]:
+    """website/content/<name>'s rows (tab-separated; # lines are comments)."""
+    return [l.split("\t") for l in (CONTENT / name).read_text("utf-8").splitlines()
+            if l.strip() and not l.startswith("#")]
+
+
+def figures_fields() -> str:
+    """The stores' figures in the label's field grammar, each a link to where it was read. The
+    sources' names are names (translate="no": a lone element in its block would still be sent)."""
+    return '<dl class="fields figures">' + "".join(
+        f'<div><dt translate="no">{name}</dt><dd><a href="{esc(href)}">{value}</a><small>{fine}</small></dd></div>'
+        for name, href, value, fine in FIGURES) + "</dl>"
+
+
+def checked_on(text: str = "Checked on") -> str:
+    return f'{text} <time datetime="{FIGURES_CHECKED}" translate="no">{FIGURES_CHECKED}</time>'
+
+
+def said_list() -> str:
+    """website/content/quotes.tsv: each quote as written, in its own language (all of them left to
+    right), with its source; under it our translation, marked so (styles.css hides it where the
+    page is in the quote's language). Who said it is a name: its block is translate="no"."""
+    items = []
+    for lang, language, who, role, outlet, date, url, quote, english in content_tsv("quotes.tsv"):
+        when = f'<time datetime="{date}" translate="no">{date}</time>'
+        source = f'<a href="{esc(url)}"><span translate="no">{esc(outlet)}</span></a>'
+        if who == outlet:
+            by, line = f'<b translate="no">{esc(who)}</b>', f"{role}, {when}"
+        else:
+            by, line = f'<b translate="no">{esc(who)}</b>', f"{role} on {source}, {when}"
+            source = ""
+        if source:
+            by = f'<a href="{esc(url)}">{by}</a>'
+        items.append(
+            f'<li><figure class="said">'
+            f'<blockquote lang="{lang}" dir="ltr" translate="no" cite="{esc(url)}"><p>{esc(quote)}</p></blockquote>'
+            f'<div class="said-tr" data-same="{lang.split("-")[0]}"><p class="said-tr-name">Translated from {language}</p>'
+            f'<p>{esc(english)}</p></div>'
+            f'<figcaption><p class="said-by" translate="no">{by}</p><p class="said-where">{line}</p></figcaption>'
+            f'</figure></li>')
+    return f'<ul class="said-list" role="list">{"".join(items)}</ul>'
+
+
+def signed_sheet() -> str:
+    """The home page's proof of delivery: the stores' figures, then what people wrote."""
+    return (f'<div class="sheet sheet-labelled signed-sheet"><p class="sheet-band"><b>Proof of delivery</b>'
+            f'<span>{checked_on("Figures checked on")} · quotes exact, linked to their source</span></p>'
+            f'{figures_fields()}{said_list()}</div>')
+
+
+def press_groups(rows: list[list[str]]) -> str:
+    """Pieces by language group (English first, then by name), each a link: its title in its own
+    language, the outlet and the date. Titles and names stay as written (translate="no")."""
+    order = sorted({r[1].split("-")[0] for r in rows},
+                   key=lambda k: (k != "en", PRESS_LANGS[k]))
+    out = []
+    for key in order:
+        items = "".join(
+            f'<li><a href="{esc(url)}"><b lang="{lang}" dir="auto">{esc(title)}</b>'
+            f'<span><span dir="auto">{esc(outlet)}</span> · <time datetime="{date}">{date}</time></span>'
+            f'<svg class="mf-arrow" aria-hidden="true"><use href="#i-arrow"/></svg></a></li>'
+            for _, lang, outlet, date, url, title in sorted(rows, key=lambda r: r[3], reverse=True)
+            if lang.split("-")[0] == key)
+        out.append(f'<div class="mf-group"><h3 class="mf-name">{PRESS_LANGS[key]}</h3>'
+                   f'<ul class="mf-list press-list" role="list" translate="no">{items}</ul></div>')
+    return "".join(out)
+
+
+def channel_group(name: str, rows: list[tuple[str, str, str]], fine: str = "") -> str:
+    items = "".join(
+        f'<li><a href="{esc(href)}"><b translate="no">{esc(label)}</b><span>{what}</span>'
+        f'<svg class="mf-arrow" aria-hidden="true"><use href="#i-arrow"/></svg></a></li>'
+        for label, href, what in rows)
+    note = f'<p class="fine channel-note">{fine}</p>' if fine else ""
+    return (f'<div class="mf-group"><h3 class="mf-name">{name}</h3>'
+            f'<div><ul class="mf-list" role="list">{items}</ul>{note}</div></div>')
+
+
+def build_press() -> None:
+    """/press.html: the stores' figures, what independent writers and video makers published about
+    MDM (website/content/press.tsv), the fair criticism with our answer, and where MDM comes from."""
+    path = "/press.html"
+    trail = [("Home", "/"), ("Press and mentions", path)]
+    rows = content_tsv("press.tsv")
+    articles = [r for r in rows if r[0] == "article"]
+    videos = [r for r in rows if r[0] == "video"]
+    locker = "https://lockergnome.com/mister-download-manager-one-second-localhost-benchmark/"
+    lede = ("What others wrote and filmed about Mister Download Manager, in their own languages, and the "
+            "places to get it. Independent pieces only: pages that re-host MDM's files are left out.")
+    fine = (f'{checked_on("Every link checked on")}. Wrote about MDM, or found a mistake here? '
+            f'<a href="{REPO}/issues/new?template=website.yml&amp;page={urllib.parse.quote(SITE + path)}">Tell us on GitHub</a>.')
+    body = f"""{page_head("Press and mentions", lede, trail, fine)}
+    <div class="wrap press-page">
+      <section class="sheet sheet-labelled press-sheet" aria-labelledby="figures-title">
+        <h2 class="sheet-band" id="figures-title"><b>In figures</b><span>{checked_on()}, rounded down</span></h2>
+        {figures_fields()}
+      </section>
+      <section class="sheet sheet-labelled press-sheet" aria-labelledby="articles-title">
+        <h2 class="sheet-band" id="articles-title"><b>Articles and reviews</b><span>{len(articles)}, newest first in each language</span></h2>
+        {press_groups(articles)}
+      </section>
+      <section class="sheet sheet-labelled press-sheet" aria-labelledby="videos-title">
+        <h2 class="sheet-band" id="videos-title"><b>Videos</b><span>{len(videos)}, on YouTube</span></h2>
+        {press_groups(videos)}
+      </section>
+      <section class="page-body prose press-critique" aria-labelledby="criticism">
+        <h2 id="criticism">The fair criticism</h2>
+        <p class="press-cite"><a href="{locker}"><cite lang="en" translate="no">Mister Download Manager's one-second gigabyte came from a server on the same PC</cite></a> <span>Chris Pirillo, <span translate="no">Lockergnome</span>, <time datetime="2026-11-12" translate="no">2026-11-12</time></span></p>
+        <p>He is right about the setup. Our "1 GiB in 1 second" comes from a loopback test: both programs downloaded from a test server on the same PC. It compares the two programs under the same load; it doesn't measure an internet connection, and MDM won't make yours faster than it is. We now say so wherever the figure appears.</p>
+        <p><a href="/benchmark.html">The benchmark report</a> has every run, the method and the raw data, so anyone can check it or run it again.</p>
+      </section>
+      <section class="sheet sheet-labelled press-sheet" id="available-on" aria-labelledby="available-title">
+        <h2 class="sheet-band" id="available-title"><b>Available on</b><span>The official places first</span></h2>
+        {channel_group("Official", OFFICIAL)}
+        {channel_group("Community packages", COMMUNITY, "Made and kept up by volunteers, not by us. Each one installed the release's own files when we looked; check what yours installs against SHA256SUMS.txt.")}
+      </section>
+      <p class="crew-join"><a class="btn btn-line" href="/download.html#get-it-safely">How to get MDM safely</a></p>
+    </div>"""
+    write(path, f"Press and mentions — {NAME}",
+          f"Articles, reviews and videos about {NAME} in many languages, its figures in the browser stores "
+          "and on GitHub, and the official places to get it.",
+          body, jsonld=[crumbs_ld(trail)], priority="0.5")
+
+
 # ---- Languages: i18n/languages.tsv ---------------------------------------------------------------
 
 def build_languages() -> None:
@@ -1257,9 +1461,65 @@ def third_party_table() -> str:
 
 # ---- Hand-written pages: the home page, download, comparison, 404 --------------------------------
 
+# The processors each system's downloads are built for, as far as the latest published release
+# has their files: (row name, its id, the files as (link text, FILES key)).
+PROCESSORS = {
+    "windows": [
+        ("Windows on ARM", "windows-arm64", [("setup-arm64.exe", "setup_arm64"),
+                                             ("portable-arm64.zip", "portable_arm64"),
+                                             ("arm64.zip", "zip_arm64")]),
+        ("32-bit Windows", "windows-x86", [("setup-x86.exe", "setup_x86"),
+                                           ("portable-x86.zip", "portable_x86"),
+                                           ("x86.zip", "zip_x86")]),
+    ],
+    "linux": [
+        ("ARM64", "linux-arm64", [(".AppImage", "appimage_arm64"), (".deb", "deb_arm64"),
+                                  (".rpm", "rpm_arm64"), (".tar.gz", "tar_arm64")]),
+    ],
+}
+
+
+def processor_out(file_key: str) -> bool:
+    """Whether the latest published release has the file FILES[file_key] links to."""
+    return published(FILES[file_key].rsplit(f"MisterDownloadManager-{VERSION}-", 1)[1])
+
+
+def processor_rows(system: str) -> str:
+    """The download page's rows for `system`'s other processors (<!--@processors windows-->):
+    each one's files where the latest release has them; those still to come in one row with the
+    "Coming with version" tag (none once that version is out without them)."""
+    rows, coming = [], []
+    for name, anchor, files in PROCESSORS[system]:
+        if processor_out(files[0][1]):
+            links = "&nbsp;· ".join(f'<a class="file" href="{FILES[key]}">{text}</a>' for text, key in files)
+            rows.append(f'<div id="{anchor}"><dt>{name}</dt><dd>{links}</dd></div>')
+        else:
+            coming.append(name)
+    tag = coming_banner("tag")
+    if coming and tag:
+        rows.append(f'<div><dt>{" · ".join(coming)}</dt><dd>{tag}</dd></div>')
+    return "\n              ".join(rows)
+
+
+def processor_names(system: str) -> str:
+    """The processors `system`'s published downloads are for, as the cards and "What you need"
+    say it: today's words ("64-bit", "x86-64") until the latest release has another's files."""
+    if system == "windows":
+        names = ["x64"] + [n for n, key in (("ARM64", "setup_arm64"), ("32-bit", "setup_x86"))
+                           if processor_out(key)]
+        if len(names) == 1:
+            return "64-bit"
+    else:
+        names = ["x86-64"] + (["ARM64"] if processor_out("appimage_arm64") else [])
+    return names[0] if len(names) == 1 else ", ".join(names[:-1]) + " and " + names[-1]
+
+
 def fill(text: str) -> str:
     for k, v in FILES.items():
         text = text.replace("{{FILE_" + k.upper() + "}}", v)
+    for system in PROCESSORS:
+        text = text.replace(f"<!--@processors {system}-->", processor_rows(system))
+        text = text.replace("{{" + system.upper() + "_CPUS}}", processor_names(system))
     if "{{BENCH_REPORT}}" in text:
         text = text.replace("{{BENCH_REPORT}}", bench_report())
     for k in ("stars", "forks", "issues", "watchers"):
@@ -1271,10 +1531,10 @@ def fill(text: str) -> str:
     if "<!--@features-->" in text:
         text = text.replace("<!--@features-->", manifest(feature_list()))
     text = coming_marks(text.replace("<!--@coming-->", coming_banner()))
-    text = text.replace("<!--@crew-->", crew_pile())
+    text = text.replace("<!--@crew-->", crew_pile()).replace("<!--@signed-->", signed_sheet())
     text = text.replace("<!--@fields-->", waybill_fields()).replace("<!--@barcode-->", barcode.svg(f"MDM {VERSION}"))
     return (text.replace("{{VERSION}}", VERSION).replace("{{REPO}}", REPO).replace("{{SITE}}", SITE)
-            .replace("{{SPONSORS}}", SPONSORS).replace("{{SOFTWARE_LD}}", json.dumps(SOFTWARE_LD, ensure_ascii=False, separators=(",", ":"))))
+            .replace("{{SPONSORS}}", SPONSORS).replace("{{RELEASE_KEY}}", RELEASE_KEY).replace("{{SOURCEFORGE}}", SOURCEFORGE).replace("{{SOFTWARE_LD}}", json.dumps(SOFTWARE_LD, ensure_ascii=False, separators=(",", ":"))))
 
 
 def build_templated(name: str, path: str, section: str, priority: str) -> None:
@@ -1565,7 +1825,7 @@ def build_themes() -> None:
             <li><code>inherits</code> is the theme yours starts from: <code>classic</code> (the default), {builtin}, or another theme file in the same folder.</li>
             <li><code>[seeds]</code> are a handful of colours (<code>background</code>, <code>surface</code>, <code>header</code>, <code>text</code>, <code>accent</code>, <code>selection</code>, <code>error</code>, <code>warning</code>, <code>success</code>) that MDM spreads over every control. <code>[seeds.light]</code> and <code>[seeds.dark]</code> give each side its own.</li>
             <li><code>[colors]</code> sets single colour roles on both sides, <code>[light]</code> and <code>[dark]</code> on one side only: <code>#rrggbb</code>, or <code>#rrggbbaa</code> with transparency.</li>
-            <li><code>[sizes]</code> are corner radii, border widths, font sizes and row heights, in pixels. <code>[controls]</code> chooses the shape of text boxes, check boxes, buttons, progress bars, scroll bars, the focus mark and the title bar.</li>
+            <li><code>[sizes]</code> are corner radii, border widths, font sizes and row heights, in pixels. <code>[controls]</code> chooses the shape of text boxes, check boxes, buttons, progress bars, scroll bars, column headers, the focus mark and the title bar, and the menus' font.</li>
             <li><code>icons</code> is <code>color</code>, <code>mono</code> or <code>accent</code>. A theme in a folder of its own (<code>my-theme/theme.toml</code>) can bring its icons in <code>icons/16</code> and <code>icons/24</code>, each named for what it shows (<code>tb-add-url.svg</code>, <code>cat-music.png</code>); <code>-symbolic</code> ones take the theme's text colour.</li>
             <li><code>contrast = "high"</code> strengthens every edge and text colour on top.</li>
           </ul>
@@ -1661,7 +1921,10 @@ def copy_static() -> None:
     for item in WEB.iterdir():
         if item.name in ("content",) or item.suffix == ".html":
             continue
-        if item.is_dir():
+        if item.name == "vitrine":
+            # Vitrine's scripts and stylesheets; its lock file stays home.
+            shutil.copytree(item, OUT / item.name, ignore=shutil.ignore_patterns("*.json"))
+        elif item.is_dir():
             shutil.copytree(item, OUT / item.name)
         else:
             shutil.copy2(item, OUT / item.name)
@@ -1681,11 +1944,11 @@ def copy_static() -> None:
 
 
 def bust_caches() -> None:
-    """Every page asks for /styles.css, /main.js and /bench.js by their content hash, so a
-    browser never pairs a new page with an old cached stylesheet."""
+    """Every page asks for /styles.css, /main.js, /bench.js and Vitrine's files by their content
+    hash, so a browser never pairs a new page with an old cached stylesheet."""
     import hashlib
     tags = {}
-    for name in ("styles.css", "main.js", "bench.js"):
+    for name in ("styles.css", "main.js", "bench.js") + tuple(f"vitrine/{n}" for n in vitrine.FILES):
         tags[name] = hashlib.sha256((OUT / name).read_bytes()).hexdigest()[:10]
     for page in OUT.rglob("*.html"):
         text = page.read_text("utf-8")
@@ -1704,6 +1967,12 @@ def finish(available: dict[str, list[str]]) -> None:
 
 
 def main() -> None:
+    # The lightbox and dialogs are Vitrine (anefzaoui/vitrine, anefzaoui/vitrine-modal), vendored in
+    # website/vitrine/ at the commits vitrine.lock.json pins: an edited copy is refused here.
+    bad = vitrine.problems()
+    if bad:
+        sys.exit("website/vitrine/ doesn't match vitrine.lock.json (change Vitrine upstream, then "
+                 "`python tools/website/vitrine.py fetch`):\n  " + "\n  ".join(bad))
     STATS.update(repo_stats())
     load_crew()
     copy_static()
@@ -1718,6 +1987,7 @@ def main() -> None:
     build_languages()
     build_repo_pages()
     build_contributors()
+    build_press()
     build_content_pages()
     build_features()
     build_themes()

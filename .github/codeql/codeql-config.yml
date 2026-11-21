@@ -1,0 +1,19 @@
+# CodeQL's configuration (codeql.yml reads it for every language).
+#
+# Left out: code that is not MDM's, and code that never ships and only exists to test what does.
+# Everything else is analysed, with every query: the app, the engine and the other crates, the
+# browser extension, the website's own scripts and the workflows. The crates' unit and
+# integration tests stay in too; their alerts are dismissed one by one.
+#
+# Rust is analysed without a build (build-mode: none), so these paths apply to it as well.
+paths-ignore:
+  # Third-party code kept as it came: the website's chart library, the agent skills' scripts.
+  - website/vendor
+  - .claude
+  # mdm-labserver, the local test server the tests and the lab run against; not in any download.
+  - crates/labserver
+  # The extension's test tooling (unit tests against fake browser APIs, the end-to-end run in
+  # real headless browsers, the package check); the extension itself is extension/.
+  - tools/extension/*.mjs
+  # Lab scripts driving test machines and browsers by hand.
+  - tools/lab

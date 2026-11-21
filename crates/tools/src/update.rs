@@ -108,30 +108,97 @@ impl Install {
         Install::Source,
     ];
 
-    /// The release files of `version` that replace this kind of copy (the names
-    /// tools/installer/*.sh and build.ps1 give them), the one to take first first. The Linux files
-    /// are named without "-experimental" from the release after 0.2.4 (build-linux.sh), and the
-    /// macOS ones may lose it too: the plain name is looked for first, then the `…-experimental`
-    /// one of the releases before. None for a build from source.
+    /// The release files of `version` that replace this kind of copy on this build's processor
+    /// ([`Arch::THIS`]), the one to take first first: see [`Install::assets_on`].
     pub fn assets(self, version: &str) -> Vec<String> {
-        let (tail, ext) = match self {
-            Install::Installer => ("setup", ".exe"),
-            Install::PortableZip => ("portable", ".zip"),
-            Install::PlainZip => ("x64", ".zip"),
+        self.assets_on(Arch::THIS, version)
+    }
+
+    /// The release files of `version` that replace this kind of copy built for `arch` (the names
+    /// tools/installer/build.ps1, build-linux.sh and build-macos.sh give them), the one to take
+    /// first first. The x64 Windows files keep the names they had before there were others
+    /// (`setup.exe`, `portable.zip`, `x64.zip`), so every copy installed before finds its update;
+    /// the others name their processor (`setup-arm64.exe`, `portable-x86.zip`, `arm64.zip`). The
+    /// Linux files are named without "-experimental" from the release after 0.2.4
+    /// (build-linux.sh), and the macOS ones may lose it too: the plain name is looked for first,
+    /// then the `…-experimental` one of the releases before. None for a build from source, or for
+    /// a processor MDM publishes nothing for (32-bit Linux or Mac; `None`, see [`Arch::THIS`]).
+    pub fn assets_on(self, arch: Option<Arch>, version: &str) -> Vec<String> {
+        let Some(arch) = arch else {
+            return Vec::new();
+        };
+        let windows = |kind: &str| match arch {
+            Arch::X64 => kind.to_owned(),
+            other => format!("{kind}-{}", other.name()),
+        };
+        let linux = matches!(
+            self,
+            Install::AppImage | Install::Deb | Install::Rpm | Install::TarGz
+        );
+        let (tail, ext) = match (self, arch) {
+            (Install::System | Install::Source, _) => return Vec::new(),
+            (Install::Installer, _) => (windows("setup"), ".exe"),
+            (Install::PortableZip, _) => (windows("portable"), ".zip"),
+            (Install::PlainZip, _) => (arch.name().to_owned(), ".zip"),
             // One app per processor (tools/installer/build-macos.sh, #25). 0.2.4 and older look
             // for the universal one, find it missing and offer the release's page instead.
-            Install::Dmg if cfg!(target_arch = "aarch64") => ("macos-arm64", ".dmg"),
-            Install::Dmg => ("macos-x86_64", ".dmg"),
-            Install::AppImage => ("linux-x86_64", ".AppImage"),
-            Install::Deb => ("linux-x86_64", ".deb"),
-            Install::Rpm => ("linux-x86_64", ".rpm"),
-            Install::TarGz => ("linux-x86_64", ".tar.gz"),
-            Install::System | Install::Source => return Vec::new(),
+            (Install::Dmg, Arch::Arm64) => ("macos-arm64".to_owned(), ".dmg"),
+            (Install::Dmg, Arch::X64) => ("macos-x86_64".to_owned(), ".dmg"),
+            (_, Arch::X64) if linux => ("linux-x86_64".to_owned(), self.linux_ext()),
+            (_, Arch::Arm64) if linux => ("linux-arm64".to_owned(), self.linux_ext()),
+            _ => return Vec::new(),
         };
         let name = |tail: &str| format!("MisterDownloadManager-{version}-{tail}{ext}");
+        match (self, arch) {
+            (Install::Installer | Install::PortableZip | Install::PlainZip, _) => vec![name(&tail)],
+            // Linux on ARM came after "-experimental" went: it has no older name.
+            (_, Arch::Arm64) if linux => vec![name(&tail)],
+            _ => vec![name(&tail), name(&format!("{tail}-experimental"))],
+        }
+    }
+
+    /// A Linux file's extension.
+    fn linux_ext(self) -> &'static str {
         match self {
-            Install::Installer | Install::PortableZip | Install::PlainZip => vec![name(tail)],
-            _ => vec![name(tail), name(&format!("{tail}-experimental"))],
+            Install::AppImage => ".AppImage",
+            Install::Deb => ".deb",
+            Install::Rpm => ".rpm",
+            _ => ".tar.gz",
+        }
+    }
+}
+
+/// The processor a release file is built for, as the Windows files' names say it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Arch {
+    /// 64-bit Intel and AMD (x86-64).
+    X64,
+    /// 64-bit ARM: Windows on ARM, Linux on ARM, Apple Silicon.
+    Arm64,
+    /// 32-bit Intel and AMD (Windows).
+    X86,
+}
+
+impl Arch {
+    /// This build's processor. A copy built for x64 and run emulated on an ARM PC says x64: it
+    /// updates to the x64 files until the ARM build is installed. None for a processor MDM
+    /// publishes nothing for (a build from source on RISC-V, ...): it never updates itself.
+    pub const THIS: Option<Arch> = if cfg!(target_arch = "x86_64") {
+        Some(Arch::X64)
+    } else if cfg!(target_arch = "aarch64") {
+        Some(Arch::Arm64)
+    } else if cfg!(target_arch = "x86") {
+        Some(Arch::X86)
+    } else {
+        None
+    };
+
+    /// `x64`, `arm64`, `x86`.
+    pub fn name(self) -> &'static str {
+        match self {
+            Arch::X64 => "x64",
+            Arch::Arm64 => "arm64",
+            Arch::X86 => "x86",
         }
     }
 }
@@ -411,16 +478,17 @@ Connection: close
 
     #[test]
     fn every_kind_has_its_release_file() {
+        let x64 = Some(Arch::X64);
         assert_eq!(
-            Install::Installer.assets("0.2.2"),
+            Install::Installer.assets_on(x64, "0.2.2"),
             ["MisterDownloadManager-0.2.2-setup.exe"]
         );
         assert_eq!(
-            Install::PortableZip.assets("0.2.2"),
+            Install::PortableZip.assets_on(x64, "0.2.2"),
             ["MisterDownloadManager-0.2.2-portable.zip"]
         );
         assert_eq!(
-            Install::PlainZip.assets("0.2.2"),
+            Install::PlainZip.assets_on(x64, "0.2.2"),
             ["MisterDownloadManager-0.2.2-x64.zip"]
         );
         // Linux and macOS: the plain name first, then the one up to 0.2.x.
@@ -431,7 +499,7 @@ Connection: close
             (Install::Rpm, ".rpm"),
         ] {
             assert_eq!(
-                install.assets("1.0.0"),
+                install.assets_on(x64, "1.0.0"),
                 [
                     format!("MisterDownloadManager-1.0.0-linux-x86_64{ext}"),
                     format!("MisterDownloadManager-1.0.0-linux-x86_64-experimental{ext}"),
@@ -439,21 +507,117 @@ Connection: close
             );
         }
         // The .dmg for the Mac's own processor.
-        let arch = if cfg!(target_arch = "aarch64") {
-            "arm64"
-        } else {
-            "x86_64"
-        };
+        for (arch, name) in [(Arch::Arm64, "arm64"), (Arch::X64, "x86_64")] {
+            assert_eq!(
+                Install::Dmg.assets_on(Some(arch), "1.0.0"),
+                [
+                    format!("MisterDownloadManager-1.0.0-macos-{name}.dmg"),
+                    format!("MisterDownloadManager-1.0.0-macos-{name}-experimental.dmg"),
+                ]
+            );
+        }
+        assert!(Install::Source.assets_on(x64, "1.0.0").is_empty());
+        // This build asks for its own processor's.
         assert_eq!(
-            Install::Dmg.assets("1.0.0"),
-            [
-                format!("MisterDownloadManager-1.0.0-macos-{arch}.dmg"),
-                format!("MisterDownloadManager-1.0.0-macos-{arch}-experimental.dmg"),
-            ]
+            Install::Installer.assets("1.0.0"),
+            Install::Installer.assets_on(Arch::THIS, "1.0.0")
         );
-        assert!(Install::Source.assets("1.0.0").is_empty());
         let labels: std::collections::HashSet<_> = Install::ALL.iter().map(|i| i.label()).collect();
         assert_eq!(labels.len(), Install::ALL.len());
+    }
+
+    /// Windows on ARM and 32-bit Windows (and Linux on ARM) update to their own processor's
+    /// files, never to x64's; what isn't published (32-bit Linux or Mac) is none.
+    #[test]
+    fn each_processor_updates_to_its_own_files() {
+        let (arm, x86) = (Some(Arch::Arm64), Some(Arch::X86));
+        assert_eq!(
+            Install::Installer.assets_on(arm, "1.0.0"),
+            ["MisterDownloadManager-1.0.0-setup-arm64.exe"]
+        );
+        assert_eq!(
+            Install::PortableZip.assets_on(arm, "1.0.0"),
+            ["MisterDownloadManager-1.0.0-portable-arm64.zip"]
+        );
+        assert_eq!(
+            Install::PlainZip.assets_on(arm, "1.0.0"),
+            ["MisterDownloadManager-1.0.0-arm64.zip"]
+        );
+        assert_eq!(
+            Install::Installer.assets_on(x86, "1.0.0"),
+            ["MisterDownloadManager-1.0.0-setup-x86.exe"]
+        );
+        assert_eq!(
+            Install::PortableZip.assets_on(x86, "1.0.0"),
+            ["MisterDownloadManager-1.0.0-portable-x86.zip"]
+        );
+        assert_eq!(
+            Install::PlainZip.assets_on(x86, "1.0.0"),
+            ["MisterDownloadManager-1.0.0-x86.zip"]
+        );
+        for (install, ext) in [
+            (Install::TarGz, ".tar.gz"),
+            (Install::AppImage, ".AppImage"),
+            (Install::Deb, ".deb"),
+            (Install::Rpm, ".rpm"),
+        ] {
+            // Linux on ARM came after "-experimental" went.
+            assert_eq!(
+                install.assets_on(arm, "1.0.0"),
+                [format!("MisterDownloadManager-1.0.0-linux-arm64{ext}")]
+            );
+            assert!(install.assets_on(x86, "1.0.0").is_empty());
+        }
+        assert!(Install::Dmg.assets_on(x86, "1.0.0").is_empty());
+        // A processor MDM publishes nothing for never updates itself.
+        for install in Install::ALL {
+            assert!(install.assets_on(None, "1.0.0").is_empty());
+        }
+        // Each kind and processor has a name of its own: no copy takes another's file.
+        let mut seen = std::collections::HashMap::new();
+        for arch in [Arch::X64, Arch::Arm64, Arch::X86] {
+            for install in Install::ALL {
+                for name in install.assets_on(Some(arch), "1.0.0") {
+                    if let Some(other) = seen.insert(name.clone(), (install, arch)) {
+                        panic!("{name}: {other:?} and {:?}", (install, arch));
+                    }
+                }
+            }
+        }
+    }
+
+    /// The Windows names are build.ps1's and mdm.iss's: x64's as before, the others with their
+    /// processor.
+    #[test]
+    fn the_windows_names_are_build_ps1_s() {
+        let script = include_str!("../../../tools/installer/build.ps1").replace("\r\n", "\n");
+        assert!(script.contains(
+            "\nNew-Zip \"MisterDownloadManager-$version-portable$suffix\" $true\nNew-Zip \"MisterDownloadManager-$version-$Arch\" $false\n"
+        ));
+        assert!(script.contains("$suffix = if ($Arch -eq \"x64\") { \"\" } else { \"-$Arch\" }"));
+        assert!(script.contains("[ValidateSet(\"x64\", \"arm64\", \"x86\")]"));
+        let iss = include_str!("../../../tools/installer/mdm.iss").replace("\r\n", "\n");
+        assert!(iss.contains(
+            "#if Arch == \"x64\"\nOutputBaseFilename=MisterDownloadManager-{#AppVersion}-setup\n#else\nOutputBaseFilename=MisterDownloadManager-{#AppVersion}-setup-{#Arch}\n#endif"
+        ));
+        for arch in [Arch::X64, Arch::Arm64, Arch::X86] {
+            let (a, suffix) = match arch {
+                Arch::X64 => ("x64", String::new()),
+                other => (other.name(), format!("-{}", other.name())),
+            };
+            assert_eq!(
+                Install::Installer.assets_on(Some(arch), "1.0.0"),
+                [format!("MisterDownloadManager-1.0.0-setup{suffix}.exe")]
+            );
+            assert_eq!(
+                Install::PortableZip.assets_on(Some(arch), "1.0.0"),
+                [format!("MisterDownloadManager-1.0.0-portable{suffix}.zip")]
+            );
+            assert_eq!(
+                Install::PlainZip.assets_on(Some(arch), "1.0.0"),
+                [format!("MisterDownloadManager-1.0.0-{a}.zip")]
+            );
+        }
     }
 
     /// The Linux names looked for first are the ones tools/installer/build-linux.sh gives its
@@ -462,9 +626,16 @@ Connection: close
     fn the_linux_names_are_build_linux_sh_s() {
         let script = include_str!("../../../tools/installer/build-linux.sh").replace("\r\n", "\n");
         assert!(
-            script.contains("\nname=\"MisterDownloadManager-$version-linux-x86_64\"\n"),
+            script.contains("\nname=\"MisterDownloadManager-$version-linux-$arch\"\n"),
             "build-linux.sh names its files differently"
         );
+        // Its processors, as the names say them.
+        for (machine, arch) in [("x86_64", "x86_64"), ("aarch64", "arm64")] {
+            assert!(
+                script.contains(&format!("\n  {machine}) arch={arch} ")),
+                "build-linux.sh builds no {machine}"
+            );
+        }
         for (install, ext) in [
             (Install::TarGz, ".tar.gz"),
             (Install::AppImage, ".AppImage"),
@@ -476,8 +647,12 @@ Connection: close
                 "build-linux.sh makes no {ext}"
             );
             assert_eq!(
-                install.assets("1.0.0")[0],
+                install.assets_on(Some(Arch::X64), "1.0.0")[0],
                 format!("MisterDownloadManager-1.0.0-linux-x86_64{ext}")
+            );
+            assert_eq!(
+                install.assets_on(Some(Arch::Arm64), "1.0.0")[0],
+                format!("MisterDownloadManager-1.0.0-linux-arm64{ext}")
             );
         }
     }

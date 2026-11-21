@@ -12,7 +12,7 @@
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Mister Download Manager">
   <meta property="og:title" content="Download Mister Download Manager {{VERSION}}">
-  <meta property="og:description" content="Free for Windows, with macOS and Linux to try. Installer, portable zip and the browser extension.">
+  <meta property="og:description" content="Free for Windows and Linux, with macOS to try. Installer, portable zip and the browser extension.">
   <meta property="og:url" content="{{SITE}}/download.html">
   <meta property="og:image" content="{{SITE}}/assets/social.png">
   <meta name="twitter:card" content="summary_large_image">
@@ -20,8 +20,13 @@
   <link rel="icon" href="/assets/favicon-32.png" type="image/png" sizes="32x32">
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
   <link rel="manifest" href="/site.webmanifest">
+  <link rel="stylesheet" href="/vitrine/vitrine.css">
+  <link rel="stylesheet" href="/vitrine/vitrine-modal.css">
   <link rel="stylesheet" href="/styles.css">
   <!--@theme-->
+  <script src="/vitrine/vitrine-core.js" defer></script>
+  <script src="/vitrine/vitrine-modal.js" defer></script>
+  <script src="/vitrine/vitrine.js" defer></script>
   <script src="/main.js" defer></script>
   <script type="application/ld+json">{{SOFTWARE_LD}}</script>
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"{{SITE}}/"},{"@type":"ListItem","position":2,"name":"Download","item":"{{SITE}}/download.html"}]}</script>
@@ -33,7 +38,7 @@
       <div class="wrap">
         <ol class="crumbs" aria-label="Breadcrumb"><li><a href="/">Home</a></li><li aria-current="page">Download</li></ol>
         <h1>Download Mister Download Manager</h1>
-        <p class="lede small">Version {{VERSION}} · free and open source · no ads, no spyware, nothing bundled. <a href="/news.html">What's new</a></p>
+        <p class="lede small">Version {{VERSION}} · free and open source · no ads, no spyware, nothing bundled. <a href="/news.html">What's new</a> · <a href="#get-it-safely">Get it safely</a></p>
       </div>
     </section>
 
@@ -41,12 +46,13 @@
       <div class="wrap">
         <ul class="service-list os-cards" role="list">
           <li class="service os-card" id="windows" data-os="windows" data-href="{{FILE_SETUP}}" data-label="Download for Windows">
-            <h2 class="h3like"><svg class="os-ico" aria-hidden="true"><use href="#os-windows"/></svg> Windows <small>10 and 11 · 64-bit</small></h2>
+            <h2 class="h3like"><svg class="os-ico" aria-hidden="true"><use href="#os-windows"/></svg> Windows <small>10 and 11 · {{WINDOWS_CPUS}}</small></h2>
             <p class="service-tags"><span class="tag stable">Stable</span><span class="tag">Recommended</span></p>
             <dl class="fields">
               <div><dt><a href="{{FILE_SETUP}}">setup.exe</a></dt><dd>Installs MDM, connects your browsers, asks your language</dd></div>
               <div><dt><a href="{{FILE_PORTABLE}}">portable.zip</a></dt><dd>Unzip anywhere, a USB stick too; everything stays in its folder</dd></div>
               <div><dt><a href="{{FILE_ZIP}}">x64.zip</a></dt><dd>The programs without an installer</dd></div>
+              <!--@processors windows-->
             </dl>
             <a class="btn btn-go" href="{{FILE_SETUP}}"><svg class="os-ico" aria-hidden="true"><use href="#os-windows"/></svg> Download the installer</a>
           </li>
@@ -61,12 +67,13 @@
             <a class="btn btn-line" href="{{FILE_DMG_ARM64}}"><svg class="os-ico" aria-hidden="true"><use href="#os-macos"/></svg> Download for Apple Silicon</a>
           </li>
           <li class="service os-card" id="linux" data-os="linux" data-href="{{FILE_APPIMAGE}}" data-label="Download for Linux">
-            <h2 class="h3like"><svg class="os-ico" aria-hidden="true"><use href="#os-linux"/></svg> Linux <small>x86-64</small></h2>
-            <p class="service-tags"><span class="tag try">Experimental</span></p>
+            <h2 class="h3like"><svg class="os-ico" aria-hidden="true"><use href="#os-linux"/></svg> Linux <small>{{LINUX_CPUS}}</small></h2>
+            <p class="service-tags"><span class="tag stable">Stable</span></p>
             <dl class="fields">
               <div><dt><a href="{{FILE_APPIMAGE}}">.AppImage</a></dt><dd>Any distribution: make it executable and run it</dd></div>
               <div><dt><a href="{{FILE_DEB}}">.deb</a> · <a href="{{FILE_RPM}}">.rpm</a></dt><dd>Debian, Ubuntu, Mint · Fedora, openSUSE, RHEL</dd></div>
               <div><dt><a href="{{FILE_TAR}}">.tar.gz</a></dt><dd>The programs, to unpack anywhere</dd></div>
+              <!--@processors linux-->
             </dl>
             <a class="btn btn-line" href="{{FILE_APPIMAGE}}"><svg class="os-ico" aria-hidden="true"><use href="#os-linux"/></svg> Download the AppImage</a>
           </li>
@@ -76,6 +83,7 @@
           <li><a href="{{REPO}}/releases/tag/v{{VERSION}}"><svg aria-hidden="true"><use href="#i-tag"/></svg><span><b>All files and checksums</b><small>Version {{VERSION}} on GitHub Releases, with SHA256SUMS.txt</small></span></a></li>
           <li><a href="/contributing.html#getting-set-up"><svg aria-hidden="true"><use href="#i-code"/></svg><span><b>Build it from source</b><small>cargo build, on Windows, macOS or Linux</small></span></a></li>
           <li><a href="{{REPO}}"><svg aria-hidden="true"><use href="#i-github"/></svg><span><b>The project on GitHub</b><small>Code, issues and every release</small></span></a></li>
+          <li><a href="/code-signing-policy.html"><svg aria-hidden="true"><use href="#i-seal"/></svg><span><b>Code signing policy</b><small>What is signed, who approves it, and privacy</small></span></a></li>
         </ul>
       </div>
     </section>
@@ -103,19 +111,40 @@ winget upgrade AhmedNefzaoui.MisterDownloadManager</code></pre>
       <p><b>Linux</b>: install the <b>.deb</b> with <code>sudo apt install ./&lt;file&gt;.deb</code> (Debian, Ubuntu, Mint) or the <b>.rpm</b> with <code>sudo dnf install ./&lt;file&gt;.rpm</code> (Fedora), and the packages bring what MDM needs. Or make the <b>AppImage</b> executable (<code>chmod +x</code>) and run it. MDM connects itself to your browsers at each start; then add the extension from your browser's store, above. <a href="/help/getting-started.html#on-linux">More in the help</a>.</p>
       <figure class="shot"><img class="for-light" src="/assets/screens/main-linux-light.webp" width="930" height="507" alt="Mister Download Manager's main window on Ubuntu's GNOME desktop: the categories and a list of downloads." loading="lazy" decoding="async"><img class="for-dark" src="/assets/screens/main-linux-dark.webp" width="930" height="507" alt="Mister Download Manager's main window on Ubuntu's GNOME desktop, in night mode." loading="lazy" decoding="async"><figcaption>MDM on Ubuntu's GNOME desktop.</figcaption></figure>
       <p><b>macOS</b>: open the <b>.dmg</b> and drag Mister Download Manager to Applications, then right-click it and choose <b>Open</b> the first time.</p>
-      <!--@coming 0.5-->
-      <p>Linux won't be experimental any more. GNOME, KDE Plasma, Xfce and Cinnamon were checked window by window, with the tray and Dark Mode support, in Wayland sessions too, and the <b>.deb</b> and <b>.rpm</b> in clean Ubuntu 24.04, Debian 12 and Fedora 45 systems. What's left: the Flatpak Firefox isn't checked yet, and screen readers (Orca) don't read MDM's windows on Linux yet. macOS stays experimental. <a href="/features/systems.html">Windows, Mac and Linux</a></p>
+      <p>Linux isn't experimental any more, since version 0.5.0. GNOME, KDE Plasma, Xfce and Cinnamon are checked window by window, with the tray and Dark Mode support, in Wayland sessions too, and the <b>.deb</b> and <b>.rpm</b> in clean Ubuntu 24.04, Debian 12 and Fedora 45 systems. What's left: the Flatpak Firefox isn't checked yet, and screen readers (Orca) don't read MDM's windows on Linux yet. macOS stays experimental. <a href="/features/systems.html">Windows, Mac and Linux</a></p>
 
       <h2>What you need</h2>
       <ul>
-        <li><b>Windows 10 or 11</b>, 64-bit; about 100 MB of disk space.</li>
+        <li><b>Windows 10 or 11</b>, {{WINDOWS_CPUS}}; about 100 MB of disk space.</li>
         <li><b>macOS 11</b> or later on Apple Silicon or Intel (experimental).</li>
-        <li><b>Linux</b> on x86-64 with a desktop session, X11 or Wayland (today's files experimental).</li>
+        <li><b>Linux</b> on {{LINUX_CPUS}} with a desktop session, X11 or Wayland.</li>
         <li>For video pages, MDM downloads yt-dlp (and ffmpeg if you want merged qualities) on first use.</li>
       </ul>
 
-      <h2 id="check-your-download">Check your download</h2>
-      <p>Every release lists the SHA-256 checksum of each file in <a href="{{FILE_SUMS}}">SHA256SUMS.txt</a>. On Windows, compare it with <code>certutil -hashfile file SHA256</code>; on macOS and Linux with <code>shasum -a 256 file</code>. All files are built from the public source by GitHub Actions; the build logs are on <a href="{{REPO}}/actions">GitHub</a>.</p>
+      <h2 id="get-it-safely">Get it safely</h2>
+      <p>MDM is free and open source, for everyone. There is no premium, pro, "MOD", paid or cracked version of it: nothing to buy and nothing to unlock. A copy sold or "unlocked" under its name isn't ours.</p>
+      <p>The official places to get it:</p>
+      <dl class="fields safe-sources">
+        <div><dt><a href="{{REPO}}/releases">GitHub Releases</a></dt><dd>Every file of every version, with its checksums</dd></div>
+        <div><dt><a href="/download.html">This website</a></dt><dd>Its download links lead to GitHub Releases</dd></div>
+        <div><dt><a href="{{CWS}}">Chrome Web Store</a></dt><dd>The browser extension, for Chrome, Edge, Brave, Opera and Vivaldi</dd></div>
+        <div><dt><a href="{{AMO}}">Firefox Add-ons</a></dt><dd>The browser extension for Firefox</dd></div>
+        <div><dt><a href="#winget">WinGet</a></dt><dd>Installs the setup from GitHub Releases</dd></div>
+        <div><dt><a href="{{SOURCEFORGE}}">SourceForge mirror</a></dt><dd>An automatic, exact copy of the GitHub releases (with SourceForge's ads around it)</dd></div>
+      </dl>
+      <p>Community packages, such as the AUR and Nix ones, are made by volunteers, not by us: <a href="/press.html#available-on">see which ones</a>. Copies on other download sites, cloud drives or in chat groups aren't ours either. Wherever a copy comes from, you can check it.</p>
+
+      <h3 id="check-your-download">Check your download</h3>
+      <ol>
+        <li>From the release, download <a href="{{FILE_SUMS}}">SHA256SUMS.txt</a>, the SHA-256 checksum of every file, and its signature, <a href="{{FILE_SUMS_SIG}}">SHA256SUMS.txt.sig</a>.</li>
+        <li>Get your file's checksum: on Windows with <code>certutil -hashfile file SHA256</code>, on macOS and Linux with <code>shasum -a 256 file</code>. It must match the file's line in SHA256SUMS.txt.</li>
+        <li>To be sure the list itself is ours, check its signature with GnuPG: import <a href="{{RELEASE_KEY}}">MDM's release key</a>, then run <code>gpg --verify SHA256SUMS.txt.sig SHA256SUMS.txt</code>. It should report a <b translate="no">Good signature</b> from the key <code>5826 D399 249D E856 EA08 7D80 2E29 3C28 E8A6 9D74</code>.</li>
+      </ol>
+      <p>Every file is built from the public source by GitHub Actions; the build logs are on <a href="{{REPO}}/actions">GitHub</a>.</p>
+
+      <h3 id="if-windows-warns">If Windows or an antivirus warns</h3>
+      <p>The installer isn't code-signed, and each new version is new to Windows, so SmartScreen may show <b>Windows protected your PC</b> until enough people have run it. Choose <b>More info</b>, check that the file is <code>MisterDownloadManager-{{VERSION}}-setup.exe</code>, then <b>Run anyway</b>.</p>
+      <p>A few antivirus programs, mostly machine-learning engines, flag new installers they have rarely seen. On VirusTotal, a handful of small engines flagging the setup while the big ones stay clean is usually a false positive. If the checksum matches, it is the file we published; if something still looks wrong, <a href="{{REPO}}/issues">tell us on GitHub</a>. More in <a href="/help/troubleshooting.html#antivirus">Troubleshooting</a>.</p>
 
       <h2>Older versions and source code</h2>
       <p>Every release, with its notes and files, is on <a href="{{REPO}}/releases">GitHub Releases</a>. The source code is at <a href="{{REPO}}">github.com/anefzaoui/misterdownloadmanager</a> under the GNU GPL, version 3.</p>

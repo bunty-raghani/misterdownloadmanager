@@ -72,7 +72,7 @@ async fn a_bot_check_is_passed_the_way_a_browser_connects() {
         .expect("the browser-like connection gets through");
     same_content(&out.path, 668, 3 << 20);
     let log = settled_log(&s).await;
-    // MDM's own request first, refused; then the browser-like connection's, one at a time.
+    // MDM's own request first, refused; then the browser-like connection's.
     assert_eq!(log[0].outcome, "fault:browser_only", "{log:?}");
     assert!(log[0].sec_fetch_mode.is_none());
     let through: Vec<_> = log[1..].iter().collect();
@@ -405,10 +405,23 @@ async fn a_look_and_its_download_ask_once_more_in_all() {
     .unwrap();
     same_content(&out.path, 5, 1 << 20);
     let log = settled_log(&s).await;
-    assert_eq!(log.len(), 2, "{log:?}");
     assert_eq!(log[0].outcome, "fault:browser_only");
+    assert_eq!(
+        log.iter()
+            .filter(|e| e.outcome == "fault:browser_only")
+            .count(),
+        1,
+        "{log:?}"
+    );
+    // The look's answer is the download's first: no other whole request, only parts after it.
     assert!(
         log[1].sec_fetch_mode.is_some() && log[1].status == 200,
+        "{log:?}"
+    );
+    assert!(
+        log[2..]
+            .iter()
+            .all(|e| e.sec_fetch_mode.is_some() && e.status == 206),
         "{log:?}"
     );
 }
@@ -471,6 +484,48 @@ async fn a_second_refusal_stays_the_bot_check() {
     assert_eq!(log.len(), 2, "{log:?}");
 }
 
+/// #1494: a challenge that wants its script run (Cloudflare's "Just a moment..."; the lab's
+/// `js_challenge`) refuses every connection MDM makes, since MDM runs no script: the download
+/// fails with the bot check's refusal (Alt+click leaves it to the browser, which runs it). With
+/// the cookie the browser got for passing it, the same address gives the file.
+#[tokio::test]
+async fn a_challenge_to_run_in_a_browser_stays_the_bot_check() {
+    let s = server("js_challenge=0").await;
+    let dir = tempfile::tempdir().unwrap();
+    let err = Download::start(
+        Request {
+            url: s.url("/gen/64K/js.bin?seed=1494").parse().unwrap(),
+            headers: Default::default(),
+            dest: Destination::Dir(dir.path().to_owned()),
+        },
+        opts(),
+    )
+    .wait()
+    .await
+    .unwrap_err();
+    assert!(matches!(err, mdm_engine::Error::BotCheck), "{err:?}");
+    let log = settled_log(&s).await;
+    assert!(log.len() >= 2, "asked once more at least: {log:?}");
+    assert!(
+        log.iter().all(|e| e.outcome == "fault:js_challenge"),
+        "{log:?}"
+    );
+    let mut passed = HeaderMap::new();
+    passed.insert(COOKIE, "mdm_lab_clearance=1".parse().unwrap());
+    let out = Download::start(
+        Request {
+            url: s.url("/gen/64K/js.bin?seed=1494").parse().unwrap(),
+            headers: passed,
+            dest: Destination::Dir(dir.path().to_owned()),
+        },
+        opts(),
+    )
+    .wait()
+    .await
+    .expect("the check's cookie lets it through");
+    same_content(&out.path, 1494, 64 << 10);
+}
+
 /// FileHippo's way (#630): 412 Precondition Failed, empty, to whatever isn't a browser. MDM's
 /// first request carries no precondition, so that 412 can only refuse the program: it is asked
 /// once more the way a browser connects too, and the file comes.
@@ -497,4 +552,256 @@ async fn a_412_to_a_request_without_preconditions_is_asked_once_more_too() {
         log[1..].iter().all(|e| e.sec_fetch_mode.is_some()),
         "{log:?}"
     );
+}
+
+/// A download to its end, with its event log's lines.
+async fn to_the_end(dl: Download) -> (Result<mdm_engine::Outcome, mdm_engine::Error>, Vec<String>) {
+    let deadline = Instant::now() + Duration::from_secs(60);
+    let events = loop {
+        let snap = dl.snapshot();
+        if matches!(snap.state, State::Done | State::Failed | State::Cancelled) {
+            break snap.events.iter().map(|e| e.text.clone()).collect();
+        }
+        assert!(Instant::now() < deadline, "never ended");
+        tokio::time::sleep(Duration::from_millis(20)).await;
+    };
+    (dl.wait().await, events)
+}
+
+/// The browser-like connection's answers to ranged requests (206), and the most of them that
+/// were coming in at the same time.
+fn parts_at_once(log: &[LogEntry]) -> (Vec<&LogEntry>, usize) {
+    let parts: Vec<&LogEntry> = log
+        .iter()
+        .filter(|e| e.status == 206 && e.range.is_some() && e.sec_fetch_mode.is_some())
+        .collect();
+    let most = parts
+        .iter()
+        .map(|a| {
+            parts
+                .iter()
+                .filter(|b| b.t_start_ms <= a.t_start_ms && a.t_start_ms < b.t_end_ms)
+                .count()
+        })
+        .max()
+        .unwrap_or(0);
+    (parts, most)
+}
+
+/// #668 (SwiftyPop's report): a download that got past the bot check only the way a browser
+/// connects goes on with as many connections as any other, each asking for its part on a
+/// browser-like connection of its own, not on one connection as a browser's own download does.
+#[tokio::test]
+async fn the_browser_like_connection_downloads_on_several_connections() {
+    let s = server("browser_only=1&require_cookie=sid=1&rate=1M").await;
+    let dir = tempfile::tempdir().unwrap();
+    let (out, events) = to_the_end(Download::start(
+        Request {
+            url: s.url("/gen/6M/game.zip?seed=1668").parse().unwrap(),
+            headers: handed_over(),
+            dest: Destination::Dir(dir.path().to_owned()),
+        },
+        Options {
+            max_connections: 6,
+            ..opts()
+        },
+    ))
+    .await;
+    same_content(&out.expect("downloaded").path, 1668, 6 << 20);
+    let log = settled_log(&s).await;
+    assert_eq!(log[0].outcome, "fault:browser_only", "{log:?}");
+    assert_eq!(
+        log.iter()
+            .filter(|e| e.outcome.starts_with("fault:"))
+            .count(),
+        1,
+        "only MDM's own first request was refused: {log:?}"
+    );
+    for e in &log[1..] {
+        assert!(e.sec_fetch_mode.is_some(), "{e:?}");
+        assert_eq!(e.cookie.as_deref(), Some("sid=1"), "{e:?}");
+        assert_eq!(e.user_agent.as_deref(), Some(CHROME), "{e:?}");
+    }
+    let (parts, most) = parts_at_once(&log);
+    assert!(parts.len() >= 5, "{log:?}");
+    assert!(most >= 4, "parts at once: {most}; {log:?}");
+    let peers: std::collections::HashSet<_> = log[1..].iter().map(|e| e.peer).collect();
+    assert!(peers.len() >= 5, "connections: {}; {log:?}", peers.len());
+    assert!(
+        events
+            .iter()
+            .any(|e| e.contains("takes ranges on the browser-like connection")),
+        "{events:?}"
+    );
+}
+
+/// Over HTTP/2, which the browser profiles speak as browsers do, requests at the same time would
+/// share one connection: each part comes on a connection of its own, as over HTTP/1.1.
+#[tokio::test]
+async fn over_http2_each_part_has_a_connection_of_its_own() {
+    let s = LabServer::start(Config {
+        faults: Faults::parse("browser_only=1&rate=1M").unwrap(),
+        tls: true,
+        http2: true,
+        ..Config::default()
+    })
+    .await
+    .unwrap();
+    let dir = tempfile::tempdir().unwrap();
+    let (out, events) = to_the_end(Download::start(
+        Request {
+            url: s.url("/gen/4M/h2.bin?seed=22").parse().unwrap(),
+            headers: handed_over(),
+            dest: Destination::Dir(dir.path().to_owned()),
+        },
+        Options {
+            extra_roots: vec![s.ca_der().unwrap()],
+            max_connections: 4,
+            ..opts()
+        },
+    ))
+    .await;
+    let out = out.unwrap_or_else(|e| panic!("{e:?}: {events:?}"));
+    same_content(&out.path, 22, 4 << 20);
+    let log = settled_log(&s).await;
+    assert_eq!(log[0].browser_tls, Some(false), "{log:?}");
+    let (parts, most) = parts_at_once(&log);
+    assert!(parts.iter().all(|e| e.browser_tls == Some(true)), "{log:?}");
+    assert!(most >= 3, "parts at once: {most}; {log:?}");
+    // The parts at the same time came on as many connections.
+    let peers: std::collections::HashSet<_> = parts.iter().map(|e| e.peer).collect();
+    assert!(peers.len() >= 3, "connections: {}; {log:?}", peers.len());
+}
+
+/// A site that lets the browser-like connection download the file whole but refuses its parts
+/// (403, as its bot check refuses a program): the download goes on with that one connection, as
+/// before, after the one part asked; it says why.
+#[tokio::test]
+async fn parts_refused_leave_it_on_one_connection() {
+    let s = server("browser_only=1&refuse_ranges=403&rate=4M").await;
+    let dir = tempfile::tempdir().unwrap();
+    let (out, events) = to_the_end(Download::start(
+        Request {
+            url: s.url("/gen/3M/whole.bin?seed=403").parse().unwrap(),
+            headers: Default::default(),
+            dest: Destination::Dir(dir.path().to_owned()),
+        },
+        opts(),
+    ))
+    .await;
+    same_content(&out.expect("downloaded").path, 403, 3 << 20);
+    let log = settled_log(&s).await;
+    assert_eq!(log[0].outcome, "fault:browser_only", "{log:?}");
+    assert_eq!(
+        log.iter()
+            .filter(|e| e.outcome == "fault:refuse_ranges")
+            .count(),
+        1,
+        "one part asked, no more: {log:?}"
+    );
+    assert!(log.iter().all(|e| e.status != 206), "{log:?}");
+    assert!(
+        events
+            .iter()
+            .any(|e| e.contains("was refused (403 Forbidden); going on with one connection")),
+        "{events:?}"
+    );
+}
+
+/// The same with a site that ignores the parts asked on it (the whole file again).
+#[tokio::test]
+async fn parts_ignored_leave_it_on_one_connection() {
+    let s = server("browser_only=1&no_range=1&rate=4M&range_rate=256K").await;
+    let dir = tempfile::tempdir().unwrap();
+    let (out, events) = to_the_end(Download::start(
+        Request {
+            url: s.url("/gen/3M/whole.bin?seed=200").parse().unwrap(),
+            headers: Default::default(),
+            dest: Destination::Dir(dir.path().to_owned()),
+        },
+        opts(),
+    ))
+    .await;
+    same_content(&out.expect("downloaded").path, 200, 3 << 20);
+    let log = settled_log(&s).await;
+    assert_eq!(
+        log.iter().filter(|e| e.range.is_some()).count(),
+        1,
+        "one part asked, no more: {log:?}"
+    );
+    assert!(
+        events
+            .iter()
+            .any(|e| e.contains("was answered with the whole file; going on with one connection")),
+        "{events:?}"
+    );
+}
+
+/// #1494: the browser-like connection sends one User-Agent, the download's, even when the
+/// download's headers carry it (a site's own, a caller's): two would tell a program apart from
+/// a browser. A server that answers MDM's own request with Cloudflare's challenge and keeps the
+/// browser-like request's header lines as they came.
+#[tokio::test]
+async fn the_browser_like_connection_sends_one_user_agent() {
+    use tokio::io::{AsyncReadExt, AsyncWriteExt};
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let port = listener.local_addr().unwrap().port();
+    let (seen_tx, mut seen_rx) = tokio::sync::mpsc::unbounded_channel::<String>();
+    tokio::spawn(async move {
+        loop {
+            let Ok((mut sock, _)) = listener.accept().await else {
+                return;
+            };
+            let seen = seen_tx.clone();
+            tokio::spawn(async move {
+                loop {
+                    let mut head = Vec::new();
+                    let mut byte = [0u8; 1];
+                    while !head.ends_with(b"\r\n\r\n") {
+                        match sock.read(&mut byte).await {
+                            Ok(1) => head.push(byte[0]),
+                            _ => return,
+                        }
+                    }
+                    let head = String::from_utf8_lossy(&head).into_owned();
+                    let browser = head.to_ascii_lowercase().contains("\r\nsec-fetch-mode:");
+                    let answer = if browser {
+                        let _ = seen.send(head);
+                        "HTTP/1.1 200 OK\r\ncontent-type: application/octet-stream\r\ncontent-length: 5\r\n\r\nhello".to_owned()
+                    } else {
+                        let page = "<!DOCTYPE html><title>Just a moment...</title>";
+                        format!(
+                            "HTTP/1.1 403 Forbidden\r\ncf-mitigated: challenge\r\ncontent-type: text/html\r\ncontent-length: {}\r\n\r\n{page}",
+                            page.len()
+                        )
+                    };
+                    if sock.write_all(answer.as_bytes()).await.is_err() {
+                        return;
+                    }
+                }
+            });
+        }
+    });
+    let mut headers = HeaderMap::new();
+    headers.insert(USER_AGENT, CHROME.parse().unwrap());
+    let dir = tempfile::tempdir().unwrap();
+    let out = Download::start(
+        Request {
+            url: format!("http://127.0.0.1:{port}/f.bin").parse().unwrap(),
+            headers,
+            dest: Destination::Dir(dir.path().to_owned()),
+        },
+        opts(),
+    )
+    .wait()
+    .await
+    .expect("the browser-like connection gets it");
+    assert_eq!(std::fs::read(&out.path).unwrap(), b"hello");
+    let head = seen_rx.recv().await.expect("a browser-like request");
+    let agents: Vec<&str> = head
+        .split("\r\n")
+        .filter(|l| l.to_ascii_lowercase().starts_with("user-agent:"))
+        .collect();
+    assert_eq!(agents.len(), 1, "{head}");
+    assert!(agents[0].ends_with(CHROME), "{head}");
 }

@@ -33,10 +33,10 @@
     "message": "Mister Download Manager-এ পাঠানো হয়েছে"
   },
   "menu_selected": {
-    "message": "Mister Download Manager দিয়ে নির্বাচিত লিঙ্কগুলি ডাউনলোড করুন"
+    "message": "Mister Download Manager দিয়ে নির্বাচিত লিংকগুলো ডাউনলোড করুন"
   },
   "menu_all": {
-    "message": "Mister Download Manager দিয়ে সমস্ত লিঙ্ক ডাউনলোড করুন"
+    "message": "Mister Download Manager দিয়ে সব লিংক ডাউনলোড করুন"
   },
   "status_connected": {
     "message": "Mister Download Manager-এর সাথে সংযুক্ত"
@@ -51,7 +51,7 @@
     }
   },
   "status_paused": {
-    "message": "বিরত আছে: ডাউনলোডগুলি ব্রাউজারের সাথে থাকে"
+    "message": "বিরত আছে: ডাউনলোডগুলো ব্রাউজারের সাথে থাকে"
   },
   "status_not_installed": {
     "message": "Mister Download Manager ইনস্টল করা নেই, অথবা এর ব্রাউজার ইন্টিগ্রেশন সেট আপ করা নেই"
@@ -66,7 +66,7 @@
     "message": "Mister Download Manager-এর সঙ্গে সংযোগ ব্যর্থ হয়েছে"
   },
   "status_too_large": {
-    "message": "এই ডাউনলোডের বিবরণ হস্তান্তর করার জন্য খুব বড় ছিল"
+    "message": "এই ডাউনলোডের বিস্তারিত হস্তান্তর করার জন্য খুব বড় ছিল"
   },
   "status_update_app": {
     "message": "এই এক্সটেনশনের সব সুবিধা ব্যবহার করতে Mister Download Manager আপডেট করুন"
@@ -92,9 +92,6 @@
       }
     }
   },
-  "popup_undo": {
-    "message": "পূর্বাবস্থায় ফিরিয়ে আনুন"
-  },
   "popup_excluded": {
     "message": "$site$ থেকে ডাউনলোড ব্রাউজারেই হয়",
     "placeholders": {
@@ -108,7 +105,7 @@
     "message": "Mister Download Manager খুলুন"
   },
   "popup_options": {
-    "message": "বিকল্পসমূহ..."
+    "message": "বিকল্প..."
   },
   "popup_help": {
     "message": "সহায়তা"
@@ -132,16 +129,16 @@
     "message": "শেষ ডাউনলোডটি ব্রাউজারে ছেড়ে দেওয়া হয়েছিল।"
   },
   "declined_file_type": {
-    "message": "এর প্রকার বিকল্প → ফাইলের প্রকারগুলিতে নেই৷"
+    "message": "এর প্রকার বিকল্প → ফাইলের ধরনে নেই৷"
   },
   "declined_site": {
-    "message": "এর সাইট বিকল্প → ফাইলের প্রকারগুলিতে, ব্রাউজারে ছেড়ে দেওয়া সাইটগুলিতে রয়েছে৷"
+    "message": "এর সাইট বিকল্প → ফাইলের ধরনে, ব্রাউজারে ছেড়ে দেওয়া সাইটগুলোতে রয়েছে৷"
   },
   "declined_address": {
-    "message": "এর ঠিকানা বিকল্প → ফাইলের প্রকারগুলিতে, ব্রাউজারে ছেড়ে দেওয়া ঠিকানাগুলিতে রয়েছে৷"
+    "message": "এর ঠিকানা বিকল্প → ফাইলের ধরনে, ব্রাউজারে ছেড়ে দেওয়া ঠিকানাগুলোতে রয়েছে৷"
   },
   "declined_small": {
-    "message": "এটি বিকল্প → ফাইলের প্রকারগুলিতে ন্যূনতম আকারের চেয়ে ছোট৷"
+    "message": "এটি বিকল্প → ফাইলের ধরনে ন্যূনতম আকারের চেয়ে ছোট৷"
   },
   "declined_browser": {
     "message": "এই ব্রাউজারটি বিকল্প → সাধারণে টিক দেওয়া নেই।"
@@ -149,20 +146,23 @@
   "declined_integration_off": {
     "message": "বিকল্প → সাধারণে উন্নত ব্রাউজার ইন্টিগ্রেশন ব্যবহার করুন বন্ধ আছে।"
   },
+  "declined_torrents": {
+    "message": "এটি একটি টরেন্ট, এবং টরেন্ট সেটিংসে “Mister Download Manager দিয়ে ম্যাগনেট লিংক ও .torrent ফাইল খুলুন” বন্ধ আছে।"
+  },
   "declined_site_access": {
     "message": "এই সাইটটি পড়ার অনুমতি এক্সটেনশনের নেই (ব্রাউজারের সাইট অ্যাক্সেস)।"
   },
   "popup_alt": {
-    "message": "ব্রাউজারকে ডাউনলোড করতে দিতে একটি লিঙ্কে ক্লিক করার সময় Alt ধরে রাখুন।"
+    "message": "ব্রাউজারকে ডাউনলোড করতে দিতে একটি লিংকে ক্লিক করার সময় Alt ধরে রাখুন।"
   },
   "popup_media": {
-    "message": "এই পৃষ্ঠার মিডিয়া"
+    "message": "এই পেজের মিডিয়া"
   },
   "popup_media_none": {
-    "message": "এই পৃষ্ঠায় এখনো কোনো ভিডিও বা অডিও পাওয়া যায়নি। এটি চালান, তারপর এটি আবার খুলুন।"
+    "message": "এই পেজে এখনো কোনো ভিডিও বা অডিও পাওয়া যায়নি। এটি চালান, তারপর এটি আবার খুলুন।"
   },
   "popup_media_streamed": {
-    "message": "এই পৃষ্ঠার প্লেয়ার ভিডিওটি খণ্ড খণ্ড করে স্ট্রিম করে, তাই তালিকায় দেখানোর মতো কোনো ফাইল নেই। ভিডিওর উপর পয়েন্টার রেখে এর «ভিডিও ডাউনলোড করুন» বোতামটি ব্যবহার করুন।"
+    "message": "এই পেজের প্লেয়ার ভিডিওটি খণ্ড খণ্ড করে স্ট্রিম করে, তাই তালিকায় দেখানোর মতো কোনো ফাইল নেই। ভিডিওর উপর পয়েন্টার রেখে এর «ভিডিও ডাউনলোড করুন» বোতামটি ব্যবহার করুন।"
   },
   "popup_media_store": {
     "message": "Chrome Web Store-এর নিয়মের কারণে অ্যাড-অনের এই কপি এই সাইটের ভিডিও থেকে দূরে থাকে। কী করতে পারেন তা «সহায়তা»-য় বলা আছে।"
@@ -183,7 +183,7 @@
     "message": "সুরক্ষিত ভিডিও"
   },
   "video_unnamed": {
-    "message": "এটি কোন ভিডিও তা বোঝা যাচ্ছে না: ভিডিওটির নিজের পৃষ্ঠা খুলে সেখানে চেষ্টা করুন"
+    "message": "এটি কোন ভিডিও তা বোঝা যাচ্ছে না: ভিডিওটির নিজের পেজ খুলে সেখানে চেষ্টা করুন"
   },
   "video_looking": {
     "message": "কোয়ালিটি খোঁজা হচ্ছে…"
@@ -204,7 +204,7 @@
     "message": "Mister Download Manager অন্য ভিডিওর কাজে ব্যস্ত"
   },
   "video_queued": {
-    "message": "কিউতে যোগ করা হয়েছে"
+    "message": "সারিতে যোগ করা হয়েছে"
   },
   "video_failed_lookup": {
     "message": "খোঁজা যায়নি"
@@ -219,7 +219,7 @@
     "message": "ডাউনলোড করতে পোস্টটি খুলুন"
   },
   "popup_send_to": {
-    "message": "ডাউনলোডগুলি এখানে পাঠান"
+    "message": "ডাউনলোডগুলো এখানে পাঠান"
   },
   "popup_send_here": {
     "message": "এই কম্পিউটার"
@@ -237,10 +237,10 @@
     "message": "পেয়ার করুন"
   },
   "popup_remote_help": {
-    "message": "এর ঠিকানা একবার খুলুন এবং এর সার্টিফিকেট গ্রহণ করুন, তারপর এর অপশন, রিমোট, পেয়ার এ ডিভাইস (অথবা misterdownloadmanager-cli pair) থেকে একটি কোড লিখুন।"
+    "message": "এর ঠিকানা একবার খুলুন এবং এর সার্টিফিকেট গ্রহণ করুন, তারপর এর বিকল্প, রিমোট, পেয়ার এ ডিভাইস (অথবা misterdownloadmanager-cli pair) থেকে একটি কোড লিখুন।"
   },
   "status_remote": {
-    "message": "ডাউনলোডগুলি $address$-এ যায়",
+    "message": "ডাউনলোডগুলো $address$-এ যায়",
     "placeholders": {
       "address": {
         "content": "$1",
@@ -270,7 +270,7 @@
     "message": "ব্রাউজার এক্সটেনশন"
   },
   "popup_media_title_name": {
-    "message": "মিডিয়া ফাইলের নামের আগে পৃষ্ঠার শিরোনাম যোগ করুন"
+    "message": "মিডিয়া ফাইলের নামের আগে পেজের শিরোনাম যোগ করুন"
   },
   "video_cant_save": {
     "message": "সংরক্ষণ করা যাবে না"
@@ -328,5 +328,424 @@
   },
   "video_original": {
     "message": "আসল"
+  },
+  "video_compatible": {
+    "message": "সর্বাধিক সামঞ্জস্যপূর্ণ"
+  },
+  "popup_video_hide_fullscreen": {
+    "message": "পূর্ণ স্ক্রিনে ডাউনলোড বাটন লুকান"
+  },
+  "popup_video_hide_fullscreen_title": {
+    "message": "পেজ পূর্ণ স্ক্রিনে থাকা অবস্থায়, এর ভিডিওগুলোতে কোনো ডাউনলোড ভিডিও বাটন দেখাবে না"
+  },
+  "popup_remote_forget": {
+    "message": "ভুলে যান"
+  },
+  "popup_gear": {
+    "message": "Mister Download Manager-এর বিকল্প"
+  },
+  "popup_tabs": {
+    "message": "পপআপ বিভাগগুলো"
+  },
+  "popup_tab_downloads": {
+    "message": "ডাউনলোড"
+  },
+  "popup_tab_page": {
+    "message": "এই পেজ"
+  },
+  "popup_tab_settings": {
+    "message": "সেটিংস"
+  },
+  "popup_conn": {
+    "message": "সংযুক্ত · $version$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.5.2"
+      }
+    }
+  },
+  "popup_conn_plain": {
+    "message": "সংযুক্ত"
+  },
+  "popup_conn_off": {
+    "message": "সংযুক্ত নয়"
+  },
+  "popup_conn_paused": {
+    "message": "বিরতি দেওয়া হয়েছে"
+  },
+  "popup_conn_update": {
+    "message": "Mister Download Manager আপডেট করুন"
+  },
+  "popup_conn_remote": {
+    "message": "$server$-এ পাঠানো হচ্ছে",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_cancel": {
+    "message": "বাতিল করুন"
+  },
+  "popup_page_none": {
+    "message": "এটি কোনো ওয়েব পেজ নয়: এখানে কিছু করার নেই।"
+  },
+  "popup_exclude_by_rule": {
+    "message": "বিকল্পের একটি নিয়মে ব্রাউজারে ছেড়ে দেওয়া হয়েছে"
+  },
+  "popup_dl_search": {
+    "message": "ডাউনলোড খুঁজুন"
+  },
+  "popup_dl_filters": {
+    "message": "দেখান"
+  },
+  "popup_dl_all": {
+    "message": "সব"
+  },
+  "popup_dl_running": {
+    "message": "চলমান"
+  },
+  "popup_dl_done_filter": {
+    "message": "সম্পূর্ণ হয়েছে"
+  },
+  "popup_dl_failed_filter": {
+    "message": "ব্যর্থ হয়েছে"
+  },
+  "popup_dl_clear": {
+    "message": "সম্পূর্ণ হওয়াগুলো পরিষ্কার করুন"
+  },
+  "popup_dl_running_count": {
+    "message": "এখন $count$টি ডাউনলোড হচ্ছে",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_remote": {
+    "message": "এগুলো $server$-এর Mister Download Manager-এর ডাউনলোড। সেগুলোর ফাইল সেখানে খুলুন।",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_dl_more": {
+    "message": "$total$টির মধ্যে নতুন $shown$টি। Mister Download Manager সব তালিকাভুক্ত করে।",
+    "placeholders": {
+      "shown": {
+        "content": "$1",
+        "example": "60"
+      },
+      "total": {
+        "content": "$2",
+        "example": "245"
+      }
+    }
+  },
+  "popup_dl_of": {
+    "message": "$size$-এর মধ্যে $done$",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "12.3 MB"
+      },
+      "size": {
+        "content": "$2",
+        "example": "48.7 MB"
+      }
+    }
+  },
+  "popup_dl_left": {
+    "message": "$time$ বাকি",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "0:42"
+      }
+    }
+  },
+  "popup_dl_starting": {
+    "message": "শুরু হচ্ছে..."
+  },
+  "popup_dl_paused": {
+    "message": "বিরতি দেওয়া হয়েছে"
+  },
+  "popup_dl_waiting": {
+    "message": "অপেক্ষা করছে"
+  },
+  "popup_dl_done": {
+    "message": "সম্পূর্ণ হয়েছে"
+  },
+  "popup_dl_just_now": {
+    "message": "এইমাত্র"
+  },
+  "popup_dl_failed": {
+    "message": "ব্যর্থ হয়েছে"
+  },
+  "popup_dl_failed_why": {
+    "message": "ব্যর্থ হয়েছে: $why$",
+    "placeholders": {
+      "why": {
+        "content": "$1",
+        "example": "the server refused the connection"
+      }
+    }
+  },
+  "popup_dl_gone": {
+    "message": "ফাইলটি মুছে ফেলা হয়েছে বা সরানো হয়েছে"
+  },
+  "popup_dl_loading": {
+    "message": "ডাউনলোড খোঁজা হচ্ছে..."
+  },
+  "popup_dl_none": {
+    "message": "এখনো কোনো ডাউনলোড নেই"
+  },
+  "popup_dl_none_text": {
+    "message": "Mister Download Manager দিয়ে আপনি যা ডাউনলোড করেন তা এখানে দেখা যায়।"
+  },
+  "popup_dl_no_match": {
+    "message": "কোনো মিল পাওয়া যায়নি"
+  },
+  "popup_dl_no_match_text": {
+    "message": "কোনো ডাউনলোডের নাম বা ঠিকানায় “$words$” নেই।",
+    "placeholders": {
+      "words": {
+        "content": "$1",
+        "example": "report"
+      }
+    }
+  },
+  "popup_dl_show_all": {
+    "message": "সব ডাউনলোড দেখান"
+  },
+  "popup_list_off": {
+    "message": "Mister Download Manager চলছে না"
+  },
+  "popup_list_off_text": {
+    "message": "এখানে আপনার ডাউনলোডগুলো দেখতে এটি শুরু করুন।"
+  },
+  "popup_list_start": {
+    "message": "Mister Download Manager শুরু করুন"
+  },
+  "popup_list_old": {
+    "message": "Mister Download Manager আপডেট করুন"
+  },
+  "popup_list_old_text": {
+    "message": "এই সংস্করণটি এখনো এর ডাউনলোডগুলো এখানে তালিকাভুক্ত করতে পারে না।"
+  },
+  "popup_list_busy": {
+    "message": "Mister Download Manager ব্যস্ত আছে। আবার চেষ্টা করা হচ্ছে..."
+  },
+  "popup_list_unreached": {
+    "message": "Mister Download Manager-এর সাথে যোগাযোগ করা যাচ্ছে না"
+  },
+  "popup_list_remote_unreachable": {
+    "message": "$server$-এ Mister Download Manager-এর সাথে যোগাযোগ করা যাচ্ছে না",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_list_remote_unreachable_text": {
+    "message": "এটি চলছে কি না এবং এই ব্রাউজারটি এর সার্টিফিকেট গ্রহণ করে কি না তা পরীক্ষা করুন (সেটিংস → ডাউনলোড পাঠান → এটি খুলুন)।",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_act_open": {
+    "message": "খুলুন"
+  },
+  "popup_act_open_named": {
+    "message": "$file$ খুলুন",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_folder": {
+    "message": "ফোল্ডারে দেখান"
+  },
+  "popup_act_folder_named": {
+    "message": "ফোল্ডারে $file$ দেখান",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_copy_file": {
+    "message": "ফাইল কপি করুন"
+  },
+  "popup_act_share": {
+    "message": "শেয়ার করুন..."
+  },
+  "popup_act_copy_link": {
+    "message": "লিংক কপি করুন"
+  },
+  "popup_act_pause": {
+    "message": "বিরতি দিন"
+  },
+  "popup_act_pause_named": {
+    "message": "$file$-এ বিরতি দিন",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_resume": {
+    "message": "পুনরায় শুরু করুন"
+  },
+  "popup_act_resume_named": {
+    "message": "$file$ পুনরায় শুরু করুন",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_again": {
+    "message": "আবার ডাউনলোড করুন"
+  },
+  "popup_act_remove": {
+    "message": "তালিকা থেকে বাদ দিন"
+  },
+  "popup_act_delete": {
+    "message": "ফাইল মুছুন..."
+  },
+  "popup_act_more": {
+    "message": "আরও কাজ"
+  },
+  "popup_act_more_named": {
+    "message": "$file$-এর জন্য আরও কাজ",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_title": {
+    "message": "আপনি কি সত্যিই ফাইলটি মুছতে চান?"
+  },
+  "popup_ask_delete": {
+    "message": "$file$ আপনার কম্পিউটার থেকে মুছে ফেলা হবে এবং ডাউনলোডটি তালিকা থেকে বাদ দেওয়া হবে। এটি পূর্বাবস্থায় ফেরানো যাবে না।",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_ok": {
+    "message": "মুছুন"
+  },
+  "popup_ask_clear_title": {
+    "message": "আপনি কি সত্যিই সম্পন্ন ডাউনলোডগুলো তালিকা থেকে বাদ দিতে চান?"
+  },
+  "popup_ask_clear": {
+    "message": "$count$টি সম্পূর্ণ ডাউনলোড তালিকা থেকে বাদ যাবে। সেগুলোর ফাইল যেখানে আছে সেখানেই থাকবে।",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "8"
+      }
+    }
+  },
+  "popup_ask_clear_ok": {
+    "message": "বাদ দিন"
+  },
+  "popup_said_file": {
+    "message": "$file$ কপি করা হয়েছে। এটি কোনো ফোল্ডার, চ্যাট বা মেসেজে পেস্ট করুন।",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_link": {
+    "message": "লিংক কপি করা হয়েছে"
+  },
+  "popup_said_removed": {
+    "message": "$file$ তালিকা থেকে বাদ দেওয়া হয়েছে",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_deleted": {
+    "message": "$file$ মুছে ফেলা হয়েছে",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_again": {
+    "message": "$file$ আবার ডাউনলোড করা হচ্ছে",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_cleared": {
+    "message": "সম্পন্ন ডাউনলোডগুলো তালিকা থেকে বাদ দেওয়া হয়েছে"
+  },
+  "popup_act_gone": {
+    "message": "সেই ডাউনলোডটি আর তালিকায় নেই।"
+  },
+  "popup_act_missing": {
+    "message": "ফাইলটি যেখানে সংরক্ষণ করা হয়েছিল সেখানে আর নেই (সরানো বা মুছে ফেলা হয়েছে)।"
+  },
+  "popup_act_running": {
+    "message": "প্রথমে এটি বিরতি দিন।"
+  },
+  "popup_act_cant": {
+    "message": "এই ডাউনলোডের জন্য এটি এখন করা যাবে না।"
+  },
+  "popup_act_unsupported": {
+    "message": "এই সিস্টেমটি তা করতে পারে না।"
+  },
+  "popup_act_off": {
+    "message": "Mister Download Manager চলছে না।"
+  },
+  "popup_act_busy": {
+    "message": "Mister Download Manager সময়মতো উত্তর দেয়নি। আবার চেষ্টা করুন।"
+  },
+  "popup_act_failed": {
+    "message": "এটি কাজ করেনি। আবার চেষ্টা করুন।"
+  },
+  "status_running": {
+    "message": "ডাউনলোড হচ্ছে: $count$",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_open_remote": {
+    "message": "এর পেজ খুলুন"
   }
 }

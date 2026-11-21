@@ -92,9 +92,6 @@
       }
     }
   },
-  "popup_undo": {
-    "message": "เลิกทำ"
-  },
   "popup_excluded": {
     "message": "การดาวน์โหลดจาก $site$ จะยังคงอยู่ในเบราว์เซอร์",
     "placeholders": {
@@ -148,6 +145,9 @@
   },
   "declined_integration_off": {
     "message": "การใช้การผสานรวมเบราว์เซอร์ขั้นสูงถูกปิดใน ตัวเลือก → ทั่วไป"
+  },
+  "declined_torrents": {
+    "message": "เป็นทอร์เรนต์ และ “เปิดลิงก์แม่เหล็กและไฟล์ .torrent ด้วย Mister Download Manager” ปิดอยู่ในการตั้งค่าทอร์เรนต์"
   },
   "declined_site_access": {
     "message": "ส่วนขยายไม่ได้รับอนุญาตให้อ่านไซต์นี้ (การเข้าถึงไซต์ของเบราว์เซอร์)"
@@ -328,5 +328,424 @@
   },
   "video_original": {
     "message": "ต้นฉบับ"
+  },
+  "video_compatible": {
+    "message": "เข้ากันได้มากที่สุด"
+  },
+  "popup_video_hide_fullscreen": {
+    "message": "ซ่อนปุ่มดาวน์โหลดเมื่อเต็มหน้าจอ"
+  },
+  "popup_video_hide_fullscreen_title": {
+    "message": "ขณะที่หน้าเว็บแสดงผลแบบเต็มหน้าจอ วิดีโอจะไม่แสดงปุ่มดาวน์โหลดวิดีโอ"
+  },
+  "popup_remote_forget": {
+    "message": "ลืม"
+  },
+  "popup_gear": {
+    "message": "ตัวเลือกใน Mister Download Manager"
+  },
+  "popup_tabs": {
+    "message": "ส่วนต่าง ๆ ของป๊อปอัป"
+  },
+  "popup_tab_downloads": {
+    "message": "รายการดาวน์โหลด"
+  },
+  "popup_tab_page": {
+    "message": "หน้านี้"
+  },
+  "popup_tab_settings": {
+    "message": "การตั้งค่า"
+  },
+  "popup_conn": {
+    "message": "เชื่อมต่อแล้ว · $version$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.5.2"
+      }
+    }
+  },
+  "popup_conn_plain": {
+    "message": "เชื่อมต่อแล้ว"
+  },
+  "popup_conn_off": {
+    "message": "ไม่ได้เชื่อมต่อ"
+  },
+  "popup_conn_paused": {
+    "message": "หยุดชั่วคราวแล้ว"
+  },
+  "popup_conn_update": {
+    "message": "อัปเดต Mister Download Manager"
+  },
+  "popup_conn_remote": {
+    "message": "กำลังส่งไปยัง $server$",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_cancel": {
+    "message": "ยกเลิก"
+  },
+  "popup_page_none": {
+    "message": "นี่ไม่ใช่หน้าเว็บ: ไม่มีอะไรให้ทำที่นี่"
+  },
+  "popup_exclude_by_rule": {
+    "message": "เบราว์เซอร์จัดการเองตามกฎในการตั้งค่า"
+  },
+  "popup_dl_search": {
+    "message": "ค้นหารายการดาวน์โหลด"
+  },
+  "popup_dl_filters": {
+    "message": "แสดง"
+  },
+  "popup_dl_all": {
+    "message": "ทั้งหมด"
+  },
+  "popup_dl_running": {
+    "message": "กำลังทำงาน"
+  },
+  "popup_dl_done_filter": {
+    "message": "เสร็จแล้ว"
+  },
+  "popup_dl_failed_filter": {
+    "message": "ล้มเหลว"
+  },
+  "popup_dl_clear": {
+    "message": "ล้างรายการที่เสร็จแล้ว"
+  },
+  "popup_dl_running_count": {
+    "message": "กำลังดาวน์โหลด $count$ รายการ",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_remote": {
+    "message": "นี่คือรายการดาวน์โหลดของ Mister Download Manager ที่ $server$ เปิดไฟล์ที่นั่น",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_dl_more": {
+    "message": "แสดง $shown$ รายการล่าสุดจากทั้งหมด $total$ รายการ ดูรายการทั้งหมดได้ใน Mister Download Manager",
+    "placeholders": {
+      "shown": {
+        "content": "$1",
+        "example": "60"
+      },
+      "total": {
+        "content": "$2",
+        "example": "245"
+      }
+    }
+  },
+  "popup_dl_of": {
+    "message": "$done$ จาก $size$",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "12.3 MB"
+      },
+      "size": {
+        "content": "$2",
+        "example": "48.7 MB"
+      }
+    }
+  },
+  "popup_dl_left": {
+    "message": "เหลือ $time$",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "0:42"
+      }
+    }
+  },
+  "popup_dl_starting": {
+    "message": "กำลังเริ่มต้น..."
+  },
+  "popup_dl_paused": {
+    "message": "หยุดชั่วคราวแล้ว"
+  },
+  "popup_dl_waiting": {
+    "message": "กำลังรอ"
+  },
+  "popup_dl_done": {
+    "message": "เสร็จแล้ว"
+  },
+  "popup_dl_just_now": {
+    "message": "เมื่อสักครู่"
+  },
+  "popup_dl_failed": {
+    "message": "ล้มเหลว"
+  },
+  "popup_dl_failed_why": {
+    "message": "ล้มเหลว: $why$",
+    "placeholders": {
+      "why": {
+        "content": "$1",
+        "example": "the server refused the connection"
+      }
+    }
+  },
+  "popup_dl_gone": {
+    "message": "ไฟล์ถูกลบหรือย้าย"
+  },
+  "popup_dl_loading": {
+    "message": "กำลังค้นหารายการดาวน์โหลด..."
+  },
+  "popup_dl_none": {
+    "message": "ยังไม่มีรายการดาวน์โหลด"
+  },
+  "popup_dl_none_text": {
+    "message": "รายการที่ดาวน์โหลดด้วย Mister Download Manager จะแสดงที่นี่"
+  },
+  "popup_dl_no_match": {
+    "message": "ไม่ตรงกัน"
+  },
+  "popup_dl_no_match_text": {
+    "message": "ไม่มีชื่อหรือที่อยู่ของรายการดาวน์โหลดใดมี “$words$”",
+    "placeholders": {
+      "words": {
+        "content": "$1",
+        "example": "report"
+      }
+    }
+  },
+  "popup_dl_show_all": {
+    "message": "แสดงรายการดาวน์โหลดทั้งหมด"
+  },
+  "popup_list_off": {
+    "message": "Mister Download Manager ไม่ได้กำลังทำงาน"
+  },
+  "popup_list_off_text": {
+    "message": "เริ่มแอปเพื่อดูรายการดาวน์โหลดที่นี่"
+  },
+  "popup_list_start": {
+    "message": "เริ่ม Mister Download Manager"
+  },
+  "popup_list_old": {
+    "message": "อัปเดต Mister Download Manager"
+  },
+  "popup_list_old_text": {
+    "message": "เวอร์ชันนี้ยังไม่สามารถแสดงรายการดาวน์โหลดที่นี่ได้"
+  },
+  "popup_list_busy": {
+    "message": "Mister Download Manager ไม่ว่าง กำลังลองอีกครั้ง..."
+  },
+  "popup_list_unreached": {
+    "message": "ไม่สามารถเข้าถึง Mister Download Manager ได้"
+  },
+  "popup_list_remote_unreachable": {
+    "message": "ไม่สามารถเข้าถึง Mister Download Manager ที่ $server$ ได้",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_list_remote_unreachable_text": {
+    "message": "ตรวจสอบว่าโปรแกรมกำลังทำงานอยู่ และเบราว์เซอร์นี้ยอมรับใบรับรอง (การตั้งค่า → ส่งการดาวน์โหลดไปที่ → เปิด)",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_act_open": {
+    "message": "เปิด"
+  },
+  "popup_act_open_named": {
+    "message": "เปิด $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_folder": {
+    "message": "แสดงในโฟลเดอร์"
+  },
+  "popup_act_folder_named": {
+    "message": "แสดง $file$ ในโฟลเดอร์",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_copy_file": {
+    "message": "คัดลอกไฟล์"
+  },
+  "popup_act_share": {
+    "message": "แชร์..."
+  },
+  "popup_act_copy_link": {
+    "message": "คัดลอกลิงก์"
+  },
+  "popup_act_pause": {
+    "message": "หยุดชั่วคราว"
+  },
+  "popup_act_pause_named": {
+    "message": "หยุด $file$ ชั่วคราว",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_resume": {
+    "message": "ดำเนินการต่อ"
+  },
+  "popup_act_resume_named": {
+    "message": "ดำเนินการต่อ $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_again": {
+    "message": "ดาวน์โหลดอีกครั้ง"
+  },
+  "popup_act_remove": {
+    "message": "นำออกจากรายการ"
+  },
+  "popup_act_delete": {
+    "message": "ลบไฟล์..."
+  },
+  "popup_act_more": {
+    "message": "การดำเนินการเพิ่มเติม"
+  },
+  "popup_act_more_named": {
+    "message": "การดำเนินการเพิ่มเติมสำหรับ $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_title": {
+    "message": "ต้องการลบไฟล์หรือไม่"
+  },
+  "popup_ask_delete": {
+    "message": "$file$ จะถูกลบออกจากคอมพิวเตอร์ และรายการดาวน์โหลดจะถูกนำออกจากรายการ การดำเนินการนี้ไม่สามารถย้อนกลับได้",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_ok": {
+    "message": "ลบ"
+  },
+  "popup_ask_clear_title": {
+    "message": "ต้องการล้างรายการดาวน์โหลดที่เสร็จแล้วหรือไม่"
+  },
+  "popup_ask_clear": {
+    "message": "รายการดาวน์โหลดที่เสร็จแล้ว $count$ รายการจะถูกนำออกจากรายการ ไฟล์จะยังคงอยู่ในตำแหน่งเดิม",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "8"
+      }
+    }
+  },
+  "popup_ask_clear_ok": {
+    "message": "ล้าง"
+  },
+  "popup_said_file": {
+    "message": "คัดลอก $file$ แล้ว วางลงในโฟลเดอร์ แชท หรือข้อความ",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_link": {
+    "message": "คัดลอกลิงก์แล้ว"
+  },
+  "popup_said_removed": {
+    "message": "นำ $file$ ออกจากรายการแล้ว",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_deleted": {
+    "message": "ลบ $file$ แล้ว",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_again": {
+    "message": "กำลังดาวน์โหลด $file$ อีกครั้ง",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_cleared": {
+    "message": "ล้างรายการดาวน์โหลดที่เสร็จแล้วแล้ว"
+  },
+  "popup_act_gone": {
+    "message": "รายการดาวน์โหลดนั้นไม่อยู่ในรายการแล้ว"
+  },
+  "popup_act_missing": {
+    "message": "ไฟล์ไม่อยู่ในตำแหน่งที่บันทึกไว้แล้ว (ถูกย้ายหรือลบ)"
+  },
+  "popup_act_running": {
+    "message": "หยุดชั่วคราวก่อน"
+  },
+  "popup_act_cant": {
+    "message": "ไม่สามารถดำเนินการกับรายการดาวน์โหลดนี้ได้ในขณะนี้"
+  },
+  "popup_act_unsupported": {
+    "message": "ระบบนี้ไม่สามารถทำได้"
+  },
+  "popup_act_off": {
+    "message": "Mister Download Manager ไม่ได้กำลังทำงาน"
+  },
+  "popup_act_busy": {
+    "message": "Mister Download Manager ไม่ตอบกลับทันเวลา ลองอีกครั้ง"
+  },
+  "popup_act_failed": {
+    "message": "ไม่สำเร็จ ลองอีกครั้ง"
+  },
+  "status_running": {
+    "message": "กำลังดาวน์โหลด: $count$",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_open_remote": {
+    "message": "เปิดหน้า"
   }
 }

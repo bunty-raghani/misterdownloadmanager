@@ -92,9 +92,6 @@
       }
     }
   },
-  "popup_undo": {
-    "message": "പഴയപടിയാക്കുക"
-  },
   "popup_excluded": {
     "message": "$site$ എന്നതിൽ നിന്നുള്ള ഡൗൺലോഡുകൾ ബ്രൗസറിൽ തുടരും",
     "placeholders": {
@@ -148,6 +145,9 @@
   },
   "declined_integration_off": {
     "message": "ഓപ്ഷനുകൾ → പൊതുവായത് എന്നതിൽ വിപുലമായ ബ്രൗസർ സംയോജനം ഉപയോഗിക്കുക എന്നത് ഓഫാണ്."
+  },
+  "declined_torrents": {
+    "message": "ഇതൊരു ടോറന്റാണ്, കൂടാതെ ടോറന്റ് ക്രമീകരണങ്ങളിൽ Mister Download Manager ഉപയോഗിച്ച് മാഗ്നറ്റ് ലിങ്കുകളും .torrent ഫയലുകളും തുറക്കുക എന്നത് ഓഫാണ്."
   },
   "declined_site_access": {
     "message": "ഈ സൈറ്റ് വായിക്കാൻ വിപുലീകരണത്തിന് അനുവാദമില്ല (ബ്രൗസറിന്റെ സൈറ്റ് ആക്സസ്)."
@@ -328,5 +328,424 @@
   },
   "video_original": {
     "message": "ഒറിജിനൽ"
+  },
+  "video_compatible": {
+    "message": "ഏറ്റവും അനുയോജ്യം"
+  },
+  "popup_video_hide_fullscreen": {
+    "message": "ഫുൾ സ്ക്രീനിൽ ഡൗൺലോഡ് ബട്ടൺ മറയ്ക്കുക"
+  },
+  "popup_video_hide_fullscreen_title": {
+    "message": "പേജ് ഫുൾ സ്ക്രീനിൽ ആയിരിക്കുമ്പോൾ, അതിലെ വീഡിയോകളിൽ ഡൗൺലോഡ് വീഡിയോ ബട്ടൺ കാണിക്കില്ല"
+  },
+  "popup_remote_forget": {
+    "message": "മറക്കുക"
+  },
+  "popup_gear": {
+    "message": "Mister Download Manager ഓപ്ഷനുകൾ"
+  },
+  "popup_tabs": {
+    "message": "പോപ്പ്അപ്പ് വിഭാഗങ്ങൾ"
+  },
+  "popup_tab_downloads": {
+    "message": "ഡൗൺലോഡുകൾ"
+  },
+  "popup_tab_page": {
+    "message": "ഈ പേജ്"
+  },
+  "popup_tab_settings": {
+    "message": "ക്രമീകരണങ്ങൾ"
+  },
+  "popup_conn": {
+    "message": "ബന്ധിപ്പിച്ചു · $version$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.5.2"
+      }
+    }
+  },
+  "popup_conn_plain": {
+    "message": "ബന്ധിപ്പിച്ചു"
+  },
+  "popup_conn_off": {
+    "message": "ബന്ധിപ്പിച്ചിട്ടില്ല"
+  },
+  "popup_conn_paused": {
+    "message": "താൽക്കാലികമായി നിർത്തി"
+  },
+  "popup_conn_update": {
+    "message": "Mister Download Manager അപ്ഡേറ്റ് ചെയ്യുക"
+  },
+  "popup_conn_remote": {
+    "message": "$server$-ലേക്ക് അയയ്ക്കുന്നു",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_cancel": {
+    "message": "റദ്ദാക്കുക"
+  },
+  "popup_page_none": {
+    "message": "ഇതൊരു വെബ് പേജല്ല: ഇവിടെ ഒന്നും ചെയ്യാനില്ല."
+  },
+  "popup_exclude_by_rule": {
+    "message": "ഓപ്ഷനുകളിലെ ഒരു നിയമം കാരണം ബ്രൗസറിന് വിട്ടുനൽകി"
+  },
+  "popup_dl_search": {
+    "message": "ഡൗൺലോഡുകൾ തിരയുക"
+  },
+  "popup_dl_filters": {
+    "message": "കാണിക്കുക"
+  },
+  "popup_dl_all": {
+    "message": "എല്ലാം"
+  },
+  "popup_dl_running": {
+    "message": "പ്രവർത്തിക്കുന്നു"
+  },
+  "popup_dl_done_filter": {
+    "message": "പൂർത്തിയായി"
+  },
+  "popup_dl_failed_filter": {
+    "message": "പരാജയപ്പെട്ടു"
+  },
+  "popup_dl_clear": {
+    "message": "പൂർത്തിയായവ മായ്ക്കുക"
+  },
+  "popup_dl_running_count": {
+    "message": "ഇപ്പോൾ $count$ ഡൗൺലോഡ് ചെയ്യുന്നു",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_remote": {
+    "message": "ഇവ $server$-ലെ Mister Download Manager-ന്റെ ഡൗൺലോഡുകളാണ്. അവിടെ അവയുടെ ഫയലുകൾ തുറക്കുക.",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_dl_more": {
+    "message": "$total$-ൽ $shown$ എണ്ണം പുതിയത്. Mister Download Manager അവയെല്ലാം ലിസ്റ്റ് ചെയ്യുന്നു.",
+    "placeholders": {
+      "shown": {
+        "content": "$1",
+        "example": "60"
+      },
+      "total": {
+        "content": "$2",
+        "example": "245"
+      }
+    }
+  },
+  "popup_dl_of": {
+    "message": "$size$-ൽ $done$",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "12.3 MB"
+      },
+      "size": {
+        "content": "$2",
+        "example": "48.7 MB"
+      }
+    }
+  },
+  "popup_dl_left": {
+    "message": "$time$ ശേഷിക്കുന്നു",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "0:42"
+      }
+    }
+  },
+  "popup_dl_starting": {
+    "message": "ആരംഭിക്കുന്നു..."
+  },
+  "popup_dl_paused": {
+    "message": "താൽക്കാലികമായി നിർത്തി"
+  },
+  "popup_dl_waiting": {
+    "message": "കാത്തിരിക്കുന്നു"
+  },
+  "popup_dl_done": {
+    "message": "പൂർത്തിയായി"
+  },
+  "popup_dl_just_now": {
+    "message": "ഇപ്പോൾ"
+  },
+  "popup_dl_failed": {
+    "message": "പരാജയപ്പെട്ടു"
+  },
+  "popup_dl_failed_why": {
+    "message": "പരാജയപ്പെട്ടു: $why$",
+    "placeholders": {
+      "why": {
+        "content": "$1",
+        "example": "the server refused the connection"
+      }
+    }
+  },
+  "popup_dl_gone": {
+    "message": "ഫയൽ ഇല്ലാതാക്കുകയോ നീക്കുകയോ ചെയ്തു"
+  },
+  "popup_dl_loading": {
+    "message": "ഡൗൺലോഡുകൾക്കായി തിരയുന്നു..."
+  },
+  "popup_dl_none": {
+    "message": "ഇതുവരെ ഡൗൺലോഡുകളൊന്നും ഇല്ല"
+  },
+  "popup_dl_none_text": {
+    "message": "Mister Download Manager ഉപയോഗിച്ച് നിങ്ങൾ ഡൗൺലോഡ് ചെയ്യുന്നത് ഇവിടെ കാണിക്കും."
+  },
+  "popup_dl_no_match": {
+    "message": "ഒന്നും പൊരുത്തപ്പെടുന്നില്ല"
+  },
+  "popup_dl_no_match_text": {
+    "message": "ഒരു ഡൗൺലോഡിന്റെ പേരിനോ വിലാസത്തിനോ “$words$” ഇല്ല.",
+    "placeholders": {
+      "words": {
+        "content": "$1",
+        "example": "report"
+      }
+    }
+  },
+  "popup_dl_show_all": {
+    "message": "എല്ലാ ഡൗൺലോഡുകളും കാണിക്കുക"
+  },
+  "popup_list_off": {
+    "message": "Mister Download Manager പ്രവർത്തിക്കുന്നില്ല"
+  },
+  "popup_list_off_text": {
+    "message": "നിങ്ങളുടെ ഡൗൺലോഡുകൾ ഇവിടെ കാണാൻ ഇത് ആരംഭിക്കുക."
+  },
+  "popup_list_start": {
+    "message": "Mister Download Manager ആരംഭിക്കുക"
+  },
+  "popup_list_old": {
+    "message": "Mister Download Manager അപ്ഡേറ്റ് ചെയ്യുക"
+  },
+  "popup_list_old_text": {
+    "message": "ഈ പതിപ്പിന് അതിൻ്റെ ഡൗൺലോഡുകൾ ഇവിടെ ലിസ്റ്റ് ചെയ്യാൻ ഇതുവരെ കഴിഞ്ഞിട്ടില്ല."
+  },
+  "popup_list_busy": {
+    "message": "Mister Download Manager തിരക്കിലാണ്. വീണ്ടും ശ്രമിക്കുന്നു..."
+  },
+  "popup_list_unreached": {
+    "message": "Mister Download Manager എത്തിച്ചേരാനാകുന്നില്ല"
+  },
+  "popup_list_remote_unreachable": {
+    "message": "Mister Download Manager നെ $server$ എന്നതിൽ ബന്ധപ്പെടാനായില്ല",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_list_remote_unreachable_text": {
+    "message": "ഇത് പ്രവർത്തിക്കുന്നുണ്ടെന്നും ഈ ബ്രൗസർ അതിന്റെ സർട്ടിഫിക്കറ്റ് സ്വീകരിക്കുന്നുണ്ടെന്നും ഉറപ്പാക്കുക (ക്രമീകരണങ്ങൾ → ഡൗൺലോഡുകൾ ഇതിലേക്ക് അയയ്ക്കുക → ഇത് തുറക്കുക).",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_act_open": {
+    "message": "തുറക്കുക"
+  },
+  "popup_act_open_named": {
+    "message": "$file$ തുറക്കുക",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_folder": {
+    "message": "ഫോൾഡറിൽ കാണിക്കുക"
+  },
+  "popup_act_folder_named": {
+    "message": "$file$ ഫോൾഡറിൽ കാണിക്കുക",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_copy_file": {
+    "message": "ഫയൽ പകർത്തുക"
+  },
+  "popup_act_share": {
+    "message": "പങ്കിടുക..."
+  },
+  "popup_act_copy_link": {
+    "message": "ലിങ്ക് പകർത്തുക"
+  },
+  "popup_act_pause": {
+    "message": "താൽക്കാലികമായി നിർത്തുക"
+  },
+  "popup_act_pause_named": {
+    "message": "$file$ താൽക്കാലികമായി നിർത്തുക",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_resume": {
+    "message": "പുനരാരംഭിക്കുക"
+  },
+  "popup_act_resume_named": {
+    "message": "$file$ പുനരാരംഭിക്കുക",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_again": {
+    "message": "വീണ്ടും ഡൗൺലോഡ് ചെയ്യുക"
+  },
+  "popup_act_remove": {
+    "message": "ലിസ്റ്റിൽ നിന്ന് നീക്കം ചെയ്യുക"
+  },
+  "popup_act_delete": {
+    "message": "ഫയൽ ഇല്ലാതാക്കുക..."
+  },
+  "popup_act_more": {
+    "message": "കൂടുതൽ പ്രവർത്തനങ്ങൾ"
+  },
+  "popup_act_more_named": {
+    "message": "$file$ എന്നതിനായുള്ള കൂടുതൽ പ്രവർത്തനങ്ങൾ",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_title": {
+    "message": "ഫയൽ ഇല്ലാതാക്കണോ?"
+  },
+  "popup_ask_delete": {
+    "message": "$file$ നിങ്ങളുടെ കമ്പ്യൂട്ടറിൽ നിന്ന് ഇല്ലാതാക്കുകയും ഡൗൺലോഡ് ലിസ്റ്റിൽ നിന്ന് നീക്കം ചെയ്യുകയും ചെയ്യും. ഇത് പഴയപടിയാക്കാൻ കഴിയില്ല.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_ok": {
+    "message": "ഇല്ലാതാക്കുക"
+  },
+  "popup_ask_clear_title": {
+    "message": "പൂർത്തിയായ ഡൗൺലോഡുകൾ നീക്കം ചെയ്യണോ?"
+  },
+  "popup_ask_clear": {
+    "message": "$count$ പൂർത്തിയായ ഡൗൺലോഡുകൾ ലിസ്റ്റിൽ നിന്ന് നീക്കം ചെയ്യും. അവയുടെ ഫയലുകൾ അവയുടെ സ്ഥാനത്ത് തന്നെ തുടരും.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "8"
+      }
+    }
+  },
+  "popup_ask_clear_ok": {
+    "message": "മായ്ക്കുക"
+  },
+  "popup_said_file": {
+    "message": "$file$ പകർത്തി. ഒരു ഫോൾഡറിലോ ചാറ്റിലോ സന്ദേശത്തിലോ ഒട്ടിക്കുക.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_link": {
+    "message": "ലിങ്ക് പകർത്തി"
+  },
+  "popup_said_removed": {
+    "message": "$file$ ലിസ്റ്റിൽ നിന്ന് നീക്കം ചെയ്തു",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_deleted": {
+    "message": "$file$ ഇല്ലാതാക്കി",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_again": {
+    "message": "$file$ വീണ്ടും ഡൗൺലോഡ് ചെയ്യുന്നു",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_cleared": {
+    "message": "പൂർത്തിയായ ഡൗൺലോഡുകൾ മായ്ച്ചു"
+  },
+  "popup_act_gone": {
+    "message": "ആ ഡൗൺലോഡ് ഇനി ലിസ്റ്റിലില്ല."
+  },
+  "popup_act_missing": {
+    "message": "അതിന്റെ ഫയൽ സംരക്ഷിച്ച സ്ഥലത്ത് ഇപ്പോൾ ഇല്ല (നീക്കുകയോ ഇല്ലാതാക്കുകയോ ചെയ്തു)."
+  },
+  "popup_act_running": {
+    "message": "ആദ്യം താൽക്കാലികമായി നിർത്തുക."
+  },
+  "popup_act_cant": {
+    "message": "ഈ ഡൗൺലോഡിൽ ഇപ്പോൾ അത് ചെയ്യാൻ കഴിയില്ല."
+  },
+  "popup_act_unsupported": {
+    "message": "ഈ സിസ്റ്റത്തിന് അത് ചെയ്യാൻ കഴിയില്ല."
+  },
+  "popup_act_off": {
+    "message": "Mister Download Manager പ്രവർത്തിക്കുന്നില്ല."
+  },
+  "popup_act_busy": {
+    "message": "Mister Download Manager സമയത്തിന് മറുപടി നൽകിയില്ല. വീണ്ടും ശ്രമിക്കുക."
+  },
+  "popup_act_failed": {
+    "message": "അത് പ്രവർത്തിച്ചില്ല. വീണ്ടും ശ്രമിക്കുക."
+  },
+  "status_running": {
+    "message": "ഡൗൺലോഡ് ചെയ്യുന്നു: $count$",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_open_remote": {
+    "message": "അതിൻ്റെ പേജ് തുറക്കുക"
   }
 }

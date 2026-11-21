@@ -1,0 +1,100 @@
+# Dependabot: proposes updates to the workflows' actions, the Rust crates, the store tools the
+# Release workflow uses (tools/release) and the website build's Python package (tools/website).
+# Kept quiet: once a week, minor and patch updates in one pull request per ecosystem (a major
+# update comes alone), at most two or three open at a time, and a release a week old before it is
+# proposed. Security updates come grouped the same way, as soon as an advisory is published. Every
+# pull request runs CI like any other.
+version: 2
+
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 2
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: Dependencies
+    labels: [dependencies]
+    groups:
+      actions:
+        applies-to: version-updates
+        update-types: [minor, patch]
+      actions-security:
+        applies-to: security-updates
+        update-types: [minor, patch]
+
+  - package-ecosystem: cargo
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 3
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: Dependencies
+    labels: [dependencies]
+    # MDM's own forks, patched in Cargo.toml's [patch.crates-io] (or taken from git) at a commit
+    # that carries MDM's changes: they move by hand, with those changes on the new release.
+    ignore:
+      - dependency-name: "egui*"
+      - dependency-name: eframe
+      - dependency-name: "epaint*"
+      - dependency-name: ecolor
+      - dependency-name: emath
+      - dependency-name: winit
+      - dependency-name: "wgpu*"
+      - dependency-name: "naga*"
+      - dependency-name: "librqbit*"
+      - dependency-name: "craft-*"
+      # The font parser egui's epaint uses: MDM checks fonts with the same one (#953, #1412),
+      # so it moves with egui.
+      - dependency-name: skrifa
+    groups:
+      crates:
+        applies-to: version-updates
+        update-types: [minor, patch]
+      crates-security:
+        applies-to: security-updates
+        update-types: [minor, patch]
+
+  - package-ecosystem: npm
+    directory: /tools/release
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 2
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: Dependencies
+    labels: [dependencies]
+    groups:
+      release-tools:
+        applies-to: version-updates
+        update-types: [minor, patch]
+      release-tools-security:
+        applies-to: security-updates
+        update-types: [minor, patch]
+
+  - package-ecosystem: pip
+    directory: /tools/website
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 2
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: Dependencies
+    labels: [dependencies]
+    groups:
+      website:
+        applies-to: version-updates
+        update-types: [minor, patch]
+      website-security:
+        applies-to: security-updates
+        update-types: [minor, patch]

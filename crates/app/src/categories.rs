@@ -568,4 +568,122 @@ mod tests {
         assert_eq!(Category::of("ubuntu.iso.torrent"), Category::General);
         assert!(Category::all().contains(&Category::Torrents));
     }
+
+    /// #1063: `Category::of` works from rules built once, no longer from every category's
+    /// types listed again for each name; it answers as before for every name, with the shipped
+    /// categories, the user's (first, wildcards, `*.` and `.` written types) and edited or
+    /// deleted built-in ones, and follows each change at once.
+    #[test]
+    fn a_names_category_is_as_before_whatever_the_categories() {
+        let _turn = registry();
+        let shipped: Vec<String> = Category::BUILT_IN
+            .iter()
+            .flat_map(|c| {
+                c.shipped_types_text()
+                    .split(' ')
+                    .map(str::to_owned)
+                    .collect::<Vec<_>>()
+            })
+            .filter(|t| !t.is_empty())
+            .collect();
+        assert!(shipped.len() > 40, "{shipped:?}");
+        let mut names: Vec<String> = vec![
+            "README".into(),
+            "a.".into(),
+            ".hidden".into(),
+            "archive.tar.gz".into(),
+            "movie.part.r01".into(),
+            "movie.R15".into(),
+            "movie.r2".into(),
+            "x.mp".into(),
+            "x.mp4v".into(),
+            "x.ts".into(),
+            "x.tsv".into(),
+            "x.tsa".into(),
+            "novel.EPUB".into(),
+            "novel.mobi".into(),
+            "notes.azw3".into(),
+            "song.flac".into(),
+            "photo.jpeg".into(),
+            "été.ÉPUB".into(),
+            "名前.MP3".into(),
+            "x.unknown".into(),
+        ];
+        for t in &shipped {
+            let t = t.trim_end_matches('*');
+            names.push(format!("file.{}", t.to_ascii_lowercase()));
+            names.push(format!("file.{t}"));
+            names.push(format!("file.{t}9"));
+        }
+        let same = |when: &str| {
+            for n in &names {
+                assert_eq!(Category::of(n), Category::of_as_before(n), "{n} ({when})");
+            }
+        };
+        crate::model::set_custom(&[]);
+        crate::model::set_builtin(&[]);
+        same("as shipped");
+        assert_eq!(Category::of("a.ZIP"), Category::Compressed);
+        assert_eq!(Category::of("movie.R15"), Category::Compressed);
+        assert_eq!(Category::of("novel.epub"), Category::General);
+
+        let changes = crate::model::categories_changed();
+        let custom = |id: u32, name: &str, types: &str| CustomCategory {
+            id,
+            name: name.into(),
+            types: types.into(),
+            folder: None,
+        };
+        crate::model::set_custom(&[
+            custom(1, "Books", "EPUB *.mobi, .azw3"),
+            custom(2, "Parts", "R1* 7Z"),
+            custom(3, "Empty", ""),
+            custom(4, "Players", "mp*"),
+        ]);
+        assert!(crate::model::categories_changed() > changes);
+        same("the user's categories");
+        assert_eq!(Category::of("novel.EPUB"), Category::Custom(1));
+        assert_eq!(Category::of("notes.azw3"), Category::Custom(1));
+        assert_eq!(Category::of("movie.R15"), Category::Custom(2), "first");
+        assert_eq!(Category::of("movie.part.r01"), Category::Compressed);
+        assert_eq!(Category::of("song.mp3"), Category::Custom(4));
+
+        crate::model::set_builtin(&[
+            BuiltinEdit {
+                category: Category::Video,
+                name: None,
+                types: None,
+                deleted: true,
+            },
+            BuiltinEdit {
+                category: Category::Music,
+                name: Some("Songs".into()),
+                types: Some("FLAC WAV".into()),
+                deleted: false,
+            },
+            BuiltinEdit {
+                category: Category::Documents,
+                name: Some("Papers".into()),
+                types: None,
+                deleted: false,
+            },
+        ]);
+        same("edited and deleted built-in ones");
+        assert_eq!(Category::of("film.mkv"), Category::General, "Video deleted");
+        assert_eq!(Category::of("song.flac"), Category::Music);
+        assert_eq!(Category::of("song.wma"), Category::General);
+        assert_eq!(Category::of("manual.pdf"), Category::Documents);
+
+        // Back as shipped: the rules follow.
+        crate::model::set_custom(&[]);
+        crate::model::set_builtin(&[]);
+        same("as shipped again");
+        assert_eq!(Category::of("film.mkv"), Category::Video);
+        assert_eq!(Category::of("novel.epub"), Category::General);
+        // The same lists again change nothing.
+        let changes = crate::model::categories_changed();
+        crate::model::set_custom(&[]);
+        crate::model::set_builtin(&[]);
+        assert_eq!(crate::model::categories_changed(), changes);
+    }
 }

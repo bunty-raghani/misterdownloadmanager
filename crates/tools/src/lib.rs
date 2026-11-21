@@ -2,13 +2,26 @@
 //! (`yt-dlp -U`): we fetch a release from its GitHub page, verify its `SHA2-256SUMS` against
 //! yt-dlp's OpenPGP signing key (pinned in `keys/yt-dlp.asc`), verify the program against that
 //! list, install it next to earlier versions (`tools/yt-dlp/<version>/`), switch to it
-//! atomically, never downgrade, and keep the previous version for rollback.
+//! atomically, never downgrade, and keep the previous version for rollback. MDM keeps its own
+//! copies up to date by itself (`autoupdate`, #1544).
 
+// Keeping MDM's own helpers up to date (#1544).
+pub mod autoupdate;
+pub mod bgutil;
 pub mod chosen;
+pub mod declared;
+// The Deno earlier versions of MDM installed for YouTube (#1448, #1470), until its Node.js is in
+// place (#1570).
+pub mod deno;
 pub mod ffmpeg;
+mod folder;
 pub mod gallery;
-mod macos;
+pub mod github;
+// Which JavaScript runtime yt-dlp uses for YouTube (#1570).
+pub mod jsruntime;
 pub mod manifest;
+// Node.js, the JavaScript runtime MDM installs when the computer has none (#1570).
+pub mod node;
 mod openpgp;
 pub mod pages;
 pub mod pieces;
@@ -18,12 +31,13 @@ pub mod relay;
 pub mod resolve;
 pub mod servers;
 pub mod streams;
-// System helper discovery is for Linux and macOS; Windows keeps its verified managed copies.
-#[cfg(unix)]
+// System helper discovery, on every system (#452): a copy found on the PATH (a package manager's,
+// Homebrew's, pip's or an installer's), used when MDM has none of its own.
 mod system;
 pub mod update;
 pub mod video;
 pub mod workdir;
+pub mod youtube;
 
 use std::path::{Path, PathBuf};
 
@@ -36,8 +50,12 @@ const YTDLP_KEY: &str = include_str!("../keys/yt-dlp.asc");
 /// 5826D399249DE856EA087D802E293C28E8A69D74): release.yml signs each release's SHA256SUMS.txt
 /// with it (the MDM_RELEASE_KEY secret), and MDM updates itself only from a list it signed.
 const MDM_KEY: &str = include_str!("../keys/mdm-release.asc");
-/// Where releases come from.
+/// Where releases come from: GitHub's API, else its pages (`github`, #1337).
 const RELEASES: &str = "https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest";
+/// yt-dlp's repository on GitHub.
+const YTDLP_REPO: &str = "yt-dlp/yt-dlp";
+/// yt-dlp's checksum list in each release, and its signature.
+const YTDLP_SUMS: [&str; 2] = ["SHA2-256SUMS", "SHA2-256SUMS.sig"];
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -72,6 +90,9 @@ pub enum Error {
     /// The chosen network adapter is down or can't reach the server (#35).
     #[error(transparent)]
     Adapter(#[from] mdm_engine::NetError),
+    /// Another install of the same helper is under way (here or in another copy of MDM).
+    #[error("{0} is being installed or updated already")]
+    Busy(String),
 }
 
 impl Error {
@@ -109,7 +130,8 @@ pub struct Installed {
     pub exe: PathBuf,
 }
 
-/// `Installed::version` of a program found on the system: its package manager's, not asked (#452).
+/// `Installed::version` of a program found on the system: its package manager's or installer's,
+/// not asked (#452).
 const SYSTEM: &str = "system";
 
 impl Installed {
@@ -124,15 +146,25 @@ pub fn tools_dir() -> Option<PathBuf> {
     mdm_ipc::data_dir().map(|d| d.join("tools"))
 }
 
-/// yt-dlp's file name for this platform in its releases. On macOS, its folder build: why, in
-/// `macos`.
-pub fn ytdlp_asset() -> &'static str {
-    if cfg!(windows) {
-        "yt-dlp.exe"
-    } else if cfg!(target_os = "macos") {
-        "yt-dlp_macos.zip"
-    } else {
-        "yt-dlp_linux"
+/// yt-dlp's file name for this system and processor in its releases; None where it publishes
+/// none (the system's yt-dlp, or one chosen in Helpers, works there).
+pub fn ytdlp_asset() -> Option<&'static str> {
+    ytdlp_asset_for(std::env::consts::OS, std::env::consts::ARCH)
+}
+
+/// yt-dlp's file name in its releases for a system and a processor, as Rust names them
+/// (`std::env::consts`). On Windows and macOS, its folder build (why, in `folder`): Windows on
+/// ARM and 32-bit Windows have their own; macOS's is one for both processors. On Linux, the
+/// single program for that processor.
+fn ytdlp_asset_for(os: &str, arch: &str) -> Option<&'static str> {
+    match (os, arch) {
+        ("windows", "x86_64") => Some("yt-dlp_win.zip"),
+        ("windows", "aarch64") => Some("yt-dlp_win_arm64.zip"),
+        ("windows", "x86") => Some("yt-dlp_win_x86.zip"),
+        ("macos", _) => Some("yt-dlp_macos.zip"),
+        ("linux", "x86_64") => Some("yt-dlp_linux"),
+        ("linux", "aarch64") => Some("yt-dlp_linux_aarch64"),
+        _ => None,
     }
 }
 
@@ -279,20 +311,18 @@ pub fn sum_for(sums: &str, name: &str) -> Option<[u8; 32]> {
 }
 
 /// The yt-dlp to use: the person's own (`chosen`), else MDM's install in `dir`
-/// (`dir/yt-dlp/current.json`), if any and still there; on Linux and macOS, else the system's.
+/// (`dir/yt-dlp/current.json`), if any and still there; else the system's.
 pub fn installed(dir: &Path) -> Option<Installed> {
     let own = chosen::chosen(dir, chosen::Helper::YtDlp).or_else(|| own_ytdlp(dir));
-    #[cfg(unix)]
-    return own.or_else(|| system::installed("yt-dlp"));
-    #[cfg(not(unix))]
-    own
+    own.or_else(|| system::installed("yt-dlp"))
 }
 
 fn own_ytdlp(dir: &Path) -> Option<Installed> {
     let text = std::fs::read(dir.join("yt-dlp").join("current.json")).ok()?;
     let i: Installed = serde_json::from_slice(&text).ok()?;
-    // macOS: the one-file build earlier versions installed can't run from a downloaded app (`macos`).
-    if cfg!(target_os = "macos") && macos::one_file_build(&i.exe) {
+    // macOS: the one-file build earlier versions installed can't run from a downloaded app
+    // (`folder`). On Windows it runs, only slower: used until the folder build replaces it.
+    if cfg!(target_os = "macos") && folder::one_file_build(&i.exe) {
         return None;
     }
     i.exe.is_file().then_some(i)
@@ -304,18 +334,6 @@ pub(crate) fn newer(a: &str, b: &str) -> bool {
     parts(a) > parts(b)
 }
 
-#[derive(Deserialize)]
-struct Release {
-    tag_name: String,
-    assets: Vec<Asset>,
-}
-
-#[derive(Deserialize)]
-struct Asset {
-    name: String,
-    browser_download_url: String,
-}
-
 /// Whether the once-per-session update has a yt-dlp to refresh: not the system's, which is its
 /// package manager's to update (#452), and which only an explicit [`install_latest`] replaces.
 pub fn refreshable(dir: &Path) -> bool {
@@ -325,7 +343,8 @@ pub fn refreshable(dir: &Path) -> bool {
 /// Install the latest yt-dlp release into `dir` unless the installed one is as new, the program
 /// downloaded with MDM's engine (`net`), counted into `progress`. Returns what is installed
 /// afterwards. A system copy doesn't count as installed here: this is the way to get MDM's own
-/// instead (Helpers), and MDM's own then wins ([`installed`]).
+/// instead (Helpers), and MDM's own then wins ([`installed`]). A version newer than the one in use
+/// while a run uses it waits for that run to end (`autoupdate`).
 pub async fn install_latest(
     dir: &Path,
     net: &mdm_engine::Options,
@@ -335,41 +354,101 @@ pub async fn install_latest(
     if let Some(mine) = chosen::chosen(dir, chosen::Helper::YtDlp) {
         return Ok(mine);
     }
-    let client = client(net, RELEASES)?;
-    let body = client
-        .get(RELEASES)
-        .send()
-        .await?
-        .error_for_status()?
-        .bytes()
-        .await?;
-    let release: Release =
-        serde_json::from_slice(&body).map_err(|e| Error::BadRelease(e.to_string()))?;
+    install_with(dir, net, progress, None).await?;
+    own_ytdlp(dir).ok_or_else(|| Error::Missing("yt-dlp after its install".into()))
+}
+
+/// [`install_latest`] for `autoupdate`: the newest release, installed when it is newer than the
+/// version in use and than `floor` (a version the person went back from), switched to now or once
+/// the runs using yt-dlp end.
+pub(crate) async fn install_with(
+    dir: &Path,
+    net: &mdm_engine::Options,
+    progress: Option<&update::Progress>,
+    floor: Option<&str>,
+) -> Result<autoupdate::Got, Error> {
+    install_from(
+        dir,
+        net,
+        progress,
+        floor,
+        &Source {
+            api: RELEASES,
+            web: github::WEB,
+            signed: signed_by_ytdlp,
+        },
+    )
+    .await
+}
+
+/// Where yt-dlp's releases come from: GitHub's API and pages, and the key their checksum lists
+/// are signed with. Always yt-dlp's own outside this crate's tests.
+pub(crate) struct Source<'a> {
+    pub api: &'a str,
+    pub web: &'a str,
+    pub signed: fn(&[u8], &[u8]) -> bool,
+}
+
+/// [`install_with`] from `source`.
+pub(crate) async fn install_from(
+    dir: &Path,
+    net: &mdm_engine::Options,
+    progress: Option<&update::Progress>,
+    floor: Option<&str>,
+    source: &Source<'_>,
+) -> Result<autoupdate::Got, Error> {
+    let asset =
+        ytdlp_asset().ok_or_else(|| Error::Missing("yt-dlp build for this system".into()))?;
+    let root = dir.join("yt-dlp");
+    let _installing = autoupdate::installing(&root, "yt-dlp")?;
+    // From GitHub's API, else (its rate limit) github.com's pages: the same files either way,
+    // checked the same way below.
+    let [sums_name, sig_name] = YTDLP_SUMS;
+    let release = github::latest_release(
+        net,
+        source.api,
+        source.web,
+        YTDLP_REPO,
+        &[sums_name, sig_name, asset],
+    )
+    .await?;
+    let latest = release.tag.clone();
+    let none = || autoupdate::Got {
+        latest: release.tag.clone(),
+        settled: None,
+    };
     if let Some(current) = own_ytdlp(dir)
-        && !newer(&release.tag_name, &current.version)
+        && !newer(&release.tag, &current.version)
+        // The same release again only as the folder build, in place of the one-file one that
+        // earlier versions of MDM installed on Windows (#1053).
+        && !(folder::BUILD && folder::one_file_build(&current.exe))
     {
-        return Ok(current); // never the same again, never older
+        return Ok(none()); // never the same again, never older
+    }
+    if floor.is_some_and(|f| !newer(&release.tag, f)) {
+        return Ok(none());
+    }
+    // Already here (staged, or kept after going back): switched to, not downloaded again.
+    if let Some(here) = autoupdate::kept(&root, &release.tag)
+        && !(folder::BUILD && folder::one_file_build(&here.exe))
+    {
+        let settled = Some(autoupdate::settle(&root, here)?);
+        return Ok(autoupdate::Got { latest, settled });
     }
     let url = |name: &str| {
         release
-            .assets
+            .files
             .iter()
-            .find(|a| a.name == name)
-            .map(|a| a.browser_download_url.clone())
+            .find(|(n, _)| n == name)
+            .map(|(_, u)| u.clone())
             .ok_or_else(|| Error::Missing(name.to_owned()))
     };
-    let sums = signed_list(
-        &client,
-        &url("SHA2-256SUMS")?,
-        &url("SHA2-256SUMS.sig")?,
-        signed_by_ytdlp,
-    )
-    .await?;
-    let asset = ytdlp_asset();
+    let sums_url = url(sums_name)?;
+    let client = client(net, &sums_url)?;
+    let sums = signed_list(&client, &sums_url, &url(sig_name)?, source.signed).await?;
     let expected =
         sum_for(&sums, asset).ok_or_else(|| Error::Missing(format!("checksum for {asset}")))?;
     let exe_url = url(asset)?;
-    let root = dir.join("yt-dlp");
     std::fs::create_dir_all(&root)?;
     // Named by its checksum: one release's cut-off download resumes, never another's.
     let download = root.join(format!("yt-dlp-{}.download", hex::encode(&expected[..8])));
@@ -379,15 +458,34 @@ pub async fn install_latest(
     if Sha256::digest(&program).as_slice() != expected {
         return Err(Error::BadChecksum);
     }
-    #[cfg(target_os = "macos")]
-    return macos::put_folder(dir, &release.tag_name, &program);
-    #[cfg(not(target_os = "macos"))]
-    put(dir, "yt-dlp", &release.tag_name, asset, &program, &exe_url)
+    #[cfg(any(windows, target_os = "macos"))]
+    let placed = folder::place_folder(dir, &release.tag, &program, &exe_url)?;
+    #[cfg(not(any(windows, target_os = "macos")))]
+    let placed = place(dir, "yt-dlp", &release.tag, asset, &program, &exe_url)?;
+    tracing::info!("yt-dlp {} verified and installed", release.tag);
+    let settled = Some(autoupdate::settle(&root, placed)?);
+    Ok(autoupdate::Got { latest, settled })
 }
 
 /// Install verified `program` as `version` of `tool` (`dir/<tool>/<version>/<asset>`) and make it
 /// current (atomically), keeping the previous version for rollback and removing older ones.
+#[cfg(test)]
 pub(crate) fn put(
+    dir: &Path,
+    tool: &str,
+    version: &str,
+    asset: &str,
+    program: &[u8],
+    from: &str,
+) -> Result<Installed, Error> {
+    let placed = place(dir, tool, version, asset, program, from)?;
+    make_current(&dir.join(tool), placed)
+}
+
+/// Install verified `program` as `version` of `tool` (`dir/<tool>/<version>/<asset>`), beside
+/// the current one: [`autoupdate::settle`] makes it current.
+#[cfg_attr(any(windows, target_os = "macos"), allow(dead_code))]
+pub(crate) fn place(
     dir: &Path,
     tool: &str,
     version: &str,
@@ -409,28 +507,64 @@ pub(crate) fn put(
         use std::os::unix::fs::PermissionsExt;
         std::fs::set_permissions(&exe, std::fs::Permissions::from_mode(0o755))?;
     }
-    make_current(
-        &root,
-        Installed {
-            version: version.to_owned(),
-            exe,
-        },
-    )
+    Ok(Installed {
+        version: version.to_owned(),
+        exe,
+    })
 }
 
-/// Make `now` (installed in `root/<version>/`) the current version of a tool: `current.json`
-/// switched atomically, the previous version kept for rollback, older ones removed.
+/// Make `now` (installed in a folder of `root`, `root/<version>/` mostly) the current version of a
+/// tool: `current.json` switched atomically, the previous version kept for rollback (and named in
+/// `previous.json`), older ones removed. Only while no run uses the tool: `autoupdate::settle`.
+#[cfg(test)]
 pub(crate) fn make_current(root: &Path, now: Installed) -> Result<Installed, Error> {
+    let keep = switch_current(root, &now)?;
+    remove_others(root, &keep);
+    Ok(now)
+}
+
+/// [`make_current`]'s switch: `current.json` and `previous.json` written. Returns the folders to
+/// keep (the new version's and the previous one's).
+pub(crate) fn switch_current(root: &Path, now: &Installed) -> Result<Vec<String>, Error> {
+    let now = now.clone();
     let previous = std::fs::read(root.join("current.json"))
         .ok()
-        .and_then(|t| serde_json::from_slice::<Installed>(&t).ok());
+        .and_then(|t| serde_json::from_slice::<Installed>(&t).ok())
+        .filter(|p| *p != now);
     let json = serde_json::to_vec_pretty(&now).map_err(std::io::Error::other)?;
     craft_atomic::atomic_write(&root.join("current.json"), &json)?;
-    // Keep the new and the previous version; older ones go.
-    let keep: Vec<String> = [Some(now.version.clone()), previous.map(|p| p.version)]
+    match &previous {
+        Some(p) => {
+            let json = serde_json::to_vec_pretty(p).map_err(std::io::Error::other)?;
+            craft_atomic::atomic_write(&root.join("previous.json"), &json)?;
+        }
+        None => {
+            // The same version again (the folder build in place of the one-file one): the
+            // previous one named stays.
+        }
+    }
+    // Keep the new and the previous version's folders; older ones go. A version's folder is the
+    // one its program is in, under `root` (its version's name, unless that was taken: `folder`).
+    let folder_of = |i: &Installed| {
+        i.exe
+            .strip_prefix(root)
+            .ok()
+            .and_then(|p| p.components().next())
+            .map(|c| c.as_os_str().to_string_lossy().into_owned())
+            .unwrap_or_else(|| i.version.clone())
+    };
+    let named = std::fs::read(root.join("previous.json"))
+        .ok()
+        .and_then(|t| serde_json::from_slice::<Installed>(&t).ok());
+    Ok([Some(&now), previous.as_ref().or(named.as_ref())]
         .into_iter()
         .flatten()
-        .collect();
+        .map(folder_of)
+        .collect())
+}
+
+/// [`make_current`]'s tidying: every folder of `root` but those in `keep` removed.
+pub(crate) fn remove_others(root: &Path, keep: &[String]) {
     if let Ok(entries) = std::fs::read_dir(root) {
         for e in entries.flatten() {
             let name = e.file_name().to_string_lossy().into_owned();
@@ -439,7 +573,6 @@ pub(crate) fn make_current(root: &Path, now: Installed) -> Result<Installed, Err
             }
         }
     }
-    Ok(now)
 }
 
 /// Mark-of-the-Web: the program came from the internet (Windows checks it like a browser
@@ -502,6 +635,32 @@ mod tests {
         assert!(sum_for(&sums, "yt-dlp.ex").is_none());
     }
 
+    /// Each system and processor MDM is published for takes yt-dlp's own build for it, and the
+    /// release's signed list has a checksum for each (a real release's list).
+    #[test]
+    fn ytdlp_has_a_build_for_each_processor() {
+        let sums = String::from_utf8_lossy(SUMS);
+        for (os, arch, asset) in [
+            ("windows", "x86_64", "yt-dlp_win.zip"),
+            ("windows", "aarch64", "yt-dlp_win_arm64.zip"),
+            ("windows", "x86", "yt-dlp_win_x86.zip"),
+            ("linux", "x86_64", "yt-dlp_linux"),
+            ("linux", "aarch64", "yt-dlp_linux_aarch64"),
+            ("macos", "aarch64", "yt-dlp_macos.zip"),
+            ("macos", "x86_64", "yt-dlp_macos.zip"),
+        ] {
+            assert_eq!(ytdlp_asset_for(os, arch), Some(asset), "{os} {arch}");
+            assert!(sum_for(&sums, asset).is_some(), "{asset} not in the list");
+        }
+        // No build of yt-dlp's own: the system's, or one chosen in Helpers.
+        assert_eq!(ytdlp_asset_for("linux", "riscv64"), None);
+        assert_eq!(ytdlp_asset_for("freebsd", "x86_64"), None);
+        assert_eq!(
+            ytdlp_asset(),
+            ytdlp_asset_for(std::env::consts::OS, std::env::consts::ARCH)
+        );
+    }
+
     #[test]
     fn versions_compare_as_dates() {
         assert!(newer("2026.10.26", "2026.9.30"));
@@ -540,7 +699,7 @@ mod tests {
             "https://x/",
         )
         .unwrap();
-        // macOS installs the folder build (`macos`), with a folder beside the program.
+        // macOS installs the folder build (`folder`), with a folder beside the program.
         #[cfg(target_os = "macos")]
         std::fs::create_dir_all(now.exe.with_file_name("_internal")).unwrap();
         assert_eq!(installed(dir.path()).unwrap(), now);

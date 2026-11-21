@@ -57,7 +57,9 @@ KEEP = sorted(set(tr.KEEP + ["macOS", "Linux", "Rust", "YouTube", "Vimeo", "Tone
                              "Free Download Manager", "AB Download Manager", "Motrix",
                              "Neat Download Manager", "Prism", "JDownloader 2", "JDownloader",
                              "Xtreme Download Manager", "Gopeed", "DOWNitUP", "PyIDM", "aria2",
-                             "Hugging Face"]), key=len, reverse=True)
+                             "Hugging Face",
+                             # The code signing policy's signer.
+                             "SignPath Foundation", "SignPath.io", "SignPath"]), key=len, reverse=True)
 # Kept names a language writes in its own script instead (the maintainer's spelling of his name).
 OWN_SPELLING = {
     "ar": {"Ahmed Nefzaoui": "أحمد نفزاوي"},
@@ -112,8 +114,8 @@ def latin_digits(text: str) -> str:
 PRICE_IN, PRICE_OUT = 0.30, 2.50
 
 RULES = """You translate the website of Mister Download Manager (MDM) from English into {english}
-({native}, language code {code}). MDM is a free, open-source download manager for Windows (macOS
-and Linux builds are experimental). It looks and works like Internet Download Manager (IDM), the
+({native}, language code {code}). MDM is a free, open-source download manager for Windows and Linux
+(macOS builds are experimental). It looks and works like Internet Download Manager (IDM), the
 paid download manager many people know, but it is a separate program, written from scratch.
 
 The readers are ordinary computer users who want faster, safer downloads, and people looking for
@@ -234,7 +236,11 @@ def why_not(code: str, row: dict, text) -> str | None:
     words = re.sub(r"(?<!\w)\.\w+|\w+(?:-\w+)+", " ", words)
     letters = [w for w in re.findall(r"[^\W\d_]{3,}", words) if w.islower() and len(w) <= 15]
     script = tr.SCRIPT.get(code)
-    if script and len(letters) >= 2 and not tr.has_script(PH.sub("", text), script):
+    # A list of names the app takes as they are ("fluent, square, adwaita, luna"): no words to
+    # write in the language's script.
+    ident = r"[a-z0-9][a-z0-9-]*"
+    names_only = re.fullmatch(rf"\s*{ident}(?:\s*,\s*{ident})+\s*", PH.sub(" ", src))
+    if script and len(letters) >= 2 and not names_only and not tr.has_script(PH.sub("", text), script):
         return f"write it in {next(l[4] for l in si.LANGS if l[0] == code)} script"
     plain_src, plain_tr = PH.sub("", src), PH.sub("", text)
     if len(plain_src) > 25:
@@ -243,7 +249,7 @@ def why_not(code: str, row: dict, text) -> str | None:
         low = 0.1 if code in ("zh-hans", "ja", "ko") else 0.25
         if not low <= ratio <= 4.0:
             return "the translation's length doesn't match the English (something added or missing)"
-        if plain_tr.strip() == plain_src.strip() and len(letters) >= 3:
+        if plain_tr.strip() == plain_src.strip() and len(letters) >= 3 and not names_only:
             return "it is still in English"
     return None
 

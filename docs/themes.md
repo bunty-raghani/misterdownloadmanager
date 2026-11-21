@@ -139,7 +139,7 @@ focus = "ring"
   with transparency. The roles a file sets win over its seeds.
 - **`[sizes]`** — corner radii, border widths, font sizes and row heights, in pixels.
 - **`[controls]`** — the shape of text boxes, check boxes, buttons, progress bars, scroll bars,
-  the focus mark and the title bar.
+  column headers, the focus mark and the title bar, and the menus' font.
 - **`icons`** — `color`, `mono` (one colour) or `accent`.
 - **`contrast = "high"`** — strengthens every edge and text colour on top of the rest.
 

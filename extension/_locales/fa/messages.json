@@ -92,9 +92,6 @@
       }
     }
   },
-  "popup_undo": {
-    "message": "لغو"
-  },
   "popup_excluded": {
     "message": "دانلودها از $site$ در مرورگر می‌مانند",
     "placeholders": {
@@ -148,6 +145,9 @@
   },
   "declined_integration_off": {
     "message": "«استفاده از یکپارچه‌سازی پیشرفته مرورگر» در گزینه‌ها ← عمومی خاموش است."
+  },
+  "declined_torrents": {
+    "message": "این یک تورنت است و «باز کردن پیوندهای مگنت و فایل‌های .torrent با Mister Download Manager» در تنظیمات تورنت خاموش است."
   },
   "declined_site_access": {
     "message": "افزونه اجازه خواندن این سایت را ندارد (دسترسی سایت مرورگر)."
@@ -328,5 +328,424 @@
   },
   "video_original": {
     "message": "اصلی"
+  },
+  "video_compatible": {
+    "message": "سازگارترین"
+  },
+  "popup_video_hide_fullscreen": {
+    "message": "پنهان کردن دکمه بارگیری در حالت تمام‌صفحه"
+  },
+  "popup_video_hide_fullscreen_title": {
+    "message": "در حالی که صفحه در حالت تمام‌صفحه است، ویدیوهای آن دکمه «بارگیری ویدیو» را نشان نمی‌دهند"
+  },
+  "popup_remote_forget": {
+    "message": "فراموش کردن"
+  },
+  "popup_gear": {
+    "message": "گزینه‌ها در Mister Download Manager"
+  },
+  "popup_tabs": {
+    "message": "بخش‌های بازشو"
+  },
+  "popup_tab_downloads": {
+    "message": "بارگیری‌ها"
+  },
+  "popup_tab_page": {
+    "message": "این صفحه"
+  },
+  "popup_tab_settings": {
+    "message": "تنظیمات"
+  },
+  "popup_conn": {
+    "message": "متصل · $version$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.5.2"
+      }
+    }
+  },
+  "popup_conn_plain": {
+    "message": "متصل"
+  },
+  "popup_conn_off": {
+    "message": "متصل نیست"
+  },
+  "popup_conn_paused": {
+    "message": "مکث شد"
+  },
+  "popup_conn_update": {
+    "message": "به‌روزرسانی Mister Download Manager"
+  },
+  "popup_conn_remote": {
+    "message": "در حال ارسال به $server$",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_cancel": {
+    "message": "لغو"
+  },
+  "popup_page_none": {
+    "message": "این یک صفحه وب نیست: کاری برای انجام دادن اینجا وجود ندارد."
+  },
+  "popup_exclude_by_rule": {
+    "message": "توسط یک قانون در تنظیمات به مرورگر واگذار شده است"
+  },
+  "popup_dl_search": {
+    "message": "جستجوی بارگیری‌ها"
+  },
+  "popup_dl_filters": {
+    "message": "نمایش"
+  },
+  "popup_dl_all": {
+    "message": "همه"
+  },
+  "popup_dl_running": {
+    "message": "در حال اجرا"
+  },
+  "popup_dl_done_filter": {
+    "message": "انجام شد"
+  },
+  "popup_dl_failed_filter": {
+    "message": "ناموفق"
+  },
+  "popup_dl_clear": {
+    "message": "پاک کردن موارد تکمیل‌شده"
+  },
+  "popup_dl_running_count": {
+    "message": "$count$ مورد در حال بارگیری",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_remote": {
+    "message": "این‌ها بارگیری‌های Mister Download Manager در $server$ هستند. فایل‌هایشان را آنجا باز کنید.",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_dl_more": {
+    "message": "جدیدترین $shown$ از $total$. Mister Download Manager همه آن‌ها را فهرست می‌کند.",
+    "placeholders": {
+      "shown": {
+        "content": "$1",
+        "example": "60"
+      },
+      "total": {
+        "content": "$2",
+        "example": "245"
+      }
+    }
+  },
+  "popup_dl_of": {
+    "message": "$done$ از $size$",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "12.3 MB"
+      },
+      "size": {
+        "content": "$2",
+        "example": "48.7 MB"
+      }
+    }
+  },
+  "popup_dl_left": {
+    "message": "$time$ باقی مانده",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "0:42"
+      }
+    }
+  },
+  "popup_dl_starting": {
+    "message": "در حال شروع..."
+  },
+  "popup_dl_paused": {
+    "message": "مکث شد"
+  },
+  "popup_dl_waiting": {
+    "message": "در انتظار"
+  },
+  "popup_dl_done": {
+    "message": "انجام شد"
+  },
+  "popup_dl_just_now": {
+    "message": "همین حالا"
+  },
+  "popup_dl_failed": {
+    "message": "ناموفق"
+  },
+  "popup_dl_failed_why": {
+    "message": "ناموفق: $why$",
+    "placeholders": {
+      "why": {
+        "content": "$1",
+        "example": "the server refused the connection"
+      }
+    }
+  },
+  "popup_dl_gone": {
+    "message": "فایل حذف یا منتقل شده است"
+  },
+  "popup_dl_loading": {
+    "message": "در حال جستجوی بارگیری‌ها..."
+  },
+  "popup_dl_none": {
+    "message": "هنوز بارگیری‌ای وجود ندارد"
+  },
+  "popup_dl_none_text": {
+    "message": "آنچه با Mister Download Manager بارگیری می‌کنید، اینجا نمایش داده می‌شود."
+  },
+  "popup_dl_no_match": {
+    "message": "هیچ موردی مطابقت ندارد"
+  },
+  "popup_dl_no_match_text": {
+    "message": "هیچ نام یا آدرس بارگیری‌ای شامل «$words$» نیست.",
+    "placeholders": {
+      "words": {
+        "content": "$1",
+        "example": "report"
+      }
+    }
+  },
+  "popup_dl_show_all": {
+    "message": "نمایش همه بارگیری‌ها"
+  },
+  "popup_list_off": {
+    "message": "Mister Download Manager در حال اجرا نیست"
+  },
+  "popup_list_off_text": {
+    "message": "آن را اجرا کنید تا بارگیری‌هایتان را اینجا ببینید."
+  },
+  "popup_list_start": {
+    "message": "اجرای Mister Download Manager"
+  },
+  "popup_list_old": {
+    "message": "به‌روزرسانی Mister Download Manager"
+  },
+  "popup_list_old_text": {
+    "message": "این نسخه هنوز نمی‌تواند بارگیری‌هایش را اینجا فهرست کند."
+  },
+  "popup_list_busy": {
+    "message": "Mister Download Manager مشغول است. در حال تلاش مجدد..."
+  },
+  "popup_list_unreached": {
+    "message": "امکان دسترسی به Mister Download Manager وجود ندارد"
+  },
+  "popup_list_remote_unreachable": {
+    "message": "امکان دسترسی به Mister Download Manager در $server$ وجود ندارد",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_list_remote_unreachable_text": {
+    "message": "بررسی کنید که در حال اجرا باشد و این مرورگر گواهی آن را بپذیرد (تنظیمات ← ارسال بارگیری‌ها به ← باز کردن آن).",
+    "placeholders": {
+      "server": {
+        "content": "$1",
+        "example": "192.168.1.10:8463"
+      }
+    }
+  },
+  "popup_act_open": {
+    "message": "باز کردن"
+  },
+  "popup_act_open_named": {
+    "message": "باز کردن $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_folder": {
+    "message": "نمایش در پوشه"
+  },
+  "popup_act_folder_named": {
+    "message": "نمایش $file$ در پوشه",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_copy_file": {
+    "message": "کپی کردن فایل"
+  },
+  "popup_act_share": {
+    "message": "اشتراک‌گذاری..."
+  },
+  "popup_act_copy_link": {
+    "message": "کپی کردن پیوند"
+  },
+  "popup_act_pause": {
+    "message": "مکث"
+  },
+  "popup_act_pause_named": {
+    "message": "توقف $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_resume": {
+    "message": "ادامه"
+  },
+  "popup_act_resume_named": {
+    "message": "ادامه $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_act_again": {
+    "message": "بارگیری دوباره"
+  },
+  "popup_act_remove": {
+    "message": "حذف از فهرست"
+  },
+  "popup_act_delete": {
+    "message": "حذف فایل..."
+  },
+  "popup_act_more": {
+    "message": "اقدامات بیشتر"
+  },
+  "popup_act_more_named": {
+    "message": "اقدامات بیشتر برای $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_title": {
+    "message": "فایل حذف شود؟"
+  },
+  "popup_ask_delete": {
+    "message": "$file$ از رایانه شما حذف می‌شود و از فهرست بارگیری‌ها برداشته خواهد شد. این عمل قابل بازگردانی نیست.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_ask_delete_ok": {
+    "message": "حذف"
+  },
+  "popup_ask_clear_title": {
+    "message": "بارگیری‌های تکمیل‌شده پاک شوند؟"
+  },
+  "popup_ask_clear": {
+    "message": "آیا $count$ بارگیری تکمیل‌شده از فهرست حذف شوند؟ فایل‌هایشان در جای خود باقی می‌مانند.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "8"
+      }
+    }
+  },
+  "popup_ask_clear_ok": {
+    "message": "پاک کردن"
+  },
+  "popup_said_file": {
+    "message": "$file$ کپی شد. آن را در یک پوشه، چت یا پیام جای‌گذاری کنید.",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_link": {
+    "message": "پیوند کپی شد"
+  },
+  "popup_said_removed": {
+    "message": "$file$ از فهرست حذف شد",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_deleted": {
+    "message": "$file$ حذف شد",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_again": {
+    "message": "در حال بارگیری دوباره $file$",
+    "placeholders": {
+      "file": {
+        "content": "$1",
+        "example": "report.pdf"
+      }
+    }
+  },
+  "popup_said_cleared": {
+    "message": "بارگیری‌های تکمیل‌شده پاک شدند"
+  },
+  "popup_act_gone": {
+    "message": "این بارگیری دیگر در فهرست نیست."
+  },
+  "popup_act_missing": {
+    "message": "فایل آن دیگر در محل ذخیره شده نیست (منتقل یا حذف شده است)."
+  },
+  "popup_act_running": {
+    "message": "ابتدا آن را متوقف کنید."
+  },
+  "popup_act_cant": {
+    "message": "این کار را نمی‌توان اکنون برای این بارگیری انجام داد."
+  },
+  "popup_act_unsupported": {
+    "message": "این سیستم نمی‌تواند این کار را انجام دهد."
+  },
+  "popup_act_off": {
+    "message": "Mister Download Manager در حال اجرا نیست."
+  },
+  "popup_act_busy": {
+    "message": "Mister Download Manager به‌موقع پاسخ نداد. دوباره امتحان کنید."
+  },
+  "popup_act_failed": {
+    "message": "این کار انجام نشد. دوباره امتحان کنید."
+  },
+  "status_running": {
+    "message": "در حال بارگیری: $count$",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_dl_open_remote": {
+    "message": "باز کردن صفحه‌اش"
   }
 }

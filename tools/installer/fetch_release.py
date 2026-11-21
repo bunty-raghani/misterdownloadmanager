@@ -1,11 +1,14 @@
 """One file of a GitHub release, for the release builds' helpers (dump_syms, appimagetool).
 
-    python tools/installer/fetch_release.py <owner/repo> <tag> <file name> <output path>
+    python tools/installer/fetch_release.py <owner/repo> <tag> <file name> <output path> [<sha256>]
+
+With a sha256 it refuses a file whose hash differs, so a pinned helper can't change under the build.
 
 With GH_TOKEN or GITHUB_TOKEN set it signs in and goes through GitHub's API: anonymous downloads
 from github.com can fail while signed-in ones work. Without a token it uses the public address.
 A server error or a dropped connection is tried again for several minutes.
 """
+import hashlib
 import json
 import os
 import sys
@@ -74,7 +77,12 @@ def fetch(repo, tag, name):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 5:
+    if len(sys.argv) not in (5, 6):
         sys.exit(__doc__)
+    data = fetch(sys.argv[1], sys.argv[2], sys.argv[3])
+    if len(sys.argv) == 6:
+        got = hashlib.sha256(data).hexdigest()
+        if got != sys.argv[5].lower():
+            sys.exit(f"{sys.argv[3]}: sha256 {got}, expected {sys.argv[5]}")
     with open(sys.argv[4], "wb") as f:
-        f.write(fetch(sys.argv[1], sys.argv[2], sys.argv[3]))
+        f.write(data)

@@ -1,0 +1,2 @@
+#!/bin/sh
+echo a fake yt-dlp, for a test

@@ -1,6 +1,6 @@
 # Mister Download Manager
 
-> Mister Download Manager (MDM) is a free, open-source (GPL-3.0) download manager for Windows 10 and 11, with builds for Linux and macOS (today's marked experimental; Linux is no longer experimental from version 0.5.0, macOS still is). It is laid out like Internet Download Manager (IDM) — toolbar, categories, download list, progress window with every connection, queues and scheduler — and is not affiliated with Tonec Inc. In its published benchmark against IDM 6.42 on the same computer and server it was faster in all seven scenarios (5.4× on a 1 GiB file, 106× on a 256 KiB file).
+> Mister Download Manager (MDM) is a free, open-source (GPL-3.0) download manager for Windows 10 and 11 and Linux (x86-64 and ARM64), with experimental builds for macOS. It is laid out like Internet Download Manager (IDM) — toolbar, categories, download list, progress window with every connection, queues and scheduler — and is not affiliated with Tonec Inc. In its published benchmark against IDM 6.42 on the same computer and server it was faster in all seven scenarios (5.4× on a 1 GiB file, 106× on a 256 KiB file).
 
 Key facts:
 - Price: free, no ads, no trial, no paid edition. Licence: GNU GPL 3.0. Source: https://github.com/anefzaoui/misterdownloadmanager
@@ -16,7 +16,7 @@ Key facts:
 
 ## Pages
 
-- [Download](https://misterdownloadmanager.com/download.html): Windows installer and portable zip, macOS .dmg, Linux AppImage/.deb/.rpm/.tar.gz, browser extension, checksums
+- [Download](https://misterdownloadmanager.com/download.html): Windows installer and portable zip, macOS .dmg, Linux AppImage/.deb/.rpm/.tar.gz, browser extension, checksums, the official sources and how to check a download's checksum and signature
 - [Free IDM alternative](https://misterdownloadmanager.com/idm-alternative.html): Mister Download Manager as a free, open-source alternative to Internet Download Manager, compared side by side with IDM and with nine other free download managers (Free Download Manager, AB Download Manager, Motrix, Neat Download Manager, Prism, JDownloader 2, Xtreme Download Manager, Gopeed, DOWNitUP)
 - [Features](https://misterdownloadmanager.com/features/): a page for each feature, with its window, where it is in the app and what it can't do yet
 - [Themes](https://misterdownloadmanager.com/themes.html): every built-in theme, light and dark, and how to make your own
@@ -26,3 +26,4 @@ Key facts:
 - [Languages](https://misterdownloadmanager.com/languages.html)
 - [Privacy policy](https://misterdownloadmanager.com/privacy.html)
 - [Benchmark report with raw data](https://misterdownloadmanager.com/benchmark.html)
+- [Press and mentions](https://misterdownloadmanager.com/press.html): independent articles, reviews and videos about MDM, its figures in the browser stores and on GitHub, and the official places to get it
