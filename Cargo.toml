@@ -46,7 +46,7 @@ skrifa = { version = "0.44.0", default-features = false, features = ["std"] }
 # A font from the system for a script MDM's own font lists don't name (theme.rs, #1125): the
 # system's own choice (DirectWrite, CoreText) through fontique, in the same egui fork; the font
 # files are mapped, not read into memory.
-egui_system_font_provider = { git = "https://github.com/anefzaoui/egui.git", rev = "823e3f3bffce51c87a48f15a27edaa9c13698447" }
+egui_system_font_provider = { git = "https://github.com/anefzaoui/egui.git", rev = "82ba93539645f29f39835a5691b5d4b79433b88e" }
 image = { version = "0.25.10", default-features = false, features = ["png"] }
 dirs = "7.0.0"
 # Gzipped IP blocklists, read to convert them for librqbit (crates/torrent blocklist.rs).
@@ -241,7 +241,9 @@ overflow-checks = false
 # mdm/glow-texture-no-panic, #1173); a window OpenGL can't paint for a moment (its context can't
 # be made current on it, a frame that can't be shown) is painted again 100 ms later instead of a
 # panic, the context kept, and the app is told (`ViewportHooks::gl_paint_failed`, branch
-# mdm-gl-context-errors, #1448).
+# mdm-gl-context-errors, #1448); every window's texture changes wait in one queue and reach the
+# painter whichever window paints first, so a dialog draws the pictures the main window loaded
+# while it was minimized (branch mdm-shared-texture-deltas, #1639).
 # craft-libs can take the same commits to share one egui again.
 [patch.crates-io]
 # librqbit 9.1.0 with per-torrent rate limits that change while a torrent runs (#39), and a
@@ -267,16 +269,16 @@ librqbit-upnp = { git = "https://github.com/anefzaoui/rqbit.git", rev = "c99ca4b
 # (ikatson/librqbit-utp#3, #4): on Windows, one packet sent to a closed port (or one oversized
 # datagram) no longer stops uTP for the whole session, and ringbuf 0.5.
 librqbit-utp = { git = "https://github.com/ikatson/librqbit-utp.git", rev = "06e1c53c8df6edb2830d6aab64a6d4bed8479908" }
-ecolor = { git = "https://github.com/anefzaoui/egui.git", rev = "823e3f3bffce51c87a48f15a27edaa9c13698447" }
-emath = { git = "https://github.com/anefzaoui/egui.git", rev = "823e3f3bffce51c87a48f15a27edaa9c13698447" }
-epaint = { git = "https://github.com/anefzaoui/egui.git", rev = "823e3f3bffce51c87a48f15a27edaa9c13698447" }
-epaint_default_fonts = { git = "https://github.com/anefzaoui/egui.git", rev = "823e3f3bffce51c87a48f15a27edaa9c13698447" }
-egui = { git = "https://github.com/anefzaoui/egui.git", rev = "823e3f3bffce51c87a48f15a27edaa9c13698447" }
-egui-winit = { git = "https://github.com/anefzaoui/egui.git", rev = "823e3f3bffce51c87a48f15a27edaa9c13698447" }
-egui_glow = { git = "https://github.com/anefzaoui/egui.git", rev = "823e3f3bffce51c87a48f15a27edaa9c13698447" }
-egui-wgpu = { git = "https://github.com/anefzaoui/egui.git", rev = "823e3f3bffce51c87a48f15a27edaa9c13698447" }
-egui_extras = { git = "https://github.com/anefzaoui/egui.git", rev = "823e3f3bffce51c87a48f15a27edaa9c13698447" }
-eframe = { git = "https://github.com/anefzaoui/egui.git", rev = "823e3f3bffce51c87a48f15a27edaa9c13698447" }
+ecolor = { git = "https://github.com/anefzaoui/egui.git", rev = "82ba93539645f29f39835a5691b5d4b79433b88e" }
+emath = { git = "https://github.com/anefzaoui/egui.git", rev = "82ba93539645f29f39835a5691b5d4b79433b88e" }
+epaint = { git = "https://github.com/anefzaoui/egui.git", rev = "82ba93539645f29f39835a5691b5d4b79433b88e" }
+epaint_default_fonts = { git = "https://github.com/anefzaoui/egui.git", rev = "82ba93539645f29f39835a5691b5d4b79433b88e" }
+egui = { git = "https://github.com/anefzaoui/egui.git", rev = "82ba93539645f29f39835a5691b5d4b79433b88e" }
+egui-winit = { git = "https://github.com/anefzaoui/egui.git", rev = "82ba93539645f29f39835a5691b5d4b79433b88e" }
+egui_glow = { git = "https://github.com/anefzaoui/egui.git", rev = "82ba93539645f29f39835a5691b5d4b79433b88e" }
+egui-wgpu = { git = "https://github.com/anefzaoui/egui.git", rev = "82ba93539645f29f39835a5691b5d4b79433b88e" }
+egui_extras = { git = "https://github.com/anefzaoui/egui.git", rev = "82ba93539645f29f39835a5691b5d4b79433b88e" }
+eframe = { git = "https://github.com/anefzaoui/egui.git", rev = "82ba93539645f29f39835a5691b5d4b79433b88e" }
 winit = { git = "https://github.com/storytold/winit.git", rev = "a517b3846ee8457d84ee4975110bfda6797c44dc" }
 # wgpu-hal 30.0.1 (the v30.0.1 release commit) with one change: a window's Direct3D 12 swap chain
 # is made with DXGI_SCALING_NONE instead of STRETCH, so while a dialog resizes, Windows shows the

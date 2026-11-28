@@ -135,6 +135,16 @@ pub struct Validators {
     pub etag_host: Option<String>,
     /// Last-Modified, kept only when it is a strong validator (`Date` at least 1 s later).
     pub last_modified: Option<String>,
+    /// The whole file's digests the server sends with every answer, whatever its range
+    /// (`x-oss-hash-crc64ecma: …`, as `name=value`, `download::digests_of`): the same on every
+    /// copy of the file, another for another file.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub digests: Vec<String>,
+    /// The copies behind the address differ in ETag and date but not in their digests (one file
+    /// on several origins behind one CDN, #1577): ranges are asked without `If-Range`, which
+    /// another copy answers with the whole file, and each answer must carry the same digest.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub by_digest: bool,
 }
 
 impl Validators {
@@ -159,7 +169,25 @@ impl Validators {
             etag_host: etag.as_ref().and(host.map(str::to_owned)),
             etag,
             last_modified,
+            ..Validators::default()
         }
+    }
+
+    /// Whether an answer carrying `theirs` (its digests, `name=value`) is this file: Some(true)
+    /// when they share a digest and none of the same name differs, Some(false) when one
+    /// differs, None when there is nothing to compare.
+    pub fn same_digest(&self, theirs: &[String]) -> Option<bool> {
+        let name = |d: &str| d.split_once('=').map_or("", |(n, _)| n).to_owned();
+        let mut same = None;
+        for ours in &self.digests {
+            for t in theirs.iter().filter(|t| name(t) == name(ours)) {
+                if t != ours {
+                    return Some(false);
+                }
+                same = Some(true);
+            }
+        }
+        same
     }
 
     /// The `If-Range` value for a request to `host`: the ETag only to the host that issued it,
@@ -177,7 +205,7 @@ impl Validators {
             Validators {
                 etag: Some(v.to_owned()),
                 etag_host: host.map(str::to_owned),
-                last_modified: None,
+                ..Validators::default()
             }
         } else {
             Validators {
@@ -257,6 +285,45 @@ mod migrate_tests {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// #1577: an answer is this file by its digests when they share one and none of the same
+    /// name differs; another value of the same digest is another file.
+    #[test]
+    fn same_digest_needs_one_in_common_and_none_different() {
+        let v = Validators {
+            digests: vec!["x-oss-hash-crc64ecma=1".into(), "x-linked-etag=ab".into()],
+            ..Validators::default()
+        };
+        let d = |list: &[&str]| list.iter().map(|s| (*s).to_owned()).collect::<Vec<_>>();
+        assert_eq!(v.same_digest(&d(&["x-oss-hash-crc64ecma=1"])), Some(true));
+        assert_eq!(
+            v.same_digest(&d(&["x-oss-hash-crc64ecma=1", "x-linked-etag=cd"])),
+            Some(false)
+        );
+        assert_eq!(v.same_digest(&d(&["x-oss-hash-crc64ecma=2"])), Some(false));
+        assert_eq!(v.same_digest(&d(&["x-goog-hash:md5=1"])), None);
+        assert_eq!(v.same_digest(&[]), None);
+        assert_eq!(
+            Validators::default().same_digest(&d(&["x-linked-etag=ab"])),
+            None
+        );
+    }
+
+    /// A state saved before digests (or without one) reads as before, and one saved with them
+    /// keeps them.
+    #[test]
+    fn digests_are_kept_in_the_state() {
+        let old: Validators = serde_json::from_str(r#"{"etag":"\"a\"","etag_host":"h"}"#).unwrap();
+        assert!(old.digests.is_empty() && !old.by_digest);
+        let v = Validators {
+            digests: vec!["x-oss-hash-crc64ecma=1".into()],
+            by_digest: true,
+            ..Validators::default()
+        };
+        let json = serde_json::to_string(&v).unwrap();
+        assert_eq!(serde_json::from_str::<Validators>(&json).unwrap(), v);
+        assert!(!serde_json::to_string(&old).unwrap().contains("digest"));
+    }
 
     #[test]
     fn save_load_round_trip() {

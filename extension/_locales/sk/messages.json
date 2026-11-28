@@ -116,6 +116,18 @@
   "popup_fix": {
     "message": "Ako to opraviť"
   },
+  "popup_by_hand": {
+    "message": "Táto kópia bola načítaná ručne a nebude sa sama aktualizovať."
+  },
+  "popup_by_hand_firefox": {
+    "message": "Táto kópia bola načítaná ručne: nebude sa sama aktualizovať a prehliadač ju po reštarte odstráni."
+  },
+  "popup_store_chrome": {
+    "message": "Pridať z obchodu Chrome Web Store"
+  },
+  "popup_store_firefox": {
+    "message": "Pridať z addons.mozilla.org"
+  },
   "popup_declined": {
     "message": "Ponechané prehliadaču: $name$",
     "placeholders": {
@@ -319,6 +331,9 @@
   },
   "video_all_qualities": {
     "message": "Všetky kvality a titulky..."
+  },
+  "video_part": {
+    "message": "Stiahnuť časť odtiaľto..."
   },
   "video_failed": {
     "message": "Mister Download Manager nie je nainštalovaný alebo sa nespustil"

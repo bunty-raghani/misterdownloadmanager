@@ -10,6 +10,10 @@
 #. Click'n'Load window: a page whose web site the browser doesn't name, so MDM can't tell which site it is
 #. {n} = a number (keep the braces as they are)
 @plural	An unknown site wants to send {n} link to Link grabber.|An unknown site wants to send {n} links to Link grabber.	An unknown site wants to send {n} link to Link grabber.|An unknown site wants to send {n} links to Link grabber.
+#. count in traypanel.rs
+#. the notification-area icon's panel (#1365), under the downloads it lists: how many others are running; {n} a number
+#. {n} = a number (keep the braces as they are)
+@plural	And {n} more|And {n} more	And {n} more|And {n} more
 #. count in torrent downloads
 #. number of additional files in a list of files
 #. {n} = a number (keep the braces as they are)
@@ -217,6 +221,12 @@
 #. text in the settings
 #. Options → DNS: the NextDNS configuration ID typed isn't one
 	A NextDNS configuration ID is six letters and digits (0-9, a-f).	A NextDNS configuration ID is six letters and digits (0-9, a-f).
+#. text in the Download video window
+#. why "Embed chapters" (and the subtitles) are greyed in Download video: only a part of the video is downloaded, and its chapters and subtitles would be the whole video's
+	A part is saved without the video's chapters and subtitles	A part is saved without the video's chapters and subtitles
+#. text in the Download video window
+#. why Part is greyed in Download video: the page is a playlist, whose videos are downloaded whole
+	A playlist's videos are downloaded whole	A playlist's videos are downloaded whole
 #. text in the Options window
 #. Options → Sites Logins → Cookies for video sites: the tooltip of the profile box
 	A profile's name or its folder. Empty: the profile used last. For a browser built on Chromium that isn't listed (Helium, Thorium...), choose Chromium and its profile's folder.	A profile's name or its folder. Empty: the profile used last. For a browser built on Chromium that isn't listed (Helium, Thorium...), choose Chromium and its profile's folder.
@@ -250,6 +260,7 @@
 #. a download's server's round trip: {ms} a number of milliseconds, {reach} near, medium or far
 	about {ms} ms ({reach})	about {ms} ms ({reach})
 #. text in the Download video window
+#. in Download video beside the part's From and To: the part's size, estimated from the whole video's; {size} is "12.3 MB"
 #. a file size that is only an estimate, as a screen reader says it in the Download video window's list of qualities; {size} is "532 MB"
 #. {size} = a file size such as "4.2 MB" (keep the braces as they are)
 	about {size}	about {size}
@@ -670,7 +681,7 @@
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Canada	Canada
-#. button in the Batch download window; button in categories.rs; text in the Checksum window; button in a dialog box; button in extracting archives (a download's log, the Archive password window); button in the Find window; button in gallerydlg.rs; text in the Link grabber window; text in the Help menu's windows (About, updates, shortcuts, Tell a friend); button in langpick.rs; button in the Options window; button in a download's progress window; text in remote.rs; button in the Scheduler window; button in the Add torrent window; button in the Download video window
+#. button in the Batch download window; button in categories.rs; text in the Checksum window; button in a dialog box; button in extracting archives (a download's log, the Archive password window); button in the Find window; button in gallerydlg.rs; text in the Link grabber window; text in the Help menu's windows (About, updates, shortcuts, Tell a friend); button in langpick.rs; button in the Options window; button in a download's progress window; text in remote.rs; button in the Scheduler window; button in the Add torrent window; button in traypanel.rs; button in the Download video window
 #. button: stop downloading the update
 	Cancel	Cancel
 #. text in errors.rs
@@ -742,6 +753,9 @@
 	Check the proxy in Options → {proxy}, or download {name} yourself and choose it in {helpers} → {other}.	Check the proxy in Options → {proxy}, or download {name} yourself and choose it in {helpers} → {other}.
 #. text in helpers.rs
 	Check your connection, then try again, or get them later from the video window.	Check your connection, then try again, or get them later from the video window.
+#. text in the Options window
+#. tooltip of "Show downloads when the notification area icon is clicked": what the click on MDM's tray icon does when it is ticked and when not
+	Checked, a click on MDM's icon shows what is downloading, with Pause and Cancel, and a double click opens the window; unchecked, a click shows or hides the window	Checked, a click on MDM's icon shows what is downloading, with Pause and Cancel, and a double click opens the window; unchecked, a click shows or hides the window
 #. text in the Options window
 #. tooltip of the close-setting: checked keeps MDM running when the window closes, in the notification area when available or else the taskbar; downloads continue; unchecked closing quits
 	Checked, closing the window keeps MDM running: it hides in the notification area when available, or minimizes to the taskbar otherwise, and downloads continue; unchecked, closing quits MDM	Checked, closing the window keeps MDM running: it hides in the notification area when available, or minimizes to the taskbar otherwise, and downloads continue; unchecked, closing quits MDM
@@ -830,7 +844,7 @@
 	Clipboard	Clipboard
 #. text in the Options window
 	Clock:	Clock:
-#. text in the Checksum window; text in the main window (menus, toolbar, Categories pane); button in crashui.rs; button in a dialog box; button in extension.rs; button in the Help menu's windows (About, updates, shortcuts, Tell a friend); button in helpers.rs; button in the download list; button in the Options window; button in rssdlg.rs; button in torrentfiles.rs; text in standard windows
+#. text in the Checksum window; text in the main window (menus, toolbar, Categories pane); button in crashui.rs; button in a dialog box; button in extension.rs; button in the Help menu's windows (About, updates, shortcuts, Tell a friend); button in helpers.rs; button in the download list; button in the Options window; button in rssdlg.rs; button in torrentfiles.rs; text in traypanel.rs; text in standard windows
 #. both verbs: Verify = check the file now; Close = close the window
 #. tooltip of the × that closes the Categories pane
 #. verb: closes this window
@@ -984,7 +998,7 @@
 #. text in the Options window
 #. a date's order: day first (30/10/2026)
 	Day, month, year	Day, month, year
-#. page title in the Options window
+#. page title in the Options window; text in the Options window
 	Debrid service accounts	Debrid service accounts
 #. text in the Scheduler window
 	December	December
@@ -1121,12 +1135,6 @@
 	Download Later	Download Later
 #. window title in a dialog box
 	Download later	Download later
-#. text in the Scheduler's download limits
-#. a11y name of the second Download limits box, where "every {n} hours" puts its {n}
-	Download limit: every how many hours	Download limit: every how many hours
-#. text in the Scheduler's download limits
-#. a11y name of the first Download limits box, where "Download no more than {n} MBytes" puts its {n}
-	Download limit: MBytes	Download limit: MBytes
 #. window title in a dialog box; text in the Options window; checkbox in the Options window; text in the Scheduler window
 #. the Scheduler's page (and checkbox) that caps how much is downloaded in a time
 	Download limits	Download limits
@@ -1217,8 +1225,12 @@
 #. text in win32.rs
 #. Windows' Settings → Default apps: what Mister Download Manager is
 	Downloads files, videos and torrents	Downloads files, videos and torrents
-#. text in the tray icon's menu
+#. message or event log entry in the main window
+#. the notice shown once, the first time a download comes from a browser's private (incognito) window: it stays in MDM's list like any other, after a restart too; where to turn that off. {options} = the Options window, {general} = its General tab, {checkbox} = the checkbox "Keep private-window downloads in the list"
+	Downloads from a browser's private window stay in MDM's list like any other, also after MDM restarts; their cookies are never saved. To keep them in memory only, untick {options} → {general} → {checkbox}.	Downloads from a browser's private window stay in MDM's list like any other, also after MDM restarts; their cookies are never saved. To keep them in memory only, untick {options} → {general} → {checkbox}.
+#. text in the tray icon's menu; text in traypanel.rs
 #. tray menu: a submenu of the downloads now running; choosing one shows its progress window
+#. the notification-area icon's panel (#1365): its title, over the downloads now running (also the tray menu's submenu)
 	Downloads in progress	Downloads in progress
 #. text in a dialog box
 #. {time} = a time of day (keep the braces as they are)
@@ -1341,6 +1353,9 @@
 	Every local network address	Every local network address
 #. what a keyboard shortcut does in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 	Everything at its normal size (100%)	Everything at its normal size (100%)
+#. text in the Download video window
+#. choice in Download video's Part: the part is encoded again so it starts and ends exactly at From and To (slower)
+	Exact cut, encoded again	Exact cut, encoded again
 #. text in the Options window
 #. label before an example date and time written the chosen way
 	Example:	Example:
@@ -1403,6 +1418,9 @@
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Faroe Islands	Faroe Islands
+#. text in the Download video window
+#. tooltip of "Quick cut, at keyframes" in Download video: what it does
+	Fast: the streams are copied as they are, so the part may start a little before From	Fast: the streams are copied as they are, so the part may start a little before From
 #. text in the Scheduler window
 	February	February
 #. text in rssdlg.rs
@@ -1568,6 +1586,12 @@
 #. message or event log entry in the main window
 #. where a download came from, in its log: a playlist or channel, by yt-dlp
 	from a playlist (yt-dlp)	from a playlist (yt-dlp)
+#. text in the download list (sizes, speeds, status)
+#. tooltip of the mark (a mask) before a download's status in the list: it came from a browser's private (incognito) window, and it is in memory only, gone from the list when MDM closes
+	From a private window: in memory only, gone from the list when MDM closes	From a private window: in memory only, gone from the list when MDM closes
+#. text in the download list (sizes, speeds, status)
+#. tooltip of the mark (a mask) before a download's status in the list: it came from a browser's private (incognito) window, and MDM's list keeps it after a restart (Options → General → Keep private-window downloads in the list)
+	From a private window: kept in the list	From a private window: kept in the list
 #. message or event log entry in the main window
 	from a torrent file	from a torrent file
 #. option (radio button) in the Options window
@@ -1580,6 +1604,9 @@
 	from the browser	from the browser
 #. message or event log entry in the main window
 	from the command line	from the command line
+#. text in the Download video window
+#. in Download video after "Only a part": {from} and {to} are boxes where times are typed (1:30, 1:02:03), drawn where they stand in the translation
+	from {from} to {to}	from {from} to {to}
 #. text in the Batch download window
 	From:	From:
 #. checkbox in the Options window
@@ -1609,7 +1636,7 @@
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Gambia	Gambia
-#. text in the download list (sizes, speeds, status); text in the Options window; text in a download's progress window
+#. message or event log entry in the main window; text in the download list (sizes, speeds, status); text in the Options window; text in a download's progress window
 #. category name: files of no particular kind
 #. tab title: general settings
 #. tab title: general information
@@ -1934,7 +1961,7 @@
 #. text in helpers.rs
 #. Helpers: checkbox: MDM checks for and installs newer versions of its own yt-dlp, ffmpeg, gallery-dl and Node.js by itself
 	Keep MDM's helpers up to date automatically	Keep MDM's helpers up to date automatically
-#. text in the Options window
+#. message or event log entry in the main window; text in the Options window
 #. checkbox: downloads started from a browser's private (incognito) window are saved in MDM's download list like any other, so they are still there after MDM restarts
 	Keep private-window downloads in the list	Keep private-window downloads in the list
 #. text in the Options window
@@ -2479,6 +2506,9 @@
 	No day is ticked: the queue will not start	No day is ticked: the queue will not start
 #. message or event log entry in the main window
 	No download links were found in the clipboard. Copy a text with http, https, ftp or magnet links in it, and try again.	No download links were found in the clipboard. Copy a text with http, https, ftp or magnet links in it, and try again.
+#. text in traypanel.rs
+#. the notification-area icon's panel (#1365) when no download is running
+	No downloads are running	No downloads are running
 #. message or event log entry in the main window
 #. title in the empty download list (this category or queue has no downloads)
 	No downloads here	No downloads here
@@ -2677,6 +2707,9 @@
 	Only a finished download, or one not started yet, can be moved	Only a finished download, or one not started yet, can be moved
 #. message or event log entry in the main window
 	Only a finished download, or one not started yet, can be moved. Stop it and finish it first.	Only a finished download, or one not started yet, can be moved. Stop it and finish it first.
+#. text in the Download video window
+#. checkbox in Download video: download only a part of the video or sound; the From and To boxes follow it
+	Only a part	Only a part
 #. text in the Scheduler window
 #. the Scheduler, under "Wake the computer to run this queue" (Linux): the computer's wake alarm can be set by an administrator only
 	Only an administrator can allow this	Only an administrator can allow this
@@ -2690,6 +2723,9 @@
 #. in Download video, a list longer than MDM lists: only its first {n} videos are shown
 #. {n} = a number (keep the braces as they are)
 	Only the first {n} videos are listed.	Only the first {n} videos are listed.
+#. message or event log entry in the main window
+#. event log: a torrent through a debrid account gets only the files ticked in Add torrent; {files} how many ("3")
+	Only the {files} file(s) ticked in Add torrent	Only the {files} file(s) ticked in Add torrent
 #. checkbox in a dialog box
 	Only while I'm using the computer	Only while I'm using the computer
 #. button in a dialog box; text in a dialog box; button in a download's Properties window; button in torrentfiles.rs
@@ -2709,7 +2745,8 @@
 	Open in browser	Open in browser
 #. checkbox in the Add torrent window
 	Open magnet links and .torrent files with Mister Download Manager	Open magnet links and .torrent files with Mister Download Manager
-#. text in the tray icon's menu
+#. text in the tray icon's menu; text in traypanel.rs
+#. the notification-area icon's panel (#1365): its button that opens the main window (also the tray menu's first item)
 	Open Mister Download Manager	Open Mister Download Manager
 #. text in extension.rs
 #. step 2 of turning on the Safari extension; Cmd is the Command key
@@ -2736,7 +2773,7 @@
 #. button in a dialog box
 #. the trailing ... means it opens a window: keep it
 	Open with...	Open with...
-#. text in the tray icon's menu
+#. message or event log entry in the main window; text in the tray icon's menu
 #. plural noun: opens the Options window (settings)
 	Options	Options
 #. text in a download's progress window
@@ -2790,6 +2827,9 @@
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Paraguay	Paraguay
+#. text in the Download video window
+#. label in Download video before the choice to download only a part of the video or sound (from one time to another)
+	Part	Part
 #. text in the Batch download window; text in a dialog box; label in the Options window; text in the Options window; text in a download's Properties window
 	Password	Password
 #. text in the Link grabber window; text in the Options window
@@ -2880,6 +2920,9 @@
 #. text in a dialog box
 #. tooltip of the greyed Preview button in Download File Info
 	Preview isn't available yet	Preview isn't available yet
+#. message or event log entry in the main window
+#. title of the notice shown once, the first time a download comes from a browser's private (incognito) window
+	Private-window downloads	Private-window downloads
 #. text in the Download video window
 #. a private-window video's authentication failure: only cookies supplied by that private window may be used, even after restarting MDM
 	Private-window downloads do not use Cookies for video sites from Options. Open the page in a private window, sign in there, and use its Download video button again.	Private-window downloads do not use Cookies for video sites from Options. Open the page in a private window, sign in there, and use its Download video button again.
@@ -2933,6 +2976,9 @@
 #. item in the Categories tree in the main window; text in the Scheduler window
 #. plural noun: the download queues
 	Queues	Queues
+#. text in the Download video window
+#. choice in Download video's Part: cut where the video has a keyframe, the streams copied as they are (fast; it may start a little before From)
+	Quick cut, at keyframes	Quick cut, at keyframes
 #. text in the Options window
 #. Options → Sites Logins → Cookies for video sites: a note under the choices
 	Read on this computer only, and sent only to the video's site.	Read on this computer only, and sent only to the video's site.
@@ -3274,6 +3320,9 @@
 	Show download complete dialog	Show download complete dialog
 #. checkbox in the Options window
 	Show download progress dialog when a download starts	Show download progress dialog when a download starts
+#. text in the Options window
+#. checkbox: a click on MDM's icon in the notification area (system tray) shows a small panel over it with the downloads now running, their progress, Pause and Cancel; unticked, the click shows or hides the main window
+	Show downloads when the notification area icon is clicked	Show downloads when the notification area icon is clicked
 #. button in a dialog box
 #. button: shows these downloads in MDM's list, selected
 	Show in list	Show in list
@@ -3489,6 +3538,9 @@
 #. text in helpers.rs
 #. the trailing ... means it is still going on: keep it
 	Starting...	Starting...
+#. text in the Download video window
+#. tooltip of "Exact cut, encoded again" in Download video: what it does
+	Starts and ends exactly at From and To: ffmpeg encodes the part again, which takes longer	Starts and ends exactly at From and To: ffmpeg encodes the part again, which takes longer
 #. text in the Options window
 #. column title: the account's state (premium, days left)
 	State	State
@@ -3628,6 +3680,9 @@
 #. text in the Options window
 #. Options → Archives, in red: the program chosen with "Use another program..." isn't 7-Zip's command line program (an archiver's window was picked instead); 7z.exe is that program's file name
 	That isn't 7-Zip's command line program (7z.exe).	That isn't 7-Zip's command line program (7z.exe).
+#. text in the Download video window
+#. why Download Now is greyed in Download video: Part's times are the whole video's (untick Only a part to download it whole)
+	That's the whole video: change From or To, or untick Only a part	That's the whole video: change From or To, or untick Only a part
 #. text in torrent downloads
 #. an error: the copy of the .torrent file the app keeps is missing
 	the .torrent file kept for it is gone	the .torrent file kept for it is gone
@@ -3864,6 +3919,9 @@
 #. text in debrid.rs
 #. Options → Accounts: the service doesn't say whether the account is premium (Mega-Debrid, signed in with an API key); a free account's links are refused when downloading
 	the service doesn't say whether it is premium	the service doesn't say whether it is premium
+#. tooltip (why a control is greyed) in the Download video window
+#. why Part is greyed in Download video: the site doesn't say how long the video is (a live stream, for one)
+	The site doesn't say how long this video is	The site doesn't say how long this video is
 #. text in errors.rs
 #. why a download failed (#701): a file host answered with its own web page (a countdown before the link, a captcha, a sign-in) where the file was expected. The browser gets past it; MDM's browser extension then hands the real file back to MDM
 	the site sent a web page instead of the file (a waiting page, a captcha or a sign-in): open the link in your browser, finish there, and the download comes back to MDM	the site sent a web page instead of the file (a waiting page, a captcha or a sign-in): open the link in your browser, finish there, and the download comes back to MDM
@@ -4044,6 +4102,7 @@
 	This name is reserved by Windows	This name is reserved by Windows
 #. tooltip (why a control is greyed) in the Download video window
 #. why "Embed chapters" is greyed: ffmpeg (a helper program) is not installed
+#. why Part is greyed in Download video: ffmpeg (a helper program) is not installed
 #. why "Put them into the video" is greyed: ffmpeg (a helper program) is not installed
 	This needs ffmpeg	This needs ffmpeg
 #. text in the Add torrent window
@@ -4120,6 +4179,12 @@
 #. text in unix.rs
 #. Linux, after a missing library's name: {command} = the terminal command that installs it ("sudo apt install libxkbcommon-x11-0"), left as it is
 	To install what's missing: {command}	To install what's missing: {command}
+#. text in the Download video window
+#. why Download Now is greyed in Download video: Part's To time is past the video's end
+	To is past the end of the video	To is past the end of the video
+#. text in the Download video window
+#. why Download Now is greyed in Download video: Part's To time isn't after its From time
+	To must come after From	To must come after From
 #. text in the Batch download window
 	To:	To:
 #. text in the Scheduler window
@@ -4259,6 +4324,9 @@
 #. text in the Scheduler window
 #. why OK is greyed when naming a new queue
 	Type the queue's name	Type the queue's name
+#. text in the Download video window
+#. why Download Now is greyed in Download video: a Part box holds something that isn't a time
+	Type the times as 1:30 or 1:02:03	Type the times as 1:30 or 1:02:03
 #. text in the Options window
 #. Options → Add an account: waiting while the user types the code at the service's page; {page} its address, {time} minutes:seconds left
 #. {time} = a time of day (keep the braces as they are)
@@ -4387,7 +4455,7 @@
 #. text in the Options window
 #. Options → Add an account: label before the field for the user name at the debrid service
 	User name:	User name:
-#. page title in the Options window
+#. page title in the Options window; text in the Options window
 	User names and passwords for servers/sites	User names and passwords for servers/sites
 #. text in the Options window
 	User-Agent for manually added downloads:	User-Agent for manually added downloads:
@@ -4699,7 +4767,7 @@
 #. text in the Options window
 #. Options → Remote → Pair a device: done; {device} = the name it was given
 	{device} is paired. It can control MDM now.	{device} is paired. It can control MDM now.
-#. text in remote.rs
+#. text in remote.rs; text in traypanel.rs
 #. remote control page (on a phone): progress; {done} and {size} are sizes ("1.2 MB of 7.5 MB")
 #. {size} = a file size such as "4.2 MB" (keep the braces as they are)
 	{done} of {size}	{done} of {size}
@@ -4876,6 +4944,9 @@
 #. text in errors.rs
 	{service} can't reach this file host right now; MDM will try again later	{service} can't reach this file host right now; MDM will try again later
 #. text in errors.rs
+#. a torrent through a debrid service: a file ticked in Add torrent isn't among the files the service has, so nothing was downloaded (rather than every file); {service} its name, {file} the file's path in the torrent
+	{service} doesn't list {file}, chosen in Add torrent: nothing was downloaded. Add the torrent again with all its files, or without this one	{service} doesn't list {file}, chosen in Add torrent: nothing was downloaded. Add the torrent again with all its files, or without this one
+#. text in errors.rs
 #. a debrid service's error: it isn't answering
 	{service} is not responding; try again later	{service} is not responding; try again later
 #. text in errors.rs
@@ -4990,6 +5061,12 @@ column	Upload speed	Upload speed
 #. in the menu under the download button over a video: the page is a list of videos (a playlist), whose videos are chosen in the app's window; keep the name Mister Download Manager as it is
 extension	A list of videos: choose them in Mister Download Manager	A list of videos: choose them in Mister Download Manager
 #. text in the browser extension
+#. link after popup_by_hand_firefox in the toolbar button's popup: opens the add-on's page on addons.mozilla.org (Firefox's add-ons store), whose copy Firefox keeps and updates; keep addons.mozilla.org as it is
+extension	Add it from addons.mozilla.org	Add it from addons.mozilla.org
+#. text in the browser extension
+#. link after popup_by_hand in the toolbar button's popup: opens the extension's page in the Chrome Web Store, whose copy the browser keeps up to date; keep the name Chrome Web Store as it is
+extension	Add it from the Chrome Web Store	Add it from the Chrome Web Store
+#. text in the browser extension
 #. on the download button (green) over a video after the app added and started the download; a quality may follow ('· 1080p') and a 'Show' button; MDM is the app's short name, keep it; short
 extension	Added to MDM	Added to MDM
 #. text in the browser extension
@@ -5088,6 +5165,10 @@ extension	Done	Done
 #. text in the browser extension
 #. button beside a video, sound or stream in the toolbar button's popup: download it with the app; verb; short
 extension	Download	Download
+#. text in the browser extension
+#. command in the menu of the download button over a video: opens the app's Download video window with Part ticked, From set to where the video is playing now, to download only a part of it
+#. the trailing ... means it is still going on: keep it
+extension	Download a part from here...	Download a part from here...
 #. text in the browser extension
 #. command in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): downloads the file again from the start
 extension	Download again	Download again
@@ -5487,6 +5568,12 @@ extension	This browser isn't ticked in Options → General.	This browser isn't t
 #. text in the browser extension
 #. choice under Send downloads to: the Mister Download Manager on this computer
 extension	This computer	This computer
+#. text in the browser extension
+#. one line at the top of the toolbar button's popup when the extension was loaded by hand (Load unpacked, with Developer mode on) in Chrome, Edge, Brave, Opera or Vivaldi; followed by the link popup_store_chrome
+extension	This copy was loaded by hand and won't update itself.	This copy was loaded by hand and won't update itself.
+#. text in the browser extension
+#. one line at the top of the toolbar button's popup when the add-on was loaded by hand in Firefox (Load Temporary Add-on, in about:debugging); followed by the link popup_store_firefox; the browser here is Firefox (or Zen, LibreWolf)
+extension	This copy was loaded by hand: it won't update itself, and the browser removes it when it restarts.	This copy was loaded by hand: it won't update itself, and the browser removes it when it restarts.
 #. text in the browser extension
 #. status when a download carried too much data (very large cookies) to give to the app
 extension	This download's details were too large to hand over	This download's details were too large to hand over

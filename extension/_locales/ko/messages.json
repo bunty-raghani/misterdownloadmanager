@@ -116,6 +116,18 @@
   "popup_fix": {
     "message": "해결 방법"
   },
+  "popup_by_hand": {
+    "message": "이 복사본은 수동으로 로드되었으며 자동으로 업데이트되지 않습니다."
+  },
+  "popup_by_hand_firefox": {
+    "message": "이 복사본은 수동으로 로드되었습니다. 자동으로 업데이트되지 않으며 브라우저를 다시 시작하면 제거됩니다."
+  },
+  "popup_store_chrome": {
+    "message": "Chrome 웹 스토어에서 추가"
+  },
+  "popup_store_firefox": {
+    "message": "addons.mozilla.org에서 추가"
+  },
   "popup_declined": {
     "message": "브라우저에 남겨짐: $name$",
     "placeholders": {
@@ -319,6 +331,9 @@
   },
   "video_all_qualities": {
     "message": "모든 화질 및 자막..."
+  },
+  "video_part": {
+    "message": "여기부터 일부 다운로드..."
   },
   "video_failed": {
     "message": "Mister Download Manager이(가) 설치되지 않았거나 시작되지 않았습니다."

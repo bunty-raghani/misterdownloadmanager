@@ -70,6 +70,15 @@ pub struct Faults {
     /// The server (of a file host's several) whose copy is served: its own ETag and a
     /// Last-Modified N × 12 s later, the same bytes (Rapidgator's servers).
     pub node: Option<u64>,
+    /// A CDN in front of N copies of the file (#1577): request n is served by copy `(n-1) % N`
+    /// (as `node`: its own ETag and Last-Modified, the same bytes), whichever node a connection
+    /// lands on.
+    pub nodes: Option<u64>,
+    /// Every answer carries the whole file's digest, `x-oss-hash-crc64ecma` (a stand-in value:
+    /// the same on every copy, another once `etag_change_every` changes the file), as object
+    /// stores and their CDNs send it with any range (#1577).
+    #[serde(deserialize_with = "flag_opt")]
+    pub digest: Option<bool>,
     /// Delay before sending response headers, ms.
     pub latency_ms: Option<u64>,
     /// Delay before answering a request that asks for a range, ms (on top of `latency_ms`): the
@@ -156,6 +165,8 @@ impl Faults {
             etag_change_every: over.etag_change_every.or(self.etag_change_every),
             etag: over.etag.clone().or(self.etag.clone()),
             node: over.node.or(self.node),
+            nodes: over.nodes.or(self.nodes),
+            digest: over.digest.or(self.digest),
             latency_ms: over.latency_ms.or(self.latency_ms),
             range_latency_ms: over.range_latency_ms.or(self.range_latency_ms),
             range_rate: over.range_rate.or(self.range_rate),

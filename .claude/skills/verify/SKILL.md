@@ -44,12 +44,51 @@ Pick what the diff touches:
 | the engine, protocols, errors | `cargo run -p mdm-labserver -- --faults "<fault>"` (GET / lists them) and a real download through it: `cargo run -p mdm-app -- --cli get <url> -o <dir>` and the app's window |
 | a window, a dialog, a theme | the app with `MDM_DATA_DIR`, the window opened with `/show <window>` (as `tools/shots/make.py` does), in light and dark, a long language (de) and right to left (ar), at more than one interface size; Classic and a theme that draws its own title bar |
 | the browser add-on | `tools/extension/pack.ps1`, then `node tools/extension/e2e.mjs <browsers> --only=<cases>` (real headless browsers, their own profiles); add a case for the new behaviour |
-| Linux or macOS code, fonts, the desktop | the Linux test machine (`tools/lab/linux-vm/vm.ps1`, its guest scripts `build.sh`, `restart-lab.sh`, `shots.sh`); macOS builds only on GitHub's runners |
+| Linux or macOS code, fonts, the desktop | the Linux test machine (`tools/lab/linux-vm/vm.ps1`, its guest scripts `build.sh`, `restart-lab.sh`, `shots.sh`); macOS on GitHub's macOS runners (below) |
 | videos, live streams | a local stream (ffmpeg to HLS, a local http server) through the real yt-dlp and ffmpeg |
 | the website | `python tools/website/build.py --serve`, checked at phone width and desktop |
 | the website's lightbox or dialogs (`website/vitrine/`) | they are Vitrine: change them upstream ([anefzaoui/vitrine](https://github.com/anefzaoui/vitrine), [anefzaoui/vitrine-modal](https://github.com/anefzaoui/vitrine-modal)), where `node test/e2e.mjs` runs them in Chromium and Firefox; then `python tools/website/vitrine.py fetch --lightbox=<sha> --modal=<sha>` and the built site in both browsers |
 
 Write down what you ran and what you saw: commands, numbers, log lines, before and after.
+
+### macOS: the runner
+
+Nobody here has a Mac; GitHub's macOS runners are the Mac. The **macOS showcase** workflow
+(`.github/workflows/macos-showcase.yml`, scripts in `tools/lab/macos/`) builds a commit on Apple
+Silicon (`macos-latest`) and Intel (`macos-15-intel`) and runs it there as a person would: its
+own data folder and download folder, the lab server at `http://downloads.example`, windows opened
+with `/show`, pictures taken with `screencapture`. A run builds only the commit it runs on; to
+check a pull request, push its head commit to a branch of its own and the push starts it:
+
+```
+git push origin <head sha>:refs/heads/macos-showcase/pr-<n>
+gh run list --workflow macos-showcase.yml --branch macos-showcase/pr-<n>
+gh run watch <run id>; gh run download <run id> -n macos-arm64 -n macos-x86_64
+git push origin --delete macos-showcase/pr-<n>          # when done
+```
+
+Never give it a ref of other code to build on `main` (it has no such input on purpose): a run on
+`main` shares main's caches, and an outside contributor's code there could plant something in
+them that main's builds would read. On its own branch it can't: main never reads that branch's
+caches. By hand on a branch: `gh workflow run macos-showcase.yml --ref <branch> -f jobs=verify`.
+
+A push runs everything. `jobs=verify` (about 12 minutes on Apple Silicon, 20 on Intel) starts
+MDM, runs a 200 MB download over 8 connections to its end and checks its SHA-256 against the server's, asks the
+automation API about it, checks `--cli get` the same way, takes the main and progress windows
+(`verify/*.png`), keeps MDM's log (`verify/logs/`) and quits with `/exit`, timed, twice (main
+window only; a dialog open and the main window minimized, #1651). `verify/verify.txt` has a
+`PASS` or `FAIL` line for each; the job fails if any failed. A change to a window adds
+`jobs=all` (or `showcase`): light and dark, every style theme, Options, the menu bar item and a
+recording, under `showcase/`. `jobs=dmg` installs the latest release's `.dmg` files and checks
+them (`dmg_from_commit=true`: this commit's too, as the release builds them). To try changes to
+the scripts themselves, push them to a `macos-showcase/<name>` branch: that runs everything
+(`macos-showcase/dmg<name>`: the `.dmg` jobs only, with the commit's own).
+
+The PR then says `Verified: macOS runner (Apple Silicon, Intel; run <link>)`. What a runner can't
+show stays under `Not verified:` — a real GPU (runners draw with Apple's software OpenGL), a
+Retina panel (the showcase's HiDPI screen is a virtual display), Gatekeeper's first-start
+question (an unsigned app is started with its quarantine removed), Safari itself, and the menu bar
+item's panel and menu (a click posted there opens neither on a runner).
 
 ## 3. Screenshots
 

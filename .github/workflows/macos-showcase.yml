@@ -1,0 +1,180 @@
+# MDM on macOS, run for real on GitHub's macOS runners: Apple Silicon (macos-latest) and Intel
+# (macos-15-intel, the last Intel image GitHub offers). Nobody watches their screens and nothing
+# personal is on them. Three jobs (tools/lab/macos/):
+#
+# - app: builds the commit the run is on, then verify.sh (a
+#   download from the lab server to its end and its SHA-256, the automation API, `--cli get`, the
+#   main and progress windows' pictures, MDM's log, /exit timed) and showcase.sh (light and dark,
+#   the style themes, Options, the menu bar item, a screen recording). Its artifact:
+#   macos-<arch>. What a pull request says as "Verified: macOS runner" (.claude/skills/verify).
+# - dmg: the latest release's .dmg for each processor (and, with `dmg_from_commit`, this commit's,
+#   built by build-macos.sh as the release builds them) installed as a person installs it and
+#   checked: dmg-check.sh.
+#
+# Run by hand (Actions → macOS showcase → Run workflow, on a branch) or by a push to a
+# macos-showcase/** branch (macos-showcase/dmg*: with this commit's .dmg files). Never on other
+# pushes or pull requests. No secret is used; the token reads only.
+#
+# A run builds only the commit it runs on: there is no input naming other code. A pull request is
+# checked by pushing its commit to a macos-showcase/pr-<n> branch (.claude/skills/verify), so its
+# code runs in that branch's own cache scope, which main never reads: it can't plant anything in
+# main's caches. Runs on main build main's own code. Caches are only read here (CI's), never saved.
+name: macOS showcase
+
+on:
+  workflow_dispatch:
+    inputs:
+      jobs:
+        description: "Which checks"
+        type: choice
+        options: [all, verify, showcase, dmg]
+        default: all
+      release:
+        description: "The release whose .dmg files are checked (empty: the latest)"
+        type: string
+        default: ""
+      dmg_from_commit:
+        description: "Also build this commit's .dmg files (build-macos.sh) and check them"
+        type: boolean
+        default: false
+  push:
+    branches: ["macos-showcase/**"]
+
+concurrency:
+  group: macos-showcase-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  app:
+    if: inputs.jobs != 'dmg' && !startsWith(github.ref, 'refs/heads/macos-showcase/dmg')
+    name: app (${{ matrix.arch }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { runner: macos-latest, arch: arm64 }
+          - { runner: macos-15-intel, arch: x86_64 }
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - name: Toolchain
+        run: rustup show active-toolchain || rustup toolchain install
+
+      # CI's own cache of this runner's build (ci.yml saves it on main), read only: these runs add
+      # none of their own to the repository's 10 GB.
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-${{ runner.arch }}-cargo-${{ hashFiles('Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-${{ runner.arch }}-cargo-
+
+      - name: Build
+        id: build
+        run: |
+          cargo build -p mdm-app -p mdm-cli -p mdm-nmhost -p mdm-labserver
+          bash tools/lab/macos/bundle.sh target/debug "$RUNNER_TEMP/Mister Download Manager.app"
+
+      - name: Verify (a download to its end, the API, the windows, /exit)
+        if: inputs.jobs != 'showcase'
+        run: bash tools/lab/macos/verify.sh "$RUNNER_TEMP/Mister Download Manager.app" target/debug/labserver "$RUNNER_TEMP/out/verify"
+
+      - name: Showcase (light and dark, themes, the menu bar item, a recording)
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && inputs.jobs != 'verify' }}
+        timeout-minutes: 30
+        run: bash tools/lab/macos/showcase.sh "$RUNNER_TEMP/Mister Download Manager.app" target/debug/labserver "$RUNNER_TEMP/out/showcase"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: macos-${{ matrix.arch }}
+          path: ${{ runner.temp }}/out
+
+  # This commit's .dmg files, built as release.yml builds them (both processors on Apple Silicon).
+  dmg-build:
+    if: (inputs.dmg_from_commit && (inputs.jobs == 'all' || inputs.jobs == 'dmg')) || startsWith(github.ref, 'refs/heads/macos-showcase/dmg')
+    runs-on: macos-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Toolchain
+        run: rustup show active-toolchain || rustup toolchain install
+      - name: Apple Silicon and Intel .dmg
+        env:
+          # Signed-in downloads of the build's helpers (fetch_release.py) on main only; elsewhere
+          # (a pull request's commit on a macos-showcase/ branch) anonymous: no token for its code.
+          GH_TOKEN: ${{ github.ref == 'refs/heads/main' && github.token || '' }}
+        run: bash tools/installer/build-macos.sh
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: dmg-built
+          path: target/dist/*.dmg
+
+  dmg:
+    needs: dmg-build
+    if: always() && (inputs.jobs == '' || inputs.jobs == 'all' || inputs.jobs == 'dmg') && needs.dmg-build.result != 'failure'
+    name: dmg (${{ matrix.source }}, ${{ matrix.arch }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON((inputs.dmg_from_commit || startsWith(github.ref, 'refs/heads/macos-showcase/dmg')) && '[{"runner":"macos-latest","arch":"arm64","source":"release"},{"runner":"macos-15-intel","arch":"x86_64","source":"release"},{"runner":"macos-latest","arch":"arm64","source":"built"},{"runner":"macos-15-intel","arch":"x86_64","source":"built"}]' || '[{"runner":"macos-latest","arch":"arm64","source":"release"},{"runner":"macos-15-intel","arch":"x86_64","source":"release"}]') }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      # The release's .dmg (source: release), and in every case its symbols zip: the HTTPS
+      # download's file, from github.com as a browser gets it (a redirect to GitHub's storage),
+      # checked against the copy gh brought. The built .dmg is checked by MDM's own engine, so
+      # the HTTPS file needn't come from the same build.
+      - name: The release's files
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.release }}
+          SOURCE: ${{ matrix.source }}
+          ARCH: ${{ matrix.arch }}
+        run: |
+          tag=${TAG:-$(gh release view -R "$GITHUB_REPOSITORY" --json tagName -q .tagName)}
+          mkdir -p "$RUNNER_TEMP/dmg" "$RUNNER_TEMP/https"
+          gh release download "$tag" -R "$GITHUB_REPOSITORY" -D "$RUNNER_TEMP/https" -p "*-symbols-macos-$ARCH.zip"
+          if [ "$SOURCE" = release ]; then
+            gh release download "$tag" -R "$GITHUB_REPOSITORY" -D "$RUNNER_TEMP/dmg" -p "*-macos-$ARCH-experimental.dmg"
+          fi
+          zip=$(ls "$RUNNER_TEMP/https"/*-symbols-*.zip)
+          echo "HTTPS_URL=https://github.com/$GITHUB_REPOSITORY/releases/download/$tag/$(basename "$zip")" >> "$GITHUB_ENV"
+          echo "HTTPS_SHA=$(shasum -a 256 "$zip" | awk '{print $1}')" >> "$GITHUB_ENV"
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        if: matrix.source == 'built'
+        with:
+          name: dmg-built
+          path: ${{ runner.temp }}/dmg
+
+      - name: Install, start, download, quit
+        env:
+          ARCH: ${{ matrix.arch }}
+        run: |
+          dmg=$(ls "$RUNNER_TEMP"/dmg/*-macos-"$ARCH"-*.dmg)
+          bash tools/lab/macos/dmg-check.sh "$dmg" "$RUNNER_TEMP/out" "${HTTPS_URL:-}" "${HTTPS_SHA:-}"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: dmg-${{ matrix.source }}-${{ matrix.arch }}
+          path: ${{ runner.temp }}/out

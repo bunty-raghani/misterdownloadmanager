@@ -116,6 +116,18 @@
   "popup_fix": {
     "message": "So beheben Sie es"
   },
+  "popup_by_hand": {
+    "message": "Diese Kopie wurde manuell geladen und wird nicht automatisch aktualisiert."
+  },
+  "popup_by_hand_firefox": {
+    "message": "Diese Kopie wurde manuell geladen: Sie wird nicht automatisch aktualisiert, und der Browser entfernt sie beim Neustart."
+  },
+  "popup_store_chrome": {
+    "message": "Aus dem Chrome Web Store hinzufügen"
+  },
+  "popup_store_firefox": {
+    "message": "Von addons.mozilla.org hinzufügen"
+  },
   "popup_declined": {
     "message": "Für den Browser belassen: $name$",
     "placeholders": {
@@ -319,6 +331,9 @@
   },
   "video_all_qualities": {
     "message": "Alle Qualitäten und Untertitel..."
+  },
+  "video_part": {
+    "message": "Einen Teil ab hier herunterladen..."
   },
   "video_failed": {
     "message": "Mister Download Manager ist nicht installiert oder wurde nicht gestartet"

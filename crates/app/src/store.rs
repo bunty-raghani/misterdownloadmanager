@@ -526,6 +526,7 @@ mod tests {
                     parts: Vec::new(),
                     named: false,
                     duration: None,
+                    part: None,
                 });
                 i
             })
@@ -582,19 +583,36 @@ mod tests {
         load_from(p, empty()).items.iter().map(|i| i.id).collect()
     }
 
+    /// #1581: kept by default; unticked, a private window's downloads aren't written.
     #[test]
-    fn a_private_windows_downloads_are_not_saved_by_default() {
+    fn a_private_windows_downloads_are_saved_by_default_and_not_when_unticked() {
         let dir = tempfile::tempdir().unwrap();
         let p = dir.path().join("downloads.json");
         let layout = crate::list::ListState::default().layout();
         let items = normal_and_private(dir.path());
         let settings = Settings::default();
-        assert!(!settings.keep_private_downloads, "off by default");
+        assert!(settings.keep_private_downloads, "on by default");
         save_to(&p, 3, &items, &layout, &settings, &[]).unwrap();
+        assert_eq!(saved_ids(&p), [1, 2]);
+        // A list from before the option, or from before #1581 (its default saved), reads with
+        // it on.
+        for old in [
+            serde_json::json!({}),
+            serde_json::json!({"keep_private_downloads": false}),
+        ] {
+            let old: Settings = serde_json::from_value(old).unwrap();
+            assert!(old.keep_private_downloads);
+        }
+        let unticked = Settings {
+            keep_private_downloads: false,
+            ..Settings::default()
+        };
+        save_to(&p, 3, &items, &layout, &unticked, &[]).unwrap();
         assert_eq!(saved_ids(&p), [1]);
-        // A list from before the option reads with it off.
-        let old: Settings = serde_json::from_value(serde_json::json!({})).unwrap();
-        assert!(!old.keep_private_downloads);
+        assert!(
+            !load_from(&p, empty()).settings.keep_private_downloads,
+            "kept unticked"
+        );
     }
 
     #[test]
@@ -625,7 +643,10 @@ mod tests {
         assert!(loaded.items.iter().all(|i| i.context.cookies.is_none()));
         // Turning the option off later keeps the rows already saved (read back, none is
         // marked private) ...
-        let off = Settings::default();
+        let off = Settings {
+            keep_private_downloads: false,
+            ..Settings::default()
+        };
         save_to(&p, 3, &loaded.items, &layout, &off, &[]).unwrap();
         assert_eq!(saved_ids(&p), [1, 2]);
         // ... while a private row still in memory goes from the next save.

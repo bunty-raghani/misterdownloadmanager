@@ -851,11 +851,28 @@ mod tests {
         assert!(!valid_nextdns_profile("xyz") && !valid_nextdns_profile("a1b2c3d"));
     }
 
+    /// A DNS server on this computer that takes every connection and never answers. Not an
+    /// address nobody has (TEST-NET-1's 192.0.2.1): a network that answers every DNS question
+    /// itself, whatever address it was sent to (an internet provider's or a router's transparent
+    /// DNS proxy, a filter on the computer), answers that one too, and the dead DNS then knows
+    /// github.com (#1653). Nothing between this computer and itself does.
+    async fn silent_dns() -> SocketAddr {
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let addr = listener.local_addr().unwrap();
+        tokio::spawn(async move {
+            let mut held = Vec::new();
+            while let Ok((stream, _)) = listener.accept().await {
+                held.push(stream);
+            }
+        });
+        addr
+    }
+
     #[tokio::test]
     async fn an_unreachable_dns_fails_without_asking_the_system() {
-        // TEST-NET-1: never answers. Strict: the error names the DNS, no system answer.
+        // Never answers. Strict: the error names the DNS, no system answer.
         let choice = DnsChoice {
-            dns: Dns::Plain(vec!["192.0.2.1:53".parse().unwrap()]),
+            dns: Dns::Plain(vec![silent_dns().await]),
             fallback: false,
             label: "Dead DNS".into(),
         };

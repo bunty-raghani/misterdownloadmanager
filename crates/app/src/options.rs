@@ -507,31 +507,31 @@ impl OptionsDialog {
         if portable {
             s.launch_on_startup = false;
         }
-        let checks: [(f32, &mut bool, &str); 8] = [
+        let checks: [(f32, &mut bool, &str); 9] = [
             (
                 94.0,
                 &mut s.launch_on_startup,
                 crate::i18n::mark("Launch Mister Download Manager on startup"),
             ),
             (
-                113.0,
+                112.0,
                 &mut s.clipboard_autostart,
                 crate::i18n::mark("Offer to download links copied to the clipboard"),
             ),
             (
-                133.0,
+                130.0,
                 &mut s.mv2_extensions,
                 crate::i18n::mark("Extend the availability of Manifest 2 Chrome extensions"),
             ),
             (
-                152.0,
+                148.0,
                 &mut s.advanced_integration,
                 crate::i18n::mark("Use advanced browser integration"),
             ),
             // MDM's: turns back on the delete confirmation that "Don't show this dialog again"
             // turned off. The browsers' group below starts a row lower for it.
             (
-                172.0,
+                166.0,
                 &mut s.confirm_delete,
                 crate::i18n::mark("Confirm before deleting downloads"),
             ),
@@ -539,7 +539,7 @@ impl OptionsDialog {
             // only, gone when MDM closes). The rows below, and the browsers' group, a row lower,
             // its list a row shorter again (it scrolls).
             (
-                191.0,
+                184.0,
                 &mut s.keep_private_downloads,
                 // i18n: checkbox: downloads started from a browser's private (incognito) window are saved in MDM's download list like any other, so they are still there after MDM restarts
                 crate::i18n::mark("Keep private-window downloads in the list"),
@@ -547,17 +547,26 @@ impl OptionsDialog {
             // MDM's (#63): Minimize hides the main window and progress windows in the tray too.
             // The browsers' group starts a row lower again, its list a row shorter (it scrolls).
             (
-                210.0,
+                202.0,
                 &mut s.minimize_to_tray,
                 // i18n: checkbox: the Minimize button hides MDM's windows to the notification area (system tray) instead of the taskbar
                 crate::i18n::mark("Minimize to the notification area"),
             ),
             // MDM's: the × hides the window in the notification area, or quits.
             (
-                229.0,
+                220.0,
                 &mut s.close_to_tray,
                 // i18n: checkbox: closing keeps MDM running, in the notification area when available or else the taskbar, instead of quitting
                 crate::i18n::mark("Keep running when closing the window"),
+            ),
+            // MDM's (#1365): a click on the tray icon shows the downloads panel (traypanel.rs);
+            // unticked, it shows or hides the window as before. With MDM's other tray settings:
+            // the rows are 18 apart (were 19 or 20) to make room, the rest of the page 9 lower.
+            (
+                238.0,
+                &mut s.tray_panel,
+                // i18n: checkbox: a click on MDM's icon in the notification area (system tray) shows a small panel over it with the downloads now running, their progress, Pause and Cancel; unticked, the click shows or hides the main window
+                crate::i18n::mark("Show downloads when the notification area icon is clicked"),
             ),
         ];
         // Greyed where no tray shows MDM's icon (some Linux desktops): nothing could bring the
@@ -584,6 +593,11 @@ impl OptionsDialog {
                 // i18n: tooltip of "Keep private-window downloads in the list": checked, downloads from a browser's private (incognito) window are saved in the list and survive MDM closing or restarting; unchecked, they are kept in memory only and are gone when MDM closes. Their cookies are never saved.
                 check.on_hover_text(crate::i18n::t(
                     "Checked, downloads from a browser's private window are saved in the list and are still there when MDM restarts; unchecked, they are kept in memory only and are gone when MDM closes. Their cookies are never saved",
+                ));
+            } else if i == 8 && check.hovered() {
+                // i18n: tooltip of "Show downloads when the notification area icon is clicked": what the click on MDM's tray icon does when it is ticked and when not
+                check.on_hover_text(crate::i18n::t(
+                    "Checked, a click on MDM's icon shows what is downloading, with Pause and Cancel, and a double click opens the window; unchecked, a click shows or hides the window",
                 ));
             } else if i == 7 && check.hovered() {
                 // i18n: tooltip of the close-setting: checked keeps MDM running when the window closes, in the notification area when available or else the taskbar; downloads continue; unchecked closing quits
@@ -617,15 +631,15 @@ impl OptionsDialog {
         let (lbl_rc, lbl_cut) = winui::text_fit(
             &p,
             o.x + 30.0,
-            o.y + 262.0,
+            o.y + 271.0,
             hk_label,
             lbl_ink,
             o.x + box_x - 6.0,
         );
         if lbl_cut {
-            winui::full_on_hover(ui, lbl_rc, ("general-hotkey", 262), hk_label);
+            winui::full_on_hover(ui, lbl_rc, ("general-hotkey", 271), hk_label);
         }
-        let box_rc = r(o, box_x, 248.0, box_w, 21.0);
+        let box_rc = r(o, box_x, 257.0, box_w, 21.0);
         let box_resp = ui.interact(
             box_rc,
             egui::Id::unique("hotkey-recorder"),
@@ -726,7 +740,7 @@ impl OptionsDialog {
             ui,
             &p,
             o.x + box_x + 6.0,
-            o.y + 262.0,
+            o.y + 271.0,
             &hk_text,
             hk_ink,
             o.x + box_x + box_w - 6.0,
@@ -740,7 +754,7 @@ impl OptionsDialog {
             };
         if winui::button_light(
             ui,
-            r(o, clear_x, 248.0, clear_w, 21.0),
+            r(o, clear_x, 257.0, clear_w, 21.0),
             "Clear",
             clear_kind,
             false,
@@ -754,7 +768,7 @@ impl OptionsDialog {
             ui,
             o,
             16.0,
-            275.0,
+            284.0,
             392.0,
             119.0,
             "Capture downloads from the following browsers:",
@@ -767,7 +781,7 @@ impl OptionsDialog {
         let ev = winui::row_list(
             ui,
             "browsers",
-            r(o, 30.0, 285.0, 362.0, 37.0),
+            r(o, 30.0, 294.0, 362.0, 37.0),
             browsers.len(),
             17.0,
             &mut self.browser_rows,
@@ -813,13 +827,13 @@ impl OptionsDialog {
         };
         off(
             ui,
-            r(o, add_at.0, 328.0, add_at.1, 21.0),
+            r(o, add_at.0, 337.0, add_at.1, 21.0),
             crate::i18n::mark("Add browser..."),
         );
         // MDM's: what stands between a browser and MDM, checked in order.
         if winui::button_light(
             ui,
-            r(o, test_at.0, 328.0, test_at.1, 21.0),
+            r(o, test_at.0, 337.0, test_at.1, 21.0),
             "Test browser integration...",
             ButtonKind::Normal,
             false,
@@ -830,7 +844,7 @@ impl OptionsDialog {
                 self.s.advanced_integration,
             )));
         }
-        winui::etched_h(&p, o.x + 34.0, o.y + 356.0, 357.0);
+        winui::etched_h(&p, o.x + 34.0, o.y + 365.0, 357.0);
         // The buttons at the right as wide as their labels in this language (#192), their
         // captions ending 6 px before them.
         let fit_right =
@@ -841,7 +855,7 @@ impl OptionsDialog {
         let (rect, cut) = winui::text_right_within(
             &p,
             o.x + keys_at.0 - 6.0,
-            o.y + 379.0,
+            o.y + 388.0,
             label,
             LIGHT_TEXT(),
             o.x + 22.0,
@@ -851,7 +865,7 @@ impl OptionsDialog {
         }
         if winui::button_light(
             ui,
-            r(o, keys_at.0, 365.0, keys_at.1, 21.0),
+            r(o, keys_at.0, 374.0, keys_at.1, 21.0),
             "Keys...",
             ButtonKind::Normal,
             false,
@@ -861,12 +875,12 @@ impl OptionsDialog {
             self.sub = Some(Sub::Keys(self.s.capture_opened));
         }
         let label = crate::i18n::t("Customize MDM menu items in context menu of browsers");
-        let (rect, cut) = winui::text_right(&p, o.x + 313.0, o.y + 419.0, label, LIGHT_DISABLED());
+        let (rect, cut) = winui::text_right(&p, o.x + 313.0, o.y + 428.0, label, LIGHT_DISABLED());
         if cut {
             winui::full_on_hover(ui, rect, ("general-right", 419), label);
         }
         // i18n: verb: edit the item
-        let menu_edit = off(ui, r(o, 289.0, 406.0, 103.0, 21.0), "Edit...");
+        let menu_edit = off(ui, r(o, 289.0, 415.0, 103.0, 21.0), "Edit...");
         winui::name(&menu_edit, label);
         // The download button over videos in the browsers (our own panel, Sub::Panels).
         let label = crate::i18n::t("Customize MDM Download panels in browsers");
@@ -874,7 +888,7 @@ impl OptionsDialog {
         let (rect, cut) = winui::text_right(
             &p,
             o.x + panels_at.0 - 6.0,
-            o.y + 452.0,
+            o.y + 457.0,
             label,
             LIGHT_TEXT(),
         );
@@ -883,7 +897,7 @@ impl OptionsDialog {
         }
         let panels_edit = winui::button_light(
             ui,
-            r(o, panels_at.0, 438.0, panels_at.1, 21.0),
+            r(o, panels_at.0, 443.0, panels_at.1, 21.0),
             // i18n: verb: edit the item
             "Edit...",
             ButtonKind::Normal,
@@ -1658,11 +1672,15 @@ impl OptionsDialog {
         );
         // The sentence's words are painted, not exposed: each box is named as its part of it
         // reads, or a screen reader says only "edit, 200" (#1407).
+        let names = winui::sentence_names(
+            crate::i18n::t(crate::quota::LIMITS_SENTENCE),
+            &["mb", "hours"],
+        );
         let mb_box = winui::number_field(ui, boxes[0], &mut self.mb, 1, 999_999, on, LIGHT_PAGE());
-        winui::name(&mb_box, crate::i18n::t(crate::quota::LIMITS_MB_NAME));
+        winui::name(&mb_box, &names[0]);
         let hours_box =
             winui::number_field(ui, boxes[1], &mut self.hours, 1, 999, on, LIGHT_PAGE());
-        winui::name(&hours_box, crate::i18n::t(crate::quota::LIMITS_HOURS_NAME));
+        winui::name(&hours_box, &names[1]);
         winui::checkbox_light(
             ui,
             o + vec2(37.0, 376.0),
@@ -2197,6 +2215,8 @@ impl OptionsDialog {
                 ]
             })
             .collect();
+        // Named for screen readers by the page's title (#1407).
+        self.account_rows.name = crate::i18n::t("Debrid service accounts");
         let (_, del_key) = report(
             ui,
             o,
@@ -2357,6 +2377,8 @@ impl OptionsDialog {
             })
             .collect();
         // The list leaves the page's foot to Cookies for video sites (#229).
+        // Named for screen readers by the page's title (#1407).
+        self.login_rows.name = crate::i18n::t("User names and passwords for servers/sites");
         let (dbl, del_key) = report(
             ui,
             o,
@@ -3363,6 +3385,8 @@ impl OptionsDialog {
             .iter()
             .map(|d| vec![d.name.clone(), when(d.added), when(d.seen)])
             .collect();
+        // Named for screen readers by its caption above (#1407).
+        self.device_rows.name = crate::i18n::t("Paired devices:");
         let (_, del_key) = report(
             ui,
             o,

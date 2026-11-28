@@ -116,6 +116,18 @@
   "popup_fix": {
     "message": "Jak to naprawić"
   },
+  "popup_by_hand": {
+    "message": "Ta kopia została załadowana ręcznie i nie będzie się aktualizować."
+  },
+  "popup_by_hand_firefox": {
+    "message": "Ta kopia została załadowana ręcznie: nie będzie się aktualizować, a przeglądarka usunie ją po ponownym uruchomieniu."
+  },
+  "popup_store_chrome": {
+    "message": "Dodaj ją ze sklepu Chrome Web Store"
+  },
+  "popup_store_firefox": {
+    "message": "Dodaj ją z addons.mozilla.org"
+  },
   "popup_declined": {
     "message": "Pozostawiono przeglądarce: $name$",
     "placeholders": {
@@ -319,6 +331,9 @@
   },
   "video_all_qualities": {
     "message": "Wszystkie jakości i napisy..."
+  },
+  "video_part": {
+    "message": "Pobierz część od tego miejsca..."
   },
   "video_failed": {
     "message": "Mister Download Manager nie jest zainstalowany lub nie uruchomił się"

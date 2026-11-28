@@ -17,10 +17,11 @@ use crate::winui::{self, ButtonKind, r, text};
 
 type Slot<T> = Arc<Mutex<Option<Result<T, String>>>>;
 
-/// What Download Now or Later adds: a video, or a playlist's (#69).
+/// What Download Now or Later adds: a video, or a playlist's (#69). Both boxed: each is large,
+/// and they differ in size.
 pub enum VideoOut {
-    One(VideoAdd),
-    Many(crate::playlistdlg::PlaylistAdd),
+    One(Box<VideoAdd>),
+    Many(Box<crate::playlistdlg::PlaylistAdd>),
 }
 
 /// What OK adds.
@@ -49,6 +50,8 @@ pub struct VideoAdd {
     /// The video's length (whole seconds) as looked up, for the duplicate check
     /// ([`whole_seconds`], `model::VideoSpec::duration`).
     pub duration: Option<u32>,
+    /// Only this part of it (#1662); none for the whole video.
+    pub part: Option<mdm_tools::part::Part>,
 }
 
 /// A looked-up length (`resolve::Video::duration`, seconds) as a video download keeps it: whole
@@ -136,11 +139,26 @@ pub struct VideoDialog {
     pref: Subs,
     /// The clipboard's page address, read off the window's thread (#661).
     clip: crate::clipboard::Prefill,
+    /// Part (#1662): only from one time to another, as typed, cut quickly at the keyframes or
+    /// exactly.
+    part_on: bool,
+    part_from: String,
+    part_to: String,
+    part_exact: bool,
+    /// From the browser's quality menu: Part ticked, From where the player was (seconds), for
+    /// the video looked up.
+    part_at: Option<u32>,
+    /// The file name MDM last gave (the choice's, with the part's words): File name follows the
+    /// choice and the part while it still holds it.
+    auto_name: String,
 }
+
+/// How much lower than before Part (#1662) the rows under Subtitles are: its two lines.
+const PART_ROWS: f32 = 52.0;
 
 /// The top of the window's bottom row of buttons (Helpers..., Download Now, Later, Cancel),
 /// under Embed chapters.
-const BUTTONS_Y: f32 = 389.0;
+const BUTTONS_Y: f32 = 389.0 + PART_ROWS;
 
 /// What is installed in the tools folder: (folder, yt-dlp, ffmpeg).
 type Tools = (
@@ -212,6 +230,12 @@ impl VideoDialog {
             chapters: true,
             pref: Subs::default(),
             clip: Default::default(),
+            part_on: false,
+            part_from: String::new(),
+            part_to: String::new(),
+            part_exact: false,
+            part_at: None,
+            auto_name: String::new(),
         }
     }
 
@@ -245,11 +269,14 @@ impl VideoDialog {
             context.referer = None;
         }
         let page = own;
+        // The browser's "Download a part from here..." (#1662): Part ticked, From there.
+        let part_at = context.video_part_from;
         VideoDialog {
             page: page.clone(),
             from_browser: page,
             context,
             auto_look: true,
+            part_at,
             ..Self::blank(folder)
         }
     }
@@ -281,7 +308,36 @@ impl VideoDialog {
             .then(|| crate::i18n::t("No video this can download on that page").into());
         self.subs = mdm_tools::resolve::sub_choices(&v, crate::i18n::code());
         self.sub_pick = pick_for(&self.subs, &self.pref);
+        // Part's times (#1662): the whole video, From where the browser's player was when asked.
+        let length = mdm_tools::part::length(v.duration);
+        let hours = length.is_some_and(|l| l >= 3600);
+        let at = self.part_at.take();
+        self.part_from =
+            mdm_tools::part::clock(at.unwrap_or(0).min(length.unwrap_or(u32::MAX)), hours);
+        self.part_to = length.map_or_else(String::new, |l| mdm_tools::part::clock(l, hours));
+        if at.is_some() && length.is_some() {
+            self.part_on = true;
+        }
         self.video = Some((v, choices));
+        self.name_from_choice();
+    }
+
+    /// The part as typed (#1662): none while Part isn't ticked; why it can't be, else.
+    pub fn part(&self) -> Result<Option<mdm_tools::part::Part>, mdm_tools::part::Problem> {
+        if !self.part_on || self.list.is_some() {
+            return Ok(None);
+        }
+        let duration = self.video.as_ref().and_then(|(v, _)| v.duration);
+        mdm_tools::part::Part::checked(&self.part_from, &self.part_to, self.part_exact, duration)
+            .map(Some)
+    }
+
+    /// Part (#1662) ticked with these times and cut (`/show video-part`: its screenshots).
+    pub fn show_part(&mut self, from: &str, to: &str, exact: bool) {
+        self.part_on = true;
+        self.part_from = from.into();
+        self.part_to = to.into();
+        self.part_exact = exact;
         self.name_from_choice();
     }
 
@@ -445,7 +501,7 @@ impl VideoDialog {
             ctx,
             "video-page",
             "Download video from a page",
-            [500.0, 422.0],
+            [500.0, 422.0 + PART_ROWS],
             false,
             winui::BG(),
             |ui, o| self.body(ui, o, rt),
@@ -478,13 +534,13 @@ impl VideoDialog {
         let start_now = self.start_now.unwrap_or(true);
         if let Some(list) = &self.list {
             let merge = self.tools.as_ref().is_some_and(|t| t.2.is_some());
-            return Some(VideoOut::Many(list.add(
+            return Some(VideoOut::Many(Box::new(list.add(
                 &folder,
                 merge,
                 start_now,
                 &self.context(),
                 self.category(),
-            )));
+            ))));
         }
         let (Some((_, choices)), Ok(page)) = (&self.video, url::Url::parse(self.page.trim()))
         else {
@@ -492,9 +548,16 @@ impl VideoDialog {
         };
         let c = choices.get(self.chosen.min(choices.len().checked_sub(1)?))?;
         let name = mdm_engine::naming::sanitize(self.name.trim());
-        // Not the name the choice gave it (the page's title): the user's (#1102).
-        let named = name
-            != mdm_engine::naming::sanitize(file_name(&self.video.as_ref()?.0.title, c).trim());
+        let part = self.part().ok()?;
+        // Not the name the choice gave it (the page's title, with the part's words): the user's
+        // (#1102).
+        let given = file_name(&self.video.as_ref()?.0.title, c);
+        let given = match &part {
+            Some(p) => mdm_tools::part::named(&given, p),
+            None => given,
+        };
+        let named = name != mdm_engine::naming::sanitize(given.trim());
+        let duration = self.video.as_ref().and_then(|v| v.0.duration);
         let chosen = self.chosen_subs();
         // The video the page declares (#1076): its address, the page as its Referer.
         let declared = self
@@ -506,20 +569,29 @@ impl VideoDialog {
             Some((address, d)) => (address, declared_context(&self.context(), d)),
             None => (page, self.context()),
         };
-        Some(VideoOut::One(VideoAdd {
+        Some(VideoOut::One(Box::new(VideoAdd {
             page,
             selector: c.selector.clone(),
             dest: folder.join(name),
             category: self.category(),
-            size: c.size,
+            // A part's: its share of the whole (#1662).
+            size: match &part {
+                Some(p) => p.estimate(c.size, duration),
+                None => c.size,
+            },
             start_now,
             context,
-            subs: subs_for_choice(c, &chosen),
+            subs: if part.is_some() {
+                Subs::default()
+            } else {
+                subs_for_choice(c, &chosen)
+            },
             remember: (!self.subs.is_empty()).then_some(chosen),
             preloaded: None,
             named,
-            duration: whole_seconds(self.video.as_ref().and_then(|v| v.0.duration)),
-        }))
+            duration: whole_seconds(duration),
+            part,
+        })))
     }
 
     /// The choice (or the playlist's quality) saves only the sound; None while there is none.
@@ -570,14 +642,34 @@ impl VideoDialog {
         crate::dialogs::resolve_path(&self.folder)
     }
 
-    /// The file name, and Save to (#611), follow the choice.
+    /// The file name, and Save to (#611), follow the choice, and the part's words its times
+    /// (#1662).
     fn name_from_choice(&mut self) {
         if let Some((v, choices)) = &self.video
             && let Some(c) = choices.get(self.chosen)
         {
             self.name = file_name(&v.title, c);
+            self.auto_name.clear();
+            self.name_for_part();
         }
         self.follow_sound();
+    }
+
+    /// File name says the part (`Talk (1m30s-4m10s).mp4`, #1662) while it holds the name MDM
+    /// gave (a name typed stays as typed): its words follow the times, and go with Part.
+    fn name_for_part(&mut self) {
+        if !self.auto_name.is_empty() && self.name != self.auto_name {
+            return;
+        }
+        let bare = mdm_tools::part::unnamed(&self.name);
+        let want = match self.part() {
+            Ok(Some(p)) => mdm_tools::part::named(&bare, &p),
+            // Times being typed: the name waits for them.
+            Err(_) => return,
+            Ok(None) => bare,
+        };
+        self.name = want.clone();
+        self.auto_name = want;
     }
 
     /// Install a helper in the background.
@@ -971,6 +1063,8 @@ impl VideoDialog {
             },
             // i18n: label before the list of a video's subtitle languages
             crate::i18n::t("Subtitles"),
+            // i18n: label in Download video before the choice to download only a part of the video or sound (from one time to another)
+            crate::i18n::t("Part"),
         ];
         let widest = labels
             .iter()
@@ -1035,6 +1129,12 @@ impl VideoDialog {
             };
             label(ui, 328.0, labels[2], shade);
         }
+        let part_shade = if self.part_row(ui, o, bx, ffmpeg.is_some()) {
+            winui::TEXT()
+        } else {
+            winui::TEXT_DISABLED()
+        };
+        label(ui, 359.0, labels[3], part_shade);
         self.chapters_row(ui, o, bx, ffmpeg.is_some());
 
         // The choices belong to the address looked up: an edited address is looked up first
@@ -1049,7 +1149,9 @@ impl VideoDialog {
                     && !self.name.trim().is_empty()
             }
         };
-        let ready = chosen && !busy && !stale;
+        // A part whose times can't be (#1662): said on Download Now.
+        let part_problem = self.part().err();
+        let ready = chosen && !busy && !stale && part_problem.is_none();
         let kind = |default: bool| match (ready, default) {
             (false, _) => ButtonKind::Disabled,
             (true, true) => ButtonKind::Default,
@@ -1098,8 +1200,14 @@ impl VideoDialog {
         // i18n: why Download Now is greyed: the page address was changed after the look-up
         let now = winui::why_disabled(now, stale, "Look up the new address first");
         // i18n: why Download Now is greyed: a playlist's videos are still being listed
-        let now = winui::why_disabled(now, listing, "Wait for the list, or stop listing").clicked()
-            || (ready && winui::enter_pressed(ui));
+        let now = winui::why_disabled(now, listing, "Wait for the list, or stop listing");
+        let now = match part_problem {
+            Some(problem) if chosen && !busy && !stale => {
+                winui::why_disabled(now, true, part_problem_text(problem))
+            }
+            _ => now,
+        };
+        let now = now.clicked() || (ready && winui::enter_pressed(ui));
         let later = winui::button(
             ui,
             r(o, later_at.0, BUTTONS_Y, later_at.1, 21.0),
@@ -1157,11 +1265,12 @@ impl VideoDialog {
                 .and_then(|(_, c)| c.get(self.chosen))
                 .is_some_and(|c| mdm_tools::resolve::audio_conversion(&c.selector).is_some()),
         };
-        let can = ffmpeg && !converts;
+        let part = self.part_on && self.list.is_none();
+        let can = ffmpeg && !converts && !part;
         let mut on = self.chapters && can;
         let resp = winui::checkbox_until(
             ui,
-            pos2(o.x + bx, o.y + 350.0),
+            pos2(o.x + bx, o.y + 350.0 + PART_ROWS),
             &mut on,
             // i18n: checkbox in Download video: the chapters a video's page lists (YouTube's, for one) go into the video file, where players show them and skip between them
             "Embed chapters",
@@ -1174,15 +1283,196 @@ impl VideoDialog {
             // i18n: why "Embed chapters" is greyed: ffmpeg (a helper program) is not installed
             "This needs ffmpeg",
         );
-        winui::why_disabled(
+        let resp = winui::why_disabled(
             resp,
             ffmpeg && converts,
             // i18n: why "Embed chapters" is greyed in Download video: the choice is a sound converted to MP3, Opus or FLAC, which MDM saves without chapters
             "MP3, Opus and FLAC files are saved without chapters",
         );
+        winui::why_disabled(
+            resp,
+            ffmpeg && !converts && part,
+            // i18n: why "Embed chapters" (and the subtitles) are greyed in Download video: only a part of the video is downloaded, and its chapters and subtitles would be the whole video's
+            "A part is saved without the video's chapters and subtitles",
+        );
         if can {
             self.chapters = on;
         }
+    }
+
+    /// Part (#1662), under Subtitles: only from one time to another of the video or the sound.
+    /// Ticked, From and To take the times (`1:30`, `1:02:03`; the video's length the bound, the
+    /// whole video at first), and the cut is quick (at the keyframes, the streams copied: it may
+    /// start a little before From) or exact (the part encoded again). Its estimated size beside
+    /// it. Greyed without ffmpeg (it does the cut), for a playlist, before a video is looked up and
+    /// for one of no known length (a live stream). True when it can be used (its label is greyed
+    /// otherwise).
+    fn part_row(&mut self, ui: &mut Ui, o: Pos2, bx: f32, ffmpeg: bool) -> bool {
+        let p = ui.painter().clone();
+        let duration = self.video.as_ref().and_then(|(v, _)| v.duration);
+        let length = mdm_tools::part::length(duration);
+        let hours = length.is_some_and(|l| l >= 3600);
+        let looked = self.video.as_ref().is_some_and(|(_, c)| !c.is_empty());
+        let can = ffmpeg && self.list.is_none() && looked && length.is_some();
+        // i18n: checkbox in Download video: download only a part of the video or sound; the From and To boxes follow it
+        const ONLY: &str = crate::i18n::mark("Only a part");
+        let mut on = self.part_on && can;
+        let tick = winui::checkbox_until(
+            ui,
+            pos2(o.x + bx, o.y + 350.0),
+            &mut on,
+            ONLY,
+            can,
+            Some(o.x + 489.0),
+        );
+        let tick = winui::why_disabled(
+            tick,
+            !ffmpeg,
+            // i18n: why Part is greyed in Download video: ffmpeg (a helper program) is not installed
+            "This needs ffmpeg",
+        );
+        let tick = winui::why_disabled(
+            tick,
+            ffmpeg && self.list.is_some(),
+            // i18n: why Part is greyed in Download video: the page is a playlist, whose videos are downloaded whole
+            "A playlist's videos are downloaded whole",
+        );
+        winui::why_disabled(
+            tick,
+            ffmpeg && self.list.is_none() && looked && length.is_none(),
+            // i18n: why Part is greyed in Download video: the site doesn't say how long the video is (a live stream, for one)
+            "The site doesn't say how long this video is",
+        );
+        if can && on != self.part_on {
+            self.part_on = on;
+        }
+        let active = can && self.part_on;
+        let problem = if active { self.part().err() } else { None };
+        // From {from} to {to}, after the box's caption; the boxes red while their times can't be.
+        let template =
+            // i18n: in Download video after "Only a part": {from} and {to} are boxes where times are typed (1:30, 1:02:03), drawn where they stand in the translation
+            crate::i18n::t("from {from} to {to}");
+        let after = winui::checkbox_caption_end(&p, o.x + bx, ONLY) + 6.0;
+        let shade = if active {
+            winui::TEXT()
+        } else {
+            winui::TEXT_DISABLED()
+        };
+        let boxes = winui::sentence(
+            ui,
+            &p,
+            template,
+            &[winui::SentenceLine {
+                lead: winui::Lead::Left(after),
+                lead_baseline: o.y + 359.0,
+                boxes: pos2(after, o.y + 346.0),
+                gap: 5.0,
+                baseline: o.y + 359.0,
+            }],
+            &[
+                ("from", egui::vec2(64.0, 21.0)),
+                ("to", egui::vec2(64.0, 21.0)),
+            ],
+            |p, x, baseline, s| {
+                text(p, x, baseline, s, shade);
+            },
+        );
+        let names = winui::sentence_names(template, &["from", "to"]);
+        use mdm_tools::part::Problem;
+        let from_ok = !matches!(problem, Some(Problem::NotATime))
+            || mdm_tools::part::parse_time(&self.part_from).is_some();
+        let to_ok = match problem {
+            Some(Problem::NotATime) => mdm_tools::part::parse_time(&self.part_to).is_some(),
+            Some(Problem::Backwards | Problem::PastEnd(_)) => false,
+            _ => true,
+        };
+        let from = winui::time_field(
+            ui,
+            boxes[0],
+            &mut self.part_from,
+            length,
+            hours,
+            active,
+            from_ok && problem != Some(Problem::Whole),
+        );
+        winui::name(&from, &names[0]);
+        let to = winui::time_field(
+            ui,
+            boxes[1],
+            &mut self.part_to,
+            length,
+            hours,
+            active,
+            to_ok && problem != Some(Problem::Whole),
+        );
+        winui::name(&to, &names[1]);
+        // Its size, about: its share of the choice's (#1662).
+        let ends = boxes[1].max.x.max(boxes[0].max.x);
+        let ends = if winui::rtl() {
+            winui::mx(boxes[1].min.x.min(boxes[0].min.x))
+        } else {
+            ends
+        };
+        if let (true, Ok(Some(part))) = (active, self.part())
+            && let Some(c) = self.video.as_ref().and_then(|(_, c)| c.get(self.chosen))
+            && let Some(bytes) = part.estimate(c.size, duration)
+        {
+            let size = crate::dialogs::dialog_size(bytes);
+            winui::fit(
+                ui,
+                &p,
+                ends + 10.0,
+                o.y + 359.0,
+                &crate::i18n::fmt(
+                    // i18n: in Download video beside the part's From and To: the part's size, estimated from the whole video's; {size} is "12.3 MB"
+                    crate::i18n::t("about {size}"),
+                    &[("size", &size)],
+                ),
+                winui::MUTED(),
+                o.x + 489.0,
+                "video-part-size",
+            );
+        }
+        // Quick or exact, under the box's caption.
+        let x = o.x + bx + 16.0;
+        // i18n: choice in Download video's Part: cut where the video has a keyframe, the streams copied as they are (fast; it may start a little before From)
+        const QUICK: &str = crate::i18n::mark("Quick cut, at keyframes");
+        // i18n: choice in Download video's Part: the part is encoded again so it starts and ends exactly at From and To (slower)
+        const EXACT: &str = crate::i18n::mark("Exact cut, encoded again");
+        let exact_x = winui::checkbox_caption_end(&p, x, QUICK) + 16.0;
+        let quick = winui::radio_light_until(
+            ui,
+            pos2(x, o.y + 376.0),
+            !self.part_exact,
+            QUICK,
+            active,
+            Some(exact_x - 8.0),
+        );
+        let quick = quick.on_hover_text(crate::i18n::t(
+            // i18n: tooltip of "Quick cut, at keyframes" in Download video: what it does
+            "Fast: the streams are copied as they are, so the part may start a little before From",
+        ));
+        if quick.clicked() && active {
+            self.part_exact = false;
+        }
+        let exact = winui::radio_light_until(
+            ui,
+            pos2(exact_x, o.y + 376.0),
+            self.part_exact,
+            EXACT,
+            active,
+            Some(o.x + 489.0),
+        );
+        let exact = exact.on_hover_text(crate::i18n::t(
+            // i18n: tooltip of "Exact cut, encoded again" in Download video: what it does
+            "Starts and ends exactly at From and To: ffmpeg encodes the part again, which takes longer",
+        ));
+        if exact.clicked() && active {
+            self.part_exact = true;
+        }
+        // File name says the part while it holds the name MDM gave.
+        self.name_for_part();
+        can
     }
 
     /// Embed chapters' tick, for the settings (`video_chapters`).
@@ -1201,7 +1491,8 @@ impl VideoDialog {
             .and_then(|(_, c)| c.get(self.chosen))
             .cloned();
         let audio = choice.as_ref().is_some_and(mdm_tools::resolve::is_audio);
-        let on = !self.subs.is_empty() && !audio;
+        // A part's would be the whole video's, out of step with it (#1662).
+        let on = !self.subs.is_empty() && !audio && !self.part_on;
         let items = sub_items(&self.subs, self.video.is_some());
         let shown: Vec<&str> = items.iter().map(String::as_str).collect();
         let pick = if on { self.sub_pick } else { 0 };
@@ -1245,6 +1536,24 @@ impl VideoDialog {
             self.embed = embed;
         }
         on
+    }
+}
+
+/// Why Download Now is greyed while Part's times can't be (#1662), in English (`why_disabled`
+/// translates it).
+fn part_problem_text(problem: mdm_tools::part::Problem) -> &'static str {
+    use mdm_tools::part::Problem;
+    match problem {
+        // i18n: why Download Now is greyed in Download video: a Part box holds something that isn't a time
+        Problem::NotATime => crate::i18n::mark("Type the times as 1:30 or 1:02:03"),
+        // i18n: why Download Now is greyed in Download video: Part's To time isn't after its From time
+        Problem::Backwards => crate::i18n::mark("To must come after From"),
+        // i18n: why Download Now is greyed in Download video: Part's To time is past the video's end
+        Problem::PastEnd(_) => crate::i18n::mark("To is past the end of the video"),
+        Problem::Whole => {
+            // i18n: why Download Now is greyed in Download video: Part's times are the whole video's (untick Only a part to download it whole)
+            crate::i18n::mark("That's the whole video: change From or To, or untick Only a part")
+        }
     }
 }
 
@@ -1750,6 +2059,7 @@ mod tests {
                 parts: vec![],
                 named: false,
                 duration: None,
+                part: None,
             });
             item.private_window = private;
             item.context.private = private;
@@ -2315,6 +2625,84 @@ mod tests {
             Some(VideoOut::One(add)) => (add.dest.parent().unwrap().to_owned(), add.category),
             _ => panic!("a video is added"),
         }
+    }
+
+    /// #1662: Part ticked, its times typed: the download is that part (its share of the size,
+    /// no subtitles), File name says it and follows the times while it is MDM's, and goes back
+    /// with Part; a name typed stays. Times that can't be hold Download Now.
+    #[test]
+    fn a_part_is_added_with_its_name_and_size() {
+        let mut d = looked_up(false);
+        let (_, video) = rows(&d);
+        choose(&mut d, video);
+        assert_eq!((d.part_from.as_str(), d.part_to.as_str()), ("0:00", "1:00"));
+        assert_eq!(d.part(), Ok(None));
+        d.show_part("0:15", "0:45", true);
+        assert_eq!(d.name, "A talk (15s-45s).mp4");
+        let Some(VideoOut::One(add)) = d.added() else {
+            panic!("a video is added")
+        };
+        assert_eq!(
+            add.part,
+            Some(mdm_tools::part::Part {
+                from: 15,
+                to: 45,
+                exact: true
+            })
+        );
+        assert_eq!(add.size, Some(3050), "half of 6100");
+        assert!(!add.named, "MDM's name, with the part's words");
+        assert!(add.subs.langs.is_empty());
+        assert!(add.dest.ends_with("A talk (15s-45s).mp4"));
+        // The times change: the name follows.
+        d.part_to = "0:50".into();
+        d.name_for_part();
+        assert_eq!(d.name, "A talk (15s-50s).mp4");
+        // Times that can't be: nothing added, the name waits.
+        d.part_to = "0:10".into();
+        d.name_for_part();
+        assert_eq!(d.part(), Err(mdm_tools::part::Problem::Backwards));
+        assert!(d.added().is_none());
+        assert_eq!(d.name, "A talk (15s-50s).mp4");
+        d.part_to = "1:01".into();
+        assert_eq!(d.part(), Err(mdm_tools::part::Problem::PastEnd(60)));
+        d.part_from = "0:00".into();
+        d.part_to = "1:00".into();
+        assert_eq!(d.part(), Err(mdm_tools::part::Problem::Whole));
+        // Untick: the whole video's name again.
+        d.part_on = false;
+        d.name_for_part();
+        assert_eq!(d.name, "A talk.mp4");
+        // A name typed is kept as typed.
+        d.part_on = true;
+        d.name = "Mine.mp4".into();
+        d.part_from = "0:20".into();
+        d.name_for_part();
+        assert_eq!(d.name, "Mine.mp4");
+    }
+
+    /// #1662: the browser's "Download a part from here...": Part ticked, From where the player
+    /// was, To the end.
+    #[test]
+    fn the_browsers_part_starts_where_the_player_was() {
+        let cmd = mdm_ipc::Command {
+            video_part_from: Some(20),
+            ..Default::default()
+        };
+        let (video, _) = dirs();
+        let mut d = VideoDialog::for_page(video, "https://video.example/talk", cmd);
+        d.tools = Some((None, None, None));
+        d.looked_up = d.page.clone();
+        d.set_video(
+            mdm_tools::resolve::parse(
+                br#"{"title": "A talk", "duration": 60, "formats": [
+                {"format_id": "18", "ext": "mp4", "height": 360, "vcodec": "avc1", "acodec": "mp4a", "filesize": 6100}]}"#,
+            )
+            .unwrap(),
+        );
+        assert!(d.part_on);
+        assert_eq!((d.part_from.as_str(), d.part_to.as_str()), ("0:20", "1:00"));
+        assert_eq!(d.name, "A talk (20s-1m00s).mp4");
     }
 
     /// #1076: the video a page declares is what the download keeps (its address, the page as its

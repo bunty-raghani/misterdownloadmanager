@@ -138,6 +138,10 @@ pub struct Command {
     /// it), without the site's name (`Film | Site` is `Film`: the extension's `withoutSiteName`):
     /// a video yt-dlp knows only by its address is named by it.
     pub video_title: Option<String>,
+    /// With `video_page`, from that button's "Download a part from here..." (#1662): the window
+    /// opens with Part ticked, From this many seconds into the video (where its player was).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub video_part_from: Option<u32>,
     /// From the browser's quality menu over a video (the button's click): look this video up
     /// with yt-dlp, off the window, and answer at once with a token to ask about it
     /// ([`api::VideoLookupAnswer`], `pending`). The browser's request context (`referer`,

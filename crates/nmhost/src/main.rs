@@ -142,6 +142,9 @@ struct Message {
     title: Option<String>,
     /// The button over a plain file (`src`, #703): it is downloaded as any file, at once.
     direct: bool,
+    /// The button's "Download a part from here..." (`video`, #1662): the seconds into the video
+    /// its player was at, where the part starts.
+    part: Option<u32>,
     /// The button's "Show": the main window with the newest download of this address selected.
     show_download: Option<String>,
     /// The button's "Turn on": show it on this site (a host name) again.
@@ -715,6 +718,7 @@ fn video_command(
         mime: m.mime.clone().filter(|t| direct && !t.trim().is_empty()),
         video_page: Some(src.unwrap_or_else(|| m.url.clone())),
         video_title: m.title.clone().filter(|t| !t.trim().is_empty()),
+        video_part_from: m.part.filter(|_| !direct),
         referer,
         origin,
         cookies: m.cookies.clone().filter(|c| !c.is_empty()),

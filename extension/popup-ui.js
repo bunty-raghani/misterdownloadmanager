@@ -516,3 +516,25 @@ async function copyText(text) {
     return done;
   }
 }
+
+// ---- a copy loaded by hand ----------------------------------------------------------------------
+
+// The add-on's pages in the browsers' stores (the README's and the website's): the copy there is
+// signed, stays after a restart and the browser keeps it up to date.
+const STORE_FIREFOX = "https://addons.mozilla.org/firefox/addon/mister-download-manager/";
+const STORE_CHROME = "https://chromewebstore.google.com/detail/mister-download-manager/ejoleppdfgjdndddcjoehopknmlglojp";
+
+// What the popup says about how this copy was installed (#1613), from management.getSelf()'s
+// `installType` (it needs no "management" permission, in Chromium or Firefox). Only a copy loaded
+// by hand, "development" (Load unpacked in Chromium; Load Temporary Add-on in Firefox), is told
+// it won't update itself, in Firefox that it goes when Firefox restarts too, with the link to its
+// browser's store; null for the rest: the store's copy ("normal"), a policy's ("admin"), one
+// another program installed ("sideload": MDM's setup has Chrome add the store's copy that way, and
+// it updates from the store), and "other" (nothing to tell about it). `firefox`: Firefox's family
+// (Zen, LibreWolf, Waterfox), the others take the Chrome Web Store's.
+function installNote(self, firefox) {
+  if (!self || self.installType !== "development") return null;
+  return firefox
+    ? { text: tx("popup_by_hand_firefox"), link: tx("popup_store_firefox"), href: STORE_FIREFOX }
+    : { text: tx("popup_by_hand"), link: tx("popup_store_chrome"), href: STORE_CHROME };
+}

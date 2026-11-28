@@ -116,6 +116,18 @@
   "popup_fix": {
     "message": "Kako odpraviti težavo"
   },
+  "popup_by_hand": {
+    "message": "Ta kopija je bila naložena ročno in se ne bo posodobila sama."
+  },
+  "popup_by_hand_firefox": {
+    "message": "Ta kopija je bila naložena ročno: ne bo se posodobila sama, brskalnik pa jo bo odstranil ob ponovnem zagonu."
+  },
+  "popup_store_chrome": {
+    "message": "Dodajte ga iz trgovine Chrome Web Store"
+  },
+  "popup_store_firefox": {
+    "message": "Dodajte ga iz addons.mozilla.org"
+  },
   "popup_declined": {
     "message": "Prepuščeno brskalniku: $name$",
     "placeholders": {
@@ -319,6 +331,9 @@
   },
   "video_all_qualities": {
     "message": "Vse kakovosti in podnapisi..."
+  },
+  "video_part": {
+    "message": "Prenesi del od tukaj..."
   },
   "video_failed": {
     "message": "Mister Download Manager ni nameščen ali se ni zagnal"

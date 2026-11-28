@@ -116,6 +116,18 @@
   "popup_fix": {
     "message": "Πώς να το διορθώσετε"
   },
+  "popup_by_hand": {
+    "message": "Αυτό το αντίγραφο φορτώθηκε χειροκίνητα και δεν θα ενημερωθεί αυτόματα."
+  },
+  "popup_by_hand_firefox": {
+    "message": "Αυτό το αντίγραφο φορτώθηκε χειροκίνητα: δεν θα ενημερωθεί αυτόματα και το πρόγραμμα περιήγησης το αφαιρεί όταν επανεκκινεί."
+  },
+  "popup_store_chrome": {
+    "message": "Προσθήκη από το Chrome Web Store"
+  },
+  "popup_store_firefox": {
+    "message": "Προσθήκη από το addons.mozilla.org"
+  },
   "popup_declined": {
     "message": "Παραμένει στο πρόγραμμα περιήγησης: $name$",
     "placeholders": {
@@ -319,6 +331,9 @@
   },
   "video_all_qualities": {
     "message": "Όλες οι ποιότητες και οι υπότιτλοι..."
+  },
+  "video_part": {
+    "message": "Λήψη ενός τμήματος από εδώ..."
   },
   "video_failed": {
     "message": "Το Mister Download Manager δεν είναι εγκατεστημένο ή δεν ξεκίνησε"

@@ -116,6 +116,18 @@
   "popup_fix": {
     "message": "దీన్ని ఎలా పరిష్కరించాలి"
   },
+  "popup_by_hand": {
+    "message": "ఈ కాపీని మాన్యువల్‌గా లోడ్ చేశారు; ఇది స్వయంగా అప్‌డేట్ అవ్వదు."
+  },
+  "popup_by_hand_firefox": {
+    "message": "ఈ కాపీని చేతితో లోడ్ చేశారు: ఇది స్వయంచాలకంగా నవీకరించబడదు, మరియు బ్రౌజర్ పునఃప్రారంభించినప్పుడు దానిని తీసివేస్తుంది."
+  },
+  "popup_store_chrome": {
+    "message": "Chrome Web Store నుండి జోడించండి"
+  },
+  "popup_store_firefox": {
+    "message": "addons.mozilla.org నుండి జోడించండి"
+  },
   "popup_declined": {
     "message": "బ్రౌజర్‌కు వదిలివేయబడింది: $name$",
     "placeholders": {
@@ -319,6 +331,9 @@
   },
   "video_all_qualities": {
     "message": "అన్ని నాణ్యతలు మరియు ఉపశీర్షికలు..."
+  },
+  "video_part": {
+    "message": "ఇక్కడ నుండి ఒక భాగాన్ని డౌన్‌లోడ్ చేయండి..."
   },
   "video_failed": {
     "message": "Mister Download Manager ఇన్‌స్టాల్ చేయబడలేదు లేదా ప్రారంభం కాలేదు"

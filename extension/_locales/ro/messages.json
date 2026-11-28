@@ -116,6 +116,18 @@
   "popup_fix": {
     "message": "Cum se remediază"
   },
+  "popup_by_hand": {
+    "message": "Această copie a fost încărcată manual și nu se va actualiza singură."
+  },
+  "popup_by_hand_firefox": {
+    "message": "Această copie a fost încărcată manual: nu se va actualiza singură, iar browserul o va elimina la repornire."
+  },
+  "popup_store_chrome": {
+    "message": "Adăugați-l din Chrome Web Store"
+  },
+  "popup_store_firefox": {
+    "message": "Adăugați-l de pe addons.mozilla.org"
+  },
   "popup_declined": {
     "message": "Lăsat browserului: $name$",
     "placeholders": {
@@ -319,6 +331,9 @@
   },
   "video_all_qualities": {
     "message": "Toate calitățile și subtitrările..."
+  },
+  "video_part": {
+    "message": "Descărcați o parte de aici..."
   },
   "video_failed": {
     "message": "Mister Download Manager nu este instalat sau nu a pornit"

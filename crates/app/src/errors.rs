@@ -237,6 +237,15 @@ pub fn service(service: &str, fault: &mdm_engine::ServiceFault) -> String {
                 &[("name", &ltr(name))],
             );
         }
+        F::ChosenFileMissing(path) => {
+            return fmt(
+                // i18n: a torrent through a debrid service: a file ticked in Add torrent isn't among the files the service has, so nothing was downloaded (rather than every file); {service} its name, {file} the file's path in the torrent
+                t(
+                    "{service} doesn't list {file}, chosen in Add torrent: nothing was downloaded. Add the torrent again with all its files, or without this one",
+                ),
+                &[("service", service), ("file", &crate::i18n::isolate(path))],
+            );
+        }
         F::Other(message) => {
             return fmt(
                 // i18n: a debrid service's error in its own words (English); {service} its name

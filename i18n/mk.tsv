@@ -12,6 +12,11 @@
 #. {n} = a number (keep the braces as they are)
 #, machine
 @plural	An unknown site wants to send {n} link to Link grabber.|An unknown site wants to send {n} links to Link grabber.	Непозната страница сака да испрати {n} врска до грабачот на врски.|Непозната страница сака да испрати {n} врски до грабачот на врски.
+#. count in traypanel.rs
+#. the notification-area icon's panel (#1365), under the downloads it lists: how many others are running; {n} a number
+#. {n} = a number (keep the braces as they are)
+#, machine
+@plural	And {n} more|And {n} more	И уште {n}|И уште {n}
 #. count in torrent downloads
 #. number of additional files in a list of files
 #. {n} = a number (keep the braces as they are)
@@ -54,6 +59,11 @@
 #. {n} = a number (keep the braces as they are)
 #, machine
 @plural	There is {n} more download waiting. Cancel it too?|There are {n} more downloads waiting. Cancel them too?	Има уште {n} преземање на чекање. Да се откаже и тоа?|Има уште {n} преземања на чекање. Да се откажат и тие?
+#. count in a dialog box
+#. under "Also delete the files from disk", while it is ticked: how many of the downloads being deleted are finished, whose complete files are deleted from the disk too
+#. {n} = a number (keep the braces as they are)
+#, machine
+@plural	This also deletes {n} finished file.|This also deletes {n} finished files.	Ова брише и {n} завршена датотека.|Ова брише и {n} завршени датотеки.
 #. count in a dialog box
 #. under the first failed downloads in the summary of a group of downloads: {n} more failed (Show in list shows them all)
 #. {n} = a number (keep the braces as they are)
@@ -273,6 +283,14 @@
 #. Options → DNS: the NextDNS configuration ID typed isn't one
 #, machine
 	A NextDNS configuration ID is six letters and digits (0-9, a-f).	Идентификаторот за конфигурација на NextDNS е шест букви и цифри (0-9, a-f).
+#. text in the Download video window
+#. why "Embed chapters" (and the subtitles) are greyed in Download video: only a part of the video is downloaded, and its chapters and subtitles would be the whole video's
+#, machine
+	A part is saved without the video's chapters and subtitles	Дел е зачуван без поглавјата и преводите на видеото
+#. text in the Download video window
+#. why Part is greyed in Download video: the page is a playlist, whose videos are downloaded whole
+#, machine
+	A playlist's videos are downloaded whole	Видеата од плејлиста се преземаат цели
 #. text in the Options window
 #. Options → Sites Logins → Cookies for video sites: the tooltip of the profile box
 #, machine
@@ -317,6 +335,7 @@
 #, machine
 	about {ms} ms ({reach})	околу {ms} ms ({reach})
 #. text in the Download video window
+#. in Download video beside the part's From and To: the part's size, estimated from the whole video's; {size} is "12.3 MB"
 #. a file size that is only an estimate, as a screen reader says it in the Download video window's list of qualities; {size} is "532 MB"
 #. {size} = a file size such as "4.2 MB" (keep the braces as they are)
 #, machine
@@ -509,6 +528,9 @@
 #. in the Subtitles list of Download video: every language the video's uploader gave
 #, machine
 	All the uploader's	Сите на испраќачот
+#. text in helpers.rs
+#, machine
+	All three are open source. MDM gets them from their official releases with its own downloader and checks each file's signature before it runs. About 140 MB, once.	Сите три се со отворен код. MDM ги презема од нивните официјални изданија со сопствен преземач и го проверува потписот на секоја датотека пред да ја изврши. Околу 140 MB, еднократно.
 #. text in cnl.rs
 #. button in the Click'n'Load window: let this site send links (remembered)
 #, machine
@@ -680,6 +702,7 @@
 #, machine
 	Asking the service...	Прашување на услугата...
 #. text in the Options window
+#. Options → Proxy / Socks: Test is running
 #. Options → DNS settings: the test is running
 #. the trailing ... means it is still going on: keep it
 #, machine
@@ -879,7 +902,7 @@
 #. a country's name (where a download's server is)
 #, machine
 	Canada	Канада
-#. button in the Batch download window; button in categories.rs; text in the Checksum window; button in a dialog box; button in extracting archives (a download's log, the Archive password window); button in the Find window; button in gallerydlg.rs; text in the Link grabber window; text in the Help menu's windows (About, updates, shortcuts, Tell a friend); button in langpick.rs; button in the Options window; button in a download's progress window; text in remote.rs; button in the Scheduler window; button in the Add torrent window; button in the Download video window
+#. button in the Batch download window; button in categories.rs; text in the Checksum window; button in a dialog box; button in extracting archives (a download's log, the Archive password window); button in the Find window; button in gallerydlg.rs; text in the Link grabber window; text in the Help menu's windows (About, updates, shortcuts, Tell a friend); button in langpick.rs; button in the Options window; button in a download's progress window; text in remote.rs; button in the Scheduler window; button in the Add torrent window; button in traypanel.rs; button in the Download video window
 #. button: stop downloading the update
 #, machine
 	Cancel	Откажете
@@ -978,6 +1001,10 @@
 #, machine
 	Check your connection, then try again, or get them later from the video window.	Проверете ја вашата врска, па обидете се повторно, или преземете ги подоцна од прозорецот за видео.
 #. text in the Options window
+#. tooltip of "Show downloads when the notification area icon is clicked": what the click on MDM's tray icon does when it is ticked and when not
+#, machine
+	Checked, a click on MDM's icon shows what is downloading, with Pause and Cancel, and a double click opens the window; unchecked, a click shows or hides the window	Ако е штиклирано, кликнувањето на иконата на MDM ги прикажува тековните преземања со опции за паузирање и откажување, а двоен клик го отвора прозорецот; ако не е штиклирано, кликнувањето го прикажува или скрива прозорецот
+#. text in the Options window
 #. tooltip of the close-setting: checked keeps MDM running when the window closes, in the notification area when available or else the taskbar; downloads continue; unchecked closing quits
 #, machine
 	Checked, closing the window keeps MDM running: it hides in the notification area when available, or minimizes to the taskbar otherwise, and downloads continue; unchecked, closing quits MDM	Ако е штиклирано, затворањето на прозорецот го задржува MDM да работи: се крие во областа за известувања кога е достапно, или се минимизира во лентата со задачи, а преземањата продолжуваат; ако не е штиклирано, затворањето го исклучува MDM.
@@ -1041,6 +1068,9 @@
 #. remote control page (on a phone): what the ".torrent file" button does (screen readers)
 #, machine
 	Choose a .torrent file	Изберете .torrent-датотека
+#. text in helpers.rs
+#, machine
+	Choose a JavaScript runtime (Node.js, Deno, QuickJS or Bun)	Изберете JavaScript извршна околина (Node.js, Deno, QuickJS или Bun)
 #. text in langpick.rs
 #, machine
 	Choose a language	Изберете јазик
@@ -1051,7 +1081,8 @@
 #. Options → Sites Logins → Cookies for video sites: the title of the window, and the tooltip of the button, that pick a browser profile's folder
 #, machine
 	Choose the profile's folder	Изберете ја папката на профилот
-#. text in helpers.rs
+#. text in helpers.rs; text in the Options window
+#. file picker title; {name} = the program to choose (yt-dlp, ffmpeg, 7-Zip)
 #. {name} = a file name (keep the braces as they are)
 #, machine
 	Choose {name}	Изберете {name}
@@ -1083,7 +1114,7 @@
 #. text in the Options window
 #, machine
 	Clock:	Часовник:
-#. text in the Checksum window; text in the main window (menus, toolbar, Categories pane); button in crashui.rs; button in a dialog box; button in extension.rs; button in the Help menu's windows (About, updates, shortcuts, Tell a friend); button in helpers.rs; button in the download list; button in the Options window; button in rssdlg.rs; button in torrentfiles.rs; text in standard windows
+#. text in the Checksum window; text in the main window (menus, toolbar, Categories pane); button in crashui.rs; button in a dialog box; button in extension.rs; button in the Help menu's windows (About, updates, shortcuts, Tell a friend); button in helpers.rs; button in the download list; button in the Options window; button in rssdlg.rs; button in torrentfiles.rs; text in traypanel.rs; text in standard windows
 #. both verbs: Verify = check the file now; Close = close the window
 #. tooltip of the × that closes the Categories pane
 #. verb: closes this window
@@ -1290,7 +1321,7 @@
 #. a date's order: day first (30/10/2026)
 #, machine
 	Day, month, year	Ден, месец, година
-#. page title in the Options window
+#. page title in the Options window; text in the Options window
 #, machine
 	Debrid service accounts	Сметки за дебрид услуги
 #. text in the Scheduler window
@@ -1555,11 +1586,6 @@
 #, machine
 	Downloading again from the start	Повторно се презема од почеток
 #. text in the Download video window
-#. in Download video: MDM downloads Deno (a program's name) and checks it against its published checksum
-#. the trailing ... means it is still going on: keep it
-#, machine
-	Downloading and verifying Deno (about 40 MB)...	Се презема и проверува Deno (околу 40 MB)...
-#. text in the Download video window
 #. the trailing ... means it is still going on: keep it
 #, machine
 	Downloading and verifying ffmpeg (about 80 MB)...	Преземање и проверка на ffmpeg (околу 80 МБ)...
@@ -1567,6 +1593,10 @@
 #. the trailing ... means it is still going on: keep it
 #, machine
 	Downloading and verifying gallery-dl...	Преземање и проверка на gallery-dl...
+#. text in the Download video window
+#. the trailing ... means it is still going on: keep it
+#, machine
+	Downloading and verifying Node.js (40 to 60 MB)...	Се презема и проверува Node.js (40 до 60 MB)...
 #. text in the Download video window
 #. the trailing ... means it is still going on: keep it
 #, machine
@@ -1585,7 +1615,7 @@
 #, machine
 	Downloading the update... {percent}%	Се презема ажурирањето... {percent}%
 #. text in helpers.rs
-#. {name} = yt-dlp or ffmpeg; {n} of {total} = which helper of how many; {percent} = how far, e.g. 45%
+#. {name} = yt-dlp, ffmpeg or Node.js; {n} of {total} = which helper of how many; {percent} = how far, e.g. 45%
 #. {name} = a file name; {n} = a number (keep the braces as they are)
 #, machine
 	Downloading {name} ({n} of {total})... {percent}	Преземање на {name} ({n} од {total})... {percent}
@@ -1601,8 +1631,13 @@
 #. Windows' Settings → Default apps: what Mister Download Manager is
 #, machine
 	Downloads files, videos and torrents	Презема датотеки, видеа и торенти
-#. text in the tray icon's menu
+#. message or event log entry in the main window
+#. the notice shown once, the first time a download comes from a browser's private (incognito) window: it stays in MDM's list like any other, after a restart too; where to turn that off. {options} = the Options window, {general} = its General tab, {checkbox} = the checkbox "Keep private-window downloads in the list"
+#, machine
+	Downloads from a browser's private window stay in MDM's list like any other, also after MDM restarts; their cookies are never saved. To keep them in memory only, untick {options} → {general} → {checkbox}.	Преземањата од приватен прозорец на прелистувач остануваат на листата на MDM како и сите други, дури и по рестартирање на MDM; нивните колачиња никогаш не се зачувуваат. За да ги задржите само во меморија, отштиклирајте {options} → {general} → {checkbox}.
+#. text in the tray icon's menu; text in traypanel.rs
 #. tray menu: a submenu of the downloads now running; choosing one shows its progress window
+#. the notification-area icon's panel (#1365): its title, over the downloads now running (also the tray menu's submenu)
 #, machine
 	Downloads in progress	Преземања во тек
 #. text in a dialog box
@@ -1769,6 +1804,10 @@
 #. what a keyboard shortcut does in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #, machine
 	Everything at its normal size (100%)	Сè во нормална големина (100%)
+#. text in the Download video window
+#. choice in Download video's Part: the part is encoded again so it starts and ends exactly at From and To (slower)
+#, machine
+	Exact cut, encoded again	Прецизно сечење, повторно кодирано
 #. text in the Options window
 #. label before an example date and time written the chosen way
 #, machine
@@ -1853,6 +1892,10 @@
 #. a country's name (where a download's server is)
 #, machine
 	Faroe Islands	Фарски Острови
+#. text in the Download video window
+#. tooltip of "Quick cut, at keyframes" in Download video: what it does
+#, machine
+	Fast: the streams are copied as they are, so the part may start a little before From	Брзо: стримовите се копираат како што се, па делот може да започне малку пред Од
 #. text in the Scheduler window
 #, machine
 	February	Февруари
@@ -1941,6 +1984,10 @@
 #. verb: button that starts the search
 #, machine
 	Find	Најди
+#. text in the Options window
+#. Options → Archives: button, shown once a 7-Zip program was chosen with "Use another program...": go back to the 7-Zip MDM finds on the computer by itself
+#, machine
+	Find 7-Zip automatically	Автоматски пронајдете 7-Zip
 #. what a keyboard shortcut does in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #, machine
 	Find a download	Најди преземање
@@ -2075,6 +2122,14 @@
 #. where a download came from, in its log: a playlist or channel, by yt-dlp
 #, machine
 	from a playlist (yt-dlp)	од плејлиста (yt-dlp)
+#. text in the download list (sizes, speeds, status)
+#. tooltip of the mark (a mask) before a download's status in the list: it came from a browser's private (incognito) window, and it is in memory only, gone from the list when MDM closes
+#, machine
+	From a private window: in memory only, gone from the list when MDM closes	Од приватен прозорец: само во меморија, исчезнува од листата кога MDM ќе се затвори
+#. text in the download list (sizes, speeds, status)
+#. tooltip of the mark (a mask) before a download's status in the list: it came from a browser's private (incognito) window, and MDM's list keeps it after a restart (Options → General → Keep private-window downloads in the list)
+#, machine
+	From a private window: kept in the list	Од приватен прозорец: задржано на листата
 #. message or event log entry in the main window
 #, machine
 	from a torrent file	од торент датотека
@@ -2092,6 +2147,10 @@
 #. message or event log entry in the main window
 #, machine
 	from the command line	од командната линија
+#. text in the Download video window
+#. in Download video after "Only a part": {from} and {to} are boxes where times are typed (1:30, 1:02:03), drawn where they stand in the translation
+#, machine
+	from {from} to {to}	од {from} до {to}
 #. text in the Batch download window
 #, machine
 	From:	Од:
@@ -2132,7 +2191,7 @@
 #. a country's name (where a download's server is)
 #, machine
 	Gambia	Гамбија
-#. text in the download list (sizes, speeds, status); text in the Options window; text in a download's progress window
+#. message or event log entry in the main window; text in the download list (sizes, speeds, status); text in the Options window; text in a download's progress window
 #. category name: files of no particular kind
 #. tab title: general settings
 #. tab title: general information
@@ -2391,10 +2450,6 @@
 #, machine
 	Install 7-Zip (free), then right-click the download and choose Extract.	Инсталирајте 7-Zip (бесплатно), потоа кликнете со десното копче на преземањето и изберете Извлечи.
 #. text in the Download video window
-#. button in Download video: download and install Deno, the JavaScript runtime YouTube needs (Deno is a program's name)
-#, machine
-	Install Deno	Инсталирајте го Deno
-#. text in the Download video window
 #. button: download and install the ffmpeg program
 #, machine
 	Install ffmpeg	Инсталирај ffmpeg
@@ -2406,6 +2461,10 @@
 #. link in the browser extension's window: the tutorial that adds it without the browser's store
 #, machine
 	Install it by hand	Инсталирајте го рачно
+#. text in the Download video window
+#. button in Download video: download and install Node.js, the JavaScript runtime YouTube needs (Node.js is a program's name)
+#, machine
+	Install Node.js	Инсталирајте Node.js
 #. text in unix.rs
 #. Linux, after a missing library's name, on a distribution MDM doesn't know
 #, machine
@@ -2534,9 +2593,9 @@
 #, machine
 	Japan	Јапонија
 #. text in helpers.rs
-#. Video helpers: the row of the JavaScript runtime yt-dlp needs for YouTube (Deno is a program's name)
+#. Video helpers: the row of the JavaScript runtime (Node.js, Deno...) yt-dlp needs for YouTube's videos
 #, machine
-	JavaScript runtime (Deno)	Извршна околина за JavaScript (Deno)
+	JavaScript runtime (for YouTube)	JavaScript извршна околина (за YouTube)
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -2562,10 +2621,10 @@
 #, machine
 	KBytes/sec	КБ/сек
 #. text in helpers.rs
-#. Helpers: checkbox: MDM checks for and installs newer versions of its own yt-dlp, ffmpeg, gallery-dl and Deno by itself
+#. Helpers: checkbox: MDM checks for and installs newer versions of its own yt-dlp, ffmpeg, gallery-dl and Node.js by itself
 #, machine
 	Keep MDM's helpers up to date automatically	Автоматско ажурирање на помошните програми на MDM
-#. text in the Options window
+#. message or event log entry in the main window; text in the Options window
 #. checkbox: downloads started from a browser's private (incognito) window are saved in MDM's download list like any other, so they are still there after MDM restarts
 #, machine
 	Keep private-window downloads in the list	Зачувајте ги преземањата од приватен прозорец во списокот
@@ -2768,6 +2827,11 @@
 #. why Download Now is greyed: the page address was changed after the look-up
 #, machine
 	Look up the new address first	Прво побарајте ја новата адреса
+#. text in helpers.rs
+#. Video helpers: MDM is asking the JavaScript runtimes on the computer (Node.js, Deno...) for their versions, to see which one yt-dlp can use
+#. the trailing ... means it is still going on: keep it
+#, machine
+	Looking for a JavaScript runtime on this computer...	Се бара JavaScript извршна околина на овој компјутер...
 #. text in the Add torrent window
 #. while a magnet link's file list is fetched, before any peer is found
 #. the trailing ... means it is still going on: keep it
@@ -2941,13 +3005,13 @@
 #, machine
 	MDM does not answer. Trying again...	MDM не одговара. Се обидувам повторно...
 #. text in helpers.rs
-#. Video helpers: MDM can't download Deno on this system (32-bit Windows, an unusual processor); Deno and Node.js are program names
-#, machine
-	MDM has no copy for this system: install Deno or Node.js	MDM нема копија за овој систем: инсталирајте Deno или Node.js
-#. text in helpers.rs
 #. Video helpers: MDM can't download this helper on this Windows (ffmpeg on 32-bit Windows); "Use another program" is the button below
 #, machine
 	MDM has no copy for this system: install it, or use another program	MDM нема копија за овој систем: инсталирајте ја или користете друга програма
+#. text in helpers.rs
+#. Video helpers: MDM can't download Node.js on this system (an unusual processor); Node.js and Deno are program names; "Use another program" is the button below
+#, machine
+	MDM has no copy for this system: install Node.js or Deno, or use another program	MDM нема копија за овој систем: инсталирајте Node.js или Deno, или користете друга програма
 #. text in remote.rs
 #. remote control page (on a phone): no pairing code is shown in MDM; "Pair a device" is MDM's button
 #, machine
@@ -3295,6 +3359,10 @@
 #. message or event log entry in the main window
 #, machine
 	No download links were found in the clipboard. Copy a text with http, https, ftp or magnet links in it, and try again.	Не беа пронајдени врски за преземање во таблата со исечоци. Копирајте текст со http, https, ftp или магнетни врски и обидете се повторно.
+#. text in traypanel.rs
+#. the notification-area icon's panel (#1365) when no download is running
+#, machine
+	No downloads are running	Нема активни преземања
 #. message or event log entry in the main window
 #. title in the empty download list (this category or queue has no downloads)
 #, machine
@@ -3372,6 +3440,10 @@
 #. message or event log entry in the main window
 #, machine
 	No web addresses were found in {file}.	Не беа пронајдени веб-адреси во {file}.
+#. text in helpers.rs
+#. helper name and what it does (Node.js and YouTube are names)
+#, machine
+	Node.js: unlocks YouTube's qualities	Node.js: ги отклучува квалитетите на YouTube
 #. text in the Options window; text in the Download video window
 #. in the Subtitles list of Download video: download no subtitles
 #, machine
@@ -3565,6 +3637,10 @@
 #. message or event log entry in the main window
 #, machine
 	Only a finished download, or one not started yet, can be moved. Stop it and finish it first.	Може да се премести само завршено преземање или преземање што сè уште не е започнато. Прво запрете го и завршете го.
+#. text in the Download video window
+#. checkbox in Download video: download only a part of the video or sound; the From and To boxes follow it
+#, machine
+	Only a part	Само дел
 #. text in the Scheduler window
 #. the Scheduler, under "Wake the computer to run this queue" (Linux): the computer's wake alarm can be set by an administrator only
 #, machine
@@ -3582,6 +3658,10 @@
 #. {n} = a number (keep the braces as they are)
 #, machine
 	Only the first {n} videos are listed.	Наведени се само првите {n} видеа.
+#. message or event log entry in the main window
+#. event log: a torrent through a debrid account gets only the files ticked in Add torrent; {files} how many ("3")
+#, machine
+	Only the {files} file(s) ticked in Add torrent	Само {files} датотека(и) штиклирана(и) во Додај торент
 #. checkbox in a dialog box
 #, machine
 	Only while I'm using the computer	Само додека го користам компјутерот
@@ -3606,7 +3686,8 @@
 #. checkbox in the Add torrent window
 #, machine
 	Open magnet links and .torrent files with Mister Download Manager	Отвори магнетни врски и .torrent датотеки со Mister Download Manager
-#. text in the tray icon's menu
+#. text in the tray icon's menu; text in traypanel.rs
+#. the notification-area icon's panel (#1365): its button that opens the main window (also the tray menu's first item)
 #, machine
 	Open Mister Download Manager	Отвори Mister Download Manager
 #. text in extension.rs
@@ -3644,7 +3725,7 @@
 #. the trailing ... means it opens a window: keep it
 #, machine
 	Open with...	Отворете со...
-#. text in the tray icon's menu
+#. message or event log entry in the main window; text in the tray icon's menu
 #. plural noun: opens the Options window (settings)
 #, machine
 	Options	Опции
@@ -3716,6 +3797,10 @@
 #. a country's name (where a download's server is)
 #, machine
 	Paraguay	Парагвај
+#. text in the Download video window
+#. label in Download video before the choice to download only a part of the video or sound (from one time to another)
+#, machine
+	Part	Дел
 #. text in the Batch download window; text in a dialog box; label in the Options window; text in the Options window; text in a download's Properties window
 #, machine
 	Password	Лозинка
@@ -3836,6 +3921,10 @@
 #. tooltip of the greyed Preview button in Download File Info
 #, machine
 	Preview isn't available yet	Прегледот сè уште не е достапен
+#. message or event log entry in the main window
+#. title of the notice shown once, the first time a download comes from a browser's private (incognito) window
+#, machine
+	Private-window downloads	Преземања од приватен прозорец
 #. text in the Download video window
 #. a private-window video's authentication failure: only cookies supplied by that private window may be used, even after restarting MDM
 #, machine
@@ -3908,6 +3997,10 @@
 #. plural noun: the download queues
 #, machine
 	Queues	Редови
+#. text in the Download video window
+#. choice in Download video's Part: cut where the video has a keyframe, the streams copied as they are (fast; it may start a little before From)
+#, machine
+	Quick cut, at keyframes	Брзо сечење, на клучни кадри
 #. text in the Options window
 #. Options → Sites Logins → Cookies for video sites: a note under the choices
 #, machine
@@ -4366,6 +4459,10 @@
 #. checkbox in the Options window
 #, machine
 	Show download progress dialog when a download starts	Прикажи дијалог за напредок на преземањето кога ќе започне преземање
+#. text in the Options window
+#. checkbox: a click on MDM's icon in the notification area (system tray) shows a small panel over it with the downloads now running, their progress, Pause and Cancel; unticked, the click shows or hides the main window
+#, machine
+	Show downloads when the notification area icon is clicked	Прикажи ги преземањата кога ќе се кликне иконата во областа за известувања
 #. button in a dialog box
 #. button: shows these downloads in MDM's list, selected
 #, machine
@@ -4658,6 +4755,10 @@
 #. the trailing ... means it is still going on: keep it
 #, machine
 	Starting...	Започнување...
+#. text in the Download video window
+#. tooltip of "Exact cut, encoded again" in Download video: what it does
+#, machine
+	Starts and ends exactly at From and To: ffmpeg encodes the part again, which takes longer	Започнува и завршува точно на Од и До: ffmpeg повторно го кодира делот, што трае подолго
 #. text in the Options window
 #. column title: the account's state (premium, days left)
 #, machine
@@ -4841,6 +4942,14 @@
 #. why Batch download's OK is greyed
 #, machine
 	That is more than 100,000 files: make the range smaller	Тоа е повеќе од 100.000 датотеки: намалете го опсегот
+#. text in the Options window
+#. Options → Archives, in red: the program chosen with "Use another program..." isn't 7-Zip's command line program (an archiver's window was picked instead); 7z.exe is that program's file name
+#, machine
+	That isn't 7-Zip's command line program (7z.exe).	Тоа не е програмата за командна линија на 7-Zip (7z.exe).
+#. text in the Download video window
+#. why Download Now is greyed in Download video: Part's times are the whole video's (untick Only a part to download it whole)
+#, machine
+	That's the whole video: change From or To, or untick Only a part	Тоа е целото видео: променете Од или До, или отштиклирајте Само дел
 #. text in torrent downloads
 #. an error: the copy of the .torrent file the app keeps is missing
 #, machine
@@ -5163,6 +5272,10 @@
 #. Options → Accounts: the service doesn't say whether the account is premium (Mega-Debrid, signed in with an API key); a free account's links are refused when downloading
 #, machine
 	the service doesn't say whether it is premium	услугата не кажува дали сметката е премиум
+#. tooltip (why a control is greyed) in the Download video window
+#. why Part is greyed in Download video: the site doesn't say how long the video is (a live stream, for one)
+#, machine
+	The site doesn't say how long this video is	Сајтот не кажува колку е долго ова видео
 #. text in errors.rs
 #. why a download failed (#701): a file host answered with its own web page (a countdown before the link, a captcha, a sign-in) where the file was expected. The browser gets past it; MDM's browser extension then hands the real file back to MDM
 #, machine
@@ -5405,6 +5518,7 @@
 	This name is reserved by Windows	Ова име е резервирано од Windows
 #. tooltip (why a control is greyed) in the Download video window
 #. why "Embed chapters" is greyed: ffmpeg (a helper program) is not installed
+#. why Part is greyed in Download video: ffmpeg (a helper program) is not installed
 #. why "Put them into the video" is greyed: ffmpeg (a helper program) is not installed
 #, machine
 	This needs ffmpeg	Ова бара ffmpeg
@@ -5471,6 +5585,9 @@
 #. {site} = a web site's name such as "example.com" (keep the braces as they are)
 #, machine
 	this {site} link is a web page, not the file: open it in your browser and download from there	оваа врска на {site} е веб-страница, а не датотека: отворете ја во вашиот прелистувач и преземете од таму
+#. text in helpers.rs
+#, machine
+	Three free helpers make it work. Get them now, and saving a video is one click away when you find one.	Три бесплатни помагала го овозможуваат тоа. Преземете ги сега, и зачувувањето видео е на еден клик кога ќе најдете некое.
 #. text in whereis.rs
 #. where a download's server is, when a proxy carries it (the proxy's place not known)
 #, machine
@@ -5505,6 +5622,14 @@
 #. Linux, after a missing library's name: {command} = the terminal command that installs it ("sudo apt install libxkbcommon-x11-0"), left as it is
 #, machine
 	To install what's missing: {command}	За да го инсталирате она што недостасува: {command}
+#. text in the Download video window
+#. why Download Now is greyed in Download video: Part's To time is past the video's end
+#, machine
+	To is past the end of the video	До е по крајот на видеото
+#. text in the Download video window
+#. why Download Now is greyed in Download video: Part's To time isn't after its From time
+#, machine
+	To must come after From	До мора да биде по Од
 #. text in the Batch download window
 #, machine
 	To:	До:
@@ -5692,6 +5817,10 @@
 #. why OK is greyed when naming a new queue
 #, machine
 	Type the queue's name	Внесете го името на редот
+#. text in the Download video window
+#. why Download Now is greyed in Download video: a Part box holds something that isn't a time
+#, machine
+	Type the times as 1:30 or 1:02:03	Внесете ги времињата како 1:30 или 1:02:03
 #. text in the Options window
 #. Options → Add an account: waiting while the user types the code at the service's page; {page} its address, {time} minutes:seconds left
 #. {time} = a time of day (keep the braces as they are)
@@ -5798,8 +5927,9 @@
 #. text in the Options window
 #, machine
 	Use advanced browser integration	Користете напредна интеграција со прелистувачот
-#. text in errors.rs; button in helpers.rs
+#. text in errors.rs; button in helpers.rs; text in the Options window
 #. Video helpers: button: pick a program (yt-dlp or ffmpeg) already on the computer
+#. Options → Archives: button: pick the 7-Zip command line program to extract 7z and RAR archives with (PeaZip's own 7z.exe, a portable copy), instead of the one MDM finds
 #. the trailing ... means it opens a window: keep it
 #, machine
 	Use another program...	Користете друга програма...
@@ -5863,7 +5993,7 @@
 #. Options → Add an account: label before the field for the user name at the debrid service
 #, machine
 	User name:	Корисничко име:
-#. page title in the Options window
+#. page title in the Options window; text in the Options window
 #, machine
 	User names and passwords for servers/sites	Кориснички имиња и лозинки за сервери/страници
 #. text in the Options window
@@ -6161,13 +6291,12 @@
 #, machine
 	Your own program: {path} ({version})	Ваша програма: {path} ({version})
 #. text in helpers.rs
-#. Video helpers: {path} = the computer's own JavaScript runtime (node.exe, deno.exe), used as it is: MDM needn't download one
-#, machine
-	Your system's, nothing to download: {path}	На вашиот систем, нема што да се презема: {path}
-#. text in helpers.rs
 #. Video helpers: {path} = the system's yt-dlp, ffmpeg or gallery-dl
 #, machine
 	Your system's: {path}	Ваш систем: {path}
+#. text in helpers.rs
+#, machine
+	YouTube makes yt-dlp run a piece of JavaScript before it lists its videos, and this computer has nothing to run it with. Node.js does.	YouTube го тера yt-dlp да изврши парче JavaScript пред да ги наведе своите видеа, а овој компјутер нема ништо со што би го извршил. Node.js го прави тоа.
 #. text in the Download video window
 #. in Download video and the browser's video menu: yt-dlp had no JavaScript runtime, so YouTube listed only some qualities (often only the sound); Node.js and Deno are program names
 #, machine
@@ -6282,7 +6411,7 @@
 #. Options → Remote → Pair a device: done; {device} = the name it was given
 #, machine
 	{device} is paired. It can control MDM now.	{device} е спарен. Сега може да го контролира MDM.
-#. text in remote.rs
+#. text in remote.rs; text in traypanel.rs
 #. remote control page (on a phone): progress; {done} and {size} are sizes ("1.2 MB of 7.5 MB")
 #. {size} = a file size such as "4.2 MB" (keep the braces as they are)
 #, machine
@@ -6401,7 +6530,7 @@
 #, machine
 	{name}  ({files}, {size})	{name} ({files}, {size})
 #. text in helpers.rs
-#. {name} = yt-dlp or ffmpeg; {error} = why
+#. {name} = yt-dlp, ffmpeg or Node.js; {error} = why
 #. {name} = a file name; {error} = an error message (keep the braces as they are)
 #, machine
 	{name} could not be downloaded: {error}	Не можеше да се преземе {name}: {error}
@@ -6411,7 +6540,7 @@
 #, machine
 	{name} is a 7z or RAR archive. MDM extracts those with 7-Zip, which isn't installed.	{name} е 7z или RAR архива. MDM ги распакува овие архиви со 7-Zip, кој не е инсталиран.
 #. text in errors.rs
-#. error: a helper (yt-dlp, ffmpeg, gallery-dl, Deno) is being downloaded already, by MDM's automatic update or another copy of MDM; {name} = its name
+#. error: a helper (yt-dlp, ffmpeg, gallery-dl, Node.js) is being downloaded already, by MDM's automatic update or another copy of MDM; {name} = its name
 #. {name} = a file name (keep the braces as they are)
 #, machine
 	{name} is being downloaded already: try again in a moment	{name} веќе се презема: обидете се повторно за момент
@@ -6480,6 +6609,22 @@
 #. {rate} = a speed such as "1.2 MB/sec" (keep the braces as they are)
 #, machine
 	{rate} (limit: {limit})	{rate} (ограничување: {limit})
+#. text in helpers.rs
+#. Video helpers: the Deno an earlier version of MDM installed, still used until MDM's own Node.js replaces it (by the next update, or Use MDM's own copy); {runtime} = "Deno" and its version
+#, machine
+	{runtime}, MDM's earlier copy: Node.js takes its place at the next update	{runtime}, претходна копија на MDM: Node.js го зазема неговото место при следното ажурирање
+#. text in helpers.rs
+#. Video helpers: MDM's own Node.js is the JavaScript runtime; {runtime} = "Node.js" and its version
+#, machine
+	{runtime}, Mister Download Manager's own copy	{runtime}, сопствена копија на Mister Download Manager
+#. text in helpers.rs
+#. Video helpers: the JavaScript runtime the person chose; {runtime} = its name and version ("Node.js 24.11.0"), {path} = where it is
+#, machine
+	{runtime}, your own program: {path}	{runtime}, ваша сопствена програма: {path}
+#. text in helpers.rs
+#. Video helpers: the computer's own JavaScript runtime, used as it is (MDM needn't download one); {runtime} = its name and version ("Node.js 24.11.0", "Deno 2.5.6"), {path} = where it is
+#, machine
+	{runtime}, your system's, nothing to download: {path}	{runtime}, од вашиот систем, нема што да се презема: {path}
 #. text in errors.rs
 #. a debrid service's error: too many requests; MDM waits and retries
 #, machine
@@ -6494,6 +6639,10 @@
 #. text in errors.rs
 #, machine
 	{service} can't reach this file host right now; MDM will try again later	{service} не може да пристапи до овој хост за датотеки во моментов; MDM ќе се обиде повторно подоцна
+#. text in errors.rs
+#. a torrent through a debrid service: a file ticked in Add torrent isn't among the files the service has, so nothing was downloaded (rather than every file); {service} its name, {file} the file's path in the torrent
+#, machine
+	{service} doesn't list {file}, chosen in Add torrent: nothing was downloaded. Add the torrent again with all its files, or without this one	{service} не го наведува {file}, избрано во Додај торент: ништо не е преземено. Додајте го торентот повторно со сите негови датотеки, или без оваа
 #. text in errors.rs
 #. a debrid service's error: it isn't answering
 #, machine
@@ -6537,6 +6686,11 @@
 #. a debrid service's error in its own words (English); {service} its name
 #, machine
 	{service}: {message}	{service}: {message}
+#. text in errors.rs
+#. a download's error: a video site kept answering MDM's request for the file with its download page again; {site} = the site's name (LuluStream)
+#. {site} = a web site's name such as "example.com" (keep the braces as they are)
+#, machine
+	{site} didn't give the file this time: try again in a moment	{site} овој пат не ја даде датотеката: обидете се повторно за момент
 #. text in a download's Properties window
 #. {size} = a file size such as "4.2 MB"; {bytes} = a number of bytes (keep the braces as they are)
 #, machine
@@ -6641,6 +6795,14 @@ column	Upload speed	Брзина на испраќање
 #. in the menu under the download button over a video: the page is a list of videos (a playlist), whose videos are chosen in the app's window; keep the name Mister Download Manager as it is
 #, machine
 extension	A list of videos: choose them in Mister Download Manager	Список на видеа: изберете ги во Mister Download Manager
+#. text in the browser extension
+#. link after popup_by_hand_firefox in the toolbar button's popup: opens the add-on's page on addons.mozilla.org (Firefox's add-ons store), whose copy Firefox keeps and updates; keep addons.mozilla.org as it is
+#, machine
+extension	Add it from addons.mozilla.org	Додајте го од addons.mozilla.org
+#. text in the browser extension
+#. link after popup_by_hand in the toolbar button's popup: opens the extension's page in the Chrome Web Store, whose copy the browser keeps up to date; keep the name Chrome Web Store as it is
+#, machine
+extension	Add it from the Chrome Web Store	Додајте го од Chrome Web Store
 #. text in the browser extension
 #. on the download button (green) over a video after the app added and started the download; a quality may follow ('· 1080p') and a 'Show' button; MDM is the app's short name, keep it; short
 #, machine
@@ -6771,6 +6933,11 @@ extension	Done	Завршено
 #. button beside a video, sound or stream in the toolbar button's popup: download it with the app; verb; short
 #, machine
 extension	Download	Преземете
+#. text in the browser extension
+#. command in the menu of the download button over a video: opens the app's Download video window with Part ticked, From set to where the video is playing now, to download only a part of it
+#. the trailing ... means it is still going on: keep it
+#, machine
+extension	Download a part from here...	Преземи дел од тука...
 #. text in the browser extension
 #. command in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): downloads the file again from the start
 #, machine
@@ -7298,6 +7465,14 @@ extension	This browser isn't ticked in Options → General.	Овој прели�
 #. choice under Send downloads to: the Mister Download Manager on this computer
 #, machine
 extension	This computer	Овој компјутер
+#. text in the browser extension
+#. one line at the top of the toolbar button's popup when the extension was loaded by hand (Load unpacked, with Developer mode on) in Chrome, Edge, Brave, Opera or Vivaldi; followed by the link popup_store_chrome
+#, machine
+extension	This copy was loaded by hand and won't update itself.	Оваа копија е вчитана рачно и нема да се ажурира сама.
+#. text in the browser extension
+#. one line at the top of the toolbar button's popup when the add-on was loaded by hand in Firefox (Load Temporary Add-on, in about:debugging); followed by the link popup_store_firefox; the browser here is Firefox (or Zen, LibreWolf)
+#, machine
+extension	This copy was loaded by hand: it won't update itself, and the browser removes it when it restarts.	Оваа копија е вчитана рачно: нема да се ажурира сама, а прелистувачот ќе ја отстрани кога ќе се рестартира.
 #. text in the browser extension
 #. status when a download carried too much data (very large cookies) to give to the app
 #, machine

@@ -11,6 +11,8 @@
 //! - Real-Debrid's and AllDebrid's file links are the fake host's (`http://hoster.test/file/…`),
 //!   unrestricted as any link; Premiumize's are the lab's own direct links (`/gen/…`).
 //! - `GET /_debrid/torrents` lists what the accounts still hold (a test checks the cleanup).
+//! - Real-Debrid's `selectFiles` takes `all` or the files' ids (comma-separated): only those are
+//!   fetched and linked; `GET /_debrid/rd-selected/{id}` shows what a torrent was sent.
 
 use std::collections::HashMap;
 use std::sync::Mutex;
@@ -28,10 +30,14 @@ struct Torrent {
     name: String,
     hash: String,
     polls: u32,
-    selected: bool,
+    /// Real-Debrid's `selectFiles`: the chosen files' ids (1-based), once chosen.
+    selected: Option<Vec<usize>>,
 }
 
 static TORRENTS: Mutex<Option<HashMap<String, Torrent>>> = Mutex::new(None);
+/// Real-Debrid's `selectFiles` as sent (`all` or the ids), by torrent id: kept after the torrent
+/// is deleted, for the tests (`GET /_debrid/rd-selected/{id}`).
+static RD_SELECTED: Mutex<Option<HashMap<String, String>>> = Mutex::new(None);
 static NEXT: Mutex<u64> = Mutex::new(1);
 
 fn with<T>(f: impl FnOnce(&mut HashMap<String, Torrent>) -> T) -> T {
@@ -106,7 +112,7 @@ fn add(service: &'static str, text: &str) -> Option<(String, String, String)> {
                 name: name.clone(),
                 hash: hash.clone(),
                 polls: 0,
-                selected: false,
+                selected: None,
             },
         )
     });
@@ -152,6 +158,20 @@ pub async fn held() -> Response {
     axum::Json(json!(ids)).into_response()
 }
 
+/// `GET /_debrid/rd-selected/{id}`: what that fake Real-Debrid torrent was sent in
+/// `selectFiles`, as plain text (`all`, `1`, `1,3`); 404 when it was sent nothing.
+pub async fn rd_selected(Path(id): Path<String>) -> Response {
+    let sent = RD_SELECTED
+        .lock()
+        .unwrap()
+        .as_ref()
+        .and_then(|m| m.get(&id).cloned());
+    match sent {
+        Some(s) => s.into_response(),
+        None => StatusCode::NOT_FOUND.into_response(),
+    }
+}
+
 // ---- Real-Debrid -----------------------------------------------------------------------------
 
 fn rd_error(status: StatusCode, error: &str, code: i64) -> Response {
@@ -187,13 +207,13 @@ pub async fn rd_info(headers: HeaderMap, Path(id): Path<String>) -> Response {
     };
     let (name, hash, selected, files) = with(|m| {
         let t = &m[&id];
-        (t.name.clone(), t.hash.clone(), t.selected, files(t))
+        (t.name.clone(), t.hash.clone(), t.selected.clone(), files(t))
     });
     let (status, progress) = if dead {
         ("dead", 0)
     } else if polls == 1 {
         ("magnet_conversion", 0)
-    } else if !selected {
+    } else if selected.is_none() {
         ("waiting_files_selection", 0)
     } else if polls < 4 {
         ("downloading", 50)
@@ -201,17 +221,29 @@ pub async fn rd_info(headers: HeaderMap, Path(id): Path<String>) -> Response {
         ("downloaded", 100)
     };
     let ready = status == "downloaded";
+    let chosen = |i: usize| selected.as_ref().is_some_and(|s| s.contains(&(i + 1)));
     let list: Vec<Value> = files
         .iter()
         .enumerate()
-        .map(|(i, (p, _, b))| json!({"id": i + 1, "path": format!("/{p}"), "bytes": b, "selected": i32::from(selected)}))
+        .map(|(i, (p, _, b))| json!({"id": i + 1, "path": format!("/{p}"), "bytes": b, "selected": i32::from(chosen(i))}))
         .collect();
+    // One link per selected file, in order; the torrent's size is theirs.
     let links: Vec<String> = if ready {
-        files.iter().map(|(p, s, _)| host_link(p, s)).collect()
+        files
+            .iter()
+            .enumerate()
+            .filter(|(i, _)| chosen(*i))
+            .map(|(_, (p, s, _))| host_link(p, s))
+            .collect()
     } else {
         Vec::new()
     };
-    let bytes: u64 = files.iter().map(|f| f.2).sum();
+    let bytes: u64 = files
+        .iter()
+        .enumerate()
+        .filter(|(i, _)| selected.is_none() || chosen(*i))
+        .map(|(_, f)| f.2)
+        .sum();
     axum::Json(json!({
         "id": id, "filename": name, "original_filename": name, "hash": hash, "bytes": bytes,
         "original_bytes": bytes, "host": "real-debrid.com", "split": 2000, "progress": progress,
@@ -220,15 +252,39 @@ pub async fn rd_info(headers: HeaderMap, Path(id): Path<String>) -> Response {
     .into_response()
 }
 
-/// `POST /rd/rest/1.0/torrents/selectFiles/{id}` (`files`): 204.
+/// `POST /rd/rest/1.0/torrents/selectFiles/{id}` (`files`: `all`, or the files' ids
+/// comma-separated, as Real-Debrid documents it): 204. An id the torrent hasn't: 400.
 pub async fn rd_select(headers: HeaderMap, Path(id): Path<String>, body: Bytes) -> Response {
     if !token_ok(&headers) {
         return rd_error(StatusCode::UNAUTHORIZED, "bad_token", 8);
     }
-    if field(&form(&body), "files").as_deref() != Some("all") {
+    let Some(sent) = field(&form(&body), "files") else {
         return rd_error(StatusCode::BAD_REQUEST, "wrong_parameter", 2);
-    }
-    match with(|m| m.get_mut(&id).map(|t| t.selected = true)) {
+    };
+    let Some(count) = with(|m| m.get(&id).map(|t| files(t).len())) else {
+        return rd_error(StatusCode::NOT_FOUND, "unknown_ressource", 7);
+    };
+    let ids: Option<Vec<usize>> = if sent == "all" {
+        Some((1..=count).collect())
+    } else {
+        sent.split(',')
+            .map(|n| {
+                n.trim()
+                    .parse::<usize>()
+                    .ok()
+                    .filter(|n| (1..=count).contains(n))
+            })
+            .collect()
+    };
+    let Some(ids) = ids.filter(|ids| !ids.is_empty()) else {
+        return rd_error(StatusCode::BAD_REQUEST, "wrong_parameter", 2);
+    };
+    RD_SELECTED
+        .lock()
+        .unwrap()
+        .get_or_insert_with(HashMap::new)
+        .insert(id.clone(), sent);
+    match with(|m| m.get_mut(&id).map(|t| t.selected = Some(ids))) {
         Some(()) => StatusCode::NO_CONTENT.into_response(),
         None => rd_error(StatusCode::NOT_FOUND, "unknown_ressource", 7),
     }

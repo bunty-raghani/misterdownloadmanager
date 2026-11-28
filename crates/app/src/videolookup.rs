@@ -527,6 +527,7 @@ pub fn video_add(
         // The page's title, shortened to fit (#1102).
         named: false,
         duration: crate::videodlg::whole_seconds(p.video.duration),
+        part: None,
     })
 }
 

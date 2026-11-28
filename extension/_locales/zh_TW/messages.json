@@ -116,6 +116,18 @@
   "popup_fix": {
     "message": "如何修正"
   },
+  "popup_by_hand": {
+    "message": "此副本是手動載入的，不會自行更新。"
+  },
+  "popup_by_hand_firefox": {
+    "message": "此副本是手動載入的：它不會自行更新，且瀏覽器會在重新啟動時將其移除。"
+  },
+  "popup_store_chrome": {
+    "message": "從 Chrome Web Store 新增"
+  },
+  "popup_store_firefox": {
+    "message": "從 addons.mozilla.org 新增"
+  },
   "popup_declined": {
     "message": "已留給瀏覽器：$name$",
     "placeholders": {
@@ -319,6 +331,9 @@
   },
   "video_all_qualities": {
     "message": "所有畫質和字幕..."
+  },
+  "video_part": {
+    "message": "從這裡下載部分內容..."
   },
   "video_failed": {
     "message": "Mister Download Manager 未安裝或未啟動"

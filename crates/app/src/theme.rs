@@ -280,14 +280,10 @@ pub(crate) use themed;
 /// already cover Arabic, Hebrew, Armenian and Georgian.
 #[cfg(windows)]
 const SCRIPT_FONTS: &[(&str, &[&str], &[&str])] = &[
-    ("han-sc", &["msyh.ttc"], &["zh-hans"]),
-    ("han-tc", &["msjh.ttc"], &["zh-hant"]),
-    (
-        "japanese",
-        &["YuGothM.ttc", "meiryo.ttc", "msgothic.ttc"],
-        &["ja"],
-    ),
-    ("hangul", &["malgun.ttf"], &["ko"]),
+    ("han-sc", HAN_SC, &["zh-hans"]),
+    ("han-tc", HAN_TC, &["zh-hant"]),
+    ("japanese", JAPANESE, &["ja"]),
+    ("hangul", HANGUL, &["ko"]),
     (
         "indic",
         &["Nirmala.ttc", "Nirmala.ttf"],
@@ -299,6 +295,87 @@ const SCRIPT_FONTS: &[(&str, &[&str], &[&str])] = &[
     ("ethiopic", &["ebrima.ttf"], &["am"]),
     ("cherokee", &["gadugi.ttf"], &["chr"]),
 ];
+
+/// Windows' Simplified Chinese fonts, best first (#1605): Microsoft YaHei (a collection since
+/// Windows 8, a single font on Windows 7), DengXian (Windows 10 and later), SimSun, SimHei. A
+/// Windows without the first (Windows 7's is `msyh.ttf`; a copy whose fonts were stripped) has
+/// one of the others, which have every Simplified character; a Japanese font has the characters
+/// Chinese shares with Japanese, in their Japanese shapes, and few of the Simplified-only ones.
+#[cfg(windows)]
+const HAN_SC: &[&str] = &[
+    "msyh.ttc",
+    "msyh.ttf",
+    "Deng.ttf",
+    "simsun.ttc",
+    "simhei.ttf",
+];
+/// Traditional Chinese: Microsoft JhengHei (a single font on Windows 7), then MingLiU.
+#[cfg(windows)]
+const HAN_TC: &[&str] = &["msjh.ttc", "msjh.ttf", "mingliu.ttc"];
+/// Japanese: Yu Gothic, Meiryo, MS Gothic.
+#[cfg(windows)]
+const JAPANESE: &[&str] = &["YuGothM.ttc", "meiryo.ttc", "msgothic.ttc"];
+/// Korean: Malgun Gothic.
+#[cfg(windows)]
+const HANGUL: &[&str] = &["malgun.ttf"];
+
+/// Characters only Simplified Chinese writes this way (载链浏览动设选项这们时为发开关; the
+/// Traditional forms are [`TRADITIONAL_ONLY`]'s): a font that has them all is a Simplified
+/// Chinese font, which a Japanese or Traditional one isn't. The reporter's boxes were these
+/// (#1605).
+#[cfg_attr(not(windows), allow(dead_code))]
+const SIMPLIFIED_ONLY: &str = "\u{8F7D}\u{94FE}\u{6D4F}\u{89C8}\u{52A8}\u{8BBE}\u{9009}\u{9879}\u{8FD9}\u{4EEC}\u{65F6}\u{4E3A}\u{53D1}\u{5F00}\u{5173}";
+/// The same words' Traditional forms (載鏈瀏覽動設選項這們時為發開關).
+#[cfg_attr(not(windows), allow(dead_code))]
+const TRADITIONAL_ONLY: &str = "\u{8F09}\u{93C8}\u{700F}\u{89BD}\u{52D5}\u{8A2D}\u{9078}\u{9805}\u{9019}\u{5011}\u{6642}\u{70BA}\u{767C}\u{958B}\u{95DC}";
+
+/// What a script font loaded up front must cover to be taken ([`script_fonts_in`]), and the
+/// script's name in the log: the Chinese fonts must be the Chinese they are for. The other
+/// scripts take the first of their files egui can draw with.
+#[cfg(windows)]
+fn script_probe(key: &str) -> Option<(&'static str, &'static str)> {
+    match key {
+        "han-sc" => Some(("Chinese (Simplified)", SIMPLIFIED_ONLY)),
+        "han-tc" => Some(("Chinese (Traditional)", TRADITIONAL_ONLY)),
+        _ => None,
+    }
+}
+
+/// Whether face `index` of `bytes` has a glyph for every character of `text`.
+#[cfg_attr(not(any(windows, target_os = "macos")), allow(dead_code))]
+fn covers(bytes: &[u8], index: u32, text: &str) -> bool {
+    use skrifa::MetadataProvider as _;
+    skrifa::FontRef::from_index(bytes, index).is_ok_and(|font| {
+        let map = font.charmap();
+        text.chars().all(|c| map.map(c).is_some())
+    })
+}
+
+/// The font files for Chinese and Japanese characters (Han), in the order they are tried
+/// (#1605), for an interface in `code`: its own script's first, then the other Chinese, then
+/// the Japanese; so a Chinese interface never draws a character Chinese shares with Japanese in
+/// a Japanese face while a Chinese font is there. A Simplified Chinese interface, and any whose
+/// language isn't Chinese, Japanese or Korean, starts with the Simplified fonts; a Korean one
+/// with its own font (Malgun Gothic has Hanja). One list for every way MDM finds a font for a
+/// Han character: the ones loaded up front start it ([`SCRIPT_FONTS`]), the fonts found on
+/// demand follow it ([`ScriptFallback`]), and so does DirectWrite's classic text
+/// ([`cjk_font_files_for`]).
+#[cfg(windows)]
+pub(crate) fn han_files(code: &str) -> Vec<&'static str> {
+    let lists: &[&[&str]] = match code {
+        "zh-hant" => &[HAN_TC, HAN_SC, JAPANESE],
+        "ja" => &[JAPANESE, HAN_SC, HAN_TC],
+        "ko" => &[HANGUL, HAN_SC, HAN_TC, JAPANESE],
+        _ => &[HAN_SC, HAN_TC, JAPANESE],
+    };
+    let mut files = Vec::new();
+    for file in lists.iter().copied().flatten() {
+        if !files.contains(file) {
+            files.push(*file);
+        }
+    }
+    files
+}
 
 /// macOS's fonts, in /System/Library/Fonts: the specific ones first, then Arial Unicode for
 /// every other script the system font lacks.
@@ -610,11 +687,19 @@ fn font_path(dir: &std::path::Path, rel: &str) -> std::path::PathBuf {
 ///
 /// Windows and macOS: the blocks below name the system's font for each script. Linux: fontconfig
 /// is asked for a font that has the character (`:charset=`), one question per Unicode block.
-struct ScriptFallback;
+/// The fonts folder and the interface language are the system's and the app's, unless a test
+/// names its own.
+#[derive(Default)]
+struct ScriptFallback {
+    dir: Option<std::path::PathBuf>,
+    code: Option<String>,
+}
 
 /// One script's fonts on demand: a key, its code points, the files to try (in order).
 #[cfg_attr(not(any(windows, target_os = "macos")), allow(dead_code))]
 struct FallbackFont {
+    /// Read on Windows (the Han list, [`fallback_files`]) and by the tests.
+    #[cfg_attr(not(windows), allow(dead_code))]
     key: &'static str,
     ranges: &'static [(u32, u32)],
     files: &'static [&'static str],
@@ -684,9 +769,22 @@ const FALLBACK_FONTS: &[FallbackFont] = &[
             (0xFFE0, 0xFFEF),
             (0x20000, 0x3FFFF),
         ],
-        files: &["msyh.ttc", "msjh.ttc", "YuGothM.ttc", "msgothic.ttc"],
+        // In the interface language's order ([`fallback_files`], [`han_files`]).
+        files: &[],
     },
 ];
+
+/// The files to try for a character of `font`'s, in order, for an interface in `code`: the
+/// table's, and on Windows the Han list in the interface language's order ([`han_files`]).
+#[cfg_attr(not(any(windows, target_os = "macos")), allow(dead_code))]
+fn fallback_files(font: &FallbackFont, code: &str) -> Vec<&'static str> {
+    #[cfg(windows)]
+    if font.key == "han" {
+        return han_files(code);
+    }
+    let _ = code;
+    font.files.to_vec()
+}
 
 /// macOS's fonts for the same scripts; Arial Unicode for what isn't listed. Compiled everywhere,
 /// so the tests check it on every system.
@@ -836,15 +934,11 @@ pub(crate) fn cjk_font_files_for(c: char, code: &str) -> Vec<&'static str> {
     let Some(script) = cjk_script(c) else {
         return Vec::new();
     };
-    let own = match script {
-        "han" => match code {
-            "zh-hant" => "han-tc",
-            "ja" => "japanese",
-            "ko" => "hangul",
-            _ => "han-sc",
-        },
-        other => other,
-    };
+    // Chinese and Japanese characters: the one Han list, in the language's order (#1605).
+    if script == "han" {
+        return han_files(code);
+    }
+    let own = script;
     let mut files = Vec::new();
     let mut add = |list: &'static [&'static str]| {
         for file in list {
@@ -863,40 +957,65 @@ pub(crate) fn cjk_font_files_for(c: char, code: &str) -> Vec<&'static str> {
 }
 
 /// The bytes of the font for `c`, loaded once per font, shared by every family that asks.
-fn fallback_font(c: char) -> Option<(String, egui::FontData)> {
+/// Windows and macOS: the first file of the character's list (in the fonts folder `dir`, in the
+/// interface language `code`'s order: [`fallback_files`]) whose face has it, named
+/// `fallback:<file>`; so a character one file lacks comes from the next (#1605: MS Gothic, the
+/// last of the Han list, was the one font of the Han characters on a Windows without the first
+/// ones, and lacks the Simplified-only ones). None when no file of the list has it: the system's
+/// own choice is asked next ([`SystemFallback`]).
+fn fallback_font(c: char, dir: &std::path::Path, code: &str) -> Option<(String, egui::FontData)> {
     use std::collections::HashMap;
     use std::sync::Mutex;
-    static LOADED: Mutex<Option<HashMap<String, Option<egui::FontData>>>> = Mutex::new(None);
-
-    #[cfg(any(windows, target_os = "macos"))]
-    let (key, files): (String, Vec<std::path::PathBuf>) = {
-        let font = fallback_entry(FALLBACK_FONTS, c)?;
-        let dir = font_dir();
-        (
-            format!("fallback:{}", font.key),
-            font.files.iter().map(|f| font_path(&dir, f)).collect(),
-        )
-    };
-    #[cfg(not(any(windows, target_os = "macos")))]
-    let (key, files): (String, Vec<std::path::PathBuf>) = {
-        // One question per Unicode block: a script's letters don't each need an fc-match.
-        let block = (c as u32) >> 8;
-        (
-            format!("fallback:{block:x}"),
-            fc_lookup(&format!(":charset={:x}", c as u32)),
-        )
-    };
-
+    static LOADED: Mutex<Option<HashMap<std::path::PathBuf, Option<egui::FontData>>>> =
+        Mutex::new(None);
     let mut loaded = LOADED.lock().unwrap_or_else(|e| e.into_inner());
     let loaded = loaded.get_or_insert_with(HashMap::new);
-    let font = loaded
-        .entry(key.clone())
-        .or_insert_with(|| {
-            let bytes = files.iter().find_map(|f| read_font(f))?;
-            Some(font_data(bytes).tweak(on_demand_tweak()))
+    let mut load = |path: &std::path::Path| {
+        loaded
+            .entry(path.to_owned())
+            .or_insert_with(|| {
+                let bytes = read_font(path)?;
+                let data = font_data(bytes).tweak(on_demand_tweak());
+                tracing::info!(
+                    "fonts: {} face {} loaded on demand (U+{:04X})",
+                    path.display(),
+                    data.index,
+                    c as u32
+                );
+                Some(data)
+            })
+            .clone()
+    };
+
+    #[cfg(any(windows, target_os = "macos"))]
+    {
+        let font = fallback_entry(FALLBACK_FONTS, c)?;
+        let text = c.to_string();
+        fallback_files(font, code).into_iter().find_map(|file| {
+            let data = load(&font_path(dir, file))?;
+            covers(data.bytes(), data.index, &text).then(|| (format!("fallback:{file}"), data))
         })
-        .clone()?;
-    Some((key, font))
+    }
+    // Linux: one font per Unicode block, the first file fontconfig names for its first
+    // character asked (a script's letters don't each need a font of their own), kept under the
+    // block's name.
+    #[cfg(not(any(windows, target_os = "macos")))]
+    {
+        static BLOCKS: Mutex<Option<HashMap<u32, Option<std::path::PathBuf>>>> = Mutex::new(None);
+        let _ = (dir, code);
+        let block = (c as u32) >> 8;
+        let mut blocks = BLOCKS.lock().unwrap_or_else(|e| e.into_inner());
+        let file = blocks
+            .get_or_insert_with(HashMap::new)
+            .entry(block)
+            .or_insert_with(|| {
+                fc_lookup(&format!(":charset={:x}", c as u32))
+                    .into_iter()
+                    .find(|f| load(f).is_some())
+            })
+            .clone()?;
+        Some((format!("fallback:{block:x}"), load(&file)?))
+    }
 }
 
 /// How a font found on demand draws: on the baseline of the family's first font (as the script
@@ -982,7 +1101,13 @@ fn pick_font(
 impl egui::FontProvider for ScriptFallback {
     fn font_for(&self, request: &egui::FallbackRequest<'_>) -> Option<egui::FontInsert> {
         let c = request.cluster.chars().next()?;
-        let (key, data) = fallback_font(c)?;
+        #[cfg(any(windows, target_os = "macos"))]
+        let system = font_dir();
+        #[cfg(not(any(windows, target_os = "macos")))]
+        let system = std::path::PathBuf::new();
+        let dir = self.dir.as_deref().unwrap_or(&system);
+        let code = self.code.as_deref().unwrap_or_else(|| crate::i18n::code());
+        let (key, data) = fallback_font(c, dir, code)?;
         Some(egui::FontInsert::new(&key, data, Vec::new()))
     }
 }
@@ -1030,7 +1155,7 @@ impl egui::FontProvider for SystemFallback {
 /// ([`ScriptFallback`]), then the system's choice ([`SystemFallback`]).
 fn on_demand_fonts() -> Vec<std::sync::Arc<dyn egui::FontProvider>> {
     vec![
-        std::sync::Arc::new(ScriptFallback),
+        std::sync::Arc::new(ScriptFallback::default()),
         #[cfg(any(windows, target_os = "macos"))]
         std::sync::Arc::new(SystemFallback::default()),
     ]
@@ -1061,21 +1186,52 @@ fn ui_font() -> Option<Vec<u8>> {
 /// The script fonts for `code` (every language's with `all`): (key, bytes), in fallback order.
 fn script_fonts(code: &str, all: bool) -> Vec<(String, Vec<u8>)> {
     #[cfg(any(windows, target_os = "macos"))]
+    return script_fonts_in(&font_dir(), code, all);
+    #[cfg(not(any(windows, target_os = "macos")))]
+    return script_fonts_in(std::path::Path::new(""), code, all);
+}
+
+/// [`script_fonts`] from the fonts folder `dir` (Windows and macOS; Linux asks fontconfig).
+fn script_fonts_in(dir: &std::path::Path, code: &str, all: bool) -> Vec<(String, Vec<u8>)> {
+    #[cfg(any(windows, target_os = "macos"))]
     {
-        let dir = font_dir();
         SCRIPT_FONTS
             .iter()
             .filter(|(_, _, langs)| all || langs.contains(&code))
             // The first file there is used (older systems name some differently); a .ttc's
-            // regular face is the one drawn with ([`text_face`], #1483).
+            // regular face is the one drawn with ([`text_face`], #1483). A Chinese one must have
+            // its script's own characters (#1605: [`script_probe`]), and the log says which.
             .filter_map(|(key, files, _)| {
-                let bytes = files.iter().find_map(|f| read_font(&font_path(&dir, f)))?;
+                #[cfg(windows)]
+                if let Some((script, probe)) = script_probe(key) {
+                    let found = files.iter().find_map(|f| {
+                        let bytes = read_font(&font_path(dir, f))?;
+                        let face = text_face(&bytes);
+                        covers(&bytes, face, probe).then_some((*f, face, bytes))
+                    });
+                    return match found {
+                        Some((file, face, bytes)) => {
+                            tracing::info!("fonts: {script} from {file} face {face}");
+                            Some(((*key).to_owned(), bytes))
+                        }
+                        None => {
+                            tracing::warn!(
+                                "fonts: no {script} font with its characters in {} (looked for {}): its text comes from other fonts, or shows as boxes",
+                                dir.display(),
+                                files.join(", ")
+                            );
+                            None
+                        }
+                    };
+                }
+                let bytes = files.iter().find_map(|f| read_font(&font_path(dir, f)))?;
                 Some(((*key).to_owned(), bytes))
             })
             .collect()
     }
     #[cfg(not(any(windows, target_os = "macos")))]
     {
+        let _ = dir;
         // Several languages share a font (Devanagari, the CJK collection): loaded once.
         let mut looked = std::collections::HashMap::new();
         SCRIPT_LANGS
@@ -1879,6 +2035,131 @@ mod font_file_tests {
 #[cfg(test)]
 mod glyph_tests {
 
+    /// A fonts folder holding only these files of Windows' own (copied from C:\Windows\Fonts),
+    /// or None where one of them isn't installed.
+    #[cfg(windows)]
+    fn fonts_folder_with(files: &[&str]) -> Option<tempfile::TempDir> {
+        let dir = tempfile::tempdir().unwrap();
+        for file in files {
+            let from = super::font_dir().join(file);
+            if !from.is_file() {
+                eprintln!("{} isn't installed here: not checked", from.display());
+                return None;
+            }
+            std::fs::copy(&from, dir.path().join(file)).unwrap();
+        }
+        Some(dir)
+    }
+
+    /// #1605: a Windows whose Chinese fonts are SimSun alone (no Microsoft YaHei: Windows 7 has
+    /// it as msyh.ttf, a stripped copy has none), beside MS Gothic. A Simplified Chinese
+    /// interface draws its words with SimSun, the characters Chinese shares with Japanese (下)
+    /// too: before, MS Gothic was the one font found for Han characters, which lacks the
+    /// Simplified-only ones (载, 链, 浏, 览), and they were boxes where the system's own fallback
+    /// had nothing better (Windows 7 has none). The system's fallback isn't asked here.
+    #[cfg(windows)]
+    #[test]
+    fn simplified_chinese_without_yahei_is_drawn_with_simsun() {
+        use egui::epaint::text::{Fonts, TextOptions};
+        use egui::{FontFamily, FontId};
+        let Some(dir) = fonts_folder_with(&["msgothic.ttc", "simsun.ttc"]) else {
+            return;
+        };
+        let words = "\u{4E0B}\u{8F7D}\u{94FE}\u{63A5}\u{6D4F}\u{89C8}\u{5668}"; // 下载链接浏览器
+        let provider = super::ScriptFallback {
+            dir: Some(dir.path().to_owned()),
+            code: Some("zh-hans".into()),
+        };
+        let mut fonts = Fonts::new(TextOptions::default(), egui::FontDefinitions::default())
+            .with_font_providers(vec![std::sync::Arc::new(provider)]);
+        let id = FontId::new(13.0, FontFamily::Proportional);
+        assert!(fonts.has_glyphs(&id, "\u{4E0B}"), "下");
+        let found = |fonts: &Fonts| -> Vec<String> {
+            fonts
+                .discovered_fonts()
+                .iter()
+                .map(|f| f.name.clone())
+                .collect()
+        };
+        assert_eq!(found(&fonts), ["fallback:simsun.ttc"], "下 from SimSun");
+        assert!(fonts.has_glyphs(&id, words), "{words}");
+        assert!(fonts.has_glyphs(&id, super::SIMPLIFIED_ONLY));
+        assert_eq!(
+            found(&fonts),
+            ["fallback:simsun.ttc"],
+            "all of it from SimSun"
+        );
+        // Loaded up front for the interface too: SimSun, which has the Simplified-only ones.
+        let up_front = super::script_fonts_in(dir.path(), "zh-hans", false);
+        let keys: Vec<&str> = up_front.iter().map(|(k, _)| k.as_str()).collect();
+        assert_eq!(keys, ["han-sc"]);
+        let bytes = &up_front[0].1;
+        assert!(super::covers(bytes, super::text_face(bytes), words));
+        // Traditional Chinese has no font of its own here: none is loaded for it up front (MS
+        // Gothic lacks its own characters), and its words come on demand from SimSun.
+        assert!(super::script_fonts_in(dir.path(), "zh-hant", false).is_empty());
+        // MS Gothic alone: still nothing Japanese passes for Chinese up front.
+        let japanese_only = fonts_folder_with(&["msgothic.ttc"]).unwrap();
+        assert!(super::script_fonts_in(japanese_only.path(), "zh-hans", false).is_empty());
+    }
+
+    /// #1605: for a Simplified Chinese interface, no Traditional Chinese or Japanese font comes
+    /// before a Simplified one, wherever a Han character's font is looked for (on demand, and
+    /// DirectWrite's classic text); a Traditional interface starts with its own, a Japanese one
+    /// with its own, a Korean one with Malgun Gothic (which has Hanja).
+    #[cfg(windows)]
+    #[test]
+    fn a_chinese_interface_tries_its_own_chinese_fonts_first() {
+        let han = [
+            '\u{4E0B}',  // 下, Chinese and Japanese alike
+            '\u{8F7D}',  // 载, Simplified only
+            '\u{3001}',  // 、 CJK punctuation
+            '\u{3400}',  // extension A
+            '\u{FF01}',  // fullwidth !
+            '\u{20000}', // extension B
+        ];
+        for (code, own, first) in [
+            ("zh-hans", super::HAN_SC, "msyh.ttc"),
+            ("zh-hant", super::HAN_TC, "msjh.ttc"),
+            ("ja", super::JAPANESE, "YuGothM.ttc"),
+            ("ko", super::HANGUL, "malgun.ttf"),
+        ] {
+            for c in han {
+                let entry = super::fallback_entry(super::FALLBACK_FONTS, c).unwrap();
+                let lists = [
+                    super::fallback_files(entry, code),
+                    super::cjk_font_files_for(c, code),
+                ];
+                for files in lists {
+                    assert_eq!(files[0], first, "{code} U+{:04X}: {files:?}", c as u32);
+                    let others = files.iter().position(|f| !own.contains(f)).unwrap();
+                    assert!(
+                        files[others..].iter().all(|f| !own.contains(f)),
+                        "{code} U+{:04X}: {files:?}",
+                        c as u32
+                    );
+                    assert_eq!(others, own.len(), "{code}: {files:?}");
+                }
+            }
+        }
+        // Simplified Chinese, and every language that isn't Chinese, Japanese or Korean: every
+        // Simplified file, then the Traditional ones, then the Japanese ones.
+        for code in ["zh-hans", "en", "de", "ar"] {
+            let files = super::han_files(code);
+            let rank = |f: &&str| {
+                if super::HAN_SC.contains(f) {
+                    0
+                } else if super::HAN_TC.contains(f) {
+                    1
+                } else {
+                    2
+                }
+            };
+            assert!(files.is_sorted_by_key(rank), "{code}: {files:?}");
+            assert_eq!(files.len(), 11, "{code}: {files:?}");
+        }
+    }
+
     /// #405: a script the interface language doesn't use: Bangla in a file name, Japanese in a
     /// playlist, under an English interface. Before: nothing loaded it, so boxes.
     #[cfg(windows)]
@@ -1971,7 +2252,12 @@ mod glyph_tests {
                 .collect()
         };
         assert!(fonts.has_glyphs(&id, NAMES[3].1), "Hindi");
-        assert_eq!(found(&fonts), ["fallback:indic"]);
+        // Named by its file (Nirmala UI, a collection since Windows 10 1709).
+        let names = found(&fonts);
+        assert!(
+            names.len() == 1 && names[0].starts_with("fallback:Nirmala."),
+            "{names:?}"
+        );
         assert!(fonts.has_glyphs(&id, NAMES[4].1), "Thaana");
         let names = found(&fonts);
         assert_eq!(names.len(), 2, "{names:?}");
@@ -2080,14 +2366,18 @@ mod glyph_tests {
         use egui::epaint::text::{Fonts, TextOptions};
         use egui::{FontFamily, FontId};
         let mut fonts = Fonts::new(TextOptions::default(), egui::FontDefinitions::default())
-            .with_font_providers(vec![std::sync::Arc::new(super::ScriptFallback)]);
+            .with_font_providers(vec![std::sync::Arc::new(super::ScriptFallback::default())]);
         let id = FontId::new(13.0, FontFamily::Proportional);
         assert!(
             fonts.has_glyphs(&id, SINHALA),
             "no font for {SINHALA}; found {:?}",
             font_names(&fonts)
         );
-        assert_eq!(font_names(&fonts), ["fallback:sinhala"]);
+        let names = font_names(&fonts);
+        assert!(
+            names.len() == 1 && names[0].starts_with("fallback:Supplemental/Sinhala"),
+            "{names:?}"
+        );
     }
 
     /// The same names drawn with macOS's own fonts: the fallback finds a file that is there and
@@ -2098,7 +2388,7 @@ mod glyph_tests {
         use egui::epaint::text::{Fonts, TextOptions};
         use egui::{FontFamily, FontId};
         let mut fonts = Fonts::new(TextOptions::default(), egui::FontDefinitions::default())
-            .with_font_providers(vec![std::sync::Arc::new(super::ScriptFallback)]);
+            .with_font_providers(vec![std::sync::Arc::new(super::ScriptFallback::default())]);
         let id = FontId::new(13.0, FontFamily::Proportional);
         for text in OTHER_SCRIPTS {
             assert!(fonts.has_glyphs(&id, text), "no font for {text}");
@@ -2221,7 +2511,21 @@ mod glyph_tests {
                     || letters.iter().filter(|c| f.has_glyph(&id, **c)).count() * 10
                         >= letters.len() * 9
             });
-            if !has_script {
+            // A Chinese interface whose own script has a file here must draw its own characters
+            // (#1605: Simplified Chinese drawn as boxes, with a Japanese font standing in): not
+            // skipped, and the characters only its script writes so are checked too.
+            #[cfg(windows)]
+            let own = match code.as_str() {
+                "zh-hans" => Some((super::HAN_SC, super::SIMPLIFIED_ONLY)),
+                "zh-hant" => Some((super::HAN_TC, super::TRADITIONAL_ONLY)),
+                _ => None,
+            }
+            .filter(|(files, _)| files.iter().any(|f| super::font_dir().join(f).is_file()));
+            #[cfg(not(windows))]
+            let own: Option<(&[&str], &str)> = None;
+            if let Some((_, probe)) = own {
+                needed.extend(probe.chars());
+            } else if !has_script {
                 skipped.push(code);
                 continue;
             }

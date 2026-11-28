@@ -116,6 +116,18 @@
   "popup_fix": {
     "message": "எப்படிச் சரிசெய்வது"
   },
+  "popup_by_hand": {
+    "message": "இந்த நகல் கைமுறையாக ஏற்றப்பட்டது, அது தானாகவே புதுப்பிக்கப்படாது."
+  },
+  "popup_by_hand_firefox": {
+    "message": "இந்த நகல் கைமுறையாக ஏற்றப்பட்டது: இது தானாகவே புதுப்பிக்கப்படாது, மேலும் உலாவி மறுதொடங்கும்போது அதை நீக்கிவிடும்."
+  },
+  "popup_store_chrome": {
+    "message": "Chrome Web Store இலிருந்து சேர்க்கவும்"
+  },
+  "popup_store_firefox": {
+    "message": "addons.mozilla.org இலிருந்து சேர்க்கவும்"
+  },
   "popup_declined": {
     "message": "உலாவியில் விடப்பட்டது: $name$",
     "placeholders": {
@@ -319,6 +331,9 @@
   },
   "video_all_qualities": {
     "message": "அனைத்துத் தரங்களும் வசனங்களும்..."
+  },
+  "video_part": {
+    "message": "இங்கிருந்து ஒரு பகுதியைப் பதிவிறக்கவும்..."
   },
   "video_failed": {
     "message": "Mister Download Manager நிறுவப்படவில்லை அல்லது தொடங்கவில்லை"

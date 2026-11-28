@@ -138,9 +138,13 @@ header = "#ebeadb"
 "header.sorted" = "#e2e0d0"
 # Lists' and tables' frames: XP's grey.
 "list.frame" = "#96978f"
-# The title bar: a deep blue with a bright rim along its top, lighter again toward its dark
-# bottom edge; a paler blue while the window isn't the active one. Its buttons a lighter blue,
-# Close red-orange, with a white edge and glyph.
+# The title bar: XP's deep blue (#0054e3), with a light band under its top edge, lighter and
+# more vivid again toward its dark bottom edge (the "luna" caption style shades it from this
+# colour, as XP's own rows); a paler blue while the window isn't the active one. Its buttons a
+# lighter blue, Close red-orange, with a white edge (the gloss) and glyph. While the window isn't the active one, XP
+# shows the buttons half-faded into the paler bar: a mid blue, Close a dusty rose, their edge
+# a pale blue, and the glyphs still solid white. The glyphs are XP's shapes (Minimize a short
+# thick bar low in the button), drawn by the "luna" caption style.
 caption = "#0054e3"
 "caption.inactive" = "#7a96df"
 "caption.text" = "#ffffff"
@@ -148,6 +152,10 @@ caption = "#0054e3"
 "caption.button" = "#2a5ff0"
 "caption.close" = "#e0441c"
 "caption.close.text" = "#ffffff"
+"caption.button.inactive" = "#5478e8"
+"caption.close.inactive" = "#ad7690"
+"caption.glyph.inactive" = "#ffffff"
+"caption.edge.inactive" = "#bdc9ef"
 
 [dark]
 gloss = "#6a7795"
@@ -215,3 +223,7 @@ caption = "#0b3fa8"
 "caption.button" = "#2558c8"
 "caption.close" = "#c8401c"
 "caption.close.text" = "#ffffff"
+"caption.button.inactive" = "#3054a3"
+"caption.close.inactive" = "#834e5c"
+"caption.glyph.inactive" = "#ffffff"
+"caption.edge.inactive" = "#52638a"

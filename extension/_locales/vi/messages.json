@@ -116,6 +116,18 @@
   "popup_fix": {
     "message": "Cách khắc phục"
   },
+  "popup_by_hand": {
+    "message": "Bản sao này được tải thủ công và sẽ không tự cập nhật."
+  },
+  "popup_by_hand_firefox": {
+    "message": "Bản sao này được tải thủ công: nó sẽ không tự cập nhật và trình duyệt sẽ xóa nó khi khởi động lại."
+  },
+  "popup_store_chrome": {
+    "message": "Thêm từ Chrome Web Store"
+  },
+  "popup_store_firefox": {
+    "message": "Thêm từ addons.mozilla.org"
+  },
   "popup_declined": {
     "message": "Để lại cho trình duyệt: $name$",
     "placeholders": {
@@ -319,6 +331,9 @@
   },
   "video_all_qualities": {
     "message": "Tất cả chất lượng và phụ đề..."
+  },
+  "video_part": {
+    "message": "Tải xuống một phần từ đây..."
   },
   "video_failed": {
     "message": "Mister Download Manager chưa được cài đặt hoặc chưa khởi động"

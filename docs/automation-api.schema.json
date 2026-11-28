@@ -882,6 +882,15 @@
             "null"
           ]
         },
+        "video_part_from": {
+          "description": "With `video_page`, from that button's \"Download a part from here...\" (#1662): the window\nopens with Part ticked, From this many seconds into the video (where its player was).",
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
         "video_pick": {
           "anyOf": [
             {

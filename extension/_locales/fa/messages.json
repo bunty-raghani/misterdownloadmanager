@@ -116,6 +116,18 @@
   "popup_fix": {
     "message": "چگونه آن را رفع کنیم"
   },
+  "popup_by_hand": {
+    "message": "این نسخه به‌صورت دستی بارگذاری شده و خودبه‌خود به‌روزرسانی نمی‌شود."
+  },
+  "popup_by_hand_firefox": {
+    "message": "این نسخه به‌صورت دستی بارگیری شده است: خودکار به‌روزرسانی نمی‌شود و مرورگر هنگام راه‌اندازی مجدد آن را حذف می‌کند."
+  },
+  "popup_store_chrome": {
+    "message": "آن را از Chrome Web Store اضافه کنید"
+  },
+  "popup_store_firefox": {
+    "message": "آن را از addons.mozilla.org اضافه کنید"
+  },
   "popup_declined": {
     "message": "واگذارشده به مرورگر: $name$",
     "placeholders": {
@@ -319,6 +331,9 @@
   },
   "video_all_qualities": {
     "message": "همه کیفیت‌ها و زیرنویس‌ها..."
+  },
+  "video_part": {
+    "message": "بارگیری یک بخش از اینجا..."
   },
   "video_failed": {
     "message": "Mister Download Manager نصب نشده است یا اجرا نشد"

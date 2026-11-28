@@ -116,6 +116,18 @@
   "popup_fix": {
     "message": "Jak to opravit"
   },
+  "popup_by_hand": {
+    "message": "Tato kopie byla načtena ručně a nebude se sama aktualizovat."
+  },
+  "popup_by_hand_firefox": {
+    "message": "Tato kopie byla načtena ručně: nebude se sama aktualizovat a prohlížeč ji po restartu odebere."
+  },
+  "popup_store_chrome": {
+    "message": "Přidat z obchodu Chrome Web Store"
+  },
+  "popup_store_firefox": {
+    "message": "Přidat z addons.mozilla.org"
+  },
   "popup_declined": {
     "message": "Ponecháno prohlížeči: $name$",
     "placeholders": {
@@ -319,6 +331,9 @@
   },
   "video_all_qualities": {
     "message": "Všechny kvality a titulky..."
+  },
+  "video_part": {
+    "message": "Stáhnout část odsud..."
   },
   "video_failed": {
     "message": "Aplikace Mister Download Manager není nainstalovaná nebo se nespustila"

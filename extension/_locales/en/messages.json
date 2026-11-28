@@ -147,6 +147,22 @@
     "message": "How to fix it",
     "description": "link under a connection problem in the toolbar button's popup, to the help page's section for it"
   },
+  "popup_by_hand": {
+    "message": "This copy was loaded by hand and won't update itself.",
+    "description": "one line at the top of the toolbar button's popup when the extension was loaded by hand (Load unpacked, with Developer mode on) in Chrome, Edge, Brave, Opera or Vivaldi; followed by the link popup_store_chrome"
+  },
+  "popup_by_hand_firefox": {
+    "message": "This copy was loaded by hand: it won't update itself, and the browser removes it when it restarts.",
+    "description": "one line at the top of the toolbar button's popup when the add-on was loaded by hand in Firefox (Load Temporary Add-on, in about:debugging); followed by the link popup_store_firefox; the browser here is Firefox (or Zen, LibreWolf)"
+  },
+  "popup_store_chrome": {
+    "message": "Add it from the Chrome Web Store",
+    "description": "link after popup_by_hand in the toolbar button's popup: opens the extension's page in the Chrome Web Store, whose copy the browser keeps up to date; keep the name Chrome Web Store as it is"
+  },
+  "popup_store_firefox": {
+    "message": "Add it from addons.mozilla.org",
+    "description": "link after popup_by_hand_firefox in the toolbar button's popup: opens the add-on's page on addons.mozilla.org (Firefox's add-ons store), whose copy Firefox keeps and updates; keep addons.mozilla.org as it is"
+  },
   "popup_declined": {
     "message": "Left to the browser: $name$",
     "description": "in the toolbar button's popup: the last download the extension let the browser keep instead of handing it to the app; followed by why (one of the declined_* texts)",
@@ -412,6 +428,10 @@
   "video_all_qualities": {
     "message": "All qualities and subtitles...",
     "description": "command in the menu of the download button over a video: opens the app's Download video window, with every quality and the subtitles"
+  },
+  "video_part": {
+    "message": "Download a part from here...",
+    "description": "command in the menu of the download button over a video: opens the app's Download video window with Part ticked, From set to where the video is playing now, to download only a part of it"
   },
   "video_failed": {
     "message": "Mister Download Manager isn't installed or didn't start",

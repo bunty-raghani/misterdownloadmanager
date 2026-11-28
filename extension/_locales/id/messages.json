@@ -116,6 +116,18 @@
   "popup_fix": {
     "message": "Cara memperbaikinya"
   },
+  "popup_by_hand": {
+    "message": "Salinan ini dimuat secara manual dan tidak akan memperbarui dirinya sendiri."
+  },
+  "popup_by_hand_firefox": {
+    "message": "Salinan ini dimuat secara manual: tidak akan memperbarui diri, dan browser akan menghapusnya saat dimulai ulang."
+  },
+  "popup_store_chrome": {
+    "message": "Tambahkan dari Chrome Web Store"
+  },
+  "popup_store_firefox": {
+    "message": "Tambahkan dari addons.mozilla.org"
+  },
   "popup_declined": {
     "message": "Diserahkan ke browser: $name$",
     "placeholders": {
@@ -319,6 +331,9 @@
   },
   "video_all_qualities": {
     "message": "Semua kualitas dan subtitel..."
+  },
+  "video_part": {
+    "message": "Unduh sebagian dari sini..."
   },
   "video_failed": {
     "message": "Mister Download Manager tidak terinstal atau tidak dimulai"

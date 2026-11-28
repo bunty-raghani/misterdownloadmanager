@@ -116,6 +116,18 @@
   "popup_fix": {
     "message": "วิธีแก้ไข"
   },
+  "popup_by_hand": {
+    "message": "สำเนาที่โหลดด้วยตนเองนี้จะไม่ได้รับการอัปเดต"
+  },
+  "popup_by_hand_firefox": {
+    "message": "สำเนาที่โหลดด้วยตนเองนี้จะไม่อัปเดตตัวเอง และเบราว์เซอร์จะลบออกเมื่อรีสตาร์ท"
+  },
+  "popup_store_chrome": {
+    "message": "เพิ่มจาก Chrome Web Store"
+  },
+  "popup_store_firefox": {
+    "message": "เพิ่มจาก addons.mozilla.org"
+  },
   "popup_declined": {
     "message": "เหลือไว้ให้เบราว์เซอร์: $name$",
     "placeholders": {
@@ -319,6 +331,9 @@
   },
   "video_all_qualities": {
     "message": "ทุกคุณภาพและคำบรรยาย..."
+  },
+  "video_part": {
+    "message": "ดาวน์โหลดบางส่วนจากที่นี่..."
   },
   "video_failed": {
     "message": "Mister Download Manager ไม่ได้ติดตั้งหรือไม่ได้เริ่มทำงาน"

@@ -116,6 +116,18 @@
   "popup_fix": {
     "message": "איך לתקן זאת"
   },
+  "popup_by_hand": {
+    "message": "עותק זה נטען ידנית ולא יתעדכן בעצמו."
+  },
+  "popup_by_hand_firefox": {
+    "message": "עותק זה נטען ידנית: הוא לא יתעדכן מעצמו, והדפדפן יסיר אותו כשהוא יופעל מחדש."
+  },
+  "popup_store_chrome": {
+    "message": "הוסף אותו מחנות האינטרנט של Chrome"
+  },
+  "popup_store_firefox": {
+    "message": "הוסף אותו מ־addons.mozilla.org"
+  },
   "popup_declined": {
     "message": "הושאר לדפדפן: $name$",
     "placeholders": {
@@ -319,6 +331,9 @@
   },
   "video_all_qualities": {
     "message": "כל האיכויות והכתוביות..."
+  },
+  "video_part": {
+    "message": "הורד חלק מכאן..."
   },
   "video_failed": {
     "message": "Mister Download Manager אינו מותקן או לא הופעל"

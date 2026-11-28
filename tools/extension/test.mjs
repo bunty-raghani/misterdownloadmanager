@@ -972,6 +972,14 @@ const ok = (what) => {
   assert.equal(own.url, "https://tube.test/watch?v=abc123", "the video's own page");
   assert.equal(own.referrer, "https://blog.test/post");
   assert.equal(own.cookies, "sid=1");
+  // #1662: "Download a part from here...": the second the player was at goes with it, as a whole
+  // number of seconds; anything else doesn't.
+  assert.equal((await ask({ type: "video", url: "https://tube.test/watch?v=abc123", part: 95 })).ok, true);
+  assert.equal(natives(calls).filter((m) => m.video).at(-1).part, 95, "the part's start goes to the app");
+  for (const part of [-1, 1.5, "95", null]) {
+    await ask({ type: "video", url: "https://tube.test/watch?v=abc123", part });
+    assert.equal(natives(calls).filter((m) => m.video).at(-1).part, undefined, `no part from ${JSON.stringify(part)}`);
+  }
   // Another site's address is not the page's: ignored, as any message content was before.
   assert.equal((await ask({ type: "video", url: "https://evil.test/watch?v=abc123" })).ok, true);
   assert.equal(
@@ -3223,7 +3231,7 @@ function videoButton({ stored = {}, location, iframes, videos, subframe = false 
   assert.ok(/const IDLE_MS = 1500;/.test(source), "fades 1.5 s after the pointer rests");
   // Its texts: English's, kept as the fallback too.
   const english = JSON.parse(readText("../../extension/_locales/en/messages.json"));
-  for (const key of ["video_looking", "video_all_qualities", "video_no_choices", "video_playlist", "video_no_ytdlp", "video_too_long", "video_busy", "video_queued", "video_failed_lookup",
+  for (const key of ["video_looking", "video_all_qualities", "video_part", "video_no_choices", "video_playlist", "video_no_ytdlp", "video_too_long", "video_busy", "video_queued", "video_failed_lookup",
     "video_off", "video_drm", "video_cant_save", "video_open_post", "video_open_post_button", "video_drag_dots", "video_tip_best", "video_sending", "video_added", "video_show",
     "video_no_answer", "video_get_mdm", "video_retry", "video_turn_on", "video_download_best", "video_best", "video_original", "video_compatible"]) {
     assert.ok(english[key], key);
@@ -5147,6 +5155,70 @@ const MP4 = (() => {
   assert.equal(ctx.actWhyText("missing"), "Its file is no longer where it was saved (moved or deleted).");
   assert.equal(ctx.actWhyText("odd"), "That didn't work. Try again.");
   ok("#1496 the popup's rows: status lines, buttons, cut names");
+}
+
+// #1613: a copy loaded by hand says so in its popup, with its browser's store; the store's copy,
+// a policy's, one another program installed (Chrome adding the store's copy from MDM's setup)
+// and "other" say nothing. popup-ui.js installNote, and popup.js showInstall as the popup runs it
+// (management.getSelf, which needs no "management" permission; none in Safari).
+{
+  const en = JSON.parse(readText("../../extension/_locales/en/messages.json"));
+  const getMessage = (key) => (en[key] ? en[key].message : "");
+  const ctx = { chrome: { i18n: { getMessage, getUILanguage: () => "en-US" } }, console: quietConsole, URL };
+  vm.runInNewContext(readText("../../extension/popup-ui.js"), ctx);
+  const AMO = "https://addons.mozilla.org/firefox/addon/mister-download-manager/";
+  const CWS = "https://chromewebstore.google.com/detail/mister-download-manager/ejoleppdfgjdndddcjoehopknmlglojp";
+  const note = (installType, firefox) => JSON.parse(JSON.stringify(ctx.installNote({ installType }, firefox)));
+  assert.deepEqual(note("development", false), {
+    text: "This copy was loaded by hand and won't update itself.",
+    link: "Add it from the Chrome Web Store",
+    href: CWS,
+  });
+  assert.deepEqual(note("development", true), {
+    text: "This copy was loaded by hand: it won't update itself, and the browser removes it when it restarts.",
+    link: "Add it from addons.mozilla.org",
+    href: AMO,
+  });
+  for (const type of ["normal", "admin", "sideload", "other", undefined]) {
+    for (const firefox of [false, true]) assert.equal(ctx.installNote({ installType: type }, firefox), null, `${type}, firefox ${firefox}`);
+  }
+  assert.equal(ctx.installNote(null, false), null, "no answer: nothing");
+  // The links are the ones the README and the website use.
+  const readme = readText("../../README.md");
+  const site = readText("../website/build.py");
+  assert.ok(readme.includes(AMO) && readme.includes(CWS), "the README's store links");
+  assert.ok(site.includes(`AMO = "${AMO}"`) && site.includes(`CWS = "${CWS}"`), "the website's store links");
+
+  // popup.js' showInstall against a fake popup: what its line shows for each browser and answer.
+  const popup = readText("../../extension/popup.js");
+  const at = popup.indexOf("async function showInstall(");
+  const body = popup.slice(at, popup.indexOf("\n}\n", at) + 2);
+  const shown = async ({ firefox, self, safari = false, management = true }) => {
+    const els = Object.fromEntries(["by-hand", "by-hand-text", "by-hand-store"].map((id) => [id, { hidden: true, textContent: "", href: "" }]));
+    const ext = {
+      runtime: { getManifest: () => (safari ? { browser_specific_settings: { safari: {} } } : {}) },
+      ...(management ? { management: { getSelf: () => (self instanceof Error ? Promise.reject(self) : Promise.resolve(self)) } } : {}),
+    };
+    const run = new Function("ext", "firefox", "$", "installNote", `${body}\nreturn showInstall();`);
+    await run(ext, firefox, (id) => els[id], ctx.installNote);
+    return els["by-hand"].hidden ? null : [els["by-hand-text"].textContent, els["by-hand-store"].textContent, els["by-hand-store"].href];
+  };
+  assert.deepEqual(await shown({ firefox: false, self: { installType: "development" } }), [en.popup_by_hand.message, en.popup_store_chrome.message, CWS]);
+  assert.deepEqual(await shown({ firefox: true, self: { installType: "development" } }), [en.popup_by_hand_firefox.message, en.popup_store_firefox.message, AMO]);
+  for (const installType of ["normal", "admin", "sideload", "other"]) {
+    assert.equal(await shown({ firefox: false, self: { installType } }), null, `Chromium ${installType}`);
+    assert.equal(await shown({ firefox: true, self: { installType } }), null, `Firefox ${installType}`);
+  }
+  // Safari (no getSelf; its extension comes only with the app), no management at all, a refusal.
+  assert.equal(await shown({ firefox: false, safari: true, self: { installType: "development" } }), null, "Safari");
+  assert.equal(await shown({ firefox: false, management: false }), null, "no management API");
+  assert.equal(await shown({ firefox: true, self: new Error("refused") }), null, "getSelf refused");
+  // No "management" permission for it, in any manifest.
+  for (const m of ["manifest.json", "manifest.firefox.json", "manifest.safari.json"]) {
+    const j = JSON.parse(readText(`../../extension/${m}`));
+    assert.ok(![...(j.permissions || []), ...(j.optional_permissions || [])].includes("management"), `${m} asks no "management" permission`);
+  }
+  ok("#1613 a copy loaded by hand says it won't update itself, with its store; the store's, a policy's or a sideloaded one says nothing");
 }
 
 // Another MDM's list cut to the popup's view as the app cuts its own (mdm_ipc RecentAnswer::of,

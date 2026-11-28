@@ -116,6 +116,18 @@
   "popup_fix": {
     "message": "Kako to popraviti"
   },
+  "popup_by_hand": {
+    "message": "Ova je kopija ručno učitana i neće se sama ažurirati."
+  },
+  "popup_by_hand_firefox": {
+    "message": "Ova je kopija ručno učitana: neće se sama ažurirati, a preglednik će je ukloniti pri ponovnom pokretanju."
+  },
+  "popup_store_chrome": {
+    "message": "Dodajte ga iz Chrome web-trgovine"
+  },
+  "popup_store_firefox": {
+    "message": "Dodajte ga s addons.mozilla.org"
+  },
   "popup_declined": {
     "message": "Prepušteno pregledniku: $name$",
     "placeholders": {
@@ -319,6 +331,9 @@
   },
   "video_all_qualities": {
     "message": "Sve kvalitete i titlovi..."
+  },
+  "video_part": {
+    "message": "Preuzmi dio odavde..."
   },
   "video_failed": {
     "message": "Mister Download Manager nije instaliran ili se nije pokrenuo"

@@ -140,23 +140,8 @@ impl DropTarget {
             styled = crate::chrome::style_popup(TITLE, crate::chrome::PopupLook::Floating);
             let rect = ui.max_rect();
             let p = ui.painter();
-            let (fill, edge) = if over {
-                (
-                    // Something dragged over it: the shared highlight and accent, in the mode.
-                    crate::winui::highlight_fill(crate::winui::State::Hot, crate::theme::colors())
-                        .unwrap_or(crate::winui::BG()),
-                    crate::winui::accent(),
-                )
-            } else {
-                (crate::winui::BG(), crate::theme::colors().drop_edge)
-            };
-            p.rect_filled(rect, 0.0, fill);
-            p.rect_stroke(
-                rect,
-                0.0,
-                egui::Stroke::new(1.0, edge),
-                egui::StrokeKind::Inside,
-            );
+            // Something dragged over it: the shared highlight and accent, in the mode.
+            crate::chrome::floating_frame(p, rect, over);
             egui::Image::new(icon.clone()).paint_at(
                 ui,
                 egui::Rect::from_center_size(rect.center(), vec2(40.0, 40.0)),

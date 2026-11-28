@@ -116,6 +116,18 @@
   "popup_fix": {
     "message": "Nasıl düzeltilir"
   },
+  "popup_by_hand": {
+    "message": "Bu kopya elle yüklendi ve kendini güncellemeyecek."
+  },
+  "popup_by_hand_firefox": {
+    "message": "Bu kopya elle yüklendi: kendini güncellemez ve tarayıcı yeniden başlatıldığında kaldırılır."
+  },
+  "popup_store_chrome": {
+    "message": "Chrome Web Mağazası'ndan ekle"
+  },
+  "popup_store_firefox": {
+    "message": "addons.mozilla.org adresinden ekle"
+  },
   "popup_declined": {
     "message": "Tarayıcıya bırakıldı: $name$",
     "placeholders": {
@@ -319,6 +331,9 @@
   },
   "video_all_qualities": {
     "message": "Tüm kaliteler ve altyazılar..."
+  },
+  "video_part": {
+    "message": "Buradan bir bölüm indir..."
   },
   "video_failed": {
     "message": "Mister Download Manager yüklü değil veya başlatılamadı"

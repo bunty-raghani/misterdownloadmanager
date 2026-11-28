@@ -12,6 +12,11 @@
 #. {n} = a number (keep the braces as they are)
 #, machine
 @plural	An unknown site wants to send {n} link to Link grabber.|An unknown site wants to send {n} links to Link grabber.	अज्ञात साइटले लिङ्क ग्राबरमा {n} वटा लिङ्क पठाउन चाहन्छ।|अज्ञात साइटले लिङ्क ग्राबरमा {n} वटा लिङ्क पठाउन चाहन्छ।
+#. count in traypanel.rs
+#. the notification-area icon's panel (#1365), under the downloads it lists: how many others are running; {n} a number
+#. {n} = a number (keep the braces as they are)
+#, machine
+@plural	And {n} more|And {n} more	र {n} थप|र {n} थप
 #. count in torrent downloads
 #. number of additional files in a list of files
 #. {n} = a number (keep the braces as they are)
@@ -54,6 +59,11 @@
 #. {n} = a number (keep the braces as they are)
 #, machine
 @plural	There is {n} more download waiting. Cancel it too?|There are {n} more downloads waiting. Cancel them too?	{n} वटा डाउनलोड अझै पर्खिरहेका छन्। यसलाई पनि रद्द गर्नुहुन्छ?|{n} वटा डाउनलोड अझै पर्खिरहेका छन्। तिनीहरूलाई पनि रद्द गर्नुहुन्छ?
+#. count in a dialog box
+#. under "Also delete the files from disk", while it is ticked: how many of the downloads being deleted are finished, whose complete files are deleted from the disk too
+#. {n} = a number (keep the braces as they are)
+#, machine
+@plural	This also deletes {n} finished file.|This also deletes {n} finished files.	यसले {n} वटा पूरा भएका फाइल पनि मेटाउँछ।|यसले {n} वटा पूरा भएका फाइल पनि मेटाउँछ।
 #. count in a dialog box
 #. under the first failed downloads in the summary of a group of downloads: {n} more failed (Show in list shows them all)
 #. {n} = a number (keep the braces as they are)
@@ -273,6 +283,14 @@
 #. Options → DNS: the NextDNS configuration ID typed isn't one
 #, machine
 	A NextDNS configuration ID is six letters and digits (0-9, a-f).	NextDNS कन्फिगरेसन ID छ वटा अक्षर र अंक (0-9, a-f) को हुन्छ।
+#. text in the Download video window
+#. why "Embed chapters" (and the subtitles) are greyed in Download video: only a part of the video is downloaded, and its chapters and subtitles would be the whole video's
+#, machine
+	A part is saved without the video's chapters and subtitles	भिडियोको एउटा भाग अध्याय र उपशीर्षकहरूबिना सुरक्षित गरिएको छ
+#. text in the Download video window
+#. why Part is greyed in Download video: the page is a playlist, whose videos are downloaded whole
+#, machine
+	A playlist's videos are downloaded whole	प्लेलिस्टका भिडियोहरू पूर्ण रूपमा डाउनलोड हुन्छन्
 #. text in the Options window
 #. Options → Sites Logins → Cookies for video sites: the tooltip of the profile box
 #, machine
@@ -317,6 +335,7 @@
 #, machine
 	about {ms} ms ({reach})	लगभग {ms} मि.से. ({reach})
 #. text in the Download video window
+#. in Download video beside the part's From and To: the part's size, estimated from the whole video's; {size} is "12.3 MB"
 #. a file size that is only an estimate, as a screen reader says it in the Download video window's list of qualities; {size} is "532 MB"
 #. {size} = a file size such as "4.2 MB" (keep the braces as they are)
 #, machine
@@ -509,6 +528,9 @@
 #. in the Subtitles list of Download video: every language the video's uploader gave
 #, machine
 	All the uploader's	अपलोडकर्ताका सबै
+#. text in helpers.rs
+#, machine
+	All three are open source. MDM gets them from their official releases with its own downloader and checks each file's signature before it runs. About 140 MB, once.	यी तीनवटै खुला स्रोत हुन्। MDM ले तिनीहरूलाई आफ्नै डाउनलोडरबाट तिनीहरूको आधिकारिक रिलीजहरूबाट प्राप्त गर्छ र चलाउनु अघि प्रत्येक फाइलको हस्ताक्षर जाँच गर्छ। एक पटकमा लगभग 140 MB।
 #. text in cnl.rs
 #. button in the Click'n'Load window: let this site send links (remembered)
 #, machine
@@ -680,6 +702,7 @@
 #, machine
 	Asking the service...	सेवालाई सोध्दै...
 #. text in the Options window
+#. Options → Proxy / Socks: Test is running
 #. Options → DNS settings: the test is running
 #. the trailing ... means it is still going on: keep it
 #, machine
@@ -879,7 +902,7 @@
 #. a country's name (where a download's server is)
 #, machine
 	Canada	क्यानाडा
-#. button in the Batch download window; button in categories.rs; text in the Checksum window; button in a dialog box; button in extracting archives (a download's log, the Archive password window); button in the Find window; button in gallerydlg.rs; text in the Link grabber window; text in the Help menu's windows (About, updates, shortcuts, Tell a friend); button in langpick.rs; button in the Options window; button in a download's progress window; text in remote.rs; button in the Scheduler window; button in the Add torrent window; button in the Download video window
+#. button in the Batch download window; button in categories.rs; text in the Checksum window; button in a dialog box; button in extracting archives (a download's log, the Archive password window); button in the Find window; button in gallerydlg.rs; text in the Link grabber window; text in the Help menu's windows (About, updates, shortcuts, Tell a friend); button in langpick.rs; button in the Options window; button in a download's progress window; text in remote.rs; button in the Scheduler window; button in the Add torrent window; button in traypanel.rs; button in the Download video window
 #. button: stop downloading the update
 #, machine
 	Cancel	रद्द गर्नुहोस्
@@ -978,6 +1001,10 @@
 #, machine
 	Check your connection, then try again, or get them later from the video window.	आफ्नो जडान जाँच गर्नुहोस्, त्यसपछि फेरि प्रयास गर्नुहोस्, वा पछि भिडियो विन्डोबाट प्राप्त गर्नुहोस्।
 #. text in the Options window
+#. tooltip of "Show downloads when the notification area icon is clicked": what the click on MDM's tray icon does when it is ticked and when not
+#, machine
+	Checked, a click on MDM's icon shows what is downloading, with Pause and Cancel, and a double click opens the window; unchecked, a click shows or hides the window	टिक लगाउँदा, MDM को आइकनमा क्लिक गर्दा डाउनलोड भइरहेका फाइलहरू र पज तथा रद्द गर्ने विकल्पहरू देखिन्छन्; डबल क्लिक गर्दा विन्डो खुल्छ। टिक नलगाउँदा, क्लिक गर्दा विन्डो देखिन्छ वा लुक्छ
+#. text in the Options window
 #. tooltip of the close-setting: checked keeps MDM running when the window closes, in the notification area when available or else the taskbar; downloads continue; unchecked closing quits
 #, machine
 	Checked, closing the window keeps MDM running: it hides in the notification area when available, or minimizes to the taskbar otherwise, and downloads continue; unchecked, closing quits MDM	चयन गरिएको अवस्थामा, विन्डो बन्द गर्दा MDM चलिरहन्छ: उपलब्ध भए सूचना क्षेत्रमा लुक्छ, नभए टास्कबारमा मिनिमाइज हुन्छ, र डाउनलोडहरू जारी रहन्छन्; चयन नगरिएको अवस्थामा, विन्डो बन्द गर्दा MDM बन्द हुन्छ
@@ -1041,6 +1068,9 @@
 #. remote control page (on a phone): what the ".torrent file" button does (screen readers)
 #, machine
 	Choose a .torrent file	.torrent फाइल छान्नुहोस्
+#. text in helpers.rs
+#, machine
+	Choose a JavaScript runtime (Node.js, Deno, QuickJS or Bun)	जाभास्क्रिप्ट रनटाइम छान्नुहोस् (Node.js, Deno, QuickJS वा Bun)
 #. text in langpick.rs
 #, machine
 	Choose a language	भाषा छान्नुहोस्
@@ -1051,7 +1081,8 @@
 #. Options → Sites Logins → Cookies for video sites: the title of the window, and the tooltip of the button, that pick a browser profile's folder
 #, machine
 	Choose the profile's folder	प्रोफाइलको फोल्डर छान्नुहोस्
-#. text in helpers.rs
+#. text in helpers.rs; text in the Options window
+#. file picker title; {name} = the program to choose (yt-dlp, ffmpeg, 7-Zip)
 #. {name} = a file name (keep the braces as they are)
 #, machine
 	Choose {name}	{name} छान्नुहोस्
@@ -1088,7 +1119,7 @@
 #. text in the Options window
 #, machine
 	Clock:	घडी:
-#. text in the Checksum window; text in the main window (menus, toolbar, Categories pane); button in crashui.rs; button in a dialog box; button in extension.rs; button in the Help menu's windows (About, updates, shortcuts, Tell a friend); button in helpers.rs; button in the download list; button in the Options window; button in rssdlg.rs; button in torrentfiles.rs; text in standard windows
+#. text in the Checksum window; text in the main window (menus, toolbar, Categories pane); button in crashui.rs; button in a dialog box; button in extension.rs; button in the Help menu's windows (About, updates, shortcuts, Tell a friend); button in helpers.rs; button in the download list; button in the Options window; button in rssdlg.rs; button in torrentfiles.rs; text in traypanel.rs; text in standard windows
 #. both verbs: Verify = check the file now; Close = close the window
 #. tooltip of the × that closes the Categories pane
 #. verb: closes this window
@@ -1295,7 +1326,7 @@
 #. a date's order: day first (30/10/2026)
 #, machine
 	Day, month, year	दिन, महिना, वर्ष
-#. page title in the Options window
+#. page title in the Options window; text in the Options window
 #, machine
 	Debrid service accounts	डिब्रिड सेवा खाताहरू
 #. text in the Scheduler window
@@ -1560,11 +1591,6 @@
 #, machine
 	Downloading again from the start	सुरुदेखि फेरि डाउनलोड हुँदैछ
 #. text in the Download video window
-#. in Download video: MDM downloads Deno (a program's name) and checks it against its published checksum
-#. the trailing ... means it is still going on: keep it
-#, machine
-	Downloading and verifying Deno (about 40 MB)...	Deno डाउनलोड र प्रमाणित गर्दै (लगभग 40 MB)...
-#. text in the Download video window
 #. the trailing ... means it is still going on: keep it
 #, machine
 	Downloading and verifying ffmpeg (about 80 MB)...	ffmpeg (लगभग 80 MB) डाउनलोड र प्रमाणित गर्दै...
@@ -1572,6 +1598,10 @@
 #. the trailing ... means it is still going on: keep it
 #, machine
 	Downloading and verifying gallery-dl...	gallery-dl डाउनलोड र प्रमाणित गरिँदैछ...
+#. text in the Download video window
+#. the trailing ... means it is still going on: keep it
+#, machine
+	Downloading and verifying Node.js (40 to 60 MB)...	Node.js डाउनलोड र प्रमाणीकरण गर्दै (40 देखि 60 MB)...
 #. text in the Download video window
 #. the trailing ... means it is still going on: keep it
 #, machine
@@ -1586,7 +1616,11 @@
 #, machine
 	Downloading the update... {percent}	अद्यावधिक डाउनलोड गर्दै... {percent}
 #. text in helpers.rs
-#. {name} = yt-dlp or ffmpeg; {n} of {total} = which helper of how many; {percent} = how far, e.g. 45%
+#. Helpers: a newer version of a helper is being downloaded; {percent} = how far, a number
+#, machine
+	Downloading the update... {percent}%	अद्यावधिक डाउनलोड गर्दै... {percent}%
+#. text in helpers.rs
+#. {name} = yt-dlp, ffmpeg or Node.js; {n} of {total} = which helper of how many; {percent} = how far, e.g. 45%
 #. {name} = a file name; {n} = a number (keep the braces as they are)
 #, machine
 	Downloading {name} ({n} of {total})... {percent}	{name} ({total} मध्ये {n}) डाउनलोड गर्दै... {percent}
@@ -1602,8 +1636,13 @@
 #. Windows' Settings → Default apps: what Mister Download Manager is
 #, machine
 	Downloads files, videos and torrents	फाइल, भिडियो र टोरेन्टहरू डाउनलोड गर्छ
-#. text in the tray icon's menu
+#. message or event log entry in the main window
+#. the notice shown once, the first time a download comes from a browser's private (incognito) window: it stays in MDM's list like any other, after a restart too; where to turn that off. {options} = the Options window, {general} = its General tab, {checkbox} = the checkbox "Keep private-window downloads in the list"
+#, machine
+	Downloads from a browser's private window stay in MDM's list like any other, also after MDM restarts; their cookies are never saved. To keep them in memory only, untick {options} → {general} → {checkbox}.	ब्राउजरको निजी विन्डोबाट गरिएका डाउनलोडहरू MDM को सूचीमा अन्य जस्तै रहन्छन्, MDM पुन: सुरु भएपछि पनि; तिनीहरूका कुकीहरू कहिल्यै बचत हुँदैनन्। तिनीहरूलाई मेमोरीमा मात्र राख्न, {options} → {general} → {checkbox} अनटिक गर्नुहोस्।
+#. text in the tray icon's menu; text in traypanel.rs
 #. tray menu: a submenu of the downloads now running; choosing one shows its progress window
+#. the notification-area icon's panel (#1365): its title, over the downloads now running (also the tray menu's submenu)
 #, machine
 	Downloads in progress	प्रगतिमा रहेका डाउनलोडहरू
 #. text in a dialog box
@@ -1770,6 +1809,10 @@
 #. what a keyboard shortcut does in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #, machine
 	Everything at its normal size (100%)	सबै सामान्य आकारमा (100%)
+#. text in the Download video window
+#. choice in Download video's Part: the part is encoded again so it starts and ends exactly at From and To (slower)
+#, machine
+	Exact cut, encoded again	सटीक कट, फेरि इन्कोड गरिएको
 #. text in the Options window
 #. label before an example date and time written the chosen way
 #, machine
@@ -1854,6 +1897,10 @@
 #. a country's name (where a download's server is)
 #, machine
 	Faroe Islands	फारो टापुहरू
+#. text in the Download video window
+#. tooltip of "Quick cut, at keyframes" in Download video: what it does
+#, machine
+	Fast: the streams are copied as they are, so the part may start a little before From	छिटो: स्ट्रिमहरू जस्ताका तस्तै प्रतिलिपि हुन्छन्, त्यसैले भाग सुरु हुने समयभन्दा अलि पहिले सुरु हुन सक्छ
 #. text in the Scheduler window
 #, machine
 	February	फेब्रुअरी
@@ -1942,6 +1989,10 @@
 #. verb: button that starts the search
 #, machine
 	Find	खोज्नुहोस्
+#. text in the Options window
+#. Options → Archives: button, shown once a 7-Zip program was chosen with "Use another program...": go back to the 7-Zip MDM finds on the computer by itself
+#, machine
+	Find 7-Zip automatically	7-Zip स्वचालित रूपमा फेला पार्नुहोस्
 #. what a keyboard shortcut does in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #, machine
 	Find a download	डाउनलोड फेला पार्नुहोस्
@@ -2076,6 +2127,14 @@
 #. where a download came from, in its log: a playlist or channel, by yt-dlp
 #, machine
 	from a playlist (yt-dlp)	प्लेलिस्टबाट (yt-dlp)
+#. text in the download list (sizes, speeds, status)
+#. tooltip of the mark (a mask) before a download's status in the list: it came from a browser's private (incognito) window, and it is in memory only, gone from the list when MDM closes
+#, machine
+	From a private window: in memory only, gone from the list when MDM closes	निजी विन्डोबाट: मेमोरीमा मात्र, MDM बन्द हुँदा सूचीबाट हट्छ
+#. text in the download list (sizes, speeds, status)
+#. tooltip of the mark (a mask) before a download's status in the list: it came from a browser's private (incognito) window, and MDM's list keeps it after a restart (Options → General → Keep private-window downloads in the list)
+#, machine
+	From a private window: kept in the list	निजी विन्डोबाट: सूचीमा राखिएको छ
 #. message or event log entry in the main window
 #, machine
 	from a torrent file	टोरेन्ट फाइलबाट
@@ -2093,6 +2152,10 @@
 #. message or event log entry in the main window
 #, machine
 	from the command line	कमान्ड लाइनबाट
+#. text in the Download video window
+#. in Download video after "Only a part": {from} and {to} are boxes where times are typed (1:30, 1:02:03), drawn where they stand in the translation
+#, machine
+	from {from} to {to}	{from} देखि {to} सम्म
 #. text in the Batch download window
 #, machine
 	From:	बाट:
@@ -2133,7 +2196,7 @@
 #. a country's name (where a download's server is)
 #, machine
 	Gambia	गाम्बिया
-#. text in the download list (sizes, speeds, status); text in the Options window; text in a download's progress window
+#. message or event log entry in the main window; text in the download list (sizes, speeds, status); text in the Options window; text in a download's progress window
 #. category name: files of no particular kind
 #. tab title: general settings
 #. tab title: general information
@@ -2333,6 +2396,10 @@
 #. Options → DNS settings: checkbox: when the chosen DNS can't be reached, use the system's instead
 #, machine
 	If it can't be reached, use the system's DNS	यदि यो पुग्न सकिँदैन भने, प्रणालीको DNS प्रयोग गर्नुहोस्
+#. text in extension.rs
+#. under "macOS keeps Mister Download Manager out of …'s folder" (Test browser integration, the browser extension's window): how to allow it. The quoted words and System Settings → Privacy & Security → Full Disk Access are macOS's own: use Apple's words in this language, or keep the English ones when unsure
+#, machine
+	If macOS asks whether it may access data from other apps, allow it. Or turn on Mister Download Manager in System Settings → Privacy & Security → Full Disk Access. Then press Set it up.	यदि macOS ले अन्य एपहरूबाट डेटा पहुँच गर्न अनुमति दिने बारे सोध्छ भने, यसलाई अनुमति दिनुहोस्। वा प्रणाली सेटिङहरू → गोपनीयता र सुरक्षा → पूर्ण डिस्क पहुँचमा Mister Download Manager अन गर्नुहोस्। त्यसपछि यसलाई सेट अप गर्नुहोस्(&S) थिच्नुहोस्।
 #. text in errors.rs
 #. what to do when a helper's server couldn't be reached; {proxy} = the Options tab Proxy / Socks; {name} = yt-dlp, ffmpeg or gallery-dl; {helpers} and {other} = the buttons Helpers and Use another program
 #. {name} = a file name (keep the braces as they are)
@@ -2392,10 +2459,6 @@
 #, machine
 	Install 7-Zip (free), then right-click the download and choose Extract.	7-Zip (नि:शुल्क) स्थापना गर्नुहोस्, त्यसपछि डाउनलोडमा दायाँ क्लिक गर्नुहोस् र निकाल्नुहोस् छान्नुहोस्।
 #. text in the Download video window
-#. button in Download video: download and install Deno, the JavaScript runtime YouTube needs (Deno is a program's name)
-#, machine
-	Install Deno	Deno स्थापना गर्नुहोस्
-#. text in the Download video window
 #. button: download and install the ffmpeg program
 #, machine
 	Install ffmpeg	ffmpeg स्थापना गर्नुहोस्
@@ -2407,6 +2470,10 @@
 #. link in the browser extension's window: the tutorial that adds it without the browser's store
 #, machine
 	Install it by hand	हातैले स्थापना गर्नुहोस्
+#. text in the Download video window
+#. button in Download video: download and install Node.js, the JavaScript runtime YouTube needs (Node.js is a program's name)
+#, machine
+	Install Node.js	Node.js स्थापना गर्नुहोस्
 #. text in unix.rs
 #. Linux, after a missing library's name, on a distribution MDM doesn't know
 #, machine
@@ -2535,9 +2602,9 @@
 #, machine
 	Japan	जापान
 #. text in helpers.rs
-#. Video helpers: the row of the JavaScript runtime yt-dlp needs for YouTube (Deno is a program's name)
+#. Video helpers: the row of the JavaScript runtime (Node.js, Deno...) yt-dlp needs for YouTube's videos
 #, machine
-	JavaScript runtime (Deno)	जाभास्क्रिप्ट रनटाइम (Deno)
+	JavaScript runtime (for YouTube)	जाभास्क्रिप्ट रनटाइम (YouTube का लागि)
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -2563,10 +2630,10 @@
 #, machine
 	KBytes/sec	KBytes/सेकेन्ड
 #. text in helpers.rs
-#. Helpers: checkbox: MDM checks for and installs newer versions of its own yt-dlp, ffmpeg, gallery-dl and Deno by itself
+#. Helpers: checkbox: MDM checks for and installs newer versions of its own yt-dlp, ffmpeg, gallery-dl and Node.js by itself
 #, machine
 	Keep MDM's helpers up to date automatically	MDM का सहायकहरूलाई स्वचालित रूपमा अद्यावधिक राख्नुहोस्
-#. text in the Options window
+#. message or event log entry in the main window; text in the Options window
 #. checkbox: downloads started from a browser's private (incognito) window are saved in MDM's download list like any other, so they are still there after MDM restarts
 #, machine
 	Keep private-window downloads in the list	निजी विन्डो डाउनलोडहरू सूचीमा राख्नुहोस्
@@ -2769,6 +2836,11 @@
 #. why Download Now is greyed: the page address was changed after the look-up
 #, machine
 	Look up the new address first	पहिले नयाँ ठेगाना हेर्नुहोस्
+#. text in helpers.rs
+#. Video helpers: MDM is asking the JavaScript runtimes on the computer (Node.js, Deno...) for their versions, to see which one yt-dlp can use
+#. the trailing ... means it is still going on: keep it
+#, machine
+	Looking for a JavaScript runtime on this computer...	यो कम्प्युटरमा जाभास्क्रिप्ट रनटाइम खोज्दै...
 #. text in the Add torrent window
 #. while a magnet link's file list is fetched, before any peer is found
 #. the trailing ... means it is still going on: keep it
@@ -2942,13 +3014,13 @@
 #, machine
 	MDM does not answer. Trying again...	MDM ले जवाफ दिँदैन। फेरि प्रयास गर्दै...
 #. text in helpers.rs
-#. Video helpers: MDM can't download Deno on this system (32-bit Windows, an unusual processor); Deno and Node.js are program names
-#, machine
-	MDM has no copy for this system: install Deno or Node.js	MDM सँग यो प्रणालीका लागि उपयुक्त संस्करण छैन: Deno वा Node.js स्थापना गर्नुहोस्
-#. text in helpers.rs
 #. Video helpers: MDM can't download this helper on this Windows (ffmpeg on 32-bit Windows); "Use another program" is the button below
 #, machine
 	MDM has no copy for this system: install it, or use another program	MDM सँग यो प्रणालीका लागि प्रतिलिपि छैन: यसलाई स्थापना गर्नुहोस् वा अर्को कार्यक्रम प्रयोग गर्नुहोस्
+#. text in helpers.rs
+#. Video helpers: MDM can't download Node.js on this system (an unusual processor); Node.js and Deno are program names; "Use another program" is the button below
+#, machine
+	MDM has no copy for this system: install Node.js or Deno, or use another program	MDM सँग यो प्रणालीका लागि कुनै प्रतिलिपि छैन: Node.js वा Deno स्थापना गर्नुहोस्, वा अर्को प्रोग्राम प्रयोग गर्नुहोस्
 #. text in remote.rs
 #. remote control page (on a phone): no pairing code is shown in MDM; "Pair a device" is MDM's button
 #, machine
@@ -3296,6 +3368,10 @@
 #. message or event log entry in the main window
 #, machine
 	No download links were found in the clipboard. Copy a text with http, https, ftp or magnet links in it, and try again.	क्लिपबोर्डमा कुनै डाउनलोड लिङ्कहरू फेला परेनन्। http, https, ftp वा म्याग्नेट लिङ्कहरू भएको पाठ प्रतिलिपि गर्नुहोस् र फेरि प्रयास गर्नुहोस्।
+#. text in traypanel.rs
+#. the notification-area icon's panel (#1365) when no download is running
+#, machine
+	No downloads are running	कुनै डाउनलोड चलिरहेका छैनन्
 #. message or event log entry in the main window
 #. title in the empty download list (this category or queue has no downloads)
 #, machine
@@ -3373,6 +3449,10 @@
 #. message or event log entry in the main window
 #, machine
 	No web addresses were found in {file}.	{file} मा कुनै वेब ठेगाना फेला परेन।
+#. text in helpers.rs
+#. helper name and what it does (Node.js and YouTube are names)
+#, machine
+	Node.js: unlocks YouTube's qualities	Node.js: YouTube का गुणस्तरहरू अनलक गर्छ
 #. text in the Options window; text in the Download video window
 #. in the Subtitles list of Download video: download no subtitles
 #, machine
@@ -3566,6 +3646,10 @@
 #. message or event log entry in the main window
 #, machine
 	Only a finished download, or one not started yet, can be moved. Stop it and finish it first.	समाप्त भएको डाउनलोड, वा सुरु नभएको मात्र सार्न सकिन्छ। यसलाई पहिले रोक्नुहोस् र समाप्त गर्नुहोस्।
+#. text in the Download video window
+#. checkbox in Download video: download only a part of the video or sound; the From and To boxes follow it
+#, machine
+	Only a part	एउटा भाग मात्र
 #. text in the Scheduler window
 #. the Scheduler, under "Wake the computer to run this queue" (Linux): the computer's wake alarm can be set by an administrator only
 #, machine
@@ -3583,6 +3667,10 @@
 #. {n} = a number (keep the braces as they are)
 #, machine
 	Only the first {n} videos are listed.	पहिलो {n} भिडियोहरू मात्र सूचीबद्ध छन्।
+#. message or event log entry in the main window
+#. event log: a torrent through a debrid account gets only the files ticked in Add torrent; {files} how many ("3")
+#, machine
+	Only the {files} file(s) ticked in Add torrent	एड टोरन्टमा टिक लगाइएका {files} फाइल(हरू) मात्र
 #. checkbox in a dialog box
 #, machine
 	Only while I'm using the computer	मैले कम्प्युटर प्रयोग गरिरहेको बेला मात्र
@@ -3607,7 +3695,8 @@
 #. checkbox in the Add torrent window
 #, machine
 	Open magnet links and .torrent files with Mister Download Manager	Mister Download Manager सँग म्याग्नेट लिङ्कहरू र .torrent फाइलहरू खोल्नुहोस्
-#. text in the tray icon's menu
+#. text in the tray icon's menu; text in traypanel.rs
+#. the notification-area icon's panel (#1365): its button that opens the main window (also the tray menu's first item)
 #, machine
 	Open Mister Download Manager	Mister Download Manager खोल्नुहोस्
 #. text in extension.rs
@@ -3645,7 +3734,7 @@
 #. the trailing ... means it opens a window: keep it
 #, machine
 	Open with...	यससँग खोल्नुहोस्...
-#. text in the tray icon's menu
+#. message or event log entry in the main window; text in the tray icon's menu
 #. plural noun: opens the Options window (settings)
 #, machine
 	Options	विकल्पहरू
@@ -3717,6 +3806,10 @@
 #. a country's name (where a download's server is)
 #, machine
 	Paraguay	पराग्वे
+#. text in the Download video window
+#. label in Download video before the choice to download only a part of the video or sound (from one time to another)
+#, machine
+	Part	भाग
 #. text in the Batch download window; text in a dialog box; label in the Options window; text in the Options window; text in a download's Properties window
 #, machine
 	Password	पासवर्ड
@@ -3837,6 +3930,10 @@
 #. tooltip of the greyed Preview button in Download File Info
 #, machine
 	Preview isn't available yet	पूर्वावलोकन अझै उपलब्ध छैन
+#. message or event log entry in the main window
+#. title of the notice shown once, the first time a download comes from a browser's private (incognito) window
+#, machine
+	Private-window downloads	निजी विन्डोबाटका डाउनलोडहरू
 #. text in the Download video window
 #. a private-window video's authentication failure: only cookies supplied by that private window may be used, even after restarting MDM
 #, machine
@@ -3909,6 +4006,10 @@
 #. plural noun: the download queues
 #, machine
 	Queues	क्यूहरू
+#. text in the Download video window
+#. choice in Download video's Part: cut where the video has a keyframe, the streams copied as they are (fast; it may start a little before From)
+#, machine
+	Quick cut, at keyframes	द्रुत कट, किफ्रेमहरूमा
 #. text in the Options window
 #. Options → Sites Logins → Cookies for video sites: a note under the choices
 #, machine
@@ -4367,6 +4468,10 @@
 #. checkbox in the Options window
 #, machine
 	Show download progress dialog when a download starts	डाउनलोड सुरु हुँदा डाउनलोड प्रगति संवाद देखाउनुहोस्
+#. text in the Options window
+#. checkbox: a click on MDM's icon in the notification area (system tray) shows a small panel over it with the downloads now running, their progress, Pause and Cancel; unticked, the click shows or hides the main window
+#, machine
+	Show downloads when the notification area icon is clicked	सूचना क्षेत्रको आइकनमा क्लिक गर्दा डाउनलोड प्यानल देखाउनुहोस्
 #. button in a dialog box
 #. button: shows these downloads in MDM's list, selected
 #, machine
@@ -4659,6 +4764,10 @@
 #. the trailing ... means it is still going on: keep it
 #, machine
 	Starting...	सुरु गर्दै...
+#. text in the Download video window
+#. tooltip of "Exact cut, encoded again" in Download video: what it does
+#, machine
+	Starts and ends exactly at From and To: ffmpeg encodes the part again, which takes longer	सुरु हुने र सकिने समय ठ्याक्कै मिलाउन: ffmpeg ले भागलाई फेरि इन्कोड गर्छ, जसमा बढी समय लाग्छ
 #. text in the Options window
 #. column title: the account's state (premium, days left)
 #, machine
@@ -4842,6 +4951,14 @@
 #. why Batch download's OK is greyed
 #, machine
 	That is more than 100,000 files: make the range smaller	त्यो 100,000 भन्दा बढी फाइलहरू हो: दायरा सानो बनाउनुहोस्
+#. text in the Options window
+#. Options → Archives, in red: the program chosen with "Use another program..." isn't 7-Zip's command line program (an archiver's window was picked instead); 7z.exe is that program's file name
+#, machine
+	That isn't 7-Zip's command line program (7z.exe).	त्यो 7-Zip को कमान्ड लाइन प्रोग्राम (7z.exe) होइन।
+#. text in the Download video window
+#. why Download Now is greyed in Download video: Part's times are the whole video's (untick Only a part to download it whole)
+#, machine
+	That's the whole video: change From or To, or untick Only a part	त्यो पूरै भिडियो हो: 'बाट' वा 'सम्म' परिवर्तन गर्नुहोस्, वा 'एउटा भाग मात्र' को टिक हटाउनुहोस्
 #. text in torrent downloads
 #. an error: the copy of the .torrent file the app keeps is missing
 #, machine
@@ -5159,6 +5276,10 @@
 #. Options → Accounts: the service doesn't say whether the account is premium (Mega-Debrid, signed in with an API key); a free account's links are refused when downloading
 #, machine
 	the service doesn't say whether it is premium	सेवाले खाता प्रिमियम हो कि होइन भन्दैन
+#. tooltip (why a control is greyed) in the Download video window
+#. why Part is greyed in Download video: the site doesn't say how long the video is (a live stream, for one)
+#, machine
+	The site doesn't say how long this video is	साइटले यो भिडियो कति लामो छ भन्ने बताउँदैन
 #. text in errors.rs
 #. why a download failed (#701): a file host answered with its own web page (a countdown before the link, a captcha, a sign-in) where the file was expected. The browser gets past it; MDM's browser extension then hands the real file back to MDM
 #, machine
@@ -5401,6 +5522,7 @@
 	This name is reserved by Windows	यो नाम Windows द्वारा सुरक्षित गरिएको छ
 #. tooltip (why a control is greyed) in the Download video window
 #. why "Embed chapters" is greyed: ffmpeg (a helper program) is not installed
+#. why Part is greyed in Download video: ffmpeg (a helper program) is not installed
 #. why "Put them into the video" is greyed: ffmpeg (a helper program) is not installed
 #, machine
 	This needs ffmpeg	यसलाई ffmpeg चाहिन्छ
@@ -5467,6 +5589,9 @@
 #. {site} = a web site's name such as "example.com" (keep the braces as they are)
 #, machine
 	this {site} link is a web page, not the file: open it in your browser and download from there	यो {site} लिङ्क वेब पृष्ठ हो, फाइल होइन: यसलाई तपाईंको ब्राउजरमा खोल्नुहोस् र त्यहाँबाट डाउनलोड गर्नुहोस्
+#. text in helpers.rs
+#, machine
+	Three free helpers make it work. Get them now, and saving a video is one click away when you find one.	तीनवटा निःशुल्क सहायक प्रोग्रामले यसलाई काम गर्न मद्दत गर्छन्। तिनलाई अहिले डाउनलोड गर्नुहोस्, त्यसपछि भिडियो भेट्टाउँदा एक क्लिकमै सुरक्षित गर्न सक्नुहुन्छ।
 #. text in whereis.rs
 #. where a download's server is, when a proxy carries it (the proxy's place not known)
 #, machine
@@ -5501,6 +5626,14 @@
 #. Linux, after a missing library's name: {command} = the terminal command that installs it ("sudo apt install libxkbcommon-x11-0"), left as it is
 #, machine
 	To install what's missing: {command}	हराइरहेको कुरा स्थापना गर्न: {command}
+#. text in the Download video window
+#. why Download Now is greyed in Download video: Part's To time is past the video's end
+#, machine
+	To is past the end of the video	सम्मको समय भिडियोको अन्त्यभन्दा पछाडि छ
+#. text in the Download video window
+#. why Download Now is greyed in Download video: Part's To time isn't after its From time
+#, machine
+	To must come after From	सम्मको समय बाटको समयभन्दा पछि हुनुपर्छ
 #. text in the Batch download window
 #, machine
 	To:	यसका लागि:
@@ -5688,6 +5821,10 @@
 #. why OK is greyed when naming a new queue
 #, machine
 	Type the queue's name	लामको नाम टाइप गर्नुहोस्
+#. text in the Download video window
+#. why Download Now is greyed in Download video: a Part box holds something that isn't a time
+#, machine
+	Type the times as 1:30 or 1:02:03	समय 1:30 वा 1:02:03 को ढाँचामा टाइप गर्नुहोस्
 #. text in the Options window
 #. Options → Add an account: waiting while the user types the code at the service's page; {page} its address, {time} minutes:seconds left
 #. {time} = a time of day (keep the braces as they are)
@@ -5794,8 +5931,9 @@
 #. text in the Options window
 #, machine
 	Use advanced browser integration	उन्नत ब्राउजर एकीकरण प्रयोग गर्नुहोस्
-#. text in errors.rs; button in helpers.rs
+#. text in errors.rs; button in helpers.rs; text in the Options window
 #. Video helpers: button: pick a program (yt-dlp or ffmpeg) already on the computer
+#. Options → Archives: button: pick the 7-Zip command line program to extract 7z and RAR archives with (PeaZip's own 7z.exe, a portable copy), instead of the one MDM finds
 #. the trailing ... means it opens a window: keep it
 #, machine
 	Use another program...	अर्को कार्यक्रम प्रयोग गर्नुहोस्...
@@ -5859,7 +5997,7 @@
 #. Options → Add an account: label before the field for the user name at the debrid service
 #, machine
 	User name:	प्रयोगकर्ता नाम:
-#. page title in the Options window
+#. page title in the Options window; text in the Options window
 #, machine
 	User names and passwords for servers/sites	सर्भर/साइटहरूका लागि प्रयोगकर्ता नाम र पासवर्डहरू
 #. text in the Options window
@@ -6157,13 +6295,12 @@
 #, machine
 	Your own program: {path} ({version})	तपाईंको आफ्नै कार्यक्रम: {path} ({version})
 #. text in helpers.rs
-#. Video helpers: {path} = the computer's own JavaScript runtime (node.exe, deno.exe), used as it is: MDM needn't download one
-#, machine
-	Your system's, nothing to download: {path}	तपाईंको प्रणालीको, डाउनलोड गर्नुपर्दैन: {path}
-#. text in helpers.rs
 #. Video helpers: {path} = the system's yt-dlp, ffmpeg or gallery-dl
 #, machine
 	Your system's: {path}	तपाईंको प्रणालीको: {path}
+#. text in helpers.rs
+#, machine
+	YouTube makes yt-dlp run a piece of JavaScript before it lists its videos, and this computer has nothing to run it with. Node.js does.	YouTube ले आफ्ना भिडियोहरूको सूची देखाउनुअघि yt-dlp लाई जाभास्क्रिप्टको एउटा अंश चलाउन लगाउँछ, तर यो कम्प्युटरमा त्यो चलाउन कुनै प्रोग्राम छैन। Node.js ले त्यो चलाउँछ।
 #. text in the Download video window
 #. in Download video and the browser's video menu: yt-dlp had no JavaScript runtime, so YouTube listed only some qualities (often only the sound); Node.js and Deno are program names
 #, machine
@@ -6278,7 +6415,7 @@
 #. Options → Remote → Pair a device: done; {device} = the name it was given
 #, machine
 	{device} is paired. It can control MDM now.	{device} जोडा बनाइएको छ। यसले अब MDM नियन्त्रण गर्न सक्छ।
-#. text in remote.rs
+#. text in remote.rs; text in traypanel.rs
 #. remote control page (on a phone): progress; {done} and {size} are sizes ("1.2 MB of 7.5 MB")
 #. {size} = a file size such as "4.2 MB" (keep the braces as they are)
 #, machine
@@ -6397,7 +6534,7 @@
 #, machine
 	{name}  ({files}, {size})	{name} ({files}, {size})
 #. text in helpers.rs
-#. {name} = yt-dlp or ffmpeg; {error} = why
+#. {name} = yt-dlp, ffmpeg or Node.js; {error} = why
 #. {name} = a file name; {error} = an error message (keep the braces as they are)
 #, machine
 	{name} could not be downloaded: {error}	{name} डाउनलोड गर्न सकिएन: {error}
@@ -6407,7 +6544,7 @@
 #, machine
 	{name} is a 7z or RAR archive. MDM extracts those with 7-Zip, which isn't installed.	{name} 7z वा RAR सङ्ग्रह हो। MDM ले त्यस्ता सङ्ग्रह 7-Zip प्रयोग गरेर निकाल्छ, तर 7-Zip स्थापना गरिएको छैन।
 #. text in errors.rs
-#. error: a helper (yt-dlp, ffmpeg, gallery-dl, Deno) is being downloaded already, by MDM's automatic update or another copy of MDM; {name} = its name
+#. error: a helper (yt-dlp, ffmpeg, gallery-dl, Node.js) is being downloaded already, by MDM's automatic update or another copy of MDM; {name} = its name
 #. {name} = a file name (keep the braces as they are)
 #, machine
 	{name} is being downloaded already: try again in a moment	{name} पहिले नै डाउनलोड भइरहेको छ: एकछिन पछि फेरि प्रयास गर्नुहोस्
@@ -6476,6 +6613,22 @@
 #. {rate} = a speed such as "1.2 MB/sec" (keep the braces as they are)
 #, machine
 	{rate} (limit: {limit})	{rate} (सीमा: {limit})
+#. text in helpers.rs
+#. Video helpers: the Deno an earlier version of MDM installed, still used until MDM's own Node.js replaces it (by the next update, or Use MDM's own copy); {runtime} = "Deno" and its version
+#, machine
+	{runtime}, MDM's earlier copy: Node.js takes its place at the next update	{runtime}, MDM को पहिलेको प्रतिलिपि: अर्को अद्यावधिकमा यसको ठाउँ Node.js ले लिन्छ
+#. text in helpers.rs
+#. Video helpers: MDM's own Node.js is the JavaScript runtime; {runtime} = "Node.js" and its version
+#, machine
+	{runtime}, Mister Download Manager's own copy	{runtime}, Mister Download Manager को आफ्नै प्रतिलिपि
+#. text in helpers.rs
+#. Video helpers: the JavaScript runtime the person chose; {runtime} = its name and version ("Node.js 24.11.0"), {path} = where it is
+#, machine
+	{runtime}, your own program: {path}	{runtime}, तपाईंले छानेको प्रोग्राम: {path}
+#. text in helpers.rs
+#. Video helpers: the computer's own JavaScript runtime, used as it is (MDM needn't download one); {runtime} = its name and version ("Node.js 24.11.0", "Deno 2.5.6"), {path} = where it is
+#, machine
+	{runtime}, your system's, nothing to download: {path}	{runtime}, तपाईंको प्रणालीमा भएको, डाउनलोड गर्नुपर्ने छैन: {path}
 #. text in errors.rs
 #. a debrid service's error: too many requests; MDM waits and retries
 #, machine
@@ -6490,6 +6643,10 @@
 #. text in errors.rs
 #, machine
 	{service} can't reach this file host right now; MDM will try again later	{service} ले अहिले यो फाइल होस्टमा पुग्न सक्दैन; MDM ले पछि फेरि प्रयास गर्नेछ
+#. text in errors.rs
+#. a torrent through a debrid service: a file ticked in Add torrent isn't among the files the service has, so nothing was downloaded (rather than every file); {service} its name, {file} the file's path in the torrent
+#, machine
+	{service} doesn't list {file}, chosen in Add torrent: nothing was downloaded. Add the torrent again with all its files, or without this one	{service} को सूचीमा एड टोरन्टमा छानिएको {file} छैन: कुनै पनि फाइल डाउनलोड भएन। सबै फाइलहरू समावेश गरेर, वा यो फाइल हटाएर, टोरन्ट फेरि थप्नुहोस्
 #. text in errors.rs
 #. a debrid service's error: it isn't answering
 #, machine
@@ -6533,6 +6690,11 @@
 #. a debrid service's error in its own words (English); {service} its name
 #, machine
 	{service}: {message}	{service}: {message}
+#. text in errors.rs
+#. a download's error: a video site kept answering MDM's request for the file with its download page again; {site} = the site's name (LuluStream)
+#. {site} = a web site's name such as "example.com" (keep the braces as they are)
+#, machine
+	{site} didn't give the file this time: try again in a moment	{site} ले यस पटक फाइल दिएन: एकछिन पछि फेरि प्रयास गर्नुहोस्
 #. text in a download's Properties window
 #. {size} = a file size such as "4.2 MB"; {bytes} = a number of bytes (keep the braces as they are)
 #, machine
@@ -6637,6 +6799,14 @@ column	Upload speed	अपलोड गति
 #. in the menu under the download button over a video: the page is a list of videos (a playlist), whose videos are chosen in the app's window; keep the name Mister Download Manager as it is
 #, machine
 extension	A list of videos: choose them in Mister Download Manager	भिडियोहरूको सूची: तिनीहरूलाई Mister Download Manager मा चयन गर्नुहोस्
+#. text in the browser extension
+#. link after popup_by_hand_firefox in the toolbar button's popup: opens the add-on's page on addons.mozilla.org (Firefox's add-ons store), whose copy Firefox keeps and updates; keep addons.mozilla.org as it is
+#, machine
+extension	Add it from addons.mozilla.org	addons.mozilla.org बाट थप्नुहोस्
+#. text in the browser extension
+#. link after popup_by_hand in the toolbar button's popup: opens the extension's page in the Chrome Web Store, whose copy the browser keeps up to date; keep the name Chrome Web Store as it is
+#, machine
+extension	Add it from the Chrome Web Store	Chrome Web Store बाट थप्नुहोस्
 #. text in the browser extension
 #. on the download button (green) over a video after the app added and started the download; a quality may follow ('· 1080p') and a 'Show' button; MDM is the app's short name, keep it; short
 #, machine
@@ -6767,6 +6937,11 @@ extension	Done	सकियो
 #. button beside a video, sound or stream in the toolbar button's popup: download it with the app; verb; short
 #, machine
 extension	Download	डाउनलोड गर्नुहोस्
+#. text in the browser extension
+#. command in the menu of the download button over a video: opens the app's Download video window with Part ticked, From set to where the video is playing now, to download only a part of it
+#. the trailing ... means it is still going on: keep it
+#, machine
+extension	Download a part from here...	यहाँबाट एउटा भाग डाउनलोड गर्नुहोस्...
 #. text in the browser extension
 #. command in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): downloads the file again from the start
 #, machine
@@ -7294,6 +7469,14 @@ extension	This browser isn't ticked in Options → General.	यो ब्रा�
 #. choice under Send downloads to: the Mister Download Manager on this computer
 #, machine
 extension	This computer	यो कम्प्युटर
+#. text in the browser extension
+#. one line at the top of the toolbar button's popup when the extension was loaded by hand (Load unpacked, with Developer mode on) in Chrome, Edge, Brave, Opera or Vivaldi; followed by the link popup_store_chrome
+#, machine
+extension	This copy was loaded by hand and won't update itself.	यो प्रति हातैले लोड गरिएको हो र आफैँ अद्यावधिक हुनेछैन।
+#. text in the browser extension
+#. one line at the top of the toolbar button's popup when the add-on was loaded by hand in Firefox (Load Temporary Add-on, in about:debugging); followed by the link popup_store_firefox; the browser here is Firefox (or Zen, LibreWolf)
+#, machine
+extension	This copy was loaded by hand: it won't update itself, and the browser removes it when it restarts.	यो प्रतिलिपि म्यानुअल रूपमा लोड गरिएको थियो: यो आफैं अद्यावधिक हुनेछैन, र ब्राउजरले यसलाई पुन: सुरु गर्दा हटाउँछ।
 #. text in the browser extension
 #. status when a download carried too much data (very large cookies) to give to the app
 #, machine

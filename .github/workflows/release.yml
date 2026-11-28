@@ -1,9 +1,10 @@
 # Builds the downloads: Windows (tools/installer/build.ps1: installer, portable zip, plain zip)
-# for x64, ARM64 and 32-bit (x86), the browser extensions (tools/extension/pack.ps1: Chromium zip,
-# Firefox .xpi), Linux for x86-64 and ARM64 (build-linux.sh: AppImage, tar.gz, .deb, .rpm) and,
-# experimental and not yet tested by us, macOS (build-macos.sh: a .dmg for Apple Silicon, one for
-# Intel; named "-experimental"). Each build's programs are tried on the machine that built them
-# first (tools/installer/smoke.py): the processor they are for, and a download.
+# for x64, ARM64 and 32-bit (x86), the browser extension (tools/extension/pack.ps1: the Chromium
+# zip; Firefox's add-on goes to addons.mozilla.org only), Linux for x86-64 and ARM64
+# (build-linux.sh: AppImage, tar.gz, .deb, .rpm) and, experimental and not yet tested by us,
+# macOS (build-macos.sh: a .dmg for Apple Silicon, one for Intel; named "-experimental"). Each
+# build's programs are tried on the machine that built them first (tools/installer/smoke.py): the
+# processor they are for, and a download.
 # - A pushed tag vX.Y.Z (matching Cargo.toml's version) publishes a GitHub release with them and
 #   SHA256SUMS.txt, its notes from CHANGELOG.md (Help -> Check for updates sees it at once). The
 #   release waits for x64 Windows and the extensions: a failed build of another processor or
@@ -186,8 +187,10 @@ jobs:
           path: target/dist/*
 
   extension:
-    # Every browser's extension as its own download: Chrome, Edge, Brave, Opera and Vivaldi
-    # (unzip, then load the folder unpacked) and Firefox (.xpi).
+    # The extension as its own download for the Chromium browsers that can't use the Chrome Web
+    # Store (unzip, then load the folder unpacked). Firefox's isn't one (#1613): an unsigned .xpi
+    # lasts in Firefox only until it restarts, so Firefox gets it from addons.mozilla.org, and the
+    # app's own extension folder keeps a copy for developers (about:debugging).
     runs-on: ubuntu-latest
     # The store steps below run only for a pushed tag, and only when their key is there: a run by
     # hand never sends anything to a store. Each key is in the environment of its own step only.
@@ -212,7 +215,7 @@ jobs:
       - name: Tests
         run: node tools/extension/test.mjs
 
-      - name: Chromium zip, Firefox .xpi and the Chrome Web Store's zip
+      - name: Chromium zip and the Chrome Web Store's zip
         shell: pwsh
         run: |
           ./tools/extension/pack.ps1
@@ -220,7 +223,6 @@ jobs:
           $v = [regex]::Match((Get-Content Cargo.toml -Raw), '(?m)^version\s*=\s*"([^"]+)"').Groups[1].Value
           New-Item -ItemType Directory -Force target/dist | Out-Null
           Copy-Item target/extension/mdm-chromium.zip "target/dist/MisterDownloadManager-$v-extension-chromium.zip"
-          Copy-Item target/extension/mdm-firefox.xpi "target/dist/MisterDownloadManager-$v-extension-firefox.xpi"
           # For the Chrome Web Store (the next step, or its dashboard by hand): kept with the
           # build, not the release.
           New-Item -ItemType Directory -Force target/store | Out-Null
@@ -233,8 +235,8 @@ jobs:
         run: npm ci --ignore-scripts --no-audit --no-fund
 
       # The Firefox add-on is listed on addons.mozilla.org: each release's version is sent there
-      # for review (not waited for); Firefox installs and updates it from its listing. The .xpi
-      # in the release stays the unsigned one (for about:debugging).
+      # for review (not waited for); Firefox installs and updates it from its listing. The release
+      # has no .xpi (the unsigned one is gone at Firefox's next restart, #1613).
       - name: Send the Firefox add-on to addons.mozilla.org
         if: ${{ startsWith(github.ref, 'refs/tags/') && steps.keys.outputs.amo == 'true' }}
         env:
@@ -461,12 +463,17 @@ jobs:
             Write-Warning "MDM_RELEASE_KEY isn't set: this release is unsigned, and MDM won't update to it by itself."
           }
           # Notes: the version's section of CHANGELOG.md ("## [X.Y.Z]" up to the next "## "),
-          # else GitHub's list of changes since the last tag; first, the invitation to try the
-          # macOS builds when they are there (Linux's files are no longer "-experimental").
+          # else GitHub's list of changes since the last tag. First, the browser add-on's stores
+          # (#1613: the release has no file for Firefox, and the stores' copies update themselves),
+          # then the invitation to try the macOS builds when they are there (Linux's files are no
+          # longer "-experimental").
           $v = "${{ github.ref_name }}".TrimStart("v")
           $log = Get-Content CHANGELOG.md -Raw -ErrorAction SilentlyContinue
           $m = [regex]::Match("$log", "(?ms)^## \[$([regex]::Escape($v))\][^\n]*\n(.*?)(?=^## |\z)")
           $title = "Mister Download Manager ${{ github.ref_name }}"
+          $stores = "**The browser add-on:** [Add to Firefox](https://addons.mozilla.org/firefox/addon/mister-download-manager/) " +
+            "(Zen, LibreWolf too) · [Add to Chrome, Edge, Brave, Opera, Vivaldi](https://chromewebstore.google.com/detail/mister-download-manager/ejoleppdfgjdndddcjoehopknmlglojp). " +
+            "The stores' copy updates itself; ``-extension-chromium.zip`` is only for a Chromium browser that can't use its store.`n`n"
           $invite = ""
           if ($files.Name -like "*-experimental*") {
             $invite = "**On a Mac?** The ``-experimental`` files are fresh builds for Mac " +
@@ -490,10 +497,10 @@ jobs:
             # Links into the repository (docs/x.md) would resolve against the release's page:
             # point them at the tagged files.
             $notes = $m.Groups[1].Value.Trim() -replace '\]\((?![a-z]+:|#)([^)\s]+)\)', '](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/$1)'
-            Set-Content -Encoding utf8 notes.md ($invite + $notes + $thanks)
+            Set-Content -Encoding utf8 notes.md ($stores + $invite + $notes + $thanks)
             gh release create "${{ github.ref_name }}" --latest --title $title --notes-file notes.md $all
           } else {
-            Set-Content -Encoding utf8 notes.md ($invite + $thanks.Trim())
+            Set-Content -Encoding utf8 notes.md ($stores + $invite + $thanks.Trim())
             gh release create "${{ github.ref_name }}" --latest --title $title --notes-file notes.md --generate-notes $all
           }
           # The website links to the latest published release: rebuild it now that the files are

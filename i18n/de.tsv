@@ -12,6 +12,11 @@
 #. {n} = a number (keep the braces as they are)
 #, machine
 @plural	An unknown site wants to send {n} link to Link grabber.|An unknown site wants to send {n} links to Link grabber.	Eine unbekannte Website möchte {n} Link an den Link-Grabber senden.|Eine unbekannte Website möchte {n} Links an den Link-Grabber senden.
+#. count in traypanel.rs
+#. the notification-area icon's panel (#1365), under the downloads it lists: how many others are running; {n} a number
+#. {n} = a number (keep the braces as they are)
+#, machine
+@plural	And {n} more|And {n} more	Und {n} weiterer|Und {n} weitere
 #. count in torrent downloads
 #. number of additional files in a list of files
 #. {n} = a number (keep the braces as they are)
@@ -278,6 +283,14 @@
 #. Options → DNS: the NextDNS configuration ID typed isn't one
 #, machine
 	A NextDNS configuration ID is six letters and digits (0-9, a-f).	Eine NextDNS-Konfigurations-ID besteht aus sechs Buchstaben und Ziffern (0-9, a-f).
+#. text in the Download video window
+#. why "Embed chapters" (and the subtitles) are greyed in Download video: only a part of the video is downloaded, and its chapters and subtitles would be the whole video's
+#, machine
+	A part is saved without the video's chapters and subtitles	Ein Teil wird ohne die Kapitel und Untertitel des Videos gespeichert
+#. text in the Download video window
+#. why Part is greyed in Download video: the page is a playlist, whose videos are downloaded whole
+#, machine
+	A playlist's videos are downloaded whole	Die Videos einer Wiedergabeliste werden vollständig heruntergeladen
 #. text in the Options window
 #. Options → Sites Logins → Cookies for video sites: the tooltip of the profile box
 #, machine
@@ -322,6 +335,7 @@
 #, machine
 	about {ms} ms ({reach})	ca. {ms} ms ({reach})
 #. text in the Download video window
+#. in Download video beside the part's From and To: the part's size, estimated from the whole video's; {size} is "12.3 MB"
 #. a file size that is only an estimate, as a screen reader says it in the Download video window's list of qualities; {size} is "532 MB"
 #. {size} = a file size such as "4.2 MB" (keep the braces as they are)
 #, machine
@@ -888,7 +902,7 @@
 #. a country's name (where a download's server is)
 #, machine
 	Canada	Kanada
-#. button in the Batch download window; button in categories.rs; text in the Checksum window; button in a dialog box; button in extracting archives (a download's log, the Archive password window); button in the Find window; button in gallerydlg.rs; text in the Link grabber window; text in the Help menu's windows (About, updates, shortcuts, Tell a friend); button in langpick.rs; button in the Options window; button in a download's progress window; text in remote.rs; button in the Scheduler window; button in the Add torrent window; button in the Download video window
+#. button in the Batch download window; button in categories.rs; text in the Checksum window; button in a dialog box; button in extracting archives (a download's log, the Archive password window); button in the Find window; button in gallerydlg.rs; text in the Link grabber window; text in the Help menu's windows (About, updates, shortcuts, Tell a friend); button in langpick.rs; button in the Options window; button in a download's progress window; text in remote.rs; button in the Scheduler window; button in the Add torrent window; button in traypanel.rs; button in the Download video window
 #. button: stop downloading the update
 #, machine
 	Cancel	Abbrechen
@@ -986,6 +1000,10 @@
 #. text in helpers.rs
 #, machine
 	Check your connection, then try again, or get them later from the video window.	Überprüfen Sie Ihre Verbindung und versuchen Sie es dann erneut, oder rufen Sie sie später über das Videofenster ab.
+#. text in the Options window
+#. tooltip of "Show downloads when the notification area icon is clicked": what the click on MDM's tray icon does when it is ticked and when not
+#, machine
+	Checked, a click on MDM's icon shows what is downloading, with Pause and Cancel, and a double click opens the window; unchecked, a click shows or hides the window	Aktiviert: Ein Klick auf das MDM-Symbol zeigt, was heruntergeladen wird, mit Anhalten und Abbrechen, und ein Doppelklick öffnet das Fenster. Deaktiviert: Ein Klick zeigt das Fenster an oder blendet es aus
 #. text in the Options window
 #. tooltip of the close-setting: checked keeps MDM running when the window closes, in the notification area when available or else the taskbar; downloads continue; unchecked closing quits
 #, machine
@@ -1101,7 +1119,7 @@
 #. text in the Options window
 #, machine
 	Clock:	Uhr:
-#. text in the Checksum window; text in the main window (menus, toolbar, Categories pane); button in crashui.rs; button in a dialog box; button in extension.rs; button in the Help menu's windows (About, updates, shortcuts, Tell a friend); button in helpers.rs; button in the download list; button in the Options window; button in rssdlg.rs; button in torrentfiles.rs; text in standard windows
+#. text in the Checksum window; text in the main window (menus, toolbar, Categories pane); button in crashui.rs; button in a dialog box; button in extension.rs; button in the Help menu's windows (About, updates, shortcuts, Tell a friend); button in helpers.rs; button in the download list; button in the Options window; button in rssdlg.rs; button in torrentfiles.rs; text in traypanel.rs; text in standard windows
 #. both verbs: Verify = check the file now; Close = close the window
 #. tooltip of the × that closes the Categories pane
 #. verb: closes this window
@@ -1308,7 +1326,7 @@
 #. a date's order: day first (30/10/2026)
 #, machine
 	Day, month, year	Tag, Monat, Jahr
-#. page title in the Options window
+#. page title in the Options window; text in the Options window
 #, machine
 	Debrid service accounts	Debrid-Dienstkonten
 #. text in the Scheduler window
@@ -1618,8 +1636,13 @@
 #. Windows' Settings → Default apps: what Mister Download Manager is
 #, machine
 	Downloads files, videos and torrents	Lädt Dateien, Videos und Torrents herunter
-#. text in the tray icon's menu
+#. message or event log entry in the main window
+#. the notice shown once, the first time a download comes from a browser's private (incognito) window: it stays in MDM's list like any other, after a restart too; where to turn that off. {options} = the Options window, {general} = its General tab, {checkbox} = the checkbox "Keep private-window downloads in the list"
+#, machine
+	Downloads from a browser's private window stay in MDM's list like any other, also after MDM restarts; their cookies are never saved. To keep them in memory only, untick {options} → {general} → {checkbox}.	Downloads aus einem privaten Browserfenster bleiben wie alle anderen in der MDM-Liste, auch nach einem MDM-Neustart; ihre Cookies werden niemals gespeichert. Um sie nur im Speicher zu behalten, deaktivieren Sie {options} → {general} → {checkbox}.
+#. text in the tray icon's menu; text in traypanel.rs
 #. tray menu: a submenu of the downloads now running; choosing one shows its progress window
+#. the notification-area icon's panel (#1365): its title, over the downloads now running (also the tray menu's submenu)
 #, machine
 	Downloads in progress	Aktive Downloads
 #. text in a dialog box
@@ -1786,6 +1809,10 @@
 #. what a keyboard shortcut does in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #, machine
 	Everything at its normal size (100%)	Alles in normaler Größe (100 %)
+#. text in the Download video window
+#. choice in Download video's Part: the part is encoded again so it starts and ends exactly at From and To (slower)
+#, machine
+	Exact cut, encoded again	Exakter Schnitt, neu kodiert
 #. text in the Options window
 #. label before an example date and time written the chosen way
 #, machine
@@ -1870,6 +1897,10 @@
 #. a country's name (where a download's server is)
 #, machine
 	Faroe Islands	Färöer
+#. text in the Download video window
+#. tooltip of "Quick cut, at keyframes" in Download video: what it does
+#, machine
+	Fast: the streams are copied as they are, so the part may start a little before From	Schnell: Die Streams werden kopiert, wie sie sind, sodass der Teil etwas vor „Von“ beginnen kann
 #. text in the Scheduler window
 #, machine
 	February	Februar
@@ -2096,6 +2127,14 @@
 #. where a download came from, in its log: a playlist or channel, by yt-dlp
 #, machine
 	from a playlist (yt-dlp)	aus einer Wiedergabeliste (yt-dlp)
+#. text in the download list (sizes, speeds, status)
+#. tooltip of the mark (a mask) before a download's status in the list: it came from a browser's private (incognito) window, and it is in memory only, gone from the list when MDM closes
+#, machine
+	From a private window: in memory only, gone from the list when MDM closes	Aus einem privaten Fenster: nur im Speicher, nach dem Schließen von MDM aus der Liste entfernt
+#. text in the download list (sizes, speeds, status)
+#. tooltip of the mark (a mask) before a download's status in the list: it came from a browser's private (incognito) window, and MDM's list keeps it after a restart (Options → General → Keep private-window downloads in the list)
+#, machine
+	From a private window: kept in the list	Aus einem privaten Fenster: in der Liste behalten
 #. message or event log entry in the main window
 #, machine
 	from a torrent file	von einer Torrent-Datei
@@ -2113,6 +2152,10 @@
 #. message or event log entry in the main window
 #, machine
 	from the command line	von der Befehlszeile
+#. text in the Download video window
+#. in Download video after "Only a part": {from} and {to} are boxes where times are typed (1:30, 1:02:03), drawn where they stand in the translation
+#, machine
+	from {from} to {to}	von {from} bis {to}
 #. text in the Batch download window
 #, machine
 	From:	Von:
@@ -2153,7 +2196,7 @@
 #. a country's name (where a download's server is)
 #, machine
 	Gambia	Gambia
-#. text in the download list (sizes, speeds, status); text in the Options window; text in a download's progress window
+#. message or event log entry in the main window; text in the download list (sizes, speeds, status); text in the Options window; text in a download's progress window
 #. category name: files of no particular kind
 #. tab title: general settings
 #. tab title: general information
@@ -2586,7 +2629,7 @@
 #. Helpers: checkbox: MDM checks for and installs newer versions of its own yt-dlp, ffmpeg, gallery-dl and Node.js by itself
 #, machine
 	Keep MDM's helpers up to date automatically	MDM-Hilfsprogramme automatisch auf dem neuesten Stand halten
-#. text in the Options window
+#. message or event log entry in the main window; text in the Options window
 #. checkbox: downloads started from a browser's private (incognito) window are saved in MDM's download list like any other, so they are still there after MDM restarts
 #, machine
 	Keep private-window downloads in the list	Downloads aus privaten Fenstern in der Liste behalten
@@ -3321,6 +3364,10 @@
 #. message or event log entry in the main window
 #, machine
 	No download links were found in the clipboard. Copy a text with http, https, ftp or magnet links in it, and try again.	Es wurden keine Download-Links in der Zwischenablage gefunden. Kopieren Sie einen Text mit http-, https-, ftp- oder Magnet-Links und versuchen Sie es erneut.
+#. text in traypanel.rs
+#. the notification-area icon's panel (#1365) when no download is running
+#, machine
+	No downloads are running	Es laufen keine Downloads
 #. message or event log entry in the main window
 #. title in the empty download list (this category or queue has no downloads)
 #, machine
@@ -3595,6 +3642,10 @@
 #. message or event log entry in the main window
 #, machine
 	Only a finished download, or one not started yet, can be moved. Stop it and finish it first.	Nur ein abgeschlossener oder noch nicht gestarteter Download kann verschoben werden. Stoppen Sie ihn und beenden Sie ihn zuerst.
+#. text in the Download video window
+#. checkbox in Download video: download only a part of the video or sound; the From and To boxes follow it
+#, machine
+	Only a part	Nur ein Teil
 #. text in the Scheduler window
 #. the Scheduler, under "Wake the computer to run this queue" (Linux): the computer's wake alarm can be set by an administrator only
 #, machine
@@ -3636,7 +3687,8 @@
 #. checkbox in the Add torrent window
 #, machine
 	Open magnet links and .torrent files with Mister Download Manager	Magnet-Links und .torrent-Dateien mit Mister Download Manager öffnen
-#. text in the tray icon's menu
+#. text in the tray icon's menu; text in traypanel.rs
+#. the notification-area icon's panel (#1365): its button that opens the main window (also the tray menu's first item)
 #, machine
 	Open Mister Download Manager	Mister Download Manager öffnen
 #. text in extension.rs
@@ -3674,7 +3726,7 @@
 #. the trailing ... means it opens a window: keep it
 #, machine
 	Open with...	Öffnen mit...
-#. text in the tray icon's menu
+#. message or event log entry in the main window; text in the tray icon's menu
 #. plural noun: opens the Options window (settings)
 #, machine
 	Options	Optionen
@@ -3746,6 +3798,10 @@
 #. a country's name (where a download's server is)
 #, machine
 	Paraguay	Paraguay
+#. text in the Download video window
+#. label in Download video before the choice to download only a part of the video or sound (from one time to another)
+#, machine
+	Part	Teil
 #. text in the Batch download window; text in a dialog box; label in the Options window; text in the Options window; text in a download's Properties window
 #, machine
 	Password	Passwort
@@ -3865,6 +3921,10 @@
 #. tooltip of the greyed Preview button in Download File Info
 #, machine
 	Preview isn't available yet	Vorschau ist noch nicht verfügbar
+#. message or event log entry in the main window
+#. title of the notice shown once, the first time a download comes from a browser's private (incognito) window
+#, machine
+	Private-window downloads	Downloads aus privaten Fenstern
 #. text in the Download video window
 #. a private-window video's authentication failure: only cookies supplied by that private window may be used, even after restarting MDM
 #, machine
@@ -3937,6 +3997,10 @@
 #. plural noun: the download queues
 #, machine
 	Queues	Warteschlangen
+#. text in the Download video window
+#. choice in Download video's Part: cut where the video has a keyframe, the streams copied as they are (fast; it may start a little before From)
+#, machine
+	Quick cut, at keyframes	Schneller Schnitt, an Keyframes
 #. text in the Options window
 #. Options → Sites Logins → Cookies for video sites: a note under the choices
 #, machine
@@ -4394,6 +4458,10 @@
 #. checkbox in the Options window
 #, machine
 	Show download progress dialog when a download starts	Download-Fortschrittsdialog anzeigen, wenn ein Download startet
+#. text in the Options window
+#. checkbox: a click on MDM's icon in the notification area (system tray) shows a small panel over it with the downloads now running, their progress, Pause and Cancel; unticked, the click shows or hides the main window
+#, machine
+	Show downloads when the notification area icon is clicked	Downloads beim Klick auf das Symbol im Infobereich anzeigen
 #. button in a dialog box
 #. button: shows these downloads in MDM's list, selected
 #, machine
@@ -4686,6 +4754,10 @@
 #. the trailing ... means it is still going on: keep it
 #, machine
 	Starting...	Starte...
+#. text in the Download video window
+#. tooltip of "Exact cut, encoded again" in Download video: what it does
+#, machine
+	Starts and ends exactly at From and To: ffmpeg encodes the part again, which takes longer	Beginnt und endet exakt bei „Von“ und „Bis“: ffmpeg kodiert den Teil neu, was länger dauert
 #. text in the Options window
 #. column title: the account's state (premium, days left)
 #, machine
@@ -4873,6 +4945,10 @@
 #. Options → Archives, in red: the program chosen with "Use another program..." isn't 7-Zip's command line program (an archiver's window was picked instead); 7z.exe is that program's file name
 #, machine
 	That isn't 7-Zip's command line program (7z.exe).	Das ist nicht das Kommandozeilenprogramm von 7-Zip (7z.exe).
+#. text in the Download video window
+#. why Download Now is greyed in Download video: Part's times are the whole video's (untick Only a part to download it whole)
+#, machine
+	That's the whole video: change From or To, or untick Only a part	Das ist das ganze Video: Ändern Sie „Von“ oder „Bis“, oder deaktivieren Sie „Nur ein Teil“
 #. text in torrent downloads
 #. an error: the copy of the .torrent file the app keeps is missing
 #, machine
@@ -5195,6 +5271,10 @@
 #. Options → Accounts: the service doesn't say whether the account is premium (Mega-Debrid, signed in with an API key); a free account's links are refused when downloading
 #, machine
 	the service doesn't say whether it is premium	der Dienst sagt nicht, ob es Premium ist
+#. tooltip (why a control is greyed) in the Download video window
+#. why Part is greyed in Download video: the site doesn't say how long the video is (a live stream, for one)
+#, machine
+	The site doesn't say how long this video is	Die Website gibt nicht an, wie lange dieses Video ist
 #. text in errors.rs
 #. why a download failed (#701): a file host answered with its own web page (a countdown before the link, a captcha, a sign-in) where the file was expected. The browser gets past it; MDM's browser extension then hands the real file back to MDM
 #, machine
@@ -5437,6 +5517,7 @@
 	This name is reserved by Windows	Dieser Name ist von Windows reserviert
 #. tooltip (why a control is greyed) in the Download video window
 #. why "Embed chapters" is greyed: ffmpeg (a helper program) is not installed
+#. why Part is greyed in Download video: ffmpeg (a helper program) is not installed
 #. why "Put them into the video" is greyed: ffmpeg (a helper program) is not installed
 #, machine
 	This needs ffmpeg	Dazu wird ffmpeg benötigt
@@ -5539,6 +5620,14 @@
 #. Linux, after a missing library's name: {command} = the terminal command that installs it ("sudo apt install libxkbcommon-x11-0"), left as it is
 #, machine
 	To install what's missing: {command}	So installieren Sie die fehlenden Komponenten: {command}
+#. text in the Download video window
+#. why Download Now is greyed in Download video: Part's To time is past the video's end
+#, machine
+	To is past the end of the video	„Bis“ liegt nach dem Ende des Videos
+#. text in the Download video window
+#. why Download Now is greyed in Download video: Part's To time isn't after its From time
+#, machine
+	To must come after From	„Bis“ muss nach „Von“ liegen
 #. text in the Batch download window
 #, machine
 	To:	An:
@@ -5726,6 +5815,10 @@
 #. why OK is greyed when naming a new queue
 #, machine
 	Type the queue's name	Namen der Warteschlange eingeben
+#. text in the Download video window
+#. why Download Now is greyed in Download video: a Part box holds something that isn't a time
+#, machine
+	Type the times as 1:30 or 1:02:03	Geben Sie die Zeiten als 1:30 oder 1:02:03 ein
 #. text in the Options window
 #. Options → Add an account: waiting while the user types the code at the service's page; {page} its address, {time} minutes:seconds left
 #. {time} = a time of day (keep the braces as they are)
@@ -5898,7 +5991,7 @@
 #. Options → Add an account: label before the field for the user name at the debrid service
 #, machine
 	User name:	Benutzername:
-#. page title in the Options window
+#. page title in the Options window; text in the Options window
 #, machine
 	User names and passwords for servers/sites	Benutzernamen und Passwörter für Server/Websites
 #. text in the Options window
@@ -6315,7 +6408,7 @@
 #. Options → Remote → Pair a device: done; {device} = the name it was given
 #, machine
 	{device} is paired. It can control MDM now.	{device} ist gekoppelt. Es kann MDM jetzt steuern.
-#. text in remote.rs
+#. text in remote.rs; text in traypanel.rs
 #. remote control page (on a phone): progress; {done} and {size} are sizes ("1.2 MB of 7.5 MB")
 #. {size} = a file size such as "4.2 MB" (keep the braces as they are)
 #, machine
@@ -6544,6 +6637,10 @@
 #, machine
 	{service} can't reach this file host right now; MDM will try again later	{service} kann diesen Filehoster derzeit nicht erreichen; MDM versucht es später erneut
 #. text in errors.rs
+#. a torrent through a debrid service: a file ticked in Add torrent isn't among the files the service has, so nothing was downloaded (rather than every file); {service} its name, {file} the file's path in the torrent
+#, machine
+	{service} doesn't list {file}, chosen in Add torrent: nothing was downloaded. Add the torrent again with all its files, or without this one	{service} listet {file} nicht auf, ausgewählt in „Torrent hinzufügen“: Es wurde nichts heruntergeladen. Fügen Sie den Torrent erneut mit allen Dateien oder ohne diese hinzu
+#. text in errors.rs
 #. a debrid service's error: it isn't answering
 #, machine
 	{service} is not responding; try again later	{service} antwortet nicht; versuchen Sie es später erneut
@@ -6586,6 +6683,11 @@
 #. a debrid service's error in its own words (English); {service} its name
 #, machine
 	{service}: {message}	{service}: {message}
+#. text in errors.rs
+#. a download's error: a video site kept answering MDM's request for the file with its download page again; {site} = the site's name (LuluStream)
+#. {site} = a web site's name such as "example.com" (keep the braces as they are)
+#, machine
+	{site} didn't give the file this time: try again in a moment	{site} hat die Datei diesmal nicht bereitgestellt: Versuchen Sie es in Kürze erneut
 #. text in a download's Properties window
 #. {size} = a file size such as "4.2 MB"; {bytes} = a number of bytes (keep the braces as they are)
 #, machine
@@ -6690,6 +6792,14 @@ column	Upload speed	Upload-Geschwindigkeit
 #. in the menu under the download button over a video: the page is a list of videos (a playlist), whose videos are chosen in the app's window; keep the name Mister Download Manager as it is
 #, machine
 extension	A list of videos: choose them in Mister Download Manager	Eine Liste von Videos: Wählen Sie sie in Mister Download Manager aus
+#. text in the browser extension
+#. link after popup_by_hand_firefox in the toolbar button's popup: opens the add-on's page on addons.mozilla.org (Firefox's add-ons store), whose copy Firefox keeps and updates; keep addons.mozilla.org as it is
+#, machine
+extension	Add it from addons.mozilla.org	Von addons.mozilla.org hinzufügen
+#. text in the browser extension
+#. link after popup_by_hand in the toolbar button's popup: opens the extension's page in the Chrome Web Store, whose copy the browser keeps up to date; keep the name Chrome Web Store as it is
+#, machine
+extension	Add it from the Chrome Web Store	Aus dem Chrome Web Store hinzufügen
 #. text in the browser extension
 #. on the download button (green) over a video after the app added and started the download; a quality may follow ('· 1080p') and a 'Show' button; MDM is the app's short name, keep it; short
 #, machine
@@ -6820,6 +6930,11 @@ extension	Done	Fertig
 #. button beside a video, sound or stream in the toolbar button's popup: download it with the app; verb; short
 #, machine
 extension	Download	Herunterladen
+#. text in the browser extension
+#. command in the menu of the download button over a video: opens the app's Download video window with Part ticked, From set to where the video is playing now, to download only a part of it
+#. the trailing ... means it is still going on: keep it
+#, machine
+extension	Download a part from here...	Einen Teil ab hier herunterladen...
 #. text in the browser extension
 #. command in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): downloads the file again from the start
 #, machine
@@ -7347,6 +7462,14 @@ extension	This browser isn't ticked in Options → General.	Dieser Browser ist i
 #. choice under Send downloads to: the Mister Download Manager on this computer
 #, machine
 extension	This computer	Dieser Computer
+#. text in the browser extension
+#. one line at the top of the toolbar button's popup when the extension was loaded by hand (Load unpacked, with Developer mode on) in Chrome, Edge, Brave, Opera or Vivaldi; followed by the link popup_store_chrome
+#, machine
+extension	This copy was loaded by hand and won't update itself.	Diese Kopie wurde manuell geladen und wird nicht automatisch aktualisiert.
+#. text in the browser extension
+#. one line at the top of the toolbar button's popup when the add-on was loaded by hand in Firefox (Load Temporary Add-on, in about:debugging); followed by the link popup_store_firefox; the browser here is Firefox (or Zen, LibreWolf)
+#, machine
+extension	This copy was loaded by hand: it won't update itself, and the browser removes it when it restarts.	Diese Kopie wurde manuell geladen: Sie wird nicht automatisch aktualisiert, und der Browser entfernt sie beim Neustart.
 #. text in the browser extension
 #. status when a download carried too much data (very large cookies) to give to the app
 #, machine

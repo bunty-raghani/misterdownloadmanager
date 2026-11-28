@@ -116,6 +116,18 @@
   "popup_fix": {
     "message": "কীভাবে ঠিক করবেন"
   },
+  "popup_by_hand": {
+    "message": "এই কপিটি হাতে লোড করা হয়েছে এবং এটি নিজে থেকে আপডেট হবে না।"
+  },
+  "popup_by_hand_firefox": {
+    "message": "এই কপিটি হাতে লোড করা হয়েছিল: এটি নিজে থেকে আপডেট হবে না, এবং ব্রাউজার পুনরায় চালু হলে এটি মুছে ফেলবে।"
+  },
+  "popup_store_chrome": {
+    "message": "Chrome Web Store থেকে যোগ করুন"
+  },
+  "popup_store_firefox": {
+    "message": "addons.mozilla.org থেকে যোগ করুন"
+  },
   "popup_declined": {
     "message": "ব্রাউজারে ছেড়ে দেওয়া হয়েছে: $name$",
     "placeholders": {
@@ -319,6 +331,9 @@
   },
   "video_all_qualities": {
     "message": "সব গুণমান এবং সাবটাইটেল..."
+  },
+  "video_part": {
+    "message": "এখান থেকে একটি অংশ ডাউনলোড করুন..."
   },
   "video_failed": {
     "message": "Mister Download Manager ইনস্টল করা নেই বা চালু হয়নি"

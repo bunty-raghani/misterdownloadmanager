@@ -685,16 +685,16 @@ mod tests {
         let bad = install_from(dir.path(), &net, None, None, &source(good)).await;
         assert!(matches!(bad, Err(Error::BadChecksum)), "{bad:?}");
         assert_eq!(installed(dir.path()), Some(got.clone()));
-        // An older LTS listed: never a downgrade.
+        // An older LTS listed, below the oldest MDM takes on every build (20 is older than 32-bit
+        // Windows' own oldest, 22, which 24 isn't): nothing is offered at all, never a downgrade.
         std::fs::write(
             files.path().join("index.json"),
             format!(
-                r#"[{{"version":"v24.22.3","lts":"Krypton","files":["{}"]}}]"#,
+                r#"[{{"version":"v20.19.0","lts":"Iron","files":["{}"]}}]"#,
                 b.listed
             ),
         )
         .unwrap();
-        // An older LTS listed: below the oldest MDM takes, so nothing is offered at all.
         let older = install_from(dir.path(), &net, None, None, &source(good)).await;
         assert!(matches!(older, Err(Error::Missing(_))), "{older:?}");
         assert_eq!(installed(dir.path()), Some(got));

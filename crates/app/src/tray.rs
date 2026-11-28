@@ -1,6 +1,8 @@
 //! The notification-area icon (IDM: "IDM menu pops up when you right click on IDM icon"
-//! [IDM-doc]). Left click shows the window again, or hides it there while it shows; right click
-//! shows the menu. The menu's
+//! [IDM-doc]). Left click shows the downloads panel (traypanel.rs, #1365), or, with Options →
+//! General's "Show downloads when the notification area icon is clicked" unticked, shows the
+//! window again or hides it there while it shows; a double click (Windows) opens the window;
+//! right click shows the menu. The menu's
 //! contents are ours ([unknown] IDM's exact items, lab). Windows, macOS (menu bar) and Linux
 //! (StatusNotifierItem over D-Bus: KDE, GNOME with its AppIndicator extension).
 
@@ -25,9 +27,13 @@ use tray_icon::{MouseButton, MouseButtonState, TrayIcon, TrayIconBuilder, TrayIc
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum TrayCmd {
     Show,
-    /// Left click on the icon: the window back when hidden or behind other
+    /// Left click on the icon, where it was (screen pixels; None where the tray doesn't say,
+    /// [`click_at`]): the downloads panel there (#1365), or with Options' "Show downloads when the
+    /// notification area icon is clicked" unticked the window back when hidden or behind other
     /// windows, hidden there when frontmost.
-    Toggle,
+    Click(Option<(i32, i32)>),
+    /// Left double click on the icon (Windows only: the other trays send none): the window.
+    DoubleClick,
     AddUrl,
     Batch,
     /// Add batch download from clipboard (#709).
@@ -102,6 +108,23 @@ pub fn on_close(
     } else {
         OnClose::Quit
     }
+}
+
+/// A left click this soon after a double click is the double click's last release: the
+/// system's double-click time (Windows; the other trays send no double click).
+fn double_click() -> std::time::Duration {
+    #[cfg(windows)]
+    return crate::win32::double_click_time();
+    #[cfg(not(windows))]
+    std::time::Duration::from_millis(500)
+}
+
+/// A click's place as the tray gave it (screen pixels), or None where it gave none: a
+/// StatusNotifierItem host may send 0, 0 for "unknown" (GNOME's AppIndicator extension can),
+/// which is no place on any screen's taskbar.
+fn click_at(x: f64, y: f64) -> Option<(i32, i32)> {
+    let (x, y) = (x.round() as i32, y.round() as i32);
+    (x != 0 || y != 0).then_some((x, y))
 }
 
 /// The longest download name in the tray menu, in characters (the rest ends in "…").
@@ -546,19 +569,39 @@ impl Native {
 
         let wake = |tx: &Sender<TrayCmd>, ctx: &egui::Context| (tx.clone(), ctx.clone());
         let (icon_tx, icon_ctx) = wake(&tx, ctx);
+        // Windows sends a double click as down, up, double click, up: the last up is part of the
+        // double click, not a click of its own (it would open the panel again over the window).
+        let doubled: Mutex<Option<std::time::Instant>> = Mutex::new(None);
         TrayIconEvent::set_event_handler(Some(move |e: TrayIconEvent| {
-            if let TrayIconEvent::Click {
-                button: MouseButton::Left,
-                button_state: MouseButtonState::Up,
-                ..
-            } = e
-            {
-                // The window is asked for: a stall from now on is felt (crash.rs, #1126). Seen
-                // during one where the icon's events come on a thread of their own (Linux).
-                crate::crash::asked();
-                let _ = icon_tx.send(TrayCmd::Toggle);
-                icon_ctx.request_repaint();
-            }
+            let cmd = match e {
+                TrayIconEvent::Click {
+                    button: MouseButton::Left,
+                    button_state: MouseButtonState::Up,
+                    position,
+                    ..
+                } => {
+                    let last = doubled.lock().ok().and_then(|mut d| d.take());
+                    if last.is_some_and(|t| t.elapsed() < double_click()) {
+                        return;
+                    }
+                    TrayCmd::Click(click_at(position.x, position.y))
+                }
+                TrayIconEvent::DoubleClick {
+                    button: MouseButton::Left,
+                    ..
+                } => {
+                    if let Ok(mut d) = doubled.lock() {
+                        *d = Some(std::time::Instant::now());
+                    }
+                    TrayCmd::DoubleClick
+                }
+                _ => return,
+            };
+            // The window is asked for: a stall from now on is felt (crash.rs, #1126). Seen
+            // during one where the icon's events come on a thread of their own (Linux).
+            crate::crash::asked();
+            let _ = icon_tx.send(cmd);
+            icon_ctx.request_repaint();
         }));
         let (menu_tx, menu_ctx) = wake(&tx, ctx);
         let download_ids: Arc<Mutex<Vec<(MenuId, u64)>>> = Arc::default();
@@ -885,6 +928,14 @@ mod tests {
             on_close(false, true, true, Icon::There, true, false),
             OnClose::Hide
         );
+    }
+
+    /// #1365: 0, 0 is a tray that didn't say where the click was, not the screen's corner.
+    #[test]
+    fn a_click_at_0_0_has_no_place() {
+        assert_eq!(click_at(0.0, 0.0), None);
+        assert_eq!(click_at(1834.4, 1062.6), Some((1834, 1063)));
+        assert_eq!(click_at(0.0, 12.0), Some((0, 12)));
     }
 
     #[test]

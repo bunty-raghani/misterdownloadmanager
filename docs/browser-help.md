@@ -89,6 +89,10 @@ You can always save a video without the button: in MDM, open **Tasks → Downloa
 
 In Chrome, Edge and Brave you can limit an extension to some sites (right-click its toolbar button → **This can read and change site data**). On a site it may not read, the extension can't pass your sign-in on, so it leaves the download to the browser. Choose **On all sites** to let MDM take downloads everywhere.
 
+## The popup says this copy was loaded by hand {#loaded-by-hand}
+
+A copy loaded with **Load unpacked** (Chrome, Edge, Brave, Opera, Vivaldi) or **Load Temporary Add-on** (Firefox) doesn't update itself, and its toolbar button's popup says so, with a link to the browser's store. Add the extension from that link, then remove the copy loaded by hand on the browser's extensions page (`chrome://extensions`, `edge://extensions`, `about:addons`...), so the browser doesn't run two. The store's copy is the same extension, and the browser keeps it up to date.
+
 ## Firefox forgets the extension after a restart {#firefox-temporary}
 
 An add-on loaded with **Load Temporary Add-on** (from `about:debugging`) is removed when Firefox closes. Remove it and install the add-on from [its page on addons.mozilla.org](https://addons.mozilla.org/firefox/addon/mister-download-manager/) instead: Firefox keeps that one, and updates it.

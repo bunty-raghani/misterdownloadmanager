@@ -35,6 +35,16 @@ async fn setup(service: ServiceKind) -> (LabServer, Debrid) {
 }
 
 async fn run(d: &Debrid, hash: &str, folder: &Path) -> (RemoteTorrent, mdm_engine::Snapshot) {
+    run_with(d, hash, folder, None).await
+}
+
+/// `files`: the paths ticked in Add torrent (None: all).
+async fn run_with(
+    d: &Debrid,
+    hash: &str,
+    folder: &Path,
+    files: Option<Vec<String>>,
+) -> (RemoteTorrent, mdm_engine::Snapshot) {
     let order = Order {
         account: d.torrent_account().expect("an account").0,
         magnet: format!("magnet:?xt=urn:btih:{hash}&dn=Lab%20Show")
@@ -43,6 +53,7 @@ async fn run(d: &Debrid, hash: &str, folder: &Path) -> (RemoteTorrent, mdm_engin
         transfer: None,
         folder: folder.to_owned(),
         renamed: None,
+        files,
         net: Options {
             max_retries: 1,
             retry_delay: Duration::from_millis(50),
@@ -82,6 +93,40 @@ async fn held(lab: &LabServer) -> Vec<String> {
     serde_json::from_slice(&body).unwrap()
 }
 
+/// What the fake Real-Debrid torrent `id` was sent in `selectFiles` (plain text), if anything.
+async fn rd_selected(lab: &LabServer, id: &str) -> Option<String> {
+    let r = reqwest::get(lab.url(&format!("/_debrid/rd-selected/{id}")))
+        .await
+        .unwrap();
+    if r.status() == reqwest::StatusCode::NOT_FOUND {
+        return None;
+    }
+    Some(r.error_for_status().unwrap().text().await.unwrap())
+}
+
+/// Every file under `dir`, relative, `/`-separated.
+fn tree(dir: &Path) -> Vec<String> {
+    fn walk(root: &Path, dir: &Path, out: &mut Vec<String>) {
+        for e in std::fs::read_dir(dir).unwrap().flatten() {
+            let p = e.path();
+            if p.is_dir() {
+                walk(root, &p, out);
+            } else {
+                let rel = p.strip_prefix(root).unwrap();
+                let parts: Vec<String> = rel
+                    .components()
+                    .map(|c| c.as_os_str().to_string_lossy().into_owned())
+                    .collect();
+                out.push(parts.join("/"));
+            }
+        }
+    }
+    let mut out = Vec::new();
+    walk(dir, dir, &mut out);
+    out.sort();
+    out
+}
+
 #[tokio::test]
 async fn a_magnet_through_each_service_comes_down_as_files() {
     for service in ServiceKind::ALL.into_iter().filter(|s| s.takes_magnets()) {
@@ -116,6 +161,92 @@ async fn a_magnet_through_each_service_comes_down_as_files() {
             log.iter().any(|e| e.contains("is downloading the torrent")),
             "{service:?}: {log:?}"
         );
+        if service == ServiceKind::RealDebrid {
+            assert_eq!(rd_selected(&lab, &id).await.as_deref(), Some("all"));
+        }
+    }
+}
+
+/// Files unticked in Add torrent stay at the service: only the ticked one comes down, in its
+/// place in the torrent's folder, and the download's size is its own. Real-Debrid is asked for
+/// that file alone (`selectFiles` with its id), so it doesn't fetch the others.
+#[tokio::test]
+async fn only_the_files_ticked_in_add_torrent_come_down() {
+    for service in ServiceKind::ALL.into_iter().filter(|s| s.takes_magnets()) {
+        for (ticked, size, rd_id) in [
+            ("extras/notes.txt", 64u64 << 10, "2"),
+            ("video.mkv", 2 << 20, "1"),
+        ] {
+            let (lab, d) = setup(service).await;
+            let dir = tempfile::tempdir().unwrap();
+            let (t, s) = run_with(&d, "1234abcd", dir.path(), Some(vec![ticked.into()])).await;
+            assert_eq!(
+                s.state,
+                State::Done,
+                "{service:?} {ticked}: {:?} {:?}",
+                s.error,
+                s.events
+            );
+            assert_eq!(
+                tree(dir.path()),
+                vec![format!("Lab Show/{ticked}")],
+                "{service:?}: only the ticked file"
+            );
+            let name = ticked.rsplit('/').next().unwrap();
+            let show = dir.path().join("Lab Show");
+            assert!(
+                same(
+                    &show.join(ticked),
+                    if size == 2 << 20 { "2M" } else { "64K" },
+                    name
+                ),
+                "{service:?}"
+            );
+            assert_eq!(s.file.as_deref(), Some(show.as_path()), "{service:?}");
+            assert_eq!(s.size, Some(size), "{service:?}: the ticked file's size");
+            assert_eq!(s.downloaded, size, "{service:?}");
+            let id = t.transfer().expect("sent");
+            assert!(!held(&lab).await.contains(&id), "{service:?}: removed");
+            if service == ServiceKind::RealDebrid {
+                assert_eq!(
+                    rd_selected(&lab, &id).await.as_deref(),
+                    Some(rd_id),
+                    "Real-Debrid asked for the ticked file only"
+                );
+            }
+        }
+    }
+}
+
+/// A ticked file the service's list doesn't hold (by its path): the download fails and says
+/// which, nothing is written, and Real-Debrid isn't asked for any file. Never every file instead.
+#[tokio::test]
+async fn a_ticked_file_the_service_doesnt_list_fails_rather_than_taking_all() {
+    for service in ServiceKind::ALL.into_iter().filter(|s| s.takes_magnets()) {
+        let (lab, d) = setup(service).await;
+        let dir = tempfile::tempdir().unwrap();
+        let (t, s) = run_with(
+            &d,
+            "1234abcd",
+            dir.path(),
+            Some(vec!["video.mkv".into(), "extras/missing.srt".into()]),
+        )
+        .await;
+        assert_eq!(s.state, State::Failed, "{service:?}: {:?}", s.events);
+        assert_eq!(
+            t.failure(),
+            Some(ServiceFault::ChosenFileMissing("extras/missing.srt".into())),
+            "{service:?}"
+        );
+        assert!(
+            s.error.unwrap_or_default().contains("extras/missing.srt"),
+            "{service:?}"
+        );
+        assert!(tree(dir.path()).is_empty(), "{service:?}: nothing written");
+        if service == ServiceKind::RealDebrid {
+            let id = t.transfer().expect("sent");
+            assert_eq!(rd_selected(&lab, &id).await, None, "nothing selected");
+        }
     }
 }
 
@@ -221,6 +352,7 @@ async fn a_stopped_torrent_continues_from_its_transfer() {
         transfer: None,
         folder: dir.path().to_owned(),
         renamed: None,
+        files: None,
         net: Options::default(),
         poll: Duration::from_millis(300),
     };

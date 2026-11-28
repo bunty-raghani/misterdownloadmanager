@@ -68,6 +68,7 @@
     video_compatible: "Most compatible",
     video_download_best: "Download best",
     video_all_qualities: "All qualities and subtitles...",
+    video_part: "Download a part from here...",
     video_looking: "Looking up the qualities…",
     video_no_choices: "No video to download here",
     video_playlist: "A list of videos: choose them in Mister Download Manager",
@@ -1207,6 +1208,7 @@ button:focus-visible { outline: none; }
   <div class="rows" role="group"></div>
   <div class="hr"></div>
   <button role="menuitem" data-act="window"><span class="mi"><svg viewBox="0 0 16 16" ${ICON} stroke-width="1.4"><path d="M2.5 4h11M2.5 8h11M2.5 12h7"/></svg></span><span></span></button>
+  <button role="menuitem" data-act="part"><span class="mi"><svg viewBox="0 0 16 16" ${ICON} stroke-width="1.4"><path d="M3.5 2.5v11M12.5 2.5v11M3.5 8h9M6 6l-2.5 2L6 10M10 6l2.5 2L10 10"/></svg></span><span></span></button>
   <div class="hr"></div>
   <button role="menuitem" data-act="hide"><span class="mi"><svg viewBox="0 0 16 16" ${ICON} stroke-width="1.4"><circle cx="8" cy="8" r="5.5"/><path d="M4.2 11.8l7.6-7.6"/></svg></span><span></span><span class="k">Esc</span></button>
   <button role="menuitem" data-act="never"><span class="mi"><svg viewBox="0 0 16 16" ${ICON} stroke-width="1.4"><circle cx="8" cy="8" r="5.5"/><path d="M2.5 8h11M8 2.5c2 2 2 9 0 11M8 2.5c-2 2-2 9 0 11"/></svg></span><span></span></button>
@@ -1238,6 +1240,7 @@ button:focus-visible { outline: none; }
   closeX.setAttribute("aria-label", t("video_hide_here"));
   menu.setAttribute("aria-label", idleLabel);
   item("window").lastElementChild.textContent = t("video_all_qualities");
+  item("part").lastElementChild.textContent = t("video_part");
   item("hide").children[1].textContent = t("video_hide_here");
   item("never").lastElementChild.textContent = ext.i18n.getMessage("video_never_site", [host]) || `Never on ${host}`;
   item("settings").lastElementChild.textContent = t("video_settings");
@@ -2238,7 +2241,7 @@ button:focus-visible { outline: none; }
     }
   });
 
-  async function download(row, toWindow = false) {
+  async function download(row, toWindow = false, part = null) {
     if (busy || !video) return;
     busy = true;
     try {
@@ -2257,7 +2260,8 @@ button:focus-visible { outline: none; }
         await startTelegramDownload(d.src, title);
         return;
       }
-      const j = { video, src: video.currentSrc || "", href: location.href, asked: { src: d.src, title, url: d.url, at: d.at }, row, toWindow };
+      const asked = { src: d.src, title, url: d.url, at: d.at, ...(part === null ? {} : { part }) };
+      const j = { video, src: video.currentSrc || "", href: location.href, asked, row, toWindow };
       const c = { v: video, d, key: lookKey(d) };
       let l = lookOf(c);
       setStatus({ state: "sending", text: t("video_sending") });
@@ -2318,6 +2322,13 @@ button:focus-visible { outline: none; }
   // Off on this site (its "Never on" chosen, or Options keep it off here): grey, with "Turn on".
   function offStatus() {
     setStatus({ state: "off", text: t("video_off"), acts: [["on", t("video_turn_on")]] }, 6000);
+  }
+
+  // Where a part starts when "Download a part from here..." is chosen (#1662): the player's time
+  // now, in whole seconds; 0 for a video not played yet or one whose time can't be read.
+  function partFrom(v) {
+    const now = Number(v && v.currentTime);
+    return Number.isFinite(now) && now > 0 ? Math.floor(now) : 0;
   }
 
   // The click as it always was: the app's Download video window for this video, once per click;
@@ -2554,6 +2565,8 @@ button:focus-visible { outline: none; }
 
   async function run(act) {
     if (act === "window") return download(null, true);
+    // #1662: the app's window with Part ticked, From where the video is now.
+    if (act === "part") return download(null, true, partFrom(video));
     closeMenu();
     if (act === "hide") return hideHere();
     if (act === "never") {

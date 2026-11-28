@@ -116,6 +116,18 @@
   "popup_fix": {
     "message": "Com solucionar-ho"
   },
+  "popup_by_hand": {
+    "message": "Aquesta còpia s'ha carregat manualment i no s'actualitzarà automàticament."
+  },
+  "popup_by_hand_firefox": {
+    "message": "Aquesta còpia s’ha carregat manualment: no s’actualitzarà automàticament i el navegador la suprimirà quan es reiniciï."
+  },
+  "popup_store_chrome": {
+    "message": "Afegeix-la des de la Chrome Web Store"
+  },
+  "popup_store_firefox": {
+    "message": "Afegeix-la des d'addons.mozilla.org"
+  },
   "popup_declined": {
     "message": "Deixat al navegador: $name$",
     "placeholders": {
@@ -319,6 +331,9 @@
   },
   "video_all_qualities": {
     "message": "Totes les qualitats i subtítols..."
+  },
+  "video_part": {
+    "message": "Baixa una part des d'aquí..."
   },
   "video_failed": {
     "message": "Mister Download Manager no està instal·lat o no s'ha iniciat"

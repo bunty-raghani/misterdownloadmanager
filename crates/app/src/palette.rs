@@ -312,6 +312,10 @@ palette! {
     caption_close: "caption.close", "Close under the pointer" = rgb(0xc4, 0x2b, 0x1c), rgb(0xc4, 0x2b, 0x1c);
     caption_close_text: "caption.close.text", "Close's glyph under the pointer" = grey(0xff), grey(0xff);
     caption_inactive: "caption.inactive", "A title bar MDM draws, while its window isn't the active one (transparent: as when active)" = Color32::TRANSPARENT, Color32::TRANSPARENT;
+    caption_button_inactive: "caption.button.inactive", "A caption button at rest while the window isn't the active one, where the style shows one (transparent: the button's own, faded into the bar)" = Color32::TRANSPARENT, Color32::TRANSPARENT;
+    caption_close_inactive: "caption.close.inactive", "Close at rest while the window isn't the active one, where the style shows its face (transparent: its own, faded into the bar)" = Color32::TRANSPARENT, Color32::TRANSPARENT;
+    caption_glyph_inactive: "caption.glyph.inactive", "The caption buttons' symbols while the window isn't the active one, where the style shows a face (transparent: their own, faded)" = Color32::TRANSPARENT, Color32::TRANSPARENT;
+    caption_edge_inactive: "caption.edge.inactive", "The caption buttons' edge while the window isn't the active one, where the style draws one (transparent: as when active)" = Color32::TRANSPARENT, Color32::TRANSPARENT;
     // ---- other ----
     drop_edge: "drop-target.edge", "The drop target's edge at rest" = grey(0x8d), grey(0x8d);
     // ---- egui's own widgets (tooltips, multi-line boxes' scroll bars) ----
@@ -541,7 +545,8 @@ pub enum CaptionLook {
     /// colour under the pointer (Close red), their glyph then the bar's.
     Breeze,
     /// Windows XP: a shaded bar, the title in bold with a shadow, square buttons with a light
-    /// edge (Close always red).
+    /// edge and XP's own symbols (Close always red; while the window isn't the active one,
+    /// `caption.button.inactive` and the other inactive roles where the theme sets them).
     Luna,
     /// Windows 7: a glassy bar, the title on a soft glow, glossy buttons hung from the bar's
     /// top (Close wider and red).
@@ -992,8 +997,30 @@ mod tests {
         assert_eq!(luna.controls.header, HeaderLook::Luna);
         assert_eq!(luna.controls.ui_font, UiFont::Tahoma);
         assert!(luna.light.connections.a() > 0);
+        // Its title bar's buttons while the window isn't the active one: XP's own faces, edge
+        // and solid glyphs, the glyphs seen on both faces (3:1, WCAG's non-text contrast).
+        for p in [&luna.light, &luna.dark] {
+            assert_eq!(p.caption_glyph_inactive.a(), 255, "{}", p.dark);
+            assert_eq!(p.caption_edge_inactive.a(), 255, "{}", p.dark);
+            for face in [p.caption_button_inactive, p.caption_close_inactive] {
+                assert_eq!(face.a(), 255, "{}", p.dark);
+                let r = contrast(p.caption_glyph_inactive, face);
+                assert!(r >= 3.0, "luna {}: inactive glyph {r:.2}", p.dark);
+            }
+        }
         for t in builtins() {
             if t.id != "luna" {
+                // The other themes' inactive buttons keep their own, faded into the bar.
+                for p in [&t.light, &t.dark] {
+                    for c in [
+                        p.caption_button_inactive,
+                        p.caption_close_inactive,
+                        p.caption_glyph_inactive,
+                        p.caption_edge_inactive,
+                    ] {
+                        assert_eq!(c, Color32::TRANSPARENT, "{} {}", t.id, p.dark);
+                    }
+                }
                 assert_eq!(t.controls.header, HeaderLook::Flat, "{}", t.id);
                 assert_eq!(t.controls.ui_font, UiFont::System, "{}", t.id);
                 assert_ne!(t.controls.scroll, ScrollLook::Luna, "{}", t.id);

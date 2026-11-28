@@ -116,6 +116,18 @@
   "popup_fix": {
     "message": "Hogyan javítható"
   },
+  "popup_by_hand": {
+    "message": "Ezt a másolatot manuálisan töltötték be, és nem frissül automatikusan."
+  },
+  "popup_by_hand_firefox": {
+    "message": "Ez a másolat kézzel lett betöltve: nem frissül magától, és a böngésző újraindításkor eltávolítja."
+  },
+  "popup_store_chrome": {
+    "message": "Hozzáadás a Chrome Web Store-ból"
+  },
+  "popup_store_firefox": {
+    "message": "Hozzáadás az addons.mozilla.org webhelyről"
+  },
   "popup_declined": {
     "message": "Böngészőnek meghagyva: $name$",
     "placeholders": {
@@ -319,6 +331,9 @@
   },
   "video_all_qualities": {
     "message": "Minden minőség és felirat..."
+  },
+  "video_part": {
+    "message": "Rész letöltése innen..."
   },
   "video_failed": {
     "message": "Az Mister Download Manager nincs telepítve, vagy nem indult el"

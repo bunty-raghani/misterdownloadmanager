@@ -11,6 +11,11 @@
 #. {n} = a number (keep the braces as they are)
 #, machine
 @plural	An unknown site wants to send {n} link to Link grabber.|An unknown site wants to send {n} links to Link grabber.	Situs yang tidak dikenal ingin mengirim {n} tautan ke Link grabber.
+#. count in traypanel.rs
+#. the notification-area icon's panel (#1365), under the downloads it lists: how many others are running; {n} a number
+#. {n} = a number (keep the braces as they are)
+#, machine
+@plural	And {n} more|And {n} more	Dan {n} lainnya
 #. count in torrent downloads
 #. number of additional files in a list of files
 #. {n} = a number (keep the braces as they are)
@@ -46,6 +51,11 @@
 #. Cancel in Download File Info with downloads waiting behind it
 #. {n} = a number (keep the braces as they are)
 @plural	There is {n} more download waiting. Cancel it too?|There are {n} more downloads waiting. Cancel them too?	Ada {n} unduhan lagi yang menunggu. Batalkan juga?
+#. count in a dialog box
+#. under "Also delete the files from disk", while it is ticked: how many of the downloads being deleted are finished, whose complete files are deleted from the disk too
+#. {n} = a number (keep the braces as they are)
+#, machine
+@plural	This also deletes {n} finished file.|This also deletes {n} finished files.	Ini juga menghapus {n} file yang sudah selesai.
 #. count in a dialog box
 #. under the first failed downloads in the summary of a group of downloads: {n} more failed (Show in list shows them all)
 #. {n} = a number (keep the braces as they are)
@@ -221,6 +231,14 @@
 #. text in the settings
 #. Options → DNS: the NextDNS configuration ID typed isn't one
 	A NextDNS configuration ID is six letters and digits (0-9, a-f).	ID konfigurasi NextDNS adalah enam huruf dan digit (0-9, a-f).
+#. text in the Download video window
+#. why "Embed chapters" (and the subtitles) are greyed in Download video: only a part of the video is downloaded, and its chapters and subtitles would be the whole video's
+#, machine
+	A part is saved without the video's chapters and subtitles	Bagian disimpan tanpa bab dan subtitel video
+#. text in the Download video window
+#. why Part is greyed in Download video: the page is a playlist, whose videos are downloaded whole
+#, machine
+	A playlist's videos are downloaded whole	Video dalam daftar putar diunduh secara utuh
 #. text in the Options window
 #. Options → Sites Logins → Cookies for video sites: the tooltip of the profile box
 	A profile's name or its folder. Empty: the profile used last. For a browser built on Chromium that isn't listed (Helium, Thorium...), choose Chromium and its profile's folder.	Nama profil atau foldernya. Kosong: profil yang terakhir digunakan. Untuk browser berbasis Chromium yang tidak terdaftar (Helium, Thorium...), pilih Chromium dan folder profilnya.
@@ -255,6 +273,7 @@
 #. a download's server's round trip: {ms} a number of milliseconds, {reach} near, medium or far
 	about {ms} ms ({reach})	sekitar {ms} ms ({reach})
 #. text in the Download video window
+#. in Download video beside the part's From and To: the part's size, estimated from the whole video's; {size} is "12.3 MB"
 #. a file size that is only an estimate, as a screen reader says it in the Download video window's list of qualities; {size} is "532 MB"
 #. {size} = a file size such as "4.2 MB" (keep the braces as they are)
 	about {size}	sekitar {size}
@@ -399,6 +418,9 @@
 #. text in the Download video window
 #. in the Subtitles list of Download video: every language the video's uploader gave
 	All the uploader's	Semua milik pengunggah
+#. text in helpers.rs
+#, machine
+	All three are open source. MDM gets them from their official releases with its own downloader and checks each file's signature before it runs. About 140 MB, once.	Ketiganya adalah sumber terbuka. MDM mendapatkannya dari rilis resmi mereka dengan pengunduh sendiri dan memeriksa tanda tangan setiap file sebelum dijalankan. Sekitar 140 MB, sekali.
 #. text in cnl.rs
 #. button in the Click'n'Load window: let this site send links (remembered)
 #, machine
@@ -536,6 +558,7 @@
 #. the trailing ... means it is still going on: keep it
 	Asking the service...	Meminta layanan...
 #. text in the Options window
+#. Options → Proxy / Socks: Test is running
 #. Options → DNS settings: the test is running
 #. the trailing ... means it is still going on: keep it
 	Asking...	Menanyakan...
@@ -686,7 +709,7 @@
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Canada	Kanada
-#. button in the Batch download window; button in categories.rs; text in the Checksum window; button in a dialog box; button in extracting archives (a download's log, the Archive password window); button in the Find window; button in gallerydlg.rs; text in the Link grabber window; text in the Help menu's windows (About, updates, shortcuts, Tell a friend); button in langpick.rs; button in the Options window; button in a download's progress window; text in remote.rs; button in the Scheduler window; button in the Add torrent window; button in the Download video window
+#. button in the Batch download window; button in categories.rs; text in the Checksum window; button in a dialog box; button in extracting archives (a download's log, the Archive password window); button in the Find window; button in gallerydlg.rs; text in the Link grabber window; text in the Help menu's windows (About, updates, shortcuts, Tell a friend); button in langpick.rs; button in the Options window; button in a download's progress window; text in remote.rs; button in the Scheduler window; button in the Add torrent window; button in traypanel.rs; button in the Download video window
 #. button: stop downloading the update
 	Cancel	Batal
 #. text in errors.rs
@@ -759,6 +782,10 @@
 #. text in helpers.rs
 	Check your connection, then try again, or get them later from the video window.	Periksa koneksi Anda, lalu coba lagi, atau dapatkan nanti dari jendela video.
 #. text in the Options window
+#. tooltip of "Show downloads when the notification area icon is clicked": what the click on MDM's tray icon does when it is ticked and when not
+#, machine
+	Checked, a click on MDM's icon shows what is downloading, with Pause and Cancel, and a double click opens the window; unchecked, a click shows or hides the window	Jika dicentang, mengeklik ikon MDM akan menampilkan apa yang sedang diunduh, dengan Jeda dan Batal, dan mengeklik dua kali akan membuka jendela; jika tidak dicentang, mengeklik akan menampilkan atau menyembunyikan jendela
+#. text in the Options window
 #. tooltip of the close-setting: checked keeps MDM running when the window closes, in the notification area when available or else the taskbar; downloads continue; unchecked closing quits
 	Checked, closing the window keeps MDM running: it hides in the notification area when available, or minimizes to the taskbar otherwise, and downloads continue; unchecked, closing quits MDM	Jika dicentang, menutup jendela akan membuat MDM tetap berjalan: MDM akan disembunyikan di area notifikasi jika tersedia, atau diminimalkan ke bilah tugas, dan unduhan akan terus berjalan; jika tidak dicentang, menutup jendela akan keluar dari MDM
 #. text in the Options window
@@ -809,6 +836,9 @@
 #. text in remote.rs
 #. remote control page (on a phone): what the ".torrent file" button does (screen readers)
 	Choose a .torrent file	Pilih file .torrent
+#. text in helpers.rs
+#, machine
+	Choose a JavaScript runtime (Node.js, Deno, QuickJS or Bun)	Pilih runtime JavaScript (Node.js, Deno, QuickJS, atau Bun)
 #. text in langpick.rs
 	Choose a language	Pilih bahasa
 #. text in langpick.rs
@@ -816,7 +846,8 @@
 #. text in the Options window
 #. Options → Sites Logins → Cookies for video sites: the title of the window, and the tooltip of the button, that pick a browser profile's folder
 	Choose the profile's folder	Pilih folder profil
-#. text in helpers.rs
+#. text in helpers.rs; text in the Options window
+#. file picker title; {name} = the program to choose (yt-dlp, ffmpeg, 7-Zip)
 #. {name} = a file name (keep the braces as they are)
 	Choose {name}	Pilih {name}
 #. text in countries.rs
@@ -847,7 +878,7 @@
 	Clipboard	Papan klip
 #. text in the Options window
 	Clock:	Jam:
-#. text in the Checksum window; text in the main window (menus, toolbar, Categories pane); button in crashui.rs; button in a dialog box; button in extension.rs; button in the Help menu's windows (About, updates, shortcuts, Tell a friend); button in helpers.rs; button in the download list; button in the Options window; button in rssdlg.rs; button in torrentfiles.rs; text in standard windows
+#. text in the Checksum window; text in the main window (menus, toolbar, Categories pane); button in crashui.rs; button in a dialog box; button in extension.rs; button in the Help menu's windows (About, updates, shortcuts, Tell a friend); button in helpers.rs; button in the download list; button in the Options window; button in rssdlg.rs; button in torrentfiles.rs; text in traypanel.rs; text in standard windows
 #. both verbs: Verify = check the file now; Close = close the window
 #. tooltip of the × that closes the Categories pane
 #. verb: closes this window
@@ -1007,7 +1038,7 @@
 #. text in the Options window
 #. a date's order: day first (30/10/2026)
 	Day, month, year	Hari, bulan, tahun
-#. page title in the Options window
+#. page title in the Options window; text in the Options window
 	Debrid service accounts	Akun layanan debrid
 #. text in the Scheduler window
 	December	Desember
@@ -1202,16 +1233,15 @@
 #. message or event log entry in the main window
 	Downloading again from the start	Mengunduh lagi dari awal
 #. text in the Download video window
-#. in Download video: MDM downloads Deno (a program's name) and checks it against its published checksum
-#. the trailing ... means it is still going on: keep it
-#, machine
-	Downloading and verifying Deno (about 40 MB)...	Mengunduh dan memverifikasi Deno (sekitar 40 MB)...
-#. text in the Download video window
 #. the trailing ... means it is still going on: keep it
 	Downloading and verifying ffmpeg (about 80 MB)...	Mengunduh dan memverifikasi ffmpeg (sekitar 80 MB)...
 #. text in gallerydlg.rs
 #. the trailing ... means it is still going on: keep it
 	Downloading and verifying gallery-dl...	Mengunduh dan memverifikasi gallery-dl...
+#. text in the Download video window
+#. the trailing ... means it is still going on: keep it
+#, machine
+	Downloading and verifying Node.js (40 to 60 MB)...	Mengunduh dan memverifikasi Node.js (40 hingga 60 MB)...
 #. text in the Download video window
 #. the trailing ... means it is still going on: keep it
 	Downloading and verifying yt-dlp...	Mengunduh dan memverifikasi yt-dlp...
@@ -1227,7 +1257,7 @@
 #, machine
 	Downloading the update... {percent}%	Mengunduh pembaruan... {percent}%
 #. text in helpers.rs
-#. {name} = yt-dlp or ffmpeg; {n} of {total} = which helper of how many; {percent} = how far, e.g. 45%
+#. {name} = yt-dlp, ffmpeg or Node.js; {n} of {total} = which helper of how many; {percent} = how far, e.g. 45%
 #. {name} = a file name; {n} = a number (keep the braces as they are)
 	Downloading {name} ({n} of {total})... {percent}	Mengunduh {name} ({n} dari {total})... {percent}
 #. text in the download list; text in the Options window
@@ -1240,8 +1270,13 @@
 #. Windows' Settings → Default apps: what Mister Download Manager is
 #, machine
 	Downloads files, videos and torrents	Mengunduh file, video, dan torrent
-#. text in the tray icon's menu
+#. message or event log entry in the main window
+#. the notice shown once, the first time a download comes from a browser's private (incognito) window: it stays in MDM's list like any other, after a restart too; where to turn that off. {options} = the Options window, {general} = its General tab, {checkbox} = the checkbox "Keep private-window downloads in the list"
+#, machine
+	Downloads from a browser's private window stay in MDM's list like any other, also after MDM restarts; their cookies are never saved. To keep them in memory only, untick {options} → {general} → {checkbox}.	Unduhan dari jendela pribadi browser tetap ada di daftar MDM seperti yang lain, juga setelah MDM dimulai ulang; cookie-nya tidak pernah disimpan. Untuk menyimpannya hanya di memori, hapus centang {options} → {general} → {checkbox}.
+#. text in the tray icon's menu; text in traypanel.rs
 #. tray menu: a submenu of the downloads now running; choosing one shows its progress window
+#. the notification-area icon's panel (#1365): its title, over the downloads now running (also the tray menu's submenu)
 	Downloads in progress	Unduhan sedang berlangsung
 #. text in a dialog box
 #. {time} = a time of day (keep the braces as they are)
@@ -1366,6 +1401,10 @@
 	Every local network address	Setiap alamat jaringan lokal
 #. what a keyboard shortcut does in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 	Everything at its normal size (100%)	Semuanya dalam ukuran normal (100%)
+#. text in the Download video window
+#. choice in Download video's Part: the part is encoded again so it starts and ends exactly at From and To (slower)
+#, machine
+	Exact cut, encoded again	Potongan tepat, dikodekan ulang
 #. text in the Options window
 #. label before an example date and time written the chosen way
 	Example:	Contoh:
@@ -1430,6 +1469,10 @@
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Faroe Islands	Kepulauan Faroe
+#. text in the Download video window
+#. tooltip of "Quick cut, at keyframes" in Download video: what it does
+#, machine
+	Fast: the streams are copied as they are, so the part may start a little before From	Cepat: aliran disalin apa adanya, sehingga bagian mungkin dimulai sedikit sebelum Dari
 #. text in the Scheduler window
 	February	Februari
 #. text in rssdlg.rs
@@ -1495,6 +1538,10 @@
 #. button in the Find window
 #. verb: button that starts the search
 	Find	Cari
+#. text in the Options window
+#. Options → Archives: button, shown once a 7-Zip program was chosen with "Use another program...": go back to the 7-Zip MDM finds on the computer by itself
+#, machine
+	Find 7-Zip automatically	Cari 7-Zip secara otomatis
 #. what a keyboard shortcut does in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 	Find a download	Temukan unduhan
 #. message or event log entry in the main window; window title in the Find window
@@ -1593,6 +1640,14 @@
 #. message or event log entry in the main window
 #. where a download came from, in its log: a playlist or channel, by yt-dlp
 	from a playlist (yt-dlp)	dari daftar putar (yt-dlp)
+#. text in the download list (sizes, speeds, status)
+#. tooltip of the mark (a mask) before a download's status in the list: it came from a browser's private (incognito) window, and it is in memory only, gone from the list when MDM closes
+#, machine
+	From a private window: in memory only, gone from the list when MDM closes	Dari jendela pribadi: hanya di memori, hilang dari daftar saat MDM ditutup
+#. text in the download list (sizes, speeds, status)
+#. tooltip of the mark (a mask) before a download's status in the list: it came from a browser's private (incognito) window, and MDM's list keeps it after a restart (Options → General → Keep private-window downloads in the list)
+#, machine
+	From a private window: kept in the list	Dari jendela pribadi: disimpan dalam daftar
 #. message or event log entry in the main window
 	from a torrent file	dari file torrent
 #. option (radio button) in the Options window
@@ -1605,6 +1660,10 @@
 	from the browser	dari browser
 #. message or event log entry in the main window
 	from the command line	dari baris perintah
+#. text in the Download video window
+#. in Download video after "Only a part": {from} and {to} are boxes where times are typed (1:30, 1:02:03), drawn where they stand in the translation
+#, machine
+	from {from} to {to}	dari {from} hingga {to}
 #. text in the Batch download window
 	From:	Dari:
 #. checkbox in the Options window
@@ -1636,7 +1695,7 @@
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Gambia	Gambia
-#. text in the download list (sizes, speeds, status); text in the Options window; text in a download's progress window
+#. message or event log entry in the main window; text in the download list (sizes, speeds, status); text in the Options window; text in a download's progress window
 #. category name: files of no particular kind
 #. tab title: general settings
 #. tab title: general information
@@ -1833,10 +1892,6 @@
 #. in the "7-Zip needed" window, under why
 	Install 7-Zip (free), then right-click the download and choose Extract.	Instal 7-Zip (gratis), lalu klik kanan unduhan dan pilih Ekstrak.
 #. text in the Download video window
-#. button in Download video: download and install Deno, the JavaScript runtime YouTube needs (Deno is a program's name)
-#, machine
-	Install Deno	Instal Deno
-#. text in the Download video window
 #. button: download and install the ffmpeg program
 	Install ffmpeg	Instal ffmpeg
 #. button in gallerydlg.rs
@@ -1845,6 +1900,10 @@
 #. link (opens a web page) in extension.rs
 #. link in the browser extension's window: the tutorial that adds it without the browser's store
 	Install it by hand	Instalasi manual
+#. text in the Download video window
+#. button in Download video: download and install Node.js, the JavaScript runtime YouTube needs (Node.js is a program's name)
+#, machine
+	Install Node.js	Instal Node.js
 #. text in unix.rs
 #. Linux, after a missing library's name, on a distribution MDM doesn't know
 	Install what's missing from your distribution's packages.	Instal komponen yang belum tersedia dari paket distribusi Anda.
@@ -1945,9 +2004,9 @@
 #. a country's name (where a download's server is)
 	Japan	Jepang
 #. text in helpers.rs
-#. Video helpers: the row of the JavaScript runtime yt-dlp needs for YouTube (Deno is a program's name)
+#. Video helpers: the row of the JavaScript runtime (Node.js, Deno...) yt-dlp needs for YouTube's videos
 #, machine
-	JavaScript runtime (Deno)	Runtime JavaScript (Deno)
+	JavaScript runtime (for YouTube)	Runtime JavaScript (untuk YouTube)
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Jersey	Jersey
@@ -1966,10 +2025,10 @@
 #. text in a dialog box; text in a download's progress window; text in the Add torrent window
 	KBytes/sec	KB/dtk
 #. text in helpers.rs
-#. Helpers: checkbox: MDM checks for and installs newer versions of its own yt-dlp, ffmpeg, gallery-dl and Deno by itself
+#. Helpers: checkbox: MDM checks for and installs newer versions of its own yt-dlp, ffmpeg, gallery-dl and Node.js by itself
 #, machine
 	Keep MDM's helpers up to date automatically	Perbarui pembantu MDM secara otomatis
-#. text in the Options window
+#. message or event log entry in the main window; text in the Options window
 #. checkbox: downloads started from a browser's private (incognito) window are saved in MDM's download list like any other, so they are still there after MDM restarts
 #, machine
 	Keep private-window downloads in the list	Simpan unduhan dari jendela pribadi dalam daftar
@@ -2124,6 +2183,11 @@
 #. tooltip (why a control is greyed) in the Download video window
 #. why Download Now is greyed: the page address was changed after the look-up
 	Look up the new address first	Cari alamat baru terlebih dahulu
+#. text in helpers.rs
+#. Video helpers: MDM is asking the JavaScript runtimes on the computer (Node.js, Deno...) for their versions, to see which one yt-dlp can use
+#. the trailing ... means it is still going on: keep it
+#, machine
+	Looking for a JavaScript runtime on this computer...	Mencari runtime JavaScript di komputer ini...
 #. text in the Add torrent window
 #. while a magnet link's file list is fetched, before any peer is found
 #. the trailing ... means it is still going on: keep it
@@ -2256,13 +2320,13 @@
 #. the trailing ... means it is still going on: keep it
 	MDM does not answer. Trying again...	MDM tidak menjawab. Mencoba lagi...
 #. text in helpers.rs
-#. Video helpers: MDM can't download Deno on this system (32-bit Windows, an unusual processor); Deno and Node.js are program names
-#, machine
-	MDM has no copy for this system: install Deno or Node.js	MDM tidak memiliki salinan untuk sistem ini: instal Deno atau Node.js
-#. text in helpers.rs
 #. Video helpers: MDM can't download this helper on this Windows (ffmpeg on 32-bit Windows); "Use another program" is the button below
 #, machine
 	MDM has no copy for this system: install it, or use another program	MDM tidak memiliki salinan untuk sistem ini: instal, atau gunakan program lain
+#. text in helpers.rs
+#. Video helpers: MDM can't download Node.js on this system (an unusual processor); Node.js and Deno are program names; "Use another program" is the button below
+#, machine
+	MDM has no copy for this system: install Node.js or Deno, or use another program	MDM tidak memiliki salinan untuk sistem ini: instal Node.js atau Deno, atau gunakan program lain
 #. text in remote.rs
 #. remote control page (on a phone): no pairing code is shown in MDM; "Pair a device" is MDM's button
 	MDM shows no code now. Click Pair a device there first.	MDM tidak menampilkan kode sekarang. Klik Pasangkan perangkat di sana terlebih dahulu.
@@ -2525,6 +2589,10 @@
 	No day is ticked: the queue will not start	Tidak ada hari yang dicentang: antrean tidak akan dimulai
 #. message or event log entry in the main window
 	No download links were found in the clipboard. Copy a text with http, https, ftp or magnet links in it, and try again.	Tidak ada tautan unduhan yang ditemukan di papan klip. Salin teks dengan tautan http, https, ftp, atau magnet di dalamnya, lalu coba lagi.
+#. text in traypanel.rs
+#. the notification-area icon's panel (#1365) when no download is running
+#, machine
+	No downloads are running	Tidak ada unduhan yang berjalan
 #. message or event log entry in the main window
 #. title in the empty download list (this category or queue has no downloads)
 	No downloads here	Tidak ada unduhan di sini
@@ -2582,6 +2650,10 @@
 	No video this can download on that page	Tidak ada video yang dapat diunduh di halaman tersebut
 #. message or event log entry in the main window
 	No web addresses were found in {file}.	Tidak ada alamat web yang ditemukan di {file}.
+#. text in helpers.rs
+#. helper name and what it does (Node.js and YouTube are names)
+#, machine
+	Node.js: unlocks YouTube's qualities	Node.js: membuka kualitas YouTube
 #. text in the Options window; text in the Download video window
 #. in the Subtitles list of Download video: download no subtitles
 	None	Tidak ada
@@ -2725,6 +2797,10 @@
 	Only a finished download, or one not started yet, can be moved	Hanya unduhan yang selesai, atau yang belum dimulai, yang dapat dipindahkan
 #. message or event log entry in the main window
 	Only a finished download, or one not started yet, can be moved. Stop it and finish it first.	Hanya unduhan yang selesai, atau yang belum dimulai, yang dapat dipindahkan. Hentikan dan selesaikan terlebih dahulu.
+#. text in the Download video window
+#. checkbox in Download video: download only a part of the video or sound; the From and To boxes follow it
+#, machine
+	Only a part	Hanya sebagian
 #. text in the Scheduler window
 #. the Scheduler, under "Wake the computer to run this queue" (Linux): the computer's wake alarm can be set by an administrator only
 	Only an administrator can allow this	Hanya administrator yang dapat mengizinkan ini
@@ -2738,6 +2814,10 @@
 #. in Download video, a list longer than MDM lists: only its first {n} videos are shown
 #. {n} = a number (keep the braces as they are)
 	Only the first {n} videos are listed.	Hanya {n} video pertama yang tercantum.
+#. message or event log entry in the main window
+#. event log: a torrent through a debrid account gets only the files ticked in Add torrent; {files} how many ("3")
+#, machine
+	Only the {files} file(s) ticked in Add torrent	Hanya {files} file yang dicentang di Tambah torrent
 #. checkbox in a dialog box
 	Only while I'm using the computer	Hanya saat saya menggunakan komputer
 #. button in a dialog box; text in a dialog box; button in a download's Properties window; button in torrentfiles.rs
@@ -2757,7 +2837,8 @@
 	Open in browser	Buka di browser
 #. checkbox in the Add torrent window
 	Open magnet links and .torrent files with Mister Download Manager	Buka tautan magnet dan file .torrent dengan Mister Download Manager
-#. text in the tray icon's menu
+#. text in the tray icon's menu; text in traypanel.rs
+#. the notification-area icon's panel (#1365): its button that opens the main window (also the tray menu's first item)
 	Open Mister Download Manager	Buka Mister Download Manager
 #. text in extension.rs
 #. step 2 of turning on the Safari extension; Cmd is the Command key
@@ -2784,7 +2865,7 @@
 #. button in a dialog box
 #. the trailing ... means it opens a window: keep it
 	Open with...	Buka dengan...
-#. text in the tray icon's menu
+#. message or event log entry in the main window; text in the tray icon's menu
 #. plural noun: opens the Options window (settings)
 	Options	Opsi
 #. text in a download's progress window
@@ -2839,6 +2920,10 @@
 #. text in countries.rs
 #. a country's name (where a download's server is)
 	Paraguay	Paraguay
+#. text in the Download video window
+#. label in Download video before the choice to download only a part of the video or sound (from one time to another)
+#, machine
+	Part	Bagian
 #. text in the Batch download window; text in a dialog box; label in the Options window; text in the Options window; text in a download's Properties window
 	Password	Kata Sandi
 #. text in the Link grabber window; text in the Options window
@@ -2930,6 +3015,10 @@
 #. text in a dialog box
 #. tooltip of the greyed Preview button in Download File Info
 	Preview isn't available yet	Pratinjau belum tersedia
+#. message or event log entry in the main window
+#. title of the notice shown once, the first time a download comes from a browser's private (incognito) window
+#, machine
+	Private-window downloads	Unduhan jendela pribadi
 #. text in the Download video window
 #. a private-window video's authentication failure: only cookies supplied by that private window may be used, even after restarting MDM
 #, machine
@@ -2984,6 +3073,10 @@
 #. item in the Categories tree in the main window; text in the Scheduler window
 #. plural noun: the download queues
 	Queues	Antrean
+#. text in the Download video window
+#. choice in Download video's Part: cut where the video has a keyframe, the streams copied as they are (fast; it may start a little before From)
+#, machine
+	Quick cut, at keyframes	Potongan cepat pada keyframe
 #. text in the Options window
 #. Options → Sites Logins → Cookies for video sites: a note under the choices
 	Read on this computer only, and sent only to the video's site.	Hanya dibaca di komputer ini, dan hanya dikirim ke situs video.
@@ -3332,6 +3425,10 @@
 #. checkbox in the Options window
 #, machine
 	Show download progress dialog when a download starts	Tampilkan dialog kemajuan unduhan saat unduhan dimulai
+#. text in the Options window
+#. checkbox: a click on MDM's icon in the notification area (system tray) shows a small panel over it with the downloads now running, their progress, Pause and Cancel; unticked, the click shows or hides the main window
+#, machine
+	Show downloads when the notification area icon is clicked	Tampilkan unduhan saat ikon area notifikasi diklik
 #. button in a dialog box
 #. button: shows these downloads in MDM's list, selected
 	Show in list	Tampilkan dalam daftar
@@ -3559,6 +3656,10 @@
 #. text in helpers.rs
 #. the trailing ... means it is still going on: keep it
 	Starting...	Memulai...
+#. text in the Download video window
+#. tooltip of "Exact cut, encoded again" in Download video: what it does
+#, machine
+	Starts and ends exactly at From and To: ffmpeg encodes the part again, which takes longer	Dimulai dan diakhiri tepat pada Dari dan Hingga: ffmpeg mengodekan ulang bagian tersebut, yang membutuhkan waktu lebih lama
 #. text in the Options window
 #. column title: the account's state (premium, days left)
 	State	Status
@@ -3696,6 +3797,14 @@
 #. text in the Batch download window
 #. why Batch download's OK is greyed
 	That is more than 100,000 files: make the range smaller	Itu lebih dari 100.000 file: perkecil rentang
+#. text in the Options window
+#. Options → Archives, in red: the program chosen with "Use another program..." isn't 7-Zip's command line program (an archiver's window was picked instead); 7z.exe is that program's file name
+#, machine
+	That isn't 7-Zip's command line program (7z.exe).	Itu bukan program baris perintah 7-Zip (7z.exe).
+#. text in the Download video window
+#. why Download Now is greyed in Download video: Part's times are the whole video's (untick Only a part to download it whole)
+#, machine
+	That's the whole video: change From or To, or untick Only a part	Ini adalah keseluruhan video: ubah Dari atau Hingga, atau hapus centang Hanya sebagian
 #. text in torrent downloads
 #. an error: the copy of the .torrent file the app keeps is missing
 	the .torrent file kept for it is gone	file .torrent yang disimpan untuknya telah hilang
@@ -3945,6 +4054,10 @@
 #. Options → Accounts: the service doesn't say whether the account is premium (Mega-Debrid, signed in with an API key); a free account's links are refused when downloading
 #, machine
 	the service doesn't say whether it is premium	layanan tidak menyebutkan apakah akun ini premium
+#. tooltip (why a control is greyed) in the Download video window
+#. why Part is greyed in Download video: the site doesn't say how long the video is (a live stream, for one)
+#, machine
+	The site doesn't say how long this video is	Situs tidak menyebutkan durasi video ini
 #. text in errors.rs
 #. why a download failed (#701): a file host answered with its own web page (a countdown before the link, a captcha, a sign-in) where the file was expected. The browser gets past it; MDM's browser extension then hands the real file back to MDM
 	the site sent a web page instead of the file (a waiting page, a captcha or a sign-in): open the link in your browser, finish there, and the download comes back to MDM	situs mengirim halaman web alih-alih file (halaman tunggu, captcha, atau masuk): buka tautan di browser Anda, selesaikan di sana, dan unduhan akan kembali ke MDM
@@ -4140,6 +4253,7 @@
 	This name is reserved by Windows	Nama ini dicadangkan oleh Windows
 #. tooltip (why a control is greyed) in the Download video window
 #. why "Embed chapters" is greyed: ffmpeg (a helper program) is not installed
+#. why Part is greyed in Download video: ffmpeg (a helper program) is not installed
 #. why "Put them into the video" is greyed: ffmpeg (a helper program) is not installed
 	This needs ffmpeg	Ini memerlukan ffmpeg
 #. text in the Add torrent window
@@ -4194,6 +4308,9 @@
 #. a download's error: the address is a site's web page that needs a browser, not the file; {site} = the site's name (gofile)
 #. {site} = a web site's name such as "example.com" (keep the braces as they are)
 	this {site} link is a web page, not the file: open it in your browser and download from there	tautan {site} ini adalah halaman web, bukan file: buka di browser Anda dan unduh dari sana
+#. text in helpers.rs
+#, machine
+	Three free helpers make it work. Get them now, and saving a video is one click away when you find one.	Tiga pembantu gratis membuatnya berfungsi. Dapatkan sekarang, dan menyimpan video hanya dengan satu klik saat Anda menemukannya.
 #. text in whereis.rs
 #. where a download's server is, when a proxy carries it (the proxy's place not known)
 	through a proxy	melalui proksi
@@ -4219,6 +4336,14 @@
 #. text in unix.rs
 #. Linux, after a missing library's name: {command} = the terminal command that installs it ("sudo apt install libxkbcommon-x11-0"), left as it is
 	To install what's missing: {command}	Untuk menginstal komponen yang belum tersedia: {command}
+#. text in the Download video window
+#. why Download Now is greyed in Download video: Part's To time is past the video's end
+#, machine
+	To is past the end of the video	Hingga melewati akhir video
+#. text in the Download video window
+#. why Download Now is greyed in Download video: Part's To time isn't after its From time
+#, machine
+	To must come after From	Hingga harus setelah Dari
 #. text in the Batch download window
 	To:	Ke:
 #. text in the Scheduler window
@@ -4360,6 +4485,10 @@
 #. text in the Scheduler window
 #. why OK is greyed when naming a new queue
 	Type the queue's name	Ketik nama antrean
+#. text in the Download video window
+#. why Download Now is greyed in Download video: a Part box holds something that isn't a time
+#, machine
+	Type the times as 1:30 or 1:02:03	Ketik waktu sebagai 1:30 atau 1:02:03
 #. text in the Options window
 #. Options → Add an account: waiting while the user types the code at the service's page; {page} its address, {time} minutes:seconds left
 #. {time} = a time of day (keep the braces as they are)
@@ -4444,8 +4573,9 @@
 	Uruguay	Uruguay
 #. text in the Options window
 	Use advanced browser integration	Gunakan integrasi browser tingkat lanjut
-#. text in errors.rs; button in helpers.rs
+#. text in errors.rs; button in helpers.rs; text in the Options window
 #. Video helpers: button: pick a program (yt-dlp or ffmpeg) already on the computer
+#. Options → Archives: button: pick the 7-Zip command line program to extract 7z and RAR archives with (PeaZip's own 7z.exe, a portable copy), instead of the one MDM finds
 #. the trailing ... means it opens a window: keep it
 	Use another program...	Gunakan program lain...
 #. text in the Batch download window; checkbox in the Batch download window; text in a dialog box; checkbox in a dialog box
@@ -4494,7 +4624,7 @@
 #. Options → Add an account: label before the field for the user name at the debrid service
 #, machine
 	User name:	Nama pengguna:
-#. page title in the Options window
+#. page title in the Options window; text in the Options window
 	User names and passwords for servers/sites	Nama pengguna dan kata sandi untuk server/situs
 #. text in the Options window
 	User-Agent for manually added downloads:	User-Agent untuk unduhan yang ditambahkan secara manual:
@@ -4723,12 +4853,11 @@
 #. {version} = a version number (keep the braces as they are)
 	Your own program: {path} ({version})	Program Anda sendiri: {path} ({version})
 #. text in helpers.rs
-#. Video helpers: {path} = the computer's own JavaScript runtime (node.exe, deno.exe), used as it is: MDM needn't download one
-#, machine
-	Your system's, nothing to download: {path}	Sistem Anda, tidak perlu mengunduh: {path}
-#. text in helpers.rs
 #. Video helpers: {path} = the system's yt-dlp, ffmpeg or gallery-dl
 	Your system's: {path}	Sistem Anda: {path}
+#. text in helpers.rs
+#, machine
+	YouTube makes yt-dlp run a piece of JavaScript before it lists its videos, and this computer has nothing to run it with. Node.js does.	YouTube membuat yt-dlp menjalankan sepotong JavaScript sebelum mencantumkan videonya, dan komputer ini tidak memiliki apa pun untuk menjalankannya. Node.js melakukannya.
 #. text in the Download video window
 #. in Download video and the browser's video menu: yt-dlp had no JavaScript runtime, so YouTube listed only some qualities (often only the sound); Node.js and Deno are program names
 	YouTube needs a JavaScript runtime to list its video qualities: install Node.js or Deno, then look it up again	YouTube memerlukan runtime JavaScript untuk mencantumkan kualitas videonya: instal Node.js atau Deno, lalu cari lagi
@@ -4816,7 +4945,7 @@
 #. text in the Options window
 #. Options → Remote → Pair a device: done; {device} = the name it was given
 	{device} is paired. It can control MDM now.	{device} sudah dipasangkan. Sekarang dapat mengontrol MDM.
-#. text in remote.rs
+#. text in remote.rs; text in traypanel.rs
 #. remote control page (on a phone): progress; {done} and {size} are sizes ("1.2 MB of 7.5 MB")
 #. {size} = a file size such as "4.2 MB" (keep the braces as they are)
 	{done} of {size}	{done} dari {size}
@@ -4910,7 +5039,7 @@
 #. {name} = a file name; {size} = a file size such as "4.2 MB" (keep the braces as they are)
 	{name}  ({files}, {size})	{name} ({files}, {size})
 #. text in helpers.rs
-#. {name} = yt-dlp or ffmpeg; {error} = why
+#. {name} = yt-dlp, ffmpeg or Node.js; {error} = why
 #. {name} = a file name; {error} = an error message (keep the braces as they are)
 	{name} could not be downloaded: {error}	{name} tidak dapat diunduh: {error}
 #. text in extracting archives (a download's log, the Archive password window)
@@ -4918,7 +5047,7 @@
 #. {name} = a file name (keep the braces as they are)
 	{name} is a 7z or RAR archive. MDM extracts those with 7-Zip, which isn't installed.	{name} adalah arsip 7z atau RAR. MDM mengekstraknya dengan 7-Zip, yang tidak terinstal.
 #. text in errors.rs
-#. error: a helper (yt-dlp, ffmpeg, gallery-dl, Deno) is being downloaded already, by MDM's automatic update or another copy of MDM; {name} = its name
+#. error: a helper (yt-dlp, ffmpeg, gallery-dl, Node.js) is being downloaded already, by MDM's automatic update or another copy of MDM; {name} = its name
 #. {name} = a file name (keep the braces as they are)
 #, machine
 	{name} is being downloaded already: try again in a moment	{name} sedang diunduh: coba lagi sebentar lagi
@@ -4977,6 +5106,22 @@
 #. {rate} = a speed such as "1.2 MB/sec" (keep the braces as they are)
 #, machine
 	{rate} (limit: {limit})	{rate} (batas: {limit})
+#. text in helpers.rs
+#. Video helpers: the Deno an earlier version of MDM installed, still used until MDM's own Node.js replaces it (by the next update, or Use MDM's own copy); {runtime} = "Deno" and its version
+#, machine
+	{runtime}, MDM's earlier copy: Node.js takes its place at the next update	{runtime}, salinan MDM sebelumnya: Node.js akan menggantikannya pada pembaruan berikutnya
+#. text in helpers.rs
+#. Video helpers: MDM's own Node.js is the JavaScript runtime; {runtime} = "Node.js" and its version
+#, machine
+	{runtime}, Mister Download Manager's own copy	{runtime}, salinan Mister Download Manager sendiri
+#. text in helpers.rs
+#. Video helpers: the JavaScript runtime the person chose; {runtime} = its name and version ("Node.js 24.11.0"), {path} = where it is
+#, machine
+	{runtime}, your own program: {path}	{runtime}, program Anda sendiri: {path}
+#. text in helpers.rs
+#. Video helpers: the computer's own JavaScript runtime, used as it is (MDM needn't download one); {runtime} = its name and version ("Node.js 24.11.0", "Deno 2.5.6"), {path} = where it is
+#, machine
+	{runtime}, your system's, nothing to download: {path}	{runtime}, sistem Anda, tidak perlu mengunduh: {path}
 #. text in errors.rs
 #. a debrid service's error: too many requests; MDM waits and retries
 	{service} asks to slow down; MDM will try again in a minute	{service} meminta untuk memperlambat; MDM akan mencoba lagi dalam satu menit
@@ -4987,6 +5132,10 @@
 	{service} can't get this torrent: nobody shares it, or its link can't be read	{service} tidak dapat mengambil torrent ini: tidak ada yang membagikannya, atau tautannya tidak dapat dibaca
 #. text in errors.rs
 	{service} can't reach this file host right now; MDM will try again later	{service} tidak dapat menjangkau host file ini sekarang; MDM akan mencoba lagi nanti
+#. text in errors.rs
+#. a torrent through a debrid service: a file ticked in Add torrent isn't among the files the service has, so nothing was downloaded (rather than every file); {service} its name, {file} the file's path in the torrent
+#, machine
+	{service} doesn't list {file}, chosen in Add torrent: nothing was downloaded. Add the torrent again with all its files, or without this one	{service} tidak mencantumkan {file}, yang dipilih di Tambah torrent: tidak ada yang diunduh. Tambahkan torrent lagi dengan semua filenya, atau tanpa yang ini
 #. text in errors.rs
 #. a debrid service's error: it isn't answering
 	{service} is not responding; try again later	{service} tidak merespons; coba lagi nanti
@@ -5019,6 +5168,11 @@
 #. text in errors.rs
 #. a debrid service's error in its own words (English); {service} its name
 	{service}: {message}	{service}: {message}
+#. text in errors.rs
+#. a download's error: a video site kept answering MDM's request for the file with its download page again; {site} = the site's name (LuluStream)
+#. {site} = a web site's name such as "example.com" (keep the braces as they are)
+#, machine
+	{site} didn't give the file this time: try again in a moment	{site} tidak memberikan file kali ini: coba lagi sebentar lagi
 #. text in a download's Properties window
 #. {size} = a file size such as "4.2 MB"; {bytes} = a number of bytes (keep the braces as they are)
 	{size} ({bytes} Bytes)	{size} ({bytes} Byte)
@@ -5097,6 +5251,14 @@ column	Upload speed	Kecepatan unggah
 #. text in the browser extension
 #. in the menu under the download button over a video: the page is a list of videos (a playlist), whose videos are chosen in the app's window; keep the name Mister Download Manager as it is
 extension	A list of videos: choose them in Mister Download Manager	Daftar video: pilih di Mister Download Manager
+#. text in the browser extension
+#. link after popup_by_hand_firefox in the toolbar button's popup: opens the add-on's page on addons.mozilla.org (Firefox's add-ons store), whose copy Firefox keeps and updates; keep addons.mozilla.org as it is
+#, machine
+extension	Add it from addons.mozilla.org	Tambahkan dari addons.mozilla.org
+#. text in the browser extension
+#. link after popup_by_hand in the toolbar button's popup: opens the extension's page in the Chrome Web Store, whose copy the browser keeps up to date; keep the name Chrome Web Store as it is
+#, machine
+extension	Add it from the Chrome Web Store	Tambahkan dari Chrome Web Store
 #. text in the browser extension
 #. on the download button (green) over a video after the app added and started the download; a quality may follow ('· 1080p') and a 'Show' button; MDM is the app's short name, keep it; short
 extension	Added to MDM	Ditambahkan ke MDM
@@ -5213,6 +5375,11 @@ extension	Done	Selesai
 #. text in the browser extension
 #. button beside a video, sound or stream in the toolbar button's popup: download it with the app; verb; short
 extension	Download	Unduh
+#. text in the browser extension
+#. command in the menu of the download button over a video: opens the app's Download video window with Part ticked, From set to where the video is playing now, to download only a part of it
+#. the trailing ... means it is still going on: keep it
+#, machine
+extension	Download a part from here...	Unduh sebagian dari sini...
 #. text in the browser extension
 #. command in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): downloads the file again from the start
 #, machine
@@ -5668,6 +5835,14 @@ extension	This browser isn't ticked in Options → General.	Browser ini tidak di
 #. text in the browser extension
 #. choice under Send downloads to: the Mister Download Manager on this computer
 extension	This computer	Komputer ini
+#. text in the browser extension
+#. one line at the top of the toolbar button's popup when the extension was loaded by hand (Load unpacked, with Developer mode on) in Chrome, Edge, Brave, Opera or Vivaldi; followed by the link popup_store_chrome
+#, machine
+extension	This copy was loaded by hand and won't update itself.	Salinan ini dimuat secara manual dan tidak akan memperbarui dirinya sendiri.
+#. text in the browser extension
+#. one line at the top of the toolbar button's popup when the add-on was loaded by hand in Firefox (Load Temporary Add-on, in about:debugging); followed by the link popup_store_firefox; the browser here is Firefox (or Zen, LibreWolf)
+#, machine
+extension	This copy was loaded by hand: it won't update itself, and the browser removes it when it restarts.	Salinan ini dimuat secara manual: tidak akan memperbarui diri, dan browser akan menghapusnya saat dimulai ulang.
 #. text in the browser extension
 #. status when a download carried too much data (very large cookies) to give to the app
 extension	This download's details were too large to hand over	Detail unduhan ini terlalu besar untuk diserahkan

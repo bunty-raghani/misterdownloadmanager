@@ -116,6 +116,18 @@
   "popup_fix": {
     "message": "ഇത് എങ്ങനെ പരിഹരിക്കാം"
   },
+  "popup_by_hand": {
+    "message": "ഈ കോപ്പി സ്വമേധയാ ലോഡ് ചെയ്തതാണ്, ഇത് സ്വയം അപ്‌ഡേറ്റ് ചെയ്യില്ല."
+  },
+  "popup_by_hand_firefox": {
+    "message": "ഈ കോപ്പി സ്വമേധയാ ലോഡ് ചെയ്തതാണ്: ഇത് സ്വയം അപ്‌ഡേറ്റ് ചെയ്യില്ല, ബ്രൗസർ റീസ്റ്റാർട്ട് ചെയ്യുമ്പോൾ ഇത് നീക്കം ചെയ്യപ്പെടും."
+  },
+  "popup_store_chrome": {
+    "message": "Chrome Web Store-ൽ നിന്ന് ചേർക്കുക"
+  },
+  "popup_store_firefox": {
+    "message": "addons.mozilla.org-ൽ നിന്ന് ചേർക്കുക"
+  },
   "popup_declined": {
     "message": "ബ്രൗസറിനായി വിട്ടു: $name$",
     "placeholders": {
@@ -319,6 +331,9 @@
   },
   "video_all_qualities": {
     "message": "എല്ലാ ഗുണനിലവാരങ്ങളും സബ്ടൈറ്റിലുകളും..."
+  },
+  "video_part": {
+    "message": "ഇവിടെ നിന്ന് ഒരു ഭാഗം ഡൗൺലോഡ് ചെയ്യുക..."
   },
   "video_failed": {
     "message": "Mister Download Manager ഇൻസ്റ്റാൾ ചെയ്തിട്ടില്ല അല്ലെങ്കിൽ ആരംഭിച്ചില്ല"

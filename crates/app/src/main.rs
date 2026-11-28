@@ -77,6 +77,7 @@ mod torrentfiles;
 mod torrents;
 mod transfer;
 mod tray;
+mod traypanel;
 #[cfg(unix)]
 mod unix;
 mod update;
@@ -420,6 +421,13 @@ fn app() -> eframe::Result {
     // Started by an update (update.rs): the old copy may still be closing; this one waits for
     // it rather than handing it anything.
     let after_update = args.iter().any(|a| a.eq_ignore_ascii_case(update::UPDATED));
+    // A second launch brings the running copy's window to the front: this launch, just started
+    // by the user, passes its right to the foreground on (as the browser's native host does), so
+    // Windows lets it come forward with no trick (#1645).
+    #[cfg(windows)]
+    if !after_update && let Some(pid) = mdm_ipc::app_pid() {
+        win32::allow_foreground(pid);
+    }
     if !after_update
         && (mdm_ipc::send(&cmd.clone().unwrap_or_default()).is_ok()
             || cmd.as_ref().is_some_and(|c| c.exit))

@@ -34,14 +34,18 @@ impl TorrentFiles {
                 .unwrap_or_default();
             Some((files, chosen, file_done))
         });
-        let (files, chosen, session_done) = if let Some((files, chosen, file_done)) = session {
+        let (files, chosen, known_done) = if let Some((files, chosen, file_done)) = session {
             (files, chosen, Some(file_done))
         } else {
             let bytes = std::fs::read(crate::torrents::torrent_file(&spec.hash)?).ok()?;
+            // Out of the session, what its pieces say: a file ticked later is made at its full
+            // length at once, so its length on disk says nothing of what came.
+            let map = crate::torrents::state_dir()
+                .map(|d| mdm_torrent::piece_map_file(&d.join("session"), &spec.hash));
             (
                 mdm_torrent::files_from_bytes(&bytes).ok()?,
                 spec.files.clone(),
-                None,
+                map_done(&bytes, map.as_deref()),
             )
         };
         // `folder` already holds a torrent of several files' own folder (Meta::folder_in).
@@ -55,9 +59,11 @@ impl TorrentFiles {
                 let chosen = chosen.as_ref().is_none_or(|v| v.contains(&i));
                 let done = if complete {
                     f.size
-                } else if let Some(file_done) = &session_done {
+                } else if let Some(file_done) = &known_done {
                     file_done.get(i).copied().unwrap_or(0).min(f.size)
                 } else {
+                    // No piece map: the session never checked it, or it left the session
+                    // finished (librqbit removes its map with it), when its files were whole.
                     std::fs::metadata(root.join(&f.path))
                         .map(|m| m.len().min(f.size))
                         .unwrap_or(0)
@@ -270,5 +276,69 @@ impl TorrentFiles {
             Outcome::Closed => Outcome::Closed,
             Outcome::Done(()) => Outcome::Done(None),
         }
+    }
+}
+
+/// What each file has, from the torrent's saved piece map at `map` (`mdm_torrent::piece_map_file`):
+/// None without a map, or with one that isn't this torrent's.
+fn map_done(torrent: &[u8], map: Option<&std::path::Path>) -> Option<Vec<u64>> {
+    mdm_torrent::file_done_from_map(torrent, &std::fs::read(map?).ok()?)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A .torrent of `files` (name, length) in pieces of `piece` bytes, bencoded by hand.
+    fn torrent_of(files: &[(&str, u64)], piece: u64) -> Vec<u8> {
+        let total: u64 = files.iter().map(|f| f.1).sum();
+        let mut list = Vec::new();
+        for (name, len) in files {
+            list.extend(format!("d6:lengthi{len}e4:pathl{}:{name}ee", name.len()).bytes());
+        }
+        let mut out = b"d4:infod5:filesl".to_vec();
+        out.extend(list);
+        out.extend(format!("e4:name3:set12:piece lengthi{piece}e6:pieces").bytes());
+        let hashes = total.div_ceil(piece) * 20;
+        out.extend(format!("{hashes}:").bytes());
+        out.extend(std::iter::repeat_n(0u8, hashes as usize));
+        out.extend(b"ee");
+        out
+    }
+
+    /// #1624: a file ticked later is made at its full length at once; out of the session, its
+    /// pieces say what came, not its length.
+    #[test]
+    fn a_torrent_file_made_at_full_length_shows_only_its_pieces() {
+        let piece = 16 * 1024;
+        let torrent = torrent_of(&[("a.bin", 64 * 1024), ("b.bin", 1024 * 1024)], piece);
+        let tmp = tempfile::tempdir().unwrap();
+        // The sparse b.bin at its full length, as the engine makes it.
+        let b = std::fs::File::create(tmp.path().join("b.bin")).unwrap();
+        b.set_len(1024 * 1024).unwrap();
+        assert_eq!(
+            std::fs::metadata(tmp.path().join("b.bin")).unwrap().len(),
+            1024 * 1024
+        );
+        // 68 pieces: a's four (0-3) and one of b's (34).
+        let mut bits = vec![0u8; 9];
+        bits[0] = 0xf0;
+        bits[4] = 0x20;
+        let map = tmp.path().join("hash.bitv");
+        std::fs::write(&map, &bits).unwrap();
+        assert_eq!(map_done(&torrent, Some(&map)), Some(vec![64 * 1024, piece]));
+    }
+
+    /// No map (or one not of this torrent): nothing from it; the window falls back to what is on
+    /// the disk.
+    #[test]
+    fn a_torrent_without_its_piece_map_says_nothing() {
+        let torrent = torrent_of(&[("a.bin", 64 * 1024)], 16 * 1024);
+        let tmp = tempfile::tempdir().unwrap();
+        let map = tmp.path().join("hash.bitv");
+        assert_eq!(map_done(&torrent, Some(&map)), None);
+        assert_eq!(map_done(&torrent, None), None);
+        std::fs::write(&map, []).unwrap();
+        assert_eq!(map_done(&torrent, Some(&map)), None);
     }
 }

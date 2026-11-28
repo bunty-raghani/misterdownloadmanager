@@ -116,6 +116,18 @@
   "popup_fix": {
     "message": "તેને કેવી રીતે ઠીક કરવું"
   },
+  "popup_by_hand": {
+    "message": "આ કોપી હાથથી લોડ કરવામાં આવી હતી અને તે જાતે અપડેટ થશે નહીં."
+  },
+  "popup_by_hand_firefox": {
+    "message": "આ કૉપિ હાથથી લોડ કરવામાં આવી હતી: તે પોતે અપડેટ થશે નહીં, અને બ્રાઉઝર ફરી શરૂ થાય ત્યારે તેને દૂર કરી દેશે."
+  },
+  "popup_store_chrome": {
+    "message": "તેને Chrome Web Store પરથી ઉમેરો"
+  },
+  "popup_store_firefox": {
+    "message": "તેને addons.mozilla.org પરથી ઉમેરો"
+  },
   "popup_declined": {
     "message": "બ્રાઉઝર પર છોડ્યું: $name$",
     "placeholders": {
@@ -319,6 +331,9 @@
   },
   "video_all_qualities": {
     "message": "બધી ગુણવત્તા અને સબટાઈટલ..."
+  },
+  "video_part": {
+    "message": "અહીંથી એક ભાગ ડાઉનલોડ કરો..."
   },
   "video_failed": {
     "message": "Mister Download Manager ઇન્સ્ટોલ કરેલ નથી અથવા શરૂ થયું નથી"

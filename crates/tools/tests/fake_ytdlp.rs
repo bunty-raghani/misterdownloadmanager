@@ -51,6 +51,7 @@ fn main() -> ExitCode {
         long_name_checks(&me);
         saved_checks(&me);
         live_checks(&me);
+        part_checks(&me);
         println!("fake_ytdlp: ok");
         return ExitCode::SUCCESS;
     }
@@ -261,6 +262,22 @@ fn fake_ytdlp() -> ExitCode {
             return ExitCode::FAILURE;
         }
         let chosen = choice(&info, &selector, &template);
+        // #1655: streams served only from a few seconds after the choice, as YouTube's after the
+        // ad it plays ahead of the video (yt-dlp's `available_at`): `"available_at": "soon"` and
+        // `from=SOON` in their addresses become that time, counted from now, however long the
+        // look-up took.
+        let soon = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs()
+            + 5;
+        let chosen = chosen
+            .to_string()
+            .replace(
+                "\"available_at\":\"soon\"",
+                &format!("\"available_at\":{soon}"),
+            )
+            .replace("from=SOON", &format!("from={}", soon * 1000));
         println!("MDMJ {chosen}");
         return ExitCode::SUCCESS;
     }
@@ -278,6 +295,10 @@ fn fake_ytdlp() -> ExitCode {
         .unwrap_or(0);
     std::fs::write(&tries, (tried + 1).to_string()).unwrap();
     let format = after("-f").unwrap_or_default();
+    // #1662: a part, as yt-dlp's ffmpeg downloads one.
+    if let Some(sections) = after("--download-sections") {
+        return fake_part(&args, &sections, &dir, &template, &format, &mode);
+    }
     // A live stream, recorded as yt-dlp's ffmpeg records one: into `<stem>.mp4.part` (written
     // over, `-y`), MPEG-TS (`live`; `live-raw`: not), growing, saying nothing of its progress,
     // never ending by itself (a minute at most). `live-dns-once`: its first run fails a while
@@ -588,6 +609,421 @@ fn fake_ytdlp() -> ExitCode {
     ExitCode::SUCCESS
 }
 
+/// #1662: a part (`--download-sections "*<from>-<to>"`), downloaded as yt-dlp's ffmpeg downloads
+/// one: each chosen stream read from its address (MDM's server's, with the engine; the lab's
+/// otherwise) from where the part starts, by its share of the stream (the page's `duration`),
+/// over one open-ended request as ffmpeg asks (`Range: bytes=<start>-`), until it has the part's
+/// share; joined into `<output>.part`, then the file, said. `part-slow` (mode): a little at a
+/// time. Kept for the checks beside the output: its arguments (`part-args.txt`, a line each),
+/// what each stream's server answered (`part-status.txt`), the addresses it read
+/// (`part-urls.txt`) and its `no_proxy` (`part-env.txt`).
+fn fake_part(
+    args: &[String],
+    sections: &str,
+    dir: &Path,
+    template: &str,
+    format: &str,
+    mode: &str,
+) -> ExitCode {
+    use std::io::{Read, Write};
+    std::fs::write(dir.join("part-args.txt"), args.join("\n")).unwrap();
+    std::fs::write(
+        dir.join("part-env.txt"),
+        std::env::var("no_proxy").unwrap_or_default(),
+    )
+    .unwrap();
+    let (from, to) = sections
+        .trim_start_matches('*')
+        .split_once('-')
+        .map(|(a, b)| (a.parse::<f64>().unwrap(), b.parse::<f64>().unwrap()))
+        .expect("*<from>-<to>");
+    let at = |flag: &str| {
+        args.iter()
+            .position(|a| a == flag)
+            .and_then(|i| args.get(i + 1))
+            .cloned()
+    };
+    let info: serde_json::Value = serde_json::from_str(
+        &std::fs::read_to_string(at("--load-info-json").expect("a page")).unwrap(),
+    )
+    .unwrap();
+    let chosen = choice(&info, format, &template.replace("%%", "%"));
+    let duration = info["duration"].as_f64().unwrap_or(100.0);
+    println!(
+        "MDMQ {} 1280x720",
+        chosen["format_id"].as_str().unwrap_or("NA")
+    );
+    let output = chosen["filename"].as_str().unwrap().to_owned();
+    let part = format!("{output}.part");
+    let mut file = std::fs::File::create(&part).unwrap();
+    let formats = chosen["requested_formats"]
+        .as_array()
+        .cloned()
+        .unwrap_or_else(|| vec![chosen.clone()]);
+    let (mut statuses, mut urls) = (Vec::new(), Vec::new());
+    for f in formats {
+        let url = url::Url::parse(f["url"].as_str().unwrap()).unwrap();
+        urls.push(url.to_string());
+        let size = f["filesize"].as_u64().unwrap();
+        let start = (size as f64 * from / duration) as u64;
+        let len = (size as f64 * (to - from) / duration) as u64;
+        let mut s =
+            std::net::TcpStream::connect((url.host_str().unwrap(), url.port().unwrap())).unwrap();
+        let path = match url.query() {
+            Some(q) => format!("{}?{q}", url.path()),
+            None => url.path().to_owned(),
+        };
+        write!(
+            s,
+            "GET {path} HTTP/1.1\r\nHost: {}\r\nUser-Agent: Lavf/61.7.100\r\nRange: bytes={start}-\r\nConnection: close\r\n\r\n",
+            url.host_str().unwrap()
+        )
+        .unwrap();
+        let mut head = Vec::new();
+        let mut byte = [0u8; 1];
+        while !head.ends_with(b"\r\n\r\n") {
+            if s.read(&mut byte).unwrap() == 0 {
+                break;
+            }
+            head.push(byte[0]);
+        }
+        let head = String::from_utf8_lossy(&head).into_owned();
+        statuses.push(head.lines().next().unwrap_or("").to_owned());
+        let mut left = len;
+        let mut buf = vec![0u8; 64 * 1024];
+        while left > 0 {
+            let want = buf.len().min(left as usize);
+            let n = s.read(&mut buf[..want]).unwrap_or(0);
+            if n == 0 {
+                eprintln!("ERROR: [ffmpeg] the stream ended early");
+                return ExitCode::FAILURE;
+            }
+            file.write_all(&buf[..n]).unwrap();
+            left -= n as u64;
+            if mode == "part-slow" {
+                std::thread::sleep(Duration::from_millis(20));
+            }
+        }
+    }
+    std::fs::write(dir.join("part-status.txt"), statuses.join("\n")).unwrap();
+    std::fs::write(dir.join("part-urls.txt"), urls.join("\n")).unwrap();
+    drop(file);
+    std::fs::rename(&part, &output).unwrap();
+    println!("MDMF {output}");
+    ExitCode::SUCCESS
+}
+
+/// #1662: a part of a video, its streams read through MDM's server (`partserve`) at MDM's pace,
+/// only from where the part starts, in requests of a few MB; without the engine yt-dlp's ffmpeg
+/// reads them itself. A quick cut asks yt-dlp for nothing more; an exact one for its keyframes
+/// at the cuts and the encoders the ffmpeg has. No subtitles, no chapters. Stopped, it starts
+/// again and ends whole; under a speed limit it takes as long as the limit makes it.
+fn part_checks(me: &Path) {
+    use mdm_labserver::{Config, LabServer, content};
+    use mdm_tools::part::Part;
+    let rt = tokio::runtime::Runtime::new().unwrap();
+    let lab = rt.block_on(LabServer::start(Config::default())).unwrap();
+    let engine = |limit: Option<u64>| mdm_tools::streams::Engine {
+        handle: rt.handle().clone(),
+        opts: mdm_engine::Options {
+            max_connections: 4,
+            retry_delay: Duration::from_millis(50),
+            speed_limit: limit,
+            ..Default::default()
+        },
+    };
+    const V: u64 = 4 << 20;
+    const A: u64 = 1 << 20;
+    let page = format!(
+        r#"{{"id": "talk", "title": "Talk", "ext": "mp4", "duration": 100, "formats": [
+        {{"format_id": "137", "ext": "mp4", "protocol": "https", "filesize": {V},
+          "vcodec": "avc1", "acodec": "none", "vbr": 1500, "url": "{}",
+          "http_headers": {{"User-Agent": "FakeTube/1"}}}},
+        {{"format_id": "140", "ext": "m4a", "protocol": "https", "filesize": {A},
+          "vcodec": "none", "acodec": "mp4a", "abr": 128, "url": "{}"}}]}}"#,
+        lab.url("/gen/4M/v.mp4?seed=1"),
+        lab.url("/gen/1M/a.m4a?seed=2")
+    );
+    // The part's bytes of each stream, as the fake reads them: from 30 s to 60 s of 100.
+    let expected = || {
+        let share = |size: u64, seed: u64| {
+            let (start, len) = (size * 30 / 100, size * 30 / 100);
+            let mut v = vec![0; len as usize];
+            content::fill(seed, start, &mut v);
+            v
+        };
+        let mut v = share(V, 1);
+        v.extend(share(A, 2));
+        v
+    };
+    let part = Part {
+        from: 30,
+        to: 60,
+        exact: false,
+    };
+    let start = |tools: &Path,
+                 out: &Path,
+                 engine: Option<mdm_tools::streams::Engine>,
+                 part: Part,
+                 ffmpeg: Option<&Path>| {
+        // Started again in the same folder: the fake there already (a stopped one's program may
+        // still be held a moment by the system).
+        let own = tools.join(format!("fake-ytdlp{}", std::env::consts::EXE_SUFFIX));
+        let exe = if own.is_file() {
+            own
+        } else {
+            fake_in(me, tools)
+        };
+        std::fs::write(tools.join("page.json"), &page).unwrap();
+        VideoJob::start_with(
+            &exe,
+            "https://video.example/talk",
+            "bv*+ba/b",
+            out,
+            "Talk",
+            None,
+            ffmpeg,
+            None,
+            &Default::default(),
+            &Subs {
+                langs: vec!["en".into()],
+                automatic: false,
+                embed: false,
+            },
+            None,
+            engine,
+            None,
+            Some(part),
+        )
+        .expect("started")
+    };
+    let wait = |job: &VideoJob| {
+        let end = Instant::now() + Duration::from_secs(120);
+        let mut seen = Vec::new();
+        loop {
+            let p = job.progress();
+            if p.state == State::Running && p.downloaded > 0 {
+                seen.push((p.downloaded, p.total));
+            }
+            if p.state != State::Running {
+                return (p, seen);
+            }
+            assert!(Instant::now() < end, "still running: {:?}", log_of(&p));
+            std::thread::sleep(Duration::from_millis(20));
+        }
+    };
+    let read = |dir: &Path, name: &str| std::fs::read_to_string(dir.join(name)).unwrap_or_default();
+
+    // A quick cut through MDM's server.
+    let (tools, out) = (tempfile::tempdir().unwrap(), tempfile::tempdir().unwrap());
+    let job = start(tools.path(), out.path(), Some(engine(None)), part, None);
+    let (p, seen) = wait(&job);
+    let log = log_of(&p);
+    assert!(matches!(p.state, State::Done(_)), "{:?}: {log:?}", p.state);
+    assert!(
+        p.helper.is_none(),
+        "MDM's connections, not yt-dlp's own: {:?}",
+        p.helper
+    );
+    let saved = out.path().join("Talk.mp4");
+    assert!(
+        std::fs::read(&saved).unwrap() == expected(),
+        "the part's bytes, in order"
+    );
+    let args = read(out.path(), "part-args.txt");
+    let args: Vec<&str> = args.lines().collect();
+    let at = args
+        .iter()
+        .position(|a| *a == "--download-sections")
+        .expect("sections");
+    assert_eq!(args[at + 1], "*30-60");
+    for gone in [
+        "--force-keyframes-at-cuts",
+        "--embed-chapters",
+        "--sub-langs",
+        "--write-subs",
+        "--fixup",
+    ] {
+        assert!(!args.contains(&gone), "{gone} in {args:?}");
+    }
+    let urls = read(out.path(), "part-urls.txt");
+    let lab_at = lab.url("/");
+    assert!(
+        urls.lines().count() == 2
+            && urls
+                .lines()
+                .all(|u| u.starts_with("http://127.0.0.1:") && !u.starts_with(lab_at.as_str())),
+        "read through MDM's server: {urls}"
+    );
+    assert!(
+        read(out.path(), "part-status.txt")
+            .lines()
+            .all(|s| s.starts_with("HTTP/1.1 206")),
+        "{}",
+        read(out.path(), "part-status.txt")
+    );
+    assert!(read(out.path(), "part-env.txt").contains("127.0.0.1"));
+    assert!(
+        log.iter()
+            .any(|l| l == "Only the part from 0:30 to 1:00: a quick cut, at the keyframes"),
+        "{log:?}"
+    );
+    assert!(
+        log.iter()
+            .any(|l| l == "ffmpeg reads the part through MDM's connections"),
+        "{log:?}"
+    );
+    // Its progress: the bytes brought in, against the part's share of the streams (1.5 MB).
+    assert!(!seen.is_empty(), "progress while it ran");
+    assert!(
+        seen.iter().all(|(_, t)| t.is_some_and(|t| t >= 1_500_000)),
+        "{seen:?}"
+    );
+    rt.block_on(lab.settled());
+    let asked: Vec<(u64, u64)> = lab
+        .log()
+        .into_iter()
+        .filter(|e| e.path.starts_with("/gen/4M/v.mp4"))
+        .filter_map(|e| {
+            let r = e.range?;
+            let (a, b) = r.trim_start_matches("bytes=").split_once('-')?;
+            Some((a.parse().ok()?, b.parse().ok()?))
+        })
+        .collect();
+    assert!(!asked.is_empty());
+    // Nothing before the part, nothing open-ended, a few MB at most each, and far from the
+    // whole stream in all.
+    assert!(
+        asked
+            .iter()
+            .all(|(a, b)| *a >= V * 30 / 100 && b - a < 2 << 20),
+        "{asked:?}"
+    );
+    let total: u64 = asked.iter().map(|(a, b)| b - a + 1).sum();
+    assert!(total < V * 3 / 4, "{total} of {V}");
+    assert!(
+        lab.log()
+            .iter()
+            .any(|e| e.user_agent.as_deref() == Some("FakeTube/1")),
+        "yt-dlp's headers for the stream go with MDM's requests"
+    );
+
+    // An exact cut: keyframes at the cuts, and the encoders the ffmpeg has (MDM's own build's).
+    let (tools, out) = (tempfile::tempdir().unwrap(), tempfile::tempdir().unwrap());
+    let ffmpeg = tools
+        .path()
+        .join(format!("fake-ffmpeg{}", std::env::consts::EXE_SUFFIX));
+    std::fs::copy(me, &ffmpeg).unwrap();
+    let job = start(
+        tools.path(),
+        out.path(),
+        Some(engine(None)),
+        Part {
+            exact: true,
+            ..part
+        },
+        Some(&ffmpeg),
+    );
+    let (p, _) = wait(&job);
+    assert!(
+        matches!(p.state, State::Done(_)),
+        "{:?}: {:?}",
+        p.state,
+        log_of(&p)
+    );
+    let args = read(out.path(), "part-args.txt");
+    let args: Vec<&str> = args.lines().collect();
+    assert!(args.contains(&"--force-keyframes-at-cuts"), "{args:?}");
+    let at = args
+        .iter()
+        .position(|a| *a == "--downloader-args")
+        .expect("the encoders");
+    assert_eq!(
+        args[at + 1],
+        "ffmpeg_o:-c:v libopenh264 -pix_fmt yuv420p -b:v 3000k -maxrate 6000k -bufsize 6000k -c:a aac -b:a 192k"
+    );
+    assert!(
+        log_of(&p)
+            .iter()
+            .any(|l| l.ends_with("an exact cut, encoded again"))
+    );
+
+    // Stopped half-way, started again: the part comes whole (ffmpeg can't go on from where it
+    // was; the part is read again).
+    let (tools, out) = (tempfile::tempdir().unwrap(), tempfile::tempdir().unwrap());
+    std::fs::write(out.path().join("mode.txt"), "part-slow").unwrap();
+    let job = start(tools.path(), out.path(), Some(engine(None)), part, None);
+    let end = Instant::now() + Duration::from_secs(60);
+    while job.progress().downloaded < 300_000 {
+        assert!(
+            Instant::now() < end,
+            "no progress: {:?}",
+            log_of(&job.progress())
+        );
+        std::thread::sleep(Duration::from_millis(10));
+    }
+    job.stop();
+    let end = Instant::now() + Duration::from_secs(30);
+    while job.progress().state == State::Running {
+        assert!(Instant::now() < end);
+        std::thread::sleep(Duration::from_millis(20));
+    }
+    assert_eq!(job.progress().state, State::Stopped);
+    assert!(!out.path().join("Talk.mp4").exists());
+    let job = start(tools.path(), out.path(), Some(engine(None)), part, None);
+    let (p, _) = wait(&job);
+    assert!(
+        matches!(p.state, State::Done(_)),
+        "{:?}: {:?}",
+        p.state,
+        log_of(&p)
+    );
+    assert!(std::fs::read(out.path().join("Talk.mp4")).unwrap() == expected());
+
+    // Under a speed limit: 1.5 MB at 400 KB/s takes about 4 s (a second's burst allowed).
+    let (tools, out) = (tempfile::tempdir().unwrap(), tempfile::tempdir().unwrap());
+    let began = Instant::now();
+    let job = start(
+        tools.path(),
+        out.path(),
+        Some(engine(Some(400_000))),
+        part,
+        None,
+    );
+    let (p, _) = wait(&job);
+    assert!(
+        matches!(p.state, State::Done(_)),
+        "{:?}: {:?}",
+        p.state,
+        log_of(&p)
+    );
+    let took = began.elapsed();
+    assert!(
+        took >= Duration::from_millis(2000),
+        "the limit held: {took:?}"
+    );
+
+    // Without MDM's engine, yt-dlp's ffmpeg reads the streams itself: the same part.
+    let (tools, out) = (tempfile::tempdir().unwrap(), tempfile::tempdir().unwrap());
+    let job = start(tools.path(), out.path(), None, part, None);
+    let (p, _) = wait(&job);
+    assert!(
+        matches!(p.state, State::Done(_)),
+        "{:?}: {:?}",
+        p.state,
+        log_of(&p)
+    );
+    assert!(std::fs::read(out.path().join("Talk.mp4")).unwrap() == expected());
+    assert!(
+        read(out.path(), "part-urls.txt")
+            .lines()
+            .all(|u| u.starts_with(lab_at.as_str())),
+        "{}",
+        read(out.path(), "part-urls.txt")
+    );
+    assert_eq!(read(out.path(), "part-env.txt"), "");
+}
+
 /// Write `path` as yt-dlp's Python does on a new install (#1102): on Windows, with long paths
 /// off (the default), a path past 259 UTF-16 units fails as `[Errno 2] No such file or
 /// directory`; a name past 255 (UTF-16 units on Windows, bytes elsewhere) as `[Errno 22]
@@ -767,6 +1203,13 @@ fn fake_ffprobe() -> ExitCode {
 /// error) or `linger` (its file there 2 s before it ends).
 fn fake_ffmpeg() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
+    // #1662: its encoders, as MDM's own Windows build (LGPL: no x264) lists them.
+    if args.iter().any(|a| a == "-encoders") {
+        println!(
+            "Encoders:\n V..... = Video\n A..... = Audio\n ------\n V....D libopenh264          OpenH264 H.264\n V.S..D mpeg4                MPEG-4 part 2\n V....D libvpx-vp9           libvpx VP9\n A....D aac                  AAC (Advanced Audio Coding)\n A....D libopus              libopus Opus"
+        );
+        return ExitCode::SUCCESS;
+    }
     let file = |a: &str| PathBuf::from(a.strip_prefix("file:").unwrap_or(a));
     let inputs: Vec<PathBuf> = args
         .iter()
@@ -1125,6 +1568,7 @@ fn saved_checks(me: &Path) {
         None,
         None,
         Some(hook),
+        None,
     )
     .expect("started");
     let end = Instant::now() + Duration::from_secs(120);
@@ -1351,6 +1795,7 @@ fn preloaded_checks(me: &Path) {
             &Default::default(),
             &Subs::default(),
             preloaded,
+            None,
             None,
             None,
         )
@@ -1727,6 +2172,48 @@ fn engine_checks(me: &Path) {
             .filter_map(Result::ok)
             .all(|e| !e.file_name().to_string_lossy().contains(".mdm.")),
         "no part file or state left"
+    );
+
+    // #1655: YouTube's streams are refused (403) until the ad played ahead of the video would
+    // end, yt-dlp's `available_at`: the engine waits for it before its first request, says so,
+    // and the download comes down (it failed at once before). The fake's choice makes "soon"
+    // 5 s after it.
+    let (tools, out) = (tempfile::tempdir().unwrap(), tempfile::tempdir().unwrap());
+    let mut early: serde_json::Value = serde_json::from_str(&page(
+        "/gen/3M/v.mp4?seed=1&from=SOON",
+        "/gen/1M/a.m4a?seed=2&from=SOON",
+        "https",
+    ))
+    .unwrap();
+    for f in early["formats"].as_array_mut().unwrap() {
+        f["available_at"] = "soon".into();
+    }
+    std::fs::write(tools.path().join("page.json"), early.to_string()).unwrap();
+    let job = start(tools.path(), out.path(), 4);
+    let (p, _) = wait(&job);
+    let log = log_of(&p);
+    assert!(matches!(p.state, State::Done(_)), "{:?}: {log:?}", p.state);
+    assert!(
+        std::fs::read(out.path().join("Talk.mp4")).unwrap() == expected(),
+        "the streams merged"
+    );
+    assert!(
+        log.iter()
+            .any(|t| t.starts_with("Waiting ") && t.contains("as the site requires")),
+        "the wait said: {log:?}"
+    );
+    rt.block_on(lab.settled());
+    let streams: Vec<_> = lab
+        .log()
+        .into_iter()
+        .filter(|e| e.query.as_deref().is_some_and(|q| q.contains("from=")))
+        .collect();
+    assert!(!streams.is_empty());
+    // The lab answers 403 before `from`: none means none was asked for before its time.
+    assert!(
+        streams.iter().all(|e| e.status != 403),
+        "a stream asked for before its time: {:?}",
+        streams.iter().map(|e| e.status).collect::<Vec<_>>()
     );
 
     // #1240: the chosen height isn't offered (a reroute left it out): the engine downloads the

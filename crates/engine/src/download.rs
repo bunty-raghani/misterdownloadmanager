@@ -1688,6 +1688,9 @@ struct Ctx {
     wait_for_ranges: bool,
     /// Signalled by every 206 answer.
     range_answered: tokio::sync::Notify,
+    /// Signalled when a download without a digest learns its version's from a validated part
+    /// (`digest_agrees`): an answer from another copy waits for it (`await_digest`, #1577).
+    digest_learned: tokio::sync::Notify,
     /// Where a POST download's redirects turned into GETs (refreshing the target).
     as_get: AsGet,
     /// The file itself is a web page; otherwise an HTML answer is a sign-in wall or an error.
@@ -2390,12 +2393,15 @@ async fn run_fresh(
             .then(|| crate::verify::Hash::from_headers(h))
             .flatten()
     });
-    let validators = Validators::from_response(
-        header_str(h, header::ETAG),
-        header_str(h, header::LAST_MODIFIED),
-        header_str(h, header::DATE),
-        final_url.host_str(),
-    );
+    let validators = Validators {
+        digests: digests_of(h),
+        ..Validators::from_response(
+            header_str(h, header::ETAG),
+            header_str(h, header::LAST_MODIFIED),
+            header_str(h, header::DATE),
+            final_url.host_str(),
+        )
+    };
     // The server's date for the finished file (Options::server_time): its Last-Modified as
     // sent, whether or not it is strong enough to resume by.
     let stamp = opts
@@ -2492,6 +2498,7 @@ async fn run_fresh(
             advertised,
             wait_for_ranges,
             range_answered: Default::default(),
+            digest_learned: Default::default(),
             as_get,
             web_page_ok: expects_web_page(&dest, content_type.as_deref()),
             never_page,
@@ -2728,6 +2735,7 @@ async fn run_fresh_ftp(
             advertised: true,
             wait_for_ranges: false,
             range_answered: Default::default(),
+            digest_learned: Default::default(),
             as_get: AsGet::default(),
             web_page_ok: true,
             never_page: false,
@@ -2948,6 +2956,7 @@ async fn run_resume(
         ranges: AtomicU8::new(RANGES_YES),
         advertised: true,
         range_answered: Default::default(),
+        digest_learned: Default::default(),
         as_get,
         web_page_ok,
         never_page,
@@ -4195,6 +4204,11 @@ async fn supervise(ctx: Arc<Ctx>, first: Option<Body>) -> Result<(), Error> {
 async fn stop_connections(ctx: &Ctx, set: &mut JoinSet<Result<(), Error>>) {
     ctx.cancel.cancel();
     while set.join_next().await.is_some() {}
+    // None of them is connecting or receiving any more: a stopped download's list said
+    // "Connecting..." on every connection that was asking when it stopped (#1577).
+    for c in &mut ctx.shared.view.lock().unwrap().connections {
+        c.finish();
+    }
 }
 
 /// One connection: take an assignment, fetch it, repeat until there is nothing left to do.
@@ -4273,6 +4287,12 @@ async fn worker(ctx: Arc<Ctx>, id: WorkerId, mut first: Option<Body>) -> Result<
             Err(e) => {
                 ctx.shared.with_planner(|p| p.release(id));
                 if e.is_fatal() {
+                    // What stopped the download shows on the connection that met it, not
+                    // "Connecting..." (#1577).
+                    if !matches!(e, Error::Cancelled) {
+                        ctx.shared
+                            .conn(id, |c| c.status = ConnStatus::Failed(e.clone()));
+                    }
                     return Err(e);
                 }
                 // Shed: reconnect at once for the rest of the segment (not a failure).
@@ -4502,7 +4522,16 @@ async fn request(ctx: &Ctx, target: &Target, from: u64, to: u64) -> Result<Body,
     if head.status.is_success() && !ctx.web_page_ok && is_web_page(&head.headers) {
         return Err(Error::GotWebPage);
     }
+    // Another copy's whole answer, with a digest, where the download has none yet to compare it
+    // with: another connection's validated part may teach it in a moment (#1577).
+    if head.status == StatusCode::OK && unproven_copy(ctx, if_range.as_ref(), &head) {
+        await_digest(ctx).await?;
+    }
     match head.status {
+        // A part of another file: its whole file's digest isn't the download's (#1577).
+        StatusCode::PARTIAL_CONTENT if !digest_agrees(ctx, if_range.is_some(), &head) => {
+            return Err(Error::FileChanged);
+        }
         StatusCode::PARTIAL_CONTENT => {
             ctx.learn_ranges(true);
             ctx.range_answered.notify_one();
@@ -4517,6 +4546,12 @@ async fn request(ctx: &Ctx, target: &Target, from: u64, to: u64) -> Result<Body,
         StatusCode::OK if other_server_copy(ctx, &head) => {
             return Err(Error::RangesUnavailable);
         }
+        // Another copy of the file behind the same address (a CDN whose nodes fetch it from
+        // different origins, #1577): its own ETag and date, but the whole file's digest the
+        // download has. The ranges go on without `If-Range`, each answer checked by its digest.
+        StatusCode::OK if copy_by_digest(ctx, if_range.as_ref(), &head) => {
+            return Err(Error::RangesUnavailable);
+        }
         // A full body for a ranged request once ranges are known to work: If-Range failed (the
         // file changed), unless it is still the same file and this answer just lacks the range.
         StatusCode::OK if ctx.ranges.load(Ordering::SeqCst) == RANGES_YES => {
@@ -4528,6 +4563,14 @@ async fn request(ctx: &Ctx, target: &Target, from: u64, to: u64) -> Result<Body,
             if ctx.never_page && !ctx.web_page_ok {
                 not_a_page(body, &ctx.cancel).await?;
             }
+            return Err(Error::FileChanged);
+        }
+        // A full body before any part came (the ranges not known yet) whose whole-file digest
+        // isn't the download's: not a server without ranges but another version of the file
+        // (#1646). Taken for one, the download went on with its first connection alone and
+        // nothing said the file had changed. Without a digest on either side it can't be told
+        // from a server that ignores ranges, and goes on as one below.
+        StatusCode::OK if other_version(ctx, &head) => {
             return Err(Error::FileChanged);
         }
         StatusCode::OK if ctx.browser.is_some() => {
@@ -4613,12 +4656,15 @@ fn per_node_etag(ctx: &Ctx, sent: Option<&HeaderValue>, resp: &Head) -> bool {
 fn other_server_copy(ctx: &Ctx, resp: &Head) -> bool {
     let mut v = ctx.validators.lock().unwrap();
     let host = resp.url.host_str();
-    let theirs = Validators::from_response(
-        header_str(&resp.headers, header::ETAG),
-        header_str(&resp.headers, header::LAST_MODIFIED),
-        header_str(&resp.headers, header::DATE),
-        host,
-    );
+    let theirs = Validators {
+        digests: digests_of(&resp.headers),
+        ..Validators::from_response(
+            header_str(&resp.headers, header::ETAG),
+            header_str(&resp.headers, header::LAST_MODIFIED),
+            header_str(&resp.headers, header::DATE),
+            host,
+        )
+    };
     let same = is_other_server_copy(&v, &theirs, &resp.url, resp.len == Some(ctx.size));
     if same {
         ctx.shared.event(format!(
@@ -4644,6 +4690,144 @@ fn is_other_server_copy(ours: &Validators, theirs: &Validators, at: &Url, same_l
     let party =
         sites::expiring(at) && was.set_host(Some(old)).is_ok() && sites::same_party(&was, at);
     party && same_len && theirs.etag.is_some() && theirs != ours
+}
+
+/// A full answer to an `If-Range` the copy it came from didn't match (its own ETag or date)
+/// that still carries the whole file's digest the download has, at the file's length: another
+/// copy of the same file. From then on the download asks its ranges without `If-Range` and
+/// takes only answers that carry that digest (`digest_agrees`): a part of another version
+/// carries another digest, or none, and is never written.
+fn copy_by_digest(ctx: &Ctx, sent: Option<&HeaderValue>, resp: &Head) -> bool {
+    if !refused_if_range(ctx, sent, resp) {
+        return false;
+    }
+    let mut v = ctx.validators.lock().unwrap();
+    if v.same_digest(&digests_of(&resp.headers)) != Some(true) {
+        return false;
+    }
+    if !v.by_digest {
+        v.etag = None;
+        v.etag_host = None;
+        v.last_modified = None;
+        v.by_digest = true;
+        ctx.shared.event(format!(
+            "{} serves another copy of the file (its own ETag and date, the same content digest): going on by the digest",
+            resp.url.host_str().unwrap_or("?")
+        ));
+    }
+    true
+}
+
+/// A full answer, at the file's length, to an `If-Range` whose validator it doesn't carry: the
+/// copy it came from isn't the one the download started on (or the file changed). The same
+/// validator back means the server ignored the range (no ranges, or an edge without them).
+fn refused_if_range(ctx: &Ctx, sent: Option<&HeaderValue>, resp: &Head) -> bool {
+    let Some(sent) = sent.and_then(|s| s.to_str().ok()) else {
+        return false;
+    };
+    let h = &resp.headers;
+    let theirs = match sent.starts_with('"') {
+        true => header_str(h, header::ETAG),
+        false => header_str(h, header::LAST_MODIFIED),
+    };
+    theirs != Some(sent) && resp.len == Some(ctx.size)
+}
+
+/// A full answer that carries a whole-file digest of the same kind as the download's with
+/// another value: another version of the file, whatever the ranges turn out to be.
+fn other_version(ctx: &Ctx, resp: &Head) -> bool {
+    let v = ctx.validators.lock().unwrap();
+    v.same_digest(&digests_of(&resp.headers)) == Some(false)
+}
+
+/// How long an answer from another copy waits for the download to learn its digest.
+const DIGEST_WAIT: Duration = Duration::from_secs(10);
+
+/// [`refused_if_range`] with a digest, where the download has none yet (it started before MDM
+/// kept them, or on an answer without one): the same file or another can't be told yet.
+fn unproven_copy(ctx: &Ctx, sent: Option<&HeaderValue>, resp: &Head) -> bool {
+    let v = ctx.validators.lock().unwrap();
+    v.digests.is_empty()
+        && !v.by_digest
+        && refused_if_range(ctx, sent, resp)
+        && !digests_of(&resp.headers).is_empty()
+}
+
+/// Wait, at most [`DIGEST_WAIT`], for another connection's validated part to teach the
+/// download its digest (`digest_agrees`); then the answer is judged by it (`copy_by_digest`),
+/// and without one it is a changed file, as before.
+async fn await_digest(ctx: &Ctx) -> Result<(), Error> {
+    let learned = ctx.digest_learned.notified();
+    tokio::pin!(learned);
+    learned.as_mut().enable();
+    if !ctx.validators.lock().unwrap().digests.is_empty() {
+        return Ok(());
+    }
+    cancellable(&ctx.cancel, async {
+        let _ = tokio::time::timeout(DIGEST_WAIT, learned).await;
+        Ok(())
+    })
+    .await
+}
+
+/// Whether a part's answer may be this file's by its digest: one it carries must be the
+/// download's; once copies are told apart only by it (`by_digest`), it must carry one. A
+/// download without a digest yet (started before MDM kept them, or on a server that sent none)
+/// learns it from a part the server validated (`validated`: it was asked with `If-Range`): that
+/// part is the version on disk, so its digest is too.
+fn digest_agrees(ctx: &Ctx, validated: bool, resp: &Head) -> bool {
+    let mut v = ctx.validators.lock().unwrap();
+    let theirs = digests_of(&resp.headers);
+    match v.same_digest(&theirs) {
+        Some(same) => same,
+        None if v.by_digest => false,
+        None => {
+            if validated && v.digests.is_empty() && !theirs.is_empty() {
+                v.digests = theirs;
+                ctx.digest_learned.notify_waiters();
+            }
+            true
+        }
+    }
+}
+
+/// The whole file's digests an answer carries, the same whatever its range (`name=value`):
+/// object stores' and their CDNs' CRC-64 (Alibaba Cloud OSS, Tencent COS), the SHA-256 model
+/// hubs send for a stored file (`X-Linked-ETag`: Hugging Face's, ModelScope's), Google Cloud
+/// Storage's hashes and RFC 9530's `Repr-Digest`. Not `Content-MD5` or `Digest`, which may
+/// describe only the part sent.
+pub(crate) fn digests_of(h: &HeaderMap) -> Vec<String> {
+    let mut found = Vec::new();
+    for name in ["x-oss-hash-crc64ecma", "x-cos-hash-crc64ecma"] {
+        if let Some(v) = h.get(name).and_then(|v| v.to_str().ok()).map(str::trim)
+            && !v.is_empty()
+            && v.bytes().all(|b| b.is_ascii_digit())
+        {
+            found.push(format!("{name}={v}"));
+        }
+    }
+    if let Some(v) = h
+        .get("x-linked-etag")
+        .and_then(|v| v.to_str().ok())
+        .map(|v| v.trim().trim_matches('"').to_ascii_lowercase())
+        .filter(|v| v.len() == 64 && v.bytes().all(|b| b.is_ascii_hexdigit()))
+    {
+        found.push(format!("x-linked-etag={v}"));
+    }
+    for name in ["x-goog-hash", "repr-digest"] {
+        for v in h.get_all(name).iter().filter_map(|v| v.to_str().ok()) {
+            for part in v.split(',') {
+                if let Some((algo, value)) = part.trim().split_once('=') {
+                    let algo = algo.trim().to_ascii_lowercase();
+                    let value = value.trim().trim_matches(':');
+                    if !algo.is_empty() && !value.is_empty() {
+                        found.push(format!("{name}:{algo}={value}"));
+                    }
+                }
+            }
+        }
+    }
+    found
 }
 
 fn header_str(h: &HeaderMap, name: header::HeaderName) -> Option<&str> {
@@ -6359,6 +6543,46 @@ mod tests {
         );
         assert!(parse_content_range(&h).is_err());
     }
+    /// #1577: the whole file's digests an answer carries (the same whatever its range), and
+    /// not what may describe only the part sent (`Content-MD5`) or isn't a digest.
+    #[test]
+    fn digests_of_reads_the_whole_files_digests() {
+        let sha = "6b86e41dfa4757b03e8496a95bf7cb2a3bdf00eda20f1a37b7a2ed3716ffb45a";
+        let mut h = HeaderMap::new();
+        let mut add = |name: &'static str, v: &str| {
+            h.append(name, HeaderValue::from_str(v).unwrap());
+        };
+        add("x-oss-hash-crc64ecma", "18197294942945379439");
+        add("x-cos-hash-crc64ecma", "not-a-number");
+        add("x-linked-etag", &sha.to_ascii_uppercase());
+        add(
+            "x-goog-hash",
+            "crc32c=n03x6A==, md5=Ojk9c3dhfxgoKVVHYwFbHQ==",
+        );
+        add(
+            "repr-digest",
+            "sha-256=:RK/0qy18MlBSVnWgjwz6lZEWjP/lF5HF9bvEF8FabDg=:",
+        );
+        add("content-md5", "Ojk9c3dhfxgoKVVHYwFbHQ==");
+        add(
+            "digest",
+            "SHA-256=RK/0qy18MlBSVnWgjwz6lZEWjP/lF5HF9bvEF8FabDg=",
+        );
+        assert_eq!(
+            digests_of(&h),
+            [
+                "x-oss-hash-crc64ecma=18197294942945379439".to_owned(),
+                format!("x-linked-etag={sha}"),
+                "x-goog-hash:crc32c=n03x6A==".to_owned(),
+                "x-goog-hash:md5=Ojk9c3dhfxgoKVVHYwFbHQ==".to_owned(),
+                "repr-digest:sha-256=RK/0qy18MlBSVnWgjwz6lZEWjP/lF5HF9bvEF8FabDg=".to_owned(),
+            ]
+        );
+        let mut h = HeaderMap::new();
+        h.insert("x-linked-etag", HeaderValue::from_static("\"abc\""));
+        assert!(digests_of(&h).is_empty(), "not a SHA-256");
+    }
+
     fn copy_validators(etag: &str, host: &str, modified: &str) -> Validators {
         Validators::from_response(
             Some(etag),

@@ -1274,6 +1274,7 @@ fn supervise(
     engine: Option<&ByEngine>,
     saved: Option<&mdm_engine::FileHook>,
     recorder: &Recorder,
+    part: Option<&PartRun>,
 ) {
     // The first run only: a run after it looks the page up afresh (links expire).
     let mut preloaded = preloaded;
@@ -1313,6 +1314,7 @@ fn supervise(
                 engine,
                 &cookies,
                 recorder,
+                part,
             )
         };
         match ended {
@@ -1706,6 +1708,7 @@ fn run(
     child: &Child,
     mut meter: Option<&mut Meter>,
     recorder: &Recorder,
+    cut: Option<&Cut>,
 ) -> Result<Option<Ran>, String> {
     // A live stream yt-dlp records: what it says nothing of, its recording's size tells. What is
     // in the folder before yt-dlp starts is not the recorder's (taken before the spawn: the
@@ -1727,8 +1730,14 @@ fn run(
         if progress.lock().unwrap().state == State::Stopped || recorder.saving() {
             return Ok(None);
         }
-        let spawned =
-            proc::ytdlp_info(exe, &[], ours, file, url).and_then(|cmd| proc::spawn(cmd, "yt-dlp"));
+        let spawned = proc::ytdlp_info(exe, &[], ours, file, url).and_then(|mut cmd| {
+            // A part read through MDM's server (#1662): ffmpeg goes to 127.0.0.1 straight, never
+            // through a proxy yt-dlp hands it (the network adapter's relay, Options' proxy).
+            if cut.is_some_and(|c| c.server.is_some()) {
+                cmd.env("no_proxy", "127.0.0.1,localhost");
+            }
+            proc::spawn(cmd, "yt-dlp")
+        });
         match spawned {
             Ok(mut s) => {
                 let out = s.child.stdout.take().expect("piped");
@@ -1748,6 +1757,9 @@ fn run(
         scope.spawn(|| watch_merge(&merged, &read_all, progress));
         if let Some((dir, stem, before)) = &recording {
             scope.spawn(|| watch_recording(dir, stem, before, &read_all, progress));
+        }
+        if let Some(c) = cut {
+            scope.spawn(|| watch_cut(c, ours, &read_all, progress));
         }
         // Every line to the end, read as bytes (#79): a line that isn't UTF-8 (a title in a
         // legacy code page) used to end the reading there, while yt-dlp went on; it is read
@@ -2098,6 +2110,7 @@ fn attempt(
     engine: Option<&ByEngine>,
     cookies: &Cookies,
     recorder: &Recorder,
+    part: Option<&PartRun>,
 ) -> Attempt {
     let failed = |error: String, rerouted: bool| Attempt::Failed { error, rerouted };
     cookies.droppable.set(false);
@@ -2155,9 +2168,30 @@ fn attempt(
         return failed(format!("Cannot write the video information: {e}"), rerouted);
     }
     let _cleanup = Remove(file.clone());
+    // A part (#1662): yt-dlp's ffmpeg cuts it, reading through MDM's connections when the
+    // engine runs (`partserve`).
+    let mut cut = None;
+    if let Some(pr) = part {
+        match prepare_part(
+            exe, url, browser, ours, &mut info, &file, progress, engine, cookies, pr, expected,
+            dead, reroute,
+        ) {
+            Ok(c) => cut = Some(c),
+            Err(None) => return Attempt::Stopped,
+            Err(Some(e)) => return failed(e, rerouted),
+        }
+    }
+    let with_cut: Vec<String>;
+    let ours = match &cut {
+        Some(c) => {
+            with_cut = [ours, &c.args[..]].concat();
+            &with_cut[..]
+        }
+        None => ours,
+    };
     // MDM's engine downloads the streams (#769); yt-dlp then finds them in place.
     let mut by_engine = false;
-    if let Some(e) = engine {
+    if let Some(e) = engine.filter(|_| part.is_none()) {
         // With the run's selector: the nearest quality once the chosen one wasn't offered
         // (#94), or the engine would ask for that one again (#1240).
         let selector = selector_of(ours);
@@ -2177,8 +2211,9 @@ fn attempt(
         }
     }
     let mut meter = Meter::new(expected);
-    // The streams are in place: what yt-dlp says of them isn't the download's progress.
-    let meter = (!by_engine).then_some(&mut meter);
+    // The streams are in place: what yt-dlp says of them isn't the download's progress. Nor is
+    // it a part's: its ffmpeg says nothing until the end, what it reads is the progress.
+    let meter = (!by_engine && cut.is_none()).then_some(&mut meter);
     // A live stream yt-dlp records again (Resume, another try) would be recorded over the last
     // recording: kept aside first, or yt-dlp isn't started.
     if progress.lock().unwrap().helper == Some(crate::streams::Helper::Live)
@@ -2187,12 +2222,29 @@ fn attempt(
     {
         return Attempt::Blocked(e);
     }
-    let ran = match run(exe, url, ours, &file, progress, child, meter, recorder) {
+    let ran = match run(
+        exe,
+        url,
+        ours,
+        &file,
+        progress,
+        child,
+        meter,
+        recorder,
+        cut.as_ref(),
+    ) {
         Ok(Some(r)) => r,
         Ok(None) if recorder.saving() => return Attempt::Save(None),
         Ok(None) => return Attempt::Stopped,
         Err(e) => return failed(e, rerouted),
     };
+    // What MDM's connections met, in its words rather than ffmpeg's (an I/O error).
+    let mut ran = ran;
+    if let Some(why) = cut.as_ref().and_then(|c| c.server.as_ref()?.failure())
+        && !ran.status.as_ref().is_ok_and(|s| s.success())
+    {
+        ran.failure = format!("The part couldn't be downloaded: {why}");
+    }
     // Stopped to be saved: whatever ended the run, its recording is saved as it is, and nothing
     // runs again (no other try, no look-up). Unless yt-dlp finished first, and said so.
     if recorder.saving()
@@ -2268,6 +2320,7 @@ fn attempt(
             child,
             None,
             recorder,
+            None,
         ) {
             Ok(Some(again)) if again.status.as_ref().is_ok_and(|s| s.success()) => {
                 still = subtitle_failures(&again.warnings);
@@ -2349,6 +2402,271 @@ fn choose(
 
 /// yt-dlp's choice as a line of JSON: `MDMJ {…}` (`filename` and the chosen formats in it).
 const CHOICE: &str = "MDMJ %()j";
+
+/// A part's download (#1662): the part, how yt-dlp chooses the formats (the download's `-f`,
+/// `-o`, merge and conversion, without downloading), and the ffmpeg its exact cut encodes with.
+pub(crate) struct PartRun {
+    part: crate::part::Part,
+    choose: Vec<String>,
+    ffmpeg: Option<PathBuf>,
+}
+
+/// A run of a part as prepared: what it adds to yt-dlp's arguments (an exact cut's encoders),
+/// MDM's server its ffmpeg reads through (with MDM's engine), and its size as far as told.
+struct Cut {
+    args: Vec<String>,
+    server: Option<crate::partserve::PartServer>,
+    total: Option<u64>,
+}
+
+/// A run of a part on the page looked up into `file` (`info`, its servers as this run moved
+/// them): yt-dlp's choice of formats, the exact cut's encoders for what it makes, the part's
+/// size (`expected`, the window's estimate, else its share of the chosen formats'), and, with
+/// MDM's `engine`, the server each chosen stream is read through (a file over HTTP, an HLS
+/// playlist; another kind ffmpeg reads itself), its address in the page in their place. `Err(None)`:
+/// stopped meanwhile.
+#[allow(clippy::too_many_arguments)]
+fn prepare_part(
+    exe: &Path,
+    url: &str,
+    browser: &[String],
+    ours: &[String],
+    info: &mut serde_json::Value,
+    file: &Path,
+    progress: &Mutex<Progress>,
+    engine: Option<&ByEngine>,
+    cookies: &Cookies,
+    pr: &PartRun,
+    expected: Option<u64>,
+    dead: &std::collections::BTreeSet<String>,
+    reroute: bool,
+) -> Result<Cut, Option<String>> {
+    // With the run's selector: the nearest quality once the chosen one wasn't offered (#94).
+    let args = match selector_of(ours) {
+        Some(s) => with_selector(&pr.choose, s),
+        None => pr.choose.clone(),
+    };
+    let choose_args = cookies.args(&args);
+    let chosen = choose(exe, url, &choose_args, file).map_err(Some)?;
+    if progress.lock().unwrap().state == State::Stopped {
+        return Err(None);
+    }
+    let part = &pr.part;
+    let mut args = Vec::new();
+    if part.exact
+        && let Some(ff) = &pr.ffmpeg
+    {
+        let made = crate::part::Made::of(&chosen);
+        let encode = crate::part::exact_args(&made, &crate::part::encoders(ff));
+        if !encode.is_empty() {
+            args.extend([
+                "--downloader-args".into(),
+                crate::part::downloader_args("ffmpeg_o", &encode),
+            ]);
+        }
+    }
+    let formats: Vec<&serde_json::Value> = chosen
+        .get("requested_formats")
+        .and_then(serde_json::Value::as_array)
+        .filter(|a| !a.is_empty())
+        .map(|a| a.iter().collect())
+        .unwrap_or_else(|| vec![&chosen]);
+    let duration = chosen
+        .get("duration")
+        .or_else(|| info.get("duration"))
+        .and_then(serde_json::Value::as_f64);
+    let size_of = |f: &serde_json::Value| {
+        let n = |k: &str| {
+            f.get(k)
+                .and_then(serde_json::Value::as_f64)
+                .filter(|n| *n > 0.0)
+        };
+        n("filesize")
+            .or(n("filesize_approx"))
+            .or_else(|| Some(n("tbr")? * duration? * 125.0))
+            .map(|n| n as u64)
+    };
+    let whole: Option<u64> = formats.iter().map(|f| size_of(f)).sum();
+    let total = expected.or_else(|| part.estimate(whole, duration));
+    let server = match engine {
+        Some(e) => serve_part(
+            e,
+            &formats,
+            info,
+            file,
+            (part, duration),
+            (exe, url, browser),
+            &choose_args,
+            dead,
+            reroute,
+        )
+        .map_err(Some)?,
+        None => None,
+    };
+    let hours = crate::part::length(duration).is_some_and(|l| l >= 3600);
+    note(
+        progress,
+        format!(
+            "Only the part from {} to {}: {}",
+            crate::part::clock(part.from, hours),
+            crate::part::clock(part.to, hours),
+            if part.exact {
+                "an exact cut, encoded again"
+            } else {
+                "a quick cut, at the keyframes"
+            }
+        ),
+    );
+    if server.is_some() {
+        note(
+            progress,
+            "ffmpeg reads the part through MDM's connections".into(),
+        );
+    }
+    let mut p = progress.lock().unwrap();
+    p.helper = None;
+    p.engine = None;
+    p.total = total;
+    p.downloaded = 0;
+    p.speed = 0.0;
+    Ok(Cut {
+        args,
+        server,
+        total,
+    })
+}
+
+/// MDM's server for a part's chosen `formats` (#1662, [`crate::partserve`]): each one over HTTP
+/// (a file, an HLS playlist) is read through it, its address in the page looked up into `file`
+/// (`info`) made the server's. None when none can be. `page`: yt-dlp, the page's address and the
+/// browser's context, for an address that dies, asked again as the engine's streams are.
+#[allow(clippy::too_many_arguments)]
+fn serve_part(
+    e: &ByEngine,
+    formats: &[&serde_json::Value],
+    info: &mut serde_json::Value,
+    file: &Path,
+    (part, duration): (&crate::part::Part, Option<f64>),
+    page: (&Path, &str, &[String]),
+    choose_args: &[String],
+    dead: &std::collections::BTreeSet<String>,
+    reroute: bool,
+) -> Result<Option<crate::partserve::PartServer>, String> {
+    let mut sources = Vec::new();
+    for f in formats {
+        let text = |k: &str| f.get(k).and_then(serde_json::Value::as_str);
+        let playlist = matches!(text("protocol"), Some("m3u8" | "m3u8_native"));
+        let plain = matches!(text("protocol"), Some("http" | "https"));
+        let (Some(id), true) = (text("format_id"), playlist || plain) else {
+            continue;
+        };
+        let Some(s) = crate::streams::stream_of(f) else {
+            continue;
+        };
+        sources.push(crate::partserve::Source {
+            url: s.url,
+            headers: s.headers,
+            size: s.size.filter(|_| s.exact),
+            playlist,
+            format_id: id.to_owned(),
+            ends_near: ends_near(s.size, part, duration),
+        });
+    }
+    if sources.is_empty() {
+        return Ok(None);
+    }
+    let relink: crate::partserve::Relink = {
+        let (exe, url, browser) = (page.0.to_owned(), page.1.to_owned(), page.2.to_vec());
+        let (choose, dead) = (choose_args.to_vec(), dead.clone());
+        Arc::new(move |id: &str| {
+            let f = relink(&exe, &url, &browser, &choose, &dead, reroute, id)?;
+            let s = crate::streams::stream_of(&f).ok_or("no address for the stream")?;
+            Ok((s.url, s.headers))
+        })
+    };
+    let server = crate::partserve::PartServer::start(
+        &e.engine.handle,
+        e.engine.opts.clone(),
+        e.current.limiter(),
+        sources.clone(),
+        Some(relink),
+    )
+    .map_err(|err| format!("Cannot start the part's server: {err}"))?;
+    for (i, s) in sources.iter().enumerate() {
+        let local = serde_json::Value::String(server.url(i));
+        let ours = |f: &serde_json::Value| {
+            f.get("format_id").and_then(serde_json::Value::as_str) == Some(s.format_id.as_str())
+        };
+        if let Some(all) = info
+            .get_mut("formats")
+            .and_then(serde_json::Value::as_array_mut)
+        {
+            all.iter_mut()
+                .filter(|f| ours(f))
+                .for_each(|f| f["url"] = local.clone());
+        } else if ours(info) {
+            info["url"] = local;
+        }
+    }
+    std::fs::write(file, info.to_string())
+        .map_err(|err| format!("Cannot write the video information: {err}"))?;
+    Ok(Some(server))
+}
+
+/// About where `part` ends in a stream of `size` bytes `duration` long (#1662): its share of the
+/// stream, and a tenth of the part's size and a MB more, for a bitrate that varies.
+fn ends_near(size: Option<u64>, part: &crate::part::Part, duration: Option<f64>) -> Option<u64> {
+    let d = duration.filter(|d| *d > 0.0)?;
+    let size = size? as f64;
+    let end = size * f64::from(part.to) / d;
+    let len = size * f64::from(part.seconds()) / d;
+    Some((end + len / 10.0) as u64 + (1 << 20))
+}
+
+/// A part's progress while its ffmpeg runs (#1662): what MDM's server brought in, or (ffmpeg
+/// reading by itself) the size of the file it writes, against the part's size, every quarter
+/// second; held short of the whole while it runs. Ends when the reading does.
+fn watch_cut(
+    c: &Cut,
+    ours: &[String],
+    read_all: &std::sync::atomic::AtomicBool,
+    progress: &Mutex<Progress>,
+) {
+    let place = template_of(ours);
+    let mut last: Option<(Instant, u64)> = None;
+    let mut speed = 0.0;
+    while !read_all.load(std::sync::atomic::Ordering::Relaxed) {
+        std::thread::sleep(Duration::from_millis(250));
+        let got = match (&c.server, &place) {
+            (Some(s), _) => {
+                speed = s.speed();
+                s.given()
+            }
+            (None, Some((dir, stem))) => {
+                let got: u64 = parts_of(dir, stem).iter().map(|(_, n)| n).sum();
+                let now = Instant::now();
+                if let Some((t, was)) = last {
+                    let dt = now.duration_since(t).as_secs_f64();
+                    if dt >= 1.0 {
+                        speed = got.saturating_sub(was) as f64 / dt;
+                        last = Some((now, got));
+                    }
+                } else {
+                    last = Some((now, got));
+                }
+                got
+            }
+            (None, None) => continue,
+        };
+        let mut p = progress.lock().unwrap();
+        p.downloaded = got;
+        p.speed = speed;
+        p.total = Some(match c.total {
+            Some(t) if (got as f64) < t as f64 * MAX_WHILE_RUNNING => t,
+            _ => (got as f64 / MAX_WHILE_RUNNING) as u64 + 1,
+        });
+    }
+}
 
 /// MDM's engine for a video's streams (#769): the engine itself, the arguments yt-dlp chooses
 /// the formats with (`choose`), and the download's engine part under way.
@@ -2612,7 +2930,7 @@ impl VideoJob {
     ) -> Result<VideoJob, ProcError> {
         Self::start_with(
             exe, url, selector, dir, stem, rate, ffmpeg, expected, browser, subs, None, engine,
-            None,
+            None, None,
         )
     }
 
@@ -2620,7 +2938,9 @@ impl VideoJob {
     /// it is for this very choice. `saved` is shown the video and the files saved beside it
     /// (subtitles) on the job's own thread before the job says it is done (#1103): the app's
     /// mark that they came from the internet, written before the file is announced, opened or
-    /// renamed (a rename keeps the mark), and never on the window's thread.
+    /// renamed (a rename keeps the mark), and never on the window's thread. `part`: only that
+    /// part of it (#1662, [`crate::part`]), without subtitles or chapters (they'd be the whole
+    /// video's, out of step with the part); it needs `ffmpeg`.
     #[allow(clippy::too_many_arguments)]
     pub fn start_with(
         exe: &Path,
@@ -2636,6 +2956,7 @@ impl VideoJob {
         preloaded: Option<Preloaded>,
         engine: Option<crate::streams::Engine>,
         saved: Option<mdm_engine::FileHook>,
+        part: Option<crate::part::Part>,
     ) -> Result<VideoJob, ProcError> {
         proc::safe(url)?;
         let preloaded = preloaded.filter(|p| p.selector == selector);
@@ -2661,8 +2982,9 @@ impl VideoJob {
         // What comes down is the sound as the site has it, not the file the choice's size
         // estimated: the progress follows yt-dlp's own total.
         let expected = if convert.is_some() { None } else { expected };
-        // Subtitles go with a picture only (none for a sound).
-        let with_subs = convert.is_none() && !subs.langs.is_empty();
+        // Subtitles go with a picture only (none for a sound), and with the whole video only: a
+        // part's would be the whole's, their times out of step with it (#1662).
+        let with_subs = convert.is_none() && !subs.langs.is_empty() && part.is_none();
         // How yt-dlp chooses the formats for the engine (#769): the same choice, merge and
         // conversion as the download's run, without downloading.
         let mut choose: Vec<String> = vec![
@@ -2709,13 +3031,25 @@ impl VideoJob {
                     ours.extend(["--audio-quality".into(), q]);
                 }
             }
-            None => ours.extend(subtitle_args(subs, ffmpeg.is_some())),
+            None if part.is_none() => ours.extend(subtitle_args(subs, ffmpeg.is_some())),
+            None => {}
         }
+        // A part's chapters would be the whole video's, at the whole's times (yt-dlp doesn't
+        // move them): none.
         ours.extend(chapter_args(
-            CHAPTERS.load(std::sync::atomic::Ordering::Relaxed),
+            CHAPTERS.load(std::sync::atomic::Ordering::Relaxed) && part.is_none(),
             ffmpeg.is_some(),
             converted,
         ));
+        // Only the part (#1662): yt-dlp's ffmpeg seeks to it in each stream and reads only it;
+        // an exact cut has it encode the part again (its encoders are chosen with the formats,
+        // `prepare_part`).
+        if let Some(p) = &part {
+            ours.extend(["--download-sections".into(), p.sections()]);
+            if p.exact {
+                ours.push("--force-keyframes-at-cuts".into());
+            }
+        }
         let (theirs, cookies) = browser.args(url)?;
         retry_base.extend(theirs.iter().cloned());
         ours.extend(theirs.iter().cloned());
@@ -2755,8 +3089,9 @@ impl VideoJob {
         }
         // The engine's streams are there before yt-dlp's run: it fixes them up all the same
         // (`--fixup force`; by default only what it downloaded itself), as after its own
-        // download: a DASH M4A sound, HLS pieces' MPEG-TS in an MP4.
-        if engine.is_some() {
+        // download: a DASH M4A sound, HLS pieces' MPEG-TS in an MP4. A part is yt-dlp's own
+        // download (its ffmpeg's), fixed up as yt-dlp fixes its own.
+        if engine.is_some() && part.is_none() {
             ours.extend(["--fixup".into(), "force".into()]);
         }
         // Whose cookies yt-dlp has, for the log (#229): the browser's name only, never a
@@ -2794,6 +3129,11 @@ impl VideoJob {
         let current = Arc::new(crate::streams::Current::new(
             engine.as_ref().and_then(|e| e.opts.speed_limit),
         ));
+        let part = part.map(|part| PartRun {
+            part,
+            choose: choose.clone(),
+            ffmpeg: ffmpeg.map(Path::to_owned),
+        });
         let by_engine = engine.map(|engine| ByEngine {
             engine,
             choose,
@@ -2832,6 +3172,7 @@ impl VideoJob {
                         by_engine.as_ref(),
                         saved.as_ref(),
                         &recorder,
+                        part.as_ref(),
                     )
                 });
                 if std::panic::catch_unwind(run).is_err() {

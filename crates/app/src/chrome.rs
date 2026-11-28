@@ -1382,6 +1382,28 @@ pub fn style_popup(title: &str, look: PopupLook) -> bool {
     false
 }
 
+/// The frame of a small floating window of ours ([`PopupLook::Floating`]: the drop target, the
+/// tray icon's panel, #1365), filling `rect`: the window's fill and the floating windows' edge
+/// (the palette's `drop_edge`, named for the first of them), one look for all of them; `over`,
+/// something dragged over it (the drop target), the shared highlight and the accent instead.
+pub fn floating_frame(p: &egui::Painter, rect: Rect, over: bool) {
+    let (fill, edge) = if over {
+        (
+            winui::highlight_fill(winui::State::Hot, crate::theme::colors()).unwrap_or(winui::BG()),
+            winui::accent(),
+        )
+    } else {
+        (winui::BG(), crate::theme::colors().drop_edge)
+    };
+    p.rect_filled(rect, 0.0, fill);
+    p.rect_stroke(
+        rect,
+        0.0,
+        egui::Stroke::new(1.0, edge),
+        egui::StrokeKind::Inside,
+    );
+}
+
 /// Show the borderless window `vid` [`style_popup`] just styled (from its parent's pass).
 pub fn show_popup(ctx: &egui::Context, vid: egui::ViewportId) {
     ctx.send_viewport_cmd_to(vid, egui::ViewportCommand::Visible(true));

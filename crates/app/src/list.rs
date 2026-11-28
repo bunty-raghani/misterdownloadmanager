@@ -407,6 +407,9 @@ pub struct Row {
     /// How far the download is, 0..=1, when the model knows (a file with a known size): a screen
     /// reader gets it as the row's own progress bar (#1190).
     pub progress: Option<f64>,
+    /// From a private (incognito) window (#1581): the Status cell starts with a mask, and its
+    /// tip, and what a screen reader says of the row, with this (whether the list keeps it).
+    pub private: Option<String>,
 }
 
 #[derive(Default)]
@@ -971,6 +974,7 @@ pub fn show(
                 Some(whole) if *c == 3 => whole.as_str(),
                 _ => row.cells[*c].as_str(),
             })
+            .chain(row.private.as_deref())
             .filter(|t| !t.is_empty())
             .collect::<Vec<_>>()
             .join(", ");
@@ -1070,6 +1074,21 @@ pub fn show(
                 let tx = if *c == 0 {
                     icons.paint_in(ui, &bp, row.icon.clone(), pos2(x0 + 4.0, top));
                     x0 + 22.0
+                } else if *c == STATUS && row.private.is_some() {
+                    // A private window's download (#1581): a mask before its status, in the
+                    // row's text colour, kept to the cell.
+                    let ink = if sel { winui::SELECTION_TEXT() } else { TEXT() };
+                    let cell = Rect::from_min_max(pos2(*x0, top), pos2(*x1 - 1.0, top + row_h()));
+                    crate::chrome::paint_image(
+                        ui,
+                        &bp.with_clip_rect(screen(cell.intersect(body))),
+                        crate::icons::private_mark(ink),
+                        screen(Rect::from_min_size(
+                            pos2(x0 + 4.0, top),
+                            egui::vec2(16.0, 16.0),
+                        )),
+                    );
+                    x0 + 22.0
                 } else {
                     x0 + 6.0
                 };
@@ -1108,13 +1127,17 @@ pub fn show(
                     .map(english)
                     .is_some_and(|h| cell.contains(h))
                 {
-                    let tip = if *c == 3 {
+                    let tip = if *c == STATUS {
+                        // Private window's mark first (#1581), the whole status, the events.
                         let events = status_tip(idx);
-                        match &row.status_whole {
-                            Some(whole) if events.is_empty() => whole.clone(),
-                            Some(whole) => format!("{whole}\n{events}"),
-                            None => events,
-                        }
+                        row.private
+                            .iter()
+                            .chain(&row.status_whole)
+                            .chain(Some(&events))
+                            .filter(|t| !t.is_empty())
+                            .cloned()
+                            .collect::<Vec<_>>()
+                            .join("\n")
                     } else if *c == RATE && !row.cells[*c].is_empty() {
                         row.rate_tip.clone().unwrap_or_default()
                     } else {
@@ -1835,6 +1858,7 @@ mod tests {
             queued,
             cells,
             status_whole: None,
+            private: None,
             rate_tip: None,
             progress: None,
         }
@@ -2083,6 +2107,7 @@ mod tests {
                     _ => String::new(),
                 }),
                 status_whole: None,
+                private: None,
                 rate_tip: None,
                 progress: None,
             })

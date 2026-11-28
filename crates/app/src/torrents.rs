@@ -684,11 +684,26 @@ impl Host {
                 Ok(Done::Reannounced)
             }
             Act::Choose { files, pause } => {
-                if let Some(t) = self.get() {
+                // A file ticked now whose bytes are in a parts file (or kept in one by the
+                // running storage) has no file yet: it must be made and get them, even on a
+                // finished torrent whose session stopped while idle, so the session is started
+                // for it. Otherwise a stopped session only keeps the choice (Resume uses it).
+                let reopen = chosen_with_parts(
+                    state_dir().map(|d| d.join("session")).as_deref(),
+                    hash,
+                    &files,
+                );
+                let running = match self.get() {
+                    Some(t) => Some(t),
+                    None if reopen => Some(self.session(known).await?),
+                    None => None,
+                };
+                if let Some(t) = running {
                     if !t.has(hash) {
                         let bytes = read_kept(hash).await?;
-                        // Added, it opens every file at its paths, ticked or not: the same
-                        // check and hand-over as Start, before it is added.
+                        // Its ticked files are made (or checked) and handed over as at Start,
+                        // before it is added; a ticked file's bytes in a parts file go into it
+                        // as the engine opens it.
                         prepare_storage(self, spec, dest, protected).await?;
                         t.add(&bytes, &spec.folder, Some(files.clone()), Vec::new(), pause)
                             .await
@@ -698,9 +713,22 @@ impl Host {
                             })?;
                         return Ok(Done::Chosen);
                     }
-                    t.choose(hash, &files.into_iter().collect())
+                    // In the session: librqbit doesn't open its files again when the choice
+                    // changes, so the file is made (checked as at Start) and the torrent opened
+                    // again on it, its pieces kept; what the parts file held goes into it.
+                    if reopen {
+                        prepare_storage(self, spec, dest, protected).await?;
+                    }
+                    t.choose(hash, &files.iter().copied().collect())
                         .await
                         .map_err(err)?;
+                    if reopen {
+                        let bytes = read_kept(hash).await?;
+                        t.readd(hash, &bytes, false).await.map_err(|e| {
+                            revoke_grant(hash);
+                            err(e)
+                        })?;
+                    }
                     if pause {
                         if t.stats(hash).is_ok_and(|s| s.phase == Phase::Finished) {
                             t.remove(hash, false).await.map_err(err)?;
@@ -1248,6 +1276,12 @@ async fn forget_torrent(
                 }
             }
         }
+        // The parts of the pieces its unticked files shared: MDM's own, gone with it.
+        if let Err(e) =
+            mdm_torrent::authorized_storage::remove_parts(&data.join("session"), &spec.hash)
+        {
+            tracing::warn!("torrent {}: its parts files stayed: {e}", spec.hash);
+        }
         // Keep the metadata and rename mapping if deletion failed, for recovery.
         if let Some(file) = file {
             match std::fs::remove_file(file) {
@@ -1305,6 +1339,17 @@ pub struct ShareJob {
     pub spec: TorrentSpec,
     pub dest: PathBuf,
     pub claims: Arc<Vec<(u64, Vec<PathBuf>)>>,
+}
+
+/// Whether one of the files ticked now (`files`) has its bytes in a parts file under `session`
+/// (the torrents' session folder), or is kept in one by the running storage: it has no file
+/// yet, and ticking it must make it.
+fn chosen_with_parts(session: Option<&Path>, hash: &str, files: &[usize]) -> bool {
+    session.is_some_and(|s| {
+        files
+            .iter()
+            .any(|i| mdm_torrent::authorized_storage::has_parts(s, hash, *i))
+    })
 }
 
 /// The engine may not open a torrent's files on the grant it was given for another folder or
@@ -1405,40 +1450,49 @@ async fn prepare_storage_as(
             spec.folder.clone(),
             dest.to_owned(),
         );
+        let wanted = spec.files.clone();
         let result = tokio::task::spawn_blocking(move || {
-            owner2.prepare_consented(&data2, &folder2, &dest2, fresh)
+            owner2.prepare_for(&data2, &folder2, &dest2, fresh, wanted.as_deref())
         })
         .await
         .map_err(|e| e.to_string())?;
         match result {
-            Ok(files) => {
-                let (owner, folder, dest, ledger) = (
+            Ok(prepared) => {
+                let (owner, folder, dest, ledger, wanted) = (
                     owner.clone(),
                     spec.folder.clone(),
                     dest.to_owned(),
                     data.clone(),
+                    spec.files.clone(),
                 );
-                let now = crate::torrent_ownership::identities(&files);
+                let now = crate::torrent_ownership::identities(&prepared.files);
                 let swapped = held()
                     .lock()
                     .unwrap()
                     .insert(spec.hash.clone(), now.clone())
                     .is_some_and(|was| crate::torrent_ownership::swapped(&was, &now));
                 let hash = spec.hash.clone();
-                mdm_torrent::authorized_storage::authorize(
+                mdm_torrent::authorized_storage::authorize_parted(
                     &data.join("session"),
                     &spec.hash,
                     &spec.folder,
-                    files,
+                    prepared,
                     Arc::new(move || {
-                        // A later init (files chosen, re-added) takes new handles: they are
-                        // what the engine holds from then on.
-                        let files = owner.prepare(&ledger, &folder, &dest)?;
-                        held()
-                            .lock()
-                            .unwrap()
-                            .insert(hash.clone(), crate::torrent_ownership::identities(&files));
-                        Ok(files)
+                        // A later init (re-added, restarted after an error) takes new handles:
+                        // they are what the engine holds from then on. Files ticked since are
+                        // prepared again before (`Act::Choose`), with a grant of their own.
+                        let prepared = owner.prepare_for(
+                            &ledger,
+                            &folder,
+                            &dest,
+                            Vec::new(),
+                            wanted.as_deref(),
+                        )?;
+                        held().lock().unwrap().insert(
+                            hash.clone(),
+                            crate::torrent_ownership::identities(&prepared.files),
+                        );
+                        Ok(prepared)
                     }),
                 );
                 return Ok(swapped);
@@ -1907,9 +1961,76 @@ pub fn dest_for(
     }
 }
 
+/// A torrent through a debrid account (#44): the files ticked in Add torrent, `files` (indexes
+/// into `meta.files`), as the service is given them: their paths in the torrent, `/`-separated,
+/// padding files left out (None: all of them); and their total size.
+pub fn remote_choice(
+    meta: &mdm_torrent::Meta,
+    files: Option<&[usize]>,
+) -> (Option<Vec<String>>, u64) {
+    let ticked: Vec<&mdm_torrent::FileEntry> = meta
+        .files
+        .iter()
+        .enumerate()
+        .filter(|(i, f)| !f.padding && files.is_none_or(|c| c.contains(i)))
+        .map(|(_, f)| f)
+        .collect();
+    let size = ticked.iter().map(|f| f.size).sum();
+    if ticked.len() == meta.files.iter().filter(|f| !f.padding).count() {
+        return (None, size);
+    }
+    let paths = ticked
+        .iter()
+        .map(|f| {
+            f.path
+                .components()
+                .map(|c| c.as_os_str().to_string_lossy())
+                .collect::<Vec<_>>()
+                .join("/")
+        })
+        .collect();
+    (Some(paths), size)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_debrid_torrent_is_given_the_ticked_files_paths_and_size() {
+        let file = |p: &str, size, padding| mdm_torrent::FileEntry {
+            path: p.split('/').collect(),
+            size,
+            padding,
+        };
+        let meta = mdm_torrent::Meta {
+            name: "Lab Show".into(),
+            info_hash: "h".into(),
+            files: vec![
+                file("video.mkv", 2 << 20, false),
+                file(".pad/100", 100, true),
+                file("extras/notes.txt", 64 << 10, false),
+            ],
+            piece_length: 1 << 18,
+            torrent: Vec::new(),
+            peers: Vec::new(),
+        };
+        // All ticked (or the dialog's None): all, and no padding in the size.
+        assert_eq!(remote_choice(&meta, None), (None, (2 << 20) + (64 << 10)));
+        assert_eq!(
+            remote_choice(&meta, Some(&[0, 2])),
+            (None, (2 << 20) + (64 << 10))
+        );
+        assert_eq!(
+            remote_choice(&meta, Some(&[2])),
+            (Some(vec!["extras/notes.txt".to_owned()]), 64 << 10)
+        );
+        // A padding file's index never counts.
+        assert_eq!(
+            remote_choice(&meta, Some(&[0, 1])),
+            (Some(vec!["video.mkv".to_owned()]), 2 << 20)
+        );
+    }
 
     fn a_spec() -> TorrentSpec {
         TorrentSpec {
@@ -2195,6 +2316,23 @@ mod tests {
             }
         }
         session.stop().await;
+    }
+
+    /// A file ticked on a torrent out of the session (finished, its session stopped while
+    /// idle, or after MDM starts again) whose bytes are in a parts file needs the session: its
+    /// parts file on the disk says so.
+    #[test]
+    fn a_ticked_file_with_bytes_in_parts_needs_the_session() {
+        let tmp = tempfile::tempdir().unwrap();
+        let session = tmp.path().join("session");
+        let hash = "ab".repeat(20);
+        let parts = session.join(format!("{hash}.parts"));
+        std::fs::create_dir_all(&parts).unwrap();
+        std::fs::write(parts.join("3"), b"shared piece").unwrap();
+        assert!(chosen_with_parts(Some(&session), &hash, &[0, 3]));
+        assert!(!chosen_with_parts(Some(&session), &hash, &[0, 1]));
+        assert!(!chosen_with_parts(Some(&session), &"cd".repeat(20), &[3]));
+        assert!(!chosen_with_parts(None, &hash, &[3]));
     }
 
     /// #357: the ratio the list and the General tab share, and the seeding limit's.

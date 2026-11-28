@@ -89,7 +89,7 @@ A distribution's yt-dlp can also be too old for YouTube: if the list stays short
    - **Audio only FLAC**: a lossless `.flac` file, for a library or a program that wants FLAC. It can't add quality: the site's sound is already compressed with losses, and FLAC keeps it exactly as it came, in a file several times bigger. The window says so when you choose it.
 2. Pick one. Without ffmpeg, only the qualities that come with their sound are listed, and no MP3, Opus or FLAC (ffmpeg makes them).
 3. Check **Save to** (the Video category's folder by default) and **File name**, which comes from the video's title. A long title is shortened, at the end of a word, so that the files saved beside the video while it downloads fit the system's limit on a path's length; a name you type is kept as you typed it.
-4. Choose **Subtitles** if you want them (see below). **Embed chapters** is ticked: see [Chapters](#chapters).
+4. Choose **Subtitles** if you want them (see below). **Embed chapters** is ticked: see [Chapters](#chapters). To keep only a stretch of it, tick **Only a part**: see [Download only a part](#part).
 5. Click **Download Now**, or **Later** to add it to the list without starting.
 
 The video then downloads like any other file, with its own row in the list and its progress window.
@@ -154,6 +154,24 @@ Many videos are split into chapters on their page: YouTube's list under the play
 - It needs ffmpeg, which writes them. A video without chapters is saved as it is.
 - They go into a video (MP4, MKV, WebM) and into the sound as the site has it (**Audio only, original**), not into an MP3, Opus or FLAC file.
 - The command line (`video-get`) puts them in too, whenever ffmpeg is there.
+
+## Download only a part {#part}
+
+To save only a stretch of a video or of a sound (a scene, a song from a long mix, a few minutes of a podcast), tick **Only a part** on the **Part** row, under **Subtitles**, and type where it starts and where it ends.
+
+![The Part row of the video window: Only a part ticked, from 1:30 to 4:10, a quick cut, the part's size beside it](images/help/video-part.webp)
+*Only from 1:30 to 4:10, cut quickly; a part has no subtitles or chapters.*
+
+- **Times** are typed as `1:30` (a minute and a half), `1:02:03` (an hour, two minutes and three seconds) or in seconds (`90`). The boxes start at the whole video, from 0:00 to its end; **Up** and **Down** move a time by a second, **Page Up** and **Page Down** by ten. A box turns red while its time can't be (it isn't a time, the end comes before the start, it's past the video's end, or the part is the whole video), and **Download Now** says why.
+- **Quick cut, at keyframes**, the first choice: the picture and the sound are copied as they are, nothing is encoded again, so it's fast and loses nothing. A picture can only start cleanly at a keyframe, so the part starts at the last one before your start: a few seconds early at most, never late. A sound alone in an M4A starts where you say; in a WebM (Opus) at the last seek point before it, which can be ten seconds early.
+- **Exact cut, encoded again**: the part starts and ends where you said. ffmpeg encodes it again (H.264 and AAC in an MP4, VP9 and Opus in a WebM, the sound alone in its own format), which takes about as long as encoding that many minutes takes on your computer, and the picture may lose a little.
+- **The size** beside the times is an estimate: the part's share of the whole.
+- **File name** says the part: `My video (1m30s-4m10s).mp4`. A name you type is kept as you typed it.
+- **No subtitles and no chapters** go with a part: they'd be the whole video's, at the whole video's times. **Subtitles** and **Embed chapters** are greyed while **Only a part** is ticked.
+- It needs **ffmpeg**, which cuts the part, and a video whose length the site says (not a live stream). A playlist's videos are downloaded whole.
+- **From the browser**: the menu of the **Download video** button over a video has **Download a part from here...**. It opens this window with **Only a part** ticked and its start where the video is playing.
+
+How a part comes down: yt-dlp's ffmpeg finds the part in each stream by the stream's own index (an MP4's or a WebM's, an HLS stream's playlist) and reads only that part, never the whole file. What it reads comes in through MDM's own connections, in requests of a MB at most, several at once: a part comes about as fast as a whole video would (YouTube sends one long request at about the video's own pace), under your speed limits (a change applies at once), and through your proxy or network adapter. The progress window shows what has come against the part's estimated size. Paused and resumed, a part starts again from its beginning: ffmpeg can't go on from the middle of a cut. A stream sent another way (a DASH manifest, RTMP) is read by ffmpeg itself.
 
 ## Playlists and channels
 

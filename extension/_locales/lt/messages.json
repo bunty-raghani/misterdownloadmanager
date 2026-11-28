@@ -116,6 +116,18 @@
   "popup_fix": {
     "message": "Kaip tai ištaisyti"
   },
+  "popup_by_hand": {
+    "message": "Ši kopija buvo įkelta rankiniu būdu ir nebus atnaujinta automatiškai."
+  },
+  "popup_by_hand_firefox": {
+    "message": "Ši kopija buvo įkelta rankiniu būdu: ji nebus atnaujinama automatiškai, o naršyklė ją pašalins paleidus iš naujo."
+  },
+  "popup_store_chrome": {
+    "message": "Pridėti iš „Chrome“ internetinės parduotuvės"
+  },
+  "popup_store_firefox": {
+    "message": "Pridėti iš addons.mozilla.org"
+  },
   "popup_declined": {
     "message": "Palikta naršyklei: $name$",
     "placeholders": {
@@ -319,6 +331,9 @@
   },
   "video_all_qualities": {
     "message": "Visos kokybės ir subtitrai..."
+  },
+  "video_part": {
+    "message": "Atsisiųsti dalį nuo čia..."
   },
   "video_failed": {
     "message": "Mister Download Manager neįdiegta arba nepasileido"

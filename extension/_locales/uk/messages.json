@@ -116,6 +116,18 @@
   "popup_fix": {
     "message": "Як це виправити"
   },
+  "popup_by_hand": {
+    "message": "Ця копія була завантажена вручну і не оновлюватиметься автоматично."
+  },
+  "popup_by_hand_firefox": {
+    "message": "Цю копію завантажено вручну: вона не оновлюватиметься автоматично, а браузер видалить її після перезапуску."
+  },
+  "popup_store_chrome": {
+    "message": "Додати з Chrome Web Store"
+  },
+  "popup_store_firefox": {
+    "message": "Додати з addons.mozilla.org"
+  },
   "popup_declined": {
     "message": "Залишено браузеру: $name$",
     "placeholders": {
@@ -319,6 +331,9 @@
   },
   "video_all_qualities": {
     "message": "Усі якості та субтитри..."
+  },
+  "video_part": {
+    "message": "Завантажити частину звідси..."
   },
   "video_failed": {
     "message": "Mister Download Manager не встановлено або не запущено"

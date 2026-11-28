@@ -14,7 +14,7 @@ use mdm_labserver::{Config, LabServer, content};
 
 #[path = "support/fake_dns.rs"]
 mod support;
-use support::{FakeDns, fake_dns};
+use support::{FakeDns, fake_dns, silent_dns};
 
 fn options(dns: Dns) -> Options {
     Options {
@@ -72,16 +72,30 @@ async fn a_dead_dns_fails_the_download_and_names_itself() {
         headers: Default::default(),
         dest: Destination::Dir(dir.path().to_owned()),
     };
-    // TEST-NET-1 never answers; strict: no system fallback, so the download fails.
-    let err = Download::start(
-        req,
-        options(Dns::Plain(vec!["192.0.2.1:53".parse().unwrap()])),
-    )
-    .wait()
-    .await
-    .unwrap_err();
+    // A DNS on this computer that never answers, not an address nobody has (TEST-NET-1): a
+    // network that answers every DNS question itself, whatever address it went to (a transparent
+    // DNS proxy), answers for that one too, with "no such name" for this one, and the check
+    // passed for another reason. Strict: no system fallback, so the download fails.
+    let dns = silent_dns().await;
+    // The connect timeout covers the lookup too: a short one, so the wait for an answer that
+    // never comes is seconds, not the DNS's own time limit on every try.
+    let opts = Options {
+        connect_timeout: std::time::Duration::from_secs(2),
+        ..options(Dns::Plain(vec![dns.addr]))
+    };
+    let err = Download::start(req, opts).wait().await.unwrap_err();
     let text = format!("{err} {err:?}");
     assert!(text.contains("the test DNS"), "{text}");
+    // It was the one asked, and it is the DNS that didn't answer, not a name it doesn't know.
+    assert!(
+        dns.asked
+            .lock()
+            .unwrap()
+            .iter()
+            .any(|n| n == "files.mdm.test"),
+        "the test DNS wasn't asked"
+    );
+    assert!(!text.contains("NoSuchName"), "{text}");
 }
 
 /// Options → Proxy / Socks → Network adapter (#35), on this computer's loopback: 127.0.0.2

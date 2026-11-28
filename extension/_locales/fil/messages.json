@@ -116,6 +116,18 @@
   "popup_fix": {
     "message": "Paano ito ayusin"
   },
+  "popup_by_hand": {
+    "message": "Ini-load nang mano-mano ang kopyang ito at hindi ito mag-a-update nang kusa."
+  },
+  "popup_by_hand_firefox": {
+    "message": "Ang kopyang ito ay mano-manong ni-load: hindi ito mag-a-update nang kusa, at aalisin ito ng browser kapag nag-restart."
+  },
+  "popup_store_chrome": {
+    "message": "Idagdag ito mula sa Chrome Web Store"
+  },
+  "popup_store_firefox": {
+    "message": "Idagdag ito mula sa addons.mozilla.org"
+  },
   "popup_declined": {
     "message": "Iniwan sa browser: $name$",
     "placeholders": {
@@ -319,6 +331,9 @@
   },
   "video_all_qualities": {
     "message": "Lahat ng kalidad at subtitle..."
+  },
+  "video_part": {
+    "message": "I-download ang isang bahagi mula dito..."
   },
   "video_failed": {
     "message": "Hindi naka-install ang Mister Download Manager o hindi nagsimula"

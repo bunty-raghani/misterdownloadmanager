@@ -87,6 +87,9 @@ pub enum ServiceFault {
     /// A torrent's file whose name can't be written safely in its folder (it climbs out of it,
     /// `../`): nothing is written.
     UnsafeName(String),
+    /// A torrent's file ticked in Add torrent that the service's list doesn't hold (by its path
+    /// in the torrent): nothing is downloaded rather than every file.
+    ChosenFileMissing(String),
     /// Anything else, in the service's own words.
     Other(String),
 }
@@ -125,6 +128,12 @@ impl std::fmt::Display for ServiceFault {
             }
             ServiceFault::UnsafeName(n) => {
                 return write!(f, "a file's name can't be written safely: {n}");
+            }
+            ServiceFault::ChosenFileMissing(p) => {
+                return write!(
+                    f,
+                    "a file chosen in Add torrent isn't in the service's list: {p}"
+                );
             }
             ServiceFault::Other(m) => return f.write_str(m),
         };

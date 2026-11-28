@@ -2360,7 +2360,7 @@ fn segment_bar(p: &egui::Painter, o: Pos2, item: &Item, segments: &[(u64, f64)])
 
 /// The Pause button's label and kind: a live stream being recorded is stopped and saved (still
 /// `Action::Pause`, the app's `halt` saves it), and while it is saved the button waits.
-fn pause_button(
+pub(crate) fn pause_button(
     status: Status,
     live: Option<mdm_tools::video::LiveState>,
     resumable: Option<bool>,
@@ -2393,7 +2393,7 @@ fn pause_button(
 
 /// The labels the Pause button can show for one download, its width the widest's: "Stop and
 /// save" only in a live stream's window, so no other's buttons move.
-fn pause_labels(live_stream: bool) -> &'static [&'static str] {
+pub(crate) fn pause_labels(live_stream: bool) -> &'static [&'static str] {
     if live_stream {
         &["Pause", "Resume", "Stop and save"]
     } else {

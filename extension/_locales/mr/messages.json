@@ -116,6 +116,18 @@
   "popup_fix": {
     "message": "ते कसे दुरुस्त करावे"
   },
+  "popup_by_hand": {
+    "message": "ही कॉपी हाताने लोड केली होती आणि ती स्वतः अपडेट होणार नाही."
+  },
+  "popup_by_hand_firefox": {
+    "message": "ही प्रत हाताने लोड केली होती: ती स्वतः अपडेट होणार नाही, आणि ब्राउझर रीस्टार्ट झाल्यावर ती काढून टाकेल."
+  },
+  "popup_store_chrome": {
+    "message": "Chrome वेब स्टोअरमधून जोडा"
+  },
+  "popup_store_firefox": {
+    "message": "addons.mozilla.org वरून जोडा"
+  },
   "popup_declined": {
     "message": "ब्राउझरसाठी सोडले: $name$",
     "placeholders": {
@@ -319,6 +331,9 @@
   },
   "video_all_qualities": {
     "message": "सर्व गुणवत्ता स्तर आणि उपशीर्षके..."
+  },
+  "video_part": {
+    "message": "इथून एक भाग डाउनलोड करा..."
   },
   "video_failed": {
     "message": "Mister Download Manager स्थापित केलेले नाही किंवा सुरू झाले नाही"

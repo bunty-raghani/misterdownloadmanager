@@ -116,6 +116,18 @@
   "popup_fix": {
     "message": "修正方法"
   },
+  "popup_by_hand": {
+    "message": "このコピーは手動で読み込まれたため、自動更新されません。"
+  },
+  "popup_by_hand_firefox": {
+    "message": "このコピーは手動で読み込まれたものです。自動更新されず、ブラウザーを再起動すると削除されます。"
+  },
+  "popup_store_chrome": {
+    "message": "Chrome Web Store から追加"
+  },
+  "popup_store_firefox": {
+    "message": "addons.mozilla.org から追加"
+  },
   "popup_declined": {
     "message": "ブラウザーに残されました: $name$",
     "placeholders": {
@@ -319,6 +331,9 @@
   },
   "video_all_qualities": {
     "message": "すべての画質と字幕..."
+  },
+  "video_part": {
+    "message": "ここから一部をダウンロード..."
   },
   "video_failed": {
     "message": "Mister Download Manager がインストールされていないか、起動していません"

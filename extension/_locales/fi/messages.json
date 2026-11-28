@@ -116,6 +116,18 @@
   "popup_fix": {
     "message": "Miten korjata"
   },
+  "popup_by_hand": {
+    "message": "Tämä kopio ladattiin käsin, eikä se päivity itsestään."
+  },
+  "popup_by_hand_firefox": {
+    "message": "Tämä kopio ladattiin käsin: se ei päivity itsestään, ja selain poistaa sen uudelleenkäynnistyksen yhteydessä."
+  },
+  "popup_store_chrome": {
+    "message": "Lisää se Chrome Web Storesta"
+  },
+  "popup_store_firefox": {
+    "message": "Lisää se osoitteesta addons.mozilla.org"
+  },
   "popup_declined": {
     "message": "Jätetty selaimelle: $name$",
     "placeholders": {
@@ -319,6 +331,9 @@
   },
   "video_all_qualities": {
     "message": "Kaikki laadut ja tekstitykset..."
+  },
+  "video_part": {
+    "message": "Lataa osa tästä..."
   },
   "video_failed": {
     "message": "Mister Download Manager ei ole asennettu tai sitä ei käynnistetty"

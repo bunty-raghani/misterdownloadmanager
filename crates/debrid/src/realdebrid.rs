@@ -247,23 +247,28 @@ pub(crate) async fn add_magnet(http: &Http, token: &str, magnet: &str) -> Result
     Ok(a.id)
 }
 
-/// `GET torrents/info/{id}`; a torrent waiting for its files to be chosen gets all of them
-/// (`POST torrents/selectFiles/{id}`, `files=all`).
+/// `GET torrents/info/{id}`; a torrent waiting for its files to be chosen gets the ones ticked in
+/// Add torrent, `chosen` (`POST torrents/selectFiles/{id}`, `files` their ids comma-separated;
+/// None: `all`). A ticked file it doesn't list: nothing is selected.
 pub(crate) async fn torrent_status(
     http: &Http,
     token: &str,
     id: &str,
+    chosen: Option<&[String]>,
 ) -> Result<crate::torrents::Status, Fault> {
     let id = crate::plain_id(id)?;
     let rest = &http.services.rd.rest;
     let url = rest.join(&format!("torrents/info/{id}")).expect("relative");
     let info: crate::torrents::RdInfo = http.json(http.get(&url).bearer_auth(token), fault).await?;
     if info.status == "waiting_files_selection" {
+        let files = crate::torrents::rd_selection(&info, chosen)
+            .map_err(|p| Fault::Service(mdm_engine::ServiceFault::ChosenFileMissing(p)))?;
         let url = rest
             .join(&format!("torrents/selectFiles/{id}"))
             .expect("relative");
         http.empty(
-            http.post_form(&url, &[("files", "all")]).bearer_auth(token),
+            http.post_form(&url, &[("files", files.as_str())])
+                .bearer_auth(token),
             fault,
         )
         .await?;

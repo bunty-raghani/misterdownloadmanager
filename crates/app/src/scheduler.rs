@@ -992,9 +992,15 @@ impl Scheduler {
                 text(p, x, baseline, s, LIGHT_TEXT());
             },
         );
+        // The sentence's words are painted, not exposed: the box is named as its part of it
+        // reads (#1407).
+        let names = winui::sentence_names(
+            crate::i18n::t("Download {files} files at the same time"),
+            &["files"],
+        );
         let f = &mut self.forms[self.selected];
         // A spin box: the number and its arrows, one control.
-        winui::spin_box(
+        let files = winui::spin_box(
             ui,
             boxes[0],
             &mut f.files_at_once,
@@ -1003,6 +1009,7 @@ impl Scheduler {
             true,
             "files-at-once",
         );
+        winui::name(&files, &names[0]);
 
         // The queue's files: File Name, Size, Status, Time left.
         let list = r(o, 229.0, 82.0, 396.0, 294.0 + DY);
@@ -1209,8 +1216,12 @@ impl Scheduler {
                 text(p, x, baseline, s, c);
             },
         );
-        // Named as Options → Connection's are, from the constants beside the sentence they
-        // share (quota.rs): its words are painted, not exposed (#1407).
+        // Named as Options → Connection's are, from the sentence they share (quota.rs):
+        // its words are painted, not exposed (#1407).
+        let names = winui::sentence_names(
+            crate::i18n::t(crate::quota::LIMITS_SENTENCE),
+            &["mb", "hours"],
+        );
         let mb_box = winui::number_field(
             ui,
             boxes[0],
@@ -1220,7 +1231,7 @@ impl Scheduler {
             l.on,
             LIGHT_BG(),
         );
-        winui::name(&mb_box, crate::i18n::t(crate::quota::LIMITS_MB_NAME));
+        winui::name(&mb_box, &names[0]);
         let hours_box = winui::number_field(
             ui,
             boxes[1],
@@ -1230,7 +1241,7 @@ impl Scheduler {
             l.on,
             LIGHT_BG(),
         );
-        winui::name(&hours_box, crate::i18n::t(crate::quota::LIMITS_HOURS_NAME));
+        winui::name(&hours_box, &names[1]);
         winui::checkbox_light(
             ui,
             o + vec2(239.0, 127.0),

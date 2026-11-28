@@ -116,6 +116,18 @@
   "popup_fix": {
     "message": "Како да решите проблем"
   },
+  "popup_by_hand": {
+    "message": "Ова копија је ручно учитана и неће се сама ажурирати."
+  },
+  "popup_by_hand_firefox": {
+    "message": "Ова копија је ручно учитана: неће се сама ажурирати, а прегледач ће је уклонити при поновном покретању."
+  },
+  "popup_store_chrome": {
+    "message": "Додајте га из Chrome Web Store-а"
+  },
+  "popup_store_firefox": {
+    "message": "Додајте га са addons.mozilla.org"
+  },
   "popup_declined": {
     "message": "Остављено прегледачу: $name$",
     "placeholders": {
@@ -319,6 +331,9 @@
   },
   "video_all_qualities": {
     "message": "Сви квалитети и преводи..."
+  },
+  "video_part": {
+    "message": "Преузми део одавде..."
   },
   "video_failed": {
     "message": "Mister Download Manager није инсталиран или није покренут"

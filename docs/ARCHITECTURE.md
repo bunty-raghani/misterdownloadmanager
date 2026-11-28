@@ -79,7 +79,9 @@ their Linux and macOS counterparts to `unix.rs` (starting with the session, the 
 sounds, show in folder, the crash handler); every other file is safe, portable Rust. Fonts come from the system:
 Windows' Fonts folder, macOS's system fonts, fontconfig on Linux (`theme.rs`). The interface language's
 script fonts load at start; text in another script gets its font the first time it shows: from MDM's
-lists of the system's fonts for each script, then, on Windows and macOS, from the system's own fallback
+lists of the system's fonts for each script (the first file there that has the letter; on Windows one
+Han list in the interface language's order, `theme::han_files`, for the fonts loaded at start, those
+found later and DirectWrite's alike), then, on Windows and macOS, from the system's own fallback
 (DirectWrite's, CoreText's, through fontique: `egui_system_font_provider`) for what the lists don't
 name; Linux asks fontconfig for any letter. On Windows, Latin,
 Greek, Cyrillic and single-codepoint CJK text is drawn by DirectWrite (`win32.rs`, through egui's glyph rasterizer hook):

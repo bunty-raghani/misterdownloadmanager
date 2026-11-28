@@ -22,6 +22,8 @@ Browser integration has two parts: a small helper program that the browser talks
 
 Firefox 140 or later is needed. Install the add-on from its page on addons.mozilla.org, [Mister Download Manager](https://addons.mozilla.org/firefox/addon/mister-download-manager/): click **Add to Firefox**. Firefox keeps it updated. Zen and LibreWolf install it from the same page. (MDM's **Add Mister Download Manager to your browser** window opens that page for you.)
 
+For developers, Firefox can also load the add-on by hand: in `about:debugging`, **This Firefox → Load Temporary Add-on...**, choose `mdm-firefox.xpi`, which comes with MDM: in the `extension` folder where it is installed on Windows (as below), in `/usr/share/misterdownloadmanager` from the Linux packages. Firefox keeps that copy only until it restarts, and it doesn't update itself; its toolbar button's popup says so. The add-on from addons.mozilla.org is the one to use.
+
 ### Chrome, Edge, Brave, Opera and Vivaldi
 
 Install the extension from its page in the Chrome Web Store, [Mister Download Manager](https://chromewebstore.google.com/detail/mister-download-manager/ejoleppdfgjdndddcjoehopknmlglojp): click **Add to Chrome**. In Edge the button is **Get**: Edge first asks to **Allow extensions from other stores** (click **Allow**), then **Add extension**. The browser keeps it updated. MDM's **Add Mister Download Manager to your browser** window opens that page in each browser for you, and Chrome may offer it by itself at its next start once MDM is installed.
@@ -96,7 +98,7 @@ When MDM takes a download, the browser's own copy is cancelled and removed from 
 3. ![Download complete, with Open, Open with..., Open folder and Close](images/help/catch-complete.webp)
    *Download complete: Open the file, or Open folder.*
 
-Downloads from a private window use that window's cookies, never the normal ones, and aren't kept in MDM's list after it closes, unless you tick **Options → General → Keep private-window downloads in the list**: then they are saved like any other and survive a restart (their cookies are never saved).
+Downloads from a private window use that window's cookies, never the normal ones, and are kept in MDM's list like any other, so they are still there after a restart (their cookies are never saved). A small mask before a download's status marks it as a private window's; its tip says whether the list keeps it. To keep them in memory only, as the browser keeps its private history, untick **Options → General → Keep private-window downloads in the list**: then they are gone from the list when MDM closes.
 
 Files MDM downloads from the browser are marked as coming from the internet, as the browser marks its own: Windows checks a program with SmartScreen before it runs and Office opens a document in Protected View. Like the browser, MDM leaves the mark out when Windows' Group Policy **Do not preserve zone information in file attachments** is on; [Options → Save to](options.md#save-to) can turn it off for MDM alone.
 

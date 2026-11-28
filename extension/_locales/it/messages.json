@@ -116,6 +116,18 @@
   "popup_fix": {
     "message": "Come risolvere"
   },
+  "popup_by_hand": {
+    "message": "Questa copia è stata caricata manualmente e non si aggiornerà."
+  },
+  "popup_by_hand_firefox": {
+    "message": "Questa copia è stata caricata manualmente: non si aggiornerà da sola e il browser la rimuoverà al riavvio."
+  },
+  "popup_store_chrome": {
+    "message": "Aggiungila dal Chrome Web Store"
+  },
+  "popup_store_firefox": {
+    "message": "Aggiungila da addons.mozilla.org"
+  },
   "popup_declined": {
     "message": "Lasciato al browser: $name$",
     "placeholders": {
@@ -319,6 +331,9 @@
   },
   "video_all_qualities": {
     "message": "Tutte le qualità e i sottotitoli..."
+  },
+  "video_part": {
+    "message": "Scarica una parte da qui..."
   },
   "video_failed": {
     "message": "Mister Download Manager non è installato o non si è avviato"

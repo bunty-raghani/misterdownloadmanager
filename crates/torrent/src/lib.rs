@@ -160,6 +160,60 @@ pub fn files_from_bytes(torrent: &[u8]) -> Result<Vec<FileEntry>, TorrentError> 
     Ok(entries)
 }
 
+/// librqbit's saved piece map of a torrent, in its session folder: one bit a piece, the first
+/// piece in the first byte's highest bit, set once the piece is checked. It is written while the
+/// torrent is in the session and stays there when the session stops; removing the torrent from
+/// the session removes it.
+pub fn piece_map_file(session_dir: &Path, hash: &str) -> PathBuf {
+    session_dir.join(format!("{}.bitv", hash.to_ascii_lowercase()))
+}
+
+/// What each of a saved torrent's files (as [`files_from_bytes`] lists them, padding included)
+/// has of the pieces its piece map (`map`, from [`piece_map_file`]) says are there: the numbers
+/// the session shows ([`Stats::file_done`]), for a torrent out of it. None: not a torrent, or a
+/// map too short for it.
+pub fn file_done_from_map(torrent: &[u8], map: &[u8]) -> Option<Vec<u64>> {
+    check_bytes(torrent).ok()?;
+    let meta = librqbit::torrent_from_bytes(torrent).ok()?;
+    let info = meta.info.data.validate().ok()?;
+    let sizes: Vec<u64> = info.iter_file_details().map(|f| f.len).collect();
+    file_done_of(&sizes, info.lengths().default_piece_length().into(), map)
+}
+
+/// [`file_done_from_map`]'s count, for files of `sizes` laid end to end in pieces of
+/// `piece_length` bytes (the last one shorter): each file has the bytes of each piece it shares
+/// that the map has, as librqbit counts them (`size_of_piece_in_file`). None: no piece size, or a
+/// map with fewer bits than the torrent has pieces.
+pub fn file_done_of(sizes: &[u64], piece_length: u64, map: &[u8]) -> Option<Vec<u64>> {
+    if piece_length == 0 {
+        return None;
+    }
+    let total: u64 = sizes.iter().sum();
+    if (map.len() as u64).saturating_mul(8) < total.div_ceil(piece_length) {
+        return None;
+    }
+    let have = |p: u64| map[(p / 8) as usize] & (0x80 >> (p % 8)) != 0;
+    let mut start = 0;
+    Some(
+        sizes
+            .iter()
+            .map(|&len| {
+                let end = start + len;
+                let first = start / piece_length;
+                let done = (first..end.div_ceil(piece_length))
+                    .filter(|&p| have(p))
+                    .map(|p| {
+                        let piece = p * piece_length;
+                        (piece + piece_length).min(end) - piece.max(start)
+                    })
+                    .sum();
+                start = end;
+                done
+            })
+            .collect(),
+    )
+}
+
 /// Replace `path` with `bytes` through `tmp`, which is flushed to the disk before it takes
 /// `path`'s place (#1357): a crash or a power cut then leaves the old file or the new one, never
 /// an empty one (a rename can reach the disk before the data it names). Only off the window's
@@ -614,9 +668,62 @@ pub struct Torrents {
     /// Torrents waiting for their check to end before they pause ([`Torrents::pause`]); a Start
     /// meanwhile takes the pause back ([`Torrents::resume`]).
     pause_after_check: Arc<std::sync::Mutex<std::collections::HashSet<String>>>,
+    /// Torrents being added again with their pieces kept ([`Torrents::readd`]): they read as
+    /// before until the session has them back. Shared with `watch`'s thread.
+    readding: Arc<Readding>,
 }
 
 pub(crate) type Handle = Arc<librqbit::ManagedTorrent>;
+
+/// Torrents taken out of the session and added again with their pieces kept (a file ticked,
+/// Add trackers), by info hash (lowercase), and how they read before. Meanwhile librqbit has
+/// nothing to say of one (out of the session), then counts the bytes it checks of a sample of
+/// the pieces kept, from 0, without its files' progress: the list read 0.00 % for a moment
+/// (#1648). So until it is back and checked, the window reads it as before.
+type Readding = std::sync::Mutex<std::collections::HashMap<String, Before>>;
+
+/// A torrent as it read before a re-add ([`Readding`]).
+struct Before {
+    stats: Stats,
+    chosen: Option<Vec<usize>>,
+    /// The handle taken out of the session: its metadata (the files the progress window lists)
+    /// stays; its state, files and piece map went with the delete.
+    handle: Handle,
+    swarm: Option<Swarm>,
+    /// Added again: once librqbit has checked it, its numbers are its own again. Not before:
+    /// it reads Paused before it leaves the session.
+    back: bool,
+}
+
+impl Before {
+    /// Its numbers meanwhile: being checked (librqbit checks the pieces kept), nothing moving,
+    /// as much as it had.
+    fn stats(&self) -> Stats {
+        Stats {
+            phase: Phase::Checking,
+            checked: None,
+            down_speed: 0.0,
+            up_speed: 0.0,
+            peers_live: 0,
+            ..self.stats.clone()
+        }
+    }
+}
+
+/// What the window reads of `hash` when librqbit says `now`: as before while it is re-added
+/// ([`Readding`]); librqbit's own once it is back and checked, which ends the re-add.
+fn held(readding: &Readding, hash: &str, now: Stats) -> Stats {
+    let mut r = readding.lock().unwrap();
+    let key = hash.to_ascii_lowercase();
+    match r.get(&key) {
+        Some(b) if b.back && now.phase != Phase::Checking => {
+            r.remove(&key);
+            now
+        }
+        Some(b) => b.stats(),
+        None => now,
+    }
+}
 
 type Checks = std::sync::Mutex<std::collections::HashMap<String, (u64, std::time::Instant)>>;
 
@@ -960,12 +1067,18 @@ impl Torrents {
         }
         let api = Api::new(session.clone(), None);
         let checks: Arc<Checks> = Default::default();
+        let readding: Arc<Readding> = Default::default();
         // The first reading here, so the torrents restored are known from the start.
-        let first = read_all(&session, &api, &checks, &HashSet::new());
+        let first = read_all(&session, &api, &checks, &readding, &HashSet::new());
         let watch = {
-            let (session, api, checks) = (session.clone(), api.clone(), checks.clone());
+            let (session, api, checks, readding) = (
+                session.clone(),
+                api.clone(),
+                checks.clone(),
+                readding.clone(),
+            );
             watch::Watch::start(first, watch::EVERY, move |wanted| {
-                read_all(&session, &api, &checks, wanted)
+                read_all(&session, &api, &checks, &readding, wanted)
             })
         };
         Ok(Torrents {
@@ -977,6 +1090,7 @@ impl Torrents {
             checks,
             watch,
             pause_after_check: Default::default(),
+            readding,
         })
     }
 
@@ -1119,7 +1233,7 @@ impl Torrents {
         let seen = id(hash)
             .ok()
             .and_then(|i| self.session.get(i))
-            .map(|h| read_one(&h, hash, &self.checks));
+            .map(|h| read_one(&h, hash, &self.checks, &self.readding));
         self.watch.put(hash, seen);
     }
 
@@ -1285,6 +1399,13 @@ impl Torrents {
         recheck: bool,
     ) -> Result<(), TorrentError> {
         let res = self.readd_now(hash, torrent, recheck).await;
+        if res.is_err() {
+            // Not back (or never out): it reads as librqbit says.
+            self.readding
+                .lock()
+                .unwrap()
+                .remove(&hash.to_ascii_lowercase());
+        }
         self.refresh(hash);
         res
     }
@@ -1306,15 +1427,34 @@ impl Torrents {
         let (files, paused) = (h.only_files(), h.is_paused());
         let limits = self.torrent_limits(hash);
         let order = h.piece_order();
-        drop(h);
-        let map = self
-            .session_dir
-            .join(format!("{}.bitv", hash.to_ascii_lowercase()));
+        // The peers it is talking to are asked again at once: a file ticked while it downloads
+        // re-adds it, and its download goes on without waiting for trackers or the DHT.
+        let peers: Vec<SocketAddr> = peers_of(&self.api, id(hash)?)
+            .iter()
+            .filter_map(|p| p.addr.parse().ok())
+            .collect();
+        let map = self.piece_map_path(hash);
         let kept = if recheck {
             None
         } else {
-            std::fs::read(&map).ok()
+            self.piece_map_now(hash, &h).await
         };
+        // Its pieces kept, it reads as now (paused, every piece it has) until it is back; a
+        // Recheck counts its check from 0, which is what it shows.
+        if !recheck {
+            let before = Before {
+                stats: stats_of(&h, hash, &self.checks),
+                chosen: files.clone(),
+                handle: h.clone(),
+                swarm: self.watch.get(hash).and_then(|s| s.swarm.clone()),
+                back: false,
+            };
+            self.readding
+                .lock()
+                .unwrap()
+                .insert(hash.to_ascii_lowercase(), before);
+        }
+        drop(h);
         self.session
             .delete(id(hash)?, false)
             .await
@@ -1330,10 +1470,17 @@ impl Torrents {
                 tokio::time::sleep(Duration::from_millis(100)).await;
             }
         } else if let Some(bits) = kept {
-            let _ = std::fs::write(&map, bits);
+            put_piece_map(&map, &bits).await;
         }
-        self.add(torrent, &folder, files, Vec::new(), paused)
-            .await?;
+        if let Some(b) = self
+            .readding
+            .lock()
+            .unwrap()
+            .get_mut(&hash.to_ascii_lowercase())
+        {
+            b.back = true;
+        }
+        self.add(torrent, &folder, files, peers, paused).await?;
         if let Some((down, up)) = limits {
             let _ = self.set_torrent_limits(hash, down, up);
         }
@@ -1358,6 +1505,10 @@ impl Torrents {
 
     /// Take it out of the session; the files stay unless `delete_files`.
     pub async fn remove(&self, hash: &str, delete_files: bool) -> Result<(), TorrentError> {
+        self.readding
+            .lock()
+            .unwrap()
+            .remove(&hash.to_ascii_lowercase());
         let res = self
             .session
             .delete(id(hash)?, delete_files)
@@ -1378,11 +1529,8 @@ impl Torrents {
         let (files, paused) = (h.only_files(), h.is_paused());
         let limits = self.torrent_limits(hash);
         let order = h.piece_order();
+        let piece_map = self.piece_map_now(hash, &h).await;
         drop(h);
-        let map = self
-            .session_dir
-            .join(format!("{}.bitv", hash.to_ascii_lowercase()));
-        let piece_map = std::fs::read(&map).ok();
         self.session.delete(tid, false).await.map_err(engine)?;
         Ok(Some(DetachedTorrent {
             files,
@@ -1408,10 +1556,7 @@ impl Torrents {
             None => (fallback_files, false, None, None, None),
         };
         if let Some(bits) = piece_map {
-            let map = self
-                .session_dir
-                .join(format!("{}.bitv", hash.to_ascii_lowercase()));
-            let _ = std::fs::write(map, bits);
+            put_piece_map(&self.piece_map_path(hash), &bits).await;
         }
         self.add(torrent, folder, files, Vec::new(), paused).await?;
         if let Some((down, up)) = limits {
@@ -1421,6 +1566,29 @@ impl Torrents {
             let _ = self.set_order(hash, order);
         }
         Ok(())
+    }
+
+    /// librqbit's saved piece map of a torrent, `<session>/<hash>.bitv`.
+    fn piece_map_path(&self, hash: &str) -> PathBuf {
+        self.session_dir
+            .join(format!("{}.bitv", hash.to_ascii_lowercase()))
+    }
+
+    /// Its piece map with every piece it has now, as the `.bitv` file librqbit reads back (one
+    /// bit a piece, the first piece the high bit of the first byte), before it is taken out of
+    /// the session. librqbit keeps the map in memory and writes it to disk only every 16 MiB of
+    /// pieces (and once more when it is dropped, after the file is gone), so the file alone
+    /// lacks the pieces since: they would be fetched again. A running torrent is paused first,
+    /// so no piece comes between this map and its removal. Without a map in memory (still
+    /// being checked), the file as it is.
+    async fn piece_map_now(&self, hash: &str, h: &Handle) -> Option<Vec<u8>> {
+        if matches!(h.stats().state, TorrentStatsState::Live) {
+            let _ = self.session.pause(h).await;
+        }
+        match self.api.api_dump_haves(id(hash).ok()?) {
+            Ok((bits, _)) => Some(bits.as_raw_slice().to_vec()),
+            Err(_) => std::fs::read(self.piece_map_path(hash)).ok(),
+        }
     }
 
     /// Every torrent the session holds (to forget ones the app no longer lists).
@@ -1593,6 +1761,33 @@ fn peers_of(api: &Api, i: TorrentIdOrHash) -> Vec<Peer> {
     out
 }
 
+/// Write a piece map back where librqbit has just removed it, for the torrent added again to
+/// find. On Windows the old file can stay, delete-pending, until librqbit's writer lets go of
+/// it, and the name can't be made again until then: it is tried for up to five seconds. Given
+/// up, the pieces it held are only fetched again, but the log says so (#1648).
+async fn put_piece_map(map: &Path, bits: &[u8]) {
+    put_piece_map_tries(map, bits, 50, Duration::from_millis(100)).await;
+}
+
+async fn put_piece_map_tries(map: &Path, bits: &[u8], tries: u32, apart: Duration) -> bool {
+    let mut last = None;
+    for i in 0..tries {
+        match std::fs::write(map, bits) {
+            Ok(()) => return true,
+            Err(e) => last = Some(e),
+        }
+        if i + 1 < tries {
+            tokio::time::sleep(apart).await;
+        }
+    }
+    tracing::warn!(
+        "torrents: can't write the piece map back to {} ({}); its pieces will be fetched again",
+        map.display(),
+        last.map_or_else(|| "not tried".to_owned(), |e| e.to_string())
+    );
+    false
+}
+
 fn pieces_of(api: &Api, i: TorrentIdOrHash) -> Vec<bool> {
     match api.api_dump_haves(i) {
         Ok((bits, len)) => bits.iter().by_vals().take(len as usize).collect(),
@@ -1602,9 +1797,9 @@ fn pieces_of(api: &Api, i: TorrentIdOrHash) -> Vec<bool> {
 
 /// One torrent read now, for the window's [`Torrents::seen`] (its details only when wanted, by
 /// [`read_all`]). Waits as [`stats_of`] does.
-fn read_one(h: &Handle, hash: &str, checks: &Checks) -> watch::Seen {
+fn read_one(h: &Handle, hash: &str, checks: &Checks, readding: &Readding) -> watch::Seen {
     watch::Seen {
-        stats: stats_of(h, hash, checks),
+        stats: held(readding, hash, stats_of(h, hash, checks)),
         chosen: h.only_files(),
         handle: Some(h.clone()),
         swarm: None,
@@ -1618,15 +1813,17 @@ fn read_all(
     session: &Session,
     api: &Api,
     checks: &Checks,
+    readding: &Readding,
     wanted: &HashSet<String>,
 ) -> std::collections::HashMap<String, Arc<watch::Seen>> {
     let all: Vec<(String, Handle)> = session.with_torrents(|all| {
         all.map(|(_, h)| (h.info_hash().as_string(), h.clone()))
             .collect()
     });
-    all.into_iter()
+    let mut out: std::collections::HashMap<String, watch::Seen> = all
+        .into_iter()
         .map(|(hash, h)| {
-            let mut seen = read_one(&h, &hash, checks);
+            let mut seen = read_one(&h, &hash, checks, readding);
             if wanted.contains(&hash) {
                 let i = TorrentIdOrHash::Hash(h.info_hash());
                 seen.swarm = Some(Swarm {
@@ -1635,9 +1832,32 @@ fn read_all(
                     pieces: pieces_of(api, i),
                 });
             }
-            (hash, Arc::new(seen))
+            (hash, seen)
         })
-        .collect()
+        .collect();
+    // Being re-added (still there after `read_one`): out of the session, it reads as before;
+    // back but still checked, its pieces too (librqbit has none to show until checked).
+    for (hash, b) in readding.lock().unwrap().iter() {
+        match out.get_mut(hash) {
+            Some(seen) => {
+                if b.swarm.is_some() {
+                    seen.swarm = b.swarm.clone();
+                }
+            }
+            None => {
+                out.insert(
+                    hash.clone(),
+                    watch::Seen {
+                        stats: b.stats(),
+                        chosen: b.chosen.clone(),
+                        handle: Some(b.handle.clone()),
+                        swarm: b.swarm.clone(),
+                    },
+                );
+            }
+        }
+    }
+    out.into_iter().map(|(h, s)| (h, Arc::new(s))).collect()
 }
 
 #[cfg(test)]
@@ -1903,6 +2123,120 @@ mod tests {
         ));
         assert!(Source::magnet("https://x/y.torrent").is_none());
         assert!(Source::magnet("magnet").is_none());
+    }
+
+    /// A piece map with `have` set, of `pieces` bits, as librqbit writes it.
+    fn map_of(pieces: usize, have: &[usize]) -> Vec<u8> {
+        let mut map = vec![0u8; pieces.div_ceil(8)];
+        for &p in have {
+            map[p / 8] |= 0x80 >> (p % 8);
+        }
+        map
+    }
+
+    /// #1624: each file has its share of each piece there, pieces across two files counted in
+    /// both, the last piece shorter.
+    #[test]
+    fn file_done_counts_each_file_s_share_of_the_pieces_there() {
+        // Pieces of 10: a = 0..25 (pieces 0-2), b = 25..30 (piece 2), c = 30..47 (3-4, the
+        // last one 7 bytes), an empty file at 47.
+        let sizes = [25, 5, 17, 0];
+        assert_eq!(
+            file_done_of(&sizes, 10, &map_of(5, &[0, 1, 2, 3, 4])),
+            Some(vec![25, 5, 17, 0])
+        );
+        assert_eq!(
+            file_done_of(&sizes, 10, &map_of(5, &[])),
+            Some(vec![0, 0, 0, 0])
+        );
+        // Piece 2 is a's last 5 bytes and all of b; the last piece is c's last 7.
+        assert_eq!(
+            file_done_of(&sizes, 10, &map_of(5, &[2, 4])),
+            Some(vec![5, 5, 7, 0])
+        );
+        assert_eq!(
+            file_done_of(&sizes, 10, &map_of(5, &[1])),
+            Some(vec![10, 0, 0, 0])
+        );
+        // An empty file in the middle of a piece has none of it.
+        assert_eq!(
+            file_done_of(&[5, 0, 5], 10, &map_of(1, &[0])),
+            Some(vec![5, 0, 5])
+        );
+    }
+
+    /// A big file with one piece there has that piece, whatever its length on disk.
+    #[test]
+    fn file_done_of_a_big_file_with_one_piece() {
+        let piece = 16 * 1024;
+        let sizes = [64 * 1024, 1024 * 1024];
+        let have: Vec<usize> = (0..4).chain([4 + 30]).collect();
+        assert_eq!(
+            file_done_of(&sizes, piece, &map_of(68, &have)),
+            Some(vec![64 * 1024, piece])
+        );
+    }
+
+    /// A map that can't be this torrent's, or no piece size: nothing is said.
+    #[test]
+    fn file_done_of_needs_a_bit_for_each_piece() {
+        // 47 bytes in pieces of 10: 5 pieces, one byte of map.
+        assert_eq!(file_done_of(&[47], 10, &[]), None);
+        assert!(file_done_of(&[47], 10, &[0xff]).is_some());
+        // 90 bytes: 9 pieces, two bytes.
+        assert_eq!(file_done_of(&[90], 10, &[0xff]), None);
+        assert_eq!(file_done_of(&[90], 10, &[0xff, 0x80]), Some(vec![90]));
+        assert_eq!(file_done_of(&[47], 0, &[0xff]), None);
+        assert_eq!(file_done_from_map(b"not a torrent", &[0xff]), None);
+    }
+
+    /// #1624: out of the session, the saved piece map gives each file what the session showed
+    /// for it, a full-length file with few good pieces included.
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn the_saved_piece_map_gives_the_session_s_file_numbers() {
+        let tmp = tempfile::tempdir().unwrap();
+        let src = tmp.path().join("set");
+        std::fs::create_dir_all(&src).unwrap();
+        let a: Vec<u8> = (0..40 * 1024u32).map(|i| (i % 251) as u8).collect();
+        let b: Vec<u8> = (0..100 * 1024u32).map(|i| (i % 239) as u8).collect();
+        std::fs::write(src.join("a.bin"), &a).unwrap();
+        std::fs::write(src.join("b.bin"), &b).unwrap();
+        let torrent = make_torrent(&src).await;
+        let order: Vec<u64> = files_from_bytes(&torrent)
+            .unwrap()
+            .iter()
+            .map(|f| f.size)
+            .collect();
+        // The copy: the first file whole, the second at its full length (as the engine makes
+        // a file) with only its first 20 KiB.
+        let out = tmp.path().join("out").join("set");
+        std::fs::create_dir_all(&out).unwrap();
+        let entries = files_from_bytes(&torrent).unwrap();
+        for (i, f) in entries.iter().enumerate() {
+            let data = if f.path.ends_with("a.bin") { &a } else { &b };
+            let mut kept = data.clone();
+            if i == entries.len() - 1 {
+                kept[20 * 1024..].fill(0);
+            }
+            std::fs::write(out.join(&f.path), &kept).unwrap();
+        }
+        let state = tmp.path().join("state");
+        let t = Torrents::start(offline(&state)).await.unwrap();
+        let hash = t.add(&torrent, &out, None, Vec::new(), true).await.unwrap();
+        let deadline = std::time::Instant::now() + Duration::from_secs(30);
+        while t.stats(&hash).unwrap().phase == Phase::Checking {
+            assert!(std::time::Instant::now() < deadline, "never checked");
+            tokio::time::sleep(Duration::from_millis(50)).await;
+        }
+        let seen = t.stats(&hash).unwrap().file_done;
+        t.stop().await;
+        assert!(
+            seen[entries.len() - 1] < order[entries.len() - 1],
+            "{seen:?}"
+        );
+        assert!(seen[0] > 0, "{seen:?}");
+        let map = std::fs::read(piece_map_file(&state.join("session"), &hash)).unwrap();
+        assert_eq!(file_done_from_map(&torrent, &map), Some(seen));
     }
 
     /// A torrent of `dir`'s files, made by librqbit.
@@ -2834,6 +3168,653 @@ mod tests {
         );
         seeder.stop().await;
         leecher.stop().await;
+    }
+
+    /// Unticked files are not made in the download's folder: the pieces they share with the
+    /// ticked one are kept in a parts file, and a file ticked later gets its bytes from there.
+    #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+    async fn unticked_files_stay_out_of_the_folder_until_ticked() {
+        let tmp = tempfile::tempdir().unwrap();
+        let src = tmp.path().join("seed").join("set");
+        std::fs::create_dir_all(&src).unwrap();
+        let a: Vec<u8> = (0..300_001u32).map(|i| (i % 251) as u8).collect();
+        let b: Vec<u8> = (0..120_003u32).map(|i| (i % 13) as u8).collect();
+        let c: Vec<u8> = b"a small file that shares the last piece of b.bin".to_vec();
+        std::fs::write(src.join("a.bin"), &a).unwrap();
+        std::fs::write(src.join("b.bin"), &b).unwrap();
+        std::fs::write(src.join("c.txt"), &c).unwrap();
+        let torrent = make_torrent(&src).await;
+
+        let seeder = Torrents::start(offline(&tmp.path().join("s1")))
+            .await
+            .unwrap();
+        let meta = seeder
+            .metadata(
+                &Source::File(torrent.clone()),
+                Duration::from_secs(10),
+                None,
+            )
+            .await
+            .unwrap();
+        let hash = seeder
+            .add(&torrent, &src, None, Vec::new(), false)
+            .await
+            .unwrap();
+        let deadline = std::time::Instant::now() + Duration::from_secs(20);
+        while seeder.stats(&hash).unwrap().phase != Phase::Finished {
+            assert!(std::time::Instant::now() < deadline, "seeder never checked");
+            tokio::time::sleep(Duration::from_millis(100)).await;
+        }
+        let addr = seeder.listen_addr().expect("seeder listens");
+        let index = |name: &str| meta.files.iter().position(|f| f.path.ends_with(name));
+        let (ia, ib, ic) = (
+            index("a.bin").unwrap(),
+            index("b.bin").unwrap(),
+            index("c.txt").unwrap(),
+        );
+
+        // The leecher, as the app runs it: only the files MDM hands over are opened.
+        let mut config = offline(&tmp.path().join("s2"));
+        config.require_authorization = true;
+        let session = config.state_dir.join("session");
+        let leecher = Torrents::start(config).await.unwrap();
+        let out = meta.folder_in(&tmp.path().join("got"));
+        std::fs::create_dir_all(&out).unwrap();
+        let make = |i: usize| {
+            let path = out.join(&meta.files[i].path);
+            authorized_storage::PreparedFile {
+                index: i,
+                file: std::fs::OpenOptions::new()
+                    .read(true)
+                    .write(true)
+                    .create(true)
+                    .truncate(false)
+                    .open(&path)
+                    .unwrap(),
+                path,
+            }
+        };
+        authorized_storage::authorize_parted(
+            &session,
+            &meta.info_hash,
+            &out,
+            authorized_storage::Prepared {
+                files: vec![make(ib)],
+                parted: vec![ia, ic],
+            },
+            Arc::new(|| Err(std::io::ErrorKind::PermissionDenied.into())),
+        );
+        let h2 = leecher
+            .add(&torrent, &out, Some(vec![ib]), vec![addr], false)
+            .await
+            .unwrap();
+        let deadline = std::time::Instant::now() + Duration::from_secs(30);
+        loop {
+            let s = leecher.stats(&h2).unwrap();
+            if s.phase == Phase::Finished {
+                break;
+            }
+            assert!(std::time::Instant::now() < deadline, "no transfer: {s:?}");
+            tokio::time::sleep(Duration::from_millis(100)).await;
+        }
+        assert_eq!(std::fs::read(out.join(&meta.files[ib].path)).unwrap(), b);
+        let mut there: Vec<_> = std::fs::read_dir(&out)
+            .unwrap()
+            .map(|e| e.unwrap().file_name().to_string_lossy().into_owned())
+            .collect();
+        there.sort();
+        assert_eq!(there, ["b.bin"], "only the ticked file is in the folder");
+        let parts = session.join(format!("{h2}.parts"));
+        assert!(parts.join(ia.to_string()).is_file(), "a.bin's shared piece");
+        assert!(parts.join(ic.to_string()).is_file(), "c.txt's shared piece");
+        assert!(authorized_storage::is_parted(&session, &h2, ic));
+
+        // c.txt ticked: made now, the torrent opened again on it, its bytes from the parts.
+        authorized_storage::authorize_parted(
+            &session,
+            &meta.info_hash,
+            &out,
+            authorized_storage::Prepared {
+                files: vec![make(ib), make(ic)],
+                parted: vec![ia],
+            },
+            Arc::new(|| Err(std::io::ErrorKind::PermissionDenied.into())),
+        );
+        leecher
+            .choose(&h2, &[ib, ic].into_iter().collect())
+            .await
+            .unwrap();
+        leecher.readd(&h2, &torrent, false).await.unwrap();
+        let deadline = std::time::Instant::now() + Duration::from_secs(30);
+        loop {
+            let s = leecher.stats(&h2).unwrap();
+            if s.phase == Phase::Finished {
+                break;
+            }
+            assert!(std::time::Instant::now() < deadline, "not finished: {s:?}");
+            tokio::time::sleep(Duration::from_millis(100)).await;
+        }
+        assert_eq!(std::fs::read(out.join(&meta.files[ic].path)).unwrap(), c);
+        assert!(!parts.join(ic.to_string()).exists(), "moved into c.txt");
+        assert!(!out.join(&meta.files[ia].path).exists());
+        assert!(!authorized_storage::is_parted(&session, &h2, ic));
+
+        leecher.remove(&h2, false).await.unwrap();
+        authorized_storage::remove_parts(&session, &h2).unwrap();
+        assert!(!parts.exists());
+        authorized_storage::forget(&session, &h2);
+        seeder.stop().await;
+        leecher.stop().await;
+    }
+
+    /// Ticking and unticking while it downloads (the app's Files tab: the ticked file is made,
+    /// the torrent opened again on it, its pieces and peers kept): the ticked file comes whole,
+    /// the unticked one, ours already, stays in the folder, and it finishes without the rest of
+    /// that one.
+    #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+    async fn ticking_and_unticking_while_it_downloads() {
+        let tmp = tempfile::tempdir().unwrap();
+        let src = tmp.path().join("seed").join("set");
+        std::fs::create_dir_all(&src).unwrap();
+        let a: Vec<u8> = (0..300_001u32).map(|i| (i % 251) as u8).collect();
+        let b: Vec<u8> = (0..400_003u32).map(|i| (i % 13) as u8).collect();
+        let c: Vec<u8> = b"a small file between b.bin and d.bin, ticked later".to_vec();
+        let d: Vec<u8> = (0..300_007u32).map(|i| (i % 7) as u8).collect();
+        for (name, bytes) in [("a.bin", &a), ("b.bin", &b), ("c.txt", &c), ("d.bin", &d)] {
+            std::fs::write(src.join(name), bytes).unwrap();
+        }
+        let torrent = make_torrent(&src).await;
+
+        let seeder = Torrents::start(offline(&tmp.path().join("s1")))
+            .await
+            .unwrap();
+        let meta = seeder
+            .metadata(
+                &Source::File(torrent.clone()),
+                Duration::from_secs(10),
+                None,
+            )
+            .await
+            .unwrap();
+        let hash = seeder
+            .add(&torrent, &src, None, Vec::new(), false)
+            .await
+            .unwrap();
+        let deadline = std::time::Instant::now() + Duration::from_secs(20);
+        while seeder.stats(&hash).unwrap().phase != Phase::Finished {
+            assert!(std::time::Instant::now() < deadline, "seeder never checked");
+            tokio::time::sleep(Duration::from_millis(100)).await;
+        }
+        let addr = seeder.listen_addr().expect("seeder listens");
+        let index = |name: &str| meta.files.iter().position(|f| f.path.ends_with(name));
+        let (ia, ib, ic, id) = (
+            index("a.bin").unwrap(),
+            index("b.bin").unwrap(),
+            index("c.txt").unwrap(),
+            index("d.bin").unwrap(),
+        );
+
+        let mut config = offline(&tmp.path().join("s2"));
+        config.require_authorization = true;
+        let session = config.state_dir.join("session");
+        let leecher = Torrents::start(config).await.unwrap();
+        let out = meta.folder_in(&tmp.path().join("got"));
+        std::fs::create_dir_all(&out).unwrap();
+        let make = |i: usize| {
+            let path = out.join(&meta.files[i].path);
+            authorized_storage::PreparedFile {
+                index: i,
+                file: std::fs::OpenOptions::new()
+                    .read(true)
+                    .write(true)
+                    .create(true)
+                    .truncate(false)
+                    .open(&path)
+                    .unwrap(),
+                path,
+            }
+        };
+        let no_reopen =
+            || -> Arc<dyn Fn() -> std::io::Result<authorized_storage::Prepared> + Send + Sync> {
+                Arc::new(|| Err(std::io::ErrorKind::PermissionDenied.into()))
+            };
+
+        // b.bin and d.bin ticked, slowly enough to change the choice halfway.
+        authorized_storage::authorize_parted(
+            &session,
+            &meta.info_hash,
+            &out,
+            authorized_storage::Prepared {
+                files: vec![make(ib), make(id)],
+                parted: vec![ia, ic],
+            },
+            no_reopen(),
+        );
+        // The session's limit, there before the first piece is asked for.
+        leecher.set_download_limit(Some(64 * 1024));
+        let h2 = leecher
+            .add(&torrent, &out, Some(vec![ib, id]), vec![addr], false)
+            .await
+            .unwrap();
+        let deadline = std::time::Instant::now() + Duration::from_secs(30);
+        loop {
+            let s = leecher.stats(&h2).unwrap();
+            assert_ne!(s.phase, Phase::Finished, "never seen halfway: {s:?}");
+            if s.phase == Phase::Downloading && s.fetched > 0 {
+                assert!(s.done < s.total, "not halfway: {s:?}");
+                break;
+            }
+            assert!(std::time::Instant::now() < deadline, "no transfer: {s:?}");
+            tokio::time::sleep(Duration::from_millis(50)).await;
+        }
+        assert!(!out.join(&meta.files[ic].path).exists());
+
+        // Halfway: c.txt ticked, d.bin unticked, as the Files tab does it.
+        authorized_storage::authorize_parted(
+            &session,
+            &meta.info_hash,
+            &out,
+            authorized_storage::Prepared {
+                files: vec![make(ib), make(ic), make(id)],
+                parted: vec![ia],
+            },
+            no_reopen(),
+        );
+        leecher
+            .choose(&h2, &[ib, ic].into_iter().collect())
+            .await
+            .unwrap();
+        leecher.readd(&h2, &torrent, false).await.unwrap();
+        leecher.set_download_limit(None);
+        let deadline = std::time::Instant::now() + Duration::from_secs(30);
+        loop {
+            let s = leecher.stats(&h2).unwrap();
+            if s.phase == Phase::Finished {
+                break;
+            }
+            assert!(std::time::Instant::now() < deadline, "not finished: {s:?}");
+            tokio::time::sleep(Duration::from_millis(100)).await;
+        }
+        assert_eq!(std::fs::read(out.join(&meta.files[ib].path)).unwrap(), b);
+        assert_eq!(std::fs::read(out.join(&meta.files[ic].path)).unwrap(), c);
+        assert!(
+            out.join(&meta.files[id].path).is_file(),
+            "an unticked file of ours stays"
+        );
+        assert!(!out.join(&meta.files[ia].path).exists());
+        assert!(!authorized_storage::has_parts(&session, &h2, ic));
+
+        leecher.remove(&h2, false).await.unwrap();
+        authorized_storage::remove_parts(&session, &h2).unwrap();
+        authorized_storage::forget(&session, &h2);
+        seeder.stop().await;
+        leecher.stop().await;
+    }
+
+    /// #1623: added again while it downloads (a file ticked), it keeps every piece it had, not
+    /// only those of librqbit's last saved piece map (written every 16 MiB, so here never):
+    /// none is fetched twice, and the file comes whole.
+    #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+    async fn readd_while_it_downloads_keeps_every_piece() {
+        let tmp = tempfile::tempdir().unwrap();
+        let src = tmp.path().join("seed").join("set");
+        std::fs::create_dir_all(&src).unwrap();
+        let a: Vec<u8> = (0..1_000_003u32).map(|i| (i % 251) as u8).collect();
+        let b: Vec<u8> = (0..200_001u32).map(|i| (i % 13) as u8).collect();
+        std::fs::write(src.join("a.bin"), &a).unwrap();
+        std::fs::write(src.join("b.bin"), &b).unwrap();
+        let torrent = make_torrent(&src).await;
+        let total = (a.len() + b.len()) as u64;
+
+        let seeder = Torrents::start(offline(&tmp.path().join("s1")))
+            .await
+            .unwrap();
+        let meta = seeder
+            .metadata(
+                &Source::File(torrent.clone()),
+                Duration::from_secs(10),
+                None,
+            )
+            .await
+            .unwrap();
+        let hash = seeder
+            .add(&torrent, &src, None, Vec::new(), false)
+            .await
+            .unwrap();
+        let deadline = std::time::Instant::now() + Duration::from_secs(20);
+        while seeder.stats(&hash).unwrap().phase != Phase::Finished {
+            assert!(std::time::Instant::now() < deadline, "seeder never checked");
+            tokio::time::sleep(Duration::from_millis(100)).await;
+        }
+        let addr = seeder.listen_addr().expect("seeder listens");
+
+        let leecher = Torrents::start(offline(&tmp.path().join("s2")))
+            .await
+            .unwrap();
+        let out = meta.folder_in(&tmp.path().join("got"));
+        std::fs::create_dir_all(&out).unwrap();
+        leecher.set_download_limit(Some(64 * 1024));
+        let h2 = leecher
+            .add(&torrent, &out, None, vec![addr], false)
+            .await
+            .unwrap();
+        let deadline = std::time::Instant::now() + Duration::from_secs(60);
+        let before = loop {
+            let s = leecher.stats(&h2).unwrap();
+            assert_eq!(s.total, total);
+            assert_ne!(s.phase, Phase::Finished, "never seen halfway: {s:?}");
+            if s.phase == Phase::Downloading && s.done >= total / 4 {
+                break s.done;
+            }
+            assert!(std::time::Instant::now() < deadline, "too slow: {s:?}");
+            tokio::time::sleep(Duration::from_millis(50)).await;
+        };
+
+        leecher.readd(&h2, &torrent, false).await.unwrap();
+        let deadline = std::time::Instant::now() + Duration::from_secs(30);
+        let after = loop {
+            let s = leecher.stats(&h2).unwrap();
+            if matches!(s.phase, Phase::Downloading | Phase::Finished) {
+                break s;
+            }
+            assert!(std::time::Instant::now() < deadline, "never resumed: {s:?}");
+            tokio::time::sleep(Duration::from_millis(20)).await;
+        };
+        assert!(
+            after.done >= before,
+            "pieces lost by the re-add: {before} before, {after:?}"
+        );
+
+        leecher.set_download_limit(None);
+        let deadline = std::time::Instant::now() + Duration::from_secs(30);
+        let end = loop {
+            let s = leecher.stats(&h2).unwrap();
+            if s.phase == Phase::Finished {
+                break s;
+            }
+            assert!(std::time::Instant::now() < deadline, "not finished: {s:?}");
+            tokio::time::sleep(Duration::from_millis(100)).await;
+        };
+        // Since the re-add, only what was missing then came (and a few pieces asked twice
+        // near the end, at most).
+        assert!(
+            end.fetched <= total - before + 8 * 16 * 1024,
+            "fetched again: {} before, {end:?}",
+            before
+        );
+        for (name, bytes) in [("a.bin", &a), ("b.bin", &b)] {
+            let file = meta.files.iter().find(|f| f.path.ends_with(name)).unwrap();
+            assert_eq!(&std::fs::read(out.join(&file.path)).unwrap(), bytes);
+        }
+
+        seeder.stop().await;
+        leecher.stop().await;
+    }
+
+    /// #1648: while it is added again with its pieces kept (a file ticked while it downloads),
+    /// what the window reads never drops below what it had: not out of the session between the
+    /// delete and the add, not 0 % while librqbit checks a sample of the pieces kept.
+    #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+    async fn readd_reads_what_it_had_meanwhile() {
+        let tmp = tempfile::tempdir().unwrap();
+        let src = tmp.path().join("seed").join("set");
+        std::fs::create_dir_all(&src).unwrap();
+        let a: Vec<u8> = (0..1_000_003u32).map(|i| (i % 251) as u8).collect();
+        let b: Vec<u8> = (0..200_001u32).map(|i| (i % 13) as u8).collect();
+        std::fs::write(src.join("a.bin"), &a).unwrap();
+        std::fs::write(src.join("b.bin"), &b).unwrap();
+        let torrent = make_torrent(&src).await;
+
+        let seeder = Torrents::start(offline(&tmp.path().join("s1")))
+            .await
+            .unwrap();
+        let meta = seeder
+            .metadata(
+                &Source::File(torrent.clone()),
+                Duration::from_secs(10),
+                None,
+            )
+            .await
+            .unwrap();
+        let hash = seeder
+            .add(&torrent, &src, None, Vec::new(), false)
+            .await
+            .unwrap();
+        let deadline = std::time::Instant::now() + Duration::from_secs(20);
+        while seeder.stats(&hash).unwrap().phase != Phase::Finished {
+            assert!(std::time::Instant::now() < deadline, "seeder never checked");
+            tokio::time::sleep(Duration::from_millis(100)).await;
+        }
+        let addr = seeder.listen_addr().expect("seeder listens");
+
+        let leecher = Torrents::start(offline(&tmp.path().join("s2")))
+            .await
+            .unwrap();
+        let out = meta.folder_in(&tmp.path().join("got"));
+        std::fs::create_dir_all(&out).unwrap();
+        leecher.set_download_limit(Some(64 * 1024));
+        let h2 = leecher
+            .add(&torrent, &out, None, vec![addr], false)
+            .await
+            .unwrap();
+        let deadline = std::time::Instant::now() + Duration::from_secs(60);
+        let before = loop {
+            let s = leecher.stats(&h2).unwrap();
+            assert_ne!(s.phase, Phase::Finished, "never seen halfway: {s:?}");
+            if s.phase == Phase::Downloading && s.done >= s.total / 4 {
+                break s;
+            }
+            assert!(std::time::Instant::now() < deadline, "too slow: {s:?}");
+            tokio::time::sleep(Duration::from_millis(50)).await;
+        };
+
+        // The window's reading, every 2 ms, from just before the re-add until it downloads
+        // again.
+        let over = std::sync::atomic::AtomicBool::new(false);
+        let sample = async {
+            let mut seen = Vec::new();
+            while !over.load(std::sync::atomic::Ordering::SeqCst) {
+                seen.push(leecher.seen(&h2));
+                tokio::time::sleep(Duration::from_millis(2)).await;
+            }
+            seen
+        };
+        let readd = async {
+            leecher.readd(&h2, &torrent, false).await.unwrap();
+            let deadline = std::time::Instant::now() + Duration::from_secs(30);
+            loop {
+                let s = leecher.stats(&h2).unwrap();
+                if matches!(s.phase, Phase::Downloading | Phase::Finished) {
+                    break;
+                }
+                assert!(std::time::Instant::now() < deadline, "never resumed: {s:?}");
+                tokio::time::sleep(Duration::from_millis(20)).await;
+            }
+            // And a reading of the watch's own after that.
+            tokio::time::sleep(watch::EVERY * 2).await;
+            over.store(true, std::sync::atomic::Ordering::SeqCst);
+        };
+        let (seen, ()) = tokio::join!(sample, readd);
+        assert!(seen.len() > 20, "too few readings: {}", seen.len());
+        // Never less than the reading before it (the watch's readings lag librqbit's by up to
+        // one, so not against `before` itself).
+        let (mut done, mut files) = (0, 0);
+        for (i, s) in seen.iter().enumerate() {
+            let s = s
+                .as_ref()
+                .unwrap_or_else(|| panic!("reading {i}: out of the session"));
+            let in_files: u64 = s.file_done.iter().sum();
+            assert!(
+                s.done >= done && in_files >= files,
+                "reading {i}: {} of {} (files {in_files}), {done} (files {files}) before: {s:?}",
+                s.done,
+                s.total,
+            );
+            assert_eq!(s.total, before.total, "reading {i}: {s:?}");
+            (done, files) = (s.done, in_files);
+        }
+        let last = seen.last().unwrap().as_ref().unwrap();
+        assert!(
+            matches!(last.phase, Phase::Downloading | Phase::Finished),
+            "its own numbers again: {last:?}"
+        );
+        assert!(
+            leecher.readding.lock().unwrap().is_empty(),
+            "the re-add is over"
+        );
+
+        seeder.stop().await;
+        leecher.stop().await;
+    }
+
+    /// #1648: a piece map that can't be written back is given up after its tries, and said
+    /// (a warning); one that can is written.
+    #[tokio::test]
+    async fn a_piece_map_written_back_or_given_up() {
+        // The warning shows with `--nocapture`.
+        let _ = tracing_subscriber::fmt().with_test_writer().try_init();
+        let tmp = tempfile::tempdir().unwrap();
+        let map = tmp.path().join("x.bitv");
+        assert!(put_piece_map_tries(&map, &[0xf0], 3, Duration::from_millis(1)).await);
+        assert_eq!(std::fs::read(&map).unwrap(), [0xf0]);
+        // Its folder is a file: never writable.
+        let blocked = map.join("y.bitv");
+        let at = std::time::Instant::now();
+        assert!(!put_piece_map_tries(&blocked, &[0xf0], 3, Duration::from_millis(1)).await);
+        assert!(at.elapsed() < Duration::from_secs(5));
+        assert!(!blocked.exists());
+    }
+
+    /// A finished torrent taken out of the session, the session started again (the app stops
+    /// it while idle): a file ticked then is made and gets its bytes from the parts file, with
+    /// no peer to ask, when the torrent is added again with it ticked.
+    #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+    async fn a_file_ticked_on_a_finished_torrent_out_of_the_session_comes_from_its_parts() {
+        let tmp = tempfile::tempdir().unwrap();
+        let src = tmp.path().join("seed").join("set");
+        std::fs::create_dir_all(&src).unwrap();
+        let a: Vec<u8> = (0..300_001u32).map(|i| (i % 251) as u8).collect();
+        let b: Vec<u8> = (0..120_003u32).map(|i| (i % 13) as u8).collect();
+        let c: Vec<u8> = b"a small file that shares the last piece of b.bin".to_vec();
+        std::fs::write(src.join("a.bin"), &a).unwrap();
+        std::fs::write(src.join("b.bin"), &b).unwrap();
+        std::fs::write(src.join("c.txt"), &c).unwrap();
+        let torrent = make_torrent(&src).await;
+
+        let seeder = Torrents::start(offline(&tmp.path().join("s1")))
+            .await
+            .unwrap();
+        let meta = seeder
+            .metadata(
+                &Source::File(torrent.clone()),
+                Duration::from_secs(10),
+                None,
+            )
+            .await
+            .unwrap();
+        let hash = seeder
+            .add(&torrent, &src, None, Vec::new(), false)
+            .await
+            .unwrap();
+        let deadline = std::time::Instant::now() + Duration::from_secs(20);
+        while seeder.stats(&hash).unwrap().phase != Phase::Finished {
+            assert!(std::time::Instant::now() < deadline, "seeder never checked");
+            tokio::time::sleep(Duration::from_millis(100)).await;
+        }
+        let addr = seeder.listen_addr().expect("seeder listens");
+        let index = |name: &str| meta.files.iter().position(|f| f.path.ends_with(name));
+        let (ia, ib, ic) = (
+            index("a.bin").unwrap(),
+            index("b.bin").unwrap(),
+            index("c.txt").unwrap(),
+        );
+        let state = tmp.path().join("s2");
+        let session = state.join("session");
+        let out = meta.folder_in(&tmp.path().join("got"));
+        std::fs::create_dir_all(&out).unwrap();
+        let make = |i: usize| {
+            let path = out.join(&meta.files[i].path);
+            authorized_storage::PreparedFile {
+                index: i,
+                file: std::fs::OpenOptions::new()
+                    .read(true)
+                    .write(true)
+                    .create(true)
+                    .truncate(false)
+                    .open(&path)
+                    .unwrap(),
+                path,
+            }
+        };
+        let guarded = || {
+            let mut config = offline(&state);
+            config.require_authorization = true;
+            config
+        };
+
+        // b.bin downloaded alone, then the finished torrent leaves the session, which stops.
+        let leecher = Torrents::start(guarded()).await.unwrap();
+        authorized_storage::authorize_parted(
+            &session,
+            &meta.info_hash,
+            &out,
+            authorized_storage::Prepared {
+                files: vec![make(ib)],
+                parted: vec![ia, ic],
+            },
+            Arc::new(|| Err(std::io::ErrorKind::PermissionDenied.into())),
+        );
+        let h2 = leecher
+            .add(&torrent, &out, Some(vec![ib]), vec![addr], false)
+            .await
+            .unwrap();
+        let deadline = std::time::Instant::now() + Duration::from_secs(30);
+        while leecher.stats(&h2).unwrap().phase != Phase::Finished {
+            assert!(std::time::Instant::now() < deadline, "no transfer");
+            tokio::time::sleep(Duration::from_millis(100)).await;
+        }
+        leecher.remove(&h2, false).await.unwrap();
+        leecher.stop().await;
+        seeder.stop().await;
+        authorized_storage::forget(&session, &h2);
+        assert!(!out.join(&meta.files[ic].path).exists());
+        assert!(
+            authorized_storage::has_parts(&session, &h2, ic),
+            "c.txt's bytes are in its parts file, on the disk"
+        );
+
+        // c.txt ticked: a new session, the torrent added again with it ticked, no peer.
+        let again = Torrents::start(guarded()).await.unwrap();
+        authorized_storage::authorize_parted(
+            &session,
+            &meta.info_hash,
+            &out,
+            authorized_storage::Prepared {
+                files: vec![make(ib), make(ic)],
+                parted: vec![ia],
+            },
+            Arc::new(|| Err(std::io::ErrorKind::PermissionDenied.into())),
+        );
+        let h3 = again
+            .add(&torrent, &out, Some(vec![ib, ic]), Vec::new(), true)
+            .await
+            .unwrap();
+        let deadline = std::time::Instant::now() + Duration::from_secs(30);
+        while again.stats(&h3).unwrap().phase == Phase::Checking {
+            assert!(std::time::Instant::now() < deadline, "never checked");
+            tokio::time::sleep(Duration::from_millis(100)).await;
+        }
+        assert_eq!(std::fs::read(out.join(&meta.files[ic].path)).unwrap(), c);
+        assert_eq!(std::fs::read(out.join(&meta.files[ib].path)).unwrap(), b);
+        assert!(!authorized_storage::has_parts(&session, &h3, ic));
+        assert!(!out.join(&meta.files[ia].path).exists());
+        let s = again.stats(&h3).unwrap();
+        assert_eq!(s.done, s.total, "every ticked byte there: {s:?}");
+
+        again.remove(&h3, false).await.unwrap();
+        authorized_storage::remove_parts(&session, &h3).unwrap();
+        authorized_storage::forget(&session, &h3);
+        again.stop().await;
     }
 
     /// #965: download directly into a shared folder, recheck there after restart,

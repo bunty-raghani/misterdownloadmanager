@@ -12,6 +12,11 @@
 #. {n} = a number (keep the braces as they are)
 #, machine
 @plural	An unknown site wants to send {n} link to Link grabber.|An unknown site wants to send {n} links to Link grabber.	அறியப்படாத தளம் {n} இணைப்பை இணைப்பு கிராப்பருக்கு அனுப்ப விரும்புகிறது.|அறியப்படாத தளம் {n} இணைப்புகளை இணைப்பு கிராப்பருக்கு அனுப்ப விரும்புகிறது.
+#. count in traypanel.rs
+#. the notification-area icon's panel (#1365), under the downloads it lists: how many others are running; {n} a number
+#. {n} = a number (keep the braces as they are)
+#, machine
+@plural	And {n} more|And {n} more	மேலும் {n} பதிவிறக்கங்கள்|மேலும் {n} பதிவிறக்கங்கள்
 #. count in torrent downloads
 #. number of additional files in a list of files
 #. {n} = a number (keep the braces as they are)
@@ -54,6 +59,11 @@
 #. {n} = a number (keep the braces as they are)
 #, machine
 @plural	There is {n} more download waiting. Cancel it too?|There are {n} more downloads waiting. Cancel them too?	இன்னும் {n} பதிவிறக்கம் காத்திருக்கிறது. அதையும் ரத்து செய்ய வேண்டுமா?|இன்னும் {n} பதிவிறக்கங்கள் காத்திருக்கின்றன. அவற்றையும் ரத்து செய்ய வேண்டுமா?
+#. count in a dialog box
+#. under "Also delete the files from disk", while it is ticked: how many of the downloads being deleted are finished, whose complete files are deleted from the disk too
+#. {n} = a number (keep the braces as they are)
+#, machine
+@plural	This also deletes {n} finished file.|This also deletes {n} finished files.	இந்த {n} முடிந்த கோப்பையும் நீக்குகிறது.|இந்த {n} முடிந்த கோப்புகளையும் நீக்குகிறது.
 #. count in a dialog box
 #. under the first failed downloads in the summary of a group of downloads: {n} more failed (Show in list shows them all)
 #. {n} = a number (keep the braces as they are)
@@ -273,6 +283,14 @@
 #. Options → DNS: the NextDNS configuration ID typed isn't one
 #, machine
 	A NextDNS configuration ID is six letters and digits (0-9, a-f).	NextDNS உள்ளமைவு ID ஆறு எழுத்துகளும் எண்களும் (0-9, a-f) கொண்டது.
+#. text in the Download video window
+#. why "Embed chapters" (and the subtitles) are greyed in Download video: only a part of the video is downloaded, and its chapters and subtitles would be the whole video's
+#, machine
+	A part is saved without the video's chapters and subtitles	வீடியோவின் அத்தியாயங்கள் மற்றும் வசனங்கள் இல்லாமல் ஒரு பகுதி சேமிக்கப்பட்டது
+#. text in the Download video window
+#. why Part is greyed in Download video: the page is a playlist, whose videos are downloaded whole
+#, machine
+	A playlist's videos are downloaded whole	பிளேலிஸ்ட்டின் வீடியோக்கள் முழுமையாகப் பதிவிறக்கப்படுகின்றன
 #. text in the Options window
 #. Options → Sites Logins → Cookies for video sites: the tooltip of the profile box
 #, machine
@@ -317,6 +335,7 @@
 #, machine
 	about {ms} ms ({reach})	சுமார் {ms} மி.வி ({reach})
 #. text in the Download video window
+#. in Download video beside the part's From and To: the part's size, estimated from the whole video's; {size} is "12.3 MB"
 #. a file size that is only an estimate, as a screen reader says it in the Download video window's list of qualities; {size} is "532 MB"
 #. {size} = a file size such as "4.2 MB" (keep the braces as they are)
 #, machine
@@ -509,6 +528,9 @@
 #. in the Subtitles list of Download video: every language the video's uploader gave
 #, machine
 	All the uploader's	பதிவேற்றியவர் அனைத்தையும்
+#. text in helpers.rs
+#, machine
+	All three are open source. MDM gets them from their official releases with its own downloader and checks each file's signature before it runs. About 140 MB, once.	மூன்றும் திறந்த மூலமாகும். MDM தனது பதிவிறக்கியைப் பயன்படுத்தி அவற்றின் அதிகாரப்பூர்வ வெளியீடுகளிலிருந்து பதிவிறக்கி, இயக்குவதற்கு முன் ஒவ்வொரு கோப்பின் கையொப்பத்தையும் சரிபார்க்கிறது. ஒருமுறை மட்டும் சுமார் 140 MB.
 #. text in cnl.rs
 #. button in the Click'n'Load window: let this site send links (remembered)
 #, machine
@@ -680,6 +702,7 @@
 #, machine
 	Asking the service...	சேவையைக் கேட்கிறது...
 #. text in the Options window
+#. Options → Proxy / Socks: Test is running
 #. Options → DNS settings: the test is running
 #. the trailing ... means it is still going on: keep it
 #, machine
@@ -879,7 +902,7 @@
 #. a country's name (where a download's server is)
 #, machine
 	Canada	கனடா
-#. button in the Batch download window; button in categories.rs; text in the Checksum window; button in a dialog box; button in extracting archives (a download's log, the Archive password window); button in the Find window; button in gallerydlg.rs; text in the Link grabber window; text in the Help menu's windows (About, updates, shortcuts, Tell a friend); button in langpick.rs; button in the Options window; button in a download's progress window; text in remote.rs; button in the Scheduler window; button in the Add torrent window; button in the Download video window
+#. button in the Batch download window; button in categories.rs; text in the Checksum window; button in a dialog box; button in extracting archives (a download's log, the Archive password window); button in the Find window; button in gallerydlg.rs; text in the Link grabber window; text in the Help menu's windows (About, updates, shortcuts, Tell a friend); button in langpick.rs; button in the Options window; button in a download's progress window; text in remote.rs; button in the Scheduler window; button in the Add torrent window; button in traypanel.rs; button in the Download video window
 #. button: stop downloading the update
 #, machine
 	Cancel	ரத்துசெய்
@@ -978,6 +1001,10 @@
 #, machine
 	Check your connection, then try again, or get them later from the video window.	உங்கள் இணைப்பைச் சரிபார்த்து, மீண்டும் முயற்சிக்கவும் அல்லது பின்னர் வீடியோ சாளரத்திலிருந்து அவற்றைப் பெறவும்.
 #. text in the Options window
+#. tooltip of "Show downloads when the notification area icon is clicked": what the click on MDM's tray icon does when it is ticked and when not
+#, machine
+	Checked, a click on MDM's icon shows what is downloading, with Pause and Cancel, and a double click opens the window; unchecked, a click shows or hides the window	சரிபார்க்கப்பட்டால், MDM ஐகானைக் கிளிக் செய்தால் பதிவிறக்கங்கள், இடைநிறுத்தம் மற்றும் ரத்துசெய்தல் ஆகியவை காண்பிக்கப்படும், மேலும் இருமுறை கிளிக் செய்தால் சாளரம் திறக்கும்; சரிபார்க்கப்படாவிட்டால், ஒரு கிளிக் சாளரத்தைக் காண்பிக்கும் அல்லது மறைக்கும்
+#. text in the Options window
 #. tooltip of the close-setting: checked keeps MDM running when the window closes, in the notification area when available or else the taskbar; downloads continue; unchecked closing quits
 #, machine
 	Checked, closing the window keeps MDM running: it hides in the notification area when available, or minimizes to the taskbar otherwise, and downloads continue; unchecked, closing quits MDM	தேர்வு செய்யப்பட்டால், சாளரத்தை மூடும்போது MDM இயங்கிக்கொண்டே இருக்கும்: அது அறிவிப்புப் பகுதியில் மறைந்துவிடும் (கிடைத்தால்), அல்லது பணிப்பட்டியில் சிறிதாக்கப்படும்; பதிவிறக்கங்கள் தொடரும். தேர்வு செய்யப்படாவிட்டால், மூடும்போது MDM வெளியேறும்
@@ -1041,6 +1068,9 @@
 #. remote control page (on a phone): what the ".torrent file" button does (screen readers)
 #, machine
 	Choose a .torrent file	.torrent கோப்பைத் தேர்வுசெய்யவும்
+#. text in helpers.rs
+#, machine
+	Choose a JavaScript runtime (Node.js, Deno, QuickJS or Bun)	JavaScript இயக்க நேரத்தைத் தேர்ந்தெடுக்கவும் (Node.js, Deno, QuickJS அல்லது Bun)
 #. text in langpick.rs
 #, machine
 	Choose a language	ஒரு மொழியைத் தேர்வுசெய்யவும்
@@ -1051,7 +1081,8 @@
 #. Options → Sites Logins → Cookies for video sites: the title of the window, and the tooltip of the button, that pick a browser profile's folder
 #, machine
 	Choose the profile's folder	சுயவிவரத்தின் கோப்புறையைத் தேர்ந்தெடுக்கவும்
-#. text in helpers.rs
+#. text in helpers.rs; text in the Options window
+#. file picker title; {name} = the program to choose (yt-dlp, ffmpeg, 7-Zip)
 #. {name} = a file name (keep the braces as they are)
 #, machine
 	Choose {name}	{name} என்பதைத் தேர்வுசெய்யவும்
@@ -1088,7 +1119,7 @@
 #. text in the Options window
 #, machine
 	Clock:	கடிகாரம்:
-#. text in the Checksum window; text in the main window (menus, toolbar, Categories pane); button in crashui.rs; button in a dialog box; button in extension.rs; button in the Help menu's windows (About, updates, shortcuts, Tell a friend); button in helpers.rs; button in the download list; button in the Options window; button in rssdlg.rs; button in torrentfiles.rs; text in standard windows
+#. text in the Checksum window; text in the main window (menus, toolbar, Categories pane); button in crashui.rs; button in a dialog box; button in extension.rs; button in the Help menu's windows (About, updates, shortcuts, Tell a friend); button in helpers.rs; button in the download list; button in the Options window; button in rssdlg.rs; button in torrentfiles.rs; text in traypanel.rs; text in standard windows
 #. both verbs: Verify = check the file now; Close = close the window
 #. tooltip of the × that closes the Categories pane
 #. verb: closes this window
@@ -1295,7 +1326,7 @@
 #. a date's order: day first (30/10/2026)
 #, machine
 	Day, month, year	நாள், மாதம், வருடம்
-#. page title in the Options window
+#. page title in the Options window; text in the Options window
 #, machine
 	Debrid service accounts	டீப்ரிட் சேவை கணக்குகள்
 #. text in the Scheduler window
@@ -1560,11 +1591,6 @@
 #, machine
 	Downloading again from the start	மீண்டும் முதலில் இருந்து பதிவிறக்கப்படுகிறது
 #. text in the Download video window
-#. in Download video: MDM downloads Deno (a program's name) and checks it against its published checksum
-#. the trailing ... means it is still going on: keep it
-#, machine
-	Downloading and verifying Deno (about 40 MB)...	Deno பதிவிறக்கி சரிபார்க்கிறது (சுமார் 40 MB)...
-#. text in the Download video window
 #. the trailing ... means it is still going on: keep it
 #, machine
 	Downloading and verifying ffmpeg (about 80 MB)...	ffmpeg (சுமார் 80 MB) பதிவிறக்கி சரிபார்க்கிறது...
@@ -1572,6 +1598,10 @@
 #. the trailing ... means it is still going on: keep it
 #, machine
 	Downloading and verifying gallery-dl...	gallery-dl ஐப் பதிவிறக்கிச் சரிபார்க்கிறது...
+#. text in the Download video window
+#. the trailing ... means it is still going on: keep it
+#, machine
+	Downloading and verifying Node.js (40 to 60 MB)...	Node.js ஐப் பதிவிறக்கி சரிபார்க்கிறது (40 முதல் 60 MB)...
 #. text in the Download video window
 #. the trailing ... means it is still going on: keep it
 #, machine
@@ -1590,7 +1620,7 @@
 #, machine
 	Downloading the update... {percent}%	புதுப்பிப்பைப் பதிவிறக்குகிறது... {percent}%
 #. text in helpers.rs
-#. {name} = yt-dlp or ffmpeg; {n} of {total} = which helper of how many; {percent} = how far, e.g. 45%
+#. {name} = yt-dlp, ffmpeg or Node.js; {n} of {total} = which helper of how many; {percent} = how far, e.g. 45%
 #. {name} = a file name; {n} = a number (keep the braces as they are)
 #, machine
 	Downloading {name} ({n} of {total})... {percent}	{name} பதிவிறக்கப்படுகிறது ({total} இல் {n})... {percent}
@@ -1606,8 +1636,13 @@
 #. Windows' Settings → Default apps: what Mister Download Manager is
 #, machine
 	Downloads files, videos and torrents	கோப்புகள், வீடியோக்கள் மற்றும் டோரண்டுகளைப் பதிவிறக்குகிறது
-#. text in the tray icon's menu
+#. message or event log entry in the main window
+#. the notice shown once, the first time a download comes from a browser's private (incognito) window: it stays in MDM's list like any other, after a restart too; where to turn that off. {options} = the Options window, {general} = its General tab, {checkbox} = the checkbox "Keep private-window downloads in the list"
+#, machine
+	Downloads from a browser's private window stay in MDM's list like any other, also after MDM restarts; their cookies are never saved. To keep them in memory only, untick {options} → {general} → {checkbox}.	உலாவி தனிப்பட்ட சாளரத்திலிருந்து பதிவிறக்கங்கள் MDM இன் பட்டியலில் மற்றவை போலவே இருக்கும், MDM மறுதொடக்கம் செய்யப்பட்ட பிறகும்; அவற்றின் குக்கீகள் ஒருபோதும் சேமிக்கப்படாது. அவற்றை நினைவகத்தில் மட்டும் வைத்திருக்க, {options} → {general} → {checkbox} என்பதைத் தேர்வுநீக்கவும்.
+#. text in the tray icon's menu; text in traypanel.rs
 #. tray menu: a submenu of the downloads now running; choosing one shows its progress window
+#. the notification-area icon's panel (#1365): its title, over the downloads now running (also the tray menu's submenu)
 #, machine
 	Downloads in progress	செயலில் உள்ள பதிவிறக்கங்கள்
 #. text in a dialog box
@@ -1774,6 +1809,10 @@
 #. what a keyboard shortcut does in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #, machine
 	Everything at its normal size (100%)	அனைத்தும் அதன் இயல்பான அளவில் (100%)
+#. text in the Download video window
+#. choice in Download video's Part: the part is encoded again so it starts and ends exactly at From and To (slower)
+#, machine
+	Exact cut, encoded again	துல்லியமான வெட்டு, மீண்டும் குறியாக்கம் செய்யப்பட்டது
 #. text in the Options window
 #. label before an example date and time written the chosen way
 #, machine
@@ -1858,6 +1897,10 @@
 #. a country's name (where a download's server is)
 #, machine
 	Faroe Islands	ஃபாரோ தீவுகள்
+#. text in the Download video window
+#. tooltip of "Quick cut, at keyframes" in Download video: what it does
+#, machine
+	Fast: the streams are copied as they are, so the part may start a little before From	வேகமானது: ஸ்ட்ரீம்கள் அப்படியே நகலெடுக்கப்படுகின்றன, எனவே பகுதி தொடக்க நேரத்திற்கு சற்று முன்னதாகத் தொடங்கலாம்
 #. text in the Scheduler window
 #, machine
 	February	பிப்ரவரி
@@ -1946,6 +1989,10 @@
 #. verb: button that starts the search
 #, machine
 	Find	கண்டுபிடி
+#. text in the Options window
+#. Options → Archives: button, shown once a 7-Zip program was chosen with "Use another program...": go back to the 7-Zip MDM finds on the computer by itself
+#, machine
+	Find 7-Zip automatically	7-Zip ஐத் தானாகக் கண்டறியவும்
 #. what a keyboard shortcut does in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #, machine
 	Find a download	பதிவிறக்கத்தைக் கண்டறி
@@ -2080,6 +2127,14 @@
 #. where a download came from, in its log: a playlist or channel, by yt-dlp
 #, machine
 	from a playlist (yt-dlp)	பிளேலிஸ்ட்டிலிருந்து (yt-dlp)
+#. text in the download list (sizes, speeds, status)
+#. tooltip of the mark (a mask) before a download's status in the list: it came from a browser's private (incognito) window, and it is in memory only, gone from the list when MDM closes
+#, machine
+	From a private window: in memory only, gone from the list when MDM closes	தனிப்பட்ட சாளரத்திலிருந்து: நினைவகத்தில் மட்டும்; MDM மூடப்படும்போது பட்டியலிலிருந்து நீக்கப்படும்
+#. text in the download list (sizes, speeds, status)
+#. tooltip of the mark (a mask) before a download's status in the list: it came from a browser's private (incognito) window, and MDM's list keeps it after a restart (Options → General → Keep private-window downloads in the list)
+#, machine
+	From a private window: kept in the list	ஒரு தனிப்பட்ட சாளரத்திலிருந்து: பட்டியலில் வைக்கப்பட்டுள்ளது
 #. message or event log entry in the main window
 #, machine
 	from a torrent file	டோரண்ட் கோப்பிலிருந்து
@@ -2097,6 +2152,10 @@
 #. message or event log entry in the main window
 #, machine
 	from the command line	கட்டளை வரியிலிருந்து
+#. text in the Download video window
+#. in Download video after "Only a part": {from} and {to} are boxes where times are typed (1:30, 1:02:03), drawn where they stand in the translation
+#, machine
+	from {from} to {to}	{from} முதல் {to} வரை
 #. text in the Batch download window
 #, machine
 	From:	தொடக்கம்:
@@ -2137,7 +2196,7 @@
 #. a country's name (where a download's server is)
 #, machine
 	Gambia	காம்பியா
-#. text in the download list (sizes, speeds, status); text in the Options window; text in a download's progress window
+#. message or event log entry in the main window; text in the download list (sizes, speeds, status); text in the Options window; text in a download's progress window
 #. category name: files of no particular kind
 #. tab title: general settings
 #. tab title: general information
@@ -2396,10 +2455,6 @@
 #, machine
 	Install 7-Zip (free), then right-click the download and choose Extract.	7-Zip ஐ (இலவசம்) நிறுவி, பதிவிறக்கத்தை வலது கிளிக் செய்து, பிரித்தெடு என்பதைத் தேர்ந்தெடுக்கவும்.
 #. text in the Download video window
-#. button in Download video: download and install Deno, the JavaScript runtime YouTube needs (Deno is a program's name)
-#, machine
-	Install Deno	Deno ஐ நிறுவவும்
-#. text in the Download video window
 #. button: download and install the ffmpeg program
 #, machine
 	Install ffmpeg	ffmpeg ஐ நிறுவவும்
@@ -2411,6 +2466,10 @@
 #. link in the browser extension's window: the tutorial that adds it without the browser's store
 #, machine
 	Install it by hand	கையால் நிறுவு
+#. text in the Download video window
+#. button in Download video: download and install Node.js, the JavaScript runtime YouTube needs (Node.js is a program's name)
+#, machine
+	Install Node.js	Node.js ஐ நிறுவவும்
 #. text in unix.rs
 #. Linux, after a missing library's name, on a distribution MDM doesn't know
 #, machine
@@ -2539,9 +2598,9 @@
 #, machine
 	Japan	ஜப்பான்
 #. text in helpers.rs
-#. Video helpers: the row of the JavaScript runtime yt-dlp needs for YouTube (Deno is a program's name)
+#. Video helpers: the row of the JavaScript runtime (Node.js, Deno...) yt-dlp needs for YouTube's videos
 #, machine
-	JavaScript runtime (Deno)	ஜாவாஸ்கிரிப்ட் ரன்டைம் (Deno)
+	JavaScript runtime (for YouTube)	JavaScript இயக்க நேரம் (YouTube க்காக)
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -2567,10 +2626,10 @@
 #, machine
 	KBytes/sec	KB/வி
 #. text in helpers.rs
-#. Helpers: checkbox: MDM checks for and installs newer versions of its own yt-dlp, ffmpeg, gallery-dl and Deno by itself
+#. Helpers: checkbox: MDM checks for and installs newer versions of its own yt-dlp, ffmpeg, gallery-dl and Node.js by itself
 #, machine
 	Keep MDM's helpers up to date automatically	MDM இன் உதவிக் கருவிகளைத் தானாகவே புதுப்பித்த நிலையில் வைத்திருக்கவும்
-#. text in the Options window
+#. message or event log entry in the main window; text in the Options window
 #. checkbox: downloads started from a browser's private (incognito) window are saved in MDM's download list like any other, so they are still there after MDM restarts
 #, machine
 	Keep private-window downloads in the list	தனிப்பட்ட சாளரப் பதிவிறக்கங்களை பட்டியலில் வைக்கவும்
@@ -2773,6 +2832,11 @@
 #. why Download Now is greyed: the page address was changed after the look-up
 #, machine
 	Look up the new address first	முதலில் புதிய முகவரியைத் தேடுங்கள்
+#. text in helpers.rs
+#. Video helpers: MDM is asking the JavaScript runtimes on the computer (Node.js, Deno...) for their versions, to see which one yt-dlp can use
+#. the trailing ... means it is still going on: keep it
+#, machine
+	Looking for a JavaScript runtime on this computer...	இந்தக் கணினியில் JavaScript இயக்க நேரத்தைத் தேடுகிறது...
 #. text in the Add torrent window
 #. while a magnet link's file list is fetched, before any peer is found
 #. the trailing ... means it is still going on: keep it
@@ -2946,13 +3010,13 @@
 #, machine
 	MDM does not answer. Trying again...	MDM பதிலளிக்கவில்லை. மீண்டும் முயற்சிக்கிறது...
 #. text in helpers.rs
-#. Video helpers: MDM can't download Deno on this system (32-bit Windows, an unusual processor); Deno and Node.js are program names
-#, machine
-	MDM has no copy for this system: install Deno or Node.js	இந்த சிஸ்டத்திற்கான நகல் MDM இல் இல்லை: Deno அல்லது Node.js ஐ நிறுவவும்
-#. text in helpers.rs
 #. Video helpers: MDM can't download this helper on this Windows (ffmpeg on 32-bit Windows); "Use another program" is the button below
 #, machine
 	MDM has no copy for this system: install it, or use another program	இந்தக் கணினிக்கான நகல் MDM-இல் இல்லை: அதை நிறுவவும் அல்லது மற்றொரு நிரலைப் பயன்படுத்தவும்
+#. text in helpers.rs
+#. Video helpers: MDM can't download Node.js on this system (an unusual processor); Node.js and Deno are program names; "Use another program" is the button below
+#, machine
+	MDM has no copy for this system: install Node.js or Deno, or use another program	இந்த அமைப்புக்கான நகல் MDM இல் இல்லை: Node.js அல்லது Deno ஐ நிறுவவும், அல்லது வேறு நிரலைப் பயன்படுத்தவும்
 #. text in remote.rs
 #. remote control page (on a phone): no pairing code is shown in MDM; "Pair a device" is MDM's button
 #, machine
@@ -3300,6 +3364,10 @@
 #. message or event log entry in the main window
 #, machine
 	No download links were found in the clipboard. Copy a text with http, https, ftp or magnet links in it, and try again.	கிளிப்போர்டில் பதிவிறக்க இணைப்புகள் எதுவும் கண்டறியப்படவில்லை. http, https, ftp அல்லது காந்த இணைப்புகள் உள்ள உரையை நகலெடுத்து மீண்டும் முயற்சிக்கவும்.
+#. text in traypanel.rs
+#. the notification-area icon's panel (#1365) when no download is running
+#, machine
+	No downloads are running	பதிவிறக்கங்கள் எதுவும் இயங்கவில்லை
 #. message or event log entry in the main window
 #. title in the empty download list (this category or queue has no downloads)
 #, machine
@@ -3377,6 +3445,10 @@
 #. message or event log entry in the main window
 #, machine
 	No web addresses were found in {file}.	{file} இல் வலை முகவரிகள் எதுவும் கண்டறியப்படவில்லை.
+#. text in helpers.rs
+#. helper name and what it does (Node.js and YouTube are names)
+#, machine
+	Node.js: unlocks YouTube's qualities	Node.js: YouTube இன் தர நிலைகளைத் திறக்கிறது
 #. text in the Options window; text in the Download video window
 #. in the Subtitles list of Download video: download no subtitles
 #, machine
@@ -3570,6 +3642,10 @@
 #. message or event log entry in the main window
 #, machine
 	Only a finished download, or one not started yet, can be moved. Stop it and finish it first.	முடிந்த பதிவிறக்கம் அல்லது இன்னும் தொடங்கப்படாத பதிவிறக்கம் மட்டுமே நகர்த்த முடியும். முதலில் அதை நிறுத்தி முடிக்கவும்.
+#. text in the Download video window
+#. checkbox in Download video: download only a part of the video or sound; the From and To boxes follow it
+#, machine
+	Only a part	ஒரு பகுதி மட்டும்
 #. text in the Scheduler window
 #. the Scheduler, under "Wake the computer to run this queue" (Linux): the computer's wake alarm can be set by an administrator only
 #, machine
@@ -3587,6 +3663,10 @@
 #. {n} = a number (keep the braces as they are)
 #, machine
 	Only the first {n} videos are listed.	முதல் {n} வீடியோக்கள் மட்டுமே பட்டியலிடப்பட்டுள்ளன.
+#. message or event log entry in the main window
+#. event log: a torrent through a debrid account gets only the files ticked in Add torrent; {files} how many ("3")
+#, machine
+	Only the {files} file(s) ticked in Add torrent	டோரண்டைச் சேர் என்பதில் தேர்ந்தெடுக்கப்பட்ட {files} கோப்பு(கள்) மட்டும்
 #. checkbox in a dialog box
 #, machine
 	Only while I'm using the computer	நான் கணினியைப் பயன்படுத்தும்போது மட்டும்
@@ -3611,7 +3691,8 @@
 #. checkbox in the Add torrent window
 #, machine
 	Open magnet links and .torrent files with Mister Download Manager	Mister Download Manager உடன் மேக்னட் இணைப்புகள் மற்றும் .torrent கோப்புகளைத் திற
-#. text in the tray icon's menu
+#. text in the tray icon's menu; text in traypanel.rs
+#. the notification-area icon's panel (#1365): its button that opens the main window (also the tray menu's first item)
 #, machine
 	Open Mister Download Manager	Mister Download Manager ஐத் திற
 #. text in extension.rs
@@ -3649,7 +3730,7 @@
 #. the trailing ... means it opens a window: keep it
 #, machine
 	Open with...	இதனுடன் திறக்கவும்...
-#. text in the tray icon's menu
+#. message or event log entry in the main window; text in the tray icon's menu
 #. plural noun: opens the Options window (settings)
 #, machine
 	Options	விருப்பங்கள்
@@ -3721,6 +3802,10 @@
 #. a country's name (where a download's server is)
 #, machine
 	Paraguay	பரகுவே
+#. text in the Download video window
+#. label in Download video before the choice to download only a part of the video or sound (from one time to another)
+#, machine
+	Part	பகுதி
 #. text in the Batch download window; text in a dialog box; label in the Options window; text in the Options window; text in a download's Properties window
 #, machine
 	Password	கடவுச்சொல்
@@ -3841,6 +3926,10 @@
 #. tooltip of the greyed Preview button in Download File Info
 #, machine
 	Preview isn't available yet	முன்னோட்டம் இன்னும் கிடைக்கவில்லை
+#. message or event log entry in the main window
+#. title of the notice shown once, the first time a download comes from a browser's private (incognito) window
+#, machine
+	Private-window downloads	தனிப்பட்ட சாளரப் பதிவிறக்கங்கள்
 #. text in the Download video window
 #. a private-window video's authentication failure: only cookies supplied by that private window may be used, even after restarting MDM
 #, machine
@@ -3913,6 +4002,10 @@
 #. plural noun: the download queues
 #, machine
 	Queues	வரிசைகள்
+#. text in the Download video window
+#. choice in Download video's Part: cut where the video has a keyframe, the streams copied as they are (fast; it may start a little before From)
+#, machine
+	Quick cut, at keyframes	விரைவான வெட்டு, கீஃப்ரேம்களில்
 #. text in the Options window
 #. Options → Sites Logins → Cookies for video sites: a note under the choices
 #, machine
@@ -4371,6 +4464,10 @@
 #. checkbox in the Options window
 #, machine
 	Show download progress dialog when a download starts	பதிவிறக்கம் தொடங்கும் போது பதிவிறக்க முன்னேற்ற உரையாடலைக் காட்டு
+#. text in the Options window
+#. checkbox: a click on MDM's icon in the notification area (system tray) shows a small panel over it with the downloads now running, their progress, Pause and Cancel; unticked, the click shows or hides the main window
+#, machine
+	Show downloads when the notification area icon is clicked	அறிவிப்புப் பகுதி ஐகானைக் கிளிக் செய்யும்போது பதிவிறக்கங்களைக் காட்டு
 #. button in a dialog box
 #. button: shows these downloads in MDM's list, selected
 #, machine
@@ -4663,6 +4760,10 @@
 #. the trailing ... means it is still going on: keep it
 #, machine
 	Starting...	தொடங்குகிறது...
+#. text in the Download video window
+#. tooltip of "Exact cut, encoded again" in Download video: what it does
+#, machine
+	Starts and ends exactly at From and To: ffmpeg encodes the part again, which takes longer	தொடக்க மற்றும் இறுதி நேரங்கள் துல்லியமாக இருக்கும்: ffmpeg பகுதியை மீண்டும் குறியாக்கம் செய்கிறது, இதற்கு அதிக நேரம் எடுக்கும்
 #. text in the Options window
 #. column title: the account's state (premium, days left)
 #, machine
@@ -4846,6 +4947,14 @@
 #. why Batch download's OK is greyed
 #, machine
 	That is more than 100,000 files: make the range smaller	இது 100,000 கோப்புகளுக்கு மேல்: வரம்பைக் குறைக்கவும்
+#. text in the Options window
+#. Options → Archives, in red: the program chosen with "Use another program..." isn't 7-Zip's command line program (an archiver's window was picked instead); 7z.exe is that program's file name
+#, machine
+	That isn't 7-Zip's command line program (7z.exe).	அது 7-Zip இன் கட்டளை வரி நிரல் (7z.exe) அல்ல.
+#. text in the Download video window
+#. why Download Now is greyed in Download video: Part's times are the whole video's (untick Only a part to download it whole)
+#, machine
+	That's the whole video: change From or To, or untick Only a part	அது முழு வீடியோ: தொடக்க அல்லது இறுதி நேரத்தை மாற்றவும், அல்லது ஒரு பகுதி மட்டும் என்பதைத் தேர்வுநீக்கவும்
 #. text in torrent downloads
 #. an error: the copy of the .torrent file the app keeps is missing
 #, machine
@@ -5168,6 +5277,10 @@
 #. Options → Accounts: the service doesn't say whether the account is premium (Mega-Debrid, signed in with an API key); a free account's links are refused when downloading
 #, machine
 	the service doesn't say whether it is premium	கணக்கு பிரீமியமா என்பதைச் சேவை குறிப்பிடவில்லை
+#. tooltip (why a control is greyed) in the Download video window
+#. why Part is greyed in Download video: the site doesn't say how long the video is (a live stream, for one)
+#, machine
+	The site doesn't say how long this video is	இந்த வீடியோ எவ்வளவு நேரம் நீடிக்கும் என்று தளம் கூறவில்லை
 #. text in errors.rs
 #. why a download failed (#701): a file host answered with its own web page (a countdown before the link, a captcha, a sign-in) where the file was expected. The browser gets past it; MDM's browser extension then hands the real file back to MDM
 #, machine
@@ -5410,6 +5523,7 @@
 	This name is reserved by Windows	இந்தப் பெயர் Windows ஆல் ஒதுக்கப்பட்டுள்ளது
 #. tooltip (why a control is greyed) in the Download video window
 #. why "Embed chapters" is greyed: ffmpeg (a helper program) is not installed
+#. why Part is greyed in Download video: ffmpeg (a helper program) is not installed
 #. why "Put them into the video" is greyed: ffmpeg (a helper program) is not installed
 #, machine
 	This needs ffmpeg	இதற்கு ffmpeg தேவை
@@ -5476,6 +5590,9 @@
 #. {site} = a web site's name such as "example.com" (keep the braces as they are)
 #, machine
 	this {site} link is a web page, not the file: open it in your browser and download from there	இந்த {site} இணைப்பு ஒரு வலைப்பக்கம், கோப்பு அல்ல: அதை உங்கள் உலாவியில் திறந்து அங்கிருந்து பதிவிறக்கவும்
+#. text in helpers.rs
+#, machine
+	Three free helpers make it work. Get them now, and saving a video is one click away when you find one.	மூன்று இலவசக் கருவிகள் இதைச் செயல்படுத்துகின்றன. அவற்றை இப்போதே பெறவும்; ஒரு வீடியோவைக் கண்டறிந்ததும் அதை ஒரே சொடுக்கில் சேமிக்கலாம்.
 #. text in whereis.rs
 #. where a download's server is, when a proxy carries it (the proxy's place not known)
 #, machine
@@ -5510,6 +5627,14 @@
 #. Linux, after a missing library's name: {command} = the terminal command that installs it ("sudo apt install libxkbcommon-x11-0"), left as it is
 #, machine
 	To install what's missing: {command}	விடுபட்டவற்றை நிறுவ: {command}
+#. text in the Download video window
+#. why Download Now is greyed in Download video: Part's To time is past the video's end
+#, machine
+	To is past the end of the video	இறுதி நேரம் வீடியோவின் முடிவுக்கு அப்பால் உள்ளது
+#. text in the Download video window
+#. why Download Now is greyed in Download video: Part's To time isn't after its From time
+#, machine
+	To must come after From	இறுதி நேரம் தொடக்க நேரத்துக்குப் பிறகு இருக்க வேண்டும்
 #. text in the Batch download window
 #, machine
 	To:	க்கு:
@@ -5697,6 +5822,10 @@
 #. why OK is greyed when naming a new queue
 #, machine
 	Type the queue's name	வரிசையின் பெயரைத் தட்டச்சு செய்க
+#. text in the Download video window
+#. why Download Now is greyed in Download video: a Part box holds something that isn't a time
+#, machine
+	Type the times as 1:30 or 1:02:03	நேரங்களை 1:30 அல்லது 1:02:03 என உள்ளிடவும்
 #. text in the Options window
 #. Options → Add an account: waiting while the user types the code at the service's page; {page} its address, {time} minutes:seconds left
 #. {time} = a time of day (keep the braces as they are)
@@ -5803,8 +5932,9 @@
 #. text in the Options window
 #, machine
 	Use advanced browser integration	மேம்பட்ட உலாவி ஒருங்கிணைப்பைப் பயன்படுத்தவும்
-#. text in errors.rs; button in helpers.rs
+#. text in errors.rs; button in helpers.rs; text in the Options window
 #. Video helpers: button: pick a program (yt-dlp or ffmpeg) already on the computer
+#. Options → Archives: button: pick the 7-Zip command line program to extract 7z and RAR archives with (PeaZip's own 7z.exe, a portable copy), instead of the one MDM finds
 #. the trailing ... means it opens a window: keep it
 #, machine
 	Use another program...	மற்றொரு நிரலைப் பயன்படுத்தவும்...
@@ -5868,7 +5998,7 @@
 #. Options → Add an account: label before the field for the user name at the debrid service
 #, machine
 	User name:	பயனர் பெயர்:
-#. page title in the Options window
+#. page title in the Options window; text in the Options window
 #, machine
 	User names and passwords for servers/sites	சேவையகங்கள்/தளங்களுக்கான பயனர் பெயர்கள் மற்றும் கடவுச்சொற்கள்
 #. text in the Options window
@@ -6166,13 +6296,12 @@
 #, machine
 	Your own program: {path} ({version})	உங்கள் சொந்த நிரல்: {path} ({version})
 #. text in helpers.rs
-#. Video helpers: {path} = the computer's own JavaScript runtime (node.exe, deno.exe), used as it is: MDM needn't download one
-#, machine
-	Your system's, nothing to download: {path}	உங்கள் கணினியினுடையது, பதிவிறக்க எதுவும் இல்லை: {path}
-#. text in helpers.rs
 #. Video helpers: {path} = the system's yt-dlp, ffmpeg or gallery-dl
 #, machine
 	Your system's: {path}	உங்கள் சிஸ்டத்தின்: {path}
+#. text in helpers.rs
+#, machine
+	YouTube makes yt-dlp run a piece of JavaScript before it lists its videos, and this computer has nothing to run it with. Node.js does.	YouTube தனது வீடியோக்களைப் பட்டியலிடுவதற்கு முன், yt-dlp-ஐ ஒரு JavaScript குறியீட்டை இயக்கச் செய்கிறது; இந்தக் கணினியில் அதை இயக்குவதற்கான நிரல் எதுவும் இல்லை. Node.js அதைச் செய்கிறது.
 #. text in the Download video window
 #. in Download video and the browser's video menu: yt-dlp had no JavaScript runtime, so YouTube listed only some qualities (often only the sound); Node.js and Deno are program names
 #, machine
@@ -6287,7 +6416,7 @@
 #. Options → Remote → Pair a device: done; {device} = the name it was given
 #, machine
 	{device} is paired. It can control MDM now.	{device} இணைக்கப்பட்டுள்ளது. இது இப்போது MDM ஐக் கட்டுப்படுத்த முடியும்.
-#. text in remote.rs
+#. text in remote.rs; text in traypanel.rs
 #. remote control page (on a phone): progress; {done} and {size} are sizes ("1.2 MB of 7.5 MB")
 #. {size} = a file size such as "4.2 MB" (keep the braces as they are)
 #, machine
@@ -6406,7 +6535,7 @@
 #, machine
 	{name}  ({files}, {size})	{name} ({files}, {size})
 #. text in helpers.rs
-#. {name} = yt-dlp or ffmpeg; {error} = why
+#. {name} = yt-dlp, ffmpeg or Node.js; {error} = why
 #. {name} = a file name; {error} = an error message (keep the braces as they are)
 #, machine
 	{name} could not be downloaded: {error}	{name} ஐப் பதிவிறக்க முடியவில்லை: {error}
@@ -6416,7 +6545,7 @@
 #, machine
 	{name} is a 7z or RAR archive. MDM extracts those with 7-Zip, which isn't installed.	{name} என்பது 7z அல்லது RAR காப்பகம். MDM அவற்றைப் பிரித்தெடுக்க 7-Zip-ஐப் பயன்படுத்துகிறது; 7-Zip நிறுவப்படவில்லை.
 #. text in errors.rs
-#. error: a helper (yt-dlp, ffmpeg, gallery-dl, Deno) is being downloaded already, by MDM's automatic update or another copy of MDM; {name} = its name
+#. error: a helper (yt-dlp, ffmpeg, gallery-dl, Node.js) is being downloaded already, by MDM's automatic update or another copy of MDM; {name} = its name
 #. {name} = a file name (keep the braces as they are)
 #, machine
 	{name} is being downloaded already: try again in a moment	{name} ஏற்கனவே பதிவிறக்கப்படுகிறது: சிறிது நேரத்தில் மீண்டும் முயற்சிக்கவும்
@@ -6485,6 +6614,22 @@
 #. {rate} = a speed such as "1.2 MB/sec" (keep the braces as they are)
 #, machine
 	{rate} (limit: {limit})	{rate} (வரம்பு: {limit})
+#. text in helpers.rs
+#. Video helpers: the Deno an earlier version of MDM installed, still used until MDM's own Node.js replaces it (by the next update, or Use MDM's own copy); {runtime} = "Deno" and its version
+#, machine
+	{runtime}, MDM's earlier copy: Node.js takes its place at the next update	{runtime}, MDM இன் முந்தைய நகல்: அடுத்த புதுப்பிப்பில் Node.js அதன் இடத்தைப் பிடிக்கும்
+#. text in helpers.rs
+#. Video helpers: MDM's own Node.js is the JavaScript runtime; {runtime} = "Node.js" and its version
+#, machine
+	{runtime}, Mister Download Manager's own copy	{runtime}, Mister Download Manager இன் சொந்த நகல்
+#. text in helpers.rs
+#. Video helpers: the JavaScript runtime the person chose; {runtime} = its name and version ("Node.js 24.11.0"), {path} = where it is
+#, machine
+	{runtime}, your own program: {path}	{runtime}, நீங்கள் தேர்ந்தெடுத்த நிரல்: {path}
+#. text in helpers.rs
+#. Video helpers: the computer's own JavaScript runtime, used as it is (MDM needn't download one); {runtime} = its name and version ("Node.js 24.11.0", "Deno 2.5.6"), {path} = where it is
+#, machine
+	{runtime}, your system's, nothing to download: {path}	{runtime}, இந்தக் கணினியில் உள்ளது; பதிவிறக்க எதுவும் தேவையில்லை: {path}
 #. text in errors.rs
 #. a debrid service's error: too many requests; MDM waits and retries
 #, machine
@@ -6499,6 +6644,10 @@
 #. text in errors.rs
 #, machine
 	{service} can't reach this file host right now; MDM will try again later	{service} இப்போது இந்தக் கோப்பு ஹோஸ்டை அணுக முடியவில்லை; MDM பின்னர் மீண்டும் முயற்சிக்கும்
+#. text in errors.rs
+#. a torrent through a debrid service: a file ticked in Add torrent isn't among the files the service has, so nothing was downloaded (rather than every file); {service} its name, {file} the file's path in the torrent
+#, machine
+	{service} doesn't list {file}, chosen in Add torrent: nothing was downloaded. Add the torrent again with all its files, or without this one	{service} ஆனது டோரண்டைச் சேர் என்பதில் தேர்ந்தெடுக்கப்பட்ட {file} ஐப் பட்டியலிடவில்லை: எதுவும் பதிவிறக்கப்படவில்லை. எல்லா கோப்புகளுடனோ அல்லது இந்தக் கோப்பு இல்லாமலோ டோரண்டை மீண்டும் சேர்க்கவும்
 #. text in errors.rs
 #. a debrid service's error: it isn't answering
 #, machine
@@ -6542,6 +6691,11 @@
 #. a debrid service's error in its own words (English); {service} its name
 #, machine
 	{service}: {message}	{service}: {message}
+#. text in errors.rs
+#. a download's error: a video site kept answering MDM's request for the file with its download page again; {site} = the site's name (LuluStream)
+#. {site} = a web site's name such as "example.com" (keep the braces as they are)
+#, machine
+	{site} didn't give the file this time: try again in a moment	{site} இந்த முறை கோப்பை வழங்கவில்லை: சிறிது நேரத்தில் மீண்டும் முயற்சிக்கவும்
 #. text in a download's Properties window
 #. {size} = a file size such as "4.2 MB"; {bytes} = a number of bytes (keep the braces as they are)
 #, machine
@@ -6646,6 +6800,14 @@ column	Upload speed	ஏேற்றுதல் வேகம்
 #. in the menu under the download button over a video: the page is a list of videos (a playlist), whose videos are chosen in the app's window; keep the name Mister Download Manager as it is
 #, machine
 extension	A list of videos: choose them in Mister Download Manager	வீடியோக்களின் பட்டியல்: அவற்றை Mister Download Manager இல் தேர்ந்தெடுக்கவும்
+#. text in the browser extension
+#. link after popup_by_hand_firefox in the toolbar button's popup: opens the add-on's page on addons.mozilla.org (Firefox's add-ons store), whose copy Firefox keeps and updates; keep addons.mozilla.org as it is
+#, machine
+extension	Add it from addons.mozilla.org	addons.mozilla.org இலிருந்து சேர்க்கவும்
+#. text in the browser extension
+#. link after popup_by_hand in the toolbar button's popup: opens the extension's page in the Chrome Web Store, whose copy the browser keeps up to date; keep the name Chrome Web Store as it is
+#, machine
+extension	Add it from the Chrome Web Store	Chrome Web Store இலிருந்து சேர்க்கவும்
 #. text in the browser extension
 #. on the download button (green) over a video after the app added and started the download; a quality may follow ('· 1080p') and a 'Show' button; MDM is the app's short name, keep it; short
 #, machine
@@ -6776,6 +6938,11 @@ extension	Done	முடிந்தது
 #. button beside a video, sound or stream in the toolbar button's popup: download it with the app; verb; short
 #, machine
 extension	Download	பதிவிறக்கவும்
+#. text in the browser extension
+#. command in the menu of the download button over a video: opens the app's Download video window with Part ticked, From set to where the video is playing now, to download only a part of it
+#. the trailing ... means it is still going on: keep it
+#, machine
+extension	Download a part from here...	இங்கிருந்து ஒரு பகுதியைப் பதிவிறக்கவும்...
 #. text in the browser extension
 #. command in the Downloads tab of the toolbar button's popup (the list of Mister Download Manager's newest downloads): downloads the file again from the start
 #, machine
@@ -7303,6 +7470,14 @@ extension	This browser isn't ticked in Options → General.	இந்த உல�
 #. choice under Send downloads to: the Mister Download Manager on this computer
 #, machine
 extension	This computer	இந்தக் கணினி
+#. text in the browser extension
+#. one line at the top of the toolbar button's popup when the extension was loaded by hand (Load unpacked, with Developer mode on) in Chrome, Edge, Brave, Opera or Vivaldi; followed by the link popup_store_chrome
+#, machine
+extension	This copy was loaded by hand and won't update itself.	இந்த நகல் கைமுறையாக ஏற்றப்பட்டது, அது தானாகவே புதுப்பிக்கப்படாது.
+#. text in the browser extension
+#. one line at the top of the toolbar button's popup when the add-on was loaded by hand in Firefox (Load Temporary Add-on, in about:debugging); followed by the link popup_store_firefox; the browser here is Firefox (or Zen, LibreWolf)
+#, machine
+extension	This copy was loaded by hand: it won't update itself, and the browser removes it when it restarts.	இந்த நகல் கைமுறையாக ஏற்றப்பட்டது: இது தானாகவே புதுப்பிக்கப்படாது, மேலும் உலாவி மறுதொடங்கும்போது அதை நீக்கிவிடும்.
 #. text in the browser extension
 #. status when a download carried too much data (very large cookies) to give to the app
 #, machine

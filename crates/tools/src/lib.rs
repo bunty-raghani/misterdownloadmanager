@@ -24,6 +24,8 @@ pub mod manifest;
 pub mod node;
 mod openpgp;
 pub mod pages;
+pub mod part;
+pub mod partserve;
 pub mod pieces;
 pub mod playlist;
 pub mod proc;

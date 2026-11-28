@@ -116,6 +116,18 @@
   "popup_fix": {
     "message": "ಅದನ್ನು ಹೇಗೆ ಸರಿಪಡಿಸುವುದು"
   },
+  "popup_by_hand": {
+    "message": "ಈ ನಕಲನ್ನು ಕೈಯಾರೆ ಲೋಡ್ ಮಾಡಲಾಗಿದೆ ಮತ್ತು ಸ್ವತಃ ಅಪ್‌ಡೇಟ್ ಆಗುವುದಿಲ್ಲ."
+  },
+  "popup_by_hand_firefox": {
+    "message": "ಈ ನಕಲನ್ನು ಕೈಯಾರೆ ಲೋಡ್ ಮಾಡಲಾಗಿದೆ: ಇದು ಸ್ವತಃ ಅಪ್‌ಡೇಟ್ ಆಗುವುದಿಲ್ಲ, ಮತ್ತು ಬ್ರೌಸರ್ ಮರುಪ್ರಾರಂಭಿಸಿದಾಗ ಅದನ್ನು ತೆಗೆದುಹಾಕುತ್ತದೆ."
+  },
+  "popup_store_chrome": {
+    "message": "Chrome Web Store ನಿಂದ ಸೇರಿಸಿ"
+  },
+  "popup_store_firefox": {
+    "message": "addons.mozilla.org ನಿಂದ ಸೇರಿಸಿ"
+  },
   "popup_declined": {
     "message": "ಬ್ರೌಸರ್‌ಗೆ ಬಿಡಲಾಗಿದೆ: $name$",
     "placeholders": {
@@ -319,6 +331,9 @@
   },
   "video_all_qualities": {
     "message": "ಎಲ್ಲಾ ಗುಣಮಟ್ಟಗಳು ಮತ್ತು ಉಪಶೀರ್ಷಿಕೆಗಳು..."
+  },
+  "video_part": {
+    "message": "ಇಲ್ಲಿಂದ ಒಂದು ಭಾಗವನ್ನು ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ..."
   },
   "video_failed": {
     "message": "Mister Download Manager ಅನ್ನು ಸ್ಥಾಪಿಸಲಾಗಿಲ್ಲ ಅಥವಾ ಪ್ರಾರಂಭವಾಗಲಿಲ್ಲ"

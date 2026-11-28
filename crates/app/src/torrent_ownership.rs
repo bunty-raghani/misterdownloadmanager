@@ -520,8 +520,9 @@ impl Ownership {
     /// created here, empty, with `create_new`, and its identity recorded. The engine opens
     /// whatever is at a path for writing and sets its length, so a file that is neither ours
     /// nor agreed to at Add (one saved there since, or replaced while the torrent was stopped)
-    /// stops the start: it would be cut and filled with torrent data. Unticked files count:
-    /// the engine opens them too and writes the parts of pieces they share.
+    /// stops the start: it would be cut and filled with torrent data. Every file, ticked or
+    /// not (the app prepares the ticked ones: [`Self::prepare_for`]).
+    #[cfg(test)]
     pub fn prepare(
         &self,
         data: &Path,
@@ -533,6 +534,7 @@ impl Ownership {
 
     /// Fresh consent transfers the exact open objects shown in the question. The engine
     /// receives these handles, not permission to reopen whatever later occupies their names.
+    #[cfg(test)]
     pub fn prepare_consented(
         &self,
         data: &Path,
@@ -540,6 +542,24 @@ impl Ownership {
         dest: &Path,
         fresh: Vec<mdm_torrent::authorized_storage::PreparedFile>,
     ) -> io::Result<Vec<mdm_torrent::authorized_storage::PreparedFile>> {
+        self.prepare_for(data, folder, dest, fresh, None)
+            .map(|p| p.files)
+    }
+
+    /// [`Self::prepare_consented`] for the files ticked (`wanted`, None: all). An unticked file
+    /// is never made, nor one at its path opened unless it is ours (made for this torrent
+    /// before, or agreed to): it goes in `parted`, and the engine keeps the pieces it shares
+    /// with ticked files in a parts file of MDM's own instead (`authorized_storage`).
+    pub fn prepare_for(
+        &self,
+        data: &Path,
+        folder: &Path,
+        dest: &Path,
+        fresh: Vec<mdm_torrent::authorized_storage::PreparedFile>,
+        wanted: Option<&[usize]>,
+    ) -> io::Result<mdm_torrent::authorized_storage::Prepared> {
+        let ticked = |index: usize| wanted.is_none_or(|w| w.contains(&index));
+        let mut parted = Vec::new();
         let lock = self.lock();
         let _held = lock.lock().unwrap_or_else(|e| e.into_inner());
         use mdm_torrent::authorized_storage::PreparedFile;
@@ -615,6 +635,11 @@ impl Ownership {
                 match path.symlink_metadata() {
                     Ok(metadata) => {
                         if !metadata.is_file() || metadata.file_type().is_symlink() {
+                            if !ticked(claim.index) {
+                                // Not a file of ours: an unticked one is never opened.
+                                parted.push(claim.index);
+                                continue;
+                            }
                             return Err(io::ErrorKind::InvalidInput.into());
                         }
                         // Open without create/truncate/set_len, then identify this handle.
@@ -635,9 +660,16 @@ impl Ownership {
                         };
                         if allowed {
                             opened.push(file);
+                        } else if !ticked(claim.index) {
+                            // Someone else's file where an unticked one would be: left as it
+                            // is, and nothing to ask.
+                            parted.push(claim.index);
                         } else {
                             unknown.push(file);
                         }
+                    }
+                    Err(e) if e.kind() == io::ErrorKind::NotFound && !ticked(claim.index) => {
+                        parted.push(claim.index)
                     }
                     Err(e) if e.kind() == io::ErrorKind::NotFound => missing.push((claim, path)),
                     Err(e) => return Err(e),
@@ -712,7 +744,10 @@ impl Ownership {
         ledger.protected.extend(new_protected);
         ledger.directories.extend(new_directories);
         self.save(data, &ledger)?;
-        result.map(|()| opened)
+        result.map(|()| mdm_torrent::authorized_storage::Prepared {
+            files: opened,
+            parted,
+        })
     }
 
     /// Make `path` and what is missing above it. Folders at and below `root` (the torrent's
@@ -1083,6 +1118,60 @@ mod tests {
                 })
                 .collect(),
         }
+    }
+
+    #[test]
+    fn unticked_files_are_not_made_and_a_foreign_one_is_not_opened() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path().join("output");
+        let data = tmp.path().join("data");
+        std::fs::create_dir_all(&root).unwrap();
+        // The person's own file where an unticked one would be.
+        std::fs::write(root.join("notes.txt"), b"mine").unwrap();
+        let own = owner(&["video.mkv", "subs/a.srt", "notes.txt"]);
+        own.initialize(&data, &root, &root, &[]).unwrap();
+        let p = own
+            .prepare_for(&data, &root, &root, Vec::new(), Some(&[0]))
+            .unwrap();
+        assert_eq!(p.files.iter().map(|f| f.index).collect::<Vec<_>>(), [0]);
+        let mut parted = p.parted.clone();
+        parted.sort();
+        assert_eq!(parted, [1, 2]);
+        drop(p);
+        assert!(root.join("video.mkv").is_file());
+        assert!(
+            !root.join("subs").exists(),
+            "no folder for an unticked file"
+        );
+        assert_eq!(std::fs::read(root.join("notes.txt")).unwrap(), b"mine");
+
+        // Ticked later: made then, and the file of ours kept.
+        let p = own
+            .prepare_for(&data, &root, &root, Vec::new(), Some(&[0, 1]))
+            .unwrap();
+        let mut got: Vec<_> = p.files.iter().map(|f| f.index).collect();
+        got.sort();
+        assert_eq!(got, [0, 1]);
+        assert_eq!(p.parted, [2]);
+        drop(p);
+        assert!(root.join("subs/a.srt").is_file());
+
+        // Unticked again: the file made for it is ours and stays in use, as before.
+        let p = own
+            .prepare_for(&data, &root, &root, Vec::new(), Some(&[0]))
+            .unwrap();
+        let mut got: Vec<_> = p.files.iter().map(|f| f.index).collect();
+        got.sort();
+        assert_eq!(got, [0, 1]);
+        assert_eq!(p.parted, [2]);
+        drop(p);
+
+        // Ticked, the person's file is asked about, as always.
+        let error = own
+            .prepare_for(&data, &root, &root, Vec::new(), None)
+            .unwrap_err();
+        assert!(take_consent(error).is_ok());
+        assert_eq!(std::fs::read(root.join("notes.txt")).unwrap(), b"mine");
     }
 
     #[test]

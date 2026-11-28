@@ -3930,6 +3930,8 @@ async function pageMessage(m, sender) {
       cookieJar: v.cookieJar,
       ...(v.fetchedWith ? { fetchedWith: v.fetchedWith } : {}),
       ...(tab.incognito ? { private: true } : {}),
+      // #1662: "Download a part from here...": the window with Part ticked, From at this second.
+      ...(!direct && Number.isInteger(m.part) && m.part >= 0 ? { part: m.part } : {}),
     });
     return { ok: Boolean(reply.ok), why: reply.why, ...(reply.ok && direct ? { show: v.src } : {}) };
   }

@@ -1981,7 +1981,7 @@ checksum = "d0881ea181b1df73ff77ffaaf9c7544ecc11e82fba9b5f27b262a3c73a332555"
 [[package]]
 name = "ecolor"
 version = "0.37.0"
-source = "git+https://github.com/anefzaoui/egui.git?rev=823e3f3bffce51c87a48f15a27edaa9c13698447#823e3f3bffce51c87a48f15a27edaa9c13698447"
+source = "git+https://github.com/anefzaoui/egui.git?rev=82ba93539645f29f39835a5691b5d4b79433b88e#82ba93539645f29f39835a5691b5d4b79433b88e"
 dependencies = [
  "bytemuck",
  "emath",
@@ -1990,7 +1990,7 @@ dependencies = [
 [[package]]
 name = "eframe"
 version = "0.37.0"
-source = "git+https://github.com/anefzaoui/egui.git?rev=823e3f3bffce51c87a48f15a27edaa9c13698447#823e3f3bffce51c87a48f15a27edaa9c13698447"
+source = "git+https://github.com/anefzaoui/egui.git?rev=82ba93539645f29f39835a5691b5d4b79433b88e#82ba93539645f29f39835a5691b5d4b79433b88e"
 dependencies = [
  "ahash",
  "bytemuck",
@@ -2026,7 +2026,7 @@ dependencies = [
 [[package]]
 name = "egui"
 version = "0.37.0"
-source = "git+https://github.com/anefzaoui/egui.git?rev=823e3f3bffce51c87a48f15a27edaa9c13698447#823e3f3bffce51c87a48f15a27edaa9c13698447"
+source = "git+https://github.com/anefzaoui/egui.git?rev=82ba93539645f29f39835a5691b5d4b79433b88e#82ba93539645f29f39835a5691b5d4b79433b88e"
 dependencies = [
  "accesskit",
  "ahash",
@@ -2045,7 +2045,7 @@ dependencies = [
 [[package]]
 name = "egui-wgpu"
 version = "0.37.0"
-source = "git+https://github.com/anefzaoui/egui.git?rev=823e3f3bffce51c87a48f15a27edaa9c13698447#823e3f3bffce51c87a48f15a27edaa9c13698447"
+source = "git+https://github.com/anefzaoui/egui.git?rev=82ba93539645f29f39835a5691b5d4b79433b88e#82ba93539645f29f39835a5691b5d4b79433b88e"
 dependencies = [
  "ahash",
  "bytemuck",
@@ -2064,7 +2064,7 @@ dependencies = [
 [[package]]
 name = "egui-winit"
 version = "0.37.0"
-source = "git+https://github.com/anefzaoui/egui.git?rev=823e3f3bffce51c87a48f15a27edaa9c13698447#823e3f3bffce51c87a48f15a27edaa9c13698447"
+source = "git+https://github.com/anefzaoui/egui.git?rev=82ba93539645f29f39835a5691b5d4b79433b88e#82ba93539645f29f39835a5691b5d4b79433b88e"
 dependencies = [
  "accesskit_winit",
  "arboard",
@@ -2089,7 +2089,7 @@ dependencies = [
 [[package]]
 name = "egui_extras"
 version = "0.37.0"
-source = "git+https://github.com/anefzaoui/egui.git?rev=823e3f3bffce51c87a48f15a27edaa9c13698447#823e3f3bffce51c87a48f15a27edaa9c13698447"
+source = "git+https://github.com/anefzaoui/egui.git?rev=82ba93539645f29f39835a5691b5d4b79433b88e#82ba93539645f29f39835a5691b5d4b79433b88e"
 dependencies = [
  "ahash",
  "egui",
@@ -2105,7 +2105,7 @@ dependencies = [
 [[package]]
 name = "egui_glow"
 version = "0.37.0"
-source = "git+https://github.com/anefzaoui/egui.git?rev=823e3f3bffce51c87a48f15a27edaa9c13698447#823e3f3bffce51c87a48f15a27edaa9c13698447"
+source = "git+https://github.com/anefzaoui/egui.git?rev=82ba93539645f29f39835a5691b5d4b79433b88e#82ba93539645f29f39835a5691b5d4b79433b88e"
 dependencies = [
  "bytemuck",
  "egui",
@@ -2118,7 +2118,7 @@ dependencies = [
 [[package]]
 name = "egui_system_font_provider"
 version = "0.37.0"
-source = "git+https://github.com/anefzaoui/egui.git?rev=823e3f3bffce51c87a48f15a27edaa9c13698447#823e3f3bffce51c87a48f15a27edaa9c13698447"
+source = "git+https://github.com/anefzaoui/egui.git?rev=82ba93539645f29f39835a5691b5d4b79433b88e#82ba93539645f29f39835a5691b5d4b79433b88e"
 dependencies = [
  "epaint",
  "fontique",
@@ -2147,7 +2147,7 @@ dependencies = [
 [[package]]
 name = "emath"
 version = "0.37.0"
-source = "git+https://github.com/anefzaoui/egui.git?rev=823e3f3bffce51c87a48f15a27edaa9c13698447#823e3f3bffce51c87a48f15a27edaa9c13698447"
+source = "git+https://github.com/anefzaoui/egui.git?rev=82ba93539645f29f39835a5691b5d4b79433b88e#82ba93539645f29f39835a5691b5d4b79433b88e"
 dependencies = [
  "bytemuck",
 ]
@@ -2216,7 +2216,7 @@ dependencies = [
 [[package]]
 name = "epaint"
 version = "0.37.0"
-source = "git+https://github.com/anefzaoui/egui.git?rev=823e3f3bffce51c87a48f15a27edaa9c13698447#823e3f3bffce51c87a48f15a27edaa9c13698447"
+source = "git+https://github.com/anefzaoui/egui.git?rev=82ba93539645f29f39835a5691b5d4b79433b88e#82ba93539645f29f39835a5691b5d4b79433b88e"
 dependencies = [
  "ahash",
  "bytemuck",
@@ -2242,7 +2242,7 @@ dependencies = [
 [[package]]
 name = "epaint_default_fonts"
 version = "0.37.0"
-source = "git+https://github.com/anefzaoui/egui.git?rev=823e3f3bffce51c87a48f15a27edaa9c13698447#823e3f3bffce51c87a48f15a27edaa9c13698447"
+source = "git+https://github.com/anefzaoui/egui.git?rev=82ba93539645f29f39835a5691b5d4b79433b88e#82ba93539645f29f39835a5691b5d4b79433b88e"
 
 [[package]]
 name = "equivalent"
@@ -4898,6 +4898,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2",
+ "socket2",
  "tar",
  "tempfile",
  "thiserror 2.0.21",

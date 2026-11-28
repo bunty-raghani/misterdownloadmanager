@@ -116,6 +116,18 @@
   "popup_fix": {
     "message": "Så här åtgärdar du det"
   },
+  "popup_by_hand": {
+    "message": "Den här kopian har lästs in manuellt och uppdateras inte automatiskt."
+  },
+  "popup_by_hand_firefox": {
+    "message": "Den här kopian laddades in manuellt: den uppdateras inte automatiskt, och webbläsaren tar bort den när den startas om."
+  },
+  "popup_store_chrome": {
+    "message": "Lägg till den från Chrome Web Store"
+  },
+  "popup_store_firefox": {
+    "message": "Lägg till den från addons.mozilla.org"
+  },
   "popup_declined": {
     "message": "Lämna till webbläsaren: $name$",
     "placeholders": {
@@ -319,6 +331,9 @@
   },
   "video_all_qualities": {
     "message": "Alla kvaliteter och undertexter..."
+  },
+  "video_part": {
+    "message": "Hämta en del härifrån..."
   },
   "video_failed": {
     "message": "Mister Download Manager är inte installerad eller startade inte"

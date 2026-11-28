@@ -116,6 +116,18 @@
   "popup_fix": {
     "message": "如何修复"
   },
+  "popup_by_hand": {
+    "message": "此副本是手动加载的，不会自动更新。"
+  },
+  "popup_by_hand_firefox": {
+    "message": "此副本是手动加载的：它不会自行更新，并且浏览器重启时会将其删除。"
+  },
+  "popup_store_chrome": {
+    "message": "从 Chrome 网上应用店添加"
+  },
+  "popup_store_firefox": {
+    "message": "从 addons.mozilla.org 添加"
+  },
   "popup_declined": {
     "message": "已留给浏览器：$name$",
     "placeholders": {
@@ -319,6 +331,9 @@
   },
   "video_all_qualities": {
     "message": "所有画质和字幕..."
+  },
+  "video_part": {
+    "message": "从此处下载部分..."
   },
   "video_failed": {
     "message": "Mister Download Manager 未安装或未启动"
@@ -644,7 +659,7 @@
     "message": "删除文件？"
   },
   "popup_ask_delete": {
-    "message": "$file$ 将从您的计算机中删除，并从列表中移除下载。此操作无法撤消。",
+    "message": "$file$ 将从您的计算机中删除，并从列表中移除下载。此操作无法撤销。",
     "placeholders": {
       "file": {
         "content": "$1",

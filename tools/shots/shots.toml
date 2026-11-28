@@ -234,6 +234,16 @@ alt = "The video window after Look up: the qualities with their sizes, Save to, 
 caption = "Pick a quality, then Download Now."
 
 [[shot]]
+id = "video-part"
+page = "video.md"
+under = "Download only a part {#part}"
+take = "video-part"
+# Subtitles greyed, Part's two lines and Embed chapters.
+crop = [0, 330, 0, 120]
+alt = "The Part row of the video window: Only a part ticked, from 1:30 to 4:10, a quick cut, the part's size beside it"
+caption = "Only from 1:30 to 4:10, cut quickly; a part has no subtitles or chapters."
+
+[[shot]]
 id = "video-progress"
 page = "video.md"
 under = "Start a video download"

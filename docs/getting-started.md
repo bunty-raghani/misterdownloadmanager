@@ -269,9 +269,12 @@ On Linux this needs a tray, which most desktops have (KDE Plasma, Xfce, Cinnamon
 ![MDM's icon in the top bar of Ubuntu's GNOME, its menu open: Open Mister Download Manager, Add new download, Add batch download, Downloads in progress, Speed Limiter, Scheduler, the main queue, Options and Exit](images/tray-linux.webp)
 *The tray icon's menu on Ubuntu's GNOME.*
 
-- Click the tray icon to bring the window back.
+- Click the tray icon to see what is downloading: a small panel over the icon lists each running download with its progress bar, how much has come of how much, its speed and the time left, and the progress window's **Pause** (then **Resume**; **Stop and save** for a live stream being recorded) and **Cancel** beside it. **Open Mister Download Manager** at its bottom brings the window back. Its **×**, **Esc**, a click elsewhere or another click on the icon closes it.
+- Double-click the tray icon to bring the window back straight away (Windows).
 - Right-click it for **Add new download**, **Add batch download**, **Downloads in progress**, **Speed Limiter**, **Scheduler**, the main download queue, **Options** and **Exit**.
 - **Downloads in progress** lists the running downloads. Choose one to see its progress window.
+- **Options → General → Show downloads when the notification area icon is clicked** is ticked in a new copy of MDM. Untick it and a click on the icon brings the window back (or hides it there while it is in front), as it did before the panel. An MDM that was set up before the panel keeps that click: tick it to have the panel.
+- On Linux the panel depends on the desktop's tray. KDE Plasma and Xfce send MDM the click, so the panel opens beside the icon. GNOME's AppIndicator extension may open the icon's menu on a left click instead, or send no place for the click: the panel then opens at the top right of the screen, under GNOME's top bar. In a native Wayland session the compositor decides where the panel goes and may not give it the focus, so a click elsewhere doesn't close it there: use its **×** or click the icon again. If the panel doesn't suit your desktop, untick the option above.
 
 Minimize hides the main window there too, while **Minimize to the notification area** is on in **Options → General**. It is on by default; where the tray has no icon, Minimize sends the window to the taskbar instead.
 

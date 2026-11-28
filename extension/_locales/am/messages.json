@@ -116,6 +116,18 @@
   "popup_fix": {
     "message": "እንዴት ማስተካከል ይቻላል"
   },
+  "popup_by_hand": {
+    "message": "ይህ ቅጂ በእጅ የተጫነ ሲሆን ራሱን አያዘምንም።"
+  },
+  "popup_by_hand_firefox": {
+    "message": "ይህ ቅጂ በእጅ የተጫነ ነው፦ ራሱን አያዘምንም፣ እና አሳሹ ሲጀምር ያስወግደዋል።"
+  },
+  "popup_store_chrome": {
+    "message": "ከChrome Web Store ያክሉት"
+  },
+  "popup_store_firefox": {
+    "message": "ከaddons.mozilla.org ያክሉት"
+  },
   "popup_declined": {
     "message": "ወደ አሳሹ የተተወው: $name$",
     "placeholders": {
@@ -319,6 +331,9 @@
   },
   "video_all_qualities": {
     "message": "ሁሉም ጥራቶች እና የትርጉም ጽሑፎች..."
+  },
+  "video_part": {
+    "message": "ከዚህ ከፊሉን ያውርዱ..."
   },
   "video_failed": {
     "message": "Mister Download Manager አልተጫነም ወይም አልጀመረም"

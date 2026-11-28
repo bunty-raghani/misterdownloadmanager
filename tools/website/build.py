@@ -163,7 +163,6 @@ FILES = {
     "rpm_arm64": f"{RELEASE}-linux-arm64.rpm",
     "tar_arm64": f"{RELEASE}-linux-arm64.tar.gz",
     "chromium": f"{RELEASE}-extension-chromium.zip",
-    "firefox": f"{RELEASE}-extension-firefox.xpi",
     "sums": f"{REPO}/releases/download/v{VERSION}/SHA256SUMS.txt",
     "sums_sig": f"{REPO}/releases/download/v{VERSION}/SHA256SUMS.txt.sig",
 }

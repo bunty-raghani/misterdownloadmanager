@@ -116,6 +116,18 @@
   "popup_fix": {
     "message": "Как да го поправите"
   },
+  "popup_by_hand": {
+    "message": "Това копие е заредено ръчно и няма да се актуализира автоматично."
+  },
+  "popup_by_hand_firefox": {
+    "message": "Това копие е заредено ръчно: няма да се актуализира само и браузърът ще го премахне при рестартиране."
+  },
+  "popup_store_chrome": {
+    "message": "Добавете го от Chrome Web Store"
+  },
+  "popup_store_firefox": {
+    "message": "Добавете го от addons.mozilla.org"
+  },
   "popup_declined": {
     "message": "Оставено на браузъра: $name$",
     "placeholders": {
@@ -319,6 +331,9 @@
   },
   "video_all_qualities": {
     "message": "Всички качества и субтитри..."
+  },
+  "video_part": {
+    "message": "Изтегляне на част оттук..."
   },
   "video_failed": {
     "message": "Mister Download Manager не е инсталиран или не е стартиран"

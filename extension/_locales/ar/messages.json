@@ -116,6 +116,18 @@
   "popup_fix": {
     "message": "كيفية إصلاحها"
   },
+  "popup_by_hand": {
+    "message": "حملت هذه النسخة يدويا، ولن تحدث نفسها."
+  },
+  "popup_by_hand_firefox": {
+    "message": "تم تحميل هذه النسخة يدويا: لن تحدث نفسها، ويزيلها المستعرض عند إعادة تشغيله."
+  },
+  "popup_store_chrome": {
+    "message": "أضفه من Chrome Web Store"
+  },
+  "popup_store_firefox": {
+    "message": "أضفه من addons.mozilla.org"
+  },
   "popup_declined": {
     "message": "متروك للمتصفح: $name$",
     "placeholders": {
@@ -319,6 +331,9 @@
   },
   "video_all_qualities": {
     "message": "كل الجودات والترجمات..."
+  },
+  "video_part": {
+    "message": "تنزيل جزء من هنا..."
   },
   "video_failed": {
     "message": "لم يتم تثبيت Mister Download Manager أو لم يبدأ"

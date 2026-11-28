@@ -339,3 +339,39 @@ impl Icon {
         })
     }
 }
+
+/// The download list's mark for a private (incognito) window's download (#1581): Lucide
+/// "venetian-mask", 16 × 16, inked in `ink` (the row's text colour, so it reads on a selected
+/// row and in every theme). Made once per ink.
+pub fn private_mark(ink: egui::Color32) -> ImageSource<'static> {
+    use std::cell::RefCell;
+    use std::collections::HashMap;
+    thread_local! {
+        static MADE: RefCell<HashMap<[u8; 4], ImageSource<'static>>> = RefCell::default();
+    }
+    MADE.with(|made| {
+        made.borrow_mut()
+            .entry(ink.to_array())
+            .or_insert_with(|| {
+                let hex = crate::palette::to_hex(ink);
+                let uri: &'static str = Box::leak(
+                    format!("bytes://mdm/list/private-{}.svg", hex.trim_start_matches('#'))
+                        .into_boxed_str(),
+                );
+                let svg = format!(
+                    concat!(
+                        r#"<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">"#,
+                        r#"<path d="M18 11c-1.5 0-2.5.5-3 2"/>"#,
+                        r#"<path d="M4 6a2 2 0 0 0-2 2v4a5 5 0 0 0 5 5 8 8 0 0 1 5 2 8 8 0 0 1 5-2 5 5 0 0 0 5-5V8a2 2 0 0 0-2-2h-3a8 8 0 0 0-5 2 8 8 0 0 0-5-2z"/>"#,
+                        r#"<path d="M6 11c1.5 0 2.5.5 3 2"/></svg>"#,
+                    ),
+                    hex
+                );
+                ImageSource::Bytes {
+                    uri: uri.into(),
+                    bytes: egui::load::Bytes::Shared(svg.into_bytes().into()),
+                }
+            })
+            .clone()
+    })
+}
